@@ -85,7 +85,7 @@ const PasswordReset = () => {
       });
       router.push("/dashboard");
     },
-    [navigate]
+    []
   );
 
   const handleResend = useCallback(async () => {
@@ -142,7 +142,7 @@ const PasswordReset = () => {
             </Button>
           </div>
           <div className="text-center text-sm">
-            <Link to="/auth/login" className="text-indigo-500 font-semibold">
+            <Link href="/auth/login" className="text-indigo-500 font-semibold">
               Back to login
             </Link>
           </div>

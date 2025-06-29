@@ -25,6 +25,7 @@ import MessagingService from "../../../service/MessagingService";
 import classNamesBody from "./body.module.css";
 import classNames from "./example.module.css";
 import useHistory from "./useHistory";
+import { partner } from "../../../constants";
 
 const correctText = (text) =>
   text
@@ -107,7 +108,6 @@ const MeetingConfirmationBox = ({ onSend, VacancyId }) => {
   const [loadedVacancy, setLoadedVacancy] = useState(false);
   const socket = useRef(null);
   const socketPing = useRef(null);
-  const partner = useSelector(getPartner);
 
   const handleReset = () => {
     onSend(subject, body);

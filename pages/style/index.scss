@@ -1,7 +1,7 @@
-@import "./board.scss";
-@import "./languageswitcher.scss";
-@import "./messaging.scss";
-@import "./tutorial.scss";
+@use "./board.scss";
+@use "./languageswitcher.scss";
+@use "./messaging.scss";
+@use "./tutorial.scss";
 
 .ant-btn-primary {
   background-color: #0080ff !important;

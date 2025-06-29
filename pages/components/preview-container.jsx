@@ -17,7 +17,7 @@ export const IFrame = ({
   gradients,
   ...props
 }) => {
-  const [contentRef, setContentRef] = useState<HTMLIFrameElement | null>(null);
+  const [contentRef, setContentRef] = useState(null);
   const mountNode = contentRef?.contentWindow?.document?.body;
   const iframeHead = contentRef?.contentWindow?.document?.head;
 
@@ -87,7 +87,7 @@ export const IFrame = ({
         iframeDocument?.removeEventListener("click", handleLinkClick, true);
       };
     }
-  }, [contentRef,baseColors, variants, gradients,styles, navigate]);
+  }, [contentRef,baseColors, variants, gradients,styles]);
 
   return (
     <iframe
@@ -135,11 +135,11 @@ export function PreviewContainer({
   const { baseColors, variants, gradients } = useSelector(
     (state) => state.theme
   );
-  const [device, setDevice] = useState<DeviceType>("desktop");
-  const [containerHeight, setContainerHeight] = useState<number>(
+  const [device, setDevice] = useState("desktop");
+  const [containerHeight, setContainerHeight] = useState(
     deviceSizes[device].height
   );
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef(null);
   const [scale, setScale] = useState(1);
   const [styles, setStyles] = useState("");
   const [fontStyles, setFontStyles] = useState("");

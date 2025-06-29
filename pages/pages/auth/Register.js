@@ -14,11 +14,10 @@ import { Button } from "../Landing/Button";
 import { TextField } from "../Landing/Fields";
 import { Logo } from "../Landing/Logo";
 import { SlimLayout } from "../Landing/SlimLayout";
+import { partner } from "../../constants";
 
 const Login = () => {
-  const partner = useSelector(getPartner);
 
-  console.log("partner", partner);
   const router = useRouter();
   const loading = useSelector(selectLoading);
 
@@ -50,7 +49,7 @@ const Login = () => {
       const me = await AuthService.me();
       if (!me?.data) return message.error("Could not load user data");
 
-      store.dispatch(login(me.data));
+      store.dispatch(login(me.data.me));
 
       router.push("/auth/otpemail");
     },

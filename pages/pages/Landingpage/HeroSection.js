@@ -284,8 +284,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
   const { handleItemClick } = useFocusContext();
 
-  const currentLocation = useLocation();
-  const currentPath = currentLocation?.pathname?.split("/")[1];
+  const router = useRouter();
+  const currentPath = router.pathname?.split("/")[1];
   const [isNavFixed, setIsNavFixed] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(
@@ -399,7 +399,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
   };
 
   const getColorBrightness = (color) => {
-    const rgb = color.match(/^#(\w{6})$/)[1];
+    const rgb = color.match(/^#(\w{6})$/)?.[1];
+    if(!rgb) return 0;
     const r = parseInt(rgb.slice(0, 2), 16);
     const g = parseInt(rgb.slice(2, 4), 16);
     const b = parseInt(rgb.slice(4, 6), 16);

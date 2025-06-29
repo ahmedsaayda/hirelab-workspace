@@ -34,7 +34,6 @@ const themeMUI = createMuiTheme({
 });
 
 const AntdConfig = () => {
-  const partner = useSelector(getPartner);
   const darkMode = useSelector(selectDarkMode);
   const { defaultAlgorithm, darkAlgorithm } = theme;
 

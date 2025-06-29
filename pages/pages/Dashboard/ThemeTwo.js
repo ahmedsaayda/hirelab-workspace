@@ -19,6 +19,7 @@ import {
   selectLoading,
   selectUser,
 } from "../../redux/auth/selectors";
+import { partner } from "../../constants";
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
@@ -31,7 +32,6 @@ export default function Example({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const user = useSelector(selectUser);
-  const partner = useSelector(getPartner);
   const loading = useSelector(selectLoading);
 
   return (
@@ -113,7 +113,7 @@ export default function Example({
                             {navigation.map((item) => (
                               <li key={item.name}>
                                 <Link
-                                  to={item.href}
+                                  href={item.href}
                                   target={item.target}
                                   className={classNames(
                                     item.current
@@ -138,7 +138,7 @@ export default function Example({
                                     {item.submenus.map((item) => (
                                       <li key={item.name}>
                                         <Link
-                                          to={item.href}
+                                          href={item.href}
                                           target={item.target}
                                           className={classNames(
                                             item.current
@@ -175,7 +175,7 @@ export default function Example({
                               {subMenu.items.map((team) => (
                                 <li key={team.name}>
                                   <Link
-                                    to={team.href}
+                                    href={team.href}
                                     target={team.target}
                                     className={classNames(
                                       team.current
@@ -230,7 +230,7 @@ export default function Example({
                     {navigation.map((item) => (
                       <li key={item.name}>
                         <Link
-                          to={item.href}
+                          href={item.href}
                           target={item.target}
                           className={classNames(
                             item.current
@@ -255,7 +255,7 @@ export default function Example({
                             {item.submenus.map((item) => (
                               <li key={item.name}>
                                 <Link
-                                  to={item.href}
+                                  href={item.href}
                                   target={item.target}
                                   className={classNames(
                                     item.current
@@ -292,7 +292,7 @@ export default function Example({
                       {subMenu.items.map((team) => (
                         <li key={team.name}>
                           <Link
-                            to={team.href}
+                            href={team.href}
                             target={team.target}
                             className={classNames(
                               team.current
@@ -413,7 +413,7 @@ export default function Example({
                         <Menu.Item key={item.name}>
                           {({ active }) => (
                             <Link
-                              to={item.href}
+                            href={item.href}
                               target={item.target}
                               onClick={item.onClick}
                               className={classNames(

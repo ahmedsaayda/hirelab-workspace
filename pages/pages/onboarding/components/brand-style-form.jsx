@@ -862,7 +862,7 @@ export default function BrandStyleForm() {
   const theme = useSelector((state) => state.theme);
   console.log("theme", theme);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
-  const [selectedColorType, setSelectedColorType] = useState<string>("");
+  const [selectedColorType, setSelectedColorType] = useState("");
   const [brandColors, setBrandColors] = useState([]);
   const [companyName, setCompanyName] = useState("");
   const [companyUrl, setCompanyUrl] = useState("");
@@ -2399,7 +2399,7 @@ function applyCustomFont(
 }
 
 const Preview = ({ logo, landingPageData, fullscreen, setFullscreen }) => {
-  const [device, setDevice] = useState<DeviceType>("desktop");
+  const [device, setDevice] = useState("desktop");
   const user = useSelector(selectUser);
   console.log("user", user?.landingPageNum);
   console.log("user", user?.tier);

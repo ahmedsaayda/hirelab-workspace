@@ -9,6 +9,7 @@ import { eeoForm, personalDataCollection } from "../../../data/constants";
 import useWindowDimensions from "../../../hook/useWindowDimensions";
 import { getPartner } from "../../../redux/auth/selectors";
 import CrudService from "../../../service/CrudService";
+import { partner } from "../../../constants";
 
 const VacancyEditForm = () => {
   let [searchParams] = useSearchParams();
@@ -17,7 +18,6 @@ const VacancyEditForm = () => {
   const [tourOpen, setTourOpen] = useState(!localStorage?.editFormTour);
   const [funnelSteps, setFunnelSteps] = useState([]);
   const vidRef = useRef();
-  const partner = useSelector(getPartner);
   const { width } = useWindowDimensions();
   const ref1 = useRef(null);
   const ref2 = useRef(null);

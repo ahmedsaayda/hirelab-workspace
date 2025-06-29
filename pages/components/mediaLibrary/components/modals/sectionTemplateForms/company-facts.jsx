@@ -15,7 +15,7 @@ const CompanyFactsForm = ({
   isSaving,
 }) => {
   const [showIconsSelector, setShowIconsSelector] = useState(false);
-  const [selectedFactIndex, setSelectedFactIndex] = useState<number | null>(
+  const [selectedFactIndex, setSelectedFactIndex] = useState(
     null
   );
 

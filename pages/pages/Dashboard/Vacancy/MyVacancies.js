@@ -1,4 +1,3 @@
-import { ConsoleSqlOutlined } from "@ant-design/icons";
 import { CheckCircleIcon } from "@heroicons/react/20/solid";
 import {
   CalendarIcon,
@@ -10,14 +9,11 @@ import {
 } from "@heroicons/react/24/outline";
 import {
   Avatar,
-  Badge,
   Button,
   Modal,
   Popconfirm,
   Skeleton,
   Switch,
-  Typography,
-  message,
 } from "antd";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FaChevronCircleRight } from "react-icons/fa";
@@ -40,6 +36,7 @@ import ATSService from "../../../service/ATSService";
 import CrudService from "../../../service/CrudService";
 import OnboardUser from "../OnboardUser";
 import NoObjects from "./NoObjects";
+import { partner } from "../../../constants";
 
 const tiers = [
   {
@@ -107,7 +104,6 @@ const PAGE_LIMIT = 8;
 const MyVacancies = () => {
   let dispatch = useDispatch();
   const user = useSelector(selectUser);
-  const partner = useSelector(getPartner);
   const darkMode = useSelector(selectDarkMode);
   const heroesss = useSelector((state) => state.heroes);
   let [searchParams] = useSearchParams();
@@ -379,7 +375,7 @@ const MyVacancies = () => {
                 />
               </div>
               <div className="flex justify-between items-center">
-                <Link to={`/dashboard/vacancydetails?id=${vacancy._id}`}>
+                <Link href={`/dashboard/vacancydetails?id=${vacancy._id}`}>
                   <div className="flex my-2 cursor-pointer items-center">
                     <h3 className="font-semibold text-base">{vacancy.name} </h3>
                     {vacancy.training && (
@@ -420,14 +416,14 @@ const MyVacancies = () => {
                     </div>
                   </div>
                 </div>
-                <Link to={`/dashboard/vacancydetails?id=${vacancy._id}`}>
+                <Link href={`/dashboard/vacancydetails?id=${vacancy._id}`}>
                   <FaChevronCircleRight className="text-[#5067e8] h-10 w-10" />
                 </Link>
               </div>
               <div className="flex gap-3 my-1 text-xs font-medium">
                 <Link
                   className="border border-solid rounded-lg p-2 flex flex-1 w-full justify-center"
-                  to={`/dashboard/vacancyedit?id=${vacancy._id}`}
+                  href={`/dashboard/vacancyedit?id=${vacancy._id}`}
                 >
                   <div className="flex items-center gap-3">
                     <PencilIcon height={16} />

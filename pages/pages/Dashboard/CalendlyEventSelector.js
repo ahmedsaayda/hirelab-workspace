@@ -3,12 +3,10 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { getPartner, selectLoading } from "../../redux/auth/selectors";
 import CalendlyService from "../../service/CalendlyService";
-import backgroundImage from "../Landing/images/background-auth.jpg";
-import SupportWidget from "./SupportWidget";
+import { partner } from "../../constants";
 
 const CalendlyEventSelector = ({ refresh }) => {
   const [eventTypes, setEventTypes] = useState(null);
-  const partner = useSelector(getPartner);
   const loading = useSelector(selectLoading);
 
   useEffect(() => {

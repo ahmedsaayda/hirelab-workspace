@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 
 
 const Modal = ({ isOpen, onClose, title, children }) => {
-  const modalRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef(null);
 
   useEffect(() => {
     const handleEscape = (e) => {

@@ -15,6 +15,7 @@ import CalendlyService from "../../../service/CalendlyService";
 import CrudService from "../../../service/CrudService";
 import { voices } from "../../InterviewBookCall";
 import FormMultiStep from "./FormMultiStep";
+import { partner } from "../../../constants";
 // import getFormPrompt from "./getFormPrompt";
 // import getFunnelPrompt from "./getFunnelPrompt";
 
@@ -157,7 +158,6 @@ const HeroEdit = () => {
   const router = useRouter();;
   const [vacancyData, setVacancyData] = useState(null);
   const vidRef = useRef();
-  const partner = useSelector(getPartner);
   const [eventTypes, setEventTypes] = useState([]);
 
   useEffect(() => {

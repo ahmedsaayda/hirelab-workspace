@@ -2,9 +2,9 @@ import { Divider } from "antd";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
 import { getPartner } from "../../redux/auth/selectors";
+import { partner } from "../../constants";
 
 export function Footer() {
-  const partner = useSelector(getPartner);
   const router = useRouter();;
 
   return (

@@ -40,7 +40,7 @@ import TextBoxForm from "./modals/sectionTemplateForms/text-box-form.jsx";
 
 
 export default function VideoCard({ videoUrl }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef(null);
   const [videoDetails, setVideoDetails] = useState({
     duration: "",
     resolution: "",

@@ -20,6 +20,7 @@ import CrudService from "../../../service/CrudService";
 import MessagingService from "../../../service/MessagingService";
 import classNamesBody from "./body.module.css";
 import useHistory from "./useHistory";
+import { partner } from "../../../constants";
 
 const correctText = (text) =>
   text
@@ -97,7 +98,6 @@ const VariableSMSBox = ({ candidateId, onSend, defaultBody }) => {
   const [AILoading, setAILoading] = useState(false);
   const socket = useRef(null);
   const socketPing = useRef(null);
-  const partner = useSelector(getPartner);
   const [candidateData, setCandidateData] = useState(null);
 
   useEffect(() => {

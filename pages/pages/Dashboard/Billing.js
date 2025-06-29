@@ -8,6 +8,7 @@ import { getPartner, selectLoading } from "../../redux/auth/selectors";
 import AuthService from "../../service/AuthService";
 import CornerRibbon from "react-corner-ribbon";
 import { padding } from "polished";
+import { partner } from "../../constants";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -16,7 +17,6 @@ function classNames(...classes) {
 const Billing = () => {
   const [me, setMe] = useState(null);
   const [subscription, setSubscription] = useState(null);
-  const partner = useSelector(getPartner);
   const [frequency, setFrequency] = useState(0); // 0: monthly, 1: annual
   const loading = useSelector(selectLoading);
   const [plans, setPlans] = useState([]);

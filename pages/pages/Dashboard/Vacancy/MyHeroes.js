@@ -57,7 +57,6 @@ const PAGE_LIMIT = 9;
 
 const MyHeroes = () => {
   const user = useSelector(selectUser);
-  const partner = useSelector(getPartner);
   let [searchParams] = useSearchParams();
   const router = useRouter();;
   const [vacancies, setVacancies] = useState([]);

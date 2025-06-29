@@ -38,7 +38,7 @@ import UploadService from "../../../../service/UploadService";
 function OnlineApply() {
   // const {getRootProps, getInputProps} = useDropzone()
   let [searchParams] = useSearchParams();
-  const { id, stageId } = useParams();
+  const id = "demo";
   const [vacancyData, setVacancyData] = useState({});
   const router = useRouter();;
   const [steps, setSteps] = useState(1);

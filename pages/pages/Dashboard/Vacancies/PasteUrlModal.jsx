@@ -13,12 +13,12 @@ function PasteUrlModal({ onClose, ongoBack }) {
   const user = useSelector(selectUser);
   const router = useRouter();;
 
-  const [step, setStep] = useState<number>(0);
-  const [url, setURL] = useState<string>("");
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(-1);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [backendLoading, setBackendLoading] = useState<boolean>(false);
-  const [urlError, setUrlError] = useState<string | null>(null);
+  const [step, setStep] = useState(0);
+  const [url, setURL] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState(-1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [backendLoading, setBackendLoading] = useState(false);
+  const [urlError, setUrlError] = useState(null);
 
   const brandingDetails = {
     companyName: user?.companyName,

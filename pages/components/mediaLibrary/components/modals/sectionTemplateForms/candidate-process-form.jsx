@@ -29,7 +29,7 @@ const CandidateProcessForm = ({
   });
 
   const [showIconsSelector, setShowIconsSelector] = useState(false);
-  const [selectedFactIndex, setSelectedFactIndex] = useState<number | null>(
+  const [selectedFactIndex, setSelectedFactIndex] = useState(
     null
   );
   const [activeKeys, setActiveKeys] = useState([]);

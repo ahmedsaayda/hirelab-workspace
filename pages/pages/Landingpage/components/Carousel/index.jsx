@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const CustomCarousel = ({ data, ApplicationSubmission, themeData }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState<'next' | 'previous' | null>(null);
+  const [direction, setDirection] = useState(null);
 
   // Function to move to the previous item with infinite loop
   const handlePrevious = () => {

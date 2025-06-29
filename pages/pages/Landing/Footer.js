@@ -12,12 +12,12 @@ import {
 import { FaGithub } from "react-icons/fa6";
 import { SiGofundme, SiPatreon } from "react-icons/si";
 import { useSelector } from "react-redux";
-import Link from "next/link";
-import { useRouter } from "next/router";
 import { getPartner, selectUser } from "../../redux/auth/selectors";
 import { Container } from "./Container";
 import { Logo } from "./Logo";
 import { NavLink } from "./NavLink";
+import { useRouter } from "next/router";
+import Link from "next/link";
 
 export function Footer({ data }) {
   const partner = data || useSelector(getPartner);
@@ -154,7 +154,7 @@ export function Footer({ data }) {
               ?.filter?.((media) => !!socialMediaMap?.[media.platform])
               ?.map?.((media) => (
                 <Link
-                  href={media.link}
+                href={media.link}
                   target="_blank"
                   className="group dark:text-black"
                   aria-label={media.platform}

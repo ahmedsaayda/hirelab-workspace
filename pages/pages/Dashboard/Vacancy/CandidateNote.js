@@ -1,7 +1,6 @@
 import { Divider, Popconfirm, Skeleton, Space, Button } from "antd";
 import moment from "moment";
 import React, { useEffect, useRef, useState } from "react";
-import { FaEdit } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { selectLoading, selectUser } from "../../../redux/auth/selectors";
 import CrudService from "../../../service/CrudService";
@@ -10,36 +9,6 @@ import { TrashIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import NoteDetail from "./NoteDetails";
 import { PlusCircleFilled } from "@ant-design/icons";
 
-ClassicEditor.defaultConfig = {
-  toolbar: {
-    items: [
-      "heading",
-      "|",
-      "bold",
-      "italic",
-      "|",
-      "bulletedList",
-      "numberedList",
-      "|",
-      "insertTable",
-      "|",
-      "undo",
-      "redo",
-    ],
-  },
-  image: {
-    toolbar: [
-      "imageStyle:full",
-      "imageStyle:side",
-      "|",
-      "imageTextAlternative",
-    ],
-  },
-  table: {
-    contentToolbar: ["tableColumn", "tableRow", "mergeTableCells"],
-  },
-  language: "en",
-};
 
 const getNoteUser = (user, note) => {
   if (!note?.loggedBy?.firstName) return user;

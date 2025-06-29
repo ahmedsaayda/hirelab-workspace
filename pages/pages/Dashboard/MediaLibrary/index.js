@@ -13,8 +13,8 @@ const CloudinaryScriptContext = createContext();
 
 const cloudinary = new Cloudinary({
   cloud: {
-    cloudName: localStorage?.cloudinaryCloudName,
-    apiKey: localStorage?.cloudinaryAPIKey,
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
   },
 });
 

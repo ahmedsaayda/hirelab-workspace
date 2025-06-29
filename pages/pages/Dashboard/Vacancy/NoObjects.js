@@ -38,7 +38,7 @@ const NoObjects = ({ props, onboarding, setOnboarding }) => {
 
               <div className="flex w-full justify-between mt-5 gap-2">
                 <Link
-                  to="/dashboard/home"
+                  href="/dashboard/home"
                   className="w-full bg-white border border-1 border-[#D0D5DD] text-[#344054] dark:bg-gray-600 dark:text-gray-400 rounded-md py-2.5 px-4  text-sm leading-6 font-semibold"
                 >
                   Maybe Later

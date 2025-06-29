@@ -541,7 +541,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
       : getColor("primary", 500);
   };
   const getColorBrightness = (color) => {
-    const rgb = color.match(/^#(\w{6})$/)[1];
+    const rgb = color.match(/^#(\w{6})$/)?.[1];
+    if(!rgb) return 0;
     const r = parseInt(rgb.slice(0, 2), 16);
     const g = parseInt(rgb.slice(2, 4), 16);
     const b = parseInt(rgb.slice(4, 6), 16);

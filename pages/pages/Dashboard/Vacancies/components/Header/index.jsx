@@ -17,10 +17,10 @@ export default function Header({
   setLandingPageData,
   reload,
   isAutoSaving,
+  lpId,
   ...props
 }) {
   const [templateMenu, setTemplateMenu] = useState(false);
-  const { lpId } = useParams();
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
@@ -222,7 +222,7 @@ export default function Header({
     >
       <div className="flex gap-5 justify-between items-center w-full mdx:flex-col">
         <div className="flex items-center justify-left mdx:w-full">
-          <Link to="/dashboard/vacancies">
+          <Link href="/dashboard/vacancies">
             <Img
               src="/images/img_arrow_right_blue_gray_400.svg"
               alt="arrowright"
@@ -324,7 +324,7 @@ export default function Header({
                     >
                       {item.link ? (
                         <Link
-                          to={item.link(landingPageData?._id)}
+                        href={item.link(landingPageData?._id)}
                           className="flex gap-2 justify-center items-center cursor-pointer"
                         >
                           <Img

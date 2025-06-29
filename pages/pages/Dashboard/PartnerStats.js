@@ -5,11 +5,11 @@ import { useSelector } from "react-redux";
 import { currencies } from "../../data/currencies";
 import { getPartner } from "../../redux/auth/selectors";
 import PartnerService from "../../service/PartnerService";
+import { partner } from "../../constants";
 
 const PartnerStats = () => {
   const [mainStats, setMainStats] = useState({});
   const [loading1, setLoading1] = useState(false);
-  const partner = useSelector(getPartner);
 
   const isLoading = useMemo(() => loading1 || [loading1]);
 

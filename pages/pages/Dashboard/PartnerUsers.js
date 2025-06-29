@@ -33,10 +33,10 @@ import {
   selectUser,
 } from "../../redux/auth/selectors";
 import PartnerService from "../../service/PartnerService";
+import { partner } from "../../constants";
 
 const PAGE_LIMIT = 18;
 const PartnerUsers = () => {
-  const partner = useSelector(getPartner);
   const router = useRouter();;
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);

@@ -3,7 +3,6 @@ import { Button, Heading, Img } from "./components/index.jsx";
 import { PlusOutlined, EyeOutlined, LoadingOutlined } from "@ant-design/icons";
 import { Modal } from "antd";
 function ChooseTemplate({ onChooseTemplate, selectedTemplate }) {
-  // const [selectedTemplate, setSelectedTemplate] = useState<any>();
 
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);

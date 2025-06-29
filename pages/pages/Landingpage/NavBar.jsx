@@ -20,28 +20,28 @@ import { LinkOutlined,CheckCircleFilled} from '@ant-design/icons';
 
 const useHeroHover = () => {
   const { hoveredField, scrollToSection } = useHover();
-  const sectionRef = useRef<HTMLElement>(null);
+  const sectionRef = useRef(null);
   // Main fields
-  const vacancyTitleRef = useRef<HTMLDivElement>(null);
-  const heroDescriptionRef = useRef<HTMLDivElement>(null);
-  const locationRef = useRef<HTMLDivElement>(null);
-  const hoursMinRef = useRef<HTMLDivElement>(null);
-  const cta1TitleRef = useRef<HTMLDivElement>(null);
-  const cta2TitleRef = useRef<HTMLDivElement>(null);
+  const vacancyTitleRef = useRef(null);
+  const heroDescriptionRef = useRef(null);
+  const locationRef = useRef(null);
+  const hoursMinRef = useRef(null);
+  const cta1TitleRef = useRef(null);
+  const cta2TitleRef = useRef(null);
   // Additional fields from renderMore
-  const salaryMinRef = useRef<HTMLDivElement>(null);
-  const salaryMaxRef = useRef<HTMLDivElement>(null);
-  const salaryTimeRef = useRef<HTMLDivElement>(null);
-  const salaryCurrencyRef = useRef<HTMLDivElement>(null);
-  const salaryRangeRef = useRef<HTMLDivElement>(null);
-  const hoursMaxRef = useRef<HTMLDivElement>(null);
-  const hoursUnitRef = useRef<HTMLDivElement>(null);
-  const hoursRangeRef = useRef<HTMLDivElement>(null);
-  const cta1LinkRef = useRef<HTMLDivElement>(null);
-  const cta2LinkRef = useRef<HTMLDivElement>(null);
-  const heroImageRef = useRef<HTMLDivElement>(null);
-  const heroImagePositionXRef = useRef<number>(0);
-  const heroImagePositionYRef = useRef<number>(0);
+  const salaryMinRef = useRef(null);
+  const salaryMaxRef = useRef(null);
+  const salaryTimeRef = useRef(null);
+  const salaryCurrencyRef = useRef(null);
+  const salaryRangeRef = useRef(null);
+  const hoursMaxRef = useRef(null);
+  const hoursUnitRef = useRef(null);
+  const hoursRangeRef = useRef(null);
+  const cta1LinkRef = useRef(null);
+  const cta2LinkRef = useRef(null);
+  const heroImageRef = useRef(null);
+  const heroImagePositionXRef = useRef(0);
+  const heroImagePositionYRef = useRef(0);
 
   useLayoutEffect(() => {
     if (!hoveredField) return;
@@ -662,7 +662,8 @@ const handlemediaLink = (platform) => {
       : getColor("primary", 500);
   };
   const getColorBrightness = (color) => {
-    const rgb = color.match(/^#(\w{6})$/)[1];
+    const rgb = color.match(/^#(\w{6})$/)?.[1];
+    if(!rgb) return 0;
     const r = parseInt(rgb.slice(0, 2), 16);
     const g = parseInt(rgb.slice(2, 4), 16);
     const b = parseInt(rgb.slice(4, 6), 16);

@@ -59,7 +59,6 @@ const UserManagement = () => {
       const token = Cookies.get("accessToken");
 
       const response = await axios.get(
-        // `http://localhost:5055/api/admin/users`,
         `${BASE_URL}/admin/users`,
         {
           headers: {
@@ -147,7 +146,6 @@ const UserManagement = () => {
       const token = Cookies.get("accessToken");
 
       await axios.put(
-        // `http://localhost:5055/api/admin/users/${editingUser._id}`,
         `${BASE_URL}/admin/users/${editingUser._id}`,
         values,
         {
@@ -175,7 +173,7 @@ const UserManagement = () => {
     try {
       const token = Cookies.get("accessToken");
 
-      await axios.post("http://localhost:5055/api/auth/register", values, {
+      await axios.post(`${BASE_URL}/auth/register`, values, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

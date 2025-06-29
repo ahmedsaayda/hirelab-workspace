@@ -29,6 +29,7 @@ import classNamesBody from "../Message/body.module.css";
 import classNames from "../Message/example.module.css";
 import useHistory from "../Message/useHistory";
 import HiringManagerAddModal from "./HiringManagerAddModal";
+import { partner } from "../../../constants";
 
 const ForwardResume = ({ candidateId, onSend }) => {
   const [subject, setSubject] = useState(
@@ -52,7 +53,6 @@ const ForwardResume = ({ candidateId, onSend }) => {
   const [AILoading, setAILoading] = useState(false);
   const socket = useRef(null);
   const socketPing = useRef(null);
-  const partner = useSelector(getPartner);
   const [candidateData, setCandidateData] = useState(null);
   const darkMode = useSelector(selectDarkMode);
   const backendLoading = useSelector(selectLoading);

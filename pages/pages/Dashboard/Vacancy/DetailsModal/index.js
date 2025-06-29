@@ -122,7 +122,6 @@ const DetailsModal = ({
   setDetailsModal,
 }) => {
   console.log("vacancyInfo", vacancyInfo);
-  const partner = useSelector(getPartner);
 
   const [AILoading, setAILoading] = useState(false);
   const [candidate, setCandidate] = useState(null);

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 
 export const ProgressBar = ({ progress }) => {
-  const barRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef(null);
   
   // Animate the progress bar gradient as progress increases
   useEffect(() => {

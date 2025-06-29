@@ -38,6 +38,7 @@ import { MINIMUM_AI_CHARS } from "../../../data/constants";
 import { getPartner, selectDarkMode } from "../../../redux/auth/selectors";
 import ShowPassword from "../PartnerSettings/ShowPassword";
 import ChooseAvatar from "./ChooseAvatar";
+import { partner } from "../../../constants";
 
 const getPhone = (phone) => {
   if (phone?.[0] === "+") return phone;
@@ -63,7 +64,6 @@ const DynamicForm = ({
 }) => {
   const socket = useRef();
   const socketPing = useRef();
-  const partner = useSelector(getPartner);
   const [loom, setLoom] = useState(null);
   const darkMode = useSelector(selectDarkMode);
 

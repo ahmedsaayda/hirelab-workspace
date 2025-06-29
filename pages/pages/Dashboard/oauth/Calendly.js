@@ -26,7 +26,7 @@ const Calendly = () => {
         router.push("/dashboard/settings#integrations");
       })
       .catch(() => router.push("/dashboard/settings#integrations"));
-  }, [searchParams, navigate]);
+  }, [searchParams]);
   return <></>;
 };
 

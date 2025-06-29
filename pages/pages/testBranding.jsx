@@ -17,7 +17,7 @@ const TestBranding = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Sample landing page data with templateId set to "x" to use our new template
-  const [landingPageData, setLandingPageData] = useState<any>({
+  const [landingPageData, setLandingPageData] = useState({
     department: "",
     published: true,
     timeRequirement: "",

@@ -41,6 +41,7 @@ import AuthService from "../../service/AuthService";
 import CalendlyService from "../../service/CalendlyService";
 import SMTPService from "../../service/SMTPService";
 import UploadService from "../../service/UploadService";
+import { partner } from "../../constants";
 
 function getColorFun(r, g, b) {
   return (
@@ -61,7 +62,6 @@ export default function Example() {
   const [smtp, setSmtp] = useState(null);
   const [eventTypes, setEventTypes] = useState(null);
   const loading = useSelector(selectLoading);
-  const partner = useSelector(getPartner);
   const darkMode = useSelector(selectDarkMode);
 
   const fileInput = useRef(null);

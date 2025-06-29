@@ -1,16 +1,6 @@
 // NOTE: In Next.js, routing is file-based. These route components should be moved to individual pages
-// import { Navigate, Route, Routes } from "react-router-dom";
 import React from "react";
-import Forgot from "./Forgot";
-import KYC from "./KYC";
-import Login from "./Login";
-import OTPEmail from "./OTPEmail";
-import OTPPhone from "./OTPPhone";
-import PasswordReset from "./PasswordReset";
-import PartnerRegistration from "./PartnerRegistration";
-import Register from "./Register";
-import Subscription from "./Subscription";
-import VertifyEmail from "./VertifyEmail";
+
 
 // TODO: Convert to Next.js file-based routing:
 // - pages/auth/login.js (Login)

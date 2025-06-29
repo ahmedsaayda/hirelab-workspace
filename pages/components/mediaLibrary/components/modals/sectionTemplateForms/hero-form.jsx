@@ -66,10 +66,10 @@ const HeroForm = ({initialData, onSave, isSaving}) => {
   const [isCustomLocationDeleted, setIsCustomLocationDeleted] = useState(false);
 
   const generateLocationOptions = useCallback(() => {
-    const options = allAddresses.map((address) => ({
+    const options = allAddresses?.map?.((address) => ({
       label: address.city,
       value: address.city,
-    }));
+    })) ?? [];
 
     if (
       searchText &&

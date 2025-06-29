@@ -408,11 +408,9 @@ const AIEditModal = ({
   const [generating, setGenerating] = useState(false);
   console.log("generating", generating);
   const [generatedContent, setGeneratedContent] = useState(null);
-  const [step, setStep] = useState<"input" | "review">("input");
-  const [socketError, setSocketError] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<
-    "idle" | "connecting" | "generating" | "completed" | "error"
-  >("idle");
+  const [step, setStep] = useState("input");
+  const [socketError, setSocketError] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState("idle");
   const [saving, setSaving] = useState(false);
 
   console.log("Section Name:", sectionName);

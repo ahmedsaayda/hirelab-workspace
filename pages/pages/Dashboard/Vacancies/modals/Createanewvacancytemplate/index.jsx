@@ -38,7 +38,7 @@ export default function Createanewvacancytemplate({ isOpen, ...props }) {
                     alt="divider"
                     className="h-[12px] w-[20%] mdx:w-full"
                   />
-                  <Link to="/dashboard/vacancies/new">
+                  <Link href="/dashboard/vacancies/new">
                     <Text
                       size="3xl"
                       as="p"
@@ -61,7 +61,7 @@ export default function Createanewvacancytemplate({ isOpen, ...props }) {
                     alt="divider"
                     className="h-[12px] w-[20%] mdx:w-full"
                   />
-                  <Link to="/dashboard/vacancies/new/2">
+                  <Link href="/dashboard/vacancies/new/2">
                     <Text
                       size="3xl"
                       as="p"

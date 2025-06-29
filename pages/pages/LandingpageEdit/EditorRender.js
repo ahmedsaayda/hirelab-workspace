@@ -232,8 +232,8 @@ const EditorRender = React.memo(({
   sectionName = "",
   availableJobs,
   jobsLoading,
+  lpId
 }) => {
-  const { lpId } = useParams();
   const [changed, setChanged] = useState(false);
   const { setFocusRef } = useFocusContext();
   const [activeKeys, setActiveKeys] = useState([]); // Change to plural to indicate array

@@ -77,13 +77,13 @@ const FinishApply = () => {
           </div>
           <div className="grid grid-cols-2 gap-x-3 md:w-[60vw] m-auto">
           <div className="w-full flex justify-center items-center bg-white p-5 rounded-lg border border-solir border-[#D0D5DD]">
-            <Link className="w-full text-center flex justify-center items-center flex-col" to={`/interview?token=${searchParams.get("token")}&schedule=false`}>
+            <Link className="w-full text-center flex justify-center items-center flex-col" href={`/interview?token=${searchParams.get("token")}&schedule=false`}>
             <div className="shrink-0 border border-[#EAECF0] p-2 rounded-md mb-2"><PlayCircleIcon width={20}/></div>
               Start Interview Now
             </Link>
           </div>
           <div className="w-full flex justify-center items-center bg-white p-5 rounded-lg border border-solir border-[#D0D5DD]">
-            <Link className="w-full text-center flex justify-center items-center flex-col" to={`/interview?token=${searchParams.get("token")}&schedule=true`}>
+            <Link className="w-full text-center flex justify-center items-center flex-col" href={`/interview?token=${searchParams.get("token")}&schedule=true`}>
             <div className="shrink-0 border border-[#EAECF0] p-2 rounded-md mb-2"><CalendarIcon width={20}/></div>
               Plan Your Interview
             </Link>

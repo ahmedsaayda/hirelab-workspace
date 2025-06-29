@@ -106,7 +106,7 @@ const PartnerRegistration = ({ onFinishPartnerRegister }) => {
     const me = await AuthService.me();
     if (!me?.data) return message.error("Could not load user data");
 
-    store.dispatch(login(me.data));
+    store.dispatch(login(me.data.me));
 
     router.push("/auth/otpemail");
   };

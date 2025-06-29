@@ -218,7 +218,6 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
 
   const [allMediaData, setAllMediaData] = useState([]);
 
-  // const [selectedTab, setSelectedTab] = useState<any>(ImageModal ? "2" : "3"); // Track selected tab
   const [selectedTab, setSelectedTab] = useState(() => {
       if (ImageModal === undefined) return "4";       //  section template
       if (ImageModal) return "2";                      // image section
@@ -344,7 +343,7 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
       result?.data?.items?.forEach((item) => {
         if (item.tags) {
           if (Array.isArray(item.tags)) {
-            item.tags.forEach((tag) => tagsSet.add(tag.trim()));
+            item.tags.forEach((tag) => tagsSet.add(tag?.trim?.()));
           } else if (typeof item.tags === "string") {
             tagsSet.add(item.tags.trim());
           }
@@ -352,7 +351,7 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
       });
 
       const uniqueTags = Array.from(tagsSet)
-        .filter((tag) => typeof tag === "string" && tag.trim() !== "")
+        .filter((tag) => typeof tag === "string" && tag?.trim?.() !== "")
         .sort();
 
       // setMediaTagsOptions(uniqueTags); // Use this if you have a dropdown or options for tags

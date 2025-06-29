@@ -9,7 +9,7 @@ const DropZone = ({
   accept = 'image/*'
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef(null);
 
   const handleDragOver = (e) => {
     e.preventDefault();

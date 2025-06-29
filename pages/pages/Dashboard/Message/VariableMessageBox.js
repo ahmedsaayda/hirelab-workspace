@@ -23,6 +23,7 @@ import MessagingService from "../../../service/MessagingService";
 import classNamesBody from "./body.module.css";
 import classNames from "./example.module.css";
 import useHistory from "./useHistory";
+import { partner } from "../../../constants";
 
 export const correctText = (text) =>
   text
@@ -111,7 +112,6 @@ const VariableMessageBox = ({
   const [AILoading, setAILoading] = useState(false);
   const socket = useRef(null);
   const socketPing = useRef(null);
-  const partner = useSelector(getPartner);
   const [candidateData, setCandidateData] = useState(null);
   const [templateLibrary, setTemplateLibrary] = useState(null);
   const darkMode = useSelector(selectDarkMode);

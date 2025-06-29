@@ -12,7 +12,7 @@ export function ColorPicker({
 }) {
   const [selectedColor, setSelectedColor] = useState(initialColor);
   const [isDragging, setIsDragging] = useState(false);
-  const gradientRef = useRef<HTMLDivElement>(null);
+  const gradientRef = useRef(null);
   const [handlePosition, setHandlePosition] = useState({ x: 0, y: 0 });
 
   const colors = [

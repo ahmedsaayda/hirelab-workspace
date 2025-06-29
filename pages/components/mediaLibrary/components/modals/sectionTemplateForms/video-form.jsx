@@ -19,8 +19,8 @@ const VideoSectionForm = ({
     type: 'videoSection'
   });
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const progressBarRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef(null);
+  const progressBarRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);

@@ -7,13 +7,13 @@ import MultiStepComponent from "../../../components/MultiStepComponent";
 import { getPartner } from "../../../redux/auth/selectors";
 import CalendlyService from "../../../service/CalendlyService";
 import CrudService from "../../../service/CrudService";
+import { partner } from "../../../constants";
 
 const VacancyPublish = () => {
   let [searchParams] = useSearchParams();
   const router = useRouter();;
   const [vacancyData, setVacancyData] = useState(null);
 
-  const partner = useSelector(getPartner);
   const [eventTypes, setEventTypes] = useState([]);
 
   useEffect(() => {

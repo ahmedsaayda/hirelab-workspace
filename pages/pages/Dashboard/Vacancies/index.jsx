@@ -54,6 +54,7 @@ import PasteUrlModalExperimental from "./PasteUrlModalExperimental.jsx";
 import PasteUrlModal from "./PasteUrlModal.jsx";
 import JobDescriptionModal from "./JobDescriptionModal.jsx";
 import UpgradeModal from "../../../components/UpgradeModal.jsx";
+import { partner } from "../../../constants.js";
 
 const { Column } = Table;
 
@@ -82,10 +83,8 @@ const Vacancies = () => {
   const status = getQueryParam('status');
   console.log('statusstatusstatus', status);
 
-  const [landingPages, setLandingPages] = useState<any>([]);
-  const [addNew, setAddNew] = useState<
-    null | "scratch" | "import-ats" | "job-description" | "url" | "template"
-  >(null);
+  const [landingPages, setLandingPages] = useState([]);
+  const [addNew, setAddNew] = useState(null);
   console.log("addNew", addNew);
   const [addNewModal, setAddNewModal] = useState(false);
   const [jobTitleX, setJobTitleX] = useState("");
@@ -99,11 +98,11 @@ const Vacancies = () => {
     localStorage?.adBudget ? parseInt(localStorage?.adBudget) : 25
   );
   const [pictureChangeModal, setPictureChangeModal] = useState(false);
-  const [promote, setPromote] = useState<any>(null);
+  const [promote, setPromote] = useState(null);
   const [facebookLoading, setFacebookLoading] = useState(false);
   const [atsURL, setAtsURL] = useState("");
-  const [resources, setResources] = useState<any>([]);
-  const [adJobInterest, setAdJobInterest] = useState<any>([]);
+  const [resources, setResources] = useState([]);
+  const [adJobInterest, setAdJobInterest] = useState([]);
   const darkMode = useSelector(selectDarkMode);
   const [backendLoading, setBackendLoading] = useState(false);
   const user = useSelector(selectUser);
@@ -120,14 +119,13 @@ const Vacancies = () => {
     selectedFont: user?.selectedFont,
   };
   const [searchBarValue125, setSearchBarValue125] = React.useState("");
-  const partner = useSelector(getPartner);
 
   const [searchBarValue56, setSearchBarValue56] = React.useState("");
 
   const [jobTitle, setJobTitle] = useState("");
   const [renameModal, setRenameModal] = useState(false);
   const [newVacancyTitle, setNewVacancyTitle] = useState("");
-  const [selectedVacancy, setSelectedVacancy] = useState<any>(null);
+  const [selectedVacancy, setSelectedVacancy] = useState(null);
   const [department, setDepartment] = useState("");
 
   const [templateModal, setTemplateModal] = useState(false);
@@ -145,7 +143,7 @@ const Vacancies = () => {
     { id: 5, name: "Template 5" },
   ];
 
-  const [filters, setFilters] = useState<any>({
+  const [filters, setFilters] = useState({
     location: [],
     // salaryRange: [0, 200000],
     departments: [],
@@ -161,11 +159,11 @@ const Vacancies = () => {
     companySize: [],
   });
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [sorters, setSorters] = useState<any>([]);
+  const [sorters, setSorters] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(12);
-  const [getFilterlocations, setLocationOptions] = useState<any>([]);
+  const [getFilterlocations, setLocationOptions] = useState([]);
   const filterOptions = [
     { key: "location", label: "Location" },
     { key: "salary", label: "Salary" },
@@ -249,8 +247,8 @@ const Vacancies = () => {
     localStorage.adBudget = adBudget;
   }, [adBudget]);
 
-  const socket = useRef<WebSocket | null>(null);
-  const socketPing = useRef<any>(null);
+  const socket = useRef(null);
+  const socketPing = useRef(null);
 
   const debouncedFetch = useMemo(
     () =>

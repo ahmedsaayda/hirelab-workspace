@@ -19,6 +19,7 @@ import { store } from "./redux/store";
 import AuthService from "./service/AuthService";
 import PublicService from "./service/PublicService";
 import UserService from "./service/UserService";
+import { partner } from "./constants";
 
 function extractMongoDBId(inputString) {
   const objectIdPattern = /[0-9a-fA-F]{24}/;
@@ -34,7 +35,6 @@ function extractMongoDBId(inputString) {
 const RouteInit = () => {
   const router = useRouter();
 
-  const partner = useSelector(getPartner);
 
   const [loading, setLoading] = useState(true);
   const [registered, setRegistered] = useState(true);

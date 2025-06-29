@@ -72,7 +72,7 @@ const OTP = () => {
       });
       router.push("/dashboard");
     },
-    [navigate]
+    []
   );
 
   const handleResend = useCallback(async () => {

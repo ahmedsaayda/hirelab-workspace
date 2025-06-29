@@ -15,7 +15,7 @@ const persistConfig = {
   key: "root",
   storage,
 };
-const devTools =  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__();
+const devTools =  (typeof window !== "undefined" ? window : {}).__REDUX_DEVTOOLS_EXTENSION__ && (typeof window !== "undefined" ? window : {}).__REDUX_DEVTOOLS_EXTENSION__();
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 const store = createStore(persistedReducer,devTools);
 const persistor = persistStore(store);

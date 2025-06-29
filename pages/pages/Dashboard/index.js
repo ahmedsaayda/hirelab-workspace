@@ -65,7 +65,6 @@ import PhoneWidget from "./PhoneWidget";
 import Settings from "./Settings";
 import StatsDashboard from "./StatsDashboard";
 import SupportTickets from "./SupportTickets";
-import SupportWidget from "./SupportWidget";
 import TemplateComponent from "./TemplateComponent";
 import ThemeOne from "./ThemeOne";
 import ThemeTwo from "./ThemeTwo";
@@ -74,6 +73,7 @@ import MyMediaLibrary from "../../components/mediaLibrary/index.jsx";
 import Vacancies from "./Vacancies/index.jsx";
 import UserManagement from "./Admin/UserManagement";
 import RoleManagement from "./Admin/RoleManagement";
+import { partner } from "../../constants.js";
 export const THEME_OPTIONS = [
   { value: 1, label: "Default" },
   { value: 2, label: "Minimalistic" },
@@ -115,7 +115,6 @@ export const generateTailwindPalette = (baseColor) => {
 };
 
 const Dashboard = () => {
-  const partner = useSelector(getPartner);
   const [theme, setTheme] = useState(null);
   const [me, setMe] = useState(null);
   const [numberNewAccelerator, setNumberNewAccelerator] = useState(null);
@@ -200,81 +199,7 @@ const Dashboard = () => {
     return () => document.removeEventListener("REFRESH.TICKETNUM", refresh);
   }, [location]);
 
-  useEffect(() => {
-    const checkUser = async () => {
-      if (!Cookies.get("accessToken")) {
-        localStorage.lastVisit = window.location.href;
-        return router.push("/auth/login");
-      }
-      const res = await AuthService.me();
-      setMe(res.data.me);
-
-      const onboardingStatus = res.data.onboardingStatus;
-
-      console.log("onboardingStatus",onboardingStatus)
-      if (onboardingStatus.actionRequired) {
-        // User is not onboarded
-
-        if (
-          onboardingStatus.step === "isEmailVerified" &&
-          !location.pathname.includes("/auth/otpemail")
-        )
-          router.push("/auth/otpemail");
-        if (
-          onboardingStatus.step === "isPartnerOnboarded" &&
-          !location.pathname.includes("/auth/partneronboarding")
-        )
-          router.push("/auth/partneronboarding");
-        if (
-          onboardingStatus.step === "isPartnerActivated" &&
-          !location.pathname.includes("/dashboard/partnerActivation")
-        )
-          router.push("/dashboard/partnerActivation");
-        if (
-          onboardingStatus.step === "subscription" &&
-          !location.pathname.includes("/auth/subscription")
-        )
-          router.push("/auth/subscription");
-        if (
-          onboardingStatus.step === "billingPlanSelection" &&
-          !location.pathname.includes("/dashboard/billing")
-        ) {
-          // message.info("Please select a billing plan to continue");
-          // router.push("/dashboard/billing");
-        }
-        if (
-          onboardingStatus.step === "isPhoneVerified" &&
-          !location.pathname.includes("/auth/otpphone")
-        )
-          router.push("/auth/otpphone");
-        if (
-          onboardingStatus.step === "kycVerified" &&
-          !location.pathname.includes("/auth/kyc")
-        )
-          router.push("/auth/kyc");
-
-        if (
-          onboardingStatus.step === "profileCompletion" &&
-          !location.pathname.includes("/dashboard/settings")
-        ) {
-          message.info("Please complete your profile");
-          router.push("/dashboard/settings");
-        }
-        if (
-          onboardingStatus.step === "partnerCompletion" &&
-          !location.pathname.includes("/dashboard/partnerSettings")
-        ) {
-          message.info("Please setup your SaaS");
-          router.push("/dashboard/partnerSettings");
-        }
-      } else if (localStorage.lastVisit) {
-        window.location.href = localStorage.lastVisit;
-        localStorage.removeItem("lastVisit");
-      }
-    };
-    checkUser();
-  }, [location, router]);
-
+  
   const checkCalendlyEventTypes = useCallback(async () => {
     if (!partner?.calendlyclientId) return;
     CalendlyService.getNeedsToSelectEventType().then(({ data }) => {
@@ -322,7 +247,6 @@ const Dashboard = () => {
     },
   ];
 
-  console.log("useeeeeeeeeeeeeeer", user);
   const isOnboardingCompleted =
   !!user.companyLogo && !!user.companyUrl && !!user.companyInfo;
 
@@ -513,7 +437,7 @@ const Dashboard = () => {
     },
     {
       name: "Upgrade",
-      href: "/dashboard/Billing",
+      href: "/dashboard/billing",
       component: <div>Account</div>,
       logo: ArrowUpCircle,
       // hide: me?.role !== "recruiter",
@@ -608,7 +532,7 @@ const Dashboard = () => {
                   that this trial version will expire on{" "}
                   {moment(trialDate).format(STANDARD_MOMENT_FORMAT)}. For
                   continued access and features, kindly consider{" "}
-                  <Link to="/dashboard/billing">
+                  <Link href="/dashboard/billing">
                     upgrading to a full version
                   </Link>
                   .

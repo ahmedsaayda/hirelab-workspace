@@ -506,10 +506,10 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
 
   const generateLocationOptions = () => {
     console.log("isCustomLocationDeleted", isCustomLocationDeleted);
-    const options = allAddresses.map((address) => ({
+    const options = allAddresses?.map?.((address) => ({
       label: address.city,
       value: address.city,
-    }));
+    })) ?? [];
 
     if (
       searchText &&

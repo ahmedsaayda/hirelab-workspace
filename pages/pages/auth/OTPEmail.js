@@ -88,7 +88,7 @@ const OTP = () => {
       // // router.push("/dashboard");
       router.push("/onboarding");
     },
-    [navigate]
+    []
   );
 
   const handleResend = useCallback(async () => {

@@ -310,8 +310,8 @@ const BulletPoint = ({ index, rowIndex, item, height, getColor, handleItemClick,
 };
 
 const Template1 = ({ landingPageData, fetchData }) => {
-  const currentLocation = useLocation();
-  const currentPath = currentLocation?.pathname?.split("/")[1];
+  const router = useRouter();
+  const currentPath = router.pathname?.split("/")[1];
   const { handleItemClick } = useFocusContext();
   const { hoveredField } = useHover();
   // const sectionRef = useRef();

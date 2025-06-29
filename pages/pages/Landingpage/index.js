@@ -14,8 +14,7 @@ import ApplyCustomFont from "./ApplyCustomFont.jsx";
 import { useFocus } from "../../contexts/FocusContext";
 import { useHover } from "../../contexts/HoverContext";
 
-export default function LandingpagePage({ overrideParamId = null, fullscreen = false, showBackToEditButton = false, setFullscreen }) {
-  const { lpId: paramsId } = useParams();
+export default function LandingpagePage({ paramsId, overrideParamId = null, fullscreen = false, showBackToEditButton = false, setFullscreen }) {
   const lpId = overrideParamId ?? paramsId;
   const [landingPageData, setLandingPageData] = useState(null);
   const [showApplyButton, setShowApplyButton] = useState(false);

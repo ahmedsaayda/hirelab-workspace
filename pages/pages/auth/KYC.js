@@ -4,9 +4,9 @@ import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import AuthService from "../../service/AuthService";
+import { partner } from "../../constants";
 
 export default function Example() {
-  const partner = useSelector(getPartner);
   const [me, setMe] = useState(null);
 
   useEffect(() => {

@@ -33,6 +33,7 @@ import ReactSelect from "react-select";
 import { MINIMUM_AI_CHARS } from "../data/constants";
 import { getPartner, selectDarkMode } from "../redux/auth/selectors";
 import CloudinaryUpload from "./CloudinaryUpload";
+import { partner } from "../constants";
 
 const getPhone = (phone) => {
   if (phone?.[0] === "+") return phone;
@@ -58,7 +59,6 @@ const DynamicForm = ({
 }) => {
   const socket = useRef();
   const socketPing = useRef();
-  const partner = useSelector(getPartner);
   const [loom, setLoom] = useState(null);
   const darkMode = useSelector(selectDarkMode);
 

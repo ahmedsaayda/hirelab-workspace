@@ -30,7 +30,6 @@ import TestBranding from "./pages/testBranding.jsx";
 
 const PublicPages = () => {
   const router = useRouter();
-  const partner = useSelector(getPartner);
 
   useEffect(() => {
     const checkUser = async () => {

@@ -19,9 +19,9 @@ import { DragDropContext as BeautifulDragDropContext, Droppable as BeautifulDrop
 import {PlusOutlined} from "@ant-design/icons";
 const { TextArea } = Input;
 
-export default function FormEdit() {
+export default function FormEdit({paramsId}) {
   const router = useRouter();
-  const { lpId } = router.query;
+  const lpId = paramsId;
   const [landingPageData, setLandingPageData] = useState(null);
   const [questionModal, setQuestionModal] = useState(false);
   const [formSections, setFormSections] = useState([]);
@@ -532,6 +532,7 @@ export default function FormEdit() {
                       {isEditingForm ? (
                         <>
                           <EditorRender
+                            lpId={lpId}
                             landingPageData={landingPageData?.form}
                             setLandingPageData={(e) => {
                               const newForm = e(landingPageData?.form);

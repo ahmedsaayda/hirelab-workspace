@@ -1,3 +1,4 @@
+"use client"
 import Cookies from "js-cookie";
 import React, { useState } from "react";
 import Link from "next/link";
@@ -14,7 +15,6 @@ import { Logo } from "../Landing/Logo";
 import { SlimLayout } from "../Landing/SlimLayout";
 
 const Login = () => {
-  const partner = useSelector(getPartner);
   const router = useRouter();
   const loading = useSelector(selectLoading);
 
@@ -32,7 +32,7 @@ const Login = () => {
     const me = await AuthService.me();
     if (!me?.data) return message.error("Could not load user data");
 
-    store.dispatch(login(me.data));
+    store.dispatch(login(me.data.me));
 
     router.push("/dashboard");
   };
@@ -95,18 +95,6 @@ const Login = () => {
             </Link>
           </div>
 
-          {/* <p className="mt-3 text-[#667085] dark:text-gray-300 text-base font-normal">
-          Don’t have an account?{" "}
-          <Link
-            to="/auth/register"
-            className="font-medium text-blue-600 hover:underline"
-          >
-            Sign up
-          </Link>{" "}
-          {partner?.trialDays > 0
-            ? `for a ${partner?.trialDays} day free trial.`
-            : "to get started."}
-        </p> */}
         </form>
       </SlimLayout>
     </div>

@@ -61,6 +61,7 @@ import {
   selectLoading,
   selectUser,
 } from "../../redux/auth/selectors";
+import { partner } from "../../constants.js";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -76,7 +77,6 @@ export default function Example({
   const [collapsed, setCollapsed] = useState(false);
   const [selectedTopRightOption, setSelectedTopRightOption] = useState("");
   const user = useSelector(selectUser);
-  const partner = useSelector(getPartner);
   const loading = useSelector(selectLoading);
   const [showInviteModal, setShowInviteModal] = useState(false);
 
@@ -184,7 +184,7 @@ export default function Example({
                                 {category.subitems.map((item) => (
                                   <Link
                                     key={item.name}
-                                    to={item.href}
+                                    href={item.href}
                                     target={item?.target}
                                     className={classNames(
                                       item.current
@@ -236,7 +236,7 @@ export default function Example({
                               {subMenu.items.map((team) => (
                                 <li key={team.name}>
                                   <Link
-                                    to={team.href}
+                                    href={team.href}
                                     target={team?.target}
                                     className={classNames(
                                       team.current
@@ -313,7 +313,7 @@ export default function Example({
                         {category.subitems.map((item) => (
                           <Link
                             key={item.name}
-                            to={item.href}
+                            href={item.href}
                             target={item?.target}
                             className={classNames(
                               item.current
@@ -539,7 +539,7 @@ export default function Example({
                                 >
                                 {item.logo && <item.logo className="w-4 h-4" />}
                                 <Link
-                                  to={item.href}
+                                  href={item.href}
                                   target={item?.target}
                                   onClick={item.onClick}
                                   

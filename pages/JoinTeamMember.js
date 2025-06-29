@@ -14,9 +14,9 @@ import { login } from "./redux/auth/actions";
 import { getPartner, selectLoading } from "./redux/auth/selectors";
 import { store } from "./redux/store";
 import AuthService from "./service/AuthService";
+import { partner } from "./constants";
 
 const JoinTeamMember = () => {
-  const partner = useSelector(getPartner);
   const router = useRouter();
   const loading = useSelector(selectLoading);
 

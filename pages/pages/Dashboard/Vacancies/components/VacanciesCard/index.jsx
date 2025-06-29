@@ -223,7 +223,7 @@ export default function VacanciesCard({
                   {
                     key: "197",
                     label: (
-                      <Link to={`/dashboard/ats?id=${props._id}`}>ATS</Link>
+                      <Link href={`/dashboard/ats?id=${props._id}`}>ATS</Link>
                     ),
                   },
                   {
@@ -256,7 +256,7 @@ export default function VacanciesCard({
             </Dropdown>
 
             <Link
-              to={`/lp/${record._id}`}
+              href={`/lp/${record._id}`}
               target="_blank"
               className="flex justify-center py-2 w-full bg-gray-50_01"
             >
@@ -264,7 +264,7 @@ export default function VacanciesCard({
             </Link>
 
             <Link
-              to={`/edit-page/${record._id}`}
+              href={`/edit-page/${record._id}`}
               className="flex w-full justify-center rounded-[14px] rounded-s-none bg-gray-50_01  py-2"
             >
               <Pencil className="h-4 w-4 !text-gray-500 hover:text-black" />

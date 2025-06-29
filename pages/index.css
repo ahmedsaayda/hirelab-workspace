@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --indigo-50: #edfaff;
   --indigo-100: #d6f2ff;
@@ -10,8 +14,6 @@
   --indigo-800: #085ec5;
   --indigo-900: #0d519b;
   --indigo-950: #0e315d;
-}
-:root {
   --blue-50: #edfaff;
   --blue-100: #d6f2ff;
   --blue-200: #b5eaff;
@@ -25,9 +27,7 @@
   --blue-950: #0e315d;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
 
 body {
   min-width: 250px;

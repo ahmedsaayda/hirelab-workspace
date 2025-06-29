@@ -213,7 +213,7 @@ const VacancyDetails = () => {
                     loading={loading}
                   >
                     <Link
-                      to="#"
+                      href="#"
                       onClick={handleClick}
                       style={{ textDecoration: "none" }}
                     >

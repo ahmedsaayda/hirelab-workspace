@@ -95,8 +95,8 @@ export const Template2 = React.memo(({
     similarJobsTitleRef,
   } = useFooterHover();
   const { handleItemClick } = useFocusContext();
-  const currentLocation = useLocation();
-  const currentPath = currentLocation?.pathname?.split("/")[1];
+  const router = useRouter();
+  const currentPath = router.pathname?.split("/")[1];
 
   return (
     <div ref={sectionRef} className="w-full">
@@ -246,8 +246,8 @@ const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings })
     similarJobsTitleRef,
   } = useFooterHover();
   const { handleItemClick } = useFocusContext();
-  const currentLocation = useLocation();
-  const currentPath = currentLocation?.pathname?.split("/")[1];
+  const router = useRouter();
+  const currentPath = router.pathname?.split("/")[1];
 
   return (
     <div ref={sectionRef} className="w-full">
@@ -400,8 +400,8 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
     similarJobsTitleRef,
   } = useFooterHover();
   const { handleItemClick } = useFocusContext();
-  const currentLocation = useLocation();
-  const currentPath = useMemo(() => currentLocation?.pathname?.split("/")[1], [currentLocation?.pathname]);
+  const router = useRouter();
+  const currentPath = useMemo(() => router.pathname?.split("/")[1], [router.pathname]);
 
   // Use props if provided, otherwise fall back to local state (for backward compatibility)
   const [localSimilarJobs, setLocalSimilarJobs] = useState([]);

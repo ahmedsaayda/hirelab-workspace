@@ -40,7 +40,7 @@ const logger = {
 
 // Custom JSON viewer component with syntax highlighting and collapsible sections
 const JsonViewer = ({ data }) => {
-  const [isCollapsed, setIsCollapsed] = useState<{ [key]: boolean }>({});
+  const [isCollapsed, setIsCollapsed] = useState({});
 
   const toggleCollapse = (key) => {
     setIsCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
@@ -140,9 +140,9 @@ const PromptViewer = ({ prompt }) => {
 function PasteUrlModalExperimental({ onClose }) {
   const COMPONENT_NAME = 'PasteUrlModalExperimental';
   
-  const [url, setUrl] = useState<string>("");
-  const [urlError, setUrlError] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState<number>(0);
+  const [url, setUrl] = useState("");
+  const [urlError, setUrlError] = useState(null);
+  const [currentStep, setCurrentStep] = useState(0);
   
   // Scraping state
   const [scrapingState, setScrapingState] = useState({
@@ -152,18 +152,18 @@ function PasteUrlModalExperimental({ onClose }) {
   });
 
   // AI processing state
-  const [processingState, setProcessingState] = useState<ProcessingState>({
+  const [processingState, setProcessingState] = useState({
     loading: false,
     error: null
   });
 
   // Preview state
   const [showPreview, setShowPreview] = useState(false);
-  const [previewData, setPreviewData] = useState<any>(null);
-  const [activePreview, setActivePreview] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState(null);
+  const [activePreview, setActivePreview] = useState(null);
 
   // AI model selection
-  const [selectedAiModel, setSelectedAiModel] = useState<'gpt' | 'gemini'>('gpt');
+  const [selectedAiModel, setSelectedAiModel] = useState('gpt');
 
   // Log component mount and cleanup
   useEffect(() => {

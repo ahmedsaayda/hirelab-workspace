@@ -9,6 +9,7 @@ import { currencies } from "../../data/currencies";
 import { getPartner, selectLoading } from "../../redux/auth/selectors";
 import AuthService from "../../service/AuthService";
 import { featureMap } from "../Landing/Pricing";
+import { partner } from "../../constants";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -16,14 +17,13 @@ function classNames(...classes) {
 
 const Subscription = () => {
   const [auth, setAuth] = useState(null);
-  const partner = useSelector(getPartner);
   const [frequency, setFrequency] = useState(0);
   const router = useRouter();;
   const loading = useSelector(selectLoading);
 
   const myCurrency = useMemo(
     () => currencies.find((c) => c.iso === partner?.currency)?.symbol ?? "$",
-    [partner]
+    []
   );
 
   useEffect(() => {

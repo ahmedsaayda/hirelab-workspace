@@ -399,12 +399,12 @@ const Category = ({ title, items, onClick, existingItems }) => (
   </div>
 );
 //
-export default function LandingpageEdit() {
+export default function LandingpageEdit({paramsId}) {
   const dispatch = useDispatch();
+  const lpId = paramsId;
   const user = useSelector(selectUser);
   const { setScrollToSection, hoveredField, setHoveredField } = useHover();
   const router = useRouter();
-  const { lpId } = router.query;
   const [landingPageData, setLandingPageData] = useState(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const [addMenuItem, setAddMenuItem] = useState(false);
@@ -1239,6 +1239,7 @@ export default function LandingpageEdit() {
         setLandingPageData={setLandingPageData}
         reload={fetchData}
         isAutoSaving={isAutoSaving}
+        lpId={lpId}
       />
       <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3">
         <div

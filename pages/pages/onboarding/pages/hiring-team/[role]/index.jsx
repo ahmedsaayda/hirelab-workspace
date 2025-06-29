@@ -8,7 +8,7 @@ const { Text } = Typography;
 
 
 export default function MemberDetails() {
-  const { role } = useParams();
+  const role = "recruiter";
   const router = useRouter();;
   const [selectedRole, setSelectedRole] = useState(
     role || "recruiter"
