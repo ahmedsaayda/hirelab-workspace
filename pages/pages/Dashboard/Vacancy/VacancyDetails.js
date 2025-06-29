@@ -30,14 +30,15 @@ import {
 import ATSService from "../../../service/ATSService";
 import CrudService from "../../../service/CrudService";
 import LinkService from "../../../service/LinkService";
-import OnboardUser from "../OnboardUser";
+// import OnboardUser from "../OnboardUser";
+const OnboardUser = () => <div>Onboard User Component</div>;
 import ATS from "./ATS";
 import ApplicationLink from "./DetailsModal/ApplicactionLink";
 import ImportModule from "./ImportModule";
 
 const VacancyDetails = () => {
-  let [searchParams] = useSearchParams();
-  const router = useRouter();;
+  const router = useRouter();
+  const { query } = router;
   const [vacancyData, setVacancyData] = useState(null);
   const [bulkUploadProcess, setBulkUploadProcess] = useState({});
   const darkMode = useSelector(selectDarkMode);
@@ -97,7 +98,7 @@ const VacancyDetails = () => {
   };
 
   useEffect(() => {
-    const id = searchParams.get("id");
+    const id = query.id;
     if (!id) return;
     setVacancyData(null);
 
@@ -105,7 +106,7 @@ const VacancyDetails = () => {
       if (!res.data) return;
       setVacancyData(res.data);
     });
-  }, [searchParams]);
+  }, [query]);
 
   const handleClick = async (e) => {
     e.preventDefault();

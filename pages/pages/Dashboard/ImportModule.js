@@ -5,7 +5,7 @@ import { MdDelete } from "react-icons/md";
 import { useSelector } from "react-redux";
 import qrcode from "yaqrcode";
 
-import { handleXLSXTOJSON } from "../components/Board/services/utils";
+import { handleXLSXTOJSON } from "../../components/Board/services/utils";
 
 import {
   selectDarkMode,

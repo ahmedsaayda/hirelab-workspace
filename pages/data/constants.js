@@ -219,3 +219,60 @@ export const personalDataCollection = [
     placeholder: "Enter your phone",
   },
 ];
+
+export const eeoForm = [
+  {
+    fieldName: "race",
+    label: "Race/Ethnicity",
+    type: "select",
+    required: false,
+    placeholder: "Select race/ethnicity",
+    options: [
+      { value: "white", label: "White" },
+      { value: "black", label: "Black or African American" },
+      { value: "hispanic", label: "Hispanic or Latino" },
+      { value: "asian", label: "Asian" },
+      { value: "native_american", label: "American Indian or Alaska Native" },
+      { value: "pacific_islander", label: "Native Hawaiian or Other Pacific Islander" },
+      { value: "other", label: "Other" },
+      { value: "prefer_not_to_say", label: "Prefer not to say" },
+    ],
+  },
+  {
+    fieldName: "gender",
+    label: "Gender",
+    type: "select",
+    required: false,
+    placeholder: "Select gender",
+    options: [
+      { value: "male", label: "Male" },
+      { value: "female", label: "Female" },
+      { value: "non_binary", label: "Non-binary" },
+      { value: "prefer_not_to_say", label: "Prefer not to say" },
+    ],
+  },
+  {
+    fieldName: "veteran_status",
+    label: "Veteran Status",
+    type: "select",
+    required: false,
+    placeholder: "Select veteran status",
+    options: [
+      { value: "veteran", label: "Veteran" },
+      { value: "not_veteran", label: "Not a veteran" },
+      { value: "prefer_not_to_say", label: "Prefer not to say" },
+    ],
+  },
+  {
+    fieldName: "disability_status",
+    label: "Disability Status",
+    type: "select",
+    required: false,
+    placeholder: "Select disability status",
+    options: [
+      { value: "disabled", label: "Yes, I have a disability" },
+      { value: "not_disabled", label: "No, I do not have a disability" },
+      { value: "prefer_not_to_say", label: "Prefer not to say" },
+    ],
+  },
+];

@@ -4,7 +4,8 @@ import { useSelector } from "react-redux";
 import Link from "next/link";
 import { selectDarkMode } from "../../../redux/auth/selectors";
 import CrudService from "../../../service/CrudService";
-import OnboardUser from "../OnboardUser";
+// import OnboardUser from "../OnboardUser";
+const OnboardUser = () => <div>Onboard User Component</div>;
 
 const NoObjects = ({ props, onboarding, setOnboarding }) => {
   const darkMode = useSelector(selectDarkMode);

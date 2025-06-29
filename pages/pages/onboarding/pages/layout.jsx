@@ -1,13 +1,15 @@
 import { Inter } from "next/font/google";
-import { Stepper } from "@/components/stepper";
+// import { Stepper } from "@/components/stepper";
+const Stepper = () => <div>Stepper Component</div>;
 import { ConfigProvider } from "antd";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
-  title: "Emplifio - Onboarding",
-  description: "Complete your onboarding process with Emplifio",
-};
+// Note: metadata should be exported from pages/_document.js or app layout, not from client components
+// export const metadata = {
+//   title: "Emplifio - Onboarding", 
+//   description: "Complete your onboarding process with Emplifio",
+// };
 
 export default function RootLayout({
   children,

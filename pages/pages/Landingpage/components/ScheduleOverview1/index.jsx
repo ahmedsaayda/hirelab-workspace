@@ -1,7 +1,15 @@
-
 import React, { useState } from "react";
-import { ReactComponent as Icon } from '../../../../assets/img/undraw_time-management_fedt.svg';
-import { Heading, Text } from "..";
+import { Button, Heading, Img, Text } from "../../components";
+// import { ReactComponent as Icon } from "../../../../assets/img/undraw_time-management_fedt.svg";
+// Placeholder Icon component for Next.js
+const Icon = ({ className, style }) => (
+  <div className={className} style={style}>
+    <svg width="100" height="100" viewBox="0 0 100 100" fill="currentColor">
+      <circle cx="50" cy="50" r="30" stroke="currentColor" fill="none" strokeWidth="3"/>
+      <path d="M50 20 L50 50 L70 50" stroke="currentColor" strokeWidth="3" fill="none"/>
+    </svg>
+  </div>
+);
 import { ClockCircleOutlined } from '@ant-design/icons';
 export default function ScheduleOverview1({ filteredSchedule }) {
 

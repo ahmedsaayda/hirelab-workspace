@@ -23,8 +23,18 @@ import { useRouter } from "next/router";
 import { selectLoading } from "../../../../redux/auth/selectors";
 import ATSService from "../../../../service/ATSService";
 import CrudService from "../../../../service/CrudService";
-import { Img } from "../../../auth/components/Img";
-import UserDetail from "../../../auth/components/UserDetail";
+// import { Img } from "../../../auth/components/Img";
+// import UserDetail from "../../../auth/components/UserDetail";
+// Placeholder components
+const Img = ({ src, alt, className }) => (
+  <img src={src} alt={alt} className={className} />
+);
+const UserDetail = ({ userDetailsHeading, userDetailsDescription }) => (
+  <div className="flex flex-col gap-2">
+    <h3 className="font-semibold">{userDetailsHeading}</h3>
+    <p className="text-gray-600">{userDetailsDescription}</p>
+  </div>
+);
 import { Footer } from "../../Footer";
 // import {useDropzone} from 'react-dropzone'
 import { DeleteOutlined, FilePdfOutlined } from "@ant-design/icons";
@@ -37,10 +47,10 @@ import UploadService from "../../../../service/UploadService";
 
 function OnlineApply() {
   // const {getRootProps, getInputProps} = useDropzone()
-  let [searchParams] = useSearchParams();
+  const router = useRouter();
+  const { query } = router;
   const id = "demo";
   const [vacancyData, setVacancyData] = useState({});
-  const router = useRouter();;
   const [steps, setSteps] = useState(1);
   const fileInputRef = useRef(null);
   const [check, setCheck] = useState(false);
@@ -56,7 +66,7 @@ function OnlineApply() {
   });
 
   useEffect(async () => {
-    // const id = searchParams.get("id");
+    // const id = query.id;
     if (!id) return;
     setVacancyData(null);
 
@@ -127,12 +137,12 @@ function OnlineApply() {
         formData,
         funnelUUID: localStorage?.[`funnelUUID_${id}`],
         tracking: {
-          utm_campaign: searchParams.get("utm_campaign") ?? null,
-          utm_source: searchParams.get("utm_source") ?? null,
-          utm_medium: searchParams.get("utm_medium") ?? null,
-          utm_content: searchParams.get("utm_content") ?? null,
-          utm_term: searchParams.get("utm_term") ?? null,
-          salesforce_uuid: searchParams.get("salesforce_uuid") ?? null,
+          utm_campaign: query.utm_campaign ?? null,
+          utm_source: query.utm_source ?? null,
+          utm_medium: query.utm_medium ?? null,
+          utm_content: query.utm_content ?? null,
+          utm_term: query.utm_term ?? null,
+          salesforce_uuid: query.salesforce_uuid ?? null,
         },
       });
 

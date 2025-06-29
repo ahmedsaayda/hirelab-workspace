@@ -7,7 +7,8 @@ import LinkService from "../../../../service/LinkService";
 const ApplicationLink = ({ shortLink, setShortLink, setlinkModal }) => {
   const [optRequired, setOptRequired] = useState(true);
   const [editedValue, setEditedValue] = useState(shortLink);
-  let [searchParams] = useSearchParams();
+  const router = useRouter();
+  const { query } = router;
 
   return (
     <>
@@ -75,7 +76,7 @@ const ApplicationLink = ({ shortLink, setShortLink, setlinkModal }) => {
             type="primary"
             onClick={async () => {
               const res = await LinkService.updateShortLink(
-                `apply/${searchParams.get("id")}`,
+                `apply/${query.id}`,
                 editedValue
               );
               console.log(res);

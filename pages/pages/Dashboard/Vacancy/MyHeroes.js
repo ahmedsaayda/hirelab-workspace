@@ -22,8 +22,15 @@ import {
 } from "../../../redux/auth/selectors";
 import ATSService from "../../../service/ATSService";
 import CrudService from "../../../service/CrudService";
-import InterviewBookCall from "../../InterviewBookCall";
-import OnboardUser from "../OnboardUser";
+// import InterviewBookCall from "../../InterviewBookCall";
+// import OnboardUser from "../OnboardUser";
+// Placeholder components
+const InterviewBookCall = ({ testHero }) => (
+  <div>Interview Book Call Component - {testHero?.name}</div>
+);
+const OnboardUser = () => (
+  <div>Onboard User Component</div>
+);
 import MyHeroesTable from "./MyHeroes_Table";
 import NoObjects from "./NoObjects";
 
@@ -57,8 +64,8 @@ const PAGE_LIMIT = 9;
 
 const MyHeroes = () => {
   const user = useSelector(selectUser);
-  let [searchParams] = useSearchParams();
-  const router = useRouter();;
+  const router = useRouter();
+  const { query } = router;
   const [vacancies, setVacancies] = useState([]);
   const [singleVacancy, setSingleVacancy] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -153,15 +160,15 @@ const MyHeroes = () => {
 
   useEffect(() => {
     const getSingle = async () => {
-      const id = searchParams.get("id");
-      const isNew = searchParams.get("new");
+      const id = query.id;
+      const isNew = query.new;
       if (!id) return;
 
       const searchedVacancy = await CrudService.getSingle("Hero", id);
       setSingleVacancy({ ...searchedVacancy.data, isNew: isNew === "true" });
     };
     getSingle();
-  }, [searchParams]);
+  }, [query]);
 
   // Function to handle the input change with debounce
   const searchTimer = useRef();

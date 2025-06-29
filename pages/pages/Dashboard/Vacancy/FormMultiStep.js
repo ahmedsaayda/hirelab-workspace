@@ -36,7 +36,17 @@ import Item from "antd/es/list/Item";
 import CloudinaryUpload from "../../../components/CloudinaryUpload";
 import { MINIMUM_AI_CHARS } from "../../../data/constants";
 import { getPartner, selectDarkMode } from "../../../redux/auth/selectors";
-import ShowPassword from "../PartnerSettings/ShowPassword";
+// import ShowPassword from "../PartnerSettings/ShowPassword";
+const ShowPassword = ({ className, placeholder, onChange, value, readOnly, onPressEnter }) => (
+  <Input.Password 
+    className={className}
+    placeholder={placeholder}
+    onChange={onChange}
+    value={value}
+    readOnly={readOnly}
+    onPressEnter={onPressEnter}
+  />
+);
 import ChooseAvatar from "./ChooseAvatar";
 import { partner } from "../../../constants";
 

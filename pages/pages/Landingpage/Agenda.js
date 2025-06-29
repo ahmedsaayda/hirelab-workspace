@@ -10,8 +10,39 @@ import ScheduleOverview1 from "./components/ScheduleOverview1";
 import ScheduleOverview from "./components/ScheduleOverview";
 import Calendar from "react-calendar";
 
-import { ReactComponent as Dotted2Agenda } from "../../assets/img/dotted2Agenda.svg";
-import { ReactComponent as DottedAgenda } from "../../assets/img/dottedAgenda.svg";
+// import { ReactComponent as Dotted2Agenda } from "../../assets/img/dotted2Agenda.svg";
+// import { ReactComponent as DottedAgenda } from "../../assets/img/dottedAgenda.svg";
+// Placeholder SVG components for Next.js
+const Dotted2Agenda = ({ className, style }) => (
+  <div className={className} style={style}>
+    <svg width="50" height="50" viewBox="0 0 50 50" fill="currentColor">
+      <circle cx="5" cy="5" r="2"/>
+      <circle cx="15" cy="5" r="2"/>
+      <circle cx="25" cy="5" r="2"/>
+      <circle cx="35" cy="5" r="2"/>
+      <circle cx="45" cy="5" r="2"/>
+      <circle cx="5" cy="15" r="2"/>
+      <circle cx="15" cy="15" r="2"/>
+      <circle cx="25" cy="15" r="2"/>
+      <circle cx="35" cy="15" r="2"/>
+      <circle cx="45" cy="15" r="2"/>
+    </svg>
+  </div>
+);
+const DottedAgenda = ({ className, style }) => (
+  <div className={className} style={style}>
+    <svg width="50" height="50" viewBox="0 0 50 50" fill="currentColor">
+      <circle cx="10" cy="10" r="2"/>
+      <circle cx="20" cy="10" r="2"/>
+      <circle cx="30" cy="10" r="2"/>
+      <circle cx="40" cy="10" r="2"/>
+      <circle cx="10" cy="20" r="2"/>
+      <circle cx="20" cy="20" r="2"/>
+      <circle cx="30" cy="20" r="2"/>
+      <circle cx="40" cy="20" r="2"/>
+    </svg>
+  </div>
+);
 import { useSelector } from "react-redux";
 import { getThemeData } from "../../utils/destructureTheme.js";
 import useTemplatePalette from "../../hooks/useTemplatePalette";

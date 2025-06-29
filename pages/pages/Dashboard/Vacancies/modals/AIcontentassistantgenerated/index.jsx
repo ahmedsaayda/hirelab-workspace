@@ -1,6 +1,11 @@
 import React from "react";
 import { default as ModalProvider } from "react-modal";
-import { CloseSVG } from "../../assets/images";
+// import { CloseSVG } from "../../assets/images";
+const CloseSVG = ({ onClick, fillColor }) => (
+  <svg onClick={onClick} style={{ fill: fillColor, cursor: 'pointer' }} width="16" height="16" viewBox="0 0 24 24">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+  </svg>
+);
 import { Button, Heading, Img, Input, Text, TextArea } from "../../components";
 import AIContentAssistantGeneratedInputfield from "../../components/AIContentAssistantGeneratedInputfield";
 

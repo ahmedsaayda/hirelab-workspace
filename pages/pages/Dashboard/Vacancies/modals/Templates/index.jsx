@@ -1,6 +1,10 @@
 import React from "react";
 import { default as ModalProvider } from "react-modal";
-import { CloseSVG } from "../../assets/images";
+const CloseSVG = ({ onClick, fillColor, height = 16, width = 16 }) => (
+  <svg onClick={onClick} style={{ fill: fillColor, cursor: 'pointer' }} width={width} height={height} viewBox="0 0 24 24">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+  </svg>
+);
 import { Button, Heading, Img, Input } from "../../components";
 import TemplatesButtonbase from "../../components/TemplatesButtonbase";
 import TemplatesButtonbase1 from "../../components/TemplatesButtonbase1";

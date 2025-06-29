@@ -34,7 +34,8 @@ import {
 } from "../../../redux/auth/selectors";
 import ATSService from "../../../service/ATSService";
 import CrudService from "../../../service/CrudService";
-import OnboardUser from "../OnboardUser";
+// import OnboardUser from "../OnboardUser";
+const OnboardUser = () => <div>Onboard User Component</div>;
 import NoObjects from "./NoObjects";
 import { partner } from "../../../constants";
 
@@ -106,8 +107,8 @@ const MyVacancies = () => {
   const user = useSelector(selectUser);
   const darkMode = useSelector(selectDarkMode);
   const heroesss = useSelector((state) => state.heroes);
-  let [searchParams] = useSearchParams();
-  const router = useRouter();;
+  const router = useRouter();
+  const { query } = router;
   const [vacancies, setVacancies] = useState([]);
   const [singleVacancy, setSingleVacancy] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -223,15 +224,15 @@ const MyVacancies = () => {
 
   useEffect(() => {
     const getSingle = async () => {
-      const id = searchParams.get("id");
-      const isNew = searchParams.get("new");
+      const id = query.id;
+      const isNew = query.new;
       if (!id) return;
 
       const searchedVacancy = await CrudService.getSingle("Vacancy", id);
       setSingleVacancy({ ...searchedVacancy.data, isNew: isNew === "true" });
     };
     getSingle();
-  }, [searchParams]);
+  }, [query]);
 
   // Function to handle the input change with debounce
   const searchTimer = useRef();

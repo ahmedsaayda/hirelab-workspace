@@ -13,7 +13,14 @@ import MultiStepComponent from "../../../components/MultiStepComponent";
 import { getPartner } from "../../../redux/auth/selectors";
 import CalendlyService from "../../../service/CalendlyService";
 import CrudService from "../../../service/CrudService";
-import { voices } from "../../InterviewBookCall";
+// import { voices } from "../../InterviewBookCall";
+// Placeholder voices object
+const voices = {
+  en: { label: "English" },
+  es: { label: "Spanish" },
+  fr: { label: "French" },
+  de: { label: "German" },
+};
 import FormMultiStep from "./FormMultiStep";
 import { partner } from "../../../constants";
 // import getFormPrompt from "./getFormPrompt";
@@ -154,8 +161,8 @@ const interviewTypes = [
 ];
 
 const HeroEdit = () => {
-  let [searchParams] = useSearchParams();
-  const router = useRouter();;
+  const router = useRouter();
+  const { query } = router;
   const [vacancyData, setVacancyData] = useState(null);
   const vidRef = useRef();
   const [eventTypes, setEventTypes] = useState([]);
@@ -172,7 +179,7 @@ const HeroEdit = () => {
   }, [vidRef]);
 
   useEffect(() => {
-    const id = searchParams.get("id");
+    const id = query.id;
     if (!id) return;
 
     CrudService.getSingle("Hero", id).then((res) => {
@@ -180,7 +187,7 @@ const HeroEdit = () => {
       setVacancyData(res.data);
       console.log(res.data);
     });
-  }, [searchParams]);
+  }, [query]);
 
   if (!vacancyData) return <Skeleton active />;
 
@@ -220,7 +227,7 @@ const HeroEdit = () => {
               ...vacancyData,
             }}
             onFinish={async (formData) => {
-              const id = searchParams.get("id");
+              const id = query.id;
               if (!id) return;
 
               if (
@@ -236,7 +243,7 @@ const HeroEdit = () => {
               router.push(`/dashboard/heroes`);
             }}
             onNext={async (formData) => {
-              const id = searchParams.get("id");
+              const id = query.id;
               if (!id) return;
 
               await CrudService.update("Hero", id, {
