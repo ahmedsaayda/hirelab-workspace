@@ -1,0 +1,63 @@
+{
+  "rule 0": "The schema must be respected , vacancyTitle field is very important and must be tottaly filled  it is the title of the vacancy . I provided the schema and the vacancy exemple for you as a guide and the response must be the barebone json object with the vacancy fields only , nothing else no comments no explanations no nothing and especially not nasted objects or fields like VacancyExemple",
+  "rule 00:": "All provided fields are required ",
+  "rule 000:": "in the schema the field called InstructionsForAi is just for you to knwo what to do and must naver be included in the response",
+  "rule 1": "The default fields in the  schema are specific to mongoose and our backend , you don't have to use their content in the response",
+  "rule 2": "The response must be the a barebone json object with the vacancy fields only , nothing else no comments no explanations no nothing",
+  "rule 3": "The provided Vacancy Exemple is just for reference and must be used as a guide , and not using it's content directly",
+  "rule 4": "In the specifications field we must have 3 specifications and are Benefits,Tasks and Requirements each item must be  filled with bullet points as much as possible but they need to be extracted from the content. don't limit yourself to the provided example. please use all the scraped data conetent here. must return 8 bullet points for each specification. bullets must never be empty.The max lenght of each bullet point is 100 characters and for design reason each bullet point must not be shorter then 60 characters",
+  "rule 5": "Some special fields like salary , hours , locations must be correctly filled  . don't  came up with random data like not disclosed or not specified ...",
+  "rule 6": "fields of names , emails , phone numbers , links , etc must be correctly filled  . don't  came up with random data.",
+  "rule 7": "For fields like agenda , company facts , about the company , etc , try your best to get the content from the provided data(scraped url , job post , user provided data) other wise fill them with generic content based on the available context",
+  "rule 8": "All icons must came from react lucide icons library",
+  "rule 9": "Our system and design require the fields to have a maximum lenght in order to not break ,  below is a list with the maximum lenght of each field and must be respected",
+  "rule 10": "vacancyTitle is a must so if it is not provided in the provided content please generate it based on the context.",
+  "rule 11": "Add Salary (numbers only) : Use absolute number or range + currency",
+  "rule 12": "Location in db is always and array and we add `Remote` if it is remote , `Hybrid` if it is hybrid and we add the strings of the cities when they exist",
+  "rule 13": "IF the vacancy is full time then hoursRange is false , hoursMin is 40 and hoursUnit is Week",
+  "rule 14": "About jobDescription the Write an engaging and inspiring job description that fits the tone, values, and brand voice of the company. The copy should speak directly to the ideal candidate and help them imagine themselves in the role.",
+  "rule 15": "About the aboutTheCompanyDescription :Write an “About the Company” section tailored to the audience that typically applies for these roles. The content should be engaging, strategically framed, and written for professionals who are evaluating whether this company is a platform for their next big move.Requirements: Focus on what makes this company exciting for high-level commercial talent Include elements of the EVP: growth, impact, innovation, leadership, purpose, people Emphasize scale, customer reach, brand equity, and room to drive strategy Help the candidate imagine their impact within the organization Tone should be confident, ambitious, and human — not casual or overly polished Avoid repeating job responsibilities or generic culture phrases Avoid empty descriptors like “global leader” unless paired with specifics",
+  "rule 16": "About the Agende : Generate a realistic, role-specific day agenda to help candidates visually imagine their workday. This section should bring clarity, energy, and relevance — tailored to the rhythms of the job.",
+  "rule 17": "About the companyFacts : Generate a set of 4 or 6 company or corporate facts that communicate the company’s identity, values, and EVP in a way that appeals to potential applicants. These facts should be short, memorable, and specific, and paired with relevant visual icons for visual engagement.",
+  "Fields charachters max length(must be respected)": {
+    "vacancyTitle": 60,
+    "heroDescription": 120,
+    "jobSpecificationTitle": 40,
+    "jobSpecificationDescription": 80,
+    "specifications": {
+      "title": 20,
+      "description": 40,
+      "bulletPoints": 100
+    },
+    "recruiterContactTitle": 40,
+    "recruiterContactText": 120,
+    "recruiterFullname": 20,
+    "recruiterRole": 40,
+    "recruiterEmail": 40,
+    "recruiterPhone": 20,
+    "jobDescriptionTitle": 40,
+    "jobDescriptionSubheader": 80,
+    "jobDescription": 2000,
+
+    "agendaTitle": 40,
+    "agendaDescription": 120,
+
+    "dailyScheduleList": {
+      "eventTitle": 40,
+      "description": 400
+    },
+    "companyFactsTitle": 40,
+    "companyFactsDescription": 80,
+    "companyFacts": {
+      "headingText": 25,
+      "descriptionText": 80
+    },
+    "aboutTheCompanyTitle": 40,
+    "aboutTheCompanyText": 120,
+    "aboutTheCompanyDescription": 500,
+    "footerTitle": 80,
+    "footerDescription": 120,
+    "ctaFooterTitle": 30,
+    "similarJobsTitle": 40
+  }
+}

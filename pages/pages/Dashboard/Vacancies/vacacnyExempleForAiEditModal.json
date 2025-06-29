@@ -1,0 +1,464 @@
+{
+  "Vacancy Exemple": {
+    "// !!hero section": "",
+    "vacancyTitle": "Full Stack Team Lead",
+    "heroDescription": "Join TechCorp as a Software Engineer and be part of building innovative web applications using modern technologies.",
+    "salaryMin": "70000",
+    "salaryMax": "100000",
+    "salaryCurrency": "USD",
+    "salaryTime": "Year",
+    "hoursMin": "40",
+    "hoursMax": "40",
+    "hoursUnit": "Hours",
+    "hoursRange": false,
+    "location": ["Remote", "San Francisco"],
+
+    "// !!job specifications section": "",
+    "jobSpecificationTitle": "Job Specifications",
+    "jobSpecificationDescription": "Key details about the Software Engineer position",
+    "specifications": [
+      {
+        "title": "Benefits",
+        "description": "What we offer",
+        "bulletPoints": [
+          { "bullet": "Comprehensive health insurance" },
+          { "bullet": "Remote work options" },
+          { "bullet": "Competitive salary" },
+          { "bullet": "Professional development opportunities" }
+        ]
+      },
+      {
+        "title": "Tasks",
+        "description": "Your responsibilities",
+        "bulletPoints": [
+          { "bullet": "Develop high-quality web applications" },
+          { "bullet": "Collaborate with cross-functional teams" },
+          { "bullet": "Debug and fix issues" },
+          { "bullet": "Participate in code reviews" }
+        ]
+      },
+      {
+        "title": "Requirements",
+        "description": "What you need",
+        "bulletPoints": [
+          { "bullet": "Proficiency in JavaScript" },
+          { "bullet": "Experience with React" },
+          { "bullet": "Knowledge of Node.js" },
+          { "bullet": "2+ years of development experience" }
+        ]
+      }
+    ],
+
+    "// !!recruiter contact section": "",
+    "recruiterContactTitle": "Contact Us",
+    "recruiterContactText": "Interested in this position? Reach out to our recruitment team.",
+    "recruiters": [
+      {
+        "recruiterFullname": "Jane Smith",
+        "recruiterRole": "Senior Recruiter",
+        "recruiterEmail": "jane.smith@techcorp.com",
+        "recruiterPhone": "+1 (555) 123-4567"
+      }
+    ],
+
+    "// !!job description section": "",
+    "jobDescriptionTitle": "Job Description",
+    "jobDescriptionSubheader": "About the position",
+    "jobDescription": "As a Software Engineer at TechCorp, you will be responsible for developing and maintaining web applications using JavaScript, React, and Node.js. You'll work closely with product managers, designers, and other engineers to build high-quality, scalable solutions. We're looking for someone who is passionate about writing clean, efficient code and enjoys solving complex problems.",
+
+    "// !!agenda section": "",
+    "agendaTitle": "A Day in the Life",
+    "agendaDescription": "Here's what a typical day looks like for our Software Engineers",
+    "dailyScheduleList": [
+      {
+        "dateTimeSlot": {
+          "startTime": "02:00",
+          "endTime": "04:00"
+        },
+        "eventTitle": "Morning Check-In & Team Sync",
+        "description": "Morning Check-In & Team Sync"
+      },
+      {
+        "dateTimeSlot": {
+          "startTime": "05:00",
+          "endTime": "07:00"
+        },
+        "eventTitle": "Review Project Timelines & Milestones",
+        "description": "Review Project Timelines & Milestones"
+      }
+    ],
+
+    "// !!company facts section": "",
+    "companyFactsTitle": "TechCorp Facts",
+    "companyFactsDescription": "Learn what makes TechCorp a great place to work",
+    "companyFacts": [
+      {
+        "descriptionText": "Leading provider of innovative tech solutions",
+        "headingText": "Industry Leader",
+        "icon": "Trophy"
+      },
+      {
+        "descriptionText": "Founded in 2010, growing steadily ever since",
+        "headingText": "Established",
+        "icon": "Calendar"
+      },
+      {
+        "descriptionText": "Over 500 employees across 10 countries",
+        "headingText": "Global Team",
+        "icon": "Globe"
+      },
+      {
+        "descriptionText": "Focus on continuous learning and growth",
+        "headingText": "Development",
+        "icon": "GraduationCap"
+      }
+    ],
+
+    "// !!about company section": "",
+    "aboutTheCompanyTitle": "About TechCorp",
+    "aboutTheCompanyText": "Innovating since 2010",
+    "aboutTheCompanyDescription": "TechCorp is a leading technology company specializing in web and mobile application development. We work with clients across various industries to create cutting-edge solutions that drive business growth. Our team of talented engineers, designers, and product specialists is dedicated to delivering exceptional results.",
+
+    "// !!footer section": "",
+    "footerTitle": "Ready to join our team?",
+    "footerDescription": "Apply today and take the next step in your career with TechCorp.",
+    "ctaFooterTitle": "Apply Now",
+    "ctaFooterLink": "#apply",
+    "// !!Employee Testimonials": "",
+    "testimonialTitle": "Employee Testimonials",
+    "testimonialSubheader": "What our employees say",
+    "// !!Leader Introduction": "",
+    "leaderIntroductionTitle": "Meet Our CEO",
+    "leaderIntroductionDescription": "With the Core App development team we are on our way to become the worlds user friendliest consumer app for job connections with employers. We are just missing one person. You!",
+    "// !!Image Carousel": "",
+    "photoTitle": "Discover our company",
+    "photoText": "Our company is a forward-thinking technology company specializing in AI-driven automation solutions designed to streamline business operations and elevate customer experiences.",
+    "// !!EVP / Mission": "",
+    "evpMissionTitle": "EVP / Mission",
+    "evpMissionDescription": "EVP / Mission",
+
+    "// !!Candidate Process": "",
+    "candidateProcessTitle": "Candidate Process",
+    "candidateProcessDescription": "Candidate Process",
+    "candidateProcess": [
+      {
+        "candidateProcessText": "Candidate Process",
+        "candidateProcessIcon": "Candidate Process"
+      }
+    ],
+
+    "// !!Growth Path": "",
+    "growthPathTitle": "Growth Path",
+    "growthPathDescription": "Growth Path",
+    "growthPath": [
+      {
+        "title": "Entry-Level",
+        "description": "Entry-Level description",
+        "icon": "Trophy"
+      }
+    ],
+
+    "// !!Video": "",
+    "videoTitle": "Interview tips",
+    "videoDescription": "Mastering the Interview: Essential Tips for Success",
+
+    "// !!Text Box": "",
+    "textBoxTitle": "Text Box",
+    "textBoxText": "Text Box",
+    "textBoxDescription": "Text Box"
+  },
+  "mongoose schema": {
+    "vacancyTitle": { "type": "String" },
+    "heroDescription": {
+      "type": "String"
+    },
+    "heroImage": { "type": "String" },
+    "salaryRange": { "type": "Boolean" },
+    "salaryMin": { "type": "String" },
+    "salaryMax": { "type": "String" },
+    "salaryCurrency": { "type": "String" },
+    "salaryTime": { "type": "String" },
+    "hoursRange": { "type": "Boolean" },
+    "hoursMin": { "type": "String" },
+    "hoursMax": { "type": "String" },
+    "hoursUnit": { "type": "String" },
+    "location": { "type": ["String"] },
+
+    "jobSpecificationTitle": { "type": "String" },
+    "jobSpecificationDescription": {
+      "type": "String"
+    },
+
+    "specifications": {
+      "type": [
+        {
+          "title": {
+            "type": "String"
+          },
+          "description": {
+            "type": "String"
+          },
+          "bulletPoints": {
+            "type": [
+              {
+                "bullet": {
+                  "type": "String"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "default": [
+        {
+          "title": "Benefits",
+          "description": "Benefits description",
+          "enabled": true,
+          "bulletPoints": [
+            {
+              "bullet": "Flexibility with up to 6 months remote work within the EU"
+            }
+          ]
+        },
+
+        {
+          "title": "Tasks",
+          "description": "Tasks description",
+          "enabled": true,
+          "bulletPoints": [
+            {
+              "bullet": "Develop new features for our mobile apps using Swift and iOS & iPadOS SDK."
+            }
+          ]
+        },
+
+        {
+          "title": "Requirements",
+          "description": "Requirements description",
+          "enabled": true,
+          "bulletPoints": [
+            {
+              "bullet": "Conceptualize and develop new app features. 1"
+            }
+          ]
+        }
+      ]
+    },
+
+    "recruiterContactTitle": {
+      "type": "String"
+    },
+    "recruiterContactText": { "type": "String" },
+    "recruiters": {
+      "type": ["Object"],
+      "default": [
+        {
+          "recruiterFullname": "John Doe",
+          "recruiterRole": "HR Manager",
+          "recruiterEmail": "info@xyztech.com",
+          "recruiterPhone": "123-456-7890",
+          "recruiterAvatar": "/dhwise-images/placeholder.png",
+          "recruiterPhoneEnabled": true,
+          "recruiterEmailEnabled": true
+        }
+      ]
+    },
+
+    "jobDescriptionTitle": { "type": "String" },
+    "jobDescriptionSubheader": { "type": "String" },
+    "jobDescription": {
+      "type": "String"
+    },
+
+    "agendaTitle": { "type": "String" },
+    "agendaDescription": {
+      "type": "String"
+    },
+    "dailyScheduleList": {
+      "type": ["Object"],
+      "default": [
+        {
+          "dateTimeSlot": {
+            "type": {
+              "startTime": { "type": "String" },
+              "endTime": { "type": "String" }
+            }
+          },
+          "eventTitle": {
+            "type": "String"
+          },
+          "description": {
+            "type": "String"
+          }
+        }
+      ]
+    },
+
+    "companyFactsTitle": {
+      "type": "String"
+    },
+    "companyFactsDescription": {
+      "type": "String"
+    },
+    "companyFacts": {
+      "type": [
+        {
+          "descriptionText": { "type": "String" },
+          "headingText": { "type": "String" },
+          "icon": {
+            "type": "String"
+          }
+        }
+      ],
+      "default": [
+        {
+          "headingText": "Innovation Leaders",
+          "descriptionText": "Recruitment marketing automation.",
+          "icon": "Trophy"
+        }
+      ]
+    },
+
+    "aboutTheCompanyTitle": {
+      "type": "String"
+    },
+    "aboutTheCompanyText": {
+      "type": "String"
+    },
+    "aboutTheCompanyDescription": {
+      "type": "String"
+    },
+    "aboutTheCompanyImages": {
+      "type": ["String"]
+    },
+
+    "footerTitle": {
+      "type": "String"
+    },
+    "footerDescription": {
+      "type": "String"
+    },
+    "ctaFooterTitle": {
+      "type": "String"
+    },
+    "ctaFooterLink": {
+      "type": "String"
+    },
+    "similarJobsTitle": {
+      "type": "String"
+    },
+
+    "cta1Title": {
+      "type": "String"
+    },
+    "cta2Title": {
+      "type": "String"
+    },
+    "cta1Link": {
+      "type": "String"
+    },
+    "cta2Link": {
+      "type": "String"
+    },
+
+    "ctaApply": {
+      "type": "String"
+    },
+    "testimonialTitle": {
+      "type": "String"
+    },
+    "testimonialSubheader": {
+      "type": "String",
+      "default": "Testimonials"
+    },
+    "testimonials": {
+      "type": [
+        {
+          "comment": { "type": "String" },
+          "fullname": { "type": "String" },
+          "role": { "type": "String" },
+          "avatar": { "type": "String" },
+          "avatarEnabled": { "type": "Boolean" }
+        }
+      ]
+    },
+
+    "leaderIntroductionTitle": {
+      "type": "String"
+    },
+    "leaderIntroductionDescription": {
+      "type": "String"
+    },
+    "leaderIntroductionFullname": { "type": "String" },
+    "leaderIntroductionJobTitle": { "type": "String" },
+
+    "photoTitle": {
+      "type": "String",
+      "default": "Discover our company"
+    },
+    "photoText": { "type": "String" },
+
+    "evpMissionTitle": {
+      "type": "String",
+      "default": "EVP / Mission"
+    },
+    "evpMissionDescription": {
+      "type": "String",
+      "default": "EVP / Mission"
+    },
+    "evpMissionFullname": { "type": "String" },
+    "evpMissionCompanyName": { "type": "String" },
+    "candidateProcessTitle": {
+      "type": "String"
+    },
+    "candidateProcessDescription": {
+      "type": "String"
+    },
+    "candidateProcess": {
+      "type": [
+        {
+          "candidateProcessText": { "type": "String" },
+          "candidateProcessIcon": {
+            "type": "String"
+          }
+        }
+      ]
+    },
+
+    "growthPathTitle": {
+      "type": "String"
+    },
+    "growthPathDescription": {
+      "type": "String"
+    },
+    "growthPath": {
+      "type": [
+        {
+          "title": { "type": "String" },
+          "description": { "type": "String" },
+          "icon": { "type": "String" }
+        }
+      ]
+    },
+
+    "videoTitle": {
+      "type": "String"
+    },
+    "videoDescription": {
+      "type": "String"
+    },
+
+    "textBoxTitle": {
+      "type": "String"
+    },
+    "textBoxText": {
+      "type": "String"
+    },
+    "textBoxDescription": {
+      "type": "String"
+    },
+    "textBoxImage": {
+      "type": "String"
+    }
+  }
+}

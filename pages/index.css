@@ -1,0 +1,311 @@
+:root {
+  --indigo-50: #edfaff;
+  --indigo-100: #d6f2ff;
+  --indigo-200: #b5eaff;
+  --indigo-300: #83dfff;
+  --indigo-400: #48cbff;
+  --indigo-500: #1eadff;
+  --indigo-600: #068fff;
+  --indigo-700: #007bff;
+  --indigo-800: #085ec5;
+  --indigo-900: #0d519b;
+  --indigo-950: #0e315d;
+}
+:root {
+  --blue-50: #edfaff;
+  --blue-100: #d6f2ff;
+  --blue-200: #b5eaff;
+  --blue-300: #83dfff;
+  --blue-400: #48cbff;
+  --blue-500: #1eadff;
+  --blue-600: #068fff;
+  --blue-700: #007bff;
+  --blue-800: #085ec5;
+  --blue-900: #0d519b;
+  --blue-950: #0e315d;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  min-width: 250px;
+  background-color: white;
+}
+
+.text-red {
+  color: #ff2400;
+}
+
+/* Custom scrollbar styles */
+*::-webkit-scrollbar {
+  width: 7px; /* Width of the scrollbar */
+  height: 7px; /* Width of the scrollbar */
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Color of the tracking area */
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #888; /* Color of the scroll thumb */
+  border-radius: 10px; /* Rounded corners on the scroll thumb */
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Color of the scroll thumb on hover */
+}
+
+/* For IE, Edge, and Firefox */
+* {
+  scrollbar-width: thin; /* "auto" or "thin" */
+  scrollbar-color: #888 #f1f1f1; /* thumb and track color */
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 100vh 100vw rgba(0, 0, 0, 0.15) inset;
+  }
+  50% {
+    box-shadow: 0 0 100vh 100vw rgba(0, 0, 0, 0.35) inset;
+  }
+  100% {
+    box-shadow: 0 0 100vh 100vw rgba(0, 0, 0, 0.15) inset;
+  }
+}
+
+.splash {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.ant-modal-content {
+  min-width: 300px;
+}
+
+body {
+  background: #f8f8f8;
+}
+
+.submenu-category-title {
+  color: var(--Gray-for-text, #667085);
+  font-family: Inter;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 20px; /* 166.667% */
+  text-transform: uppercase;
+  margin-block: 8px;
+  margin-left: 8px;
+}
+
+.submenu-item-box {
+  display: flex;
+  height: 48.8px;
+  padding: 8px 4px;
+  margin-block: 4px;
+  align-items: center;
+  gap: 105px;
+  align-self: stretch;
+  border-radius: 12px;
+  cursor: pointer;
+
+  color: var(--Gray-secondary, #344054);
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 24px; /* 150% */
+}
+.submenu-item-icon {
+  width: 24px;
+  height: 24px;
+}
+.submenu-item-box:hover * {
+  stroke: white;
+}
+.submenu-item-box.current * {
+  stroke: white;
+  color: white;
+}
+
+.submenu-retract-button {
+  display: flex;
+  width: 48px;
+  height: 32px;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 8px;
+  background: var(--Primary-blue, #0e87fe);
+}
+
+.topbar {
+  display: flex;
+  padding: 24px 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  align-self: stretch;
+}
+
+.topbar-container {
+  display: flex;
+  padding: 20px 32px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  align-self: stretch;
+  border-radius: 20px;
+  background: var(--Pure-white, #fff);
+}
+
+.topbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+}
+
+.top-search-wrapper {
+  display: flex;
+  padding: 10px 14px;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
+  border-radius: 200px;
+  background: var(--background, #f8f8f8);
+}
+
+.top-right-options {
+  display: flex;
+  height: 44px;
+  padding: 10px 5px;
+  align-items: center;
+  gap: 4px;
+  border-radius: 200px;
+  background: var(--background, #f8f8f8);
+}
+.top-right-inner-circle.active {
+  background: var(--Pure-white, #fff);
+}
+.top-right-inner-circle {
+  display: flex;
+  width: 33px;
+  height: 33px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 200px;
+}
+.top-right-inner-circle > * {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+body {
+  font-family: Inter;
+}
+
+.MuiPickersToolbar-root.MuiPickersLayout-toolbar.MuiDateRangePickerToolbar-root {
+  display: none;
+}
+
+.MuiDialogActions-root.MuiDialogActions-spacing.MuiPickersLayout-actionBar {
+  display: none;
+}
+
+.MuiTypography-root.MuiTypography-subtitle1 {
+  color: #000;
+  text-align: center;
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px; /* 150% */
+}
+
+.MuiDateRangeCalendar-monthContainer {
+  border-right: 1px solid transparent !important;
+}
+
+.blurry-wrapper-text {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(12px);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.ant-modal-mask {
+  backdrop-filter: blur(8px);
+}
+
+.ant-modal {
+  min-width: 60vw;
+}
+
+.hero-img-2 {
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.card-title {
+  display: block; /* Use block display to make sure it takes full width */
+  overflow: hidden; /* Hide any text that goes beyond two lines */
+  white-space: normal; /* Allow the text to wrap */
+  height: 2.8em; /* Set height to fit two lines, adjust if needed */
+  line-height: 1.4em; /* Set line-height to ensure proper spacing */
+}
+.card-titleWithEllipsis {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Limit to 2 lines */
+  line-clamp: 2; /* Limit to 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  height: 2.8em; /* Adjust this based on your line-height */
+  line-height: 1.4em; /* Set line-height */
+}
+
+.highlight-section {
+  position: relative;
+  z-index: 1;
+}
+
+.highlight-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(14, 135, 254, 0.1);
+  border: 2px solid #0e87fe;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes highlight {
+  0% {
+    background-color: rgba(14, 135, 254, 0.1);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.evp-mission-section {
+  scroll-margin-top: 100px;
+}
+
+/* Add scrollbar-hide utility class */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}

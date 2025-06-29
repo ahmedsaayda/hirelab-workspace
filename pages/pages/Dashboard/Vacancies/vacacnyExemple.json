@@ -1,0 +1,348 @@
+{
+  "Vacancy Exemple": {
+    "// !!hero section": "",
+    "vacancyTitle": "Full Stack Team Lead",
+    "heroDescription": "Join TechCorp as a Software Engineer and be part of building innovative web applications using modern technologies.",
+    "salaryMin": "70000",
+    "salaryMax": "100000",
+    "salaryRange": true,
+    "salaryCurrency": "USD",
+    "salaryTime": "Year",
+    "hoursMin": "30",
+    "hoursMax": "40",
+    "hoursUnit": "Hours",
+    "hoursRange": false,
+    "location": ["Remote", "San Francisco"],
+
+    "// !!job specifications section": "",
+    "jobSpecificationTitle": "Job Specifications",
+    "jobSpecificationDescription": "Key details about the Software Engineer position",
+    "specifications": [
+      {
+        "title": "Benefits",
+        "description": "What we offer",
+        "bulletPoints": [
+          { "bullet": "Benefit 1" }
+        
+        ]
+      },
+      {
+        "title": "Tasks",
+        "description": "Your responsibilities",
+        "bulletPoints": [
+          { "bullet": "Task 1" }
+        ]
+      },
+      {
+        "title": "Requirements",
+        "description": "What you need",
+        "bulletPoints": [
+          { "bullet": "Requirement 1" }
+        ]
+      }
+    ],
+
+    "// !!recruiter contact section": "",
+    "recruiterContactTitle": "Contact Us",
+    "recruiterContactText": "Interested in this position? Reach out to our recruitment team.",
+    "recruiters": [
+      {
+        "recruiterFullname": "Jane Smith",
+        "recruiterRole": "Senior Recruiter",
+        "recruiterEmail": "jane.smith@techcorp.com",
+        "recruiterPhone": "+1 (555) 123-4567"
+      }
+    ],
+
+    "// !!job description section": "",
+    "jobDescriptionTitle": "Job Description",
+    "jobDescriptionSubheader": "About the position",
+    "jobDescription": "As a Software Engineer at TechCorp, you will be responsible for developing and maintaining web applications using JavaScript, React, and Node.js. You'll work closely with product managers, designers, and other engineers to build high-quality, scalable solutions. We're looking for someone who is passionate about writing clean, efficient code and enjoys solving complex problems.",
+
+    "// !!agenda section": "",
+    "agendaTitle": "A Day in the Life",
+    "agendaDescription": "Here's what a typical day looks like for our Software Engineers",
+    "dailyScheduleList": [
+      {
+        "dateTimeSlot": {
+          "startTime": "02:00",
+          "endTime": "04:00"
+        },
+        "eventTitle": "Morning Check-In & Team Sync",
+        "description": "Morning Check-In & Team Sync"
+      },
+      {
+        "dateTimeSlot": {
+          "startTime": "05:00",
+          "endTime": "07:00"
+        },
+        "eventTitle": "Review Project Timelines & Milestones",
+        "description": "Review Project Timelines & Milestones"
+      }
+    ],
+
+    "// !!company facts section": "",
+    "companyFactsTitle": "TechCorp Facts",
+    "companyFactsDescription": "Learn what makes TechCorp a great place to work",
+    "companyFacts": [
+      {
+        "descriptionText": "Leading provider of innovative tech solutions",
+        "headingText": "Industry Leader",
+        "icon": "Trophy"
+      },
+      {
+        "descriptionText": "Founded in 2010, growing steadily ever since",
+        "headingText": "Established",
+        "icon": "Calendar"
+      },
+      {
+        "descriptionText": "Over 500 employees across 10 countries",
+        "headingText": "Global Team",
+        "icon": "Globe"
+      },
+      {
+        "descriptionText": "Focus on continuous learning and growth",
+        "headingText": "Development",
+        "icon": "GraduationCap"
+      }
+    ],
+
+    "// !!about company section": "",
+    "aboutTheCompanyTitle": "About TechCorp",
+    "aboutTheCompanyText": "Innovating since 2010",
+    "aboutTheCompanyDescription": "TechCorp is a leading technology company specializing in web and mobile application development. We work with clients across various industries to create cutting-edge solutions that drive business growth. Our team of talented engineers, designers, and product specialists is dedicated to delivering exceptional results.",
+
+    "// !!footer section": "",
+    "footerTitle": "Ready to join our team?",
+    "footerDescription": "Apply today and take the next step in your career with TechCorp.",
+    "ctaFooterTitle": "Apply Now",
+    "ctaFooterLink": "#apply"
+  },
+  "mongoose schema": {
+    "vacancyTitle": { "type": "String" },
+    "heroDescription": {
+      "type": "String",
+      "InstructionsForAi": "Write a strong, inspiring headline based on the job title and company. Max 120 characters."
+    },
+    "heroImage": { "type": "String" },
+    "salaryRange": { "type": "Boolean" ,
+  "InstructionsForAi": "The salary range is a boolean value. If it is true, the salaryMin and salaryMax fields are required. If it is false, the salaryMax fields is not required ."
+  },
+    "salaryMin": { "type": "String" ,
+      "InstructionsForAi": "Add Salary (numbers only) : Use absolute number or range + currency"
+    },
+    "salaryMax": { "type": "String" },
+    "salaryCurrency": { "type": "String" },
+    "salaryTime": { "type": "String" },
+    "hoursRange": { "type": "Boolean" },
+    "hoursMin": { "type": "String" },
+    "hoursMax": { "type": "String" },
+    "hoursUnit": { "type": "String", "enum": [ "Days", "Weeks","Month"] ,
+      "InstructionsForAi": "Add number of working hours per time unit (output example = 40 hours / week or 3 hours / day)"
+  },
+    "location": { "type": ["String"],
+    "InstructionsForAi": "Add Location: Write in full. (max 20 characters),If multiple, show dropdown.If hybrid, write “Hybrid + [office location],If remote, write “Remote””"
+  },
+
+    "jobSpecificationTitle": { "type": "String" ,
+    "InstructionsForAi": "Header (Job Summary Title),Summarizes the role and company,Written in sentence case or title case"
+  },
+    "jobSpecificationDescription": {
+      "type": "String",
+      "InstructionsForAi": "Max 80 characters"
+    },
+
+    "specifications": {
+      "type": [
+        {
+          "title": {
+            "type": "String"
+          },
+          "description": {
+            "type": "String"
+          },
+          "bulletPoints": {
+            "type": [
+              {
+                "bullet": {
+                  "type": "String"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "default": [
+        {
+          "title": "Benefits",
+          "description": "Benefits description",
+          "enabled": true,
+          "bulletPoints": [
+            {
+              "bullet": ""
+            }
+          ]
+        },
+
+        {
+          "title": "Tasks",
+          "description": "Tasks description",
+          "enabled": true,
+          "bulletPoints": [
+            {
+              "bullet": ""
+            }
+          ]
+        },
+
+        {
+          "title": "Requirements",
+          "description": "Requirements description",
+          "enabled": true,
+          "bulletPoints": [
+            {
+              "bullet": ""
+            }
+          ]
+        }
+      ],
+      "InstructionsForAi": "Perks & Benefits Section:Title: Max 40 characters, aligned with company voice (e.g., Refreshing),List of up to 8 items,Each item must be a real perk or benefit from the job description,Each bullet: max 40 characters,Do not invent or generalize. Keep wording benefit-focused and clear,Use the exact language or as close as possible from the job description,Do not summarize loosely or generalize — be precise and faithful to the source"
+    },
+
+    "recruiterContactTitle": {
+      "type": "String"
+    },
+    "recruiterContactText": { "type": "String" },
+    "recruiters": {
+      "type": ["Object"],
+      "default": [
+        {
+          "recruiterFullname": "John Doe",
+          "recruiterRole": "HR Manager",
+          "recruiterEmail": "info@xyztech.com",
+          "recruiterPhone": "123-456-7890",
+          "recruiterAvatar": "/dhwise-images/placeholder.png",
+          "recruiterPhoneEnabled": true,
+          "recruiterEmailEnabled": true
+        }
+      ]
+    },
+
+    "jobDescriptionTitle": { "type": "String" ,
+      "InstructionsForAi": "Max 40 characters Should be clear, inspiring, and relevant to the role and company"
+  },
+    "jobDescriptionSubheader": { "type": "String" ,
+      "InstructionsForAi": "Max 120 characters Should hint at the impact or opportunity this job offers Use a motivating or visionary tone"
+    },
+    "jobDescription": {
+      "type": "String",
+      "InstructionsForAi": "Main Job Description (Max 2000 characters) Write an engaging and inspiring job description that fits the tone, values, and brand voice of the company. The copy should speak directly to the ideal candidate and help them imagine themselves in the role.Use 2–4 short paragraphs for readability,Avoid jargon or internal lingo,Match the company’s tone (e.g. human, bold, innovative,humble),Make it easy to skim while still feeling narrative-driven"
+    },
+
+    "agendaGeneralaAiInstructions": {
+      "type": "no type this is instructions",
+      "InstructionsForAi": "Generate a realistic, role-specific day agenda to help candidates visually imagine their workday. This section should bring clarity, energy, andrelevance — tailored to the rhythms of the job.Output Format: Section Title (max 40 characters) Section Subheader (max 80 characters) A list of 5–7 Time Slots, each including: Slot Title (max 40 characters) Time Range (24-hour format, e.g., 09:00–11:00) Slot Description (max 400 characters) Instructions for AI: Use a realistic schedule based on the job type. Office/corporate roles: typically 08:30–17:30 or 09:00–18:00 Night/weekend shifts if the role demands it Time blocks should range between 30–120 minutes Slot titles must be human, clear, and task-focused Descriptions must reflect actual job flow: meetings, prep, deep work, collaboration, leadership time No internal lingo or overused buzzwords Do not repeat the job description — this is about daily flowE"
+    },
+
+    "agendaTitle": { "type": "String" },
+    "agendaDescription": {
+      "type": "String",
+      "InstructionsForAi": "Max 120 characters"
+    },
+    "dailyScheduleList": {
+      "type": ["Object"],
+      "default": [
+        {
+          "dateTimeSlot": {
+            "type": {
+              "startTime": { "type": "String" },
+              "endTime": { "type": "String" }
+            }
+          },
+          "eventTitle": {
+            "type": "String"
+          },
+          "description": {
+            "type": "String"
+          }
+        }
+      ]
+    },
+    "companyFactsGeneralaAiInstructions": {
+      "type": "no type this is instructions",
+      "InstructionsForAi": "Purpose:Generate a set of 4 or 6 company or corporate facts that communicate the company’s identity, values, and EVP in a way that appeals to potential applicants. These facts should be short, memorable, and specific, and paired with relevant visual icons for visual engagement. Output Format: Header (max 40 characters) Subheader (max 80 characters) For each fact (generate 4 or 6): Title (max 25 characters) Description (max 80 characters) Matching Icon (from common icon libraries – e.g. Lucide, Feather, Font Awesome) Instructions for AI: Write a company facts section designed to visually communicate what the company stands for. Each fact should reflect key elements of the EVP, mission, culture, or global impact — and resonate with potential applicants considering working here. Requirements:Facts must be concise, specific, and not generic Each fact must appeal to values, pride, or ambition (e.g. impact, innovation, inclusivity, career growth, sustainability) Use active, confident tone Avoid fluffy buzzwords and clichés Use numbers, recognitions, or proof points where relevant Match each fact to a clear and relevant icon (e.g.globe, users, bar-chart, leaf, briefcase, etc.)"
+    },
+    "companyFactsTitle": {
+      "type": "String"
+    },
+    "companyFactsDescription": {
+      "type": "String"
+    },
+    "companyFacts": {
+      "type": [
+        {
+          "descriptionText": { "type": "String" },
+          "headingText": { "type": "String" },
+          "icon": {
+            "type": "String"
+          }
+        }
+      ],
+      "default": [
+        {
+          "headingText": "Innovation Leaders",
+          "descriptionText": "Recruitment marketing automation.",
+          "icon": "Trophy"
+        }
+      ]
+    },
+
+    "aboutTheCompanyTitle": {
+      "type": "String",
+      "InstructionsForAi": "Purpose: Generate a role-relevant and inspiring “About the Company” section that reflects the employer value proposition (EVP) and is tailored specifically to senior New promptcommercial leaders (e.g. Customer Leadership, Sales Directors, Strategic Partnerships).,"
+    },
+    "aboutTheCompanyText": {
+      "type": "String",
+      "InstructionsForAi": "Write an “About the Company” section tailored to the audience that typically applies for these roles. The content should be engaging, strategically framed, and written for professionals who are evaluating whether this company is a platform for their next big move."
+    },
+    "aboutTheCompanyDescription": {
+      "type": "String"
+    },
+    "aboutTheCompanyImages": {
+      "type": ["String"]
+    },
+
+    "footerTitle": {
+      "type": "String"
+    },
+    "footerDescription": {
+      "type": "String"
+    },
+    "ctaFooterTitle": {
+      "type": "String"
+    },
+    "ctaFooterLink": {
+      "type": "String"
+    },
+    "similarJobsTitle": {
+      "type": "String"
+    },
+
+    "cta1Title": {
+      "type": "String"
+    },
+    "cta2Title": {
+      "type": "String"
+    },
+    "cta1Link": {
+      "type": "String"
+    },
+    "cta2Link": {
+      "type": "String"
+    },
+
+    "ctaApply": {
+      "type": "String"
+    }
+  }
+}

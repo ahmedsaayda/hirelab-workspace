@@ -1,0 +1,24 @@
+        <svg aria-hidden="true" class="h-9 w-9" fill="none"  xmlns="http://www.w3.org/2000/svg">
+
+<defs>
+            <linearGradient
+              id="lineargrad-id"
+              x1="11.5"
+              y1="18"
+              x2="36"
+              y2="15.5"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset=".194" stopColor="#fff" />
+              <stop offset="1" stopColor="#fff" />
+            </linearGradient>
+          </defs>
+          <path
+            d="m30 15-4 5-4-11-4 18-4-11-4 7-4-5"
+            stroke="url(#lineargrad-id)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+        </svg>

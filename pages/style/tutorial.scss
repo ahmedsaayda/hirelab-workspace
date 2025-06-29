@@ -1,0 +1,178 @@
+:root {
+  --primary: #fbfcfc;
+  --active: #f1f1f1;
+  --secondary: #767777;
+  --grey: #8a8b8b;
+  --b-pad: 10px;
+  --s-pad: 5px;
+  --bg: rgb(50, 50, 50);
+}
+
+a.channel {
+  color: inherit;
+  text-decoration: none;
+}
+a.channel:hover {
+  text-decoration: underline;
+}
+
+.video-title {
+  color: var(--secondary);
+  font-size: 15px;
+  font-weight: bold;
+}
+.sub-title {
+  color: var(--grey);
+  font-size: 13px;
+}
+.icon-active {
+  filter: sepia(100%) hue-rotate(150deg) saturate(400%);
+}
+
+#playlist {
+  width: 80vw;
+  min-width: 300px;
+  display: flex;
+  position: relative;
+  transition: all ease 0.3s;
+}
+
+#video-dis {
+  flex: 6.5;
+  margin-right: 20px;
+  background: black;
+}
+#video-dis iframe {
+  width: 100%;
+  height: 100%;
+}
+.video-li {
+  flex: 3.5;
+  display: flex;
+  padding: var(--b-pad);
+  border-radius: 3px;
+  flex-direction: column;
+  background: var(--primary);
+}
+.li-collapsed {
+  overflow: hidden;
+  height: 40px;
+}
+#vli-info {
+  flex: 3;
+  padding: 0 var(--b-pad) 0 var(--b-pad);
+}
+
+#upper-info {
+  display: flex;
+}
+
+#li-titles {
+  flex: 9;
+}
+#li-titles div {
+  padding-bottom: 5px;
+}
+
+#drop-icon {
+  flex: 1;
+  cursor: pointer;
+  background: url(https://user-images.githubusercontent.com/50569315/118832584-92350500-b8e2-11eb-8398-9a90a4615b98.png)
+    no-repeat center;
+  background-size: 50%;
+}
+
+#lower-info {
+  display: flex;
+  padding-top: var(--b-pad);
+}
+#lower-info div {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+#btn-repeat {
+  margin-right: var(--b-pad);
+  background: url(https://user-images.githubusercontent.com/50569315/118832591-93663200-b8e2-11eb-8b98-3b177304b555.png)
+    no-repeat left;
+  background-size: 50%;
+}
+#btn-suffle {
+  margin-right: var(--b-pad);
+  background: url(https://user-images.githubusercontent.com/50569315/118832597-93fec880-b8e2-11eb-9146-f978064eddb1.png)
+    no-repeat left;
+  background-size: 45%;
+}
+#btn-save {
+  margin-left: auto;
+  order: 2;
+  right: 10px;
+  margin-right: var(--b-pad);
+  background: url(https://user-images.githubusercontent.com/50569315/118832594-93fec880-b8e2-11eb-8201-12cb52be231f.png)
+    no-repeat right;
+  background-size: 60%;
+}
+
+#vli-videos {
+  flex: 7;
+  overflow: auto;
+}
+
+.video-con {
+  display: flex;
+  cursor: pointer;
+  padding: var(--s-pad);
+  column-gap: var(--s-pad);
+  margin-bottom: var(--b-pad);
+}
+.video-con:hover,
+.active-con {
+  background: var(--active);
+}
+.index {
+  min-width: 15px;
+  align-self: center;
+}
+.video-thumb {
+  width: 100px;
+  height: 60px;
+  background: var(--secondary);
+}
+.video-thumb img {
+  width: 100%;
+}
+.v-titles {
+  flex: 6;
+}
+.v-titles div:nth-child(2) {
+  margin-top: var(--s-pad);
+}
+
+@media only screen and (max-width: 950px) {
+  #playlist {
+    margin: 0 auto;
+    display: block;
+    align-items: center;
+  }
+  #video-dis {
+    margin-bottom: var(--b-pad);
+    width: 100%;
+    height: 300px;
+  }
+}
+
+.iframe-container-blocker {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio, adjust as needed */
+  overflow: hidden;
+}
+.iframe-container-blocker iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Prevents clicks from reaching the iframe */
+}

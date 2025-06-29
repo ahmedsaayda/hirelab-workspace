@@ -1,0 +1,104 @@
+/* Calendar Container */
+.react-calendar {
+  width: 100%;
+  /* background-color: #1187fe; */
+  background-color: var(--primary-color) !important;
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  color: white;
+}
+
+/* Calendar Tiles days */
+.react-calendar__tile {
+  font-size: 0.875rem;
+  text-align: center;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.react-calendar__tile:hover {
+  background-color: #ffffff;
+  color: var(--primary-color) !important;
+}
+
+.react-calendar__tile:enabled:focus {
+  outline: none;
+  background-color: #ffffff;
+  color: var(--primary-color) !important;
+}
+
+.react-calendar__tile--active:enabled {
+  background-color: #ffffff;
+  color: var(--primary-color) !important;
+}
+
+
+/* Today's Date */
+.react-calendar__tile--now {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+  border-radius: 0.375rem;
+}
+
+/* Navigation Buttons */
+.react-calendar__navigation button {
+  color: #ffffff;
+  font-size: 1rem;
+  margin: 0.5rem;
+  background: none;
+  border: none;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.react-calendar__navigation button:hover{
+  background-color: rgba(0, 0, 0, 0) !important;
+  border-radius: 4px;
+}
+
+.react-calendar__navigation button:enabled:focus {
+  background-color: rgb(0 0 0 / 5%);
+}
+
+/* Calendar Weekdays */
+.react-calendar__month-view__weekdays {
+  text-transform: capitalize;
+  text-decoration: none;
+  font-weight: normal;
+  font-size: 0.875rem;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+}
+
+.react-calendar__month-view__weekdays abbr {
+  text-decoration: none;
+}
+
+/* Calendar Days */
+.react-calendar__month-view__days__day--weekend {
+  color: #ffffff;
+}
+
+.react-calendar__month-view__days button{
+  height: 44px;
+  width: 21px;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius:50%;
+}
+
+.react-calendar__navigation{
+  margin-bottom: 0;
+}
+
+.react-calendar__navigation__next2-button , .react-calendar__navigation__prev2-button  {
+  display: none;
+} 
+
+.react-calendar__month-view__days__day--neighboringMonth{
+  color :rgb(46, 45, 45);
+}
