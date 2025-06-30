@@ -66,6 +66,7 @@ import PublicService from "../../../services/PublicService.js";
 import { generateColorPalette } from "../../../utils/colors-util.js";
 import { ScrapingModal } from "./ScrapingAnimation/ScrapingModal.jsx";
 import { Content } from "antd/es/layout/layout";
+import { PreviewContainer } from "../../Dashboard/Vacancies/components/preview-container.jsx";
 
 const cloudname = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
