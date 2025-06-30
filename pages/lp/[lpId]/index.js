@@ -1,4 +1,4 @@
-import LandingpagePage from "../../../src/pages/Landingpage";
+/*  import LandingpagePage from "../../../src/pages/Landingpage"; */
 
 export async function getServerSideProps(context) {
   const { lpId } = context.params;
@@ -14,7 +14,8 @@ export async function getServerSideProps(context) {
 export default function Page({ lpId }) {
   return (
     <>
-       <LandingpagePage paramsId={lpId}/>
+    {JSON.stringify(lpId)}
+       {/* <LandingpagePage paramsId={lpId}/> */}
     </>
   );
 }
