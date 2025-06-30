@@ -1,6 +1,6 @@
 import React from "react";
 
-import SwitchProvider from "@dhiwise/react-switch";
+import ReactSwitch from "react-switch";
 import PropTypes from "prop-types";
 
 const sizes = {
@@ -26,10 +26,11 @@ const Switch = ({
   };
   return (
     <div className={className}>
-      <SwitchProvider
+      <ReactSwitch
         checked={selected}
         onChange={handleChange}
-        {...sizes[size]}
+        width={sizes[size].width}
+        height={sizes[size].height}
         checkedIcon={checkedIcon}
         uncheckedIcon={uncheckedIcon}
       />
