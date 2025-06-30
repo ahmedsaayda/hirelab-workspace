@@ -10,8 +10,8 @@ import CrudService from "../../../../src/services/CrudService";
 import { partner } from "../../../../src/constants";
 
 const VacancyPublish = () => {
-  let [searchParams] = useSearchParams();
-  const router = useRouter();;
+  const router = useRouter();
+  const { query } = router;
   const [vacancyData, setVacancyData] = useState(null);
 
   const [eventTypes, setEventTypes] = useState([]);
@@ -24,7 +24,7 @@ const VacancyPublish = () => {
   }, [partner]);
 
   useEffect(() => {
-    const id = searchParams.get("id");
+    const id = query.id;
     if (!id) return;
     setVacancyData(null);
 
@@ -32,7 +32,7 @@ const VacancyPublish = () => {
       if (!res.data) return;
       setVacancyData(res.data);
     });
-  }, [searchParams]);
+  }, [query.id]);
 
   const steps = [
     {
@@ -290,7 +290,7 @@ const VacancyPublish = () => {
             ...vacancyData,
           }}
           onFinish={async (formData) => {
-            const id = searchParams.get("id");
+            const id = query.id;
             if (!id) return;
 
             await CrudService.update("Vacancy", id, {
@@ -301,7 +301,7 @@ const VacancyPublish = () => {
             router.push(`/dashboard/vacancy?id=${id}`);
           }}
           onNext={async (formData) => {
-            const id = searchParams.get("id");
+            const id = query.id;
             if (!id) return;
 
             await CrudService.update("Vacancy", id, {

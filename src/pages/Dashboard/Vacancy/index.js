@@ -6,10 +6,11 @@ import ATS from "./ATS";
 
 const Vacancy = () => {
   const [vacancyData, setVacancyData] = useState(null);
-  let [searchParams] = useSearchParams();
+  const router = useRouter();
+  const { query } = router;
   console.log("vacancyData", vacancyData);
   useEffect(() => {
-    const id = searchParams.get("id");
+    const id = query.id;
     if (!id) return;
     setVacancyData(null);
 
@@ -22,7 +23,7 @@ const Vacancy = () => {
       .catch((err) => {
         console.log(err);
       });
-  }, [searchParams]);
+  }, [query.id]);
 
   if (!vacancyData) return <Skeleton active />;
   return (

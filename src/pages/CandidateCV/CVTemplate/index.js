@@ -41,7 +41,8 @@ import { countryLanguages } from "./countries";
 const { Option } = Select;
 
 const CVTemplate = ({ isEditable = false, finishComponent, CVData }) => {
-  let [searchParams] = useSearchParams();
+  const router = useRouter();
+  const { query } = router;
   const [candidateData, setCandidateData] = useState(CVData ?? null);
   const [editMode, setEditMode] = useState(isEditable);
   const [selectedBirthday, setSelectedBirthday] = useState(null);
@@ -62,17 +63,17 @@ const CVTemplate = ({ isEditable = false, finishComponent, CVData }) => {
 
   useEffect(() => {
     if (CVData) return;
-    const token = searchParams.get("token");
+    const token = query.token;
     if (!token) return;
 
     CVService.getCVData(token).then(({ data }) => {
       setCandidateData(data);
     });
-  }, [searchParams, CVData]);
+  }, [query.token, CVData]);
 
   const updateCVData = useCallback(
     async (data) => {
-      const token = searchParams.get("token");
+      const token = query.token;
       if (!token) return;
 
       await CVService.updateCVData(token, data);
@@ -80,13 +81,13 @@ const CVTemplate = ({ isEditable = false, finishComponent, CVData }) => {
         setCandidateData(data);
       });
     },
-    [searchParams]
+    [query.token]
   );
 
   useEffect(() => {
     fileInput4.current = document.getElementById("fileInput4");
     fileInput4.current.addEventListener("change", async () => {
-      const token = searchParams.get("token");
+      const token = query.token;
       if (!token) return;
 
       const selectedFile = fileInput4.current.files[0]; // Get the selected file
@@ -110,7 +111,7 @@ const CVTemplate = ({ isEditable = false, finishComponent, CVData }) => {
         console.log("No file selected.");
       }
     });
-  }, [updateCVData, searchParams]);
+  }, [updateCVData, query.token]);
 
   useEffect(() => {
     fileInput5.current = document.getElementById("fileInput5");
@@ -158,7 +159,7 @@ const CVTemplate = ({ isEditable = false, finishComponent, CVData }) => {
             title="Are you sure to submit your CV to the hiring manager?"
             onConfirm={async () => {
               if (loading) return;
-              const token = searchParams.get("token");
+              const token = query.token;
               if (!token) return;
 
               await CVService.submitCV(token);

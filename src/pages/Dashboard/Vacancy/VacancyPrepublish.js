@@ -19,9 +19,9 @@ import FormMultiStep from "./FormMultiStep";
 import ImportModule from "./ImportModule";
 
 const VacancyPrepublish = () => {
-  let [searchParams] = useSearchParams();
   const user = useSelector(selectUser);
-  const router = useRouter();;
+  const router = useRouter();
+  const { query } = router;
   const [vacancyData, setVacancyData] = useState(null);
   const [heroes, setHeroes] = useState([]);
   const fileInputRef = useRef(null);
@@ -46,7 +46,7 @@ const VacancyPrepublish = () => {
   }, [user]);
 
   useEffect(() => {
-    const id = searchParams.get("id");
+    const id = query.id;
     if (!id) return;
     setVacancyData(null);
 
@@ -54,7 +54,7 @@ const VacancyPrepublish = () => {
       if (!res.data) return;
       setVacancyData(res.data);
     });
-  }, [searchParams]);
+  }, [query.id]);
 
   const copyLink = async () => {
     const link = await getShortLink(`apply/${vacancyData?._id}`);
@@ -291,7 +291,7 @@ const VacancyPrepublish = () => {
           ...vacancyData,
         }}
         onNext={async (formData) => {
-          const id = searchParams.get("id");
+          const id = query.id;
           if (!id) return;
 
           delete formData._id;
@@ -300,7 +300,7 @@ const VacancyPrepublish = () => {
           });
         }}
         onFinish={async (formData) => {
-          const id = searchParams.get("id");
+          const id = query.id;
           if (!id) return;
 
           delete formData._id;

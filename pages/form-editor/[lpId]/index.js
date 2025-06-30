@@ -1,20 +1,9 @@
 import FormEdit from "../../../src/pages/FormEdit";
+import { useRouter } from 'next/router';
 
-export async function getServerSideProps(context) {
-  const { lpId } = context.params;
-  
-  return {
-      props: {
-          lpId,
-      },
-  };
-}
+export default function Page() {
+  const router = useRouter();
+  const { lpId } = router.query;
 
-// Then in your component:
-export default function Page({ lpId }) {
-  return (
-    <>
-       <FormEdit paramsId={lpId}/>
-    </>
-  );
+  return <FormEdit paramsId={lpId} />
 }

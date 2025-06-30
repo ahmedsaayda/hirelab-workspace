@@ -10,8 +10,8 @@ import CVTemplate from "./CVTemplate";
 import Finished from "./Finished";
 
 const CandidateCV = () => {
-  let [searchParams] = useSearchParams();
-  const router = useRouter();;
+  const router = useRouter();
+  const { query } = router;
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(false);
   const [candidateData, setCandidateData] = useState(null);
@@ -19,7 +19,7 @@ const CandidateCV = () => {
   const fileInput = useRef(null);
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const token = query.token;
     if (!token) return;
 
     fileInput.current = document.getElementById("fileInput6");
@@ -39,12 +39,12 @@ const CandidateCV = () => {
           console.log("No file selected.");
         }
       });
-  }, [searchParams]);
+  }, [query.token]);
 
   const backendLoading = useSelector(selectLoading);
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const token = query.token;
     if (!token) return;
 
     setLoading(true);
@@ -54,7 +54,7 @@ const CandidateCV = () => {
         setCandidateData(data);
       })
       .finally(() => setLoading(false));
-  }, [searchParams]);
+  }, [query.token]);
 
   if (!candidateData && loading) return <Skeleton active />;
   if (!candidateData && !loading)

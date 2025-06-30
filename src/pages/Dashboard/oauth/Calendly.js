@@ -4,11 +4,11 @@ import { useRouter } from "next/router";
 import CalendlyService from "../../../../src/services/CalendlyService";
 
 const Calendly = () => {
-  let [searchParams] = useSearchParams();
-  const router = useRouter();;
+  const router = useRouter();
+  const { query } = router;
 
   useEffect(() => {
-    const code = searchParams.get("code");
+    const code = query.code;
     if (!code) return;
 
     CalendlyService.requestToken({
@@ -26,7 +26,7 @@ const Calendly = () => {
         router.push("/dashboard/settings#integrations");
       })
       .catch(() => router.push("/dashboard/settings#integrations"));
-  }, [searchParams]);
+  }, [query.code]);
   return <></>;
 };
 

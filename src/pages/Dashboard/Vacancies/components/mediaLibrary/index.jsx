@@ -19,7 +19,7 @@ import {
 // hirelab-frontend\src\components\mediaLibrary\index.jsx
 import { FaSortAmountDownAlt } from "react-icons/fa";
 // import { Button, Heading } from "..."; const Button = () => null; const Heading = () => null;
-import MediaFilterMedia from "./components/modals/MediaFilterMedia.jsx";
+import MediaFilterMedia, { FilterTags } from "./components/modals/MediaFilterMedia.jsx";
 import {
   SearchOutlined,
   PlusOutlined,

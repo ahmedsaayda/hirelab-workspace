@@ -24,9 +24,9 @@ import FormMultiStep from "./FormMultiStep";
 import ImportModule from "./ImportModule";
 
 const VacancyEdit = () => {
-  let [searchParams] = useSearchParams();
   const user = useSelector(selectUser);
-  const router = useRouter();;
+  const router = useRouter();
+  const { query } = router;
   const [vacancyData, setVacancyData] = useState(null);
   const [heroes, setHeroes] = useState([]);
   const fileInputRef = useRef(null);
@@ -72,7 +72,7 @@ const VacancyEdit = () => {
           );
         } catch (e) {}
 
-        setBulkUploadProcess((current) => ({ ...current, json, mappings }));
+        setBulkUploadProcess((FilterTagscurrent) => ({ ...current, json, mappings }));
       });
     }
   };
@@ -94,7 +94,7 @@ const VacancyEdit = () => {
   }, [user]);
 
   useEffect(() => {
-    const id = searchParams.get("id");
+    const id = query.id;
     if (!id) return;
     setVacancyData(null);
 
@@ -102,7 +102,7 @@ const VacancyEdit = () => {
       if (!res.data) return;
       setVacancyData(res.data);
     });
-  }, [searchParams]);
+  }, [query.id]);
 
   //   useEffect(() => {
   //   if (!partner?.calendlyclientId) return;
@@ -303,7 +303,7 @@ const VacancyEdit = () => {
           ...vacancyData,
         }}
         onFinish={async (formData) => {
-          const id = searchParams.get("id");
+          const id = query.id;
           if (!id) return;
           console.log(formData);
           await CrudService.update("Vacancy", id, {
@@ -313,7 +313,7 @@ const VacancyEdit = () => {
           router.push(`/dashboard/vacancydetails?id=${id}`);
         }}
         onNext={async (formData) => {
-          const id = searchParams.get("id");
+          const id = query.id;
           if (!id) return;
 
           await CrudService.update("Vacancy", id, {

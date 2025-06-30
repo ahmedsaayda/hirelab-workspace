@@ -12,8 +12,8 @@ import CrudService from "../../../../src/services/CrudService";
 import { partner } from "../../../../src/constants";
 
 const VacancyEditForm = () => {
-  let [searchParams] = useSearchParams();
-  const router = useRouter();;
+  const router = useRouter();
+  const { query } = router;
   const [vacancyData, setVacancyData] = useState(null);
   const [tourOpen, setTourOpen] = useState(!localStorage?.editFormTour);
   const [funnelSteps, setFunnelSteps] = useState([]);
@@ -33,7 +33,7 @@ const VacancyEditForm = () => {
   }, [vidRef]);
 
   useEffect(() => {
-    const id = searchParams.get("id");
+    const id = query.id;
     if (!id) return;
     if (!partner) return;
     setVacancyData(null);
@@ -48,7 +48,7 @@ const VacancyEditForm = () => {
         setFunnelSteps(res.data.form);
       }
     });
-  }, [searchParams, partner]);
+  }, [query.id, partner]);
 
   if (!vacancyData) return <Skeleton active />;
   if (!funnelSteps) return <Skeleton active />;
@@ -148,7 +148,7 @@ const VacancyEditForm = () => {
 
                     setFunnelSteps(result);
 
-                    const id = searchParams.get("id");
+                    const id = query.id;
                     if (!id) return;
                     CrudService.update("Vacancy", id, { form: result });
                   }}
@@ -171,7 +171,7 @@ const VacancyEditForm = () => {
 
             setFunnelSteps(result);
 
-            const id = searchParams.get("id");
+            const id = query.id;
             if (!id) return;
             CrudService.update("Vacancy", id, { form: result });
           }}
@@ -183,7 +183,7 @@ const VacancyEditForm = () => {
           className="px-2 py-1 text-sm bg-white-500 border border-indigo-500 text-indigo-500 rounded"
           type="primary"
           onClick={async () => {
-            const id = searchParams.get("id");
+            const id = query.id;
             if (!id) return;
 
             router.push(`/dashboard/vacancyedit?id=${id}`);
@@ -197,7 +197,7 @@ const VacancyEditForm = () => {
           className="px-2 py-1 text-sm bg-indigo-500 text-white rounded"
           type="primary"
           onClick={async () => {
-            const id = searchParams.get("id");
+            const id = query.id;
             if (!id) return;
             const addition = vacancyData?.published ? "" : "&new=true";
 
