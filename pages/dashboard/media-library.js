@@ -1,11 +1,11 @@
-import MediaLibrary from "../../src/pages/Dashboard/MediaLibrary";
+import MyMediaLibrary from "../../src/pages/Dashboard/Vacancies/components/mediaLibrary";
 import Layout from "./layout";
 
 export default function Page() {
     return (
       <>
       <Layout >
-        <MediaLibrary />
+        <MyMediaLibrary />
       </Layout>
       </>
     );

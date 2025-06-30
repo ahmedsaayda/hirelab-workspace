@@ -1,21 +1,16 @@
 /*  import LandingpagePage from "../../../src/pages/Landingpage"; */
 
-export async function getServerSideProps(context) {
-  const { lpId } = context.params;
-  
-  return {
-      props: {
-          lpId,
-      },
-  };
-}
 
-// Then in your component:
-export default function Page({ lpId }) {
-  return (
-    <>
-    {JSON.stringify(lpId)}
-       {/* <LandingpagePage paramsId={lpId}/> */}
-    </>
-  );
+
+import { useRouter } from 'next/router';
+
+export default function Page() {
+  const router = useRouter();
+  const { lpId } = router.query;
+
+  return <div>
+    {/* <LandingpagePage paramsId={lpId}/> */}
+
+    Client-side lpId: {lpId}</div>;
+
 }
