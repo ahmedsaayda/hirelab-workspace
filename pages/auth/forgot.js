@@ -1,4 +1,4 @@
-import Forgot from "../pages/auth/Forgot";
+import Forgot from "../../src/pages/auth/Forgot";
 
 export default function Page() {
     return (

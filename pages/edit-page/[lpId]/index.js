@@ -1,4 +1,4 @@
-import LandingpageEdit from "../../pages/LandingpageEdit";
+import LandingpageEdit from "../../../src/pages/LandingpageEdit";
 
 export async function getServerSideProps(context) {
   const { lpId } = context.params;

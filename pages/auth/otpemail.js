@@ -1,4 +1,4 @@
-import OTPEmail from "../pages/auth/OTPEmail";
+import OTPEmail from "../../src/pages/auth/OTPEmail";
 
 export default function Page() {
     return (

@@ -1,4 +1,4 @@
-import FormEdit from "../../pages/FormEdit";
+import FormEdit from "../../../src/pages/FormEdit";
 
 export async function getServerSideProps(context) {
   const { lpId } = context.params;

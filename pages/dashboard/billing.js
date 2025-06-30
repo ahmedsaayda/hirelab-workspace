@@ -1,4 +1,4 @@
-import Billing from "../pages/Dashboard/Billing";
+import Billing from "../../src/pages/Dashboard/Billing";
 import Layout from "./layout";
 
 export default function Page() {

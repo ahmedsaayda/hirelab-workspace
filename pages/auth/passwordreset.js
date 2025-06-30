@@ -1,4 +1,4 @@
-import PasswordReset from "../pages/auth/PasswordReset";
+import PasswordReset from "../../src/pages/auth/PasswordReset";
 
 export default function Page() {
     return (

@@ -19,7 +19,7 @@ import {
   BrandKit,
   ToolrIcon,
   GroupOfPeople,
-} from "../../src/components/Icons";
+} from "../../src/pages/Dashboard/Vacancies/components/Icons.js";
 import {
   User,
   CreditCard,
@@ -47,11 +47,11 @@ import ChatService from "../../src/services/ChatService";
 import PartnerService from "../../src/services/PartnerService";
 import PublicService from "../../src/services/PublicService";
 import { partner } from "../../src/constants.js";
-import CalendlyEventSelector from "../pages/Dashboard/CalendlyEventSelector";
-import { Footer } from "../pages/Dashboard/Footer";
-import PhoneWidget from "../pages/Dashboard/PhoneWidget";
-import ThemeOne from "../pages/Dashboard/ThemeOne";
-import ThemeTwo from "../pages/Dashboard/ThemeTwo";
+import CalendlyEventSelector from "../../src/pages/Dashboard/CalendlyEventSelector.js";
+import { Footer } from "../../src/pages/Dashboard/Footer.js";
+import PhoneWidget from "../../src/pages/Dashboard/PhoneWidget.js";
+import ThemeOne from "../../src/pages/Dashboard/ThemeOne.js";
+import ThemeTwo from "../../src/pages/Dashboard/ThemeTwo.js";
 import AuthService from "../../src/services/AuthService.js";
 
 

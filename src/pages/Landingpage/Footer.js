@@ -1,0 +1,1054 @@
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useMemo,
+} from "react";
+import { Button, Heading, Img, Text } from "./components/index.jsx";
+import UserProfile4 from "./components/UserProfile4/index.jsx";
+import UserProfileCard from "./components/UserProfileCard/index.jsx";
+import { DollarSign, Clock, Briefcase } from "lucide-react";
+import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
+
+import { useFocusContext } from "../../contexts/FocusContext.js";
+import { useHover } from "../../contexts/HoverContext.js";
+import { useRouter } from "next/router";
+import CrudService from "../../services/CrudService.js";
+import { getFonts } from "./getFonts.js";
+import { calculateTextColor } from "./utils.js";
+import { GridPattern, intToHumanReadablePrice } from "./HeroSection.js";
+
+const useFooterHover = () => {
+  const {
+    hoveredField,
+    scrollToSection,
+    setLastScrollToSection,
+    lastScrollToSection,
+  } = useHover();
+  const sectionRef = useRef();
+  const titleRef = useRef();
+  const textRef = useRef();
+  const ctaFooterTitleRef = useRef();
+  const ctaFooterLinkRef = useRef();
+  const similarJobsTitleRef = useRef();
+
+  useLayoutEffect(() => {
+    if (!hoveredField) return;
+
+    const refs = {
+      footerTitle: titleRef,
+      footerDescription: textRef,
+      ctaFooterTitle: ctaFooterTitleRef,
+      ctaFooterLink: ctaFooterLinkRef,
+      similarJobsTitle: similarJobsTitleRef,
+    };
+
+    Object.values(refs).forEach((ref) => {
+      if (ref.current) {
+        ref.current.classList.remove("highlight-section");
+      }
+    });
+
+    const targetRef = refs[hoveredField]?.current;
+    if (targetRef) {
+      targetRef.classList.add("highlight-section");
+    }
+  }, [hoveredField]);
+
+  // scroll to section
+  useEffect(() => {
+    if (
+      scrollToSection === "footer" &&
+      sectionRef.current &&
+      lastScrollToSection !== "footer"
+    ) {
+      sectionRef.current.scrollIntoView({ behavior: "smooth" });
+      setLastScrollToSection("footer");
+    }
+  }, [scrollToSection]);
+
+  return {
+    sectionRef,
+    titleRef,
+    textRef,
+    ctaFooterTitleRef,
+    ctaFooterLinkRef,
+    similarJobsTitleRef,
+  };
+};
+
+// export const Template2 = React.memo(({
+export const Template2 = React.memo(({
+  landingPageData,
+  jobPostingsList,
+  jobListings,
+}) => {
+  const {
+    sectionRef,
+    titleRef,
+    textRef,
+    ctaFooterTitleRef,
+    ctaFooterLinkRef,
+    similarJobsTitleRef,
+  } = useFooterHover();
+  const { handleItemClick } = useFocusContext();
+  const router = useRouter();
+  const currentPath = router.pathname?.split("/")[1];
+
+  return (
+    <div ref={sectionRef} className="w-full">
+      <div className="flex flex-col gap-8 items-center self-stretch mt-16 sm:gap-8">
+        <div className="container mt-4 mdx:px-5">
+          <div className="flex flex-col gap-16 smx:gap-8">
+            <div className="flex flex-col items-center gap-[30px] px-14 mdx:px-5">
+              <div className="flex flex-col items-center gap-[18px] px-14 mdx:px-5">
+                <h2
+                  onClick={() => handleItemClick("footerTitle")}
+                  ref={titleRef}
+                  className="text-[30px] font-semibold text-[#000000] mdx:text-[28px] smx:text-[26px]"
+                >
+                  {landingPageData?.footerTitle}
+                </h2>
+                <p
+                  onClick={() => handleItemClick("footerDescription")}
+                  ref={textRef}
+                  className="text-[20px] font-normal text-[#000000]"
+                >
+                  {landingPageData?.footerDescription}
+                </p>
+              </div>
+              <div className="flex">
+                <Button
+                  color="light_blue_A700"
+                  href={landingPageData?.ctaFooterLink}
+                  size="2xl"
+                  shape="round"
+                  className="min-w-[252px] rounded-lg border border-solid border-[#0E87FE] px-[33px] font-semibold smx:px-5"
+                  onClick={() => handleItemClick("ctaFooterTitle")}
+                  ref={ctaFooterTitleRef}
+                >
+                  {landingPageData?.ctaFooterTitle}
+                </Button>
+              </div>
+            </div>
+            <Img
+              onClick={() => handleItemClick("similarJobsTitle")}
+              ref={similarJobsTitleRef}
+              src="/images3/img_horizontal_container.svg"
+              alt="Horizontal Image"
+              className="h-px"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-center self-stretch bg-[#f9fafb]">
+          <div className="container flex justify-center mb-24 mdx:px-5">
+            <div className="px-8 w-full sm:px-5">
+              <div className="flex flex-col gap-8 items-start">
+                <h2
+                  onClick={() => handleItemClick("similarJobsTitle")}
+                  ref={similarJobsTitleRef}
+                  className="text-[24px] font-semibold text-[#0f1728] mdx:text-[22px]"
+                >
+                  {landingPageData?.similarJobsTitle}
+                </h2>
+                <div className="flex gap-8 self-stretch mdx:flex-col">
+                  <Suspense fallback={<div>Loading feed...</div>}>
+                    {jobListings.map((d, index) => (
+                      <UserProfileCard {...d} key={"cardsList" + index} />
+                    ))}
+                  </Suspense>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="container flex flex-col items-center px-14 mdx:px-5">
+          <div className="flex gap-2">
+            <Heading
+              size="text3xl"
+              as="h3"
+              className="text-[24px] font-semibold uppercase text-[#26252a] mdx:text-[22px]"
+            >
+              <span>H</span>
+              <span>ireLab</span>
+            </Heading>
+            <Img
+              src="/images3/img_user_red_a200.png"
+              alt="User Image"
+              className="h-[30px] object-cover"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="container px-8 mx-auto mt-8 mb-10 w-full mdx:px-5">
+        <footer className="flex flex-col gap-16 items-center sm:gap-8">
+          <div className="flex flex-col gap-8 self-stretch">
+            <div className="h-px bg-[#eaecf0]" />
+            <div className="flex gap-5 justify-between items-center sm:flex-col">
+              <Text
+                size="text_md_regular"
+                as="p"
+                className="text-[16px] font-normal text-[#98a1b2]"
+              >
+                © {new Date().getFullYear()} {landingPageData?.companyName || "Hirelab"}. All rights reserved.
+              </Text>
+              <div className="flex w-[14%] justify-between gap-5 sm:w-full">
+                <a href="#">
+                  <Img
+                    src="/images3/img_social_icon.svg"
+                    alt="Social Icon 1"
+                    className="h-[24px] w-[24px]"
+                  />
+                </a>
+                <a href="#">
+                  <Img
+                    src="/images3/img_social_icon_gray_400.svg"
+                    alt="Social Icon 2"
+                    className="h-[24px] w-[24px]"
+                  />
+                </a>
+                <a href="#">
+                  <Img
+                    src="/images3/img_link.svg"
+                    alt="Link Icon"
+                    className="h-[24px] w-[24px]"
+                  />
+                </a>
+                <a href="#" a>
+                  <Img
+                    src="/images3/img_social_icon_gray_400_24x24.svg"
+                    alt="Social Icon 3"
+                    className="h-[24px] w-[24px]"
+                  />
+                </a>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+});
+// });
+
+const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings }) => {
+  const {
+    sectionRef,
+    titleRef,
+    textRef,
+    ctaFooterTitleRef,
+    ctaFooterLinkRef,
+    similarJobsTitleRef,
+  } = useFooterHover();
+  const { handleItemClick } = useFocusContext();
+  const router = useRouter();
+  const currentPath = router.pathname?.split("/")[1];
+
+  return (
+    <div ref={sectionRef} className="w-full">
+      <div className="flex flex-col items-center gap-16 bg-[#222222] py-[46px] mdx:py-5 smx:gap-8">
+        <div className="container mt-4 mdx:px-5">
+          <div className="flex flex-col gap-16 smx:gap-8">
+            <div className="flex flex-col items-center gap-[30px] px-14 mdx:px-5">
+              <div className="flex flex-col items-center gap-[18px] px-14 mdx:px-5">
+                <h2
+                  onClick={() => handleItemClick("footerTitle")}
+                  ref={titleRef}
+                  size="display_sm_semibold"
+                  as="h2"
+                  className="text-[30px] font-semibold text-[#ffffff] mdx:text-[28px] smx:text-[26px]"
+                >
+                  {landingPageData?.footerTitle}
+                </h2>
+                <p
+                  onClick={() => handleItemClick("footerDescription")}
+                  ref={textRef}
+                  size="text_xl_regular"
+                  as="p"
+                  className="text-[20px] font-normal text-[#ffffff]"
+                >
+                  {landingPageData?.footerDescription}
+                </p>
+              </div>
+              <div className="flex">
+                <Button
+                  color="light_blue_A700"
+                  href={landingPageData?.ctaFooterLink}
+                  size="2xl"
+                  shape="round"
+                  className="min-w-[252px] rounded-lg border border-solid border-[#0E87FE] px-[33px] font-semibold smx:px-5"
+                >
+                  {landingPageData?.ctaFooterTitle}
+                </Button>
+              </div>
+            </div>
+            <Img
+              src="/images3/img_horizontal_container.svg"
+              alt="Horizontal Image"
+              className="h-px"
+            />
+          </div>
+        </div>
+
+        {/* related content section */}
+        <div className="self-stretch">
+          <div className="flex justify-center bg-[#222222]">
+            <div className="container flex justify-center mb-6 mdx:px-5">
+              <div className="px-8 w-full smx:px-5">
+                <div className="flex flex-col gap-8 items-start">
+                  <h2
+                    onClick={() => handleItemClick("similarJobsTitle")}
+                    ref={similarJobsTitleRef}
+                    size="display_xs_semibold"
+                    as="h2"
+                    className="text-[24px] font-semibold text-[#ffffff] mdx:text-[22px]"
+                  >
+                    {landingPageData?.similarJobsTitle}
+                  </h2>
+                  <div className="flex gap-8 self-stretch mdx:flex-col">
+                    <Suspense fallback={<div>Loading feed...</div>}>
+                      {jobPostingsList?.map((d, index) => (
+                        <UserProfile4
+                          applyButtonText={landingPageData?.ctaFooterTitle}
+                          applyButtonLink={landingPageData?.ctaFooterLink}
+                          {...d}
+                          key={"cardsList" + index}
+                        />
+                      ))}
+                    </Suspense>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="container mdx:px-5">
+          <footer className="flex flex-col gap-16 smx:gap-8">
+            <Img
+              src="/images3/img_horizontal_container.svg"
+              alt="Footer Image"
+              className="h-px"
+            />
+            <div className="flex flex-col gap-8 items-center px-14 mx-8 mdx:mx-0 mdx:px-5">
+              <Img
+                src="/images3/img_footer_logo.png"
+                alt="Footer Logo"
+                className="h-[30px] w-[116px] object-contain"
+              />
+            </div>
+            <div className="px-8 smx:px-5">
+              <div className="flex gap-5 justify-between items-center smx:flex-col">
+                <Text
+                  size="text_md_regular"
+                  as="p"
+                  className="text-[16px] font-normal text-[#ffffff]"
+                >
+                  © {new Date().getFullYear()}{landingPageData?.companyName || "Hirelab"}. All rights reserved.
+                </Text>
+                <div className="flex w-[14%] justify-between gap-5 smx:w-full">
+                  <a href="#">
+                    <Img
+                      src="/images3/img_social_icon_base_white.svg"
+                      alt="Social Icon"
+                      className="h-[24px] w-[24px]"
+                    />
+                  </a>
+                  <a href="#">
+                    <Img
+                      src="/images3/img_social_icon_base_white_24x24.svg"
+                      alt="Social Icon 24x24"
+                      className="h-[24px] w-[24px]"
+                    />
+                  </a>
+                  <a href="#">
+                    <Img
+                      src="/images3/img_link_base_white.svg"
+                      alt="Link Icon"
+                      className="h-[24px] w-[24px]"
+                    />
+                  </a>
+                  <a href="#">
+                    <Img
+                      src="/images3/img_social_icon_24x24.svg"
+                      alt="Social Icon Large"
+                      className="h-[24px] w-[24px]"
+                    />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, similarJobs: propSimilarJobs, similarJobsLoading: propSimilarJobsLoading }) => {
+  const {
+    sectionRef,
+    titleRef,
+    textRef,
+    ctaFooterTitleRef,
+    ctaFooterLinkRef,
+    similarJobsTitleRef,
+  } = useFooterHover();
+  const { handleItemClick } = useFocusContext();
+  const router = useRouter();
+  const currentPath = useMemo(() => router.pathname?.split("/")[1], [router.pathname]);
+
+  // Use props if provided, otherwise fall back to local state (for backward compatibility)
+  const [localSimilarJobs, setLocalSimilarJobs] = useState([]);
+  const [localIsLoading, setLocalIsLoading] = useState(false);
+  
+  const similarJobs = propSimilarJobs !== undefined ? propSimilarJobs : localSimilarJobs;
+  const isLoading = propSimilarJobsLoading !== undefined ? propSimilarJobsLoading : localIsLoading;
+
+  // Memoize dependencies to prevent unnecessary re-renders
+  const similarJobsIds = useMemo(() => landingPageData?.similarJobs, [landingPageData?.similarJobs]);
+  const showSimilarJobs = useMemo(() => !!landingPageData?.showSimilarJobs, [landingPageData?.showSimilarJobs]);
+  const shouldFetchLocally = useMemo(() => propSimilarJobs === undefined, [propSimilarJobs]);
+
+  // Debounced fetch function
+  const fetchTimeoutRef = useRef(null);
+  const debouncedFetchSimilarJobs = useCallback(async () => {
+    if (!shouldFetchLocally || !similarJobsIds?.length || !showSimilarJobs) {
+      setLocalSimilarJobs([]);
+      return;
+    }
+
+    setLocalIsLoading(true);
+    try {
+      const res = await CrudService.search("LandingPageData", 100, 1, {
+        filters: { _id: { $in: similarJobsIds } },
+      });
+      
+      if (res?.data?.items) {
+        setLocalSimilarJobs(res?.data?.items);
+      }
+    } catch (err) {
+      console.error("Error fetching similar jobs:", err);
+      setLocalSimilarJobs([]);
+    } finally {
+      setLocalIsLoading(false);
+    }
+  }, [shouldFetchLocally, similarJobsIds, showSimilarJobs]);
+
+  // Local fetching for backward compatibility with debouncing
+  useEffect(() => {
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+    
+    fetchTimeoutRef.current = setTimeout(debouncedFetchSimilarJobs, 100);
+    
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
+  }, [debouncedFetchSimilarJobs]);
+
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  // Sliding carousel state/refs for mobile
+  const sliderRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  // Go to slide by index
+  const goToSlide = useCallback((index) => {
+    if (sliderRef.current) {
+      setActiveSlide(index);
+      const containerWidth = sliderRef.current.clientWidth;
+      const scrollPosition = index * containerWidth;
+      sliderRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: "smooth",
+      });
+    }
+  }, []);
+
+  // Scroll handler to update active dot
+  const scrollTimeoutRef = useRef(null);
+  const handleScroll = useCallback(() => {
+    if (sliderRef.current && !isDragging) {
+      const scrollPosition = sliderRef.current.scrollLeft;
+      const containerWidth = sliderRef.current.clientWidth;
+      const newActiveSlide = Math.round(scrollPosition / containerWidth);
+      if (newActiveSlide !== activeSlide) {
+        setActiveSlide(newActiveSlide);
+      }
+    }
+  }, [isDragging, activeSlide]);
+
+  // Debounced scroll handler
+  const debouncedHandleScroll = useCallback(() => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(handleScroll, 100);
+  }, [handleScroll]);
+
+  // Mouse/touch drag handlers
+  const handleMouseDown = useCallback((e) => {
+    setIsDragging(true);
+    setStartX(e.pageX - sliderRef.current.offsetLeft);
+    setScrollLeft(sliderRef.current.scrollLeft);
+  }, []);
+  
+  const handleTouchStart = useCallback((e) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].pageX - sliderRef.current.offsetLeft);
+    setScrollLeft(sliderRef.current.scrollLeft);
+  }, []);
+  
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - sliderRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    sliderRef.current.scrollLeft = scrollLeft - walk;
+  }, [isDragging, startX, scrollLeft]);
+  
+  const handleTouchMove = useCallback((e) => {
+    if (!isDragging) return;
+    const x = e.touches[0].pageX - sliderRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    sliderRef.current.scrollLeft = scrollLeft - walk;
+  }, [isDragging, startX, scrollLeft]);
+  
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    setTimeout(() => {
+      handleScroll();
+    }, 50);
+  }, [handleScroll]);
+
+  // Extract colors for dependency tracking - memoized to prevent re-renders
+  const primaryColor = useMemo(() => landingPageData?.primaryColor || "#26B0C6", [landingPageData?.primaryColor]);
+  const secondaryColor = useMemo(() => landingPageData?.secondaryColor || "#F7E733", [landingPageData?.secondaryColor]);
+  const tertiaryColor = useMemo(() => landingPageData?.tertiaryColor || "#44b566", [landingPageData?.tertiaryColor]);
+  const heroBackgroundColor = useMemo(() => 
+    landingPageData?.heroBackgroundColor || primaryColor || "#26B0C6", 
+    [landingPageData?.heroBackgroundColor, primaryColor]
+  );
+
+  // Memoize the custom colors object
+  const customColors = useMemo(() => ({
+    primaryColor,
+    secondaryColor,
+    tertiaryColor,
+    heroBackgroundColor,
+  }), [primaryColor, secondaryColor, tertiaryColor, heroBackgroundColor]);
+
+  // Use our template palette hook with the default colors
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#26B0C6",
+      secondaryColor: "#F7E733",
+      tertiaryColor: "#44b566",
+      heroBackgroundColor: "#26B0C6",
+    },
+    customColors
+  );
+  const { subheaderFont, bodyFont } = useMemo(() => getFonts(landingPageData), [landingPageData]);
+
+  // Ensure we have job listings
+
+  // Memoize JobCard styles outside the component
+  const jobCardStyles = useMemo(() => ({
+    container: { color: "black", fontFamily: bodyFont?.family },
+    badge: {
+      color: calculateTextColor(getColor("primary", 50)),
+      background: getColor("primary", 50),
+      padding: "10px 10px",
+      borderRadius: "10px",
+    },
+    applyButton: {
+      backgroundColor: getColor("primary", 500),
+      color: calculateTextColor(getColor("primary", 500)),
+    }
+  }), [bodyFont?.family, getColor]);
+
+  // Job Card component - memoized to prevent unnecessary re-renders
+  const JobCard = useCallback(({ job }) => {
+    if (!job) return null;
+    
+    const workType = useMemo(() => {
+      if (job.location?.includes("Remote")) return "Remote";
+      else if (job.location?.includes("Hybrid")) return "Hybrid";
+      else return "Onsite";
+    }, [job.location]);
+    
+    return (
+      <div
+        style={jobCardStyles.container}
+        className="flex overflow-hidden flex-col h-full rounded-xl  max-w-[370px] mx-auto w-full"
+      >
+        {/* Job Image */}
+        <div className="relative h-48 bg-gray-100 rounded-xl overflow-hidden">
+          {job.heroImage ? (
+            <Img
+              src={job.heroImage}
+              alt={job.vacancyTitle}
+              className="object-cover w-full h-full"
+            />
+          ) : (
+            <div className="flex justify-center items-center w-full h-full">
+              <div className="text-xl text-gray-300">No Image</div>
+            </div>
+          )}
+        </div>
+
+        {/* Job Details */}
+        <div className="flex flex-col flex-grow py-6 ">
+          <h3 className="text-xl font-bold  mb-2">{job.vacancyTitle}</h3>
+          <p className="line-clamp-2 h-[40px] mb-4 text-sm overflow-hidden text-ellipsis">
+            {job.heroDescription}
+          </p>
+
+          {/* Job Specs */}
+          <div className="flex flex-wrap gap-4 mb-6">
+            {!!job.salaryMin && (
+              <div
+                className="flex items-center text-sm"
+                style={jobCardStyles.badge}
+              >
+                <svg
+                  width="12"
+                  height="10"
+                  viewBox="0 0 12 10"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M6.5 1.5C6.5 2.05228 5.26878 2.5 3.75 2.5C2.23122 2.5 1 2.05228 1 1.5M6.5 1.5C6.5 0.947715 5.26878 0.5 3.75 0.5C2.23122 0.5 1 0.947715 1 1.5M6.5 1.5V2.25M1 1.5V7.5C1 8.05228 2.23122 8.5 3.75 8.5M3.75 4.5C3.66573 4.5 3.58234 4.49862 3.5 4.49592C2.09837 4.44999 1 4.02164 1 3.5M3.75 6.5C2.23122 6.5 1 6.05228 1 5.5M11 4.75C11 5.30228 9.76878 5.75 8.25 5.75C6.73122 5.75 5.5 5.30228 5.5 4.75M11 4.75C11 4.19772 9.76878 3.75 8.25 3.75C6.73122 3.75 5.5 4.19772 5.5 4.75M11 4.75V8.5C11 9.05228 9.76878 9.5 8.25 9.5C6.73122 9.5 5.5 9.05228 5.5 8.5V4.75M11 6.625C11 7.17728 9.76878 7.625 8.25 7.625C6.73122 7.625 5.5 7.17728 5.5 6.625"
+                    // stroke="#2E9EAC"
+                    stroke={getColor("secondary", 500)}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                {intToHumanReadablePrice(job.salaryMin)} -{" "}
+                {intToHumanReadablePrice(job.salaryMax)}/
+                {landingPageData?.salaryTime?.toLowerCase?.() || "Month"}
+              </div>
+            )}
+            <div
+              className="flex items-center text-sm"
+              style={jobCardStyles.badge}
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 6.68722C9.7659 7.03442 11 7.82736 11 8.75C11 9.99264 8.76142 11 6 11C3.23858 11 1 9.99264 1 8.75C1 7.82736 2.2341 7.03442 4 6.68722M6 8.5V4.5M6 4.5C6.82843 4.5 7.5 3.82843 7.5 3C7.5 2.17157 6.82843 1.5 6 1.5C5.17157 1.5 4.5 2.17157 4.5 3C4.5 3.82843 5.17157 4.5 6 4.5Z"
+                  stroke={getColor("secondary", 500)}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+
+              {workType}
+            </div>
+            <div
+              className="flex items-center text-sm"
+              style={jobCardStyles.badge}
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g clipPath="url(#clip0_1_2958)">
+                  <path
+                    d="M6 3V6L8 7M11 6C11 8.76142 8.76142 11 6 11C3.23858 11 1 8.76142 1 6C1 3.23858 3.23858 1 6 1C8.76142 1 11 3.23858 11 6Z"
+                    stroke={getColor("secondary", 500)}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+                <defs>
+                  <clipPath id="clip0_1_2958">
+                    <rect width="12" height="12" fill="white" />
+                  </clipPath>
+                </defs>
+              </svg>
+              {job.hoursRange
+                ? `${job.hoursMin}-${job.hoursMax}`
+                : `${job.hoursMin}`}{" "}
+              / {job.hoursUnit}
+            </div>
+          </div>
+
+          {/* Apply Button */}
+          <a
+            href={landingPageData?.cta2Link??"#"}
+            target="_blank"
+            className="py-3 w-full font-medium text-center rounded-full transition-colors mt-auto"
+            style={jobCardStyles.applyButton}
+          >
+            {job.seeMoreInfoText || "Apply Now"}
+          </a>
+        </div>
+      </div>
+    );
+  }, [jobCardStyles, getColor, landingPageData?.salaryTime, landingPageData?.cta2Link]);
+
+  // Memoize font and color calculations
+  const textColor = useMemo(() => calculateTextColor(getColor("primary", 500)), [getColor]);
+  
+  const getColorBrightness = useCallback((color) => {
+    const rgb = color?.match(/^#(\w{6})$/)?.[1];
+    if (!rgb) return 0;
+    const r = parseInt(rgb.slice(0, 2), 16);
+    const g = parseInt(rgb.slice(2, 4), 16);
+    const b = parseInt(rgb.slice(4, 6), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000;
+  }, []);
+
+  const getBackgroundColor = useCallback((primaryColor) => {
+    const brightness = getColorBrightness(primaryColor);
+    return brightness > 128
+      ? getColor("primary", 900)
+      : getColor("primary", 500);
+  }, [getColorBrightness, getColor]);
+
+  const applyButtonColor = useMemo(() => {
+    let color = getBackgroundColor(getColor("primary", 500));
+    if (getColorBrightness(landingPageData?.primaryColor) > 128) {
+      color = getColor("primary", 400);
+    }
+    return color;
+  }, [getBackgroundColor, getColor, getColorBrightness, landingPageData?.primaryColor]);
+
+  // Memoize GridPattern props to prevent flashing
+  const gridPatternProps = useMemo(() => ({
+    gridColor: getColor("tertiary", 300),
+    gridLineColor: getColor("tertiary", 50),
+    backgroundColor: getColor("primary", 500),
+    gridSize: 50
+  }), [getColor]);
+
+  // Memoize title text calculations
+  const footerTitleParts = useMemo(() => {
+    if (!landingPageData?.footerTitle) return { firstPart: "", secondPart: "" };
+    const words = landingPageData.footerTitle.split(" ");
+    const midPoint = Math.ceil(words.length / 2);
+    return {
+      firstPart: words.slice(0, midPoint).join(" "),
+      secondPart: words.slice(midPoint).join(" ")
+    };
+  }, [landingPageData?.footerTitle]);
+
+  // Memoize similar jobs title parts
+  const similarJobsTitleParts = useMemo(() => {
+    if (!landingPageData?.similarJobsTitle) return { firstWord: "You May", restWords: "Also Like" };
+    const words = landingPageData.similarJobsTitle.split(" ");
+    return {
+      firstWord: words[0] || "You May",
+      restWords: words.slice(1).join(" ") || "Also Like"
+    };
+  }, [landingPageData?.similarJobsTitle]);
+
+  // Memoize style objects to prevent re-renders
+  const titleStyle = useMemo(() => ({
+    fontFamily: subheaderFont?.family,
+    color: textColor
+  }), [subheaderFont?.family, textColor]);
+
+  const descriptionStyle = useMemo(() => ({
+    fontFamily: bodyFont?.family,
+    color: textColor
+  }), [bodyFont?.family, textColor]);
+
+  const ctaButtonStyle = useMemo(() => ({
+    backgroundColor: getColor("primary", 600),
+    color: textColor,
+    fontFamily: bodyFont?.family,
+  }), [getColor, textColor, bodyFont?.family]);
+
+  return (
+    <div
+      className="pt-16 pb-5 bg-white overflow-hidden w-full"
+      ref={sectionRef}
+      style={{ color: textColor }}
+    >
+      {/* CTA Banner */}
+      <div className="px-4 mx-auto mb-16 max-w-6xl md:px-8">
+        <div className="overflow-hidden relative p-8 text-center rounded-xl md:p-12">
+          <GridPattern
+            gridColor={gridPatternProps.gridColor}
+            gridLineColor={gridPatternProps.gridLineColor}
+            backgroundColor={gridPatternProps.backgroundColor}
+            gridSize={gridPatternProps.gridSize}
+          />
+          {/* Background Pattern */}
+          {/* <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-1/4 left-1/4 w-16 h-16 bg-white rounded-lg"></div>
+            <div className="absolute top-1/2 left-1/2 w-24 h-24 bg-white rounded-lg"></div>
+            <div className="absolute right-1/4 bottom-1/4 w-20 h-20 bg-white rounded-lg"></div>
+          </div> */}
+
+          <div className="relative z-10">
+            <h2
+              className="mx-auto mb-2 text-2xl font-bold  md:text-3xl w-fit"
+              onClick={() => handleItemClick("footerTitle")}
+              ref={titleRef}
+              style={titleStyle}
+            >
+              {footerTitleParts.firstPart}
+              <br />
+              <span style={titleStyle}>
+                {footerTitleParts.secondPart}
+              </span>
+            </h2>
+            <p
+              onClick={() => handleItemClick("footerDescription")}
+              ref={textRef}
+              className="mx-auto mb-8 text-white/80 w-fit"
+              style={descriptionStyle}
+            >
+              {landingPageData?.footerDescription ||
+                "Explore our exciting job opportunities and apply today!"}
+            </p>
+            <a
+              onClick={() => handleItemClick("ctaFooterTitle")}
+              ref={ctaFooterTitleRef}
+              href={landingPageData?.ctaFooterLink}
+              className="inline-block px-8 py-3 font-medium rounded-full transition-colors"
+              style={ctaButtonStyle}
+            >
+              {landingPageData?.ctaFooterTitle || "Apply Now"}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Similar Jobs Section */}
+      {landingPageData?.showSimilarJobs && (
+        <div className="px-4 mx-auto max-w-[1300px] md:px-8">
+          <h2
+            className="text-2xl md:text-3xl font-bold mb-8 text-center text-[#1a3e4c] w-fit mx-auto"
+            onClick={() => handleItemClick("similarJobsTitle")}
+            ref={similarJobsTitleRef}
+            style={{ color: "black", fontFamily: subheaderFont?.family }}
+          >
+            {similarJobsTitleParts.firstWord}{" "}
+            <span style={{ color: "black" }}>
+              {similarJobsTitleParts.restWords}
+            </span>
+          </h2>
+
+          {/* Desktop Grid */}
+          <div className="hidden md:flex justify-center items-stretch gap-2">
+            {similarJobs.map((job, index) => (
+              <React.Fragment key={job.id || index}>
+                {index > 0 && (
+                  <div className="mx-3 w-px bg-gray-200 self-stretch my-3"></div>
+                )}
+                <div className="max-w-[368px]">
+                  <JobCard job={job} />
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Mobile Carousel */}
+          <div className="md:hidden">
+            <div
+              ref={sliderRef}
+              className="flex overflow-x-auto justify-start snap-x snap-mandatory scroll-smooth"
+              style={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                WebkitOverflowScrolling: "touch",
+                scrollSnapType: "x mandatory",
+              }}
+              onScroll={debouncedHandleScroll}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleDragEnd}
+            >
+              {similarJobs.map((job, index) => (
+                <div
+                  key={job.id || index}
+                  className="flex-shrink-0 w-full px-2 snap-start"
+                  style={{ scrollSnapAlign: "start" }}
+                >
+                  <JobCard job={job} />
+                </div>
+              ))}
+            </div>
+            {/* Carousel Navigation Dots */}
+            <div className="flex gap-2 justify-center mt-8">
+              {similarJobs.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className="w-2 h-2 rounded-full transition-colors"
+                  style={{
+                    backgroundColor: index === activeSlide ? getColor("primary", 500) : "#e5e7eb",
+                  }}
+                  aria-label={`Go to job ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Footer Copyright */}
+      <div className="container px-8 mx-auto mt-16 mdx:px-5">
+        <div className="flex flex-col gap-8 self-stretch">
+          <div className="h-px bg-[#eaecf0]" />
+          <div className="text-center">
+            <Text as="p" className="text-[16px] font-normal text-[#98a1b2]">
+              &copy; {new Date().getFullYear()} {landingPageData?.companyName || "Hirelab"}. All rights reserved.
+            </Text>
+          </div>
+            {/* <div className="flex gap-5 justify-between sm:w-full">
+              <a href="#">
+                <Img
+                  src="/images3/img_social_icon.svg"
+                  alt="Social Icon 1"
+                  className="h-[24px] w-[24px]"
+                />
+              </a>
+              <a href="#">
+                <Img
+                  src="/images3/img_social_icon_gray_400.svg"
+                  alt="Social Icon 2"
+                  className="h-[24px] w-[24px]"
+                />
+              </a>
+              <a href="#">
+                <Img
+                  src="/images3/img_link.svg"
+                  alt="Link Icon"
+                  className="h-[24px] w-[24px]"
+                />
+              </a>
+              <a href="#">
+                <Img
+                  src="/images3/img_social_icon_gray_400_24x24.svg"
+                  alt="Social Icon 3"
+                  className="h-[24px] w-[24px]"
+                />
+              </a>
+            </div> */}
+          {/* </div> */}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+export default function TemplateThreePage(props) {
+  const jobPostingsList = [
+    {
+      userImage: "/images3/img_image_152x344.png",
+      createdWithText: props?.landingPageData?.createdWithText,
+      jobTitle: "Product Designer",
+      jobDescription:
+        "The Product Designer will assist in the planning, execution, and optimization of marketing initiatives to promote our products and services. This role will collaborate with various teams to develop and implement marketing campaigns across multiple channels",
+      applyButtonText: props?.landingPageData?.ctaFooterTitle,
+    },
+    {
+      userImage: "/images3/img_image_3.png",
+      createdWithText: props?.landingPageData?.createdWithText,
+      jobTitle: "Recruiter",
+      jobDescription:
+        "The Recruiter will assist in the planning, execution, and optimization of marketing initiatives to promote our products and services. This role will collaborate with various teams to develop and implement marketing campaigns across multiple channels",
+      applyButtonText: props?.landingPageData?.ctaFooterTitle,
+    },
+    {
+      userImage: "/images3/img_image_4.png",
+      createdWithText: props?.landingPageData?.createdWithText,
+      jobTitle: "Marketer",
+      jobDescription:
+        "The Marketer will assist in the planning, execution, and optimization of marketing initiatives to promote our products and services. This role will collaborate with various teams to develop and implement marketing campaigns across multiple channels",
+      applyButtonText: props?.landingPageData?.ctaFooterTitle,
+    },
+  ];
+  const jobListings = [
+    {
+      createdWithText: props?.landingPageData?.createdWithText,
+      monthlyEarningsText: "2500$ / month",
+      workTypeText: "Hybrid",
+      workHoursText: "8h/day",
+      jobTitle: "Product Designer",
+      jobDescription:
+        "The Product Designer will assist in the planning, execution, and optimization of marketing initiatives to promote our products and services. This role will collaborate with various teams to develop and implement marketing campaigns across multiple channels",
+      seeMoreInfoText: props?.landingPageData?.ctaFooterTitle,
+      seeMoreInfoLink: props?.landingPageData?.ctaFooterLink,
+    },
+    {
+      createdWithText: props?.landingPageData?.createdWithText,
+      monthlyEarningsText: "2500$ / month",
+      workTypeText: "Hybrid",
+      workHoursText: "8h/day",
+      jobTitle: "Recruiter",
+      jobDescription:
+        "The Recruiter will assist in the planning, execution, and optimization of marketing initiatives to promote our products and services. This role will collaborate with various teams to develop and implement marketing campaigns across multiple channels",
+      seeMoreInfoText: props?.landingPageData?.ctaFooterTitle,
+      seeMoreInfoLink: props?.landingPageData?.ctaFooterLink,
+    },
+    {
+      createdWithText: props?.landingPageData?.createdWithText,
+      monthlyEarningsText: "2500$ / month",
+      workTypeText: "Hybrid",
+      workHoursText: "8h/day",
+      jobTitle: "Marketer",
+      jobDescription:
+        "The Marketer will assist in the planning, execution, and optimization of marketing initiatives to promote our products and services. This role will collaborate with various teams to develop and implement marketing campaigns across multiple channels",
+      seeMoreInfoText: props?.landingPageData?.ctaFooterTitle,
+      seeMoreInfoLink: props?.landingPageData?.ctaFooterLink,
+    },
+  ];
+
+
+  if (props?.landingPageData?.templateId === "3")
+    return (
+      <Template3
+        jobPostingsList={jobPostingsList}
+        jobListings={jobListings}
+        {...props}
+      />
+    );
+  if (props?.landingPageData?.templateId === "2")
+    return (
+      <Template2
+        jobPostingsList={jobPostingsList}
+        jobListings={jobListings}
+        {...props}
+      />
+    );
+  if (props?.landingPageData?.templateId === "1")
+    return (
+      <Template1
+        jobPostingsList={jobPostingsList}
+        jobListings={jobListings}
+        {...props}
+      />
+    );
+
+  return <Template3 />;
+}

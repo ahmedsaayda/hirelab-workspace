@@ -1,4 +1,4 @@
-import Vacancies from "../../pages/Dashboard/Vacancies";
+import Vacancies from "../../../src/pages/Dashboard/Vacancies";
 import Layout from "../layout";
 
 export default function Page() {

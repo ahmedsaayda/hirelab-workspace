@@ -1,4 +1,4 @@
-import NewVacancyTwo from "../../../pages/Dashboard/NewVacancyTwo";
+import NewVacancyTwo from "../../../../src/pages/Dashboard/NewVacancyTwo";
 import Layout from "../../layout";
 
 export default function Page() {
