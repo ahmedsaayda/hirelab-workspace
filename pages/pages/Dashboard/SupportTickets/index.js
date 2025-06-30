@@ -3,8 +3,8 @@ import { Button, Popconfirm, Skeleton } from "antd";
 import moment from "moment";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../../redux/auth/selectors";
-import ChatService from "../../../service/ChatService";
+import { selectUser } from "../../../../src/redux/auth/selectors";
+import ChatService from "../../../../src/services/ChatService";
 
 const getPartner = (partner, user) =>
   partner.one?._id === user?._id ? partner.two : partner.one;

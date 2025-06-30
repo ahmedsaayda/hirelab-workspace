@@ -3,8 +3,8 @@ import { Button, Input, message, Radio, Typography } from "antd";
 import { QuestionCircleOutlined } from "@ant-design/icons";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../../../../redux/auth/selectors";
-import AuthService from "../../../../../service/AuthService";
+import { selectUser } from "../../../../../../src/redux/auth/selectors";
+import AuthService from "../../../../../../src/services/AuthService";
 
 const { Text } = Typography;
 

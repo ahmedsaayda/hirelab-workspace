@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Heading, Img, Text } from "./components";
-import { useHover } from "../../contexts/HoverContext";
+import { useHover } from "../../../src/contexts/HoverContext";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
 // import { Heading, Img, Text } from "./ui";

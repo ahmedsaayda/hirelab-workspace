@@ -2,11 +2,11 @@ import { Alert, message } from "antd";
 import Cookies from "js-cookie";
 import React from "react";
 import { useRouter } from "next/router";
-import MultiStepComponent from "../../components/MultiStepComponent";
-import { login, setPartner } from "../../redux/auth/actions";
-import { store } from "../../redux/store";
-import AuthService from "../../service/AuthService";
-import PublicService from "../../service/PublicService";
+import MultiStepComponent from "../../../src/components/MultiStepComponent";
+import { login, setPartner } from "../../../src/redux/auth/actions";
+import { store } from "../../../src/redux/store";
+import AuthService from "../../../src/services/AuthService";
+import PublicService from "../../../src/services/PublicService";
 
 const partnerRegistrationSteps = [
   {

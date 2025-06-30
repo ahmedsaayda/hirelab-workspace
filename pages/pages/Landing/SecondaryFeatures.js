@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { useId } from "react";
 
 import { useSelector } from "react-redux";
-import { getPartner } from "../../redux/auth/selectors";
+import { getPartner } from "../../../src/redux/auth/selectors";
 import { Container } from "./Container";
 
 function Feature({ feature, isActive, className, ...props }) {

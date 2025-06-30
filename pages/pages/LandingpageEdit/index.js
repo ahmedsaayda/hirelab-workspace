@@ -1,10 +1,10 @@
 import { Modal, Skeleton, message } from "antd";
 import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/router";
-import CrudService from "../../service/CrudService";
-import PublicService from "../../service/PublicService";
+import CrudService from "../../../src/services/CrudService";
+import PublicService from "../../../src/services/PublicService";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../redux/auth/selectors";
+import { selectUser } from "../../../src/redux/auth/selectors";
 import { changeIndigoShades, generateTailwindPalette } from "../Dashboard";
 import {
   Button,
@@ -34,12 +34,12 @@ import RecruiterContact from "../Landingpage/RecruiterContact";
 import Video from "../Landingpage/Video";
 import FormEditor from "./FormEditor";
 import { defaultLandingPageData } from "../onboarding/components/brand-style-form.jsx";
-import { PreviewContainer } from "../../components/preview-container.jsx";
+import { PreviewContainer } from "../../../src/components/preview-container.jsx";
 import CompanyFacts from "../Landingpage/CompanyFacts.js";
 import AboutCompany from "../Landingpage/AboutCompany.js";
 import TextBox from "../Landingpage/TextBox.js";
 import { AiOutlineFolderOpen } from "react-icons/ai";
-import MyMediaLibrary from "../../components/mediaLibrary/index.jsx";
+import MyMediaLibrary from "../../../src/components/mediaLibrary/index.jsx";
 import { ImagePlus } from "lucide-react";
 import {
   AboutCompanyEdit,
@@ -61,15 +61,15 @@ import {
 } from "./allEditors.jsx";
 import LandingpagePage from "../Landingpage/index.js";
 import AIEditModal from "../Dashboard/Vacancies/AIEditModal.jsx";
-import { useHover } from "../../contexts/HoverContext.js";
+import { useHover } from "../../../src/contexts/HoverContext.js";
 import NavBar from "../Landingpage/NavBar.jsx";
 // hirelab-frontend\src\pages\LandingpageEdit\index.js
 // hirelab-frontend\src\components\mediaLibrary\ImageModal\ImageSelectionModal.jsx
-import ImageSelectionModal from "../../components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
+import ImageSelectionModal from "../../../src/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
 import { useDispatch } from "react-redux";
-import { setActiveSection, setMediaLimits } from "../../redux/landingPage/mediaUploadReducer.js";
+import { setActiveSection, setMediaLimits } from "../../../src/redux/landingPage/mediaUploadReducer.js";
 import VacancyCreationDebugModal from "./VacancyCreationDebugModal.jsx";
-import eventEmitter from "../../utils/eventEmitter.js";
+import eventEmitter from "../../../src/utils/eventEmitter.js";
 
 export const renderSection = ({
   section,

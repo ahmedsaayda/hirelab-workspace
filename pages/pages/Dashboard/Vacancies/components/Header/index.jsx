@@ -7,9 +7,9 @@ import { Heading, Img } from "./..";
 import { ChartPieIcon, HomeIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { EyeOutlined, LinkOutlined } from "@ant-design/icons";
 
-import CrudService from "../../../../../service/CrudService";
+import CrudService from "../../../../../../src/services/CrudService";
 import { message } from "antd";
-import LandingPageService from "../../../../../service/landingPageService";
+import LandingPageService from "../../../../../../src/services/landingPageService";
 import { Button } from "../../../../Landing/Button";
 export default function Header({
   landingPageData,

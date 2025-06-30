@@ -7,8 +7,8 @@ import React, { useCallback, useEffect, useState } from "react";
 // } from "antd";
 import { Button, Form, Input, message, Modal } from "antd";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../../../redux/auth/selectors";
-import UserService from "../../../../service/UserService";
+import { selectUser } from "../../../../../src/redux/auth/selectors";
+import UserService from "../../../../../src/services/UserService";
 
 const ConfigurePayment = ({ setBilling, billing }) => {
   const [isModalVisible, setIsModalVisible] = useState(

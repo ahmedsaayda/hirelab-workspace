@@ -1,9 +1,9 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button, Heading, Img, Text } from "./components";
-import { getThemeData } from "../../utils/destructureTheme.js";
+import { getThemeData } from "../../../src/utils/destructureTheme.js";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
-import { useHover } from "../../contexts/HoverContext.js";
-import { useFocusContext } from "../../contexts/FocusContext.js";
+import { useHover } from "../../../src/contexts/HoverContext.js";
+import { useFocusContext } from "../../../src/contexts/FocusContext.js";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils";
 

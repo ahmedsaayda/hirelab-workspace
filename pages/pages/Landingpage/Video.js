@@ -2,11 +2,11 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Heading, Img, Text } from "./components";
 import { Play, Volume2, VolumeX, Maximize } from "lucide-react";
 import { ExpandOutlined } from "@ant-design/icons";
-import { getThemeData } from "../../utils/destructureTheme.js";
+import { getThemeData } from "../../../src/utils/destructureTheme.js";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 
-import { useFocusContext } from "../../contexts/FocusContext";
-import { useHover } from "../../contexts/HoverContext.js";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
+import { useHover } from "../../../src/contexts/HoverContext.js";
 import { getFonts } from "./getFonts.js";
 
 const useVideoHover = () => {

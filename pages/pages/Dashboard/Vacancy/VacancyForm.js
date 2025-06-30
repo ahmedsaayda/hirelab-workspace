@@ -1,9 +1,9 @@
 import { Alert, Skeleton } from "antd";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import MultiStepComponent from "../../../components/MultiStepComponent";
-import { eeoForm, personalDataCollection } from "../../../data/constants";
-import CrudService from "../../../service/CrudService";
+import MultiStepComponent from "../../../../src/components/MultiStepComponent";
+import { eeoForm, personalDataCollection } from "../../../../src/data/constants";
+import CrudService from "../../../../src/services/CrudService";
 
 const VacancyForm = () => {
   const router = useRouter();

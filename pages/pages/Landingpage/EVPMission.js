@@ -1,6 +1,6 @@
 import React, { useRef, useLayoutEffect, useEffect } from "react";
 import { Heading, Img, Text } from "./components";
-import { useHover } from "../../contexts/HoverContext";
+import { useHover } from "../../../src/contexts/HoverContext";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
 const useEvpHover = () => {

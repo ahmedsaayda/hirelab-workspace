@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { getPartner } from "../../redux/auth/selectors";
+import { getPartner } from "../../../src/redux/auth/selectors";
 import { Button } from "./Button";
 import { Container } from "./Container";
 import logoLaravel from "./images/logos/laravel.svg";

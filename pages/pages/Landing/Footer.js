@@ -12,7 +12,7 @@ import {
 import { FaGithub } from "react-icons/fa6";
 import { SiGofundme, SiPatreon } from "react-icons/si";
 import { useSelector } from "react-redux";
-import { getPartner, selectUser } from "../../redux/auth/selectors";
+import { getPartner, selectUser } from "../../../src/redux/auth/selectors";
 import { Container } from "./Container";
 import { Logo } from "./Logo";
 import { NavLink } from "./NavLink";

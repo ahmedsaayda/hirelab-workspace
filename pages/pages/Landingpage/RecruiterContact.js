@@ -6,11 +6,11 @@ import React, {
   useEffect,
 } from "react";
 import { Heading, Img, Text } from "./components";
-import { useFocusContext } from "../../contexts/FocusContext";
-import { useHover } from "../../contexts/HoverContext";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
+import { useHover } from "../../../src/contexts/HoverContext";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 import { Phone, Mail } from "lucide-react";
-import { getThemeData } from "../../utils/destructureTheme.js";
+import { getThemeData } from "../../../src/utils/destructureTheme.js";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils";
 

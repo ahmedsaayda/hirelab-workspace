@@ -33,17 +33,17 @@ import { FaAngleDown, FaExternalLinkAlt } from "react-icons/fa";
 import { MdAttachFile, MdDelete } from "react-icons/md";
 import { useSelector } from "react-redux";
 import Link from "next/link";
-import MultiStepComponent from "../../../../components/MultiStepComponent";
+import MultiStepComponent from "../../../../../src/components/MultiStepComponent";
 import {
   STANDARD_MOMENT_FORMAT,
   eeoForm,
   personalDataCollection,
-} from "../../../../data/constants";
-import { getPartner, selectLoading } from "../../../../redux/auth/selectors";
-import ATSService from "../../../../service/ATSService";
-import CrudService from "../../../../service/CrudService";
-import PublicService from "../../../../service/PublicService";
-import UploadService from "../../../../service/UploadService";
+} from "../../../../../src/data/constants";
+import { getPartner, selectLoading } from "../../../../../src/redux/auth/selectors";
+import ATSService from "../../../../../src/services/ATSService";
+import CrudService from "../../../../../src/services/CrudService";
+import PublicService from "../../../../../src/services/PublicService";
+import UploadService from "../../../../../src/services/UploadService";
 import CVTemplate from "../../../CandidateCV/CVTemplate";
 import CandidateRejectBox from "../../Message/CandidateRejectBox";
 import CandidateNote from "../CandidateNote";

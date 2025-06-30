@@ -20,14 +20,14 @@ import { useSelector } from "react-redux";
 import {
   MINIMUM_AI_CHARS,
   STANDARD_MOMENT_FORMAT,
-} from "../../../data/constants";
-import { getPartner } from "../../../redux/auth/selectors";
-import CrudService from "../../../service/CrudService";
-import MessagingService from "../../../service/MessagingService";
+} from "../../../../src/data/constants";
+import { getPartner } from "../../../../src/redux/auth/selectors";
+import CrudService from "../../../../src/services/CrudService";
+import MessagingService from "../../../../src/services/MessagingService";
 import classNamesBody from "./body.module.css";
 import classNames from "./example.module.css";
 import useHistory from "./useHistory";
-import { partner } from "../../../constants";
+import { partner } from "../../../../src/constants";
 
 const correctText = (text) =>
   text

@@ -3,8 +3,8 @@ import { Skeleton, Space, message } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
 import { IoMdCall } from "react-icons/io";
 import { MdFileCopy } from "react-icons/md";
-import CrudService from "../../service/CrudService";
-import PhoneService from "../../service/PhoneService";
+import CrudService from "../../../src/services/CrudService";
+import PhoneService from "../../../src/services/PhoneService";
 
 const PhoneCallBox = ({ candidateId, customerData }) => {
   const [candidateData, setCandidateData] = useState(null);

@@ -3,10 +3,10 @@ import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { Heading, Img, Text } from "./components";
 import { IconRenderer } from "../LandingpageEdit/IconsSelector";
 // hirelab-frontend\src\pages\LandingpageEdit\IconsSelector.js
-import { getThemeData } from "../../utils/destructureTheme.js";
+import { getThemeData } from "../../../src/utils/destructureTheme.js";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
-import { useHover } from "../../contexts/HoverContext";
-import { useFocusContext } from "../../contexts/FocusContext";
+import { useHover } from "../../../src/contexts/HoverContext";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
 import Growth_Path_Transparent_grid from "./svg/Growth_Path_Transparent_grid";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils";

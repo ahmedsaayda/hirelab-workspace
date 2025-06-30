@@ -44,7 +44,7 @@ const DottedAgenda = ({ className, style }) => (
   </div>
 );
 import { useSelector } from "react-redux";
-import { getThemeData } from "../../utils/destructureTheme.js";
+import { getThemeData } from "../../../src/utils/destructureTheme.js";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 import {
   Calendar as CalendarIcon,
@@ -53,9 +53,9 @@ import {
   DollarSign,
   FileText,
 } from "lucide-react";
-import { useFocusContext } from "../../contexts/FocusContext";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
 import { useRouter } from "next/router";
-import { useHover } from "../../contexts/HoverContext.js";
+import { useHover } from "../../../src/contexts/HoverContext.js";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils";
 import { Divider } from "antd";

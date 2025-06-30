@@ -4,9 +4,9 @@ import Draggable from "react-draggable";
 import { RxCross2 } from "react-icons/rx";
 import { useSelector } from "react-redux";
 import useWindowDimensions from "../../hook/useWindowDimensions";
-import { setPhoneCandidate } from "../../redux/auth/actions";
-import { getPhoneCandidate, selectDarkMode } from "../../redux/auth/selectors";
-import { store } from "../../redux/store";
+import { setPhoneCandidate } from "../../../src/redux/auth/actions";
+import { getPhoneCandidate, selectDarkMode } from "../../../src/redux/auth/selectors";
+import { store } from "../../../src/redux/store";
 import PhoneCallBox from "./PhoneCallBox";
 
 const PhoneWidget = () => {

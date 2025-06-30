@@ -5,11 +5,11 @@ import Cookies from "js-cookie";
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import { currencies } from "../../data/currencies";
-import { getPartner, selectLoading } from "../../redux/auth/selectors";
-import AuthService from "../../service/AuthService";
+import { currencies } from "../../../src/data/currencies";
+import { getPartner, selectLoading } from "../../../src/redux/auth/selectors";
+import AuthService from "../../../src/services/AuthService";
 import { featureMap } from "../Landing/Pricing";
-import { partner } from "../../constants";
+import { partner } from "../../../src/constants";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");

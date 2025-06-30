@@ -7,8 +7,8 @@ import { InviteModal } from "../../onboarding/components/invite-modal.jsx";
 import { Button, Heading, Img } from "../Vacancies/components/index.jsx";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
-import UpgradeModal from "../../../components/UpgradeModal.jsx";
-import { selectUser } from "../../../redux/auth/selectors.js";
+import UpgradeModal from "../../../../src/components/UpgradeModal.jsx";
+import { selectUser } from "../../../../src/redux/auth/selectors.js";
 
 const calendarEvents = [
   {

@@ -30,18 +30,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { GrInfo } from "react-icons/gr";
 import PhoneInput from "react-phone-input-2";
 import { useSelector } from "react-redux";
-import Select from "../../components/Select";
-import { countries } from "../../data/constants";
+import Select from "../../../src/components/Select";
+import { countries } from "../../../src/data/constants";
 import {
   getPartner,
   selectDarkMode,
   selectLoading,
-} from "../../redux/auth/selectors";
-import AuthService from "../../service/AuthService";
-import CalendlyService from "../../service/CalendlyService";
-import SMTPService from "../../service/SMTPService";
-import UploadService from "../../service/UploadService";
-import { partner } from "../../constants";
+} from "../../../src/redux/auth/selectors";
+import AuthService from "../../../src/services/AuthService";
+import CalendlyService from "../../../src/services/CalendlyService";
+import SMTPService from "../../../src/services/SMTPService";
+import UploadService from "../../../src/services/UploadService";
+import { partner } from "../../../src/constants";
 
 function getColorFun(r, g, b) {
   return (

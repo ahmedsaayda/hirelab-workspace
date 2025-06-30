@@ -1,10 +1,35 @@
 import React from "react";
 import { Helmet } from "react-helmet";
 import { useRouter } from "next/router";
-import { Button, Heading, Img, Input, Text } from "../components";
-import Header from "../components/Header";
-import OnboardingLocationOtherCheckbox from "../components/OnboardingLocationOtherCheckbox";
-import OnboardingLocationOtherOrder from "../components/OnboardingLocationOtherOrder";
+import {
+  Button,
+  CheckBox,
+  Heading,
+  Img,
+  Input,
+  Text,
+} from "../components";
+// import Header from "../../../src/components/Header";
+// import OnboardingLocationOtherCheckbox from "../../../src/components/OnboardingLocationOtherCheckbox";
+const Header = ({ children, className, ...props }) => (
+  <div className={className} {...props}>
+    <h1>Header Component</h1>
+    {children}
+  </div>
+);
+const OnboardingLocationOtherCheckbox = ({ children, className, ...props }) => (
+  <div className={className} {...props}>
+    <div>OnboardingLocationOtherCheckbox Component</div>
+    {children}
+  </div>
+);
+// import OnboardingLocationOtherOrder from "../../../src/components/OnboardingLocationOtherOrder";
+const OnboardingLocationOtherOrder = ({ brandstyletext, choosebrandstyletext, className, ...props }) => (
+  <div className={className} {...props}>
+    <div>{brandstyletext}</div>
+    <div>{choosebrandstyletext}</div>
+  </div>
+);
 
 export default function OnboardinglocationotherPage() {
   const router = useRouter();;

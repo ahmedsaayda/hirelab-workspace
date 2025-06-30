@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { getPartner } from "../../redux/auth/selectors";
+import { getPartner } from "../../../src/redux/auth/selectors";
 
 export function Logo(props) {
   const partner = useSelector(getPartner);

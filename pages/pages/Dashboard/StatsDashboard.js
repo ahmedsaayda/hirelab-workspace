@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import StatsService from "../../service/StatsService";
+import StatsService from "../../../src/services/StatsService";
 
 const { Option } = Select;
 

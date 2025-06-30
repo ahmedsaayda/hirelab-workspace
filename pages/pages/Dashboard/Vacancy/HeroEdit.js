@@ -9,10 +9,10 @@ import { Breadcrumb, Skeleton } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import MultiStepComponent from "../../../components/MultiStepComponent";
-import { getPartner } from "../../../redux/auth/selectors";
-import CalendlyService from "../../../service/CalendlyService";
-import CrudService from "../../../service/CrudService";
+import MultiStepComponent from "../../../../src/components/MultiStepComponent";
+import { getPartner } from "../../../../src/redux/auth/selectors";
+import CalendlyService from "../../../../src/services/CalendlyService";
+import CrudService from "../../../../src/services/CrudService";
 // import { voices } from "../../InterviewBookCall";
 // Placeholder voices object
 const voices = {
@@ -22,7 +22,7 @@ const voices = {
   de: { label: "German" },
 };
 import FormMultiStep from "./FormMultiStep";
-import { partner } from "../../../constants";
+import { partner } from "../../../../src/constants";
 // import getFormPrompt from "./getFormPrompt";
 // import getFunnelPrompt from "./getFunnelPrompt";
 

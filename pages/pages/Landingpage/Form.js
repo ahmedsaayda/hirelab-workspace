@@ -1,6 +1,6 @@
 import { Button, Form, Input, Modal, Radio, message, Select } from "antd";
 import React, { useState } from "react";
-import PublicService from "../../service/PublicService";
+import PublicService from "../../../src/services/PublicService";
 import { formItems } from "../Dashboard/Vacancies/modals/ApplicationformAddQuestions";
 import { Img } from "./components/Img";
 import MultipleChoice, { MultiSelectChoice, DropdownChoice, CustomDropdown, YesNoQuestion } from "../FormEdit/Common_components/MultipleChoice";

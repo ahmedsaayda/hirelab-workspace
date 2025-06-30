@@ -2,16 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { Modal, Input, Select, Tag, message as antdMessage } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import languages from "./lang.json";
-import CrudService from "../../../service/CrudService";
+import CrudService from "../../../../src/services/CrudService";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../../redux/auth/selectors";
+import { selectUser } from "../../../../src/redux/auth/selectors";
 import { useRouter } from "next/router";
 import { Button, Img, Text, Heading } from "./components";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation";
 import VacacnySchema from "./vacacnyExemple.json";
 import AiRules from "./aiRules.json";
 import ChooseTemplate from "./ChooseTemplate";
-import AiService from "../../../service/AiService";
+import AiService from "../../../../src/services/AiService";
 // Convert the language object to array of options
 const languageOptions = Object.entries(languages).map(([_, name]) => ({
   value: name,

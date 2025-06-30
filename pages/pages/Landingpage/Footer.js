@@ -13,10 +13,10 @@ import UserProfileCard from "./components/UserProfileCard";
 import { DollarSign, Clock, Briefcase } from "lucide-react";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 
-import { useFocusContext } from "../../contexts/FocusContext";
-import { useHover } from "../../contexts/HoverContext";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
+import { useHover } from "../../../src/contexts/HoverContext";
 import { useRouter } from "next/router";
-import CrudService from "../../service/CrudService";
+import CrudService from "../../../src/services/CrudService";
 import { getFonts } from "./getFonts";
 import { calculateTextColor } from "./utils";
 import { GridPattern, intToHumanReadablePrice } from "./HeroSection.js";

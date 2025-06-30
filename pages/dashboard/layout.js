@@ -19,7 +19,7 @@ import {
   BrandKit,
   ToolrIcon,
   GroupOfPeople,
-} from "../components/Icons";
+} from "../../src/components/Icons";
 import {
   User,
   CreditCard,
@@ -35,24 +35,24 @@ import {
   DEVELOPMENT,
   STANDARD_MOMENT_FORMAT,
   brandColor,
-} from "../data/constants";
-import { setPartner } from "../redux/auth/actions";
+} from "../../src/data/constants";
+import { setPartner } from "../../src/redux/auth/actions";
 import {
   selectDarkMode,
   selectUser,
-} from "../redux/auth/selectors";
-import { store } from "../redux/store";
-import CalendlyService from "../service/CalendlyService";
-import ChatService from "../service/ChatService";
-import PartnerService from "../service/PartnerService";
-import PublicService from "../service/PublicService";
-import { partner } from "../constants.js";
+} from "../../src/redux/auth/selectors";
+import { store } from "../../src/redux/store";
+import CalendlyService from "../../src/services/CalendlyService";
+import ChatService from "../../src/services/ChatService";
+import PartnerService from "../../src/services/PartnerService";
+import PublicService from "../../src/services/PublicService";
+import { partner } from "../../src/constants.js";
 import CalendlyEventSelector from "../pages/Dashboard/CalendlyEventSelector";
 import { Footer } from "../pages/Dashboard/Footer";
 import PhoneWidget from "../pages/Dashboard/PhoneWidget";
 import ThemeOne from "../pages/Dashboard/ThemeOne";
 import ThemeTwo from "../pages/Dashboard/ThemeTwo";
-import AuthService from "../service/AuthService.js";
+import AuthService from "../../src/services/AuthService.js";
 
 
 export const THEME_OPTIONS = [

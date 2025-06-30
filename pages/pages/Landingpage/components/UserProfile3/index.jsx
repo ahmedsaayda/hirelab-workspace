@@ -1,6 +1,6 @@
 import React from "react";
 import { Heading, Img, Text } from "./..";
-import { useFocusContext } from "../../../../contexts/FocusContext";
+import { useFocusContext } from "../../../../../src/contexts/FocusContext";
 
 export default function UserProfile3({
   userName = "Caitlyn King",

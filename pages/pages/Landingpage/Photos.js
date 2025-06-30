@@ -1,8 +1,8 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button, Heading, Img, Text } from "./components";
 import { motion } from "framer-motion";
-import { useHover } from "../../contexts/HoverContext";
-import { useFocusContext } from "../../contexts/FocusContext";
+import { useHover } from "../../../src/contexts/HoverContext";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
 

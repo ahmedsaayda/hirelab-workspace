@@ -3,13 +3,13 @@ import { Alert, Popconfirm, Skeleton, Space, Tour } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import MultiStepComponent from "../../../components/MultiStepComponent";
-import MultiStepConfigurator from "../../../components/MultiStepConfigurator";
-import { eeoForm, personalDataCollection } from "../../../data/constants";
+import MultiStepComponent from "../../../../src/components/MultiStepComponent";
+import MultiStepConfigurator from "../../../../src/components/MultiStepConfigurator";
+import { eeoForm, personalDataCollection } from "../../../../src/data/constants";
 import useWindowDimensions from "../../../hook/useWindowDimensions";
-import { getPartner } from "../../../redux/auth/selectors";
-import CrudService from "../../../service/CrudService";
-import { partner } from "../../../constants";
+import { getPartner } from "../../../../src/redux/auth/selectors";
+import CrudService from "../../../../src/services/CrudService";
+import { partner } from "../../../../src/constants";
 
 const VacancyEditForm = () => {
   let [searchParams] = useSearchParams();

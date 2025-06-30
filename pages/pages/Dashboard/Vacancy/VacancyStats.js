@@ -1,7 +1,7 @@
 import { Skeleton } from "antd";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import CrudService from "../../../service/CrudService";
+import CrudService from "../../../../src/services/CrudService";
 import StatsDashboard from "../StatsDashboard";
 
 const VacancyStats = () => {

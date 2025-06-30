@@ -3,8 +3,8 @@ import { Divider } from "antd";
 import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import AuthService from "../../service/AuthService";
-import { partner } from "../../constants";
+import AuthService from "../../../src/services/AuthService";
+import { partner } from "../../../src/constants";
 
 export default function Example() {
   const [me, setMe] = useState(null);

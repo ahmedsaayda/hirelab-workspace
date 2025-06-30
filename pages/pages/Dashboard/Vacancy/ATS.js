@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import Board from "../../../components/Board";
+import Board from "../../../../src/components/Board";
 
 import { UserAddOutlined, WechatWorkOutlined } from "@ant-design/icons";
 import { ChatBubbleLeftEllipsisIcon } from "@heroicons/react/24/solid";
@@ -43,17 +43,17 @@ import * as XLSX from "xlsx";
 import {
   handleXLSXTOJSON,
   when,
-} from "../../../components/Board/services/utils";
-import { setPhoneCandidate } from "../../../redux/auth/actions";
+} from "../../../../src/components/Board/services/utils";
+import { setPhoneCandidate } from "../../../../src/redux/auth/actions";
 import {
   getPhoneCandidate,
   selectDarkMode,
   selectLoading,
   selectUser,
-} from "../../../redux/auth/selectors";
-import { store } from "../../../redux/store";
-import ATSService from "../../../service/ATSService";
-import CrudService from "../../../service/CrudService";
+} from "../../../../src/redux/auth/selectors";
+import { store } from "../../../../src/redux/store";
+import ATSService from "../../../../src/services/ATSService";
+import CrudService from "../../../../src/services/CrudService";
 import ForwardResume from "../ForwardResume";
 import CandidateMeetingBox from "../Message/CandidateMeetingBox";
 import CandidateRejectBox from "../Message/CandidateRejectBox";

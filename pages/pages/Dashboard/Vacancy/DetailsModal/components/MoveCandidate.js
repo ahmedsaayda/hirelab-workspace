@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Button, Divider, Input, message, Select } from "antd";
-import ATSService from "../../../../../service/ATSService";
+import ATSService from "../../../../../../src/services/ATSService";
 import { useSelector } from "react-redux";
-import { selectLoading } from "../../../../../redux/auth/selectors";
+import { selectLoading } from "../../../../../../src/redux/auth/selectors";
 
 function MoveCandidate({
   stages,

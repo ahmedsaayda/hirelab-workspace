@@ -3,8 +3,8 @@ import { Alert, Modal, Skeleton } from "antd";
 import classNames from "classnames";
 import React, { Fragment, useEffect, useState } from "react";
 import { FaFilter } from "react-icons/fa";
-import ATSService from "../../../service/ATSService";
-import CrudService from "../../../service/CrudService";
+import ATSService from "../../../../src/services/ATSService";
+import CrudService from "../../../../src/services/CrudService";
 
 const FunnelTemplateLibrary = ({ onFinish, vacancyId }) => {
   const [modal, contextHolder] = Modal.useModal();

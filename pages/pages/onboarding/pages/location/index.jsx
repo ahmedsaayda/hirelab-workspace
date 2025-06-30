@@ -3,7 +3,7 @@ import { Button } from "antd";
 import { CheckOutlined, PlusCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../../../redux/auth/selectors";
+import { selectUser } from "../../../../../src/redux/auth/selectors";
 import SuccessPage from "../success/index";
 
 export default function LocationPage() {

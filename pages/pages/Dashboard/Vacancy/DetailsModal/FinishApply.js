@@ -13,8 +13,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { BoltIcon, CalendarIcon, LightBulbIcon, PlayCircleIcon, SpeakerWaveIcon, WifiIcon } from "@heroicons/react/24/outline";
-import CVService from "../../../../service/CVService";
-import { selectLoading } from "../../../../redux/auth/selectors";
+import CVService from "../../../../../src/services/CVService";
+import { selectLoading } from "../../../../../src/redux/auth/selectors";
 
 const FinishApply = () => {
   const router = useRouter();

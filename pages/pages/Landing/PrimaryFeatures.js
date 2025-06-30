@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { useEffect, useState } from "react";
 
 import { useSelector } from "react-redux";
-import { getPartner } from "../../redux/auth/selectors";
+import { getPartner } from "../../../src/redux/auth/selectors";
 import { Container } from "./Container";
 import backgroundImage from "./images/background-features.jpg";
 import screenshotExpenses from "./images/screenshots/expenses.png";

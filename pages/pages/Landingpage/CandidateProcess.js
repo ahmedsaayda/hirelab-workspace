@@ -8,11 +8,11 @@ import React, {
 } from "react";
 import { Heading, Text, CustomCarousel } from "./components";
 import ApplicationSubmission from "./components/ApplicationSubmission";
-import { getThemeData } from "../../utils/destructureTheme.js";
+import { getThemeData } from "../../../src/utils/destructureTheme.js";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 import { Mail, FileText, Users, Tag } from "lucide-react";
-import { useHover } from "../../contexts/HoverContext";
-import { useFocusContext } from "../../contexts/FocusContext";
+import { useHover } from "../../../src/contexts/HoverContext";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
 import { IconRenderer } from "../LandingpageEdit/IconsSelector.js";
 import { getFonts } from "./getFonts.js";
 

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/router";
-import AuthService from "./service/AuthService";
+import AuthService from "../src/services/AuthService";
 
 const EmailVerifyComponent = () => {
   const router = useRouter();

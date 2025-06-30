@@ -5,13 +5,13 @@ import { MdDelete } from "react-icons/md";
 import { useSelector } from "react-redux";
 import qrcode from "yaqrcode";
 
-import { handleXLSXTOJSON } from "../../components/Board/services/utils";
+import { handleXLSXTOJSON } from "../../../src/components/Board/services/utils";
 
 import {
   selectDarkMode,
   selectLoading,
   selectUser,
-} from "../../redux/auth/selectors";
+} from "../../../src/redux/auth/selectors";
 
 async function generatePDF(items) {
   // Instantiate a new jsPDF document

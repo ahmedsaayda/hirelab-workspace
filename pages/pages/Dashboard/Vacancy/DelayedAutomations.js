@@ -13,7 +13,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { FaDeleteLeft } from "react-icons/fa6";
 import { GrInfo } from "react-icons/gr";
 import { Mention, MentionsInput } from "react-mentions";
-import CrudService from "../../../service/CrudService";
+import CrudService from "../../../../src/services/CrudService";
 import classNamesBody from "../Message/body.module.css";
 import classNames from "../Message/example.module.css";
 import { removeAtIndex, replaceAtIndex } from "../PartnerSettings";

@@ -40,7 +40,7 @@ import {
   MessagerIcon,
   SearchrIcon,
   TextrIcon,
-} from "../../components/Icons";
+} from "../../../src/components/Icons";
 
 import { 
   User, 
@@ -60,8 +60,8 @@ import {
   getPartner,
   selectLoading,
   selectUser,
-} from "../../redux/auth/selectors";
-import { partner } from "../../constants.js";
+} from "../../../src/redux/auth/selectors";
+import { partner } from "../../../src/constants.js";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");

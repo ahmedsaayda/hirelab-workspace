@@ -1,11 +1,11 @@
 import React, { useMemo } from "react";
 import EditorRender from "./EditorRender";
-import eventEmitter from "../../utils/eventEmitter";
+import eventEmitter from "../../../src/utils/eventEmitter";
 import { message } from "antd";
 import { useState, useEffect } from "react";
-import Currency from "../../data/Currency.json";
+import Currency from "../../../src/data/Currency.json";
 import { Slider, Spin, Switch, Collapse, Select } from "antd";
-import { currencies } from "../../data/currencies";
+import { currencies } from "../../../src/data/currencies";
 import {
   Heading,
   Input,
@@ -14,10 +14,10 @@ import {
 } from "../Dashboard/Vacancies/components";
 import ImageUploader from "./ImageUploader";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../redux/auth/selectors";
-import { useHover } from "../../contexts/HoverContext";
-import { useFocusContext } from "../../contexts/FocusContext";
-import AuthService from "../../service/AuthService";
+import { selectUser } from "../../../src/redux/auth/selectors";
+import { useHover } from "../../../src/contexts/HoverContext";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
+import AuthService from "../../../src/services/AuthService";
 import { CloseOutlined } from "@ant-design/icons";
 
 const AboutCompanyEdit = (props) => {

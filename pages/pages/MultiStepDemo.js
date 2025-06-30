@@ -1,7 +1,7 @@
 import { Allotment } from "allotment";
 import React, { useState } from "react";
-import MultiStepComponent from "../components/MultiStepComponent";
-import MultiStepConfigurator from "../components/MultiStepConfigurator";
+import MultiStepComponent from "../../src/components/MultiStepComponent";
+import MultiStepConfigurator from "../../src/components/MultiStepConfigurator";
 
 
 export const steps = [

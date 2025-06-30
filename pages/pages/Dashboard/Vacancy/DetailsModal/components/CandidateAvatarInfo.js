@@ -1,7 +1,7 @@
 import { Dropdown, Menu } from "antd";
 import React, { useState } from "react";
 import { FaAngleDown } from "react-icons/fa";
-import ATSService from "../../../../../service/ATSService";
+import ATSService from "../../../../../../src/services/ATSService";
 
 function CandidateAvatarInfo({
   candidateInfo,

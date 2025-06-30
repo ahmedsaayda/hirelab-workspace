@@ -2,7 +2,7 @@ import { Button, Modal, Radio, Space, Upload } from "antd";
 import React, { useState } from "react";
 import { CiCirclePlus } from "react-icons/ci";
 import { useSelector } from "react-redux";
-import { selectDarkMode } from "../../redux/auth/selectors";
+import { selectDarkMode } from "../../../src/redux/auth/selectors";
 
 import { SketchPicker } from "react-color";
 import { useRouter } from "next/router";

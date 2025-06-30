@@ -19,17 +19,17 @@ import { MdArrowBackIos } from "react-icons/md";
 import { useSelector } from "react-redux";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { handleXLSXTOJSON } from "../../../components/Board/services/utils";
-import CloudinaryUpload from "../../../components/CloudinaryUpload";
-import Select from "../../../components/Select";
+import { handleXLSXTOJSON } from "../../../../src/components/Board/services/utils";
+import CloudinaryUpload from "../../../../src/components/CloudinaryUpload";
+import Select from "../../../../src/components/Select";
 import {
   selectDarkMode,
   selectLoading,
   selectUser,
-} from "../../../redux/auth/selectors";
-import ATSService from "../../../service/ATSService";
-import CrudService from "../../../service/CrudService";
-import LinkService from "../../../service/LinkService";
+} from "../../../../src/redux/auth/selectors";
+import ATSService from "../../../../src/services/ATSService";
+import CrudService from "../../../../src/services/CrudService";
+import LinkService from "../../../../src/services/LinkService";
 // import OnboardUser from "../OnboardUser";
 const OnboardUser = () => <div>Onboard User Component</div>;
 import ATS from "./ATS";

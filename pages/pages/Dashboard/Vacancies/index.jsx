@@ -31,11 +31,11 @@ import {
   selectDarkMode,
   selectLoading,
   selectUser,
-} from "../../../redux/auth/selectors.js";
-import AuthService from "../../../service/AuthService.js";
-import CrudService from "../../../service/CrudService.js";
-import PublicService from "../../../service/PublicService.js";
-import UserService from "../../../service/UserService.js";
+} from "../../../../src/redux/auth/selectors.js";
+import AuthService from "../../../../src/services/AuthService.js";
+import CrudService from "../../../../src/services/CrudService.js";
+import PublicService from "../../../../src/services/PublicService.js";
+import UserService from "../../../../src/services/UserService.js";
 
 import debounce from "lodash/debounce";
 import moment from "moment";
@@ -49,12 +49,12 @@ import Chooseatemplate from "./modals/Chooseatemplate/index.jsx";
 import FilterModal, { FilterTags } from "./modals/FilterModalVacancy/index.jsx";
 import FromScratchModal from "./FromScratchModal.jsx";
 
-import SkeletonLoader from "../../../components/Skeleton/VacancyCard.js";
+import SkeletonLoader from "../../../../src/components/Skeleton/VacancyCard.js";
 import PasteUrlModalExperimental from "./PasteUrlModalExperimental.jsx";
 import PasteUrlModal from "./PasteUrlModal.jsx";
 import JobDescriptionModal from "./JobDescriptionModal.jsx";
-import UpgradeModal from "../../../components/UpgradeModal.jsx";
-import { partner } from "../../../constants.js";
+import UpgradeModal from "../../../../src/components/UpgradeModal.jsx";
+import { partner } from "../../../../src/constants.js";
 
 const { Column } = Table;
 

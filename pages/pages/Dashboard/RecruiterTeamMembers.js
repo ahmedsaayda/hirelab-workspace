@@ -23,10 +23,10 @@ import { RiSortAsc } from "react-icons/ri";
 import { TbDeviceHeartMonitor } from "react-icons/tb";
 import PhoneInput from "react-phone-input-2";
 import { useSelector } from "react-redux";
-import { STANDARD_MOMENT_FORMAT } from "../../data/constants";
-import { selectDarkMode, selectLoading } from "../../redux/auth/selectors";
-import CrudService from "../../service/CrudService";
-import UserService from "../../service/UserService";
+import { STANDARD_MOMENT_FORMAT } from "../../../src/data/constants";
+import { selectDarkMode, selectLoading } from "../../../src/redux/auth/selectors";
+import CrudService from "../../../src/services/CrudService";
+import UserService from "../../../src/services/UserService";
 
 const PAGE_LIMIT = 18;
 const LOG_LOAD_PAGINATION = 25;

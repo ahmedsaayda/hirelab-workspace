@@ -3,11 +3,11 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import AuthService from "../../service/AuthService";
+import AuthService from "../../../src/services/AuthService";
 
 import { message } from "antd";
 import { useSelector } from "react-redux";
-import { selectLoading } from "../../redux/auth/selectors";
+import { selectLoading } from "../../../src/redux/auth/selectors";
 import { Button } from "../Landing/Button";
 import { TextField } from "../Landing/Fields";
 import { Logo } from "../Landing/Logo";

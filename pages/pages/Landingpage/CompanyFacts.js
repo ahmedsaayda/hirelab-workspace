@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { Heading, Img, Text } from "./components";
 import RenderFact from "./components/RenderFact";
-import { getThemeData } from "../../utils/destructureTheme.js";
+import { getThemeData } from "../../../src/utils/destructureTheme.js";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 import {
   Lightbulb,
@@ -20,8 +20,8 @@ import {
   MapPin,
   HelpCircle,
 } from "lucide-react";
-import { useHover } from "../../contexts/HoverContext.js";
-import { useFocusContext } from "../../contexts/FocusContext.js";
+import { useHover } from "../../../src/contexts/HoverContext.js";
+import { useFocusContext } from "../../../src/contexts/FocusContext.js";
 import { IconRenderer } from "../LandingpageEdit/IconsSelector.js";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils";

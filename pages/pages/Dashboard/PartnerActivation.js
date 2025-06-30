@@ -1,6 +1,6 @@
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
-import AuthService from "../../service/AuthService";
+import AuthService from "../../../src/services/AuthService";
 
 const PartnerActivation = () => {
   const handleSubmit = async () => {

@@ -1,7 +1,7 @@
 import { message } from "antd";
 import React, { useEffect } from "react";
 import { useRouter } from "next/router";
-import CalendlyService from "../../../service/CalendlyService";
+import CalendlyService from "../../../../src/services/CalendlyService";
 
 const Calendly = () => {
   let [searchParams] = useSearchParams();

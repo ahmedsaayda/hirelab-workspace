@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Modal, Select, Input, Button, Spin, Alert, message } from "antd";
-import CrudService from "../../../service/CrudService";
+import CrudService from "../../../../src/services/CrudService";
 import { Heading } from "./components";
 import vacacnyExempleForAiEditModal from "./vacacnyExempleForAiEditModal.json";
 import aiRulesForAiEditModal from "./aiRulesForAiEditModal.json";

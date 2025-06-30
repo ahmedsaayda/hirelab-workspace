@@ -1,8 +1,8 @@
 import { Modal, Spin } from "antd";
 import React from "react";
 import { useSelector } from "react-redux";
-import { selectDarkMode, selectLoading } from "../../../redux/auth/selectors";
-import CrudService from "../../../service/CrudService";
+import { selectDarkMode, selectLoading } from "../../../../src/redux/auth/selectors";
+import CrudService from "../../../../src/services/CrudService";
 const HiringManagerAddModal = ({
   addHiringManagerModal,
   setAddHiringManagerModal,

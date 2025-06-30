@@ -2,9 +2,9 @@ import { Divider } from "antd";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import { selectLoading } from "../../../redux/auth/selectors";
-import ATSService from "../../../service/ATSService";
-import CrudService from "../../../service/CrudService";
+import { selectLoading } from "../../../../src/redux/auth/selectors";
+import ATSService from "../../../../src/services/ATSService";
+import CrudService from "../../../../src/services/CrudService";
 import { Button } from "../../Landing/Button";
 
 const PAGINATION_LIMIT = 9;

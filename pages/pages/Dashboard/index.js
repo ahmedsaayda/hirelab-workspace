@@ -19,7 +19,7 @@ import {
   BrandKit,
   ToolrIcon,
   GroupOfPeople,
-} from "../../components/Icons";
+} from "../../../src/components/Icons";
 import {
   User,
   CreditCard,
@@ -35,25 +35,25 @@ import {
   DEVELOPMENT,
   STANDARD_MOMENT_FORMAT,
   brandColor,
-} from "../../data/constants";
-import { setDarkMode, setPartner } from "../../redux/auth/actions";
+} from "../../../src/data/constants";
+import { setDarkMode, setPartner } from "../../../src/redux/auth/actions";
 import {
   getPartner,
   selectDarkMode,
   selectUser,
-} from "../../redux/auth/selectors";
-import { store } from "../../redux/store";
-import AuthService from "../../service/AuthService";
-import CalendlyService from "../../service/CalendlyService";
-import ChatService from "../../service/ChatService";
-import PartnerService from "../../service/PartnerService";
-import PublicService from "../../service/PublicService";
+} from "../../../src/redux/auth/selectors";
+import { store } from "../../../src/redux/store";
+import AuthService from "../../../src/services/AuthService";
+import CalendlyService from "../../../src/services/CalendlyService";
+import ChatService from "../../../src/services/ChatService";
+import PartnerService from "../../../src/services/PartnerService";
+import PublicService from "../../../src/services/PublicService";
 import Billing from "./Billing";
 import CalendlyEventSelector from "./CalendlyEventSelector";
 import { Footer } from "./Footer";
 import Legal from "./legal";
 // import MediaLibrary from "./MediaLibrary/index";
-// import MediaLibrary from "../../components/mediaLibrary/index";
+// import MediaLibrary from "../../../src/components/mediaLibrary/index";
 import MyDashboard from "./MyDashboard";
 import NewVacancy from "./NewVacancy";
 import NewVacancyTwo from "./NewVacancyTwo";
@@ -69,11 +69,11 @@ import TemplateComponent from "./TemplateComponent";
 import ThemeOne from "./ThemeOne";
 import ThemeTwo from "./ThemeTwo";
 import Vacancy from "./Vacancy";
-import MyMediaLibrary from "../../components/mediaLibrary/index.jsx";
+import MyMediaLibrary from "../../../src/components/mediaLibrary/index.jsx";
 import Vacancies from "./Vacancies/index.jsx";
 import UserManagement from "./Admin/UserManagement";
 import RoleManagement from "./Admin/RoleManagement";
-import { partner } from "../../constants.js";
+import { partner } from "../../../src/constants.js";
 export const THEME_OPTIONS = [
   { value: 1, label: "Default" },
   { value: 2, label: "Minimalistic" },
@@ -486,7 +486,7 @@ const Dashboard = () => {
       href: "/dashboard",
       onClick: () => {
         // Call logout API
-        import("../../service/AuthService").then(({ default: AuthService }) => {
+        import("../../../src/services/AuthService").then(({ default: AuthService }) => {
           AuthService.logout().finally(() => {
             Cookies.remove("accessToken");
             Cookies.remove("refreshToken");

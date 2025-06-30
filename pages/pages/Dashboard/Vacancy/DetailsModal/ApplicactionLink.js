@@ -2,7 +2,7 @@ import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { Button, Divider, Input, message } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import LinkService from "../../../../service/LinkService";
+import LinkService from "../../../../../src/services/LinkService";
 
 const ApplicationLink = ({ shortLink, setShortLink, setlinkModal }) => {
   const [optRequired, setOptRequired] = useState(true);

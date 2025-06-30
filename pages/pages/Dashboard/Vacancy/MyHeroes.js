@@ -14,14 +14,14 @@ import { MdDelete, MdEdit, MdFileCopy } from "react-icons/md";
 import { PiKanbanFill, PiTestTubeFill } from "react-icons/pi";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import { brandColor } from "../../../data/constants";
+import { brandColor } from "../../../../src/data/constants";
 import {
   getPartner,
   selectDarkMode,
   selectUser,
-} from "../../../redux/auth/selectors";
-import ATSService from "../../../service/ATSService";
-import CrudService from "../../../service/CrudService";
+} from "../../../../src/redux/auth/selectors";
+import ATSService from "../../../../src/services/ATSService";
+import CrudService from "../../../../src/services/CrudService";
 // import InterviewBookCall from "../../InterviewBookCall";
 // import OnboardUser from "../OnboardUser";
 // Placeholder components

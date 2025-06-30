@@ -2,7 +2,7 @@ import { Alert, Skeleton } from "antd";
 import React, { useEffect, useState } from "react";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { useRouter } from "next/router";
-import CVService from "../../service/CVService";
+import CVService from "../../../src/services/CVService";
 import { Footer } from "../Landing/Footer";
 import CVTemplate from "./CVTemplate";
 

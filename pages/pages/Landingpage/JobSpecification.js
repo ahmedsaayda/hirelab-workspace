@@ -2,11 +2,11 @@ import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from "r
 import { Heading, Text } from "./components";
 import BenefitsOverview from "./components/BenefitsOverview";
 import BenefitsOverview1 from "./components/BenefitsOverview1";
-import { getThemeData } from "../../utils/destructureTheme.js";
+import { getThemeData } from "../../../src/utils/destructureTheme.js";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 import { Check, Zap, FileEdit, Network } from "lucide-react";
-import { useHover } from "../../contexts/HoverContext.js";
-import { useFocusContext } from "../../contexts/FocusContext.js";
+import { useHover } from "../../../src/contexts/HoverContext.js";
+import { useFocusContext } from "../../../src/contexts/FocusContext.js";
 import { useRouter } from "next/router";
 import { IconRenderer } from "../LandingpageEdit/IconsSelector.js";
 import { getFonts } from "./getFonts.js";

@@ -4,10 +4,10 @@ import { FaCopy, FaExternalLinkAlt } from "react-icons/fa";
 import { GrInfo } from "react-icons/gr";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import MultiStepComponent from "../../components/MultiStepComponent";
-import { selectDarkMode, selectLoading } from "../../redux/auth/selectors";
-import AuthService from "../../service/AuthService";
-import PartnerService from "../../service/PartnerService";
+import MultiStepComponent from "../../../src/components/MultiStepComponent";
+import { selectDarkMode, selectLoading } from "../../../src/redux/auth/selectors";
+import AuthService from "../../../src/services/AuthService";
+import PartnerService from "../../../src/services/PartnerService";
 
 function debounce(func, wait) {
   let timeout;

@@ -6,7 +6,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import UploadService from "../../service/UploadService";
+import UploadService from "../../../src/services/UploadService";
 import { Spin, Progress, Modal, Slider } from "antd";
 import { DeleteOutlined, SettingOutlined } from "@ant-design/icons";
 import { FaGripVertical } from "react-icons/fa";
@@ -19,7 +19,7 @@ import {
   Text,
 } from "../Dashboard/Vacancies/components";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
-import ImageSelectionModal from "../../components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
+import ImageSelectionModal from "../../../src/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
 import { message } from "antd";
 
 const ImageUploader = ({

@@ -3,12 +3,12 @@ import { CheckIcon } from "@heroicons/react/20/solid";
 import { Skeleton, message } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { currencies } from "../../data/currencies";
-import { getPartner, selectLoading } from "../../redux/auth/selectors";
-import AuthService from "../../service/AuthService";
+import { currencies } from "../../../src/data/currencies";
+import { getPartner, selectLoading } from "../../../src/redux/auth/selectors";
+import AuthService from "../../../src/services/AuthService";
 import CornerRibbon from "react-corner-ribbon";
 import { padding } from "polished";
-import { partner } from "../../constants";
+import { partner } from "../../../src/constants";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");

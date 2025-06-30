@@ -2,9 +2,9 @@ import { Allotment } from "allotment";
 import { Skeleton, message } from "antd";
 import React, { useEffect, useState } from "react";
 import { RxCross2 } from "react-icons/rx";
-import MultiStepComponent from "../../../components/MultiStepComponent";
-import MultiStepConfigurator from "../../../components/MultiStepConfigurator";
-import AuthService from "../../../service/AuthService";
+import MultiStepComponent from "../../../../src/components/MultiStepComponent";
+import MultiStepConfigurator from "../../../../src/components/MultiStepConfigurator";
+import AuthService from "../../../../src/services/AuthService";
 
 const SurveyFormSetup = ({ surveyFormActive, setSurveyFormActive }) => {
   const [me, setMe] = useState(null);

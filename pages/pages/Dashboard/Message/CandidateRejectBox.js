@@ -13,7 +13,7 @@ import {
 } from "antd";
 import { GrInfo } from "react-icons/gr";
 import { Mention, MentionsInput } from "react-mentions";
-import CrudService from "../../../service/CrudService";
+import CrudService from "../../../../src/services/CrudService";
 import classNamesBody from "./body.module.css";
 
 const CandidateRejectBox = ({ candidateId, onSend }) => {

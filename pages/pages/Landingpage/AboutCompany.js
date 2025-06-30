@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { Heading, Img, Text, Button } from "./components";
-import { useHover } from "../../contexts/HoverContext";
+import { useHover } from "../../../src/contexts/HoverContext";
 import { useSelector } from "react-redux";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
-import { getThemeData } from "../../utils/destructureTheme.js";
-import { useFocusContext } from "../../contexts/FocusContext";
+import { getThemeData } from "../../../src/utils/destructureTheme.js";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils";
 

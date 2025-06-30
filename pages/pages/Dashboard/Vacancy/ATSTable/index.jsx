@@ -2,8 +2,8 @@ import React from "react";
 
 import { Table, Rate, Dropdown, Avatar } from "antd";
 import { EllipsisOutlined } from "@ant-design/icons";
-import ATSService from "../../../../service/ATSService";
-import CrudService from "../../../../service/CrudService";
+import ATSService from "../../../../../src/services/ATSService";
+import CrudService from "../../../../../src/services/CrudService";
 
 
 export default function ATSTable({

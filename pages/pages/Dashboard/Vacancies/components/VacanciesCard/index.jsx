@@ -7,7 +7,7 @@ import { MdDelete, MdDeleteForever, MdEdit } from "react-icons/md";
 import { SiPlatformdotsh } from "react-icons/si";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import CrudService from "../../../../../service/CrudService";
+import CrudService from "../../../../../../src/services/CrudService";
 import { Heading, Img, Text } from "..";
 import HeroSection from "../../../../Landingpage/HeroSection";
 import { MapPin, Clock, Coins, Component, Pencil, Eye } from "lucide-react";

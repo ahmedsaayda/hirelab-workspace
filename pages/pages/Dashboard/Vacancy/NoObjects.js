@@ -2,8 +2,8 @@ import { Modal } from "antd";
 import React from "react";
 import { useSelector } from "react-redux";
 import Link from "next/link";
-import { selectDarkMode } from "../../../redux/auth/selectors";
-import CrudService from "../../../service/CrudService";
+import { selectDarkMode } from "../../../../src/redux/auth/selectors";
+import CrudService from "../../../../src/services/CrudService";
 // import OnboardUser from "../OnboardUser";
 const OnboardUser = () => <div>Onboard User Component</div>;
 

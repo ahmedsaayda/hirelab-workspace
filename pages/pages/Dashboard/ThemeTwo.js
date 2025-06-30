@@ -18,8 +18,8 @@ import {
   getPartner,
   selectLoading,
   selectUser,
-} from "../../redux/auth/selectors";
-import { partner } from "../../constants";
+} from "../../../src/redux/auth/selectors";
+import { partner } from "../../../src/constants";
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }

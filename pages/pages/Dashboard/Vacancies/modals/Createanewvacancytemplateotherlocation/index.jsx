@@ -3,8 +3,6 @@ import { default as ModalProvider } from "react-modal";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Button, Heading, Img, Input, Text } from "../../components";
-import CreateANewVacancyTemplateOtherLocationCheckbox from "../../components/CreateANewVacancyTemplateOtherLocationCheckbox";
-import { Switch } from "antd";
 
 export default function Createanewvacancytemplateotherlocation({
   isOpen,

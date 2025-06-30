@@ -2,8 +2,8 @@ import Cookies from "js-cookie";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import { selectLoading } from "../../redux/auth/selectors";
-import AuthService from "../../service/AuthService";
+import { selectLoading } from "../../../src/redux/auth/selectors";
+import AuthService from "../../../src/services/AuthService";
 
 const OTP = () => {
   const [me, setMe] = useState(null);

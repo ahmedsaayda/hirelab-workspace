@@ -1,13 +1,13 @@
 import { Alert, Button, Select, Spin, Typography } from "antd";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { selectLoading } from "../../../redux/auth/selectors";
-import ATSService from "../../../service/ATSService";
-import CrudService from "../../../service/CrudService";
+import { selectLoading } from "../../../../src/redux/auth/selectors";
+import ATSService from "../../../../src/services/ATSService";
+import CrudService from "../../../../src/services/CrudService";
 import { mappedVacancySubmission } from "./ATS";
 import {
   selectUser,
-} from "../../../redux/auth/selectors";
+} from "../../../../src/redux/auth/selectors";
 import { TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
 
 const ImportModule = ({

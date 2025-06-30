@@ -29,13 +29,13 @@ import { GrInfo } from "react-icons/gr";
 import { MdOutlineSlowMotionVideo } from "react-icons/md";
 import { useSelector } from "react-redux";
 import ReactSelect from "react-select";
-//import { MINIMUM_AI_CHARS } from "../data/constants";
-//import { getPartner, selectDarkMode } from "../redux/auth/selectors";
+//import { MINIMUM_AI_CHARS } from ".../src/data/constants";
+//import { getPartner, selectDarkMode } from ".../src/redux/auth/selectors";
 //import CloudinaryUpload from "./CloudinaryUpload";
 import Item from "antd/es/list/Item";
-import CloudinaryUpload from "../../../components/CloudinaryUpload";
-import { MINIMUM_AI_CHARS } from "../../../data/constants";
-import { getPartner, selectDarkMode } from "../../../redux/auth/selectors";
+import CloudinaryUpload from "../../../../src/components/CloudinaryUpload";
+import { MINIMUM_AI_CHARS } from "../../../../src/data/constants";
+import { getPartner, selectDarkMode } from "../../../../src/redux/auth/selectors";
 // import ShowPassword from "../PartnerSettings/ShowPassword";
 const ShowPassword = ({ className, placeholder, onChange, value, readOnly, onPressEnter }) => (
   <Input.Password 
@@ -48,7 +48,7 @@ const ShowPassword = ({ className, placeholder, onChange, value, readOnly, onPre
   />
 );
 import ChooseAvatar from "./ChooseAvatar";
-import { partner } from "../../../constants";
+import { partner } from "../../../../src/constants";
 
 const getPhone = (phone) => {
   if (phone?.[0] === "+") return phone;

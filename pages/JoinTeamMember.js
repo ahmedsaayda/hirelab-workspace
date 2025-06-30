@@ -10,11 +10,11 @@ import { Button } from "./pages/Landing/Button";
 import { TextField } from "./pages/Landing/Fields";
 import { Logo } from "./pages/Landing/Logo";
 import { SlimLayout } from "./pages/Landing/SlimLayout";
-import { login } from "./redux/auth/actions";
-import { getPartner, selectLoading } from "./redux/auth/selectors";
-import { store } from "./redux/store";
-import AuthService from "./service/AuthService";
-import { partner } from "./constants";
+import { login } from "../src/redux/auth/actions";
+import { getPartner, selectLoading } from "../src/redux/auth/selectors";
+import { store } from "../src/redux/store";
+import AuthService from "../src/services/AuthService";
+import { partner } from "../src/constants";
 
 const JoinTeamMember = () => {
   const router = useRouter();

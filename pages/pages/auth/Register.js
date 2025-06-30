@@ -2,19 +2,19 @@ import Cookies from "js-cookie";
 import React, { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import Select from "../../components/Select";
-import { login } from "../../redux/auth/actions";
-import { store } from "../../redux/store";
-import AuthService from "../../service/AuthService";
+import Select from "../../../src/components/Select";
+import { login } from "../../../src/redux/auth/actions";
+import { store } from "../../../src/redux/store";
+import AuthService from "../../../src/services/AuthService";
 
 import { Checkbox } from "antd";
 import { useSelector } from "react-redux";
-import { getPartner, selectLoading } from "../../redux/auth/selectors";
+import { getPartner, selectLoading } from "../../../src/redux/auth/selectors";
 import { Button } from "../Landing/Button";
 import { TextField } from "../Landing/Fields";
 import { Logo } from "../Landing/Logo";
 import { SlimLayout } from "../Landing/SlimLayout";
-import { partner } from "../../constants";
+import { partner } from "../../../src/constants";
 
 const Login = () => {
 

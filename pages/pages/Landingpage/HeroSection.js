@@ -5,14 +5,14 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { currencies } from "../../data/currencies";
-import { Button, Heading, Img, Text } from "../../dhwise-components";
-import { useHover } from "../../contexts/HoverContext";
+import { currencies } from "../../../src/data/currencies";
+import { Button, Heading, Img, Text } from "../../../src/dhwise-components";
+import { useHover } from "../../../src/contexts/HoverContext";
 import { Share2, ArrowRight, X } from "lucide-react";
-import { getThemeData } from "../../utils/destructureTheme.js";
+import { getThemeData } from "../../../src/utils/destructureTheme.js";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 import { useRouter } from "next/router";
-import { useFocusContext } from "../../contexts/FocusContext.js";
+import { useFocusContext } from "../../../src/contexts/FocusContext.js";
 import { FiBriefcase } from "react-icons/fi";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils";

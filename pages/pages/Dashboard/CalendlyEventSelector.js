@@ -1,9 +1,9 @@
 import { Alert, Divider, Popconfirm, Skeleton, Spin } from "antd";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { getPartner, selectLoading } from "../../redux/auth/selectors";
-import CalendlyService from "../../service/CalendlyService";
-import { partner } from "../../constants";
+import { getPartner, selectLoading } from "../../../src/redux/auth/selectors";
+import CalendlyService from "../../../src/services/CalendlyService";
+import { partner } from "../../../src/constants";
 
 const CalendlyEventSelector = ({ refresh }) => {
   const [eventTypes, setEventTypes] = useState(null);

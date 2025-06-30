@@ -19,16 +19,16 @@ import {
 } from "antd";
 import { PlusOutlined, EyeOutlined, LoadingOutlined } from "@ant-design/icons";
 import { ColorPicker } from "./color-picker.jsx";
-import scraperService from "../../../service/ScraperService";
-import AuthService from "../../../service/AuthService.js";
+import scraperService from "../../../../src/services/ScraperService";
+import AuthService from "../../../../src/services/AuthService.js";
 import HeroSection from "../../Landingpage/HeroSection.js";
 import NavBar from "../../Landingpage/NavBar.jsx";
 import { renderSection } from "../../LandingpageEdit/renderSection.js";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../../redux/auth/selectors.js";
+import { selectUser } from "../../../../src/redux/auth/selectors.js";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { PreviewContainer } from "../../../components/preview-container.jsx";
+import { PreviewContainer } from "../../../../src/components/preview-container.jsx";
 import Footer from "../../Landingpage/Footer.js";
 import { ChartPieIcon, HomeIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
@@ -55,16 +55,16 @@ import { useDispatch } from "react-redux";
 import {
   setBaseColors,
   setTextColors,
-} from "../../../redux/landingPage/themeActions";
+} from "../../../../src/redux/landingPage/themeActions";
 import { ColorPicker as AntColorPicker, Space } from "antd";
 // hirelab-frontend\src\pages\onboarding\components\brand-style-form.jsx
 // hirelab-frontend\src\pages\Dashboard\Vacancies\components\Header\index.jsx
 import { Heading, Img } from "../../Dashboard/Vacancies/components/index.jsx";
 import { LayoutTemplate } from "lucide-react";
-import CrudService from "../../../service/CrudService.js";
+import CrudService from "../../../../src/services/CrudService.js";
 import ColorPickerButton from "./ColorPickerButton.jsx";
-import PublicService from "../../../service/PublicService.js";
-import { generateColorPalette } from "../../../utils/colors-util.js";
+import PublicService from "../../../../src/services/PublicService.js";
+import { generateColorPalette } from "../../../../src/utils/colors-util.js";
 import { ScrapingModal } from "./ScrapingAnimation/ScrapingModal.jsx";
 import { Content } from "antd/es/layout/layout";
 

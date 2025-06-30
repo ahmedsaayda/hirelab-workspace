@@ -1,7 +1,7 @@
 import React, { useRef, useLayoutEffect, useEffect, useState } from "react";
 import { Heading, Img, Slider, Text } from "./components";
 import placholder from "../../assets/img/placeholder.png";
-import { useHover } from "../../contexts/HoverContext";
+import { useHover } from "../../../src/contexts/HoverContext";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
 

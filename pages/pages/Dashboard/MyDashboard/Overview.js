@@ -3,21 +3,21 @@ import {
   Input, Modal, Progress, Switch, message as antdmessage,
 } from "antd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { DotIcon } from "../../../components/Icons";
+import { DotIcon } from "../../../../src/components/Icons";
 import { DemoDualAxes } from "./DemoDualAxes";
 
 import moment from "moment";
 import { ConfigProvider, theme } from "antd";
 import { useSelector } from "react-redux";
-import { selectDarkMode, selectUser } from "../../../redux/auth/selectors";
+import { selectDarkMode, selectUser } from "../../../../src/redux/auth/selectors";
 import VacanciesCard from "../Vacancies/components/VacanciesCard";
-import CrudService from "../../../service/CrudService";
+import CrudService from "../../../../src/services/CrudService";
 import { Heading } from "../Vacancies/components";
 import { debounce } from "lodash";
 import { motion } from "framer-motion";
 // hirelab-frontend\src\components\Skeleton\VacancyCard.js
 // hirelab-frontend\src\pages\Dashboard\MyDashboard\Overview.js
-import SkeletonLoader from "../../../components/Skeleton/VacancyCard";
+import SkeletonLoader from "../../../../src/components/Skeleton/VacancyCard";
 import { useRouter } from "next/router";
 const steps = [
   {

@@ -1,7 +1,12 @@
 import React from "react";
 import { default as ModalProvider } from "react-modal";
 import { Button, Heading, Img, Input, Text } from "../../components";
-import OnboardingAddMemberInput from "../../components/OnboardingAddMemberInput";
+// import OnboardingAddMemberInput from "../../../../src/components/OnboardingAddMemberInput";
+const OnboardingAddMemberInput = ({ recruiter, className, ...props }) => (
+  <div className={className} {...props}>
+    <div>{recruiter}</div>
+  </div>
+);
 
 const data = [
   { recruiter: "Recruiter" },

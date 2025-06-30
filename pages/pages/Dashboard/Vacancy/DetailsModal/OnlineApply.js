@@ -20,9 +20,9 @@ import React, {
 import PhoneInput from "react-phone-input-2";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import { selectLoading } from "../../../../redux/auth/selectors";
-import ATSService from "../../../../service/ATSService";
-import CrudService from "../../../../service/CrudService";
+import { selectLoading } from "../../../../../src/redux/auth/selectors";
+import ATSService from "../../../../../src/services/ATSService";
+import CrudService from "../../../../../src/services/CrudService";
 // import { Img } from "../../../auth/components/Img";
 // import UserDetail from "../../../auth/components/UserDetail";
 // Placeholder components
@@ -40,9 +40,9 @@ import { Footer } from "../../Footer";
 import { DeleteOutlined, FilePdfOutlined } from "@ant-design/icons";
 import Dropzone, { useDropzone } from "react-dropzone";
 import { info } from "sass";
-import CloudinaryUpload from "../../../../components/CloudinaryUpload";
-import PublicService from "../../../../service/PublicService";
-import UploadService from "../../../../service/UploadService";
+import CloudinaryUpload from "../../../../../src/components/CloudinaryUpload";
+import PublicService from "../../../../../src/services/PublicService";
+import UploadService from "../../../../../src/services/UploadService";
 //import "../modals.scss"
 
 function OnlineApply() {

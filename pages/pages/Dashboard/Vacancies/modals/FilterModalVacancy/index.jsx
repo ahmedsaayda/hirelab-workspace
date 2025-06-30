@@ -9,22 +9,14 @@ import {
   Divider,
   Button,
 } from "antd";
-import {
-  departments,
-  skills,
-  jobTypes,
-  experienceLevels,
-  educationLevels,
-  languages,
-  industries,
-  companySizes,
-} from "./data/filterData.js";
+
 
 const { Option } = Select;
 const { Title } = Typography;
 
 import { CircleX, ChevronDown, ChevronUp, Search } from "lucide-react";
 import dayjs from "dayjs";
+import { departments } from "./data/filterData";
 
 const FilterModal = ({
   isOpen,

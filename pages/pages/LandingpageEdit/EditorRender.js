@@ -11,7 +11,7 @@ import {
 } from "antd";
 import React, { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import CrudService from "../../service/CrudService";
+import CrudService from "../../../src/services/CrudService";
 import {
   Button,
   Heading,
@@ -21,11 +21,11 @@ import {
 } from "../Dashboard/Vacancies/components";
 import EditorRenderArray from "./EditorRenderArray";
 import ImageUploader from "./ImageUploader";
-import { useFocusContext } from "../../contexts/FocusContext";
-import { useHover } from "../../contexts/HoverContext";
-import eventEmitter from "../../utils/eventEmitter";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
+import { useHover } from "../../../src/contexts/HoverContext";
+import eventEmitter from "../../../src/utils/eventEmitter";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../redux/auth/selectors";
+import { selectUser } from "../../../src/redux/auth/selectors";
 
 const stripFormattingFromText = (text) => {
   // Remove line breaks and extra spaces

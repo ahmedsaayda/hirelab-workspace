@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { getPartner } from "../../redux/auth/selectors";
+import { getPartner } from "../../../src/redux/auth/selectors";
 import { Container } from "./Container";
 import avatarImage1 from "./images/avatars/avatar-1.png";
 import avatarImage2 from "./images/avatars/avatar-2.png";

@@ -15,10 +15,10 @@ import "react-phone-input-2/lib/style.css";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { ConfigProvider } from "antd";
-import { persistor, store } from "./redux/store";
-import { HoverProvider } from "./contexts/HoverContext";
-import ThemeUpdater from "./components/ThemeUpdater";
-import { FocusProvider } from './contexts/FocusContext';
+import { persistor, store } from "../src/redux/store";
+import { HoverProvider } from "../src/contexts/HoverContext";
+import ThemeUpdater from "../src/components/ThemeUpdater";
+import { FocusProvider } from '../src/contexts/FocusContext';
 
 export default function App({Component, pageProps}) {
   return (

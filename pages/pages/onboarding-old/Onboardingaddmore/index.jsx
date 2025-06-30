@@ -2,8 +2,20 @@ import React from "react";
 import { Helmet } from "react-helmet";
 import { useRouter } from "next/router";
 import { Button, Heading, Img, Text } from "../components";
-import Header from "../components/Header";
-import OnboardingAddMoreUsercard from "../components/OnboardingAddMoreUsercard";
+// import Header from "../../../src/components/Header";
+// import OnboardingAddMoreUsercard from "../../../src/components/OnboardingAddMoreUsercard";
+const Header = ({ children, className, ...props }) => (
+  <div className={className} {...props}>
+    <h1>Header Component</h1>
+    {children}
+  </div>
+);
+const OnboardingAddMoreUsercard = ({ children, className, ...props }) => (
+  <div className={className} {...props}>
+    <div>OnboardingAddMoreUsercard Component</div>
+    {children}
+  </div>
+);
 
 const data = [
   {

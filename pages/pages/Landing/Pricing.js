@@ -4,8 +4,8 @@ import { RadioGroup } from "@headlessui/react";
 import classNames from "classnames";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { currencies } from "../../data/currencies";
-import { getPartner } from "../../redux/auth/selectors";
+import { currencies } from "../../../src/data/currencies";
+import { getPartner } from "../../../src/redux/auth/selectors";
 import { Button } from "./Button";
 import { Container } from "./Container";
 

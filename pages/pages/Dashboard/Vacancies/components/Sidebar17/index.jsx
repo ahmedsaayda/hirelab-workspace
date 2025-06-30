@@ -9,9 +9,9 @@ import {
 import { IoTrashOutline } from "react-icons/io5";
 import { Trash2 } from "lucide-react";
 import { Menu, MenuItem, Sidebar, sidebarClasses } from "react-pro-sidebar";
-import { brandColor } from "../../../../../data/constants";
+import { brandColor } from "../../../../../../src/data/constants";
 import { Heading, Img, Text } from "./..";
-import { useHover } from "../../../../../contexts/HoverContext";
+import { useHover } from "../../../../../../src/contexts/HoverContext";
 
 // Custom Delete Confirmation Modal Component
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, sectionName }) => {

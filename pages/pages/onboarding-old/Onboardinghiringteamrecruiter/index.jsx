@@ -1,8 +1,17 @@
 import React, { useState } from "react";
 import { Helmet } from "react-helmet";
 import { useRouter } from "next/router";
-import Select from "../../../components/Select";
-import { countries } from "../../../data/constants";
+// import Select from "../../../../../src/components/Select";
+const Select = ({ options, onChange, ...props }) => (
+  <select onChange={onChange} {...props}>
+    {options?.map((option, index) => (
+      <option key={index} value={option.value}>
+        {option.label}
+      </option>
+    ))}
+  </select>
+);
+import { countries } from "../../../../src/data/constants";
 import FileUpload from "../FileUpload";
 import {
   Button,
@@ -13,7 +22,13 @@ import {
   RadioGroup,
   Text,
 } from "../components";
-import Header from "../components/Header";
+// import Header from "../../../src/components/Header";
+const Header = ({ children, className, ...props }) => (
+  <div className={className} {...props}>
+    <h1>Header Component</h1>
+    {children}
+  </div>
+);
 
 export default function OnboardinghiringteamrecruiterPage() {
   const [selected, setSelected] = useState("recruiter");

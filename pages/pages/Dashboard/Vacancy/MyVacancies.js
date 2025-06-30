@@ -25,19 +25,19 @@ import { PiKanbanFill } from "react-icons/pi";
 import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { brandColor } from "../../../data/constants";
-import * as actions from "../../../redux/auth/actions";
+import { brandColor } from "../../../../src/data/constants";
+import * as actions from "../../../../src/redux/auth/actions";
 import {
   getPartner,
   selectDarkMode,
   selectUser,
-} from "../../../redux/auth/selectors";
-import ATSService from "../../../service/ATSService";
-import CrudService from "../../../service/CrudService";
+} from "../../../../src/redux/auth/selectors";
+import ATSService from "../../../../src/services/ATSService";
+import CrudService from "../../../../src/services/CrudService";
 // import OnboardUser from "../OnboardUser";
 const OnboardUser = () => <div>Onboard User Component</div>;
 import NoObjects from "./NoObjects";
-import { partner } from "../../../constants";
+import { partner } from "../../../../src/constants";
 
 const tiers = [
   {

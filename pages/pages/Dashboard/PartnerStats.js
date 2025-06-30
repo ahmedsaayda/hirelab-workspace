@@ -2,10 +2,10 @@ import { Card, Col, Progress, Row, Spin, Statistic } from "antd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { MdRefresh } from "react-icons/md";
 import { useSelector } from "react-redux";
-import { currencies } from "../../data/currencies";
-import { getPartner } from "../../redux/auth/selectors";
-import PartnerService from "../../service/PartnerService";
-import { partner } from "../../constants";
+import { currencies } from "../../../src/data/currencies";
+import { getPartner } from "../../../src/redux/auth/selectors";
+import PartnerService from "../../../src/services/PartnerService";
+import { partner } from "../../../src/constants";
 
 const PartnerStats = () => {
   const [mainStats, setMainStats] = useState({});

@@ -1,7 +1,7 @@
 import { Alert, Skeleton } from "antd";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import PublicService from "../../service/PublicService";
+import PublicService from "../../../src/services/PublicService";
 import { Footer } from "../Landing/Footer";
 
 const Finished = () => {

@@ -5,11 +5,11 @@ import {
   EditOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import UploadService from "../../../service/UploadService";
+import UploadService from "../../../../src/services/UploadService";
 import axios from "axios";
-import CrudService from "../../../service/CrudService";
+import CrudService from "../../../../src/services/CrudService";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../../redux/auth/selectors";
+import { selectUser } from "../../../../src/redux/auth/selectors";
 import { formatDistanceToNow } from "date-fns";
 
 /* 

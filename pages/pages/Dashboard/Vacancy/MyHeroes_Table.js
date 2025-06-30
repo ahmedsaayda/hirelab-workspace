@@ -3,7 +3,7 @@ import { Avatar, Popconfirm } from "antd"; // Si estás usando Ant Design para l
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MdDelete, MdEdit } from "react-icons/md";
 import { useRouter } from "next/router";
-import CrudService from "../../../service/CrudService";
+import CrudService from "../../../../src/services/CrudService";
 // import { voices } from "../../InterviewBookCall";
 // Placeholder voices object
 const voices = {

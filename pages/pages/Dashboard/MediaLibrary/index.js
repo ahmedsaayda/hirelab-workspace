@@ -1,13 +1,13 @@
 import { Button, Popconfirm } from "antd";
 import React, { createContext, useCallback, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../../redux/auth/selectors";
+import { selectUser } from "../../../../src/redux/auth/selectors";
 
 import { Cloudinary } from "@cloudinary/url-gen";
 import { useState } from "react";
-import PublicService from "../../../service/PublicService";
-import UploadService from "../../../service/UploadService";
-import UserService from "../../../service/UserService";
+import PublicService from "../../../../src/services/PublicService";
+import UploadService from "../../../../src/services/UploadService";
+import UserService from "../../../../src/services/UserService";
 
 const CloudinaryScriptContext = createContext();
 

@@ -1,12 +1,12 @@
 import { Modal, Tabs, Input, Button, Spin, Alert, Checkbox, Steps, Card } from "antd";
 import React, { useState, useEffect } from "react";
 import { Heading } from "./components";
-import AiService from "../../../service/AiService";
+import AiService from "../../../../src/services/AiService";
 import HeroSection from "../../Landingpage/HeroSection.js";
 import NavBar from "../../Landingpage/NavBar";
 import { renderSection } from "../../LandingpageEdit/renderSection.js";
 import Footer from "../../Landingpage/Footer";
-import { PreviewContainer } from "../../../components/preview-container.jsx";
+import { PreviewContainer } from "../../../../src/components/preview-container.jsx";
 
 
 // Logger utility

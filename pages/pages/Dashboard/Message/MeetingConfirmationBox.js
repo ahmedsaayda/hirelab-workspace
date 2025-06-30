@@ -17,15 +17,15 @@ import { FaRedo, FaUndo } from "react-icons/fa";
 import { TbRobotFace } from "react-icons/tb";
 import { Mention, MentionsInput } from "react-mentions";
 import { useSelector } from "react-redux";
-import { MINIMUM_AI_CHARS } from "../../../data/constants";
-import { getPartner } from "../../../redux/auth/selectors";
-import AuthService from "../../../service/AuthService";
-import CrudService from "../../../service/CrudService";
-import MessagingService from "../../../service/MessagingService";
+import { MINIMUM_AI_CHARS } from "../../../../src/data/constants";
+import { getPartner } from "../../../../src/redux/auth/selectors";
+import AuthService from "../../../../src/services/AuthService";
+import CrudService from "../../../../src/services/CrudService";
+import MessagingService from "../../../../src/services/MessagingService";
 import classNamesBody from "./body.module.css";
 import classNames from "./example.module.css";
 import useHistory from "./useHistory";
-import { partner } from "../../../constants";
+import { partner } from "../../../../src/constants";
 
 const correctText = (text) =>
   text

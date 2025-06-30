@@ -1,6 +1,6 @@
 import React from "react";
-import { useFocusContext } from "../../contexts/FocusContext";
-import { useHover } from "../../contexts/HoverContext";
+import { useFocusContext } from "../../../src/contexts/FocusContext";
+import { useHover } from "../../../src/contexts/HoverContext";
 import {
   DateTimeSlot,
   Heading,

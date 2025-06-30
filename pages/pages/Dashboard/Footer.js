@@ -1,8 +1,8 @@
 import { Divider } from "antd";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import { getPartner } from "../../redux/auth/selectors";
-import { partner } from "../../constants";
+import { getPartner } from "../../../src/redux/auth/selectors";
+import { partner } from "../../../src/constants";
 
 export function Footer() {
   const router = useRouter();;

@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { getPartner } from "../../redux/auth/selectors";
+import { getPartner } from "../../../src/redux/auth/selectors";
 import backgroundImage from "./images/background-auth.jpg";
 
 export function SlimLayout({ children }) {

@@ -3,11 +3,11 @@ import React, { useEffect, useState } from "react";
 import { MdArrowBackIos } from "react-icons/md";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import MultiStepComponent from "../../../components/MultiStepComponent";
-import { getPartner } from "../../../redux/auth/selectors";
-import CalendlyService from "../../../service/CalendlyService";
-import CrudService from "../../../service/CrudService";
-import { partner } from "../../../constants";
+import MultiStepComponent from "../../../../src/components/MultiStepComponent";
+import { getPartner } from "../../../../src/redux/auth/selectors";
+import CalendlyService from "../../../../src/services/CalendlyService";
+import CrudService from "../../../../src/services/CrudService";
+import { partner } from "../../../../src/constants";
 
 const VacancyPublish = () => {
   let [searchParams] = useSearchParams();

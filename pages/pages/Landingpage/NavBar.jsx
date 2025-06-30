@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Button } from "../Landing/Button";
 import useTemplatePalette from "../../hooks/useTemplatePalette";
-import { useHover } from "../../contexts/HoverContext";
+import { useHover } from "../../../src/contexts/HoverContext";
 import { Share2 } from "lucide-react";
 import { calculateTextColor } from "./utils";
 import { getFonts } from "./getFonts.js";

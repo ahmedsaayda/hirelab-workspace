@@ -4,7 +4,7 @@ import classNames from "classnames";
 import React, { Fragment, useEffect, useState } from "react";
 import { FaFilter } from "react-icons/fa";
 import { Mention, MentionsInput } from "react-mentions";
-import CrudService from "../../../service/CrudService";
+import CrudService from "../../../../src/services/CrudService";
 import classNamesSubject from "../Message/example.module.css";
 
 const GeneralEmailLibrary = ({ callback }) => {

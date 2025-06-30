@@ -2,7 +2,7 @@ import { Skeleton } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import PublicService from "../../service/PublicService";
+import PublicService from "../../../src/services/PublicService";
 import { changeIndigoShades, generateTailwindPalette } from "../Dashboard";
 import { renderSection } from "../LandingpageEdit/renderSection.js";
 import { Button } from "./components";
@@ -11,8 +11,8 @@ import Form from "./Form"; // Import the new FormEditor component
 import HeroSection from "./HeroSection";
 import NavBar from "./NavBar.jsx";
 import ApplyCustomFont from "./ApplyCustomFont.jsx";
-import { useFocus } from "../../contexts/FocusContext";
-import { useHover } from "../../contexts/HoverContext";
+import { useFocus } from "../../../src/contexts/FocusContext";
+import { useHover } from "../../../src/contexts/HoverContext";
 
 export default function LandingpagePage({ paramsId, overrideParamId = null, fullscreen = false, showBackToEditButton = false, setFullscreen }) {
   const lpId = overrideParamId ?? paramsId;

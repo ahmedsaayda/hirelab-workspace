@@ -31,9 +31,9 @@ import {
   getPartner,
   selectDarkMode,
   selectUser,
-} from "../../redux/auth/selectors";
-import PartnerService from "../../service/PartnerService";
-import { partner } from "../../constants";
+} from "../../../src/redux/auth/selectors";
+import PartnerService from "../../../src/services/PartnerService";
+import { partner } from "../../../src/constants";
 
 const PAGE_LIMIT = 18;
 const PartnerUsers = () => {

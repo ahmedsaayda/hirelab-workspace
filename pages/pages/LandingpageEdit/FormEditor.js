@@ -12,7 +12,7 @@ import {
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import CrudService from "../../service/CrudService";
+import CrudService from "../../../src/services/CrudService";
 //3
 const { TextArea } = Input;
 const { Title, Paragraph } = Typography;
