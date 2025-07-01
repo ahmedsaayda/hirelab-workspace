@@ -14,7 +14,7 @@ import {
   Text,
   TextArea,
 } from "../Dashboard/Vacancies/components/components/index.jsx";
-import Sidebar17 from "../Dashboard/Vacancies/components/components/Sidebar17/index.jsx";
+import Sidebar17, { sectionMap } from "../Dashboard/Vacancies/components/components/Sidebar17/index.jsx";
 import Header from "../Dashboard/Vacancies/components/components/Header/index.jsx";
 import Agenda from "../Landingpage/Agenda.js";
 import CandidateProcess from "../Landingpage/CandidateProcess.js";
@@ -34,9 +34,9 @@ import FormEditor from "./FormEditor.js";
 import { defaultLandingPageData } from "../onboarding/components/brand-style-form.jsx";
 // import PreviewContainer from "../../../src/components/preview-container.jsx";
 // Placeholder for PreviewContainer
-const PreviewContainer = ({ children, className }) => (
-  <div className={className}>{children}</div>
-);
+// const PreviewContainer = ({ children, className }) => (
+//   <div className={className}>{children}</div>
+// );
 import CompanyFacts from "../Landingpage/CompanyFacts.js";
 import AboutCompany from "../Landingpage/AboutCompany.js";
 import TextBox from "../Landingpage/TextBox.js";
@@ -72,6 +72,7 @@ import { useDispatch } from "react-redux";
 import { setActiveSection, setMediaLimits } from "../../redux/landingPage/mediaUploadReducer.js";
 import VacancyCreationDebugModal from "./VacancyCreationDebugModal.jsx";
 import eventEmitter from "../../utils/eventEmitter.js";
+import { PreviewContainer } from "../Dashboard/Vacancies/components/preview-container.jsx";
 
 export const renderSection = ({
   section,
@@ -1243,7 +1244,9 @@ export default function LandingpageEdit({paramsId}) {
         isAutoSaving={isAutoSaving}
         lpId={lpId}
       />
-      <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3">
+      <div 
+     
+      className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3">
         <div
           className={` py-4 flex  flex-grow ${
             fullscreen ? "w-0 overflow-hidden" : "w-[45%]"
@@ -1422,7 +1425,7 @@ export default function LandingpageEdit({paramsId}) {
           } transition-all duration-300 border-r border-solid border-blue_gray-50 px-2  mdx:w-full p-1`}
           style={{ scrollbarWidth: "none" }}
         >
-          <div className="flex hidden gap-5 justify-between items-center">
+          <div className="flex  gap-5 justify-between items-center">
             <Heading
               size="7xl"
               as="h2"
@@ -1473,6 +1476,8 @@ export default function LandingpageEdit({paramsId}) {
                   onClickApply={() => {}}
                   fullscreen={fullscreen}
                   showBackToEditButton={false}
+                  lpId={lpId}
+                  isEdit={true}
                 />
                             <div
                   key="hero-section"

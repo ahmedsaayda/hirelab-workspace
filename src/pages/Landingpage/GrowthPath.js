@@ -1,5 +1,5 @@
 import { Steps } from "antd";
-import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
+import React, { useEffect, useRef, useState, useLayoutEffect, useMemo } from "react";
 import { Heading, Img, Text } from "./components/index.jsx";
 import { IconRenderer } from "../LandingpageEdit/IconsSelector.js";
 // hirelab-frontend\src\pages\LandingpageEdit\IconsSelector.js
@@ -549,6 +549,35 @@ const Template1 = ({ landingPageData, fetchData }) => {
     return (r * 299 + g * 587 + b * 114) / 1000;
   };
 
+  // Stabilize GridPattern props to prevent flickering
+  const gridPatternProps = useMemo(() => {
+    // Get stable color values by directly using the color values instead of getColor function
+    const tertiaryColor200 = landingPageData?.tertiaryColor || "#44b566";
+    const tertiaryColor100 = `${tertiaryColor200}40`; // Add light transparency
+    
+    return {
+      gridColor: `${tertiaryColor200}80`, // Semi-transparent tertiary color
+      gridLineColor: tertiaryColor100,
+      backgroundColor: "transparent",
+      gridSize: 50,
+      className: "-z-10",
+      // Use a stable key based on the actual color values to prevent unnecessary re-renders
+      key: `growth-${tertiaryColor200}`
+    };
+  }, [landingPageData?.tertiaryColor]);
+
+  // Create a memoized GridPattern component to prevent re-renders
+  const MemoizedGridPattern = useMemo(() => (
+    <GridPattern
+      key={gridPatternProps.key}
+      gridColor={gridPatternProps.gridColor}
+      gridLineColor={gridPatternProps.gridLineColor}
+      backgroundColor={gridPatternProps.backgroundColor}
+      gridSize={gridPatternProps.gridSize}
+      className={gridPatternProps.className}
+    />
+  ), [gridPatternProps]);
+
   return (
     <div
       className="relative px-4 py-16 w-full bg-white md:px-8 isolate"
@@ -557,13 +586,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
       style={{ color: "black" }}
     >
       {/* <Growth_Path_Transparent_grid landingPageData={landingPageData} /> */}
-      <GridPattern
-        gridColor={getColor("tertiary", 200)}
-        gridLineColor={getColor("tertiary", 100)}
-        backgroundColor="transparent"
-        gridSize={50}
-        className="-z-10"
-      />
+      {MemoizedGridPattern}
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 text-center">
           <h2

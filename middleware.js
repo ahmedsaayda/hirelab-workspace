@@ -81,7 +81,7 @@ function isOnboardingPath(pathname) {
 async function fetchUserData(accessToken) {
   try {
     const backendUrl = process.env.NODE_ENV !== "production" 
-      ? "http://localhost:5055/api" 
+      ? "http://localhost:5155/api" 
       : process.env.NEXT_PUBLIC_BACKEND_URL;
       
     const response = await fetch(`${backendUrl}/auth/me`, {
@@ -147,6 +147,7 @@ export async function middleware(request) {
     
     let redirectPath = null;
     
+    console.log("the step is",step)
     switch (step) {
       case 'isEmailVerified':
         redirectPath = '/auth/otpemail';
@@ -158,7 +159,9 @@ export async function middleware(request) {
         redirectPath = '/dashboard/partnerActivation';
         break;
       case 'subscription':
-        redirectPath = '/auth/subscription';
+        // redirectPath = '/auth/subscription';
+        // redirectPath = '/dashboard/billing';
+
         break;
       case 'billingPlanSelection':
         //redirectPath = '/dashboard/billing';

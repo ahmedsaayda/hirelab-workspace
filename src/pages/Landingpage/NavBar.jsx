@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { Button } from "../Landing/Button.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import { useHover } from "../../contexts/HoverContext.js";
@@ -460,7 +460,8 @@ const Template1Old = ({ landingPageData, onClickApply }) => {
     </>
   );
 };
-const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen }) => {
+const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen,lpId ,isEdit}) => {
+  console.log("lpId",lpId);
   // Get device from global variable set by PreviewContainer
   const [device, setDevice] = useState((window ).__previewDevice || "desktop");
   
@@ -485,8 +486,12 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   const tertiaryColor = landingPageData?.tertiaryColor || "#44b566";
 
   const router = useRouter();
-  const {lpId} = router.query;
-  const isEditPage = router.pathname.startsWith("/edit-page/");
+  // console.log("lpId",lpId);
+  // if(!lpId){
+  //   const {lpId : lpIdFromQuery} = router?.query || {};
+  //   lpId = lpIdFromQuery;
+  // }
+  const isEditPage =isEdit || router.pathname?.startsWith("/edit-page/");
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Add debug logs
@@ -914,7 +919,7 @@ const handlemediaLink = (platform) => {
   );
 };
 
-const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen }) => {
+const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen,lpId }) => {
   if (landingPageData?.templateId?.toLowerCase() === "3")
     return (
       <Template3

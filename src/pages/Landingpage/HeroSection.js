@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useMemo,
 } from "react";
 import { currencies } from "../../data/currencies.js";
 import { Button, Heading, Img, Text } from "../../dhwise-components/index.jsx";
@@ -411,6 +412,35 @@ const Template1 = ({ landingPageData, fetchData }) => {
     getBackgroundColor(landingPageData?.primaryColor)
   );
 
+  // Stabilize GridPattern props to prevent flickering
+  const gridPatternProps = useMemo(() => {
+    // Get stable color values by directly using the color values instead of getColor function
+    const primaryColor500 = landingPageData?.primaryColor || "#2e9eac";
+    const tertiaryColor300 = landingPageData?.tertiaryColor || "#44b566";
+    const tertiaryColor50 = `${tertiaryColor300}20`; // Add light transparency
+    
+    return {
+      gridColor: `${tertiaryColor300}80`, // Semi-transparent tertiary color
+      gridLineColor: tertiaryColor50,
+      backgroundColor: primaryColor500,
+      gridSize: 40,
+      maxWidth: 1000,
+      // Use a stable key based on the actual color values to prevent unnecessary re-renders
+      key: `hero-${primaryColor500}-${tertiaryColor300}`
+    };
+  }, [landingPageData?.primaryColor, landingPageData?.tertiaryColor]);
+
+  // Create a memoized GridPattern component to prevent re-renders
+  const MemoizedGridPattern = useMemo(() => (
+    <GridPattern
+      key={gridPatternProps.key}
+      gridColor={gridPatternProps.gridColor}
+      gridLineColor={gridPatternProps.gridLineColor}
+      backgroundColor={gridPatternProps.backgroundColor}
+      gridSize={gridPatternProps.gridSize}
+      maxWidth={gridPatternProps.maxWidth}
+    />
+  ), [gridPatternProps]);
 
   return (
     <div 
@@ -424,13 +454,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
           fontFamily: bodyFont?.family,
         }}
       >
-        <GridPattern
-          gridColor={getColor("tertiary", 300)}
-          gridLineColor={getColor("tertiary", 50)}
-          backgroundColor={getColor("primary", 500)}
-          gridSize={40}
-          maxWidth={1000}
-        />
+        {MemoizedGridPattern}
         {/* {svgString} */}
         {/* Blur effect at the top center of the hero section like a lamp is glowing through the top */}
         <div className="absolute top-0 left-0 w-1/2 translate-x-1/2  bg-gradient-to-r from-white  to-white opacity-10 blur-[50px] rounded-full" />
@@ -1721,6 +1745,21 @@ export function GridPattern({
   style = {},
 }) {
   const canvasRef = useRef(null);
+  
+  // Add debugging to track GridPattern re-renders
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.debugLogger) {
+      window.debugLogger.log('GridPattern', 'COMPONENT_RENDER', {
+        gridColor,
+        gridLineColor,
+        backgroundColor,
+        gridSize,
+        maxWidth,
+        className,
+        timestamp: performance.now()
+      });
+    }
+  });
 
   useEffect(() => {
     const canvas = canvasRef.current;

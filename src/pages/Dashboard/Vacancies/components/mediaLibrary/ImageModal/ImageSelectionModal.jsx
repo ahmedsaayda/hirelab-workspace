@@ -309,7 +309,7 @@ const ImageSelectionModal = ({
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Media Library2">
+      <Modal isOpen={isOpen} onClose={onClose} title="Media Library">
         {/* Responsive layout */}
         <div className="flex flex-col lg:flex-row h-full w-full">
           {/* Sidebar - horizontal on mobile, vertical on desktop */}
@@ -353,13 +353,13 @@ const ImageSelectionModal = ({
             {activeOption === "upload" && (
               <div className="flex flex-col lg:flex-row w-full h-full min-h-[400px] lg:min-h-[500px] gap-4">
                 {/* Left: DropZone and controls */}
-                <div className="w-full lg:w-[35%] flex flex-col border-2 border-dashed border-gray-300 bg-gray-50 min-h-[300px] lg:h-auto p-2 lg:p-4 rounded-lg">
+                <div className="w-full lg:w-[35%] flex flex-col border-2 border-dashed border-gray-300 bg-gray-50 min-h-[300px]  p-2 lg:p-4 rounded-lg max-h-[calc(100vh-250px)]">
                   <DropZone
                     onFilesSelected={handleFilesSelected}
                     multiple={multiple}
                     accept={accept}
                   />
-                  <div className="flex-1 w-full mt-4 flex flex-col">
+                  <div className=" w-full mt-4 flex flex-col">
                     <h4 className="text-sm font-medium mb-2">Selected Files</h4>
                     <div className="flex-1 overflow-y-auto max-h-[250px]">
                       {files.map(renderPreview)}
@@ -368,7 +368,7 @@ const ImageSelectionModal = ({
                   <button
                     onClick={handleDone}
                     disabled={isUploading}
-                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
+                    className=" mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
                   >
                     {isUploading ? "Uploading..." : "Done"}
                   </button>
