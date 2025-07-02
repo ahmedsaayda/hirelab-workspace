@@ -1,7 +1,8 @@
+"use client"
+
 import { Skeleton } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import PublicService from "../../services/PublicService.js";
 import { changeIndigoShades, generateTailwindPalette } from "../Dashboard/index.js";
 import { renderSection } from "../LandingpageEdit/renderSection.js";
@@ -17,6 +18,7 @@ import { useHover } from "../../contexts/HoverContext.js";
 export default function LandingpagePage({ paramsId, overrideParamId = null, fullscreen = false, showBackToEditButton = false, setFullscreen }) {
   const lpId = overrideParamId ?? paramsId;
   const [landingPageData, setLandingPageData] = useState(null);
+  console.log(landingPageData);
   const [showApplyButton, setShowApplyButton] = useState(false);
   const [showFormEditor, setShowFormEditor] = useState(false); // New state for form editor visibility
 

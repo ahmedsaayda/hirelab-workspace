@@ -354,7 +354,7 @@ const ImageSelectionModal = ({
             {activeOption === "upload" && (
               <div className="flex flex-col lg:flex-row w-full h-full min-h-[400px] lg:min-h-[500px] gap-4">
                 {/* Left: DropZone and controls */}
-                <div className="w-full lg:w-[35%] flex flex-col border-2 border-dashed border-gray-300 bg-gray-50 min-h-[300px] lg:h-auto p-2 lg:p-4 rounded-lg">
+                <div className="w-full lg:w-[35%] flex flex-col border-2 border-dashed border-gray-300 bg-gray-50 min-h-[300px]  p-2 lg:p-4 rounded-lg max-h-[calc(100vh-250px)]">
                   <DropZone
                     onFilesSelected={handleFilesSelected}
                     multiple={multiple}
@@ -369,7 +369,7 @@ const ImageSelectionModal = ({
                   <button
                     onClick={handleDone}
                     disabled={isUploading}
-                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
+                    className=" mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
                   >
                     {isUploading ? "Uploading..." : "Done"}
                   </button>

@@ -2382,8 +2382,8 @@ const handleLogoUpload = async (url) => {
 
        
               {currentStep >= 1 && currentStep <= 3 && (
-                  <div className="w-full lg:w-[67%] xl:w-[67%]">
-                    <div className="h-[400px] sm:h-[500px] md:h-[600px] lg:h-[calc(100vh-200px)] xl:h-[calc(100vh-160px)] min-h-[400px] max-h-[800px] overflow-hidden text-sm text-center text-gray-400 border border-blue-600 rounded-lg">
+                  <div className="w-full lg:w-[67%] xl:w-[67%] flex justify-center">
+                    <div className="w-full max-w-[1000px] h-[400px] sm:h-[500px] md:h-[600px] lg:h-[calc(100vh-200px)] xl:h-[calc(100vh-160px)] min-h-[400px] max-h-[800px] overflow-hidden text-sm text-center text-gray-400 border border-blue-600 rounded-lg">
                       <Preview logo={companyLogo} landingPageData={landingPageData} fullscreen={fullscreen} setFullscreen={setFullscreen} />
                     </div>
                   </div>

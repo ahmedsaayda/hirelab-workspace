@@ -4,6 +4,7 @@ import React, {
   useState,
   useRef,
   useLayoutEffect,
+  useMemo,
 } from "react";
 import { Heading, Text } from "./components/index.jsx";
 import ScheduleOverview1 from "./components/ScheduleOverview1/index.jsx";
@@ -470,6 +471,33 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
 
   const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
 
+  // Stabilize GridPattern props to prevent flickering
+  const gridPatternProps = useMemo(() => {
+    // Get stable color values by directly using the color values instead of getColor function
+    const tertiaryColor300 = landingPageData?.tertiaryColor || "#44b566";
+    const tertiaryColor50 = `${tertiaryColor300}20`; // Add light transparency
+    
+    return {
+      gridColor: `${tertiaryColor300}80`, // Semi-transparent tertiary color
+      gridLineColor: tertiaryColor50,
+      backgroundColor: "transparent",
+      gridSize: 50,
+      // Use a stable key based on the actual color values to prevent unnecessary re-renders
+      key: `agenda-${tertiaryColor300}`
+    };
+  }, [landingPageData?.tertiaryColor]);
+
+  // Create a memoized GridPattern component to prevent re-renders
+  const MemoizedGridPattern = useMemo(() => (
+    <GridPattern
+      key={gridPatternProps.key}
+      gridColor={gridPatternProps.gridColor}
+      gridLineColor={gridPatternProps.gridLineColor}
+      backgroundColor={gridPatternProps.backgroundColor}
+      gridSize={gridPatternProps.gridSize}
+    />
+  ), [gridPatternProps]);
+
   return (
     <div
       id="agenda"
@@ -480,12 +508,7 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
         fontFamily: bodyFont?.family,
       }}
     >
-      <GridPattern
-        gridColor={getColor("tertiary", 300)}
-        gridLineColor={getColor("tertiary", 50)}
-        backgroundColor="transparent"
-        gridSize={50}
-      />
+      {MemoizedGridPattern}
       {/* <Template1Perks/> */}
       <div className="mx-auto max-w-3xl relative">
         <div className="mb-8 text-center">

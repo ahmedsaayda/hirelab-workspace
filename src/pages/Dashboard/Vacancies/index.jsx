@@ -55,6 +55,7 @@ import PasteUrlModal from "./PasteUrlModal.jsx";
 import JobDescriptionModal from "./JobDescriptionModal.jsx";
 import UpgradeModal from "./components/UpgradeModal.jsx";
 import { partner } from "../../../constants.js";
+import { useSearchParams } from "next/navigation";
 
 const { Column } = Table;
 
@@ -72,6 +73,7 @@ const englishStages = [
 ];
 const Vacancies = () => {
   const router = useRouter();
+  const queryParams = useSearchParams();
   
   // Extract query parameters from Next.js router
   const searchParams = new URLSearchParams(router.asPath.split('?')[1] || '');
@@ -1413,7 +1415,7 @@ Respond with json that adheres to the following jsonschema:
         <FromScratchModal onClose={() => setAddNew(null)}  ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}}/>
       )}
       {addNew === "url" && (
-        queryParams.get('debug') === 'true' 
+        queryParams?.get('debug') === 'true' 
           ? <PasteUrlModalExperimental onClose={() => setAddNew(null)}  />
           : <PasteUrlModal onClose={() => setAddNew(null)} ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}} />
       )}
