@@ -533,7 +533,7 @@ export default function Example({
                               console.log("item.logo",item.logo )
                               return (
                                 <div className={classNames(
-                                  active ? "bg-gray-50 dark:bg-gray-700  px-4 transition-all duration-[.4s]" : `${item.name === "Sign out" ? "text-red-500 dark:text-red-500" : ""}`,
+                                  active ? "bg-gray-50 dark:bg-gray-700  px-4 transition-all duration-300" : `${item.name === "Sign out" ? "text-red-500 dark:text-red-500" : ""}`,
                                   `flex items-center gap-x-2  px-3 py-1 text-sm leading-6 text-gray-900 dark:text-gray-400 `
                                 )}
                                 >
