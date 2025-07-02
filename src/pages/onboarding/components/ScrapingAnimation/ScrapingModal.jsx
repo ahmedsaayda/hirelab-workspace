@@ -21,7 +21,7 @@ export const ScrapingModal = ({
   useEffect(() => {
     if (progress <= 10) setCurrentMainMessage('Initializing scraper...');
     else if (progress <= 25) setCurrentMainMessage('Analyzing your website...');
-    else if (progress <= 50) setCurrentMainMessage('Extracting branding elements...');
+    else if (progress <= 50) setCurrentMainMessage('Analyzing style and tone...');
     else if (progress <= 75) setCurrentMainMessage('Processing data...');
     else if (progress <= 99) setCurrentMainMessage('Finalizing results...');
     else setCurrentMainMessage('Analysis complete!');

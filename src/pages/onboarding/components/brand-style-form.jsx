@@ -55,6 +55,8 @@ import {
   setBaseColors,
   setTextColors,
 } from "../../../redux/landingPage/themeActions.js";
+import { login } from "../../../redux/auth/actions.js";
+import { store } from "../../../redux/store.js";
 import { ColorPicker as AntColorPicker, Space } from "antd";
 // hirelab-frontend\src\pages\onboarding\components\brand-style-form.jsx
 // hirelab-frontend\src\pages\Dashboard\Vacancies\components\Header\index.jsx
@@ -1018,7 +1020,7 @@ export default function BrandStyleForm() {
    const handleSkip = () => {
     setShowModal(false);
     // Navigate to dashboard
-    window.location.href = "/dashboard"; // or use react-router router.push()
+    router.push("/dashboard");
   };
 const handleContinue = () => {
     setShowModal(false);
@@ -1241,6 +1243,12 @@ const handleContinue = () => {
         },
         onboardingCompleted:true
       });
+
+      // Refresh user data in Redux store
+      const me = await AuthService.me();
+      if (me?.data?.me) {
+        store.dispatch(login(me.data.me));
+      }
      const modal = Modal.success({
     title: 'Brand Style Saved',
     content: (
@@ -1436,6 +1444,7 @@ const handleCancel = () => {
 
 const handleLogoUpload = async (url) => {
   try {
+    console.log("url", url)
     // Update local state
     setCompanyLogo(url);
     setLandingPageData((prevData) => ({
@@ -1447,6 +1456,12 @@ const handleLogoUpload = async (url) => {
     await AuthService.updateMe({
       companyLogo: url,
     });
+
+    // Refresh user data in Redux store
+    const me = await AuthService.me();
+    if (me?.data?.me) {
+      store.dispatch(login(me.data.me));
+    }
 
     message.success("Logo uploaded successfully.");
   } catch (error) {
@@ -1962,7 +1977,7 @@ const handleLogoUpload = async (url) => {
                   <div className="space-y-4">
                     {/* Step 2 Content (Brand Assets) */}
                     <Typography.Text className="mb-1.5 block text-sm text-gray-700">
-                      Company Logo
+                      Upload your logo. Horizontally oriented logos display best. We recommend avoiding logos with too much white space.
                     </Typography.Text>
                     <div>
                       {/* <Upload.Dragger
@@ -2332,18 +2347,28 @@ const handleLogoUpload = async (url) => {
                     <p>Please Complete Onboarding Steps first.</p>
                   </Modal>
 
-                  {currentStep < 3 ? (
+                                    {currentStep < 3 ? (
                     <Button
-                      type="primary"
-                      className="w-1/2 custom-button"
+                      type={currentStep === 1 && !companyLogo ? "default" : "primary"}
+                      className={
+                        currentStep === 1 && !companyLogo 
+                          ? 'w-1/2 !bg-gray-300 !border-gray-300 !text-gray-500 cursor-not-allowed hover:!bg-gray-300 hover:!border-gray-300 hover:!text-gray-500' 
+                          : 'w-1/2 custom-button'
+                      }
+                      disabled={currentStep === 1 && !companyLogo}
                       onClick={handleNext}
                     >
                       Next Step
                     </Button>
                   ) : (
                     <Button
-                      type="primary"
-                      className="w-1/2 custom-button"
+                      type={!companyName?.trim() || !companyUrl?.trim() ? "default" : "primary"}
+                      className={
+                        !companyName?.trim() || !companyUrl?.trim() 
+                          ? 'w-1/2 !bg-gray-300 !border-gray-300 !text-gray-500 cursor-not-allowed hover:!bg-gray-300 hover:!border-gray-300 hover:!text-gray-500' 
+                          : 'w-1/2 custom-button'
+                      }
+                      disabled={!companyName?.trim() || !companyUrl?.trim()}
                       onClick={() => {
                         handleSaveAndNext();
                         handleApplyThemeToLandingPage();

@@ -158,11 +158,7 @@ export default function Example() {
     setOnboardingStatus(res.data.onboardingStatus);
     document.dispatchEvent(new CustomEvent("REFRESH.PROFILE"));
 
-    if (
-      res.data.onboardingStatus?.profileCompletion === 100 &&
-      localStorage.lastVisit
-    )
-      window.location.href = localStorage.lastVisit;
+
   }, [softValue]);
 
   useEffect(() => {

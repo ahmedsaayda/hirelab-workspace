@@ -83,6 +83,7 @@ const ImageUploader = ({
           onImageUpload(uploadedUrls[0]);
         }
       }
+      console.log("uploadedUrls", uploadedUrls)
     } catch (error) {
       console.error("Error handling image selection:", error);
       message.error("Failed to process selected image");

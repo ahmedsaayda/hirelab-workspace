@@ -424,16 +424,16 @@ export function PreviewContainer({
           </div>
         )}
       </div>
-      <div ref={containerRef} className="flex flex-1" style={{overflow: "hidden"}}>
+      <div ref={containerRef} className="flex flex-1 justify-center" style={{overflow: "hidden"}}>
         <div
           style={{
             width: device === "desktop" ? "1440px" : `${deviceSizes[device].width}px`,
             height: "100%",
             transform: `scale(${scale})`,
-            transformOrigin: "left top",
+            transformOrigin: "center top",
             scrollbarWidth: "none",
           }}
-          className="flex-1 mb-auto"
+          className="mb-auto"
         >
           <IFrame
             styles={styles + fontStyles}

@@ -338,7 +338,9 @@ export function MediaCard({
                   </button>
 
                   {/* Edit Button */}
-                  <button
+                  {
+                    templateData && (
+<button
                     onClick={() => onEdit?.(_id)}
                     className="group flex w-full justify-center items-center gap-1 bg-gray-50_01 hover:bg-green-400 hover:text-white py-2"
                   >
@@ -348,6 +350,9 @@ export function MediaCard({
                     />
                     Edit
                   </button>
+
+                     )
+                  }
 
                   {/* Delete Button */}
                   <button
@@ -492,7 +497,9 @@ export function MediaCard({
             <Eye className="h-4 w-4 text-gray-500 hover:text-black" />
           </button>
 
-          <button
+          {
+            templateData && (
+              <button
             title={"Edit"}
             onClick={() => {
               setIsEditModalOpenForSection(true);
@@ -504,6 +511,8 @@ export function MediaCard({
           >
             <Pencil className="h-4 w-4 text-gray-500 hover:text-black" />
           </button>
+            )
+          }
         </div>
       </div>
     </div>

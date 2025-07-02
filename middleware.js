@@ -1,5 +1,19 @@
 import { NextResponse } from 'next/server';
 
+// Simple in-memory cache for user validation (reduces API calls)
+const userValidationCache = new Map();
+const CACHE_DURATION = 30000; // 30 seconds
+
+// Cleanup expired cache entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of userValidationCache.entries()) {
+    if (now - value.timestamp > CACHE_DURATION) {
+      userValidationCache.delete(key);
+    }
+  }
+}, CACHE_DURATION); // Clean up every 30 seconds
+
 // Define paths that don't require authentication
 const publicPaths = [
   '/auth/login',
@@ -79,6 +93,13 @@ function isOnboardingPath(pathname) {
 }
 
 async function fetchUserData(accessToken) {
+  // Check cache first
+  const cacheKey = accessToken;
+  const cached = userValidationCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+
   try {
     const backendUrl = process.env.NODE_ENV !== "production" 
       ? "http://localhost:5055/api" 
@@ -89,17 +110,39 @@ async function fetchUserData(accessToken) {
       headers: {
         'Content-Type': 'application/json',
         'access_token': accessToken
-      }
+      },
+      // Add timeout to prevent hanging requests
+      signal: AbortSignal.timeout(5000) // 5 second timeout
     });
     
     if (!response.ok) {
-      throw new Error('Failed to fetch user data');
+      // Only treat 401/403 as actual auth failures
+      if (response.status === 401 || response.status === 403) {
+        const authError = { authError: true };
+        // Cache auth errors briefly to avoid repeated calls
+        userValidationCache.set(cacheKey, { data: authError, timestamp: Date.now() });
+        return authError;
+      }
+      // Other errors (500, network issues) shouldn't log user out
+      throw new Error(`Server error: ${response.status}`);
     }
     
-    return await response.json();
+    const userData = await response.json();
+    // Cache successful responses
+    userValidationCache.set(cacheKey, { data: userData, timestamp: Date.now() });
+    return userData;
   } catch (error) {
     console.error('Error fetching user data:', error);
-    return null;
+    
+    // If it's an auth error, return that specifically
+    if (error.name === 'AbortError') {
+      console.warn('Request timed out - allowing user to continue');
+    }
+    
+    // Don't log out for network/timeout errors, only for auth errors
+    const networkError = { networkError: true };
+    // Don't cache network errors - allow retry on next request
+    return networkError;
   }
 }
 
@@ -119,19 +162,26 @@ export async function middleware(request) {
     const loginUrl = new URL('/auth/login', request.url);
     // Store the intended destination
     const response = NextResponse.redirect(loginUrl);
-    response.cookies.set('lastVisit', request.url);
     return response;
   }
 
   // Fetch user data and onboarding status
   const userData = await fetchUserData(accessToken);
   
-  if (!userData || !userData.me) {
+  // Only log out for actual auth errors, not network issues
+  if (userData?.authError || (!userData?.me && !userData?.networkError)) {
     // Invalid token, redirect to login
     const loginUrl = new URL('/auth/login', request.url);
     const response = NextResponse.redirect(loginUrl);
     response.cookies.delete('accessToken');
     return response;
+  }
+  
+  // If there's a network error, allow the request to continue
+  // (user stays logged in but might see cached/stale data)
+  if (userData?.networkError) {
+    console.warn('Network error in middleware - allowing request to continue');
+    return NextResponse.next();
   }
 
   const onboardingStatus = userData.onboardingStatus;
@@ -185,15 +235,7 @@ export async function middleware(request) {
       return NextResponse.redirect(new URL(redirectPath, request.url));
     }
   } else {
-    // User is fully onboarded
-    // Check if they were trying to access a specific page before login
-    const lastVisit = request.cookies.get('lastVisit')?.value;
-    
-    if (lastVisit && pathname === '/dashboard' && lastVisit !== request.url) {
-      const response = NextResponse.redirect(new URL(lastVisit, request.url));
-      response.cookies.delete('lastVisit');
-      return response;
-    }
+
     
     // If accessing root or login while authenticated, redirect to dashboard
     if (pathname === '/' || pathname === '/auth/login') {

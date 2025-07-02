@@ -253,6 +253,7 @@ const ImageSelectionModal = ({
   const handleEdit = (id) => {
     const media = recentMedia.find((m) => m._id === id);
     if (media) {
+      console.log("media",media);
       setEditingMedia(media);
       setIsEditModalOpenForSection(true);
     }
@@ -309,7 +310,7 @@ const ImageSelectionModal = ({
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Media Library2">
+      <Modal isOpen={isOpen} onClose={onClose} title="Media Library">
         {/* Responsive layout */}
         <div className="flex flex-col lg:flex-row h-full w-full">
           {/* Sidebar - horizontal on mobile, vertical on desktop */}
@@ -359,7 +360,7 @@ const ImageSelectionModal = ({
                     multiple={multiple}
                     accept={accept}
                   />
-                  <div className="flex-1 w-full mt-4 flex flex-col">
+                  <div className=" w-full mt-4 flex flex-col">
                     <h4 className="text-sm font-medium mb-2">Selected Files</h4>
                     <div className="flex-1 overflow-y-auto max-h-[250px]">
                       {files.map(renderPreview)}
@@ -410,13 +411,13 @@ const ImageSelectionModal = ({
                             type={media.type}
                             duration={media.duration}
                             resolution={media.resolution}
+                            templateData={media.templateData}
                             size={media.size}
                             selected={files.some(f => f.url === media.thumbnail)}
                             onSelect={() => handleSelectRecent(media)}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             onRename={handleRename}
-                            templateData={media.templateData}
                             hideDescription={true}
                           />
                         </div>
