@@ -390,7 +390,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
   );
 
 
-  const textColor = calculateTextColor(getColor("primary", 500));
+  const textColor = calculateTextColor(getColor("primary", 500), landingPageData?.yiqThreshold);
 
   const getBackgroundColor = (primaryColor) => {
     const brightness = getColorBrightness(primaryColor);
@@ -409,7 +409,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
   };
 
   const navigationTextColor = calculateTextColor(
-    getBackgroundColor(landingPageData?.primaryColor)
+    getBackgroundColor(landingPageData?.primaryColor),
+    landingPageData?.yiqThreshold
   );
 
   // Stabilize GridPattern props to prevent flickering
@@ -753,7 +754,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         maxHeight: "220px",
                         overflowY: "scroll",
                         color: calculateTextColor(
-                          getColor("primary", 500)
+                          getColor("primary", 500),
+                          landingPageData?.yiqThreshold
                         ),
                         scrollbarWidth: "none", /* Firefox */
                         msOverflowStyle: "none", /* Internet Explorer 10+ */
@@ -783,7 +785,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                             }}
                             style={{
                               color: calculateTextColor(
-                                getColor("primary", 500)
+                                getColor("primary", 500),
+                                landingPageData?.yiqThreshold
                               ),
                             }}
                           >
@@ -1036,7 +1039,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                               maxHeight: "220px",
                               overflowY: "scroll",
                               color: calculateTextColor(
-                                getColor("primary", 500)
+                                getColor("primary", 500),
+                                landingPageData?.yiqThreshold
                               ),
                               scrollbarWidth: "none", /* Firefox */
                               msOverflowStyle: "none", /* Internet Explorer 10+ */
@@ -1073,7 +1077,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                                   }}
                                   style={{
                                     color: calculateTextColor(
-                                      getColor("primary", 500)
+                                      getColor("primary", 500),
+                                      landingPageData?.yiqThreshold
                                     ),
                                   }}
                                 >

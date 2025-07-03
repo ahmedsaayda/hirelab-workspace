@@ -1,21 +1,18 @@
-import React from 'react';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
-
 export default function Home() {
-  const router = useRouter();
-  
-  useEffect(() => {
-    // Middleware will handle the redirection, but this is a fallback
-    router.push('/dashboard');
-  }, [router]);
+  // This page should never render - middleware handles all redirects
+  return null;
+}
 
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">HireLab</h1>
-        <p>Redirecting...</p>
-      </div>
-    </div>
-  );
+export async function getServerSideProps(context) {
+  // Server-side redirect - no client-side delay
+  // Middleware should handle authentication and redirect accordingly:
+  // - Unauthenticated users → /auth/login
+  // - Authenticated users → /dashboard
+  // This is just a fallback in case middleware doesn't catch it
+  return {
+    redirect: {
+      destination: '/auth/login',
+      permanent: false,
+    },
+  };
 } 

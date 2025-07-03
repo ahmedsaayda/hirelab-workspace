@@ -36,13 +36,13 @@ class DebugLogger {
       // Only run in browser environment
       if (typeof window === 'undefined') return;
 
-      await fetch('/api/debug-logs', {
+/*       await fetch('/api/debug-logs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ component, event, data }),
-      });
+      }); */
     } catch (error) {
       console.error('Failed to send log to file:', error);
     }
