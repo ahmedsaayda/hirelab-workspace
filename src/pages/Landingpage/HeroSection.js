@@ -1746,20 +1746,7 @@ export function GridPattern({
 }) {
   const canvasRef = useRef(null);
   
-  // Add debugging to track GridPattern re-renders
-  React.useEffect(() => {
-    if (typeof window !== 'undefined' && window.debugLogger) {
-      window.debugLogger.log('GridPattern', 'COMPONENT_RENDER', {
-        gridColor,
-        gridLineColor,
-        backgroundColor,
-        gridSize,
-        maxWidth,
-        className,
-        timestamp: performance.now()
-      });
-    }
-  });
+
 
   useEffect(() => {
     const canvas = canvasRef.current;

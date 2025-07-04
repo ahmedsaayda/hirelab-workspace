@@ -20,7 +20,6 @@ import CrudService from "../../services/CrudService.js";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils.js";
 import { GridPattern, intToHumanReadablePrice } from "./HeroSection.js";
-import debugLogger from "../../utils/debugLogger.js";
 
 const useFooterHover = () => {
   const {
@@ -30,15 +29,7 @@ const useFooterHover = () => {
     lastScrollToSection,
   } = useHover();
   
-  // Non-blocking log
-  React.useEffect(() => {
-    debugLogger.log('Footer-useFooterHover', 'HOVER_STATE', {
-      hoveredField,
-      scrollToSection,
-      lastScrollToSection
-    });
-  }, [hoveredField, scrollToSection, lastScrollToSection]);
-  
+
   const sectionRef = useRef();
   const titleRef = useRef();
   const textRef = useRef();
@@ -402,15 +393,7 @@ const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings })
 });
 
 const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, similarJobs: propSimilarJobs, similarJobsLoading: propSimilarJobsLoading }) => {
-  // Use async log without blocking render
-  React.useEffect(() => {
-    debugLogger.log('Footer-Template1', 'COMPONENT_RENDER', {
-      landingPageDataId: landingPageData?._id,
-      primaryColor: landingPageData?.primaryColor,
-      tertiaryColor: landingPageData?.tertiaryColor,
-      renderTime: performance.now()
-    });
-  }, [landingPageData?._id, landingPageData?.primaryColor, landingPageData?.tertiaryColor]);
+
 
   const {
     sectionRef,
@@ -556,32 +539,27 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
   // Extract colors for dependency tracking - memoized to prevent re-renders
   const primaryColor = useMemo(() => {
     const color = landingPageData?.primaryColor || "#26B0C6";
-    debugLogger.log('Footer-Template1', 'PRIMARY_COLOR_CALC', { color, source: landingPageData?.primaryColor ? 'landingPage' : 'default' });
     return color;
   }, [landingPageData?.primaryColor]);
   
   const secondaryColor = useMemo(() => {
     const color = landingPageData?.secondaryColor || "#F7E733";
-    debugLogger.log('Footer-Template1', 'SECONDARY_COLOR_CALC', { color, source: landingPageData?.secondaryColor ? 'landingPage' : 'default' });
     return color;
   }, [landingPageData?.secondaryColor]);
   
   const tertiaryColor = useMemo(() => {
     const color = landingPageData?.tertiaryColor || "#44b566";
-    debugLogger.log('Footer-Template1', 'TERTIARY_COLOR_CALC', { color, source: landingPageData?.tertiaryColor ? 'landingPage' : 'default' });
     return color;
   }, [landingPageData?.tertiaryColor]);
   
   const heroBackgroundColor = useMemo(() => {
     const color = landingPageData?.heroBackgroundColor || primaryColor || "#26B0C6";
-    debugLogger.log('Footer-Template1', 'HERO_BG_COLOR_CALC', { color, primaryColor, source: landingPageData?.heroBackgroundColor ? 'landingPage' : 'primary' });
     return color;
   }, [landingPageData?.heroBackgroundColor, primaryColor]);
 
   // Create a stable color key to prevent unnecessary template palette updates
   const colorKey = useMemo(() => {
     const key = `${primaryColor}-${secondaryColor}-${tertiaryColor}-${heroBackgroundColor}`;
-    debugLogger.log('Footer-Template1', 'COLOR_KEY_CALC', { key, primaryColor, secondaryColor, tertiaryColor, heroBackgroundColor });
     return key;
   }, [primaryColor, secondaryColor, tertiaryColor, heroBackgroundColor]);
 
@@ -593,7 +571,6 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
       tertiaryColor,
       heroBackgroundColor,
     };
-    debugLogger.log('Footer-Template1', 'CUSTOM_COLORS_CALC', { colors, colorKey });
     return colors;
   }, [colorKey]);
 
@@ -608,20 +585,10 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
     customColors
   );
   
-  debugLogger.log('Footer-Template1', 'USE_TEMPLATE_PALETTE_CALL', {
-    defaultColors: {
-      primaryColor: "#26B0C6",
-      secondaryColor: "#F7E733",
-      tertiaryColor: "#44b566",
-      heroBackgroundColor: "#26B0C6",
-    },
-    customColors,
-    getColorRef: getColor.toString()
-  });
+
   
   const { subheaderFont, bodyFont } = useMemo(() => {
     const fonts = getFonts(landingPageData);
-    debugLogger.log('Footer-Template1', 'FONTS_CALC', { fonts });
     return fonts;
   }, [landingPageData]);
 
@@ -816,16 +783,7 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
       key: `${primaryColor500}-${tertiaryColor300}`
     };
     
-    debugLogger.log('Footer-Template1', 'GRID_PATTERN_PROPS_CALC', {
-      primaryColor500,
-      tertiaryColor300,
-      tertiaryColor50,
-      props,
-      dependencies: {
-        primaryColor: landingPageData?.primaryColor,
-        tertiaryColor: landingPageData?.tertiaryColor
-      }
-    });
+
     
     return props;
   }, [landingPageData?.primaryColor, landingPageData?.tertiaryColor]);
@@ -872,43 +830,25 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
   const gridPatternRef = useRef(null);
   const [stableGridKey, setStableGridKey] = useState(gridPatternProps.key);
   
-  debugLogger.log('Footer-Template1', 'STABLE_GRID_KEY_STATE', {
-    currentStableGridKey: stableGridKey,
-    newGridPatternKey: gridPatternProps.key,
-    keysEqual: stableGridKey === gridPatternProps.key
-  });
+
   
   // Only update the grid when colors actually change (debounced)
   useEffect(() => {
-    debugLogger.log('Footer-Template1', 'DEBOUNCE_EFFECT_START', {
-      stableGridKey,
-      gridPatternPropsKey: gridPatternProps.key,
-      willUpdate: stableGridKey !== gridPatternProps.key
-    });
     
     const timeoutId = setTimeout(() => {
       if (stableGridKey !== gridPatternProps.key) {
-        debugLogger.log('Footer-Template1', 'STABLE_GRID_KEY_UPDATE', {
-          oldKey: stableGridKey,
-          newKey: gridPatternProps.key
-        });
         setStableGridKey(gridPatternProps.key);
       }
     }, 100); // Small debounce to prevent rapid updates
     
     return () => {
-      debugLogger.log('Footer-Template1', 'DEBOUNCE_EFFECT_CLEANUP', { timeoutId });
       clearTimeout(timeoutId);
     };
   }, [gridPatternProps.key, stableGridKey]);
 
   // Create a memoized GridPattern component to prevent re-renders
   const MemoizedGridPattern = useMemo(() => {
-    debugLogger.log('Footer-Template1', 'MEMOIZED_GRID_PATTERN_CALC', {
-      stableGridKey,
-      gridPatternProps,
-      timestamp: performance.now()
-    });
+ 
     
     return (
       <GridPattern
@@ -927,30 +867,7 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
       ref={sectionRef}
       style={{ color: textColor }}
     >
-      {/* Debug Button - Remove after debugging */}
-      <div className="fixed top-4 right-4 z-50">
-        <div className="text-xs text-gray-600 mb-2">
-          Logs writing to: hirelab-next/src/pages/Landingpage/debug-logs.txt
-        </div>
-        <button
-          onClick={() => {
-            debugLogger.exportToFile();
-          }}
-          className="bg-green-500 text-white px-3 py-1 rounded shadow-lg text-sm block mb-2"
-          style={{ fontSize: '11px' }}
-        >
-          Download Copy
-        </button>
-        <button
-          onClick={() => {
-            debugLogger.clear();
-          }}
-          className="bg-red-500 text-white px-3 py-1 rounded shadow-lg text-sm block"
-          style={{ fontSize: '11px' }}
-        >
-          Clear File
-        </button>
-      </div>
+   
       
       {/* CTA Banner */}
       <div className="px-4 mx-auto mb-16 max-w-6xl md:px-8">

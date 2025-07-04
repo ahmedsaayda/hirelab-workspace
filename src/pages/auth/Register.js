@@ -119,11 +119,11 @@ const Login = () => {
                 <Checkbox className="col-span-full" required />
                 <label>
                   I accept the{" "}
-                  <a href="/legal/privacy" target="_blank">
+                  <a href="/legal/privacy" target="_blank" className="text-blue-600 hover:underline">
                     privacy policy
                   </a>{" "}
                   and{" "}
-                  <a href="/legal/terms" target="_blank">
+                  <a href="/legal/terms" target="_blank" className="text-blue-600 hover:underline">
                     terms of service
                   </a>
                 </label>
