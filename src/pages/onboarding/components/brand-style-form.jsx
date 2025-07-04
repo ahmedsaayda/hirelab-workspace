@@ -96,6 +96,7 @@ export const defaultLandingPageData = {
   primaryColor: "#26B0C6",
   secondaryColor: "#F7E733",
   tertiaryColor: "#44b566",
+  yiqThreshold: 128,
   selectedFont: {
     family: "Poppins-Bold",
     src: "https://res.cloudinary.com/dvq0ouupb/raw/upload/v1742388170/fmo1ye9nswzixvzglc6v.ttf",
@@ -880,6 +881,7 @@ export default function BrandStyleForm() {
   const [secondaryColor, setSecondaryColor] = useState("");
   const [tertiaryColor, setTertiaryColor] = useState("");
   const [heroBackgroundColor, setHeroBackgroundColor] = useState("");
+  const [yiqThreshold, setYiqThreshold] = useState(128);
   const [Scraping, setScraping] = useState(false);
   const [scrapeMessages, setScrapeMessages] = useState([]);
   const [landingPageData, setLandingPageData] = useState(
@@ -1048,6 +1050,7 @@ const handleContinue = () => {
       secondaryColor: secondaryColor,
       tertiaryColor: tertiaryColor,
       heroBackgroundColor: heroBackgroundColor,
+      yiqThreshold: yiqThreshold,
       selectedFont: {
         family: selectedFont,
         src: fonts.find((font) => font.family === selectedFont)?.src,
@@ -1080,6 +1083,7 @@ const handleContinue = () => {
       setHeroBackgroundColor(
         user.heroBackgroundColor || user.primaryColor || ""
       );
+      setYiqThreshold(user.yiqThreshold || 128);
 
       // Only set font values if they exist in user data
       if (user?.selectedFont?.family) setSelectedFont(user.selectedFont.family);
@@ -1094,6 +1098,7 @@ const handleContinue = () => {
         secondaryColor: user.secondaryColor || "",
         tertiaryColor: user.tertiaryColor || "",
         heroBackgroundColor: user.heroBackgroundColor || user.primaryColor || "",
+        yiqThreshold: user.yiqThreshold || 128,
         companyLogo: user.companyLogo ,
         selectedFont: user?.selectedFont || { family: "", src: "" },
         titleFont: user?.titleFont || { family: "", src: "" },
@@ -1224,6 +1229,7 @@ const handleContinue = () => {
         secondaryColor,
         tertiaryColor,
         heroBackgroundColor,
+        yiqThreshold,
         isUserFirsttime: false,
         selectedFont: {
           family: selectedFont,
@@ -2299,12 +2305,56 @@ const handleLogoUpload = async (url) => {
                           </div>
                         </div>
                       </div>
-                      {/* <div className="mt-4">
-                        <Typography.Text className="text-sm text-gray-500">
-                          Choose a primary color for auto-generation of colors or
-                          manually adjust the secondary and tertiary colors.
+
+                      {/* YIQ Threshold Controller */}
+                      <div className="mt-6">
+                        <Typography.Text strong className="mb-2 block text-md text-gray-700">
+                          Text Contrast Sensitivity
                         </Typography.Text>
-                      </div> */}
+                        <div className="flex items-center gap-4">
+                          <Typography.Text className="text-sm text-gray-600 min-w-0">
+                            Light
+                          </Typography.Text>
+                          <div className="flex-1">
+                            <input
+                              type="range"
+                              min="100"
+                              max="180"
+                              value={yiqThreshold}
+                              onChange={(e) => {
+                                const newThreshold = parseInt(e.target.value);
+                                setYiqThreshold(newThreshold);
+                                setLandingPageData((prevData) => ({
+                                  ...prevData,
+                                  yiqThreshold: newThreshold,
+                                }));
+                              }}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                              style={{
+                                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((yiqThreshold - 100) / 80) * 100}%, #e5e7eb ${((yiqThreshold - 100) / 80) * 100}%, #e5e7eb 100%)`,
+                                outline: 'none'
+                              }}
+                            />
+                          </div>
+                          <Typography.Text className="text-sm text-gray-600 min-w-0">
+                            Dark
+                          </Typography.Text>
+                        </div>
+                        <div className="flex justify-between mt-2">
+                          <Typography.Text className="text-xs text-gray-500">
+                            More white text
+                          </Typography.Text>
+                          <Typography.Text className="text-xs text-gray-600 font-medium">
+                            {yiqThreshold}
+                          </Typography.Text>
+                          <Typography.Text className="text-xs text-gray-500">
+                            More black text
+                          </Typography.Text>
+                        </div>
+                        <Typography.Text className="text-xs text-gray-500 mt-1 block">
+                          Controls when text switches from white to black on colored backgrounds
+                        </Typography.Text>
+                      </div>
                     </div>
                   </div>
                 )}
