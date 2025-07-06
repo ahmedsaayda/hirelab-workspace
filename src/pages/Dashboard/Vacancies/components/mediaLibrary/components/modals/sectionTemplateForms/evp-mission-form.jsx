@@ -98,6 +98,7 @@ const EVPMissionForm = ({
           <ImageUploader
             defaultImage={formData.evpMissionAvatar}
             onImageUpload={(url) => handleChange('evpMissionAvatar', url)}
+            allowedTabs={["image"]}
             // title="Upload Profile Image"
             // aspectRatio={800/400}
             // maxDimensions={{ width: 800, height: 400 }}

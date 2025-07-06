@@ -28,32 +28,75 @@ const ImageSelectionModal = ({
   multiple,
   maxFiles,
   accept = "image/*",
+  type = "all",
+  autosave = false,
+  currentSectionLimits=Infinity,
+  isLogo=false,
+  allowedTabs =["all","image","video","section-template"]
 }) => {
   const user = useSelector(selectUser);
   const [activeOption, setActiveOption] = useState("upload");
   const [files, setFiles] = useState(() => (existingFiles || []).map((url) => ({ url })));
   const [isUploading, setIsUploading] = useState(false);
-  const [addingFromStockImage , setAddingFromStockImage] = useState(false); 
+  const [addingFromStockImage, setAddingFromStockImage] = useState(false);
   const [recentMedia, setRecentMedia] = useState([]);
   const [recentLoading, setRecentLoading] = useState(false);
   const [editingMedia, setEditingMedia] = useState(null);
   const [isEditModalOpenForSection, setIsEditModalOpenForSection] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState("");
-  const [selectedTab, setSelectedTab] = useState("all");
+  const [selectedTab, setSelectedTab] = useState(() => {
+    if (type === "video") return "videos";
+    if (type === "image") return "images";
+    return "all";
+  });
+  const [linkValue, setLinkValue] = useState("");
+
+  // Function to check if a media type is allowed
+  const isMediaTypeAllowed = (mediaType) => {
+    if (type === "all") return true;
+    return mediaType.toLowerCase() === type.toLowerCase();
+  };
+
+  console.log("recentMedia",recentMedia)
+
+  // Filter media based on type and selectedTab
+  const filteredMedia = recentMedia.filter(media => {
+    if (type !== "all") {
+      // If type is specified (video/image), only show that type
+      return media.type.toLowerCase() === type.toLowerCase();
+    }
+    // Otherwise filter based on selected tab
+    if (selectedTab === "all") return true;
+    if (selectedTab === "images") return media.type === "image";
+    if (selectedTab === "videos") return media.type === "video";
+    return true;
+  });
+
+  console.log("type:", type);
+  console.log("filteredMedia:", filteredMedia);
 
   const handleFilesSelected = async (newFiles) => {
-    if (maxFiles && files.length + newFiles.length > maxFiles) {
-      message.error(`You can only upload up to ${maxFiles} files`);
+    if (!multiple && maxFiles === 1) {
+      // For single file mode, just replace the existing file
+      const newEntries = newFiles.map((file) => ({
+        url: URL.createObjectURL(file),
+        file,
+        progress: 0,
+      }));
+      setFiles([newEntries[0]]);
+      setIsUploading(true);
+    } else if (maxFiles && files.length + newFiles.length > maxFiles&& !isLogo) {
+      message.error(`You can only select up to ${maxFiles} ${maxFiles === 1 ? 'file' : 'files'}. Please remove some ${maxFiles === 1 ? 'file' : 'files'} first.`);
       return;
     }
-  
+
     const newEntries = newFiles.map((file) => ({
       url: URL.createObjectURL(file),
       file,
       progress: 0,
     }));
-  
+
     setFiles((prev) => {
       const newFilesArr = multiple ? [...prev, ...newEntries] : [newEntries[0]];
       // Remove duplicates by url
@@ -107,6 +150,13 @@ const ImageSelectionModal = ({
           return match ? { ...f, url: match.uploadedUrl, progress: 100 } : f;
         })
       );
+
+      // If autosave is enabled, automatically call handleDone after successful upload
+      if (autosave) {
+        const urls = files.map((f) => f.url).filter((u) => u.startsWith("http"));
+        onImageSelected(urls);
+        onClose();
+      }
     } catch (err) {
       console.error(err);
       setFiles((prev) =>
@@ -181,30 +231,30 @@ const ImageSelectionModal = ({
     fetchRecent();
   }, [isOpen, user?._id, accept]);
 
-  // Filtered media for tabs
-  const filteredMedia = selectedTab === "all"
-    ? recentMedia
-    : selectedTab === "images"
-      ? recentMedia.filter((m) => m.type === "image")
-      : recentMedia.filter((m) => m.type === "video");
-
   // Add recent upload to files
   const handleSelectRecent = (media) => {
     if (files.some(f => f.url === media.thumbnail)) return;
-    if (maxFiles && files.length >= maxFiles) {
-      message.error(`You can only upload up to ${maxFiles} files`);
+    if (maxFiles && files.length >= maxFiles&& !isLogo) {
+      message.error(`You can only select up to ${maxFiles} ${maxFiles === 1 ? 'file' : 'files'}. Please remove some ${maxFiles === 1 ? 'file' : 'files'} first.`);
       return;
     }
+    
     setFiles(prev => {
       const newFilesArr = multiple ? [...prev, { url: media.thumbnail }] : [{ url: media.thumbnail }];
       // Remove duplicates by url
       const unique = Array.from(new Map(newFilesArr.map(f => [f.url, f])).values());
+      
+      // If autosave is enabled, automatically save after selection
+      if (autosave) {
+        const urls = unique.map(f => f.url);
+        onImageSelected(urls);
+        onClose();
+      }
+      
       return unique;
     });
   };
 
-  console.log("filesfilesfilesfiles", files);
-  console.log("existingFiles", existingFiles);
 
 
   const handleRemoveFile = (url) => {
@@ -308,20 +358,48 @@ const ImageSelectionModal = ({
     }
   };
 
+  const handleLinkAdd = () => {
+    if (!linkValue) {
+      message.error("Please enter a valid URL");
+      return;
+    }
+
+    // Basic URL validation
+    try {
+      new URL(linkValue);
+    } catch (e) {
+      message.error("Please enter a valid URL");
+      return;
+    }
+
+    // Add the link to files
+    if (maxFiles && files.length >= maxFiles) {
+      message.error(`You can only add up to ${maxFiles} ${maxFiles === 1 ? 'file' : 'files'}`);
+      return;
+    }
+
+    setFiles(prev => {
+      const newFiles = [{ url: linkValue }];
+      return multiple ? [...prev, ...newFiles] : newFiles;
+    });
+
+    // Clear the input
+    setLinkValue("");
+
+    // If autosave is enabled, save immediately
+    if (autosave) {
+      onImageSelected([linkValue]);
+      onClose();
+    }
+  };
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} title="Media Library">
-        {/* Responsive layout */}
-        <div className="flex flex-col lg:flex-row h-full w-full">
-          {/* Sidebar - horizontal on mobile, vertical on desktop */}
-          <div className="p-2 lg:p-4 w-full lg:w-48 border-b lg:border-b-0 lg:border-r border-gray-100">
+        <div className="flex flex-col lg:flex-row h-[calc(100vh-200px)] max-h-[800px] w-full">
+          {/* Sidebar */}
+          <div className="p-2 lg:p-4 w-full lg:w-48 border-b lg:border-b-0 lg:border-r border-gray-100 flex-shrink-0">
             <div className="flex lg:flex-col gap-2 lg:gap-0 overflow-x-auto lg:overflow-x-visible">
-            {/* <SidebarOption
-              icon={<Film size={20} className="text-red-500" />}
-              label="Generate"
-              active={activeOption === "generate"}
-              onClick={() => setActiveOption("generate")}
-            /> */}
               <SidebarOption
                 icon={<UploadIcon size={20} className="text-blue-500" />}
                 label="Upload"
@@ -340,144 +418,160 @@ const ImageSelectionModal = ({
                 active={activeOption === "stock"}
                 onClick={() => setActiveOption("stock")}
               />
-              {/* <SidebarOption
-                icon={<Palette size={20} className="text-pink-500" />}
-                label="Brand Kits"
-                active={activeOption === "brand"}
-                onClick={() => setActiveOption("brand")}
-              /> */}
             </div>
           </div>
 
           {/* Main content */}
-          <div className="flex-1 overflow-y-auto p-2 lg:p-4">
+          <div className="flex-1 overflow-hidden p-2 lg:p-4">
             {activeOption === "upload" && (
-              <div className="flex flex-col lg:flex-row w-full h-full min-h-[400px] lg:min-h-[500px] gap-4">
+              <div className="flex flex-col lg:flex-row w-full h-full gap-4"
+             
+              >
                 {/* Left: DropZone and controls */}
-                <div className="w-full lg:w-[35%] flex flex-col border-2 border-dashed border-gray-300 bg-gray-50 min-h-[300px]  p-2 lg:p-4 rounded-lg max-h-[calc(100vh-250px)]">
-                  <DropZone
-                    onFilesSelected={handleFilesSelected}
-                    multiple={multiple}
-                    accept={accept}
-                  />
-                  <div className=" w-full mt-4 flex flex-col">
-                    <h4 className="text-sm font-medium mb-2">Selected Files</h4>
-                    <div className="flex-1 overflow-y-auto max-h-[250px]">
-                      {files.map(renderPreview)}
+                <div
+                
+                  className="lg:w-[35%] w-full ">
+                    <div className=" relative flex flex-col border-2 border-dashed border-gray-300 bg-gray-50 h-full p-2 lg:p-4 rounded-lg overflow-y-scroll">
+                    <div className="h-full"
+                      
+                      >
+                        <DropZone
+                          onFilesSelected={handleFilesSelected}
+                          multiple={multiple}
+                          accept={type === "video" ? "video/*" : type === "image" ? "image/*" : accept}
+                        />
+                        <div className="w-full mt-4 flex flex-col ">
+                          <h4 className="text-sm font-medium mb-2">Selected Files</h4>
+                          <div className="flex-1 overflow-y-auto min-h-0">
+                            {files.map(renderPreview)}
+                          </div>
+                        </div>
+
+                      </div>
                     </div>
-                  </div>
-                  <button
-                    onClick={handleDone}
-                    disabled={isUploading}
-                    className=" mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
-                  >
-                    {isUploading ? "Uploading..." : "Done"}
-                  </button>
+                      {!autosave && (
+                        <div className="mt-4 ml-4 mb-1 w-fit sticky bottom-1 bg-gray-50  z-10">
+                          <button
+                            onClick={handleDone}
+                            disabled={isUploading||files.length===0}
+                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
+                          >
+                            {isUploading ? "Uploading..." : `Choose ${type === "image" ? "Image" : "Video"}`}
+                          </button>
+                        </div>
+                      )}
+                    
                 </div>
+
                 {/* Right: Recent uploads */}
-                <div className="w-full lg:w-[65%] min-h-[300px] lg:h-auto flex flex-col items-center justify-start overflow-y-auto">
-                  <h4 className="text-sm font-semibold mb-2">Recent Uploads</h4>
-                  <Tabs activeKey={selectedTab} onChange={setSelectedTab} type="line" className="w-full mb-2">
-                    <TabPane tab="All" key="all" />
-                    <TabPane tab="Images" key="images" />
-                    <TabPane tab="Videos" key="videos" />
-                  </Tabs>
-                  {recentLoading ? (
-                    <div className="text-gray-500 w-full">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[1, 2, 3].map((index) => (
-                          <div key={index} className="w-full">
-                            <Skeleton variant="rectangular" width="100%" height={180} />
-                            <Box sx={{ pt: 1 }}>
-                              <Skeleton />
-                              <Skeleton width="60%" />
-                            </Box>
+                <div className="w-full lg:w-[65%] h-full flex flex-col overflow-hidden">
+                  <div className="flex-shrink-0">
+                    <h4 className="text-sm font-semibold mb-2">Recent Uploads</h4>
+                    {/* Only show tabs if type is "all" */}
+                    <Tabs activeKey={selectedTab} onChange={setSelectedTab} type="line" className="w-full mb-2">
+                        <TabPane tab="All" key="all" disabled={type !== "all"} />
+                        <TabPane tab="Images" key="images" disabled={type !== "image" && type !== "all"}  />
+                        <TabPane tab="Videos" key="videos" disabled={type !== "video" && type !== "all"} />
+                      </Tabs>
+                    {/* {type === "all" ? (
+                      <Tabs activeKey={selectedTab} onChange={setSelectedTab} type="line" className="w-full mb-2">
+                        <TabPane tab="All" key="all" />
+                        <TabPane tab="Images" key="images" />
+                        <TabPane tab="Videos" key="videos" />
+                      </Tabs>
+                    ) : (
+                      <div className="w-full mb-2 border-b border-gray-200">
+                        <h3 className="text-sm font-medium pb-2 capitalize">
+                          {type === "video" ? "Videos" : "Images"}
+                        </h3>
+                      </div>
+                    )} */}
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto min-h-0 pb-4">
+                    {recentLoading ? (
+                      <div className="text-gray-500 w-full">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                          {[1, 2, 3].map((index) => (
+                            <div key={index} className="w-full">
+                              <Skeleton variant="rectangular" width="100%" height={180} />
+                              <Box sx={{ pt: 1 }}>
+                                <Skeleton />
+                                <Skeleton width="60%" />
+                              </Box>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : filteredMedia.length === 0 ? (
+                      <div className="text-gray-400 py-8 text-center">No {type !== "all" ? type : ""} media found</div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+                        {filteredMedia.map((media) => (
+                          <div key={media._id} className="cursor-pointer" onClick={() => handleSelectRecent(media)}>
+                            <MediaCard
+                              _id={media._id}
+                              title={media.title}
+                              description={media.description}
+                              tags={media.tags || []}
+                              thumbnail={media.thumbnail}
+                              type={media.type}
+                              duration={media.duration}
+                              resolution={media.resolution}
+                              templateData={media.templateData}
+                              size={media.size}
+                              selected={files.some(f => f.url === media.thumbnail)}
+                              onSelect={() => handleSelectRecent(media)}
+                              onEdit={handleEdit}
+                              onDelete={handleDelete}
+                              onRename={handleRename}
+                              hideDescription={true}
+                            />
                           </div>
                         ))}
                       </div>
-                    </div>
-                  ) : filteredMedia.length === 0 ? (
-                    <div className="text-gray-400 py-8">No recent uploads</div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 w-full">
-                      {filteredMedia.map((media) => (
-                        <div key={media._id} className="cursor-pointer" onClick={() => handleSelectRecent(media)}>
-                          <MediaCard
-                            _id={media._id}
-                            title={media.title}
-                            description={media.description}
-                            tags={media.tags || []}
-                            thumbnail={media.thumbnail}
-                            type={media.type}
-                            duration={media.duration}
-                            resolution={media.resolution}
-                            templateData={media.templateData}
-                            size={media.size}
-                            selected={files.some(f => f.url === media.thumbnail)}
-                            onSelect={() => handleSelectRecent(media)}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onRename={handleRename}
-                            hideDescription={true}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             )}
-            {activeOption === "generate" && (
-              <div className="py-16 text-center text-gray-500">
-                AI Generation coming soon
-              </div>
-            )}
+
             {activeOption === "link" && (
               <div className="flex flex-col space-y-4 max-w-md mx-auto p-4">
-                <h4 className="text-lg font-medium mb-4">Add Image from URL</h4>
+                <h4 className="text-lg font-medium mb-4">Add {type === "video" ? "Video" : "Image"} from URL</h4>
                 <input
                   type="text"
-                  placeholder="https://example.com/image.jpg"
+                  placeholder={`https://example.com/${type === "video" ? "video.mp4" : "image.jpg"}`}
                   className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                  onChange={(e) => setLinkValue(e.target.value)}
+                  value={linkValue}
                 />
-                <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full sm:w-auto">
-                  Add Image
+                <button 
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full sm:w-auto"
+                  onClick={handleLinkAdd}
+                >
+                  Add {type === "video" ? "Video" : "Image"}
                 </button>
               </div>
             )}
-            {/* {activeOption === "stock" && (
-              ImageBrowser
-              onSelect={(urls) =>{
-                console.log(urls,"urlsssssssssssssssssss");
-                setFiles((prev) => [...prev, ...urls.map((u) => ({ url: u }))])}
-                }
-                maxFiles={maxFiles}
-                currentCount={files.length}
-                // getSelectedMedia={getSelectedMedia}
-                // activeSection={activeSection}
-                // mediaLimits={mediaLimits}
-                // landingPageData={landingPageData}
-              />
-            )} */}
-              {activeOption === "stock" && (
-                <div className="w-full h-full">
-                  <StockImageBrowser
-                    onSelect={(urls) => {
-                      setAddingFromStockImage(false);
-                      setFiles((prev) => {
-                        const newFiles = urls.map(url => ({ url }));
-                        return multiple ? [...prev, ...newFiles] : newFiles;
-                      });
-                      setAddingFromStockImage(true);
-                    }}
-                    maxFiles={maxFiles}
-                    currentCount={files.length}
-                  />
-                </div>
-              )}
-            {activeOption === "brand" && (
-              <div className="py-16 text-center text-gray-500">
-                Brand Kits coming soon
+
+            {activeOption === "stock" && (
+              <div className="w-full h-full">
+                <StockImageBrowser
+                  onSelect={(urls) => {
+                    setAddingFromStockImage(false);
+                    setFiles((prev) => {
+                      const newFiles = urls.map(url => ({ url }));
+                      return multiple ? [...prev, ...newFiles] : newFiles;
+                    });
+                    setAddingFromStockImage(true);
+                  }}
+                  maxFiles={maxFiles}
+                  currentCount={files.length}
+                  type={type}
+                  currentSectionLimits={currentSectionLimits}
+                  allowedTabs={allowedTabs}
+                />
               </div>
             )}
           </div>

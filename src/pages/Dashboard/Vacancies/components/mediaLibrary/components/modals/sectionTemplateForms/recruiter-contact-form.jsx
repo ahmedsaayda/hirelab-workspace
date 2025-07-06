@@ -115,6 +115,7 @@ const RecruiterContactForm = ({ initialData, onSave, isSaving }) => {
                   onImageUpload={(url) => 
                     handleRecruiterChange(index, 'recruiterAvatar', url)
                   }
+                  allowedTabs={["image"]}
                 //   title="Upload Recruiter Photo"
                 />
 

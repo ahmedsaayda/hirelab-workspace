@@ -1,7 +1,7 @@
 "use client";
 
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { Form, Input, Modal, Radio, Skeleton, Switch, message } from "antd";
+import { Form, Input, Modal, Radio, Skeleton, Switch, message, Spin } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import CrudService from "../../services/CrudService";
@@ -15,7 +15,7 @@ import ApplicationformAddQuestions, {
 import FormE from "../Landingpage/Form";
 import EditorRender from "../LandingpageEdit/EditorRender";
 import {FaGripVertical,FaTrash} from "react-icons/fa6";
-import { DragDropContext as BeautifulDragDropContext, Droppable as BeautifulDroppable, Draggable as BeautifulDraggable } from "react-beautiful-dnd";
+import { DragDropContext as BeautifulDragDropContext, Droppable as BeautifulDroppable, Draggable as BeautifulDraggable } from "@hello-pangea/dnd";
 import {PlusOutlined} from "@ant-design/icons";
 const { TextArea } = Input;
 
@@ -770,17 +770,11 @@ export default function FormEdit({paramsId}) {
       </Modal>
 
       <style jsx>{`
-        .dragging {
-          cursor: grabbing !important;
-        }
-        .react-beautiful-dnd-draggable {
-          overflow: visible !important;
+        .hello-pangea-dnd-draggable {
+          transition: transform 0.2s ease;
         }
         [data-rbd-draggable-context-id] {
-          overflow: visible !important;
-        }
-        [data-rbd-drag-placeholder] {
-          opacity: 0 !important;
+          outline: none;
         }
       `}</style>
     </div>

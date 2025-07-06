@@ -1,5 +1,5 @@
 import { forwardRef, useState } from "react";
-import { DragDropContext } from "react-beautiful-dnd";
+import { DragDropContext } from "@hello-pangea/dnd";
 import CrudService from "../../../../../services/CrudService";
 import withDroppable from "../withDroppable";
 import Column from "./components/Column";

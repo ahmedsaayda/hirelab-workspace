@@ -1,6 +1,6 @@
 import { Button, Popconfirm, Space, Tooltip, Modal } from "antd";
 import React, { useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   FaArrowAltCircleDown,
   FaArrowAltCircleUp,
@@ -385,17 +385,13 @@ export default function Sidebar17({
           cursor: grabbing !important;
         }
 
-        /* Fix for react-beautiful-dnd clipping issues */
-        .react-beautiful-dnd-draggable {
+        /* Fix for @hello-pangea/dnd clipping issues */
+        .hello-pangea-dnd-draggable {
           overflow: visible !important;
         }
-
-        /* This helps ensure the draggable content remains visible */
         [data-rbd-draggable-context-id] {
           overflow: visible !important;
         }
-
-        /* Target the actual draggable ghost element */
         [data-rbd-drag-placeholder] {
           opacity: 0 !important;
         }

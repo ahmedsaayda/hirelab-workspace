@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Input, Button, message } from "antd";
 // import ImageUploader from "..."; const ImageUploader = () => <div>Image Uploader Placeholder</div>;
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { CloseOutlined } from "@ant-design/icons";
 import { Img } from "../../../../../../../../dhwise-components";
 
@@ -100,6 +100,7 @@ const AboutCompanyForm = ({
           multiple={true}
           defaultImage={formData.aboutTheCompanyImages[0]}
           onImageUpload={handleImageUpload}
+          allowedTabs={["image"]}
         />
         <p className="text-sm text-gray-500 mt-1">
           {formData.aboutTheCompanyImages.length}/5 images uploaded

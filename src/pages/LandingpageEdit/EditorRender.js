@@ -701,6 +701,7 @@ const EditorRender = React.memo(({
                         [a.key]: url,
                       }));
                       handleChanged();
+
                     }}
                     onImageAdjustmentChange={(fieldKey, adjustments) => {
                       setLandingPageData((d) => ({
@@ -712,6 +713,7 @@ const EditorRender = React.memo(({
                       }));
                       handleChanged();
                     }}
+                    allowedTabs={["image"]}
                   />
                 </>
               ) : a.type === "video" ? (
@@ -751,6 +753,7 @@ const EditorRender = React.memo(({
                       }));
                       handleChanged();
                     }}
+                    allowedTabs={["video"]}
                   />
                 </>
               ) : a.type === "jobSelector" ? (

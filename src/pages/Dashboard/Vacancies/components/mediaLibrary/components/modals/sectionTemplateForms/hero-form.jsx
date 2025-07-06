@@ -452,6 +452,8 @@ const HeroForm = ({initialData, onSave, isSaving}) => {
         <ImageUploader
           defaultImage={formData.heroImage}
           onImageUpload={(url) => handleChange("heroImage", url)}
+          allowedTabs={["image"]}
+          
         />
       </div>
 

@@ -74,6 +74,7 @@ const TextBoxForm = ({ initialData, onSave, isSaving }) => {
         <ImageUploader
           defaultImage={formData.textBoxImage}
           onImageUpload={(url)=>handleChange("textBoxImage", url)}
+          allowedTabs={["image"]}
         />
         <p className="text-xs text-gray-500 mt-2">
           Supported formats: SVG, PNG, JPG or GIF (max. 800x400px)

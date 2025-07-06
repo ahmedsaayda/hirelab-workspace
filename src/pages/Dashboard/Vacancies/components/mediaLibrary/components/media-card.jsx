@@ -112,7 +112,7 @@ export function MediaCard({
   _id,
   title,
   description,
-  tags,
+  tags=[],
   thumbnail,
   type,
   duration,
@@ -126,6 +126,7 @@ export function MediaCard({
   onRename,
   onDelete,
   hideDescription = false,
+
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -177,7 +178,7 @@ export function MediaCard({
             <img
               src={thumbnail}
               alt={title}
-              className="object-cover w-full h-[200px] rounded-lg"
+              className="object-cover w-full aspect-square rounded-lg"
             />
             <div className="absolute px-2 py-1 text-xs text-white rounded top-2 left-2 bg-light_blue-A700 bg-opacity-15">
               {resolution}

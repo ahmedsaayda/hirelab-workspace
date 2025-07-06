@@ -1,6 +1,7 @@
+import React, { useState } from "react";
 import { Badge, Button, Space } from "antd";
 import { forwardRef } from "react";
-import { Draggable } from "react-beautiful-dnd";
+import { Draggable } from "@hello-pangea/dnd";
 import { FaFileImport } from "react-icons/fa";
 import { IoMdAddCircle } from "react-icons/io";
 import { LuWorkflow } from "react-icons/lu";

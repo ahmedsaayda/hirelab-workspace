@@ -2022,7 +2022,15 @@ const handleLogoUpload = async (url) => {
                         fieldKey="companyLogo"
                         onImageUpload={handleLogoUpload}
                         isSettingDisabled={false}
-
+                        type="image"
+                        accept="image/*"
+                        isLogo={true}
+                        currentSectionLimits={{
+                          images: 1,
+                          videos: 0,
+                          mediaType: "image",
+                        }}
+                        allowedTabs={["image"]}
                         onImageAdjustmentChange={(fieldKey, adjustments) => {
                           // You can handle image adjustments here if needed
                         }}

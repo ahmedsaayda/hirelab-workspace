@@ -111,13 +111,16 @@ const EditorRenderArray = React.memo(({
       <div className="grid grid-cols-2 gap-4 mb-0">
         {items.map((a, i) => {
           const hide = a.toggle && !landingPageData?.[a.toggleKey];
+          const isVideoSection = a.type === "video";
+          const isImageSection = a.type === "image";
+          
           return (
             <div
               key={i}
               className={`flex flex-col gap-2
-        col-span-2
-        ${a.halfWidth ? "xl:col-span-1" : "xl:col-span-2"}
-        `}
+                col-span-2
+                ${a.halfWidth ? "xl:col-span-1" : "xl:col-span-2"}
+              `}
             >
               <div className="flex gap-5 justify-between">
                 <div className="flex gap-2 items-center w-full">
@@ -225,21 +228,20 @@ const EditorRenderArray = React.memo(({
                   size={20}
                   className="flex justify-between"
                 />
-              ) : a.type === "image" ? (
+              ) : a.type === "image" || a.type === "video" ? (
                 <>
                   {!hide && (
                     <ImageUploader
                       maxFiles={a.maxFiles || 1}
                       multiple={a.multiple}
-                      defaultImage={
-                        a.key === "itself"
-                          ? landingPageData
-                          : landingPageData?.[a.key]
-                      }
+                      defaultImage={a.key === "itself" ? landingPageData : landingPageData?.[a.key]}
                       onImageUpload={(url) => {
                         setLandingPageData(url, a.key);
                         setChanged(true);
                       }}
+                      accept={isVideoSection ? "video/*" : "image/*"}
+                      type={isVideoSection ? "video" : "image"}
+                      allowedTabs={isVideoSection ? ["video"] : ["image"]}
                     />
                   )}
                 </>

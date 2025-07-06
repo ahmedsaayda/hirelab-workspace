@@ -1,6 +1,6 @@
 import { Button, Divider, Modal, Popconfirm, Space, Tooltip } from "antd";
-import React, { useEffect, useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import React, { useEffect, useState, useRef } from "react";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
 import { Input, InputNumber, Select, Typography } from "antd";
 import { GrInfo } from "react-icons/gr";

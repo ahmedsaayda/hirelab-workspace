@@ -178,11 +178,9 @@ const TestimonialReorder = ({ testimonials, onReorder }) => {
 
 
 
-export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedMedia, activeSection, setIsMediaLiOpen, mediaLimits, landingPageData, ImageModal }) {
+export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedMedia, activeSection, setIsMediaLiOpen, mediaLimits, landingPageData, ImageModal ,allowedTabs =["all","image","video","section-template"]}) {
+  console.log("activeSection", activeSection);
   const user = useSelector(selectUser);
-  // userrrrrrrrrrrrr 66033b377d48e591ff8abcf4
-
-  // Pagination start 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
   const [totalItems, setTotalItems] = useState(0);
@@ -924,25 +922,25 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
                 <TabPane
                   tab="All"
                   key="1"
-                  disabled={!!currentSectionLimits?.mediaType} // Disable if mediaType is specified
+                  disabled={!allowedTabs.includes("all")}
                 ></TabPane>
               )}
 
               <TabPane
                 tab="Images"
                 key="2"
-                disabled={currentSectionLimits?.videos === 0 || currentSectionLimits?.mediaType === 'video'} // Disable if only videos allowed
+                disabled={!allowedTabs.includes("image")}
               ></TabPane>
               <TabPane
                 tab="Videos"
                 key="3"
                 // disabled={currentSectionLimits?.images === 0 || currentSectionLimits?.mediaType === 'image'} // Disable if only images allowed
-                disabled={!!activeSection}
+                disabled={!allowedTabs.includes("video")}
               ></TabPane>
               <TabPane
                 tab="Section templates"
                 key="4"
-                disabled={!!activeSection}
+                disabled={!allowedTabs.includes("section-template")}
               // disabled={currentSectionLimits?.mediaType && 
               //   currentSectionLimits.mediaType !== 'section-template'}
               ></TabPane>

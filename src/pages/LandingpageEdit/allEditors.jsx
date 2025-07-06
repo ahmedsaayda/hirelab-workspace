@@ -48,6 +48,7 @@ const AboutCompanyEdit = (props) => {
             key: "aboutTheCompanyImages",
             label: "Images (up to 5 images)",
             type: "image",
+            accept: "image/*",
             multiple: true,
             maxFiles: 5,
           },
@@ -64,38 +65,33 @@ const LeaderIntroductionEdit = (props) => {
         {...props}
         items={[
           {
-            //header
             key: "leaderIntroductionTitle",
             label: "Header",
             max: 40,
           },
-          //body text
           {
             key: "leaderIntroductionDescription",
             label: "Body text",
             max: 400,
             textarea: true,
           },
-          // name
           {
             key: "leaderIntroductionFullname",
             label: "Full name",
             max: 40,
             halfWidth: true,
           },
-          // job title
           {
             key: "leaderIntroductionJobTitle",
             label: "Job Title",
             max: 40,
             halfWidth: true,
           },
-
-          // image
           {
             key: "leaderIntroductionAvatar",
             label: "Image",
             type: "image",
+            accept: "image/*"
           },
         ]}
       />
@@ -124,6 +120,7 @@ const VideoEdit = (props) => {
             key: "myVideo",
             label: "Video",
             type: "video",
+            accept: "video/*"
           },
         ]}
       />
@@ -249,6 +246,7 @@ const EVPMissionEdit = (props) => {
             key: "evpMissionAvatar",
             label: "Image",
             type: "image",
+            accept: "image/*"
           },
         ]}
       />
@@ -1070,6 +1068,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                   handleChange("heroImage", url);
                   document.dispatchEvent(new CustomEvent("HANDLE.CHANGED"));
                 }}
+                allowedTabs={["image"]}
               />
             </div>
           </div>
@@ -1102,10 +1101,11 @@ const JobDescriptionEdit = (props) => {
             rows: 10,
             textarea: true,
           },
-            {
+          {
             key: "jobDescriptionImage",
             label: "Image",
             type: "image",
+            accept: "image/*"
           },
         ]}
       />
@@ -1231,11 +1231,11 @@ const PhotosEdit = (props) => {
             label: "Subheader",
             max: 120,
           },
-
           {
             key: "photoImages",
             label: "Images (up to 12 images)",
             type: "image",
+            accept: "image/*",
             multiple: true,
             maxFiles: 12,
           },

@@ -187,6 +187,7 @@ export default function TestimonialsForm({ onSave, initialData, isSaving }) {
                 accept=".svg,.png,.jpg,.gif"
                 defaultImage={testimonial.avatar}
                 onImageUpload={(url) => handleImageUpload(url, index)}
+                allowedTabs={["image"]}
               />
               <p className="text-xs text-gray-500 mt-2">
                 SVG, PNG, JPG or GIF (max. 800x400px)

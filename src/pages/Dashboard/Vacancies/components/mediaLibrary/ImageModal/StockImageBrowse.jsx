@@ -1,29 +1,37 @@
-
-
 // hirelab-frontend\src\components\mediaLibrary\ImageModal\StockImageBrowse.jsx
 import React, { useState } from "react";
 import { Spin, Button, message } from "antd";
 import { useSelector } from "react-redux";
 import MyMediaLibrary from "../index.jsx";
 
-
-
 const StockImageBrowser = ({ 
   onSelect, 
   maxFiles,
   currentCount,
+  type, 
+  currentSectionLimits=Infinity,
+  allowedTabs =["all","image","video","section-template"]
 }) => {
-    const [isOpen, setIsOpen] = useState(false);// not using but require form prop of media library
+  const [isOpen, setIsOpen] = useState(false);
   const selectMediaLimits = (state) => state.mediaUpload.mediaLimits;
-const selectActiveSection = (state) => state.mediaUpload.activeSection;
+  const selectActiveSection = (state) => state.mediaUpload.activeSection;
 
   // console.log('TM_SELECTED_TEXTTM_SELECTED_TEXT', {  activeSection,
   //   mediaLimits,
   //   landingPageData,});
 
   const handleMediaSelection = (mediaItems) => {
+    // Filter items based on type
+    const filteredItems = type !== "all" 
+      ? mediaItems.filter(item => {
+          const itemType = item.type?.toLowerCase() || 
+            (item.thumbnail?.toLowerCase().includes('.mp4') ? 'video' : 'image');
+          return itemType === type.toLowerCase();
+        })
+      : mediaItems;
+
     // Extract valid URLs from selected media
-    const urls = mediaItems
+    const urls = filteredItems
       .filter(item => item.thumbnail || item.url)
       .map(item => item.thumbnail || item.url);
 
@@ -37,27 +45,27 @@ const selectActiveSection = (state) => state.mediaUpload.activeSection;
     onSelect(urls);
     setIsOpen(false); // Close the media browser modal
   };
+
   const reduxMediaLimits = useSelector(selectMediaLimits);
   const reduxActiveSection = useSelector(selectActiveSection);
 
   console.log('reduxActiveSection', reduxActiveSection);
 
-return (
-    <div className="">
-
+  return (
+    <div className="w-full">
       <MyMediaLibrary
         // isAddSectionButtonVisible={false}
         getSelectedMedia={handleMediaSelection}
-        // //  setGetMediaDataFromChild={setGetMediaDataFromChild}
         activeSection={reduxActiveSection}
         mediaLimits={reduxMediaLimits}
         setIsMediaLiOpen={setIsOpen}
-        // landingPageData={landingPageData}
-        ImageModal={reduxActiveSection?.key === 'Video'? false : true}
+        ImageModal={true}
+        currentSectionLimits={currentSectionLimits}
+        type={type}
+        allowedTabs={allowedTabs}
       />
     </div>
+  );
+};
 
-   );
- };
-
- export default StockImageBrowser;
+export default StockImageBrowser;

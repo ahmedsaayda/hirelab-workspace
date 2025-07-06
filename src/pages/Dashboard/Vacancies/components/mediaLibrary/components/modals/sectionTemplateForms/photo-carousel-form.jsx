@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Input, Button, message } from "antd";
 // import ImageUploader from "..."; const ImageUploader = () => <div>Image Uploader Placeholder</div>;
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Img } from "../../../../../../../../dhwise-components";
 
 const { TextArea } = Input;
@@ -90,6 +90,7 @@ const PhotoCarouselForm = ({
           multiple={true}
           defaultImage={formData.photoImages[0]}
           onImageUpload={handleImageUpload}
+          allowedTabs={["image"]}
         //   showUploadList={false}
         />
 

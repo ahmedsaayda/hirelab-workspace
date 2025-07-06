@@ -1,6 +1,6 @@
 import { Popconfirm, Space } from "antd";
 import React, { useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { MdOutlineDragIndicator } from "react-icons/md";
 import { default as ModalProvider } from "react-modal";
 import Link from "next/link";

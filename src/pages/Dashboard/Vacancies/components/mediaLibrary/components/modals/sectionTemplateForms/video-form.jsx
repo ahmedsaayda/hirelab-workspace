@@ -132,6 +132,7 @@ const VideoSectionForm = ({
             handleChange('myVideo', url);
             setIsPlaying(false);
           }}
+          allowedTabs={["video"]}
         />
 
         {/* Video Preview */}

@@ -92,6 +92,7 @@ const leaderIntroductionForm = ({ initialData, onSave, isSaving }) => {
           defaultImage={formData.leaderIntroductionAvatar}
           onImageUpload={(url) => handleChange("leaderIntroductionAvatar", url)}
         //   title="Upload Leader Photo"
+        allowedTabs={["image"]}
         
         />
       </div>

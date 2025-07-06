@@ -18,7 +18,7 @@ import {
   SelectBox,
   Text,
 } from "../Dashboard/Vacancies/components/components/index.jsx";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import ImageSelectionModal from "../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
 import { message } from "antd";
 
@@ -27,15 +27,21 @@ const ImageUploader = ({
   accept = "image/*",
   defaultImage,
   multiple = false,
-  maxFiles = Infinity, // Add this prop
+  maxFiles = Infinity,
   imageAdjustments = {},
   onImageAdjustmentChange,
   fieldKey,
   isSettingDisabled = true,
+  autosave = false,
+  type = "all",
+  isLogo = false,
+  currentSectionLimits={},
+  allowedTabs =["all","image","video","section-template"]
 }) => {
   console.log("multiple", multiple);
   const isVideo = accept.includes("video");
   console.log("defaultImage", defaultImage);
+  console.log("type", type);
   // Existing state for single file
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -54,6 +60,9 @@ const ImageUploader = ({
   const [isImageOpen, setIsImageOpen] = useState(false);
   const uploadRef = useRef();
 
+  // Force type based on accept prop
+  const mediaType = accept.includes("video") ? "video" : "image";
+
   // Calculate uploads left
   const uploadsLeft = multiple
     ? maxFiles - multipleFiles.length
@@ -67,23 +76,32 @@ const ImageUploader = ({
 
   const handleImageSelected = async (uploadedUrls) => {
     try {
+      console.log("Selected URLs:", uploadedUrls);
       if (multiple) {
-        // Combine and remove duplicates
-        const combined = [...multipleFiles, ...uploadedUrls];
-        const unique = Array.from(new Set(combined));
-        if (unique.length > maxFiles) {
-          message.error(`You can only upload up to ${maxFiles} files`);
-          return;
+        if (!maxFiles || maxFiles === 1) {
+          // If maxFiles is 1, replace existing files
+          setMultipleFiles(uploadedUrls.slice(-1));
+          onImageUpload(uploadedUrls.slice(-1));
+        } else {
+          // Combine and remove duplicates
+          const combined = [...multipleFiles, ...uploadedUrls];
+          console.log("Combined URLs:", combined);
+          const unique = Array.from(new Set(combined));
+          if (unique.length > maxFiles) {
+            message.error(`You can only upload up to ${maxFiles} files`);
+            return;
+          }
+          setMultipleFiles(unique);
+          onImageUpload(unique);
         }
-        setMultipleFiles(unique);
-        onImageUpload(unique);
       } else {
         if (uploadedUrls.length > 0) {
+          // For single file mode, always replace the existing file
+          console.log("Setting single URL:", uploadedUrls[0]);
           setPreviewUrl(uploadedUrls[0]);
           onImageUpload(uploadedUrls[0]);
         }
       }
-      console.log("uploadedUrls", uploadedUrls)
     } catch (error) {
       console.error("Error handling image selection:", error);
       message.error("Failed to process selected image");
@@ -211,171 +229,59 @@ const ImageUploader = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  // const handleMultipleUpload = async (files) => {
-  //   console.log("handleMultipleUpload called with files:", files);
-  //   if (!files.length || isUploading) return;
-
-  //   // Calculate how many more files can be added
-  //   const currentCount = multipleFiles.length;
-  //   const remainingSlots = maxFiles - currentCount;
-  //   const selectedFiles = Array.from(files);
-
-  //   if (selectedFiles.length > remainingSlots) {
-  //     setError(
-  //       `You can only add ${remainingSlots} more file${
-  //         remainingSlots === 1 ? "" : "s"
-  //       }. Please remove some existing files first.`
-  //     );
-  //     uploadRef.current.value = "";
-  //     return;
-  //   }
-
-  //   setError("");
-  //   setIsUploading(true);
-
-  //   // Get existing URLs before starting the upload
-  //   const existingUrls = Array.isArray(defaultImage)
-  //     ? defaultImage
-  //     : multipleFiles;
-
-  //   const previews = selectedFiles.map((file) => ({
-  //     url: URL.createObjectURL(file),
-  //     type: file.type,
-  //   }));
-
-  //   // Store file metadata mapped by URL
-  //   const newMetadata = { ...fileMetadata };
-  //   previews.forEach((preview, index) => {
-  //     const file = files[index];
-  //     newMetadata[preview.url] = {
-  //       name: file.name,
-  //       size: formatFileSize(file.size),
-  //       type: file.type,
-  //     };
-  //   });
-  //   setFileMetadata(newMetadata);
-
-  //   // Only add new preview URLs to the existing files
-  //   const updatedFiles = [...existingUrls, ...previews.map((p) => p.url)];
-  //   const updatedTypes = [...multipleFileTypes, ...previews.map((p) => p.type)];
-
-  //   // Track which files are uploading
-  //   const uploadingState = {};
-  //   selectedFiles.forEach((file) => {
-  //     uploadingState[file.name] = true;
-  //   });
-  //   setUploadingFiles(uploadingState);
-
-  //   setMultipleFiles(updatedFiles);
-  //   setMultipleFileTypes(updatedTypes);
-
-  //   const fileInfo = selectedFiles.reduce(
-  //     (acc, file) => ({
-  //       ...acc,
-  //       [file.name]: {
-  //         size: formatFileSize(file.size),
-  //         name: file.name,
-  //         progress: 0,
-  //       },
-  //     }),
-  //     { ...fileDetails }
-  //   );
-  //   setFileDetails(fileInfo);
-
-  //   try {
-  //     const uploadPromises = selectedFiles.map(async (file) => {
-  //       const result = await UploadService.upload(file, 10, (progress) => {
-  //         setUploadProgress((prev) => ({
-  //           ...prev,
-  //           [file.name]: progress,
-  //         }));
-  //       });
-  //       setFileMetadata((prev) => ({
-  //         ...prev,
-  //         [result?.data?.secure_url]: {
-  //           name: file.name,
-  //           size: formatFileSize(file.size),
-  //           type: file.type,
-  //         },
-  //       }));
-  //       return result;
-  //     });
-
-  //     const results = await Promise.all(uploadPromises);
-  //     const newUrls = results.map((result) => result.data.secure_url);
-
-  //     // Replace preview URLs with actual URLs while keeping existing ones
-  //     const finalUrls = existingUrls.concat(newUrls);
-
-  //     setMultipleFiles(finalUrls);
-  //     onImageUpload(finalUrls);
-  //   } catch (error) {
-  //     console.error("Error uploading files:", error);
-  //     // In case of error, revert to existing files
-  //     setMultipleFiles(existingUrls);
-  //   } finally {
-  //     setIsUploading(false);
-  //     // Remove from uploading state
-  //     setUploadingFiles((prev) => {
-  //       const updatedState = { ...prev };
-  //       selectedFiles.forEach((file) => delete updatedState[file.name]);
-  //       return updatedState;
-  //     });
-  //     uploadRef.current.value = "";
-  //   }
-  // };
-
+ 
   console.log("uploadingFiles", uploadingFiles);
-  // const handleUpload = useCallback(
-  //   async (event) => {
-  //     if (multiple) {
-  //       handleMultipleUpload(event.target.files);
-  //       return;
-  //     }
-  //     let selectedFile;
-  //     if (event.target.files && event.target.files[0]) {
-  //       selectedFile = event.target.files[0];
-  //       const url = URL.createObjectURL(selectedFile);
-  //       setPreviewUrl(url);
-  //       setFileType(selectedFile.type);
+  const handleUpload = useCallback(
+    async (event) => {
+      console.log("handleUpload called");
+      if (multiple) {
+        handleMultipleUpload(event.target.files);
+        return;
+      }
+      let selectedFile;
+      if (event.target.files && event.target.files[0]) {
+        selectedFile = event.target.files[0];
+        const url = URL.createObjectURL(selectedFile);
+        setPreviewUrl(url);
+        setFileType(selectedFile.type);
 
-  //       // Store single file metadata
-  //       setFileMetadata({
-  //         [url]: {
-  //           name: selectedFile.name,
-  //           size: formatFileSize(selectedFile.size),
-  //           type: selectedFile.type,
-  //         },
-  //       });
-  //     }
+        // Store single file metadata
+        setFileMetadata({
+          [url]: {
+            name: selectedFile.name,
+            size: formatFileSize(selectedFile.size),
+            type: selectedFile.type,
+          },
+        });
+      }
 
-  //     if (!selectedFile || isUploading) return;
+      if (!selectedFile || isUploading) return;
 
-  //     setIsUploading(true);
-  //     try {
-  //       console.log("upload start");
-  //       const result = await UploadService.upload(selectedFile, 100);
-  //       console.log("upload end", result);
-  //       // Store metadata for the uploaded file
-  //       setFileMetadata({
-  //         [result.data.secure_url]: {
-  //           name: selectedFile.name,
-  //           size: formatFileSize(selectedFile.size),
-  //           type: selectedFile.type,
-  //         },
-  //       });
-  //       setPreviewUrl(result.data.secure_url);
-  //       setFileType(selectedFile.type);
-  //       onImageUpload(result.data.secure_url);
-  //     } catch (error) {
-  //       console.error("Error uploading file:", error);
-  //     } finally {
-  //       setIsUploading(false);
-  //       uploadRef.current.value = "";
-  //     }
-  //   },
-  //   [isUploading, onImageUpload, multiple]
-  // );
+      setIsUploading(true);
+      try {
+        console.log("upload start");
+        const result = await UploadService.upload(selectedFile, 100);
+        console.log("upload end", result);
+        // Store metadata for the uploaded file
+        setFileMetadata({
+          [result.data.secure_url]: {
+            name: selectedFile.name,
+            size: formatFileSize(selectedFile.size),
+            type: selectedFile.type,
+          },
+        });
+        setPreviewUrl(result.data.secure_url);
+        setFileType(selectedFile.type);
+        onImageUpload(result.data.secure_url);
+      } catch (error) {
+        console.error("Error uploading file:", error);
+      } finally {
+        setIsUploading(false);
+        uploadRef.current.value = "";
+      }
+    },
+    [isUploading, onImageUpload, multiple]
+  );
 
   const handleDelete = (fileUrl, indexToRemove) => {
     console.log("TM_SELECTED_TEXT", fileUrl, indexToRemove);
@@ -524,10 +430,12 @@ const ImageUploader = ({
     setIsDraggingImage(false);
   };
 
-  const renderPreview = (url, index, details) => {
+  const renderPreview = (url, index, details,isLogo=false) => {
+    console.log("isLogo", isLogo);
     const isUploadingFile = uploadingFiles[fileMetadata[url]?.name];
     const adjustments = imageAdjustments[fieldKey] || {};
     const isSelected = selectedImage === url;
+    const isMaxFilesReached = multiple && multipleFiles.length >= maxFiles;
 
     const positionString = adjustments.objectPosition
       ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
@@ -552,7 +460,7 @@ const ImageUploader = ({
           )}
 
           <div
-            className={`flex-shrink-0 overflow-hidden rounded aspect-square
+            className={`flex-shrink-0 overflow-hidden rounded aspect-square flex items-center justify-center
             ${url?.includes("video") ? "w-32" : "w-24"}`}
           >
             {url?.includes("video") ? (
@@ -565,10 +473,12 @@ const ImageUploader = ({
               <img
                 src={url}
                 alt={`Preview ${index + 1}`}
-                className="object-cover w-full h-full rounded"
+                className=" w-full my-auto  rounded border-2  object-center"
                 style={{
                   objectPosition: positionString,
-                  objectFit: adjustments.objectFit || "cover",
+                  objectFit: isLogo ? "fill" : adjustments.objectFit || "cover",
+                  height: isLogo ? "auto" : "100%",
+                  
                 }}
               />
             )}
@@ -625,12 +535,17 @@ const ImageUploader = ({
                 e.stopPropagation();
                 handleDelete(url, index);
               }}
-              className="p-2 rounded-full hover:bg-gray-100 delete-button"
+              className={`p-2 rounded-full hover:bg-gray-100 delete-button ${
+                isMaxFilesReached ? "animate-pulse bg-red-50 hover:bg-red-100" : ""
+              }`}
+              title={isMaxFilesReached ? "Delete to upload more" : "Delete"}
             >
               <Img
                 src="/images2/img_trash_01.svg"
                 alt="trash-01"
-                className="h-[20px] w-[20px] cursor-pointer ml-auto"
+                className={`h-[20px] w-[20px] cursor-pointer ml-auto ${
+                  isMaxFilesReached ? "text-red-500" : ""
+                }`}
               />
             </button>
           
@@ -713,7 +628,7 @@ const ImageUploader = ({
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
                   >
-                    {renderPreview(url, index, fileDetails[url])}
+                    {renderPreview(url, index, fileDetails[url],isLogo)}
                   </div>
                 )}
               </Draggable>
@@ -726,33 +641,23 @@ const ImageUploader = ({
   );
 
   return (
-    <div>
-      {/* <input
-        className="hidden"
-        type="file"
-        onChange={handleUpload}
-        accept={accept}
-        disabled={isUploading}
-        ref={uploadRef}
-        multiple={multiple}
-        style={{ display: "none" }}
-      /> */}
-
+    <div className="flex flex-col h-full">
       <ImageSelectionModal
         isOpen={isImageOpen}
-        onClose={closeModal}
+        onClose={() => setIsImageOpen(false)}
         onImageSelected={handleImageSelected}
-        existingFiles={
-          multiple ? multipleFiles : previewUrl ? [previewUrl] : []
-        }
-        uploadProgress={uploadProgress}
+        existingFiles={multiple ? multipleFiles : previewUrl ? [previewUrl] : []}
         multiple={multiple}
         maxFiles={maxFiles}
+        accept={accept}
+        type={mediaType} // Pass the enforced type
+        autosave={autosave}
+        isLogo={isLogo}
+        currentSectionLimits={currentSectionLimits}
+        allowedTabs={allowedTabs}
       />
       {!limitReached ? (
         <div
-          // onClick={() => uploadRef.current.click()}
-          // onClick={onUploadClick}
           onClick={handleUploadAreaClick}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -760,50 +665,37 @@ const ImageUploader = ({
           onDragEnter={() => {
             if (!isImageOpen) openModal();
           }}
+          className="w-full"
         >
-          <div
-            className={`flex justify-end rounded-lg border border-dashed 
-            ${
-              isDragging
-                ? "bg-blue-50 border-light_blue-A700"
-                : "border-blue_gray-100 bg-white-A700"
-            } 
+          <div className={`flex justify-end rounded-lg border border-dashed 
+            ${isDragging ? "bg-blue-50 border-light_blue-A700" : "border-blue_gray-100 bg-white-A700"} 
             pb-[5px] pt-[26px] sm:pt-5 cursor-pointer transition-colors duration-200`}
           >
-            <div className="flex w-[79%] items-start justify-between gap-5 md:w-full md:p-5">
-              <div className="flex flex-col gap-1.5 items-center">
+            <div className="flex w-full md:w-[79%] items-start justify-between gap-5 p-4">
+              <div className="flex flex-col gap-1.5 items-center flex-grow">
                 <div className="flex flex-wrap gap-1 self-start">
                   {isUploading ? (
                     <Spin>
-                      <Heading
-                        size="3xl"
-                        as="h2"
-                        className="!text-light_blue-A700"
-                      >
+                      <Heading size="3xl" as="h2" className="!text-light_blue-A700">
                         Click to upload
                       </Heading>
                     </Spin>
                   ) : (
-                    <Heading
-                      size="3xl"
-                      as="h2"
-                      className="!text-light_blue-A700"
-                    >
+                    <Heading size="3xl" as="h2" className="!text-light_blue-A700">
                       Click to upload
                     </Heading>
                   )}
-
                   <Text as="p" className="!font-normal !text-blue_gray-700">
                     or drag and drop
                   </Text>
                 </div>
-                <Text size="lg" as="p" className="!text-blue_gray-700">
-                  {accept.includes("video")
+                <Text size="lg" as="p" className="!text-blue_gray-700 text-center">
+                  {isVideo
                     ? "OGM, WMV, MPG, WEBM, OGV, MOV, ASX, MPEG, MP4, M4V, AVI (max. 1GB)"
                     : "SVG, PNG, JPG or GIF (max. 800x400px)"}
                 </Text>
               </div>
-              <div className="relative mt-[9px] h-[48px] w-[15%]">
+              <div className="relative mt-[9px] h-[48px] w-[48px] md:w-[15%] flex-shrink-0">
                 <div className="absolute left-[0.00px] top-[0.00px] m-auto flex items-center px-px">
                   <Heading
                     size="lg"
@@ -812,11 +704,7 @@ const ImageUploader = ({
                   >
                     {isVideo ? "MP4" : "PNG"}
                   </Heading>
-                  <Img
-                    src="/images/img_file.svg"
-                    alt="file"
-                    className="relative ml-[-22px] h-[40px]"
-                  />
+                  <Img src="/images/img_file.svg" alt="file" className="relative ml-[-22px] h-[40px]" />
                 </div>
                 <Img
                   src="/images/img_cursor.svg"
@@ -829,22 +717,9 @@ const ImageUploader = ({
         </div>
       ) : (
         <div className="flex justify-center mb-4">
-          <button
-          // onClick={() => {
-          //   if (!multiple) {
-          //     setPreviewUrl("");
-          //     onImageUpload("");
-          //   }
-          //   uploadRef.current.click();
-          // }}
-          // className="px-4 py-2 text-white rounded-md transition-colors bg-light_blue-A700 hover:bg-blue-600"
-          >
-            {/* Change {isVideo ? "Video" : "Image"} */}
-            <p className="text-sm text-gray-500">
-              All slots filled. Replace an {isVideo ? "video" : "image"} if
-              needed.
-            </p>
-          </button>
+          <p className="text-sm text-gray-500">
+            All slots filled. Replace an {isVideo ? "video" : "image"} if needed.
+          </p>
         </div>
       )}
 
@@ -854,28 +729,20 @@ const ImageUploader = ({
         </Text>
       )}
 
-      {/* {multiple && (
-        <Text as="p" className="!text-blue_gray-700 mt-2">
-          {maxFiles !== Infinity
-            ? uploadsLeft > 0
-              ? `${uploadsLeft} upload${uploadsLeft !== 1 ? "s" : ""} left`
-              : "Maximum uploads reached"
-            : ""}
-        </Text>
-      )} */}
-
       {!multiple && previewUrl && (
-        <div className="mt-4">
-          {renderPreview(previewUrl, 0, fileDetails[previewUrl])}
+        <div className="mt-4 overflow-y-auto">
+          {renderPreview(previewUrl, 0, fileDetails[previewUrl],isLogo)}
         </div>
       )}
 
       {multiple && multipleFiles.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-4 flex-1 min-h-0 flex flex-col">
           <Text as="p" className="!text-blue_gray-700 mb-4">
             Uploaded Files: (drag to reorder)
           </Text>
-          {renderMultipleFilesPreview()}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {renderMultipleFilesPreview()}
+          </div>
         </div>
       )}
     </div>

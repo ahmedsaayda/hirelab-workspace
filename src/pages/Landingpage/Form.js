@@ -261,6 +261,7 @@ const Content = ({ landingPageData, onSubmit, setShowFormEditor }) => {
             accept="*"
             defaultImage={form.getFieldValue(field.id)}
             multiple={false}
+            allowedTabs={["image","video"]}
           />
         );
       case "website":
