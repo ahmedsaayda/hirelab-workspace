@@ -1,5 +1,5 @@
   // Calculate whether to use black or white text based on background color
-  const calculateTextColor = (hexColor, threshold = 128) => {
+  const calculateTextColor = (hexColor, threshold = 180) => {
   // Remove the # if it exists
   const hex = hexColor.replace("#", "")
 

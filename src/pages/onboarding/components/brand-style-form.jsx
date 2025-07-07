@@ -2306,7 +2306,7 @@ const handleLogoUpload = async (url) => {
                       </div>
 
                       {/* YIQ Threshold Controller */}
-                      <div className="mt-6">
+                      {/* <div className="mt-6">
                         <Typography.Text strong className="mb-2 block text-md text-gray-700">
                           Text Contrast Sensitivity
                         </Typography.Text>
@@ -2353,7 +2353,7 @@ const handleLogoUpload = async (url) => {
                         <Typography.Text className="text-xs text-gray-500 mt-1 block">
                           Controls when text switches from white to black on colored backgrounds
                         </Typography.Text>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 )}
