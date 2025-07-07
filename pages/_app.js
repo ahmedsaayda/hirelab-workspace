@@ -34,7 +34,11 @@ export default function App({Component, pageProps}) {
             <PersistGate loading={null} persistor={persistor}>
               <ThemeUpdater>
                 <HoverProvider>
-                  <ConfigProvider>
+                <ConfigProvider theme={{
+        token: {
+          colorPrimary: '#5207CD', // or any other color
+        },
+      }}>
                   <FocusProvider>
         <Component {...pageProps} />
                   </FocusProvider>

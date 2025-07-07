@@ -310,20 +310,27 @@ const Vacancies = () => {
                   ...({}),
                 }
               );
-              console.log('resultresultresult', result);
               setLandingPages(
-                result.data.items.map((i) => ({
-                  ...i,
-                  position: "Position",
-                  heading: i.vacancyTitle,
-                  deadlinetwo: "Deadline:",
-                  mar42024: moment(i.createdAt).format("MMM Do YYYY"),
-                  viewstwo: "Views:",
-                  zipcode: "6728",
-                  text: "293",
-                  applicants: "applicants",
-                  key: i._id,
-                }))
+                result.data.items.map((i) => {
+                  const visits = i.visits || 0;
+                  const avgTimeSpent = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
+                  const daysLive = Math.ceil((new Date() - new Date(i.createdAt)) / (1000 * 60 * 60 * 24));
+                  
+                  return {
+                    ...i,
+                    position: "Position",
+                    heading: i.vacancyTitle,
+                    deadlinetwo: "Deadline:",
+                    mar42024: moment(i.createdAt).format("MMM Do YYYY"),
+                    // Real analytics data
+                    visits: visits,
+                    avgTimeSpent: avgTimeSpent,
+                    applicants: 0, // For now, showing as 0
+                    // Calculate days live
+                    daysLive: daysLive,
+                    key: i._id,
+                  };
+                })
               );
               setTotalItems(result.data.total);
             }
@@ -819,122 +826,101 @@ Respond with json that adheres to the following jsonschema:
   return (
     <>
       <div className="flex flex-col flex-1 gap-6 pl-6 pt-3.5 pb-3 mdx:self-stretch">
-        <div className="flex gap-5 justify-between items-center smx:flex-col">
-          <Heading size="11xl" as="h1" fontWeight="normal" className="!text-gray-900">
+        <div className="flex gap-4 justify-between items-center smx:flex-col">
+          <h1 className="text-2xl font-semibold text-gray-900">
             Vacancies
-          </Heading>
-          <Button
-            shape="round"
+          </h1>
+          <button
             onClick={handleCreateNewVacancy}
-            leftIcon={
-              <Img
-                src="/images/img_plus_white_a700.svg"
-                alt="text input"
-                className="h-[20px] w-[20px]"
-              />
-            }
-            className="min-w-[205px] gap-1.5 font-semibold bg-indigo-500 text-white"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors duration-200 shadow-sm"
           >
-            Create a New Vacancy
-          </Button>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Create New Vacancy
+          </button>
         </div>
         <div className="flex flex-col gap-6">
           <div className="">
-            <div className="flex gap-3 w-full smx:flex-col ">
-              <Input
-                size="md"
-                shape="round"
-                name="search"
-                placeholder={`Search`}
-                value={searchValue}
-                onChange={(e) => handleSearch(e)}
-                prefix={
-                  <Img
-                    src="/images/img_search_blue_gray_500.svg"
-                    alt="search"
-                    className="h-[20px] w-[20px] cursor-pointer"
-                  />
-                }
-                suffix={
-                  searchValue && searchValue.length > 0 ? (
-                    <CloseSVG
-                      onClick={() => handleSearch("")}
-                      fillColor="#667084ff"
-                    />
-                  ) : null
-                }
-                className="w-full gap-2 !text-blue_gray-500 smx:pr-5"
-                style={{ borderColor: "transparent" }}
-              />
+            <div className="flex gap-3 w-full smx:flex-col">
+              {/* Modern Search Bar */}
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search vacancies..."
+                  value={searchValue}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                {searchValue && (
+                  <button
+                    onClick={() => handleSearch("")}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  >
+                    <svg className="w-4 h-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
 
-              {sorters.map((sorter) => {
-                const foundOption = sorterOptions.find((opt) => opt.key === sorter.key);
-                const label = foundOption ? foundOption.label : sorter.key;
+              {/* Active Sort Pills */}
+              {sorters.map((sorter) => (
+                <div key={sorter.key} className="inline-flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg border border-blue-200">
+                  <span>
+                    {sorter.key === "createdAt" ? (sorter.direction === "asc" ? "Oldest" : "Newest") :
+                      sorter.key === "salary" ? (sorter.direction === "asc" ? "Lowest Salary" : "Highest Salary") :
+                        sorter.key === "views" ? (sorter.direction === "asc" ? "Least Viewed" : "Most Viewed") :
+                          sorter.key === "applicants" ? (sorter.direction === "asc" ? "Least Applicants" : "Most Applicants") :
+                            sorter.key}
+                  </span>
+                  <button
+                    onClick={() => removeSorter(sorter.key)}
+                    className="text-blue-500 hover:text-blue-700"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
 
-                return (
-                  <div className="flex items-center justify-between bg-blue-100 text-gray-900 border border-[#0091ff74] px-2 py-0 pe-[4px] rounded-full text-sm shadow-md transition hover:bg-gray-300">
-                    <Button
-                      key={sorter.key}
-                      shape="round"
-                      rightIcon={
-                        <CircleX
-                          size={20}
-                          fill={"#9fa3a7"}
-                          className="h-[20px] w-[20px] cursor-pointer"
-                          onClick={() => removeSorter(sorter.key)}
-                        />
-                      }
-                      className="gap-2 font-semibold whitespace-nowrap bg-transparent text-gray-900"
-                    >
-                      {/* Dynamically change label based on sorter direction */}
-                      {sorter.key === "createdAt" ? (sorter.direction === "asc" ? "Oldest" : "Newest") :
-                        sorter.key === "salary" ? (sorter.direction === "asc" ? "Lowest Salary" : "Highest Salary") :
-                          sorter.key === "views" ? (sorter.direction === "asc" ? "Least Viewed" : "Most Viewed") :
-                            sorter.key === "applicants" ? (sorter.direction === "asc" ? "Least Applicants" : "Most Applicants") :
-                              sorter.key}
-                    </Button>
-
-
-                  </div>
-                );
-              })}
-
-
-              {/* @ts-ignore */}
-              <Button
-                className={`relative flex-1 w-full gap-2 font-semibold smx:self-stretch whitespace-nowrap transition text-gray-700 ${filterCount > 0 ? 'bg-blue-100 text-blue-700' : ''
-                  }`}
-                shape="round"
-                leftIcon={
-                  <Img
-                    src="/images/img_filters_lines.svg"
-                    alt="filters lines"
-                    className="h-[20px] w-[20px]"
-                  />
-                }
+              {/* Modern Filters Button */}
+              <button
                 onClick={() => setIsFilterModalOpen(true)}
-                style={{
-                  backgroundColor: filterCount > 0 ? '#EBF4FF' : 'white',
-                  color: filterCount > 0 ? '#2563EB' : '#344054',
-                  border: 'none',
-                }}
+                className={`relative inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors duration-200 ${
+                  filterCount > 0 
+                    ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' 
+                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                }`}
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                </svg>
                 Filters
-
                 {filterCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-blue-600 border-2 border-white text-white text-xs rounded-full px-1.5 py-0.5">
+                  <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
                     {filterCount}
                   </span>
                 )}
-              </Button>
+              </button>
+
+              {/* Modern Sort Button */}
               <Dropdown overlay={sorterMenu} trigger={["click"]}>
-                <Button
-                  shape="round"
-                  leftIcon={<FaSortAmountDownAlt size={20} />}
-                  className="flex-1 gap-2 w-full font-semibold whitespace-nowrap bg-white smx:self-stretch"
-                >
+                <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                  </svg>
                   Sort
-                </Button>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               </Dropdown>
             </div>
 
@@ -955,13 +941,8 @@ Respond with json that adheres to the following jsonschema:
             )}
 
           </div>
-          <div className="grid grid-cols-1 gap-4 justify-center sm:grid-cols-2 lg:grid-cols-3 lgr:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 justify-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {landingPages.map((d, index) => {
-              console.log(
-                "landingPages.location",
-                landingPages.location,
-                landingPages.length
-              );
               return (
                 <VacanciesCard
                   {...d}

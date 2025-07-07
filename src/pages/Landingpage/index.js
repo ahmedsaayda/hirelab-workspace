@@ -1,7 +1,7 @@
 "use client"
 
 import { Skeleton } from "antd";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import PublicService from "../../services/PublicService.js";
 import { changeIndigoShades, generateTailwindPalette } from "../Dashboard/index.js";
@@ -14,6 +14,7 @@ import NavBar from "./NavBar.jsx";
 import ApplyCustomFont from "./ApplyCustomFont.jsx";
 import { useFocus } from "../../contexts/FocusContext.js";
 import { useHover } from "../../contexts/HoverContext.js";
+import CrudService from "../../services/CrudService.js";
 
 export default function LandingpagePage({ paramsId, overrideParamId = null, fullscreen = false, showBackToEditButton = false, setFullscreen }) {
   const lpId = overrideParamId ?? paramsId;
@@ -21,6 +22,107 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   console.log(landingPageData);
   const [showApplyButton, setShowApplyButton] = useState(false);
   const [showFormEditor, setShowFormEditor] = useState(false); // New state for form editor visibility
+
+  // Analytics tracking
+  const startTimeRef = useRef(Date.now());
+  const hasTrackedVisitRef = useRef(false);
+  const lastTimeUpdateRef = useRef(Date.now());
+  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
+
+  // Track visit to landing page
+  const trackVisit = useCallback(async () => {
+    if (!lpId || hasTrackedVisitRef.current) return;
+    
+    try {
+      hasTrackedVisitRef.current = true;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/analytics/track-visit/${lpId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Visit tracked for landing page:", lpId, data);
+      } else {
+        throw new Error('Failed to track visit');
+      }
+    } catch (error) {
+      console.error("Error tracking visit:", error);
+      hasTrackedVisitRef.current = false;
+    }
+  }, [lpId]);
+
+  // Send time update to backend
+  const sendTimeUpdate = useCallback(async (timeInSeconds) => {
+    if (!lpId || timeInSeconds < 1) return;
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/analytics/track-time/${lpId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ timeSpent: timeInSeconds }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Time update sent:", timeInSeconds, "seconds", data);
+        lastTimeUpdateRef.current = Date.now();
+        setTotalTimeSpent(prev => prev + timeInSeconds);
+      }
+    } catch (error) {
+      console.error("Error sending time update:", error);
+    }
+  }, [lpId]);
+
+  // Send time updates every 5 seconds
+  useEffect(() => {
+    if (!lpId) return;
+
+    const interval = setInterval(() => {
+      const currentTime = Date.now();
+      const timeSinceLastUpdate = Math.floor((currentTime - lastTimeUpdateRef.current) / 1000);
+      
+      if (timeSinceLastUpdate >= 5) {
+        sendTimeUpdate(timeSinceLastUpdate);
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [lpId, sendTimeUpdate]);
+
+  // Track visit on page load and initialize time tracking
+  useEffect(() => {
+    if (landingPageData) {
+      trackVisit();
+      // Initialize time tracking
+      lastTimeUpdateRef.current = Date.now();
+    }
+  }, [landingPageData, trackVisit]);
+
+  // Send final time update when page becomes hidden (tab switch, etc)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        const currentTime = Date.now();
+        const timeSinceLastUpdate = Math.floor((currentTime - lastTimeUpdateRef.current) / 1000);
+        
+        // Send any remaining time if it's been more than 1 second
+        if (timeSinceLastUpdate >= 1) {
+          sendTimeUpdate(timeSinceLastUpdate);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [sendTimeUpdate]);
 
   // Add navbar height adjustment
   useEffect(() => {
@@ -102,6 +204,15 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   return (
     <div className="w-full">
       <ApplyCustomFont landingPageData={landingPageData} />
+      
+      {/* Debug info - only show in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed top-4 right-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-50">
+          <div>Total Time: {totalTimeSpent}s</div>
+          <div>LP ID: {lpId}</div>
+        </div>
+      )}
+
       <div className="flex flex-col justify-between items-center">
         <NavBar
           landingPageData={landingPageData}
