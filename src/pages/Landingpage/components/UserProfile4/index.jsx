@@ -77,14 +77,14 @@ export default function UserProfile4({
               {option.isSelected ? (
                 <div
                   onClick={option.toggle}
-                  className="flex h-[24px] min-w-[120px] cursor-pointer flex-row items-center justify-center whitespace-pre-wrap rounded bg-[#eef3ff] px-2.5 text-center text-[14px] font-medium text-[#0E87FE]"
+                  className="flex h-[24px] min-w-[120px] cursor-pointer flex-row items-center justify-center whitespace-pre-wrap rounded bg-[#eef3ff] px-2.5 text-center text-[14px] font-medium text-[#5207CD]"
                 >
                   <span>{option.label}</span>
                 </div>
               ) : (
                 <div
                   onClick={option.toggle}
-                  className="flex h-[24px] min-w-[120px] cursor-pointer flex-row items-center justify-center rounded bg-[#eef4ff] px-2.5 text-center text-[14px] font-medium text-[#0E87FE]"
+                  className="flex h-[24px] min-w-[120px] cursor-pointer flex-row items-center justify-center rounded bg-[#eef4ff] px-2.5 text-center text-[14px] font-medium text-[#5207CD]"
                 >
                   <span>{option.label}</span>
                 </div>
@@ -97,7 +97,7 @@ export default function UserProfile4({
         color="light_blue_A700"
         href={applyButtonLink}
         size="lg"
-        className="self-stretch rounded border border-solid border-[#0E87FE] px-[33px] font-semibold sm:px-5"
+        className="self-stretch rounded border border-solid border-[#5207CD] px-[33px] font-semibold sm:px-5"
       >
         {applyButtonText}
       </Button>

@@ -1443,14 +1443,14 @@ const Template3 = ({ landingPageData, fetchData }) => {
                   href={landingPageData?.cta1Link}
                   // color={`${textColors?.heading}`}
                   size="lg"
-                  className={`w-full rounded border border-solid border-[#0E87FE] px-[33px] font-semibold smx:px-5`}
+                  className={`w-full rounded border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5`}
                   style={{
                     borderColor: variantPl2,
                     backgroundColor: basePrimary,
                     color: variantPl1,
                   }}
                 >
-                 <Share2 size={20} color="#0E87FE" />
+                 <Share2 size={20} color="#5207CD" />
                 </Button>
               </div>
               <div ref={refs.cta2TitleRef} className="w-full">
@@ -1601,7 +1601,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                         )}
                       </div>
                     </div>
-                    <div className="h-[8px] w-[8px] rounded bg-[#0E87FE] smx:hidden" />
+                    <div className="h-[8px] w-[8px] rounded bg-[#5207CD] smx:hidden" />
                   </>
                 )}
 
@@ -1613,7 +1613,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                 />
                 <div className="flex items-center">{location}</div>
               </div>
-              <div className="h-[8px] w-[8px] rounded bg-[#0E87FE] smx:hidden" />
+              <div className="h-[8px] w-[8px] rounded bg-[#5207CD] smx:hidden" />
               <div className="flex flex-1 gap-2 items-center smr:justify-center smx:justify-start smx:w-full smx:self-stretch">
                 <Img
                   src="/images3/img_search.svg"
@@ -1658,7 +1658,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                   backgroundColor: basePrimary,
                   color: "#fff",
                 }}
-                className="min-w-[170px] gap-2 rounded-lg border border-solid border-[#0E87FE] px-[33px] font-semibold smx:px-5"
+                className="min-w-[170px] gap-2 rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5"
               >
                 <Share2 size={20} />
               </Button>
@@ -1672,7 +1672,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                   backgroundColor: basePrimary,
                   color: "#fff",
                 }}
-                className="min-w-[170px] gap-2 rounded-lg border border-solid border-[#0E87FE] px-[33px] font-semibold smx:px-5"
+                className="min-w-[170px] gap-2 rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5"
               >
                 {landingPageData?.cta2Title}
                 <ArrowRight size={20} />

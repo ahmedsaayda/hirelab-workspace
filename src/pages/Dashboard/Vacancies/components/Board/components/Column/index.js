@@ -24,7 +24,7 @@ const DroppableColumn = withDroppable(ColumnEmptyPlaceholder);
 
 const colors = [
   "bg-[#7F56D9]",
-  "bg-[#0E87FE]",
+  "bg-[#5207CD]",
   "bg-[#F75656]",
   "bg-[#EF6820]",
   "bg-[#0A8F63]",

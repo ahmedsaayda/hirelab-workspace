@@ -95,7 +95,7 @@ export default function OnboardingaddmorePage() {
                           className="h-[20px] w-[20px]"
                         />
                       }
-                      className="w-full gap-1.5 font-semibold smx:px-5 !bg-[#EFF8FF] !text-[#0E87FE]"
+                      className="w-full gap-1.5 font-semibold smx:px-5 !bg-[#EFF8FF] !text-[#5207CD]"
                       onClick={() => router.push("/onboarding/2")}
                     >
                       Add more

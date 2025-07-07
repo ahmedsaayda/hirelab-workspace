@@ -497,12 +497,12 @@ const NoteDetail = ({
               </div>
             )}
             <div className="flex items-center justify-between mt-2 space-x-4">
-              <span className="text-sm text-[#0E87FE]">
+              <span className="text-sm text-[#5207CD]">
                 {replies.length} replies
               </span>
               <Button
                 type="link"
-                className="flex items-center h-auto gap-2 p-0 text-[#0E87FE]"
+                className="flex items-center h-auto gap-2 p-0 text-[#5207CD]"
                 onClick={() => setShowReplyForm(!showReplyForm)}
               >
                 <svg
@@ -514,7 +514,7 @@ const NoteDetail = ({
                 >
                   <path
                     d="M16.6668 3.33337V4.50004C16.6668 7.3003 16.6668 8.70043 16.1219 9.76999C15.6425 10.7108 14.8776 11.4757 13.9368 11.9551C12.8672 12.5 11.4671 12.5 8.66683 12.5H3.3335M3.3335 12.5L7.50016 8.33337M3.3335 12.5L7.50016 16.6667"
-                    stroke="#0E87FE"
+                    stroke="#5207CD"
                     stroke-width="1.67"
                     stroke-linecap="round"
                     stroke-linejoin="round"

@@ -26,7 +26,7 @@ export default function UserProfile1({
           <Heading
             size="headingxl"
             as="h5"
-            className="text-[22px] font-semibold text-[#0E87FE]"
+            className="text-[22px] font-semibold text-[#5207CD]"
           >
             {userName}
           </Heading>

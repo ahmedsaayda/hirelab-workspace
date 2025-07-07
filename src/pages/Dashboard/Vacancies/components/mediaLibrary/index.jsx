@@ -1101,7 +1101,7 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
               )}
               {/* {selectedItems && selectedItems.length  > 0 && ( */}
               {selectedItems && selectedItems.length > 0 && mediaLimits && activeSection && (
-                <Button type="text" className="custom-button" onClick={handleUseSelected} style={{ backgroundColor: '#0E87FE', color: '#ffffff' }}>
+                <Button type="text" className="custom-button" onClick={handleUseSelected} style={{ backgroundColor: '#5207CD', color: '#ffffff' }}>
                   Use selected
                 </Button>
               )}

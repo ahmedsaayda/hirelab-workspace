@@ -29,7 +29,7 @@ export default function Sidebar3({ ...props }) {
           button: {
             padding: "12px",
             borderRadius: "12px",
-            [`&:hover, &.ps-active`]: { backgroundColor: "#0E87FE !important" },
+            [`&:hover, &.ps-active`]: { backgroundColor: "#5207CD !important" },
           },
         }}
         className="flex w-full flex-col items-center self-stretch pb-[38px] smx:pb-5"

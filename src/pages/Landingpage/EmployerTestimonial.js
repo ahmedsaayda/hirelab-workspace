@@ -219,7 +219,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                             }
                           }}
                           className={`mr-[5px] inline-block h-[10px] w-[10px] cursor-pointer rounded-[50%] ${
-                            isActive ? "bg-[#0E87FE]" : "bg-[#cfd4dc]"
+                            isActive ? "bg-[#5207CD]" : "bg-[#cfd4dc]"
                           }`}
                         />
                       );
@@ -384,7 +384,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                             }
                           }}
                           className={`mr-[5px] inline-block h-[10px] w-[10px] cursor-pointer rounded-[50%] ${
-                            isActive ? "bg-[#0E87FE]" : "bg-[#cfd4dc]"
+                            isActive ? "bg-[#5207CD]" : "bg-[#cfd4dc]"
                           }`}
                         />
                       );

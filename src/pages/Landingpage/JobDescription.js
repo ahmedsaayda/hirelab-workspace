@@ -133,7 +133,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                       style={{
                         display: "inline",
                         marginLeft: "5px",
-                        color: "#0E87FE",
+                        color: "#5207CD",
                         textDecoration: "underline",
                         textDecorationThickness: "2px",
                         textUnderlineOffset: "4px",
@@ -223,7 +223,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                     style={{
                       display: "inline",
                       marginLeft: "5px",
-                      color: "#0E87FE",
+                      color: "#5207CD",
                       textDecoration: "underline",
                       textDecorationThickness: "2px",
                       textUnderlineOffset: "4px",

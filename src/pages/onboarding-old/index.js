@@ -10,8 +10,8 @@ import FileUpload from "./FileUpload";
 
 const buttonStyle = {
   borderRadius: "8px",
-  border: "1px solid #0E87FE",
-  background: "#0E87FE",
+  border: "1px solid #5207CD",
+  background: "#5207CD",
   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
   display: "flex",
   padding: "10px 16px",
@@ -51,7 +51,7 @@ const Onboarding = () => {
   const [addNewColor, setAddNewColor] = useState(false);
   const [colorAddType, setColorAddType] = useState("Main Color");
   const [brandColors, setBrandColors] = useState([
-    { title: "Main Color", color: "#0E87FE" },
+    { title: "Main Color", color: "#5207CD" },
     { title: "Sub Heading", color: "#7F56D9" },
     { title: "Description", color: "#CAB9FF" },
   ]);
@@ -301,7 +301,7 @@ const Onboarding = () => {
               </div>
               <div className="border-2 border-dashed border-gray-300 rounded h-64 flex items-center justify-center bg-[#EFF8FF]">
                 {/* Dynamically loaded preview content goes here */}
-                <span className="text-[#0E87FE] font-semibold">
+                <span className="text-[#5207CD] font-semibold">
                   Preview area
                 </span>
               </div>

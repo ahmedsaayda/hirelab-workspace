@@ -67,10 +67,10 @@ const SelectBox = React.forwardRef(
             }),
             option: (provided, state) => ({
               ...provided,
-              backgroundColor: state.isSelected ? "#0E87FE" : "transparent",
+              backgroundColor: state.isSelected ? "#5207CD" : "transparent",
               color: state.isSelected ? "#ffffff" : "inherit",
               "&:hover": {
-                backgroundColor: "#0E87FE",
+                backgroundColor: "#5207CD",
                 color: "#ffffff",
               },
             }),

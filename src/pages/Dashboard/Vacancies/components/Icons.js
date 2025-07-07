@@ -31,7 +31,7 @@ export const DotIcon = (props) => (
     xmlns="http://www.w3.org/2000/svg"
   >
     <g id="_Dot">
-      <circle id="Slider" cx={4} cy={4} r={3} fill="#0E87FE" />
+      <circle id="Slider" cx={4} cy={4} r={3} fill="#5207CD" />
     </g>
   </svg>
 );
@@ -51,7 +51,7 @@ export const VerticalrIcon2 = (props) => (
   <img {...props} src="/assets/Vertical container-1.png" />
 );
 export const XrIcon = (props) => <img {...props} src="/assets/x.png" />;
-export const LogoIcon = (props) => <img {...props} src="/assets/logo.png" />;
+export const LogoIcon = (props) => <img {...props} height="48" style={{height: 48}} src="/Hirelab-Logo-purple-dashboard.png" />;
 export const XrIcon2 = (props) => <img {...props} src="/assets/x-1.png" />;
 export const AvatarrIcon = (props) => (
   <img {...props} src="/assets/Avatar.png" />

@@ -49,7 +49,7 @@ const FileUpload = () => {
             </div>
           )}
           <div className="text-[#475467]">
-            <span className="text-[#0E87FE] font-semibold">
+            <span className="text-[#5207CD] font-semibold">
               Click to upload
             </span>{" "}
             or drag and drop

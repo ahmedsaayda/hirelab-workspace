@@ -41,7 +41,7 @@ export default function UserProfile2({
             {phoneNumber}
           </Text>
         </div>
-        <div className="h-[8px] w-[8px] rounded bg-[#0E87FE]" />
+        <div className="h-[8px] w-[8px] rounded bg-[#5207CD]" />
         <div className="flex flex-1 justify-center gap-2">
           <Img
             src="/images3/img_mail_01.svg"

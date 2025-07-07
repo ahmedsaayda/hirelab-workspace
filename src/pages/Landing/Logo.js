@@ -5,9 +5,9 @@ export function Logo(props) {
   const partner = useSelector(getPartner);
   return (
     <img
-      height="40"
-      style={{ height: 40 }}
-      src={props.black ? "/logo-black.png" : partner?.logo}
+      height="72"
+      style={{ height: 72 }}
+      src={props.black ? "/Hirelab-Logo-purple-dashboard.png" : partner?.logo}
       alt=""
     />
   );

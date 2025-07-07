@@ -284,7 +284,7 @@ function getStageColor(index) {
     case 0:
       return "bg-[#7F56D9]";
     case 1:
-      return "bg-[#0E87FE]";
+      return "bg-[#5207CD]";
     case 2:
       return "bg-[#F75656]";
     case 3:

@@ -1436,7 +1436,7 @@ export default function LandingpageEdit({paramsId}) {
 
             {/* <div className="h-[34px] gap-2 bg-[#EFF8FF] rounded-[6px] cursor-pointer flex justify-between items-center px-[3px] text-sm">
               <Button
-                className="flex items-center justify-start !h-[28px] !px-3 border rounded shadow-sm bg-[#0E87FE] text-[#ffffff] focus:outline-none focus:ring"
+                className="flex items-center justify-start !h-[28px] !px-3 border rounded shadow-sm bg-[#5207CD] text-[#ffffff] focus:outline-none focus:ring"
                 onClick={() => setTemplateMenu(true)}
               >
                 Change Template
@@ -1612,7 +1612,7 @@ export default function LandingpageEdit({paramsId}) {
                   shape="round"
                   className={`${
                     landingPageData?.templateId === `${i + 1}`
-                      ? "bg-[#0E87FE] text-[#FFFFFF]"
+                      ? "bg-[#5207CD] text-[#FFFFFF]"
                       : "bg-[#FFFFFF] text-blue_gray-800_01 border border-solid border-blue_gray-100"
                   } w-full font-semibold smx:px-5 whitespace-nowrap`}
                 >

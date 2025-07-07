@@ -436,7 +436,7 @@ export default function FormEdit({paramsId}) {
                                       >
                                         {/* Icon area only, no label */}
                                         <div className="flex-1 flex items-center justify-start group-hover:justify-start transition-all pr-2" style={{width: '140px'}}>
-                                          <div className={isActive ? "bg-[#0E87FE] rounded-full p-1" : ""}>
+                                          <div className={isActive ? "bg-[#5207CD] rounded-full p-1" : ""}>
                                             <img
                                               src={
                                                 formItems.find(item => item.type === section.type)?.icon
@@ -575,14 +575,14 @@ export default function FormEdit({paramsId}) {
                                       <Switch
                                         checked={section.firstName?.visible}
                                         onChange={checked => handleUpdateSection(section.id, { firstName: { ...section.firstName, visible: checked } })}
-                                        style={{backgroundColor: section.firstName?.visible ? '#0E87FE' : '#f2f4f7'}}
+                                        style={{backgroundColor: section.firstName?.visible ? '#5207CD' : '#f2f4f7'}}
                                       />
                                     </div>
                                     <div>
                                       <Switch
                                         checked={section.firstName?.required}
                                         onChange={checked => handleUpdateSection(section.id, { firstName: { ...section.firstName, required: checked } })}
-                                        style={{backgroundColor: section.firstName?.required ? '#0E87FE' : '#f2f4f7'}}
+                                        style={{backgroundColor: section.firstName?.required ? '#5207CD' : '#f2f4f7'}}
                                       />
                                     </div>
                                   </div>,
@@ -594,14 +594,14 @@ export default function FormEdit({paramsId}) {
                                       <Switch
                                         checked={section.lastName?.visible}
                                         onChange={checked => handleUpdateSection(section.id, { lastName: { ...section.lastName, visible: checked } })}
-                                        style={{backgroundColor: section.lastName?.visible ? '#0E87FE' : '#f2f4f7'}}
+                                        style={{backgroundColor: section.lastName?.visible ? '#5207CD' : '#f2f4f7'}}
                                       />
                                     </div>
                                     <div>
                                       <Switch
                                         checked={section.lastName?.required}
                                         onChange={checked => handleUpdateSection(section.id, { lastName: { ...section.lastName, required: checked } })}
-                                        style={{backgroundColor: section.lastName?.required ? '#0E87FE' : '#f2f4f7'}}
+                                        style={{backgroundColor: section.lastName?.required ? '#5207CD' : '#f2f4f7'}}
                                       />
                                     </div>
                                   </div>
@@ -616,14 +616,14 @@ export default function FormEdit({paramsId}) {
                                     <Switch
                                       checked={section.visible}
                                       onChange={checked => handleUpdateSection(section.id, { visible: checked })}
-                                      style={{backgroundColor: section.visible ? '#0E87FE' : '#f2f4f7'}}
+                                      style={{backgroundColor: section.visible ? '#5207CD' : '#f2f4f7'}}
                                     />
                                   </div>
                                   <div>
                                     <Switch
                                       checked={section.required}
                                       onChange={checked => handleUpdateSection(section.id, { required: checked })}
-                                      style={{backgroundColor: section.required ? '#0E87FE' : '#f2f4f7'}}
+                                      style={{backgroundColor: section.required ? '#5207CD' : '#f2f4f7'}}
                                     />
                                   </div>
                                 </div>
@@ -670,8 +670,8 @@ export default function FormEdit({paramsId}) {
                             onClick={() => setDevice("mobile")}
                             className={`h-[24px]  px-2 rounded-md flex items-center justify-center font-medium transition ${
                               device === "mobile"
-                                ? "bg-[#0E87FE] text-[#EFF8FF]"
-                                : "text-[#0E87FE]"
+                                ? "bg-[#5207CD] text-[#EFF8FF]"
+                                : "text-[#5207CD]"
                             }`}
                           >
                             Mobile
@@ -680,8 +680,8 @@ export default function FormEdit({paramsId}) {
                             onClick={() => setDevice("desktop")}
                             className={`h-[24px] px-2 rounded-md flex items-center justify-center font-medium transition ${
                               device === "desktop"
-                                ? "bg-[#0E87FE] text-[#EFF8FF]"
-                                : "text-[#0E87FE]"
+                                ? "bg-[#5207CD] text-[#EFF8FF]"
+                                : "text-[#5207CD]"
                             }`}
                           >
                             Desktop

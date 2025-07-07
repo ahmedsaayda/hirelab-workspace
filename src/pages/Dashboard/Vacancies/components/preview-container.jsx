@@ -382,8 +382,8 @@ export function PreviewContainer({
             onClick={() => setDevice("mobile")}
             className={`h-[24px]  px-2 rounded-md flex items-center justify-center font-medium transition ${
               device === "mobile"
-                ? "bg-[#0E87FE] text-[#EFF8FF]"
-                : "text-[#0E87FE]"
+                ? "bg-[#5207CD] text-[#EFF8FF]"
+                : "text-[#5207CD]"
             }`}
           >
             Mobile
@@ -392,8 +392,8 @@ export function PreviewContainer({
             onClick={() => setDevice("desktop")}
             className={`h-[24px] px-2 rounded-md flex items-center justify-center font-medium transition ${
               device === "desktop"
-                ? "bg-[#0E87FE] text-[#EFF8FF]"
-                : "text-[#0E87FE]"
+                ? "bg-[#5207CD] text-[#EFF8FF]"
+                : "text-[#5207CD]"
             }`}
           >
             Desktop

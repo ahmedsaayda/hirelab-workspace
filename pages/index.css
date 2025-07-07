@@ -137,7 +137,7 @@ body {
   align-items: center;
   cursor: pointer;
   border-radius: 8px;
-  background: var(--Primary-blue, #0e87fe);
+  background: var(--Primary-blue, #5207CD);
 }
 
 .topbar {
@@ -282,7 +282,7 @@ html {
   position: absolute;
   inset: 0;
   background-color: rgba(14, 135, 254, 0.1);
-  border: 2px solid #0e87fe;
+  border: 2px solid #5207CD;
   border-radius: 4px;
   pointer-events: none;
   z-index: -1;

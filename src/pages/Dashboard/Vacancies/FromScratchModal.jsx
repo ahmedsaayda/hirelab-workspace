@@ -182,7 +182,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
       return (
         <button
           disabled
-          className="w-full py-2 text-white bg-[#0E87FE] rounded-md flex justify-center items-center gap-2"
+          className="w-full py-2 text-white bg-[#5207CD] rounded-md flex justify-center items-center gap-2"
         >
           <div className="w-5 h-5 rounded-full border-2 border-white animate-spin border-t-transparent" />
           Generating...
@@ -204,7 +204,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
               templateId: selectedTemplate,
             });
           }}
-          className="w-full py-2 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
+          className="w-full py-2 text-white bg-[#5207CD] rounded-md hover:bg-blue-600"
         >
           Generate Content
         </button>
@@ -758,7 +758,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                           templateId: selectedTemplate,
                         });
                       }}
-                      className="py-2 px-4 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
+                      className="py-2 px-4 text-white bg-[#5207CD] rounded-md hover:bg-blue-600"
                     >
                       Generate Page
                     </button>
@@ -775,7 +775,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                       onClick={() => {
                         handleCreateWithoutAI();
                       }}
-                      className="py-2 px-4 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
+                      className="py-2 px-4 text-white bg-[#5207CD] rounded-md hover:bg-blue-600"
                     >
                       {isCreatingWithoutAI ? "Creating..." : "Create Vacancy"}
                     </button>
@@ -806,7 +806,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                         templateId: selectedTemplate,
                       });
                     }}
-                    className="py-2 px-4 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
+                    className="py-2 px-4 text-white bg-[#5207CD] rounded-md hover:bg-blue-600"
                   >
                     Generate Content
                   </button>
@@ -815,7 +815,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                     onClick={() => {
                       handleCreateWithoutAI();
                     }}
-                    className="py-2 px-4 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
+                    className="py-2 px-4 text-white bg-[#5207CD] rounded-md hover:bg-blue-600"
                   >
                     {isCreatingWithoutAI ? "Creating..." : "Create Vacancy"}
                   </button>

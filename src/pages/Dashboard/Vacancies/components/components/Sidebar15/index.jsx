@@ -35,7 +35,7 @@ export default function Sidebar15({ ...props }) {
             borderRadius: "12px",
             [`&:hover, &.ps-active`]: {
               color: "#ffffff",
-              backgroundColor: "#0E87FE !important",
+              backgroundColor: "#5207CD !important",
             },
           },
         }}

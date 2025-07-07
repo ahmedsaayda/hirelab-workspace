@@ -218,7 +218,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
         className="relative h-[688px] bg-cover bg-no-repeat py-24 mdx:h-auto mdx:py-5"
         style={{ backgroundImage: "url(/images3/img_group_17.png)" }}
       >
-        <div className="ml-auto h-[254px] w-[254px] rounded-[126px] bg-[#0E87FE33] blur-[200.00px] backdrop-opacity-[0.5]" />
+        <div className="ml-auto h-[254px] w-[254px] rounded-[126px] bg-[#5207CD33] blur-[200.00px] backdrop-opacity-[0.5]" />
         <div className="container flex absolute top-0 right-0 bottom-0 left-0 justify-between items-center px-8 my-auto h-max mdx:relative mdx:flex-col mdx:gap-12 mdx:px-5">
           <div className="w-[40%] mdx:w-full">
             <div className="flex flex-col items-start gap-[22px]">

@@ -219,7 +219,7 @@ export default function TestimonialsForm({ onSave, initialData, isSaving }) {
         htmlType="submit"
         loading={isSaving}
         block
-        className="rounded-lg bg-[#0E87FE] text-white hover:bg-[#0B6ECD] transition-colors"
+        className="rounded-lg bg-[#5207CD] text-white hover:bg-[#0B6ECD] transition-colors"
       >
         {isEditing ? "Update Template":"Create Template"}
       </Button>

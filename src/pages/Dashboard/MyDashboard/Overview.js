@@ -59,7 +59,7 @@ const totalSummary = [
           <path
             id="Icon"
             d="M10.6663 4.86686C10.6663 4.24688 10.6663 3.93689 10.5982 3.68256C10.4133 2.99237 9.87416 2.45328 9.18398 2.26834C8.92965 2.2002 8.61966 2.2002 7.99967 2.2002C7.37969 2.2002 7.0697 2.2002 6.81537 2.26834C6.12519 2.45328 5.58609 2.99237 5.40116 3.68256C5.33301 3.93689 5.33301 4.24688 5.33301 4.86686M3.46634 14.2002H12.533C13.2797 14.2002 13.6531 14.2002 13.9383 14.0549C14.1892 13.927 14.3932 13.7231 14.521 13.4722C14.6663 13.187 14.6663 12.8136 14.6663 12.0669V7.0002C14.6663 6.25346 14.6663 5.88009 14.521 5.59487C14.3932 5.34399 14.1892 5.14002 13.9383 5.01219C13.6531 4.86686 13.2797 4.86686 12.533 4.86686H3.46634C2.7196 4.86686 2.34624 4.86686 2.06102 5.01219C1.81014 5.14002 1.60616 5.34399 1.47833 5.59487C1.33301 5.88009 1.33301 6.25346 1.33301 7.0002V12.0669C1.33301 12.8136 1.33301 13.187 1.47833 13.4722C1.60616 13.7231 1.81014 13.927 2.06102 14.0549C2.34624 14.2002 2.7196 14.2002 3.46634 14.2002Z"
-            stroke="#0E87FE"
+            stroke="#5207CD"
             strokeWidth="1.33333"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -319,7 +319,7 @@ const Overview = () => {
               href={step.href}
               key={i}
               className={`${step.active
-                ? "bg-[#0E87FE] text-white cursor-pointer"
+                ? "bg-[#5207CD] text-white cursor-pointer"
                 : "bg-white dark:bg-black cursor-default"
                 } px-[16px] py-[10px] rounded-lg w-[auto]`}
             >
@@ -331,7 +331,7 @@ const Overview = () => {
                   }}
                 >
                   <DotIcon />
-                  <div className="text-[#0E87FE] font-semibold">
+                  <div className="text-[#5207CD] font-semibold">
                     Step {i + 1}
                   </div>
                 </div>
@@ -588,7 +588,7 @@ const Overview = () => {
               </span>
             </div>
           )}
-          <div className={`grid justify-center grid-cols-1 gap-4 lg:grid-cols-2 sm:grid-cols-1 lgr:grid-cols-3  ${showAllActive ? "h-[50vh]" : "h-fit"}  p-2 overflow-x-hidden`}>
+          <div className={`grid justify-center grid-cols-1 gap-4 lg:grid-cols-2 sm:grid-cols-2 mdr:grid-cols-3  ${showAllActive ? "h-[50vh]" : "h-fit"}  p-2 overflow-x-hidden`}>
             {(showAllActive ? activeVacancies : activeVacancies.slice(0, 4)).map((d, index) => (
               <VacanciesCard
                 {...d}

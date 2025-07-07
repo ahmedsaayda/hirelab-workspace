@@ -461,7 +461,7 @@ const HeroForm = ({initialData, onSave, isSaving}) => {
         // type="primary"
         onClick={handleSave} // Keep this as handleSave since it's the same action
         loading={isSaving}
-        className="mt-6 rounded-lg bg-[#0E87FE] text-white !hover:border !hover:shadow-sm !border-none outline-none"
+        className="mt-6 rounded-lg bg-[#5207CD] text-white !hover:border !hover:shadow-sm !border-none outline-none"
       >
         {isEditing ? "Update Template" : "Create Template"}
       </Button>

@@ -943,7 +943,7 @@ Respond with json that adheres to the following jsonschema:
             </div>
 
             {status && (
-              <div className="filter-status-indicator inline-flex bg-[#0E87FE] text-white p-1 px-2 mt-1 rounded-full items-center">
+              <div className="filter-status-indicator inline-flex bg-[#5207CD] text-white p-1 px-2 mt-1 rounded-full items-center">
                 <span>{status === 'published' ? 'Published' : 'Unpublished'} vacancies</span>
                 <span
                   onClick={() => router.push('/dashboard/vacancies')}
