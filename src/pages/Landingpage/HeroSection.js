@@ -831,15 +831,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       transition: "object-position 0.3s ease-in-out",
                   }}    
                 />
-                  <div
-                    className="absolute inset-0 pointer-events-none z-10 bg-gradient-to-t"
-                    style={{
-                      backgroundImage: `linear-gradient(to top, ${getColor(
-                        "primary",
-                        200
-                      )} 1%, transparent 30%)`,
-                    }}
-                  ></div>
+
                 </div>
 
                 {/* Info Badges - Only visible on medium screens and up */}

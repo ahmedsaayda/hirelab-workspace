@@ -6,8 +6,9 @@ import AiService from "../../../services/AiService.js";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../redux/auth/selectors.js";
 import { useRouter } from "next/router";
-import { message as antdMessage } from "antd";
+import { message as antdMessage, Select } from "antd";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation.jsx";
+import { departmentOptions } from "./departmentOptions";
 
 function PasteUrlModal({ onClose, ongoBack }) {
   const user = useSelector(selectUser);
@@ -15,6 +16,7 @@ function PasteUrlModal({ onClose, ongoBack }) {
 
   const [step, setStep] = useState(0);
   const [url, setURL] = useState("");
+  const [department, setDepartment] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const [backendLoading, setBackendLoading] = useState(false);
@@ -36,7 +38,7 @@ function PasteUrlModal({ onClose, ongoBack }) {
   };
 
   const isButtonDisabled = () => {
-    if (step === 0) return !url || isLoading;
+    if (step === 0) return !url || !department || isLoading;
     if (step === 1) return selectedTemplate === -1 || isLoading;
     return false;
   };
@@ -129,6 +131,7 @@ function PasteUrlModal({ onClose, ongoBack }) {
         ...aiResult,
         ...brandingDetails,
         templateId: selectedTemplate,
+        department: department,
         user_id: user?._id,
         specifications: aiResult.specifications?.map((spec) => ({
           ...spec,
@@ -156,34 +159,42 @@ function PasteUrlModal({ onClose, ongoBack }) {
   const renderButton = () => {
     if (step === 0) {
       return (
-        <>
-          <Button
-            {...({} )}
-            shape="round"
-            onClick={handleNextStep}
-            className="min-w-[225px] mt-6 w-full gap-1.5 font-semibold bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isButtonDisabled()}
-          >
-            Next
-          </Button>
+        <div className="flex md:flex-row flex-col-reverse md:justify-end gap-2">
           <button
             onClick={ongoBack}
-            className="py-2 w-full text-center text-gray-600 rounded-md border border-gray-300 hover:underline mt-2"
+            className="py-2 px-4 text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
           >
             Go Back
           </button>
-        </>
+          <button
+            onClick={handleNextStep}
+            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${
+              isButtonDisabled() ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isButtonDisabled()}
+          >
+            Next
+          </button>
+        </div>
       );
     }
 
     if (step === 1) {
       return (
-        <div className="flex flex-col gap-2">
-          <Button
-            className="min-w-[225px] w-full gap-1.5 font-semibold bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            {...({} )}
-            disabled={isButtonDisabled()}
+        <div className="flex md:flex-row flex-col-reverse md:justify-end gap-2">
+          <button
+            onClick={() => setStep(0)}
+            className="py-2 px-4 text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
+            disabled={isLoading}
+          >
+            Back
+          </button>
+          <button
             onClick={handleCreateVacancy}
+            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${
+              isButtonDisabled() ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isButtonDisabled()}
           >
             {isLoading ? (
               <>
@@ -193,16 +204,7 @@ function PasteUrlModal({ onClose, ongoBack }) {
             ) : (
               "Create Vacancy"
             )}
-          </Button>
-
-          <Button
-            className="min-w-[225px] w-full gap-1.5 font-semibold text-gray-600 border border-gray-300"
-            {...({} )}
-            onClick={() => setStep(0)}
-            disabled={isLoading}
-          >
-            Back
-          </Button>
+          </button>
         </div>
       );
     }
@@ -211,7 +213,12 @@ function PasteUrlModal({ onClose, ongoBack }) {
 
   return (
     <div>
-      <Modal title="" open={true} onCancel={onClose} footer={null}>
+      <Modal title="" open={true} onCancel={onClose} footer={null} style={{
+        maxHeight: "80vh",
+        overflowY: "auto",
+        top: 20,
+        marginTop: 0
+      }}>
         {backendLoading ? (
           <AiLoadingStateAnimation
             onCancel={() => {
@@ -243,6 +250,19 @@ function PasteUrlModal({ onClose, ongoBack }) {
                 {urlError && (
                   <p className="mt-1 text-xs text-red-500">{urlError}</p>
                 )}
+                <div className="mt-4">
+                  <div className="flex gap-2 items-center mb-2">
+                    <label className="text-sm font-medium">Department</label>
+                  </div>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={department}
+                    onChange={(value) => setDepartment(value)}
+                    placeholder="Select a department"
+                    options={departmentOptions}
+                    disabled={isLoading}
+                  />
+                </div>
                 <p className="mt-2 text-xs text-gray-500">
                   Paste the complete URL of a job posting from any job board or
                   company website.

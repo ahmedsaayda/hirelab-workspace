@@ -81,7 +81,7 @@ function ChooseTemplate({ onChooseTemplate, selectedTemplate }) {
                       } w-full font-semibold smx:px-5 whitespace-nowrap`}
                     >
                       {/* Choose template */}
-                      {i === 0 ? "Choose Template" : "Coming Soon"}
+                      {i === 0 ? "Select Template" : "Coming Soon"}
                     </Button>
                   </div>
                 </div>
@@ -98,6 +98,12 @@ function ChooseTemplate({ onChooseTemplate, selectedTemplate }) {
         footer={null}
         width={previewMode === "desktop" ? 1000 : 400}
         className="template-preview-modal"
+        style={{
+          top: 20,
+          marginTop: 0,
+          maxHeight: "98vh",
+          overflowY: "auto",
+        }}
       >
         {previewTemplate && (
           <div className="flex flex-col gap-6">

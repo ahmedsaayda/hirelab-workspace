@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, Input, Select, Tag, message as antdMessage } from "antd";
+import { Modal, Input, Select, Tag, message as antdMessage, Tooltip } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import languages from "./lang.json";
 import CrudService from "../../../services/CrudService";
@@ -12,122 +12,13 @@ import VacacnySchema from "./vacacnyExemple.json";
 import AiRules from "./aiRules.json";
 import ChooseTemplate from "./ChooseTemplate";
 import AiService from "../../../services/AiService";
+import { departmentOptions } from "./departmentOptions";
+
 // Convert the language object to array of options
 const languageOptions = Object.entries(languages).map(([_, name]) => ({
   value: name,
   label: name,
 }));
-
-const departmentOptions = [
-  {
-    label: "Asset Management",
-    value: "Asset Management",
-  },
-  {
-    label: "Board of Directors",
-    value: "Board of Directors",
-  },
-  {
-    label: "Business Development",
-    value: "Business Development",
-  },
-  {
-    label: "Corporate Communications",
-    value: "Corporate Communications",
-  },
-  {
-    label: "Creative Services",
-    value: "Creative Services",
-  },
-  {
-    label: "Customer Service / Customer Experience",
-    value: "Customer Service / Customer Experience",
-  },
-  {
-    label: "Engineering",
-    value: "Engineering",
-  },
-  {
-    label: "Finance / Accounting",
-    value: "Finance / Accounting",
-  },
-  {
-    label: "General Management",
-    value: "General Management",
-  },
-  {
-    label: "Human Resources",
-    value: "Human Resources",
-  },
-  {
-    label: "Information Technology / Technology",
-    value: "Information Technology / Technology",
-  },
-  {
-    label: "Investor Relations",
-    value: "Investor Relations",
-  },
-  {
-    label: "Legal",
-    value: "Legal",
-  },
-  {
-    label: "Marketing",
-    value: "Marketing",
-  },
-  {
-    label: "Operations",
-    value: "Operations",
-  },
-  {
-    label: "Product Management",
-    value: "Product Management",
-  },
-  {
-    label: "Production",
-    value: "Production",
-  },
-  {
-    label: "Project Management Office",
-    value: "Project Management Office",
-  },
-  {
-    label: "Purchasing / Sourcing",
-    value: "Purchasing / Sourcing",
-  },
-  {
-    label: "Quality Assurance",
-    value: "Quality Assurance",
-  },
-  {
-    label: "Risk Management",
-    value: "Risk Management",
-  },
-  {
-    label: "Sales",
-    value: "Sales",
-  },
-  {
-    label: "Strategic Initiatives & Programs",
-    value: "Strategic Initiatives & Programs",
-  },
-  {
-    label: "Research & Development",
-    value: "Research & Development",
-  },
-  {
-    label: "Public Relations",
-    value: "Public Relations",
-  },
-  {
-    label: "Executive Office",
-    value: "Executive Office",
-  },
-  {
-    label: "Design",
-    value: "Design",
-  },
-];
 
 const FromScratchModal = ({ onClose ,ongoBack }) => {
   const user = useSelector(selectUser);
@@ -359,10 +250,13 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
               <div className="flex gap-2 items-center mb-2">
                 <label className="text-sm font-medium">Job Title</label>
               </div>
-              <Input
+              <input
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
                 placeholder="Enter the job title"
+                className="p-2 w-full text-sm rounded-lg border border-gray-300 dark:bg-gray-900 outline-gray-300"
+                type="text"
+                
               />
             </div>
 
@@ -411,7 +305,9 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                   Vacancy description
                 </label>
                 <div className="flex justify-center items-center w-4 h-4 rounded-full border cursor-help">
+                  <Tooltip title="Describe the vacancy in one or two sentences. Mention the role, key responsibilities, and what kind of candidate you’re looking for. E.g. ‘Write a technical job description for a medium experienced Python Developer for our Core App dev team.">
                   ?
+                  </Tooltip>
                 </div>
               </div>
               <Input.TextArea
@@ -428,7 +324,9 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                   List perks/benefits
                 </label>
                 <div className="flex justify-center items-center w-4 h-4 rounded-full border cursor-help">
+                  <Tooltip title="List all perks and benefits the role offers, separated by commas. E.g. ‘30 holidays, 70/30 Pension Arrangement, Daycare allowance children, 2500,- Euro Education Budget, Remote Working promoted.’ The more detailed, the better.">
                   ?
+                  </Tooltip>
                 </div>
               </div>
               <Input.TextArea
@@ -445,7 +343,9 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                   Add tags (optional)
                 </label>
                 <div className="flex justify-center items-center w-4 h-4 rounded-full border cursor-help">
+                  <Tooltip title="Add keywords that describe the role (e.g. ‘Developer’, ‘Sales’, ‘Remote’). Tags help organize and optimize your recruitment campaigns and find back relevant campaigns or pieces of content easier.">
                   ?
+                  </Tooltip>
                 </div>
               </div>
               <Input
@@ -453,7 +353,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyPress={handleAddTag}
                 placeholder="E.g. Developer"
-                className="mb-2"
+                className="p-2 w-full text-sm rounded-lg border border-gray-300 dark:bg-gray-900 outline-gray-300 mb-2"
               />
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
@@ -787,7 +687,12 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
 
   return (
     <>
-      <Modal title="" open={true} onCancel={onCancel} footer={null} width={600}>
+      <Modal title="" open={true} onCancel={onCancel} footer={null} width={600} style={{
+        maxHeight: "80vh",
+        overflowY: "auto",
+        top: 20,
+        marginTop: 0
+      }}>
         {!backendLoading && (
           <Heading
             size="7xl"
@@ -800,10 +705,16 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
 
           <div className="flex flex-col gap-2">
             {step === 1 && (
-              <>
+              <div className="flex md:flex-row flex-col-reverse md:justify-end gap-2">
+                <button
+                  onClick={ongoBack}
+                  className="py-2 px-4 text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
+                >
+                  Go Back
+                </button>
                 <button
                   onClick={handleNext}
-                  className={`py-2 w-full text-white ${
+                  className={`py-2 px-4 text-white ${
                     selectedTemplate === -1
                       ? "bg-blue-300 cursor-not-allowed"
                       : "bg-blue-500 hover:bg-blue-600"
@@ -812,20 +723,28 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                 >
                   Next
                 </button>
-                <button
-                  onClick={ongoBack}
-                  
-                  className="py-2 w-full text-center text-gray-600 rounded-md border border-gray-300 hover:underline mt-2"
-                >
-                  Go Back
-                </button>
-              </>
+              </div>
             )}
 
             {step === 2 && !backendLoading && (
-              <div className="flex flex-col gap-2">
+              <div className="flex md:flex-row flex-col-reverse md:justify-end gap-2 h-full">
+                <button
+                  onClick={handleBack}
+                  className="py-2 px-4 text-center text-gray-600 rounded-md border border-gray-300 hover:underline h-fit mt-auto"
+                >
+                  Back
+                </button>
                 {useAI ? (
-                  <>
+                  <div className="flex flex-col gap-2 items-end">
+                    <button
+                      onClick={() => {
+                        // setUseAI(false);
+                        handleCreateWithoutAI();
+                      }}
+                      className=" px-4 text-center text-gray-600  hover:underline"
+                    >
+                      {isCreatingWithoutAI ? "Creating..." : "Create without AI"}
+                    </button>
                     <button
                       onClick={() => {
                         handleCreateNewVacancy({
@@ -839,50 +758,26 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                           templateId: selectedTemplate,
                         });
                       }}
-                      className="w-full py-2 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
+                      className="py-2 px-4 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
                     >
-                      Generate Content
+                      Generate Page
                     </button>
-                    <button
-                      onClick={() => {
-                        // setUseAI(false);
-
-                        handleCreateWithoutAI();
-                      }}
-                      className="py-2 w-full text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
-                    >
-                      {isCreatingWithoutAI
-                        ? "Creating..."
-                        : "Create without AI"}
-                    </button>
-                    <button
-                      onClick={handleBack}
-                      className="py-2 w-full text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
-                    >
-                      Back
-                    </button>
-                  </>
+                  </div>
                 ) : (
                   <>
                     <button
-                      onClick={() => {
-                        handleCreateWithoutAI();
-                      }}
-                      className="w-full py-2 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
-                    >
-                      {isCreatingWithoutAI ? "Creating..." : "Create Vacancy"}
-                    </button>
-                    <button
                       onClick={() => setUseAI(true)}
-                      className="py-2 w-full text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
+                      className="py-2 px-4 text-center text-gray-600 rounded-md border border-gray-300 hover:underline h-fit"
                     >
                       Back to AI
                     </button>
                     <button
-                      onClick={handleBack}
-                      className="py-2 w-full text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
+                      onClick={() => {
+                        handleCreateWithoutAI();
+                      }}
+                      className="py-2 px-4 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
                     >
-                      Back to previous step
+                      {isCreatingWithoutAI ? "Creating..." : "Create Vacancy"}
                     </button>
                   </>
                 )}
@@ -890,50 +785,40 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
             )}
 
             {step === 3 && !backendLoading && (
-              <div className="flex flex-col gap-2">
+              <div className="flex md:flex-row flex-col-reverse md:justify-end gap-2 h-fit mt-auto">
+                <button
+                  onClick={handleBack}
+                  className="py-2 px-4 text-center text-gray-600 rounded-md border border-gray-300 hover:underline h-fit"
+                >
+                  Back
+                </button>
                 {useAI ? (
-                  <>
-                    <button
-                      onClick={() => {
-                        handleCreateNewVacancy({
-                          jobTitle,
-                          department,
-                          description: vacancyDescription,
-                          useAI: true,
-                          perks: perksAndBenefits?.split(","),
-                          language: language,
-                          tone: tone,
-                          templateId: selectedTemplate,
-                        });
-                      }}
-                      className="w-full py-2 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
-                    >
-                      Generate Content
-                    </button>
-                    <button
-                      onClick={handleBack}
-                      className="py-2 w-full text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
-                    >
-                      Back
-                    </button>
-                  </>
+                  <button
+                    onClick={() => {
+                      handleCreateNewVacancy({
+                        jobTitle,
+                        department,
+                        description: vacancyDescription,
+                        useAI: true,
+                        perks: perksAndBenefits?.split(","),
+                        language: language,
+                        tone: tone,
+                        templateId: selectedTemplate,
+                      });
+                    }}
+                    className="py-2 px-4 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
+                  >
+                    Generate Content
+                  </button>
                 ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        handleCreateWithoutAI();
-                      }}
-                      className="w-full py-2 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
-                    >
-                      {isCreatingWithoutAI ? "Creating..." : "Create Vacancy"}
-                    </button>
-                    <button
-                      onClick={handleBack}
-                      className="py-2 w-full text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
-                    >
-                      Back
-                    </button>
-                  </>
+                  <button
+                    onClick={() => {
+                      handleCreateWithoutAI();
+                    }}
+                    className="py-2 px-4 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600"
+                  >
+                    {isCreatingWithoutAI ? "Creating..." : "Create Vacancy"}
+                  </button>
                 )}
               </div>
             )}

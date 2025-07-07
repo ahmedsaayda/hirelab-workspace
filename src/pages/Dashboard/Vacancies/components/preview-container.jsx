@@ -369,11 +369,11 @@ export function PreviewContainer({
         </button>
       )}
       
-      <div className="flex relative gap-2 justify-center items-center pt-2 px-2">
+      <div className="flex relative gap-2 justify-center items-center pt-2 px-6">
         <Heading
           size="4xl"
           as="h3"
-          className="!text-black-900_01 absolute left-0 px-2"
+          className="!text-black-900_01 absolute left-3 px-2"
         >
           Preview
         </Heading>
@@ -408,11 +408,16 @@ export function PreviewContainer({
                 setFullscreen((prev) => !prev)}}
             >
               {fullscreen ? (
-                <img
-                  src="/images/expand-06.svg"
-                  alt="collapse"
-                  className="h-[20px] w-[20px]"
-                />
+                  <button
+                  
+                  className="fixed top-12 right-2 z-[9999] px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 flex gap-2 items-center justify-center shadow-lg transition-all duration-200"
+                  style={{ zIndex: 10000 }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Go Back
+                </button>
               ) : (
                 <img
                   src="/images/expand-06.svg"

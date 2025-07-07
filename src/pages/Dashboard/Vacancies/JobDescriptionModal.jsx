@@ -6,10 +6,9 @@ import AiService from "../../../services/AiService.js";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../redux/auth/selectors.js";
 import { useRouter } from "next/router";
-import { message as antdMessage } from "antd";
+import { message as antdMessage, Select } from "antd";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation.jsx";
-
-
+import { departmentOptions } from "./departmentOptions";
 
 function JobDescriptionModal({ onClose ,ongoBack }) {
   const user = useSelector(selectUser);
@@ -18,6 +17,7 @@ function JobDescriptionModal({ onClose ,ongoBack }) {
   // State variables
   const [step, setStep] = useState(0);
   const [jobTitle, setJobTitle] = useState("");
+  const [department, setDepartment] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,57 +41,57 @@ function JobDescriptionModal({ onClose ,ongoBack }) {
 
   const isButtonDisabled =
     step === 0
-      ? !jobTitle || !jobDescription || jobDescription.length < 1 || isLoading
+      ? !jobTitle || !department || !jobDescription || jobDescription.length < 1 || isLoading
       : selectedTemplate === -1;
 
   const renderButton = () => {
     if (step === 0) {
       return (
-        <>
-        <Button
-          shape="round"
-          onClick={() => {
-            setStep(1);
-          }}
-          className="min-w-[225px] mt-6 w-full gap-1.5 font-semibold bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isButtonDisabled}
-        >
-          {isLoading ? (
-            <>
-              <span className="inline-block mr-2 w-4 h-4 rounded-full border-2 border-white animate-spin border-t-transparent"></span>
-              Processing...
-            </>
-          ) : (
-            "Next"
-          )}
-        </Button>
+        <div className="flex md:flex-row flex-col-reverse md:justify-end gap-2">
           <button
-                  onClick={ongoBack}
-                  className="py-2 w-full text-center text-gray-600 rounded-md border border-gray-300 hover:underline mt-2"
-                >
-                  Go Back
-                </button>
-                </>
+            onClick={ongoBack}
+            className="py-2 px-4 text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
+          >
+            Go Back
+          </button>
+          <button
+            onClick={() => setStep(1)}
+            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${
+              isButtonDisabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isButtonDisabled}
+          >
+            {isLoading ? (
+              <>
+                <span className="inline-block mr-2 w-4 h-4 rounded-full border-2 border-white animate-spin border-t-transparent"></span>
+                Processing...
+              </>
+            ) : (
+              "Next"
+            )}
+          </button>
+        </div>
       );
     }
 
     if (step === 1) {
       return (
-        <div className="flex flex-col gap-2">
-          <Button
-            className="min-w-[225px] w-full gap-1.5 font-semibold bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isButtonDisabled}
-            onClick={handleCreateVacancy}
-          >
-            Create Vacancy
-          </Button>
-
-          <Button
-            className="min-w-[225px] w-full gap-1.5 font-semibold text-gray-600 border border-gray-300"
+        <div className="flex md:flex-row flex-col-reverse md:justify-end gap-2">
+          <button
             onClick={() => setStep(0)}
+            className="py-2 px-4 text-center text-gray-600 rounded-md border border-gray-300 hover:underline"
           >
             Back
-          </Button>
+          </button>
+          <button
+            onClick={handleCreateVacancy}
+            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${
+              isButtonDisabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isButtonDisabled}
+          >
+            Create Vacancy
+          </button>
         </div>
       );
     }
@@ -267,6 +267,7 @@ function JobDescriptionModal({ onClose ,ongoBack }) {
         ...brandingDetails,
         templateId: selectedTemplate,
         vacancyTitle: jobTitle,
+        department: department,
         user_id: user?._id
       };
 
@@ -308,7 +309,12 @@ function JobDescriptionModal({ onClose ,ongoBack }) {
 
   return (
     <div>
-      <Modal title="" open={true} onCancel={onClose} footer={null}>
+      <Modal title="" open={true} onCancel={onClose} footer={null} style={{
+        maxHeight: "80vh",
+        overflowY: "auto",
+        top: 20,
+        marginTop: 0
+      }}>
         {backendLoading ? (
           <AiLoadingStateAnimation
             onCancel={() => {
@@ -334,6 +340,18 @@ function JobDescriptionModal({ onClose ,ongoBack }) {
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
                 />
+                <div>
+                  <div className="flex gap-2 items-center mb-2">
+                    <label className="text-sm font-medium">Department</label>
+                  </div>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={department}
+                    onChange={(value) => setDepartment(value)}
+                    placeholder="Select a department"
+                    options={departmentOptions}
+                  />
+                </div>
                 <textarea
                   className="p-2 w-full h-64 text-sm rounded-lg border border-gray-300 dark:bg-gray-900 outline-gray-300"
                   placeholder="Paste Job Description (Ctrl+V)"
