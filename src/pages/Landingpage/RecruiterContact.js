@@ -556,7 +556,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
     const role = recruiter?.recruiterRole || "Role";
     const phone = recruiter?.recruiterPhone || "+1 (000) 000-0000";
     const email = recruiter?.recruiterEmail || "email@example.com";
-    const image = recruiter?.recruiterAvatar || placeholder;
+    const image = recruiter?.recruiterAvatar || "/dhwise-images/placeholder.png";
     const phoneIconStyle = recruiter?.phoneIconStyle || "outlined";
     const emailIconStyle = recruiter?.emailIconStyle || "outlined";
     const phoneEnabled = !!recruiter?.recruiterPhoneEnabled || false;
