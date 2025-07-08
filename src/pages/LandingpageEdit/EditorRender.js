@@ -234,6 +234,11 @@ const EditorRender = React.memo(({
   jobsLoading,
   lpId
 }) => {
+  console.log("editor render",lpId)
+  const router = useRouter();
+  const { lpId: routerLpId } = router.query;
+  if(!lpId) lpId = routerLpId;
+  console.log("editor render",lpId)
   const [changed, setChanged] = useState(false);
   const { setFocusRef } = useFocusContext();
   const [activeKeys, setActiveKeys] = useState([]); // Change to plural to indicate array
@@ -255,7 +260,7 @@ const EditorRender = React.memo(({
           await CrudService.update("LandingPageData", lpId, {
             ...landingPageData,
             _id: undefined,
-          });
+          },"editor render -- auto save");
           setChanged(false);
         } catch (error) {
           console.error("Auto-save failed:", error);
@@ -275,7 +280,7 @@ const EditorRender = React.memo(({
     await CrudService.update("LandingPageData", lpId, {
       ...landingPageData,
       _id: undefined,
-    }).then(() => {
+    },"editor render -- handle save").then(() => {
       message.success("Data saved successfully");
     });
     setChanged(false);
@@ -434,7 +439,7 @@ const EditorRender = React.memo(({
             await CrudService.update("LandingPageData", lpId, {
               ...landingPageData,
               _id: undefined,
-            });
+            },"editor render -- blur bullet list");
             setChanged(false);
           }
         }}
@@ -772,7 +777,7 @@ const EditorRender = React.memo(({
                 />
               ) : (
                 <Input
-                  className="border outline-none focus-within:border-light_blue-A700"
+                  className="border outline-none focus-within:border-light_blue-A700 text-sm"
                   shape="round"
                   type={a.inputType}
                   name="input_one"

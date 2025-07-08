@@ -125,7 +125,7 @@ export function PreviewContainer({
     };
   } else {
     setdevicebasedonfullscreen = {
-      desktop: { width: 1440, height: 980 }, // ALWAYS 1440px for desktop
+      desktop: { width: 1960, height: 1080 }, // ALWAYS 1440px for desktop
       mobile: { width: 475, height: 750 },
     };
   }

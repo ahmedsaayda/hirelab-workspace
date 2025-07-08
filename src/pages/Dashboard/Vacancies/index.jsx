@@ -86,7 +86,15 @@ const Vacancies = () => {
   console.log('statusstatusstatus', status);
 
   const [landingPages, setLandingPages] = useState([]);
-  const [addNew, setAddNew] = useState(null);
+  const [addNew, setAddNew] = useState(() => {
+    // Check local storage for any saved progress
+    const savedProgress = localStorage.getItem('vacancy_creation_progress');
+    if (savedProgress) {
+      const { type } = JSON.parse(savedProgress);
+      return type;
+    }
+    return null;
+  });
   console.log("addNew", addNew);
   const [addNewModal, setAddNewModal] = useState(false);
   const [jobTitleX, setJobTitleX] = useState("");
@@ -161,7 +169,8 @@ const Vacancies = () => {
     companySize: [],
   });
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [sorters, setSorters] = useState([]);
+  const [sorters, setSorters] = useState([{ key: 'createdAt', direction: 'desc', isDefault: true }]);
+  console.log('sorters', sorters);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(12);
@@ -312,7 +321,7 @@ const Vacancies = () => {
               );
               console.log('resultresultresult', result);
               setLandingPages(
-                result.data.items.map((i) => ({
+                result.data.items?.map((i) => ({
                   ...i,
                   position: "Position",
                   heading: i.vacancyTitle,
@@ -457,24 +466,24 @@ const Vacancies = () => {
   };
 
   const handleSorterChange = (sorter) => {
-  setSorters((prevSorters) => {
-    const existingSorter = prevSorters.find((s) => s.key === sorter.key);
+    setSorters((prevSorters) => {
+      const existingSorter = prevSorters?.find((s) => s.key === sorter.key);
 
-    if (existingSorter) {
-      // If it's the same field, toggle the direction
-      const newDirection = existingSorter.direction === 'asc' ? 'desc' : 'asc';
-      return prevSorters.map((s) =>
-        s.key === sorter.key ? { ...s, direction: newDirection } : s
-      );
-    } else {
-      // If it's a new field, add it with the specified direction
-      return [...prevSorters, { key: sorter.key, direction: sorter.direction }];
-    }
-  });
+      if (existingSorter) {
+        // If it's the same field, toggle the direction
+        const newDirection = existingSorter.direction === 'asc' ? 'desc' : 'asc';
+        // Remove isDefault when changing direction
+        return prevSorters?.map((s) =>
+          s.key === sorter.key ? { ...s, direction: newDirection, isDefault: false } : s
+        );
+      } else {
+        // If it's a new field, add it without isDefault flag
+        return [{ key: sorter.key, direction: sorter.direction, isDefault: false }];
+      }
+    });
 
-  setCurrentPage(1); // Reset to the first page when sorting changes
-};
-
+    setCurrentPage(1); // Reset to the first page when sorting changes
+  };
 
   const removeFilter = (key) => {
     setFilters((prevFilters) => prevFilters.filter((f) => f.key !== key));
@@ -488,7 +497,7 @@ const Vacancies = () => {
 
   const filterMenu = (
     <Menu>
-      {filterOptions.map((option) => (
+      {filterOptions?.map((option) => (
         <Menu.Item
           key={option.key}
           onClick={() => {
@@ -504,7 +513,7 @@ const Vacancies = () => {
 
   const sorterMenu = (
   <Menu>
-    {sorterOptions.map((option, index) => {
+    {sorterOptions?.map((option, index) => {
       const activeSorter = sorters.find((s) => s.key === option.key);
       const isActive = activeSorter && activeSorter.direction === option.direction;
 
@@ -815,6 +824,10 @@ Respond with json that adheres to the following jsonschema:
     }
   };
 
+  const handleRefreshAfterVacancyCreation = () => {
+    fetchData();
+  }
+
   if (facebookLoading) return <Skeleton active />;
   return (
     <>
@@ -867,7 +880,10 @@ Respond with json that adheres to the following jsonschema:
                 style={{ borderColor: "transparent" }}
               />
 
-              {sorters.map((sorter) => {
+              {sorters?.map((sorter) => {
+                // Skip rendering if it's the default sort
+                if (sorter.isDefault) return null;
+
                 const foundOption = sorterOptions.find((opt) => opt.key === sorter.key);
                 const label = foundOption ? foundOption.label : sorter.key;
 
@@ -881,7 +897,10 @@ Respond with json that adheres to the following jsonschema:
                           size={20}
                           fill={"#9fa3a7"}
                           className="h-[20px] w-[20px] cursor-pointer"
-                          onClick={() => removeSorter(sorter.key)}
+                          onClick={() => {
+                            // When removing a sorter, revert to default sort
+                            setSorters([{ key: 'createdAt', direction: 'desc', isDefault: true }]);
+                          }}
                         />
                       }
                       className="gap-2 font-semibold whitespace-nowrap bg-transparent text-gray-900"
@@ -893,8 +912,6 @@ Respond with json that adheres to the following jsonschema:
                             sorter.key === "applicants" ? (sorter.direction === "asc" ? "Least Applicants" : "Most Applicants") :
                               sorter.key}
                     </Button>
-
-
                   </div>
                 );
               })}
@@ -956,7 +973,7 @@ Respond with json that adheres to the following jsonschema:
 
           </div>
           <div className="grid grid-cols-1 gap-4 justify-center sm:grid-cols-2 lg:grid-cols-3 lgr:grid-cols-4">
-            {landingPages.map((d, index) => {
+            {landingPages?.map((d, index) => {
               console.log(
                 "landingPages.location",
                 landingPages.location,
@@ -980,7 +997,7 @@ Respond with json that adheres to the following jsonschema:
 
             {loadingFetchData && (
               <>
-                {new Array(4).fill(0).map((x, i) => (
+                {new Array(4).fill(0)?.map((x, i) => (
                   <div
                     key={i}
                     className="flex flex-col items-start w-full gap-4 px-6 py-5 sm:px-5 bg-white-A700 rounded-[12px] min-w-[254px] min-h-[241px]"
@@ -1087,7 +1104,7 @@ Respond with json that adheres to the following jsonschema:
                 },
                 locked: true,
               },
-            ].map((d, index) => (
+            ]?.map((d, index) => (
               <CreateANewVacancyInput {...d} key={"gridplusone" + index} />
             ))}
           </div>
@@ -1243,7 +1260,7 @@ Respond with json that adheres to the following jsonschema:
             destroyOnClose
           >
             <div className="grid grid-cols-1 gap-5 mt-2 smx:grid-cols-2 mdx:grid-cols-3 lg:grid-cols-4">
-              {resources.map((resource, i) => (
+              {resources?.map((resource, i) => (
                 <div key={i} className="flex relative flex-col items-center">
                   <img
                     width={150}
@@ -1412,15 +1429,15 @@ Respond with json that adheres to the following jsonschema:
       </Modal>
 
       {addNew === "scratch" && (
-        <FromScratchModal onClose={() => setAddNew(null)}  ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}}/>
+        <FromScratchModal onClose={() => setAddNew(null)}  ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}} onRefresh={handleRefreshAfterVacancyCreation}/>
       )}
       {addNew === "url" && (
         queryParams?.get('debug') === 'true' 
           ? <PasteUrlModalExperimental onClose={() => setAddNew(null)}  />
-          : <PasteUrlModal onClose={() => setAddNew(null)} ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}} />
+          : <PasteUrlModal onClose={() => setAddNew(null)} ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}} onRefresh={handleRefreshAfterVacancyCreation} />
       )}
       {addNew === "job-description" && (
-        <JobDescriptionModal onClose={() => setAddNew(null)} ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}} />
+        <JobDescriptionModal onClose={() => setAddNew(null)} ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}} onRefresh={handleRefreshAfterVacancyCreation} />
       )}
 
       <UpgradeModal

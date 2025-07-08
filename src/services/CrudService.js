@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getBackendUrl } from "./getBackendUrl";
 import { middleField } from "./middlefield";
+import { message } from "antd";
 
 class CrudService {
   constructor(baseURL) {
@@ -14,10 +15,17 @@ class CrudService {
   create(model, body) {
     return this.api.post(`/create?ModelName=${model}`, body);
   }
-  update(model, id, body) {
+  update(model, id, body,origine="not specified") {
+    if(!id) {
+      console.log("No id found for "+origine)
+      message.error("No id found for "+origine);}
     return this.api.put(`/single?ModelName=${model}&id=${id}`, body);
   }
-  getSingle(model, id) {
+  getSingle(model, id,origine="") {
+    if(!id) {
+      console.log("No id found for "+origine)
+      message.error("No id found for "+origine);}
+    console.log("getting single",model,id,origine)
     return this.api.get(`/single?ModelName=${model}&id=${id}`);
   }
   delete(model, id) {

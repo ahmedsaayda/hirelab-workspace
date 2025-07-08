@@ -14,7 +14,7 @@ const Vacancy = () => {
     if (!id) return;
     setVacancyData(null);
 
-    CrudService.getSingle("LandingPageData", id)
+    CrudService.getSingle("LandingPageData", id,"vacancy page")
       .then((res) => {
         console.log(res);
         if (!res.data) return;

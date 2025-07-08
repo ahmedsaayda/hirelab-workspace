@@ -404,10 +404,12 @@ const Category = ({ title, items, onClick, existingItems }) => (
 //
 export default function LandingpageEdit({paramsId}) {
   const dispatch = useDispatch();
-  const lpId = paramsId;
+  let lpId = paramsId;
+  const router = useRouter();
+  if(!lpId) lpId = router.query.lpId;
+  console.log("lpId",lpId)
   const user = useSelector(selectUser);
   const { setScrollToSection, hoveredField, setHoveredField } = useHover();
-  const router = useRouter();
   const [landingPageData, setLandingPageData] = useState(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const [addMenuItem, setAddMenuItem] = useState(false);
@@ -456,19 +458,24 @@ export default function LandingpageEdit({paramsId}) {
   const activeSection = combinedSections[activeIdx];
   
   const fetchData = useCallback(() => {
-    if (lpId) {
-      CrudService.getSingle("LandingPageData", lpId).then((res) => {
-        if (res.data) {
-          setLandingPageData(res.data);
-          // Store the initial data for comparison
-          previousDataRef.current = JSON.stringify(res.data);
-        }
-      });
-      PublicService.getLPBrand(lpId).then((res) => {
-        // if (res.data?.color) {
-        //   changeIndigoShades(generateTailwindPalette(res.data?.color));
-        // }
-      });
+    console.log("will fetch data for id",lpId)
+    if(!lpId) {
+      return;
+    }
+    try{
+      if (lpId) {
+        CrudService.getSingle("LandingPageData", lpId,"landing page edit").then((res) => {
+          if (res.data) {
+            setLandingPageData(res.data);
+            // Store the initial data for comparison
+            previousDataRef.current = JSON.stringify(res.data);
+          }
+        },"landing page id");
+
+      }
+    }catch(err){
+      message.error("Failed to load landing page data");
+      console.log("error fetching data",err)
     }
   }, [lpId]);
 
@@ -616,8 +623,8 @@ export default function LandingpageEdit({paramsId}) {
     autoSaveTimeoutRef.current = setTimeout(async () => {
       try {
         setIsAutoSaving(true);
-        const res = await CrudService.update("LandingPageData", lpId, landingPageData);
-        
+        const res = await CrudService.update("LandingPageData", lpId, landingPageData,"landing page edit");
+        console.log("auto save res",res)
         // Update the reference data to prevent unnecessary saves
         previousDataRef.current = JSON.stringify(landingPageData);
         
@@ -707,7 +714,7 @@ export default function LandingpageEdit({paramsId}) {
       // Update the backend
       CrudService.update("LandingPageData", lpId, {
         menuItems: reorderedItems,
-      });
+      },"landing page edit");
     },
     [lpId]
   );
@@ -730,7 +737,7 @@ export default function LandingpageEdit({paramsId}) {
     const newMenuItems = [...(landingPageData?.menuItems ?? []), { key }];
     CrudService.update("LandingPageData", lpId, {
       menuItems: newMenuItems,
-    });
+    },"landing page edit");
     setLandingPageData((d) => ({
       ...d,
       menuItems: newMenuItems,
@@ -755,7 +762,7 @@ export default function LandingpageEdit({paramsId}) {
 
     CrudService.update("LandingPageData", lpId, {
       menuItems: newMenuItems,
-    });
+    },"landing page edit");
     setLandingPageData((prevData) => ({
       ...prevData,
       menuItems: newMenuItems,
@@ -792,7 +799,7 @@ export default function LandingpageEdit({paramsId}) {
   };
 
   const updateMenuItems = (newMenuItems) => {
-    CrudService.update("LandingPageData", lpId, { menuItems: newMenuItems });
+    CrudService.update("LandingPageData", lpId, { menuItems: newMenuItems },"landing page edit");
     setLandingPageData((d) => ({ ...d, menuItems: newMenuItems }));
   };
 
@@ -1101,7 +1108,7 @@ export default function LandingpageEdit({paramsId}) {
         CrudService.update("LandingPageData", lpId, {
           ...landingPageData,
           _id: undefined,
-        }).then(() => {
+        },"landing page edit").then(() => {
           message.success("Auto-saved");
           setIsChanged(false);
         });
@@ -1119,7 +1126,7 @@ export default function LandingpageEdit({paramsId}) {
     message.loading("Publishing...", 0);
     setIsAutoSaving(false);
     try {
-      const res = await CrudService.update("LandingPageData", lpId, landingPageData);
+      const res = await CrudService.update("LandingPageData", lpId, landingPageData,"landing page edit");
       if (res.data) {
         setLandingPageData(res.data);
         message.destroy();
@@ -1244,14 +1251,12 @@ export default function LandingpageEdit({paramsId}) {
         isAutoSaving={isAutoSaving}
         lpId={lpId}
       />
-      <div 
-     
-      className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3">
+      <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3">
         <div
           className={` py-4 flex  flex-grow ${
             fullscreen ? "w-0 overflow-hidden" : "w-[45%]"
           } transition-all duration-300 justify-center mdx:w-full smx:flex-col`}
-          style={{ scrollbarWidth: "none" }}
+          style={{ scrollbarWidth: "none" ,}}
         >
           <Sidebar17
             handleUp={handleUp}
@@ -1325,19 +1330,11 @@ export default function LandingpageEdit({paramsId}) {
                       }}
                       title="Media Library"
                     >
-                      {/* <div>
-                        <img
-                          src="/images/template1.svg"
-                          alt="thumbnail-media-lib"
-                          className="h-[25px] w-[25px] border-none"
-                      />
-                      </div> */}
+                     
                     </button>
 
 
-                    {/* <button onClick={()=>{setIsImageOpen(true)}} >
-                      File Modal 
-                    </button> */}
+                  
 
                     <div>
                       {isOpen && (
@@ -1421,46 +1418,11 @@ export default function LandingpageEdit({paramsId}) {
 
         <div
           className={`overflow-scroll overflow-x-hidden  ${
-            fullscreen ? "w-full" : "w-[40%] xl:w-[60%]"
+            fullscreen ? "w-full" : "w-full"
           } transition-all duration-300 border-r border-solid border-blue_gray-50 px-2  mdx:w-full p-1`}
-          style={{ scrollbarWidth: "none" }}
+          style={{ scrollbarWidth: "none" ,}}
         >
-          <div className="flex  gap-5 justify-between items-center">
-            <Heading
-              size="7xl"
-              as="h2"
-              className="self-start !text-black-900_01"
-            >
-              Preview
-            </Heading>
-
-            {/* <div className="h-[34px] gap-2 bg-[#EFF8FF] rounded-[6px] cursor-pointer flex justify-between items-center px-[3px] text-sm">
-              <Button
-                className="flex items-center justify-start !h-[28px] !px-3 border rounded shadow-sm bg-[#0E87FE] text-[#ffffff] focus:outline-none focus:ring"
-                onClick={() => setTemplateMenu(true)}
-              >
-                Change Template
-              </Button>
-            </div> */}
-            <button
-              className="flex items-center justify-center h-[28px] w-[28px] rounded hover:bg-gray-100"
-              onClick={() => setFullscreen((prev) => !prev)}
-            >
-              {fullscreen ? (
-                <img
-                  src="/images/expand-06.svg"
-                  alt="collapse"
-                  className="h-[20px] w-[20px]"
-                />
-              ) : (
-                <img
-                  src="/images/expand-06.svg"
-                  alt="expand"
-                  className="h-[20px] w-[20px]"
-                />
-              )}
-            </button>
-          </div>
+         
 
           <div className=" h-[650px] overflow-x-hidden overflow-y-auto lg:h-[calc(100vh-100px)] min-h-[450px] mt-4 text-sm text-center text-gray-400 border border-blue-600 rounded-lg"
             style={{
@@ -1590,7 +1552,7 @@ export default function LandingpageEdit({paramsId}) {
                 setLandingPageData((d) => ({ ...d, templateId: `${i + 1}` }));
                 CrudService.update("LandingPageData", lpId, {
                   templateId: `${i + 1}`,
-                });
+                },"landing page edit");
                 setTemplateMenu(false);
               }}
             >

@@ -533,7 +533,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
             </div>
             {/* Job Title and Job Description */}
             {/* Mobile Badges - Visible only on small screens */}
-            <div className="flex flex-wrap gap-2 justify-center mb-6 md:hidden">
+            <div className="flex flex-wrap gap-2 justify-center mb-6 lg:hidden">
               {landingPageData?.salaryMin && (
                 <div
                   className="flex gap-2 items-center p-2 rounded-xl border shadow-lg border-white/10 lg:min-h-[75px]"
@@ -670,7 +670,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
               </div>
             </div>
             {/* Mobile Location Badge - Visible only on small screens */}
-            <div className="flex justify-center mx-auto mb-6 md:hidden">
+            <div className="flex justify-center mx-auto mb-6 lg:hidden">
               <div
                 className="flex gap-3 items-center p-3 rounded-xl border shadow-lg border-white/10 lg:min-h-[75px] relative z-[500]"
                 style={{
@@ -836,7 +836,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
                 {/* Info Badges - Only visible on medium screens and up */}
 
-                <div className="hidden absolute -left-[10%] lg:-left-[17%] xl:-left-[32%] top-0 w-1 h-full  md:block   ">
+                <div className="hidden absolute -left-[5%] lg:-left-[12%] xl:-left-[32%] top-0 w-1 h-full  lg:block ">
                   {/* Salary */}
                   <div className=" absolute -left-0 top-[15%]">
                     <div
@@ -943,12 +943,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     </svg>
                   </div>
                 </div>
-                {/* <div className="hidden absolute -left-[10%] lg:-left-[17%] xl:-left-[22%] top-0 w-1 h-full  md:block   "> */}
-                {/* <div className="hidden absolute top-0 left-[10%] xl:left-[30%] w-full h-full translate-x-[100%] md:block "> */}
+             
 
-                <div className="hidden absolute top-0 xl:left-[20%] h-full w-[50%] translate-x-[100%]   md:block ">
+                <div className="hidden absolute top-0 xl:left-[20%] h-full w-[50%] translate-x-[100%]   lg:block ">
                   {/* Location */}
-                  <div className="hidden absolute right-20 xl:right-[40] top-[5%] translate-x-[100%] md:block">
+                  <div className="hidden absolute right-20 xl:right-[40] top-[5%] xl:translate-x-[75%] 2xl:translate-x-[100%] translate-x-[75%] lg:block">
                     <div
                       className="flex gap-3 items-center p-3 rounded-xl border shadow-lg border-white/10 lg:min-h-[75px]  z-[500]"
                       style={{
@@ -1062,7 +1061,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                               .map((loc, index) => (
                                 <div
                                   key={index}
-                                  className="px-4 py-2 text-xs font-medium  cursor-pointer md:text-sm hover:bg-white/10"
+                                  className="px-4 py-2 text-xs font-medium  cursor-pointer lg:text-sm hover:bg-white/10"
                                   onClick={() => {
                                     setSelectedLocation(loc);
                                     setShowLocationDropdown(false);
@@ -1118,7 +1117,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     </svg>
                   </div>
                   {/* Hours */}
-                  <div className="hidden absolute right-[8rem] top-[60%] translate-x-[100%] md:block">
+                  <div className="hidden absolute right-[8rem] top-[60%] translate-x-[100%] lg:block">
                     <div
                       className="flex gap-3 items-center p-3 rounded-xl border shadow-lg border-white/10 lg:min-h-[75px]"
                       style={{

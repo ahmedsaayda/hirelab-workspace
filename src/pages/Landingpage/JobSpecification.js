@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback } from "react";
 import { Heading, Text } from "./components/index.jsx";
 import BenefitsOverview from "./components/BenefitsOverview/index.jsx";
 import BenefitsOverview1 from "./components/BenefitsOverview1/index.jsx";
@@ -261,275 +261,113 @@ const Template2 = ({ landingPageData, fetchData }) => {
   );
 };
 
-// Helper component for bullet points with consistent height
-const BulletPoint = ({ index, rowIndex, item, height, getColor, handleItemClick, specificationsRefs, bulletRowRefs }) => {
-  return (
-    <li 
-      className="flex items-start"
-      style={{
-        minHeight: height ? `${height}px` : 'auto',
-      }}
-    >
-      <div className="flex-shrink-0 mt-1 mr-3">
-        <div 
-          className="w-5 h-5 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: getColor("primary", 500) }}
-        >
-       
-          <svg width="13" height="11" viewBox="0 0 13 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M11.0964 0.390037L3.93643 7.30004L2.03643 5.27004C1.68643 4.94004 1.13643 4.92004 0.736435 5.20004C0.346435 5.49004 0.236435 6.00004 0.476435 6.41004L2.72643 10.07C2.94643 10.41 3.32643 10.62 3.75643 10.62C4.16643 10.62 4.55643 10.41 4.77643 10.07C5.13643 9.60004 12.0064 1.41004 12.0064 1.41004C12.9064 0.490037 11.8164 -0.319963 11.0964 0.380037V0.390037Z" fill="white"/>
-</svg>
-
-        </div>
-      </div>
-      <span
-        ref={(el) => {
-          specificationsRefs.current[
-            `specifications[${index}].bulletPoints[${rowIndex}]`
-          ] = el;
-          
-          // Store reference for height calculation
-          if (el) {
-            bulletRowRefs.current[`${index}-${rowIndex}`] = el;
-          }
-        }}
-        className=" block"
-        style={{
-          color:"black"
-        }}
-        onClick={() =>
-          handleItemClick(
-            `specifications[${index}].bulletPoints[${rowIndex}]`
-          )
-        }
-      >
-        {item.bullet}
-      </span>
-    </li>
-  );
-};
-
-const Template1 = ({ landingPageData, fetchData }) => {
+const Template1 = React.memo(({ landingPageData, fetchData }) => {
   const router = useRouter();
-  const currentPath = router.pathname?.split("/")[1];
   const { handleItemClick } = useFocusContext();
   const { hoveredField } = useHover();
-  // const sectionRef = useRef();
-  // const titleRef = useRef();
-  // const textRef = useRef();
-  // const specificationsRefs = useRef({});
-  const { sectionRef, titleRef, textRef, specificationsRefs } =
-    useJobSpecificationHover();
   
-  // Add state for bullet point heights and references
-  const [bulletRowHeights, setBulletRowHeights] = useState({});
-  const bulletRowRefs = useRef({});
+  const { sectionRef, titleRef, textRef, specificationsRefs } = useJobSpecificationHover();
   
-  // Extract colors for dependency tracking
-  const primaryColor = landingPageData?.primaryColor || "#26B0C6";
-  const secondaryColor = landingPageData?.secondaryColor || "#F7E733";
-  const tertiaryColor = landingPageData?.tertiaryColor || "#44b566";
+  // Memoize colors and theme values
+  const colors = useMemo(() => ({
+    primaryColor: landingPageData?.primaryColor || "#26B0C6",
+    secondaryColor: landingPageData?.secondaryColor || "#F7E733",
+    tertiaryColor: landingPageData?.tertiaryColor || "#44b566"
+  }), [landingPageData?.primaryColor, landingPageData?.secondaryColor, landingPageData?.tertiaryColor]);
 
-  // Use our template palette hook with the default colors
   const { getColor } = useTemplatePalette(
     {
       primaryColor: "#26B0C6",
       secondaryColor: "#F7E733",
       tertiaryColor: "#44b566",
     },
-    // Pass landingPageData colors as customColors to ensure updates
-    {
-      primaryColor,
-      secondaryColor,
-      tertiaryColor,
-    }
+    colors
   );
 
-  // Get specifications from landingPageData
-  const specifications =
-    landingPageData?.specifications?.filter((spec) => spec.enabled) ||
-    [
+  const specifications = useMemo(() => 
+    landingPageData?.specifications?.filter((spec) => spec.enabled) || [],
+    [landingPageData?.specifications]
+  );
 
-    ];
-  
-  // Calculate row heights when specifications change or on window resize
-  useEffect(() => {
-    // Only run on desktop screens
-    if (window.innerWidth <= 768) {
-      setBulletRowHeights({});
-      return;
-    }
-    
-    // Helper function to calculate heights
-    const calculateBulletHeights = () => {
-      // Group heights by row index
-      const rowGroups = {};
-      
-      Object.entries(bulletRowRefs.current).forEach(([key, element]) => {
-        if (!element) return;
-        
-        // Parse the card and row index
-        const [cardIndex, rowIndex] = key.split('-').map(Number);
-        
-        if (!rowGroups[rowIndex]) {
-          rowGroups[rowIndex] = [];
-        }
-        
-        rowGroups[rowIndex].push({
-          height: element.offsetHeight,
-          element
-        });
-      });
-      
-      // Calculate max height for each row
-      const maxHeights = {};
-      
-      Object.entries(rowGroups).forEach(([rowIndex, items]) => {
-        if (items.length > 0) {
-          const maxHeight = Math.max(...items.map(item => item.height));
-          maxHeights[rowIndex] = maxHeight;
-        }
-      });
-      
-      setBulletRowHeights(maxHeights);
-    };
-    
-    /* 
-    How this works:
-    1. We create refs for each bullet point text element
-    2. We use ResizeObserver (with a fallback to setTimeout) to detect when content changes size
-    3. We group bullet points by their row position across all cards
-    4. We find the maximum height for each row position
-    5. We apply this height to all bullet points in the same row position
-    
-    This ensures that all bullet points at the same "row level" across different cards 
-    have the same height, creating a horizontally aligned layout even when content length varies.
-    */
-    
-    // Create a ResizeObserver to detect content changes
-    let resizeObserver;
-    let isObserving = false;
-    
-    try {
-      if (typeof ResizeObserver !== 'undefined') {
-        resizeObserver = new ResizeObserver(() => {
-          // Debounce the calculation
-          if (resizeObserver.timeout) {
-            clearTimeout(resizeObserver.timeout);
+  const gridColumns = useMemo(() => {
+    if (specifications.length === 1) return "md:grid-cols-1";
+    if (specifications.length === 2) return "md:grid-cols-2";
+    return "md:grid-cols-3";
+  }, [specifications.length]);
+
+  const { subheaderFont, bodyFont } = useMemo(() => 
+    getFonts(landingPageData),
+    [landingPageData]
+  );
+
+  const textColor = useMemo(() => 
+    calculateTextColor(getColor("primary", 100)),
+    [getColor]
+  );
+
+  const fallBackIcons = useMemo(() => ["Zap", "FilePenLine", "Network"], []);
+
+  // Simple bullet point component without any height calculations
+  const BulletPoint = useMemo(() => {
+    return React.memo(({ index, rowIndex, item, getColor, handleItemClick, specificationsRefs }) => (
+      <li className="flex items-start">
+        <div className="flex-shrink-0 mt-1 mr-3">
+          <div 
+            className="w-5 h-5 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: getColor("primary", 500) }}
+          >
+            <svg width="13" height="11" viewBox="0 0 13 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fillRule="evenodd" clipRule="evenodd" d="M11.0964 0.390037L3.93643 7.30004L2.03643 5.27004C1.68643 4.94004 1.13643 4.92004 0.736435 5.20004C0.346435 5.49004 0.236435 6.00004 0.476435 6.41004L2.72643 10.07C2.94643 10.41 3.32643 10.62 3.75643 10.62C4.16643 10.62 4.55643 10.41 4.77643 10.07C5.13643 9.60004 12.0064 1.41004 12.0064 1.41004C12.9064 0.490037 11.8164 -0.319963 11.0964 0.380037V0.390037Z" fill="white"/>
+            </svg>
+          </div>
+        </div>
+        <span
+          ref={(el) => {
+            specificationsRefs.current[
+              `specifications[${index}].bulletPoints[${rowIndex}]`
+            ] = el;
+          }}
+          className="block"
+          style={{ color: "black" }}
+          onClick={() =>
+            handleItemClick(
+              `specifications[${index}].bulletPoints[${rowIndex}]`
+            )
           }
-          
-          resizeObserver.timeout = setTimeout(() => {
-            calculateBulletHeights();
-          }, 100);
-        });
-        
-        // Observe each bullet point element
-        Object.values(bulletRowRefs.current).forEach(element => {
-          if (element) {
-            resizeObserver.observe(element);
-            isObserving = true;
-          }
-        });
-      }
-    } catch (e) {
-      console.error("ResizeObserver error:", e);
-    }
-    
-    // Fallback for browsers without ResizeObserver or if observation failed
-    if (!isObserving) {
-      // Poll for changes using intervals
-      const interval = setInterval(calculateBulletHeights, 1000);
-      
-      return () => {
-        clearInterval(interval);
-      };
-    }
-    
-    // Handle window resize
-    const handleResize = () => {
-      if (window.innerWidth <= 768) {
-        setBulletRowHeights({}); // Clear heights on mobile
-      } else {
-        // Recalculate on desktop
-        setTimeout(calculateBulletHeights, 100);
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    // Initial calculation after content is loaded
-    const timer1 = setTimeout(calculateBulletHeights, 100);
-    const timer2 = setTimeout(calculateBulletHeights, 500);
-    const timer3 = setTimeout(calculateBulletHeights, 1000);
-    
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      window.removeEventListener('resize', handleResize);
-      
-      if (resizeObserver) {
-        clearTimeout(resizeObserver.timeout);
-        resizeObserver.disconnect();
-      }
-    };
-  }, [specifications]);
+        >
+          {item.bullet}
+        </span>
+      </li>
+    ));
+  }, []);
 
-
-
-  let gridColumns = "md:grid-cols-1";
-
-  if (specifications.length === 1) gridColumns = "md:grid-cols-1";
-  if (specifications.length === 2) gridColumns = "md:grid-cols-2";
-  if (specifications.length === 3) gridColumns = "md:grid-cols-3";
-
-  const {  subheaderFont, bodyFont } = getFonts(landingPageData);
-  const textColor = calculateTextColor(getColor("primary", 100))
-    const fallBackIcons = ["Zap","FilePenLine","Network"]
   return (
     <div
       id="job-specifications"
       ref={sectionRef}
       className="px-4 pt-16 pb-16 w-full bg-white md:px-8"
-      style={{
-        color:"black",
-      }}
     >
       <div className="container mx-auto">
         {/* Decorative Elements */}
-       <div className="relative">
+        <div className="relative">
           <div
-            className="
-      absolute -top-[25px] left-1/4 w-16 h-16 rounded-lg opacity-30
-      smx:top-[-20px] smx:left-4 smx:w-12 smx:h-12 "
+            className="absolute -top-[25px] left-1/4 w-16 h-16 rounded-lg opacity-30 smx:top-[-20px] smx:left-4 smx:w-12 smx:h-12"
             style={{ backgroundColor: getColor("tertiary", 200) }}
           ></div>
-
           <div
-            className="
-      absolute -top-[30px] right-1/4 w-24 h-24 rounded-lg opacity-20
-      smx:top-[-30px] smx:right-6 smx:w-14 smx:h-14 
-    "
+            className="absolute -top-[30px] right-1/4 w-24 h-24 rounded-lg opacity-20 smx:top-[-30px] smx:right-6 smx:w-14 smx:h-14"
             style={{ backgroundColor: getColor("tertiary", 300) }}
           ></div>
-
           <div
-            className="
-      absolute -top-[55px] left-1/2  w-20 h-20 rounded-lg opacity-25
-      smx:top-[-50px] smx:left-1/3 smx:w-16 smx:h-16
-    "
+            className="absolute -top-[55px] left-1/2 w-20 h-20 rounded-lg opacity-25 smx:top-[-50px] smx:left-1/3 smx:w-16 smx:h-16"
             style={{ backgroundColor: getColor("tertiary", 200) }}
           ></div>
         </div>
 
-       <svg  height="180" viewBox="0 0 794 180" fill="none" xmlns="http://www.w3.org/2000/svg" 
-       className="w-full   max-w-[794px] mx-auto"
-       >
-  {/* <rect y="90" width="90" height="90" rx="16" fill={`${getColor("primary",100)}`}/>
-  <rect x="690" y="76" width="104" height="104" rx="16" fill={`${getColor("primary",100)}`}/>
-  <rect x="296" y="32" width="116" height="116" rx="16" fill={`${getColor("primary",50)}`}/>
-  <rect x="522" y="-15" width="81" height="81" rx="16" fill={`${getColor("primary",50)}`}/> */}
-  </svg>
+        <svg height="180" viewBox="0 0 794 180" fill="none" xmlns="http://www.w3.org/2000/svg" 
+          className="w-full max-w-[794px] mx-auto"
+        />
+
         {/* Header */}
         <div className="mb-12 text-center">
           <h2
@@ -555,38 +393,30 @@ const Template1 = ({ landingPageData, fetchData }) => {
               __html: landingPageData?.jobSpecificationDescription ||
                 "We are seeking a talented and creative professional to join our dynamic team."
             }}
-          >
-          </h3>
+          />
         </div>
 
         {/* Three Column Layout */}
         <div
-          className={`grid gap-8 justify-center items-center mx-auto max-w-[1260px] ${gridColumns}`}
+          className={`grid gap-8 justify-center items-start mx-auto max-w-[1260px] ${gridColumns}`}
           style={{
-            fontFamily:bodyFont?.family
+            fontFamily: bodyFont?.family
           }}
-          
         >
           {specifications.map((spec, index) => (
             <div
-              style={{
-                // color:textColor
-            }}
               key={index}
-              className="flex flex-col p-8 h-full bg-[#FAFAFA] rounded-xl max-w-[420px] m-auto w-full"
-            >
+              className="flex flex-col p-8 bg-[#FAFAFA] rounded-xl max-w-[420px] mx-auto min-h-full w-full">
               <div className="mb-6">
                 <div
                   className="flex justify-center items-center mb-4 w-12 h-12 rounded-full"
-                  style={{ backgroundColor: "white",color:getColor("secondary", 500) }}
+                  style={{ backgroundColor: "white", color: getColor("secondary", 500) }}
                 >
-                  { (
-                    <IconRenderer
-                      icon={spec?.icon || fallBackIcons[index % 3]}
-                      className="w-6 h-6"
-                      style={{ color: getColor("secondary", 500) }}
-                    />
-                  ) }
+                  <IconRenderer
+                    icon={spec?.icon || fallBackIcons[index % 3]}
+                    className="w-6 h-6"
+                    style={{ color: getColor("secondary", 500) }}
+                  />
                 </div>
                 <h3
                   ref={(el) => {
@@ -594,7 +424,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       `specifications[${index}].title`
                     ] = el;
                   }}
-                  className="mb-1 text-xl font-bold "
+                  className="mb-1 text-xl font-bold"
                   onClick={() =>
                     handleItemClick(`specifications[${index}].title`)
                   }
@@ -607,7 +437,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       `specifications[${index}].description`
                     ] = el;
                   }}
-                  className="text-sm "
+                  className="text-sm"
                   onClick={() =>
                     handleItemClick(`specifications[${index}].description`)
                   }
@@ -617,33 +447,28 @@ const Template1 = ({ landingPageData, fetchData }) => {
               </div>
 
               <ul 
-              style={{
-                color:"black"
-              }}
-              className="flex-grow space-y-4">
-                {spec.bulletPoints?.map((item, idx) => (
+                className="flex-grow space-y-4"
+                style={{ color: "black" }}
+              >
+                {spec?.bulletPoints?.map((item, idx) => (
                   <BulletPoint 
                     key={idx}
                     index={index}
                     rowIndex={idx}
                     item={item}
-                    height={bulletRowHeights[idx]}
                     getColor={getColor}
                     handleItemClick={handleItemClick}
                     specificationsRefs={specificationsRefs}
-                    bulletRowRefs={bulletRowRefs}
                   />
                 ))}
               </ul>
-
-            
             </div>
           ))}
         </div>
       </div>
     </div>
   );
-};
+});
 
 const JobSpecification = (props) => {
   if (props?.landingPageData?.templateId?.toLowerCase() === "3")
