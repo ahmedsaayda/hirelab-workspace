@@ -120,10 +120,10 @@ const Layout = ({children}) => {
     if(user?._id)
     Intercom({
       app_id: 'h6drq6b2',
-      user_id: user._id, // IMPORTANT: Replace "user.id" with the variable you use to capture the user's ID
-      name: `${user.firstName} ${user.lastName}`, // IMPORTANT: Replace "user.name" with the variable you use to capture the user's name
-      email: user.email, // IMPORTANT: Replace "user.email" with the variable you use to capture the user's email
-      created_at: user.createdAt, // IMPORTANT: Replace "user.createdAt" with the variable you use to capture the user's sign-up date in a Unix timestamp (in seconds) e.g. 1704067200
+      user_id: user?._id, // IMPORTANT: Replace "user?.id" with the variable you use to capture the user's ID
+      name: `${user?.firstName} ${user?.lastName}`, // IMPORTANT: Replace "user?.name" with the variable you use to capture the user's name
+      email: user?.email, // IMPORTANT: Replace "user?.email" with the variable you use to capture the user's email
+      created_at: user?.createdAt, // IMPORTANT: Replace "user?.createdAt" with the variable you use to capture the user's sign-up date in a Unix timestamp (in seconds) e.g. 1704067200
     });
     
   }, [user]);
@@ -133,23 +133,23 @@ const Layout = ({children}) => {
     if (!user) return null;
 
     const currentDate = new Date();
-    const trialStartDate = new Date(user.createdAt);
+    const trialStartDate = new Date(user?.createdAt);
     trialStartDate.setDate(trialStartDate.getDate() + partner.trialDays);
     const isTrialGranted =
-      user.partnerGrantedTrialEnd &&
-      currentDate <= new Date(user.partnerGrantedTrialEnd);
+      user?.partnerGrantedTrialEnd &&
+      currentDate <= new Date(user?.partnerGrantedTrialEnd);
 
     const userTier =
-      !user.subscription?.paid || !user.subscription?.tier
+      !user?.subscription?.paid || !user?.subscription?.tier
         ? "free"
-        : user.subscription.tier;
+        : user?.subscription.tier;
 
     const isTrial =
       userTier === "free" && (isTrialGranted || currentDate <= trialStartDate);
 
     if (!isTrial) return null;
 
-    if (isTrialGranted) return user.partnerGrantedTrialEnd;
+    if (isTrialGranted) return user?.partnerGrantedTrialEnd;
     if (trialStartDate) return trialStartDate;
     return null;
   }, [user, partner]);
@@ -239,16 +239,16 @@ const Layout = ({children}) => {
   ];
 
   const isOnboardingCompleted =
-  !!user.companyLogo && !!user.companyUrl && !!user.companyInfo;
+  !!user?.companyLogo && !!user?.companyUrl && !!user?.companyInfo;
 
   const isOnboardingCompleted2 = {
-    "email": user.email,
-    "companyLogo": user.companyLogo,
-    "companyUrl": user.companyUrl,
-    "brandColors": user.brandColors,
-    "primaryColor": user.primaryColor,
-    "secondaryColor": user.secondaryColor,
-    "tertiaryColor": user.tertiaryColor,
+    "email": user?.email,
+    "companyLogo": user?.companyLogo,
+    "companyUrl": user?.companyUrl,
+    "brandColors": user?.brandColors,
+    "primaryColor": user?.primaryColor,
+    "secondaryColor": user?.secondaryColor,
+    "tertiaryColor": user?.tertiaryColor,
     isOnboardingCompleted
   };
   console.log("isOnboardingCompleted2", isOnboardingCompleted2);

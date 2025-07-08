@@ -1440,6 +1440,7 @@ export default function LandingpageEdit({paramsId}) {
                   showBackToEditButton={false}
                   lpId={lpId}
                   isEdit={true}
+                  setLandingPageData={setLandingPageData}
                 />
                             <div
                   key="hero-section"

@@ -10,9 +10,11 @@ import { getFonts } from "./getFonts.js";
 import ApplyCustomFont from "./ApplyCustomFont.jsx";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import {ArrowLeftOutlined } from '@ant-design/icons';
-import { Alert, message,Modal as AntModal, Button  as AntButton} from "antd";
-import {ClipboardCheck } from "lucide-react";
+import { Modal as AntModal, Switch, Input, Spin, Button as AntButton } from "antd";
+import { message } from "antd";
+import { ClipboardCheck } from "lucide-react";
 import { LinkOutlined,CheckCircleFilled} from '@ant-design/icons';
+import CrudService from "../../services/CrudService";
 // import XIcon from "../../assets/img/x_icon.png";
 // import Mail from "../../assets/img/mail.webp";
 // public\assets\x_icon.png
@@ -460,7 +462,7 @@ const Template1Old = ({ landingPageData, onClickApply }) => {
     </>
   );
 };
-const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen,lpId ,isEdit}) => {
+const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData }) => {
   console.log("lpId",lpId);
   // Get device from global variable set by PreviewContainer
   const [device, setDevice] = useState((window ).__previewDevice || "desktop");
@@ -527,8 +529,54 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   const[shareIcon, setShareIcon] = useState(<Share2 size={20}/>);
   const [modalVisible, setModalVisible] = useState(false);
   const [link, setLink] = useState('');
+  const [applyLinkModalVisible, setApplyLinkModalVisible] = useState(false);
+  const [ctaLink, setCtaLink] = useState("");
+  const [initialCtaLink, setInitialCtaLink] = useState("");
+  const [isPublishing, setIsPublishing] = useState(false);
 
-const handleShareClick = () => {
+  useEffect(() => {
+    if (landingPageData) {
+      setCtaLink(landingPageData.cta2Link || '#apply');
+      setInitialCtaLink(landingPageData.cta2Link || '#apply');
+    }
+  }, [landingPageData]);
+
+  const handleSaveCtaLink = () => {
+    if (!ctaLink.trim()) {
+      message.warning("Please enter a valid URL");
+      return;
+    }
+
+    CrudService.update("LandingPageData", lpId, {
+      cta2Link: ctaLink
+    }).then(() => {
+      setLandingPageData((d) => ({
+        ...d,
+        cta2Link: ctaLink
+      }));
+      setInitialCtaLink(ctaLink);
+      message.success("Apply button URL updated successfully");
+      setApplyLinkModalVisible(false);
+    }).catch(err => {
+      message.error("Failed to update Apply button URL: " + (err.message || "Unknown error"));
+    });
+  };
+
+  const handleApplyClick = () => {
+    if (isEdit) {
+      setCtaLink(landingPageData?.cta2Link || '');
+      setApplyLinkModalVisible(true);
+    } else {
+      // Ensure URL has protocol, add https:// if missing
+      let url = landingPageData?.cta2Link || '';
+      if (url && !url.match(/^https?:\/\//i)) {
+        url = 'https://' + url;
+      }
+      window.open(url, '_blank');
+    }
+  };
+
+  const handleShareClick = () => {
     const generatedLink = `${process.env.NEXT_PUBLIC_LIVE_URL}/lp/${lpId}`;
     setLink(generatedLink); // Save the generated link
     setModalVisible(true); // Show the modal
@@ -719,8 +767,12 @@ const handlemediaLink = (platform) => {
                 borderColor: getColor("primary", 800),
                 height: "45px",
                 fontSize: "16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px"
               }}
-              className="px-6 py-4 text-sm rounded-lg border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
+              className="px-6 py-4 text-sm rounded-full border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
               onClick={handleShareClick}
             >
               Share {shareIcon}
@@ -787,27 +839,76 @@ const handlemediaLink = (platform) => {
             </AntModal>
 
             <button
-              className="px-6 py-2 text-sm font-medium text-black rounded-lg transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 smx:text-xs"
+              className="px-6 py-2 text-sm font-medium rounded-full transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 smx:text-xs"
               style={{
                 backgroundColor: getColor("primary", 500),
                 color: textColor,
                 fontSize: "16px",
+                height: "45px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px"
               }}
-              // onClick={onClickApply}
-              onClick={()=>{
-                // Ensure URL has protocol, add https:// if missing
-                let url = landingPageData?.cta2Link || '';
-                if (url && !url.match(/^https?:\/\//i)) {
-                  url = 'https://' + url;
-                }
-                window.open(url, '_blank');
-              }}
+              onClick={handleApplyClick}
             >
               Apply Now
             </button>
           </div>
         </div>
       </header>
+
+      {/* Apply Link Modal */}
+      <AntModal
+        title="Set Apply Button URL"
+        open={applyLinkModalVisible}
+        onCancel={() => setApplyLinkModalVisible(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <div className="py-4">
+          <div className="mb-6">
+            <p className="text-gray-600 mb-4">
+              Before publishing your landing page, please set the URL where candidates will be directed when they click the Apply button.
+            </p>
+          </div>
+          
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Apply Button URL *
+            </label>
+            <Input
+              value={ctaLink}
+              onChange={(e) => setCtaLink(e.target.value)}
+              placeholder="https://example.com/apply"
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              This should be your application form or job posting URL
+            </p>
+          </div>
+          
+          <div className="flex justify-end gap-3">
+            <AntButton
+              onClick={() => setApplyLinkModalVisible(false)}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </AntButton>
+            <AntButton
+              onClick={handleSaveCtaLink}
+              disabled={!ctaLink.trim()}
+              className={`px-4 py-2 rounded-md ${
+                ctaLink.trim()
+                  ? 'bg-[#5207CD] text-white hover:bg-[#0C7CE6]'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              Save URL
+            </AntButton>
+          </div>
+        </div>
+      </AntModal>
 
       <div
         className="w-full h-16 mx-auto transition-all duration-100 z-[88888] border-t border-gray-200"
@@ -919,7 +1020,7 @@ const handlemediaLink = (platform) => {
   );
 };
 
-const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen,lpId }) => {
+const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData }) => {
   if (landingPageData?.templateId?.toLowerCase() === "3")
     return (
       <Template3
@@ -942,6 +1043,9 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
         showBackToEditButton={showBackToEditButton}
         fullscreen={fullscreen}
         setFullscreen={setFullscreen}
+        lpId={lpId}
+        isEdit={isEdit}
+        setLandingPageData={setLandingPageData}
       />
     );
   return (
@@ -951,6 +1055,9 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
       showBackToEditButton={showBackToEditButton}
       fullscreen={fullscreen}
       setFullscreen={setFullscreen}
+      lpId={lpId}
+      isEdit={isEdit}
+      setLandingPageData={setLandingPageData}
     />
   );
 };
