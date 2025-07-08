@@ -210,7 +210,7 @@ const Template2 = ({ landingPageData, onClickApply }) => {
                   {...({} )}
                   color="light_blue_A700"
                   size="lg"
-                  className="w-full rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
+                  className="w-full  rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
                   onClick={() => {}} // Open form editor when "Apply now" is clicked
                 >
                   {landingPageData?.ctaApply}
@@ -224,244 +224,7 @@ const Template2 = ({ landingPageData, onClickApply }) => {
   );
 };
 
-const Template1Old = ({ landingPageData, onClickApply }) => {
-  // Extract colors for dependency tracking
-  const primaryColor = landingPageData?.primaryColor || "#2e9eac";
-  const secondaryColor = landingPageData?.secondaryColor || "#e1ce11";
-  const tertiaryColor = landingPageData?.tertiaryColor || "#44b566";
-  const x = {
-    primaryColor: "#2e9eac",
-    secondaryColor: "#e1ce11",
-    tertiaryColor: "#44b566",
-  };
 
-  
-
-  // Use our template palette hook with the default colors
-  const { getColor } = useTemplatePalette(
-    {
-      primaryColor: "#2e9eac",
-      secondaryColor: "#e1ce11",
-      tertiaryColor: "#44b566",
-      heroBackgroundColor: "white",
-    },
-    // Pass landingPageData colors as customColors to ensure updates
-    {
-      primaryColor,
-      secondaryColor,
-      tertiaryColor,
-      heroBackgroundColor: "white",
-    }
-  );
-
-  // Background color for the hero section (dark teal)
-  const bgColor = "#1a3e4c";
-  const navBgColor = "#1a4a5c";
-  const logo = landingPageData?.companyLogo || "/images3/Button.png";
-  const [isFixed, setIsFixed] = useState(false);
-  const [isTemplate3NavFixed, setIsTemplate3NavFixed] = useState(false);
-  const [currentHash, setCurrentHash] = useState(
-    window.location.hash.slice(1) || "job-specifications"
-  );
-
-  const menuItemsArray = landingPageData?.menuItems?.map((item) => item.key);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsFixed(window.scrollY > 64);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("navFixed-template3", () => {
-      setIsTemplate3NavFixed(true);
-    });
-    window.addEventListener("navUnfixed-template3", () => {
-      setIsTemplate3NavFixed(false);
-    });
-  }, []);
-
-  // Listen for hash changes
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1);
-      setCurrentHash(hash || "job-specifications");
-    };
-
-    // Set initial hash
-    handleHashChange();
-
-    // Add event listener for hash changes
-    window.addEventListener("hashchange", handleHashChange);
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
-
-
-  const handleNavigate = (id) => {
-    // Dispatch a custom event that the iframe can listen to
-    const event = new CustomEvent('navigateToSection', { detail: { id } });
-    window.dispatchEvent(event);
-    // Update the URL hash
-    window.location.hash = `#${id}`;
-  };
-  const textColor = calculateTextColor(getColor("primary", 900));
-  const navigationTextColor = calculateTextColor(getColor("primary", 800));
-  return (
-    <>
-      <header
-        style={{
-          backgroundColor: !isTemplate3NavFixed
-            ? "transparent"
-            : getColor("primary", 800),
-          zIndex: 999,
-          transition: "background-color 0.6s ease",
-        }}
-        className={`flex ${
-          isFixed ? "fixed top-0" : "absolute"
-        }  items-center px-4 w-full h-16 sm:px-6 lg:px-8`}
-      >
-        <div className="w-full max-w-[1500px] mx-auto flex items-center ">
-          <div className="flex items-center">
-            <img src={logo} alt="Logo" className="mr-10 w-auto h-8" />
-          </div>
-          <div className="flex gap-3 justify-end w-full ">
-            <button
-              style={{
-                color: textColor,
-                borderColor: textColor,
-              }}
-              className="px-6 py-2 text-sm text-white rounded-full border transition hover:opacity-50"
-            >
-              <Share2 size={20} />
-            </button>
-            <button
-              className="px-6 py-2 text-sm font-medium text-black rounded-full transition hover:bg-yellow-300"
-              style={{
-                backgroundColor: getColor("primary", 800),
-                color: textColor,
-                fontSize: "20px",
-              }}
-            >
-              Apply Now
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {isTemplate3NavFixed && (
-        <div
-          className="fixed top-16 left-0 right-0 h-16 mx-auto transition-all duration-100 z-[88888]"
-          style={{
-            backgroundColor: getColor("primary", 800),
-            zIndex: 100,
-            width: "100%",
-          }}
-        >
-          <div
-            className="flex justify-center items-center mx-auto"
-            style={{
-              width: "100%",
-            }}
-          >
-            <div className="flex overflow-x-auto items-center scrollbar-hide">
-              {[
-                {
-                  id: "job-specifications",
-                  label: "Summary",
-                  enabled: menuItemsArray?.includes("Job Specifications"),
-                },
-                {
-                  id: "recruiter-contact",
-                  label: "Contacts",
-                  enabled: menuItemsArray?.includes("Recruiter Contact"),
-                },
-                {
-                  id: "job-description",
-                  label: "Description",
-                  enabled: menuItemsArray?.includes("Job Description"),
-                },
-                {
-                  id: "agenda",
-                  label: "Agenda",
-                  enabled: menuItemsArray?.includes("Agenda"),
-                },
-                {
-                  id: "about-the-company",
-                  label: "About Us",
-                  enabled: menuItemsArray?.includes("About The Company"),
-                },
-                {
-                  id: "company-facts",
-                  label: "Company Facts",
-                  enabled: menuItemsArray?.includes("Company Facts"),
-                },
-                {
-                  id: "leader-introduction",
-                  label: "Leader Intro",
-                  enabled: menuItemsArray?.includes("Leader Introduction"),
-                },
-                {
-                  id: "testimonials",
-                  label: "Testimonials",
-                  enabled: menuItemsArray?.includes("Employee Testimonials"),
-                },
-                {
-                  id: "application-process",
-                  label: "Application Process",
-                  enabled: menuItemsArray?.includes("Candidate Process"),
-                },
-                {
-                  id: "growth-path",
-                  label: "Growth Path",
-                  enabled: menuItemsArray?.includes("Growth Path"),
-                },
-              ]
-                .filter((tab) => tab.enabled)
-                ?.map((tab, index) => (
-                  <>
-                    <button
-                      key={index}
-                      onClick={() => handleNavigate(tab.id)}
-                      className="px-4 py-3 md:px-5 md:py-4 text-xs md:text-sm whitespace-nowrap transition-colors"
-                      style={{
-                        color:
-                          currentHash === tab.id
-                            ? getColor("secondary", 500)
-                            : navigationTextColor,
-                        opacity: currentHash === tab.id ? 1 : 0.6,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = getColor(
-                          "secondary",
-                          500
-                        );
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color =
-                          currentHash === tab.id
-                            ? getColor("secondary", 500)
-                            : navigationTextColor;
-                      }}
-                    >
-                      {tab.label}
-                    </button>
-                  </>
-                ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-};
 const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData }) => {
   console.log("lpId",lpId);
   // Get device from global variable set by PreviewContainer
@@ -741,12 +504,12 @@ const handlemediaLink = (platform) => {
       className="px-4 z-50"
     >
       <ApplyCustomFont landingPageData={landingPageData} />
-      <header className={`flex items-center px-4 w-full h-16 sm:px-6 lg:px-8`}>
+      <header className={`flex items-center px-4 w-full sm:h-16 py-2 sm:py-0 sm:px-6 lg:px-8`}>
         <div className="w-full mx-auto flex items-center">
           <div className="flex items-center">
             <img src={logo} alt="Logo" className="mr-10 w-auto h-8" />
           </div>
-          <div className="flex gap-3 justify-end w-full">
+          <div className="flex gap-3 justify-end w-full flex-wrap">
             {isEditPage && lpId && !isScrolled && showBackToEditButton && fullscreen && device === "desktop" && (
               <button
                 onClick={() => {
@@ -766,18 +529,38 @@ const handlemediaLink = (platform) => {
                 color: getColor("primary", 800),
                 borderColor: getColor("primary", 800),
                 height: "45px",
-                fontSize: "16px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "8px"
               }}
-              className="px-6 py-4 text-sm rounded-full border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
+              className="px-6 py-4 text-xs md:text-base whitespace-nowrap  rounded-full border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
               onClick={handleShareClick}
             >
               Share {shareIcon}
             </button>
-            <AntModal
+
+
+            <button
+              className="px-6 py-2 text-xs md:text-base whitespace-nowrap  font-medium rounded-full transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 "
+              style={{
+                backgroundColor: getColor("primary", 500),
+                color: textColor,
+                
+                height: "45px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px"
+              }}
+              onClick={handleApplyClick}
+            >
+              Apply Now
+            </button>
+          </div>
+        </div>
+      </header>
+      <AntModal
               title={null}
               visible={modalVisible}
               onCancel={handleModalClose}
@@ -837,27 +620,6 @@ const handlemediaLink = (platform) => {
                 </div>
               </div>
             </AntModal>
-
-            <button
-              className="px-6 py-2 text-sm font-medium rounded-full transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 smx:text-xs"
-              style={{
-                backgroundColor: getColor("primary", 500),
-                color: textColor,
-                fontSize: "16px",
-                height: "45px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px"
-              }}
-              onClick={handleApplyClick}
-            >
-              Apply Now
-            </button>
-          </div>
-        </div>
-      </header>
-
       {/* Apply Link Modal */}
       <AntModal
         title="Set Apply Button URL"
