@@ -432,12 +432,12 @@ export default function Header({
                   shape="round"
                   className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${i === 0
                       ? landingPageData?.templateId === `${i + 1}`
-                        ? "bg-[#5207CD] text-[#FFFFFF]"
+                        ? "bg-blue-500 text-[#FFFFFF]"
                         : "bg-[#FFFFFF] text-blue_gray-800_01 border rounded-full border-solid border-blue_gray-100"
                       : "bg-gray-200  cursor-not-allowed"
                   }`}
                 >
-                  {i === 0 ? "Choose Template" : "Coming Soonnn"}
+                  {i === 0 ? "Choose Template" : "Coming Soon"}
                 </Button>
               </div>
             </div>
