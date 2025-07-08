@@ -59,7 +59,7 @@ const totalSummary = [
           <path
             id="Icon"
             d="M10.6663 4.86686C10.6663 4.24688 10.6663 3.93689 10.5982 3.68256C10.4133 2.99237 9.87416 2.45328 9.18398 2.26834C8.92965 2.2002 8.61966 2.2002 7.99967 2.2002C7.37969 2.2002 7.0697 2.2002 6.81537 2.26834C6.12519 2.45328 5.58609 2.99237 5.40116 3.68256C5.33301 3.93689 5.33301 4.24688 5.33301 4.86686M3.46634 14.2002H12.533C13.2797 14.2002 13.6531 14.2002 13.9383 14.0549C14.1892 13.927 14.3932 13.7231 14.521 13.4722C14.6663 13.187 14.6663 12.8136 14.6663 12.0669V7.0002C14.6663 6.25346 14.6663 5.88009 14.521 5.59487C14.3932 5.34399 14.1892 5.14002 13.9383 5.01219C13.6531 4.86686 13.2797 4.86686 12.533 4.86686H3.46634C2.7196 4.86686 2.34624 4.86686 2.06102 5.01219C1.81014 5.14002 1.60616 5.34399 1.47833 5.59487C1.33301 5.88009 1.33301 6.25346 1.33301 7.0002V12.0669C1.33301 12.8136 1.33301 13.187 1.47833 13.4722C1.60616 13.7231 1.81014 13.927 2.06102 14.0549C2.34624 14.2002 2.7196 14.2002 3.46634 14.2002Z"
-            stroke="#0E87FE"
+            stroke="#5207CD"
             strokeWidth="1.33333"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -196,6 +196,12 @@ const Overview = () => {
   const [selectedVacancy, setSelectedVacancy] = useState(null);
   const [loadingVacancy, setLoadingVacancy] = useState(true);
   const [newVacancyTitle, setNewVacancyTitle] = useState("");
+  const [analyticsData, setAnalyticsData] = useState({
+    totalVisits: 0,
+    totalTimeSpent: 0,
+    avgTimeSpent: '0min',
+    newApplicants: 0
+  });
   const { defaultAlgorithm, darkAlgorithm } = theme;
   const router = useRouter();;
 
@@ -217,20 +223,58 @@ const Overview = () => {
             {}
         }
       );
-      setLandingPages(
-        result.data.items.map((i) => ({
+      const processedPages = result.data.items.map((i) => {
+        const visits = i.visits || 0;
+        const avgTimeSpent = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
+        const daysLive = Math.ceil((new Date() - new Date(i.createdAt)) / (1000 * 60 * 60 * 24));
+        
+        return {
           ...i,
           position: "Position",
           heading: i.vacancyTitle,
           deadlinetwo: "Deadline:",
           mar42024: moment(i.createdAt).format("MMM Do YYYY"),
-          viewstwo: "Views:",
-          zipcode: "6728",
-          text: "293",
-          applicants: "applicants",
+          // Real analytics data for individual cards
+          visits: visits,
+          avgTimeSpent: avgTimeSpent,
+          applicants: 0, // For now, showing as 0
+          daysLive: daysLive,
           key: i._id,
-        }))
-      );
+        };
+      });
+
+      setLandingPages(processedPages);
+
+      // Calculate analytics data
+      const totalVisits = result.data.items.reduce((sum, item) => sum + (item.visits || 0), 0);
+      const totalTimeSpent = result.data.items.reduce((sum, item) => sum + (item.totalTimeSpent || 0), 0);
+      const avgTimeInSeconds = totalVisits > 0 ? Math.round(totalTimeSpent / totalVisits) : 0;
+      
+      // Debug logging
+      console.log('Analytics Debug:', {
+        totalItems: result.data.items.length,
+        totalVisits,
+        totalTimeSpent,
+        avgTimeInSeconds,
+        sampleItem: result.data.items[0] ? {
+          visits: result.data.items[0].visits,
+          totalTimeSpent: result.data.items[0].totalTimeSpent,
+          vacancyTitle: result.data.items[0].vacancyTitle
+        } : 'No items'
+      });
+      
+      // Count new applicants (you can adjust this logic based on your needs)
+      const newApplicants = result.data.items.reduce((sum, item) => {
+        // Assuming you have an applicants field or similar
+        return sum + (item.applicantsCount || 0);
+      }, 0);
+
+      setAnalyticsData({
+        totalVisits,
+        totalTimeSpent,
+        avgTimeSpent: `${avgTimeInSeconds}s`,
+        newApplicants
+      });
 
     } catch (error) {
       console.log("Error getting vacancies", error);
@@ -319,7 +363,7 @@ const Overview = () => {
               href={step.href}
               key={i}
               className={`${step.active
-                ? "bg-[#0E87FE] text-white cursor-pointer"
+                ? "bg-[#5207CD] text-white cursor-pointer"
                 : "bg-white dark:bg-black cursor-default"
                 } px-[16px] py-[10px] rounded-lg w-[auto]`}
             >
@@ -331,7 +375,7 @@ const Overview = () => {
                   }}
                 >
                   <DotIcon />
-                  <div className="text-[#0E87FE] font-semibold">
+                  <div className="text-[#5207CD] font-semibold">
                     Step {i + 1}
                   </div>
                 </div>
@@ -347,43 +391,76 @@ const Overview = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2 w-full">
-          {totalSummary.map((step, i) => (
-            <div
-              key={i}
-              className={`bg-white dark:bg-black cursor-default px-[12px] py-[20px] rounded-lg w-auto shadow-lg `}
-            >
+          {totalSummary.map((step, i) => {
+            // Determine if this card should show "coming soon"
+            const isComingSoon = step.name === "Awareness" || step.name === "Hiring pipeline";
+            
+            // Get dynamic values based on card type
+            let dynamicValue = step.metrics[0].value;
+            if (!isComingSoon) {
+              switch (step.name) {
+                case "Consideration":
+                  dynamicValue = analyticsData.totalVisits;
+                  break;
+                case "Engagement":
+                  dynamicValue = analyticsData.avgTimeSpent;
+                  break;
+                case "Hiring pipeline":
+                  dynamicValue = analyticsData.newApplicants;
+                  break;
+                default:
+                  break;
+              }
+            }
 
-              <div className="flex flex-col gap-[12px] ">
-                <div
-                  style={{
-                    background: step.iconBackground,
-                    display: "inline-block",
-                    padding: 8,
-                    borderRadius: "100%",
-                    width: "fit-content",
-                  }}
-                >
-                  {step.icon && step.icon}
-                </div>
-                <div className="flex flex-col gap-[4px]">
-                  <div className="text-sm font-normal text-[#475467] dark:text-gray-300">
-                    {step.name}
+            return (
+              <div
+                key={i}
+                className={`bg-white dark:bg-black cursor-default px-[12px] py-[20px] rounded-lg w-auto shadow-lg ${
+                  isComingSoon ? "opacity-60" : ""
+                }`}
+              >
+                <div className="flex flex-col gap-[12px] ">
+                  <div
+                    style={{
+                      background: step.iconBackground,
+                      display: "inline-block",
+                      padding: 8,
+                      borderRadius: "100%",
+                      width: "fit-content",
+                    }}
+                  >
+                    {step.icon && step.icon}
                   </div>
-                  {step.metrics.map((metric, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="text-sm font-bold ">{metric.title}</div>
-                      <div
-                        className="text-sm font-semibold"
-                        style={{ color: step.color }}
-                      >
-                        {metric.value}
-                      </div>
+                  <div className="flex flex-col gap-[4px]">
+                    <div className="text-sm font-normal text-[#475467] dark:text-gray-300">
+                      {step.name}
                     </div>
-                  ))}
+                    {isComingSoon ? (
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-bold">Coming Soon</div>
+                        <div className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                          Soon
+                        </div>
+                      </div>
+                    ) : (
+                      step.metrics.map((metric, metricIndex) => (
+                        <div key={metricIndex} className="flex items-center justify-between">
+                          <div className="text-sm font-bold ">{metric.title}</div>
+                          <div
+                            className="text-sm font-semibold"
+                            style={{ color: step.color }}
+                          >
+                            {dynamicValue}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -588,7 +665,7 @@ const Overview = () => {
               </span>
             </div>
           )}
-          <div className={`grid justify-center grid-cols-1 gap-4 lg:grid-cols-2 sm:grid-cols-1 lgr:grid-cols-3  ${showAllActive ? "h-[50vh]" : "h-fit"}  p-2 overflow-x-hidden`}>
+          <div className={`grid justify-center grid-cols-1 gap-3 lg:grid-cols-2 sm:grid-cols-2 mdr:grid-cols-3 xl:grid-cols-4  ${showAllActive ? "h-[50vh]" : "h-fit"}  p-2 overflow-x-hidden`}>
             {(showAllActive ? activeVacancies : activeVacancies.slice(0, 4)).map((d, index) => (
               <VacanciesCard
                 {...d}
@@ -630,7 +707,7 @@ const Overview = () => {
               </span>
             </div>
           )}
-          <div className={`grid justify-center grid-cols-1 gap-4 lg:grid-cols-2 sm:grid-cols-1 lgr:grid-cols-3 p-2  overflow-x-hidden  ${showAllUnpublished ? "h-[50vh]" : "h-fit"} `}>
+          <div className={`grid justify-center grid-cols-1 gap-3 lg:grid-cols-2 sm:grid-cols-1 lgr:grid-cols-3 xl:grid-cols-4 p-2  overflow-x-hidden  ${showAllUnpublished ? "h-[50vh]" : "h-fit"} `}>
             {(showAllUnpublished ? unpublishedVacancies : unpublishedVacancies.slice(0, 4)).map((d, index) => (
               <VacanciesCard
                 {...d}

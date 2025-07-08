@@ -10,7 +10,7 @@ function StageTabs({
 }) {
   console.log("candidate", candidate?.stageId);
   console.log({ index, stageData, classObj });
-  const colors = ["#7F56D9", "#0E87FE", "#F75656", "#EF6820", "#0A8F63"];
+  const colors = ["#7F56D9", "#5207CD", "#F75656", "#EF6820", "#0A8F63"];
   console.log("currentStageIndex", currentStageIndex);
   console.log({ index, currentStageIndex });
 

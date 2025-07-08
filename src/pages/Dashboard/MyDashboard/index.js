@@ -29,7 +29,7 @@ const calendarEvents = [
           fillRule="evenodd"
           clipRule="evenodd"
           d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#0E87FE"
+          fill="#5207CD"
         />
       </svg>
     ),
@@ -75,7 +75,7 @@ const calendarEvents = [
           fillRule="evenodd"
           clipRule="evenodd"
           d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#0E87FE"
+          fill="#5207CD"
         />
       </svg>
     ),
@@ -98,7 +98,7 @@ const calendarEvents = [
           fillRule="evenodd"
           clipRule="evenodd"
           d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#0E87FE"
+          fill="#5207CD"
         />
       </svg>
     ),
@@ -121,7 +121,7 @@ const calendarEvents = [
           fillRule="evenodd"
           clipRule="evenodd"
           d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#0E87FE"
+          fill="#5207CD"
         />
       </svg>
     ),
@@ -144,7 +144,7 @@ const calendarEvents = [
           fillRule="evenodd"
           clipRule="evenodd"
           d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#0E87FE"
+          fill="#5207CD"
         />
       </svg>
     ),
@@ -167,7 +167,7 @@ const calendarEvents = [
           fillRule="evenodd"
           clipRule="evenodd"
           d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#0E87FE"
+          fill="#5207CD"
         />
       </svg>
     ),
@@ -181,11 +181,11 @@ const MyDashboard = () => {
       label: "Overview",
       children: <Overview />,
     },
-    {
+ /*    {
       key: "2",
       label: "Reports",
       children: <Reports />,
-    },
+    }, */
   ];
   const [activeKey, setActiveKey] = useState("1");
   const [showInviteModal, setShowInviteModal] = useState(true);
@@ -232,7 +232,7 @@ const MyDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col 2xl:flex-row gap-[10px]">
+    <div className="flex flex-col mdr:flex-row gap-[10px]">
       <div className="ml-[10px] w-full rounded-xl bg-white p-[24px] pr-2  2xl:w-2/3 flex flex-col gap-[24px] pt-0">
         <div className="flex flex-col md:flex-row items-center gap-4 w-full mt-4">
           <Heading size="11xl" as="h1" className="!text-gray-900">
@@ -252,7 +252,7 @@ const MyDashboard = () => {
                       className="h-[20px] w-[20px]"
                     />
                   }
-                  className="min-w-[225px] gap-1.5 font-semibold bg-[#0E87FE] text-white px-[4px]"
+                  className="min-w-[225px] gap-1.5 font-semibold bg-[#5207CD] text-white px-[4px]"
                 >
                   Create a New Vacancy
                 </Button>
@@ -261,10 +261,11 @@ const MyDashboard = () => {
           </div>
         </div>
 
-        <Tabs activeKey={activeKey} onChange={handleTabChange} items={items} />
+        {/* <Tabs activeKey={activeKey} onChange={handleTabChange} items={items} /> */}
+        <Overview />
       </div>
 
-      <div className=" w-full 2xl:w-1/3 flex flex-col gap-[32px]  bg-white dark:bg-black px-[10px] py-[24px] rounded-xl overflow-auto ">
+      <div className=" w-[50%] mdx:w-full flex flex-col gap-[32px]  bg-white dark:bg-black px-[10px] py-[24px] rounded-xl overflow-auto ">
         <CalendarRangePicker />
         {calendarEvents.map((calEvent, i) => (
           <div

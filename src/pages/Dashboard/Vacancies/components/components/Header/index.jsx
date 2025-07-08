@@ -289,7 +289,7 @@ export default function Header({
                     action: (!landingPageData?.published || hasUnpublishedChanges) && !isPublishing ? handlePublish : handlePublish,
                     bgColor: landingPageData?.published && !hasUnpublishedChanges ?
                       "bg-[#ECFDF3]" :
-                      "bg-[#0E87FE]",
+                      "bg-[#5207CD]",
                     textColor: landingPageData?.published && !hasUnpublishedChanges ?
                       "!text-[#039855]" :
                       "!text-[#FFFFFF]",
@@ -302,7 +302,7 @@ export default function Header({
                       : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="white" />
                         <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
-                        <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="#0E87FE" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="#5207CD" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
                       </svg>
                     ),
                     disabled: isPublishing,
@@ -432,7 +432,7 @@ export default function Header({
                   shape="round"
                   className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${i === 0
                       ? landingPageData?.templateId === `${i + 1}`
-                        ? "bg-[#0E87FE] text-[#FFFFFF]"
+                        ? "bg-[#5207CD] text-[#FFFFFF]"
                         : "bg-[#FFFFFF] text-blue_gray-800_01 border rounded-full border-solid border-blue_gray-100"
                       : "bg-gray-200  cursor-not-allowed"
                   }`}
@@ -466,7 +466,7 @@ export default function Header({
               disabled={ctaLink === initialCtaLink || !ctaLink.trim()}
               className={`${
                 ctaLink !== initialCtaLink && ctaLink.trim() 
-                  ? 'bg-[#0E87FE] text-white' 
+                  ? 'bg-[#5207CD] text-white' 
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
@@ -517,7 +517,7 @@ export default function Header({
               onClick={handleSaveAndPublish}
               disabled={!ctaLink.trim() || isPublishing}
               className={`px-4 py-2 rounded-md ${ctaLink.trim() && !isPublishing
-                  ? 'bg-[#0E87FE] text-white hover:bg-[#0C7CE6]'
+                  ? 'bg-[#5207CD] text-white hover:bg-[#0C7CE6]'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >

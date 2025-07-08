@@ -366,7 +366,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
           </div>
           <div className="flex items-start self-stretch mdx:flex-col">
             <div className="flex flex-1 justify-center items-start px-14 mb-7 mdx:flex-col mdx:self-stretch mdx:px-5">
-              <div className="h-[68px] w-[68px] self-end rounded-[34px] bg-[#0E87FE33] mdx:self-auto" />
+              <div className="h-[68px] w-[68px] self-end rounded-[34px] bg-[#5207CD33] mdx:self-auto" />
               <div className="mb-11 ml-[42px] mt-2.5 flex w-[86%] gap-16 mdx:ml-0 mdx:w-full mdx:flex-col">
                 {landingPageData?.recruiters?.map?.((recruiter, index) => (
                   <UserProfile
@@ -385,7 +385,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                   />
                 ))}
               </div>
-              <div className="ml-7 h-[22px] w-[22px] rounded-[10px] bg-[#0E87FE33] mdx:ml-0" />
+              <div className="ml-7 h-[22px] w-[22px] rounded-[10px] bg-[#5207CD33] mdx:ml-0" />
             </div>
             <Img
               src="/images3/img_ellipse_6.png"

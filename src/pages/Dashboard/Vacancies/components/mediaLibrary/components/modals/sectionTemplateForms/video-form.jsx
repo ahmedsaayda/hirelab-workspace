@@ -155,7 +155,7 @@ const VideoSectionForm = ({
                   onClick={togglePlay}
                   className="p-4 bg-white bg-opacity-50 rounded-full transition-opacity hover:bg-opacity-75"
                 >
-                  <PlayCircleOutlined className="text-4xl text-[#0E87FE]" />
+                  <PlayCircleOutlined className="text-4xl text-[#5207CD]" />
                 </button>
               </div>
             )}
@@ -167,7 +167,7 @@ const VideoSectionForm = ({
                 onClick={handleProgressBarClick}
               >
                 <div
-                  className="absolute inset-y-0 left-0 bg-[#0E87FE] rounded-full"
+                  className="absolute inset-y-0 left-0 bg-[#5207CD] rounded-full"
                   style={{ width: `${(currentTime / duration) * 100}%` }}
                 ></div>
               </div>
@@ -202,7 +202,7 @@ const VideoSectionForm = ({
       <Button
         onClick={handleSave}
         loading={isSaving}
-        className="mt-6 rounded-lg bg-[#0E87FE] text-white hover:bg-[#0B6ECD] transition-colors"
+        className="mt-6 rounded-lg bg-[#5207CD] text-white hover:bg-[#0B6ECD] transition-colors"
       >
         {initialData ? "Update Video" : "Create Video"}
       </Button>

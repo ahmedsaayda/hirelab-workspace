@@ -109,7 +109,7 @@ export default function UserProfileCard({
           <Heading
             size="headings"
             as="h6"
-            className="text-[16px] font-semibold text-[#0E87FE]"
+            className="text-[16px] font-semibold text-[#5207CD]"
           >
             {seeMoreInfoText}
           </Heading>

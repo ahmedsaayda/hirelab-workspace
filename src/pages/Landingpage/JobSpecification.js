@@ -210,7 +210,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
           </div>
           <div className="px-8 sm:px-5">
             <div className="flex flex-col flex-1 items-end m-auto">
-              <div className="mr-72 h-[54px] w-[254px] rounded-[126px] bg-[#0E87FE0f] blur-[200.00px] backdrop-opacity-[0.5] mdx:mr-0" />
+              <div className="mr-72 h-[54px] w-[254px] rounded-[126px] bg-[#5207CD0f] blur-[200.00px] backdrop-opacity-[0.5] mdx:mr-0" />
               <Suspense fallback={<div>Loading feed...</div>}>
                 <div
                   // className="flex gap-8 self-stretch h-full mdx:flex-col"

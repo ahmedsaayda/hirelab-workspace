@@ -8,7 +8,7 @@ import moment from "moment";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import { DarkModeSwitch } from "react-toggle-dark-mode";
+import Intercom from '@intercom/messenger-js-sdk';
 import {
   BarIcon,
   BriefcaserIcon,
@@ -113,6 +113,20 @@ const Layout = ({children}) => {
     },
     [theme]
   );
+
+  useEffect(() => {
+    console.log("user", user);
+
+    if(user?._id)
+    Intercom({
+      app_id: 'h6drq6b2',
+      user_id: user._id, // IMPORTANT: Replace "user.id" with the variable you use to capture the user's ID
+      name: `${user.firstName} ${user.lastName}`, // IMPORTANT: Replace "user.name" with the variable you use to capture the user's name
+      email: user.email, // IMPORTANT: Replace "user.email" with the variable you use to capture the user's email
+      created_at: user.createdAt, // IMPORTANT: Replace "user.createdAt" with the variable you use to capture the user's sign-up date in a Unix timestamp (in seconds) e.g. 1704067200
+    });
+    
+  }, [user]);
 
   const trialDate = useMemo(() => {
     if (!partner) return null;
@@ -297,21 +311,7 @@ const Layout = ({children}) => {
         // },
       ],
     },
-    {
-      name: "General",
-      subitems: [
-        {
-          name: "Settings",
-          href: "/dashboard/settings",
-          icon: SettingsrIcon,
-        },
-        // {
-        //   name: "Onboarding Demo",
-        //   href: "/onboarding",
-        //   icon: SettingsrIcon,
-        // },
-      ],
-    },
+    
 
     // {
     //   name: "My Users",
@@ -386,12 +386,14 @@ const Layout = ({children}) => {
       name: "Integrations",
       href: "/dashboard/settings",
       logo: Blocks,
+      grayout: true,
       // hide: user?.role !== "recruiter",
     },
     {
       name: "Team Management",
       href: "/dashboard/",
       logo: Users,
+      grayout: true,
       // hide: user?.role !== "recruiter",
     },
     {

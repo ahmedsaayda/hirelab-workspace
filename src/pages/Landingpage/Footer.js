@@ -128,7 +128,7 @@ export const Template2 = React.memo(({
                   href={landingPageData?.ctaFooterLink}
                   size="2xl"
                   shape="round"
-                  className="min-w-[252px] rounded-lg border border-solid border-[#0E87FE] px-[33px] font-semibold smx:px-5"
+                  className="min-w-[252px] rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5"
                   onClick={() => handleItemClick("ctaFooterTitle")}
                   ref={ctaFooterTitleRef}
                 >
@@ -283,7 +283,7 @@ const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings })
                   href={landingPageData?.ctaFooterLink}
                   size="2xl"
                   shape="round"
-                  className="min-w-[252px] rounded-lg border border-solid border-[#0E87FE] px-[33px] font-semibold smx:px-5"
+                  className="min-w-[252px] rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5"
                 >
                   {landingPageData?.ctaFooterTitle}
                 </Button>

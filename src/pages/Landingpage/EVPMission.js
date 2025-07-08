@@ -122,7 +122,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                     <Heading
                       size="text_lg_semibold"
                       as="h3"
-                      className="text-[18px] font-semibold text-[#0E87FE] p-2"
+                      className="text-[18px] font-semibold text-[#5207CD] p-2"
                     >
                       — {landingPageData?.evpMissionFullname}
                     </Heading>
@@ -138,7 +138,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                   </div>
                 </div>
               </div>
-              <div className="absolute left-0 top-0 m-auto h-[156px] w-[156px] rounded-[78px] bg-gradient-to-b from-[#83c0fd19] to-[#0E87FE19]" />
+              <div className="absolute left-0 top-0 m-auto h-[156px] w-[156px] rounded-[78px] bg-gradient-to-b from-[#83c0fd19] to-[#5207CD19]" />
             </div>
             {landingPageData?.evpMissionAvatar && (
               <Img
@@ -227,7 +227,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                     <Heading
                       size="text_lg_semibold"
                       as="h3"
-                      className="text-[18px] font-semibold text-[#0E87FE] p-2"
+                      className="text-[18px] font-semibold text-[#5207CD] p-2"
                     >
                       — {landingPageData?.evpMissionFullname}
                     </Heading>
@@ -243,7 +243,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                   </div>
                 </div>
               </div>
-              <div className="absolute left-0 top-0 m-auto h-[156px] w-[156px] rounded-[78px] bg-gradient-to-b from-[#83c0fd19] to-[#0E87FE19]" />
+              <div className="absolute left-0 top-0 m-auto h-[156px] w-[156px] rounded-[78px] bg-gradient-to-b from-[#83c0fd19] to-[#5207CD19]" />
             </div>
             {landingPageData?.evpMissionAvatar && (
               <Img

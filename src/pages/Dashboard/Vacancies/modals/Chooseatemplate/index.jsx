@@ -69,8 +69,8 @@ export default function Chooseatemplate({ isOpen, ...props }) {
                         shape="round"
                         className={`${
                           selected === i
-                            ? "bg-[#0E87FE] text-[#FFFFFF]"
-                            : "bg-[#EFF8FF] text-[#0E87FE]"
+                            ? "bg-[#5207CD] text-[#FFFFFF]"
+                            : "bg-[#EFF8FF] text-[#5207CD]"
                         } w-full font-semibold smx:px-5 whitespace-nowrap`}
                       >
                         Choose template

@@ -66,7 +66,7 @@ export default function BenefitsOverview({
             href={buttonApplyNowLink}
             size="2xl"
             shape="round"
-            className="self-stretch rounded-lg border border-solid border-[#0E87FE] px-[33px] font-semibold sm:px-5 mt-auto"
+            className="self-stretch rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold sm:px-5 mt-auto"
           >
             {buttonApplyNow}
           </Button>

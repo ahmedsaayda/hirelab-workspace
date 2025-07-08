@@ -140,7 +140,7 @@ const Billing = () => {
                       </span>
                       {plan.monthlyPrice !== null && plan.annualPrice !== null && (
                         <span className="text-sm font-semibold leading-6 text-gray-600">
-                          / {frequency === 0 ? "month" : "month (annual)"}
+                          / {frequency === 0 ? "month" : "month"}
                         </span>
                       )}
                     </p>
@@ -180,7 +180,18 @@ const Billing = () => {
                         }
                       }}
                     >
-                      {plan.cta}
+                      {(() => {
+                        // Check if this is the free tier
+                        if (plan.monthlyPrice === 0 || plan.monthlyPrice === null || plan.name.toLowerCase().includes('free')) {
+                          return "START FOR FREE";
+                        }
+                        // For paid tiers, show "Start Directly"
+                        else if (plan.cta === "Upgrade" || plan.cta === "Get started") {
+                          return "Start Directly";
+                        }
+                        // Keep original CTA for other cases (Current Plan, Contact Us, etc.)
+                        return plan.cta;
+                      })()}
                     </button>
                   </div>
                 </div>

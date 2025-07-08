@@ -76,8 +76,8 @@ function ChooseTemplate({ onChooseTemplate, selectedTemplate }) {
                       disabled={i !== 0}
                       className={`${
                         selectedTemplate === i + 1
-                          ? "bg-[#0E87FE] text-[#FFFFFF]"
-                          : "bg-[#EFF8FF] text-[#0E87FE]"
+                          ? "bg-[#5207CD] text-[#FFFFFF]"
+                          : "bg-[#EFF8FF] text-[#5207CD]"
                       } w-full font-semibold smx:px-5 whitespace-nowrap`}
                     >
                       {/* Choose template */}

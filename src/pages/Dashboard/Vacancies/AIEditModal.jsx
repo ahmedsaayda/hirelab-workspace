@@ -900,7 +900,7 @@ const AIEditModal = ({
         </div>
         <button
           onClick={handleGenerate}
-          className="py-2 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="py-2 text-white bg-[#5207CD] rounded-md hover:bg-blue-600 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={generating || prompt.trim() === "" || !vacancyData}
         >
           {getButtonText()}
@@ -1095,7 +1095,7 @@ const AIEditModal = ({
           Generate Again
         </button>
         <button
-          className="py-2 text-white bg-[#0E87FE] rounded-md hover:bg-blue-600 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="py-2 text-white bg-[#5207CD] rounded-md hover:bg-blue-600 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleSaveContent}
           disabled={saving}
         >

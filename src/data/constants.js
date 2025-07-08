@@ -1,4 +1,4 @@
-export const brandColor = "#0E87FE";
+export const brandColor = "#5207CD";
 
 export const USER_TESTING_MODE = true;
 

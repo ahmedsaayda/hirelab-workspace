@@ -15,7 +15,7 @@ const variants = {
     green_300: "bg-[#68d585] text-[#ffffff]",
     purple_A100: "bg-[#eea0f5] text-[#222222]",
     light_blue_A700:
-      "bg-[#0E87FE] shadow-[0_1px_2px_0_#1018280c] text-[#ffffff]",
+      "bg-[#5207CD] shadow-[0_1px_2px_0_#1018280c] text-[#ffffff]",
     deep_purple_A400: "bg-[#5925db] text-[#ffffff]",
     black_900_99: "bg-[#00000099] text-[#ffffff]",
     gray_10101: "bg-[#f6f6f6] text-[#344054]",
@@ -29,7 +29,7 @@ const variants = {
   },
   outline: {
     gray_300: "border-[#cfd4dc] border border-solid text-[#ffffff]",
-    light_blue_A700_7f: "border-[#0E87FE7f] border border-solid",
+    light_blue_A700_7f: "border-[#5207CD7f] border border-solid",
   },
 };
 const sizes = {

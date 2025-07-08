@@ -23,10 +23,11 @@ export default function VacanciesCard({
   heading = "Design Lead",
   deadlinetwo = "Date Created:",
   mar42024 = "MAR 4 2024",
-  viewstwo = "Views:",
-  zipcode = "6728",
-  text = "293",
-  applicants = "applicants",
+  // Updated props for new analytics data
+  visits = 0,
+  avgTimeSpent = 0,
+  applicants = 0,
+  daysLive = 0,
   record,
   fetchData,
   user,
@@ -39,239 +40,157 @@ export default function VacanciesCard({
 }) {
   const router = useRouter();;
   const [isSwitchLoading, setIsSwitchLoading] = useState(false);
-  console.log("props==>", props);
   return (
-    console.log("props==>", props),
-    (
-      <div
-        {...props}
-        className={`${props.className} h-full w-full shadow-lg  border-gray-300  bg-white  rounded-[12px] pb-2`}
-      >
-        <div className="flex flex-col h-full">
-          <div className="flex-grow">
-            <div className="p-1">
-              <div className="overflow-hidden  w-full rounded-lg pointer-events-none bg-slate-300">
-                <Template1Preview landingPageData={props} />
-              </div>
-            </div>
-            <div className="flex flex-col items-start gap-2 p-1 px-2 w-full">
-              {/* flex items-start self-stretch justify-between gap-2  */}
-              <div className="w-full">
-                <div className="flex gap-2 justify-between items-center w-full">
-                  {/* <Heading size="3xl" as="h6" className="!text-gray-900  card-title mb-2">
-                  {heading}
-                </Heading> */}
-                  <Text
-                    as="p"
-                    className="!font-normal !text-blue_gray-700_01 py-1"
-                  >
-                    {position}
-                  </Text>
-                  <div className="w-fit">
-                    <Switch
-                      loading={isSwitchLoading}
-                      checked={props?.published}
-                      onChange={async (e) => {
-                        setIsSwitchLoading(true);
-                        try {
-                          await CrudService.update(
-                            "LandingPageData",
-                            props._id,
-                            {
-                              published: e,
-                              publishedAt: e ? new Date() : null,
-                              uppublishedAt: e ? null : new Date(),
-                            }
-                          );
-                          await fetchData();
-                          if (e) message.success("Funnel is live!");
-                        } catch (error) {
-                          message.error("Failed to update status");
-                        } finally {
-                          setIsSwitchLoading(false);
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-                <h1
-                  className="mb-1 text-xs font-medium text-gray-900 sm:text-sm md:text-base lg:text-lg xl:text-lg"
-                  title={heading}
-                >
-                  {heading?.length > 30
-                    ? heading.substring(0, 30) + "..."
-                    : heading}
-                </h1>
-
-                {/* {
-                  props.department && (
-                    <Text
-                      as="p"
-                      className=" !text-light_blue-A700 !text-xs px-2 py-0.5 text-center mb-1 bg-light_red-A700 bg-opacity-15 rounded-full"
-                    >
-                      {props.department}
-                    </Text>
-                  )
-                } */}
-              </div>
-
-              <div className="flex flex-wrap gap-4 items-start">
-                {/* Views and Zipcode */}
-                <div className="flex gap-6 items-center flex-wrap">
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Img
-                      src="/images/img_vertical_container_blue_gray_500_01.svg"
-                      alt="viewsone"
-                      className="h-[16px] w-[16px]"
-                    />
-                    <Text
-                      size="lg"
-                      as="p"
-                      className="!text-blue_gray-500_01"
-                    >
-                      {viewstwo}
-                    </Text>
-
-
-                  <Text
-                    size="lg"
-                    as="p"
-                    className="self-start !font-medium !text-blue_gray-700 flex-shrink-0"
-                  >
-                    {zipcode}
-                  </Text>
-                  </div>
-
-
-                  {props?.location?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 items-center max-w-full">
-                      <MapPin size={16} className="text-gray-600 flex-shrink-0" />
-                      <Text
-                        size="lg"
-                        as="p"
-                        className="self-start !font-medium !text-blue_gray-700 break-words"
-                      >
-                        {Array.isArray(props?.location)
-                          ? props?.location.join(" - ")
-                          : props?.location || ""}
-                      </Text>
-                    </div>
-                  )}
-                </div>
-
-                {/* Department (conditionally wraps) */}
-                {props.department && (
-                  <div className="flex items-center gap-0.5  sm:mt-0">
-                    <Component size={16} className="text-gray-600 flex-shrink-0" />
-                    <Text
-                      as="p"
-                      className="!text-light_blue-A700 !text-xs px-2  text-center bg-light_red-A700 bg-opacity-15 rounded-full"
-                    >
-                      {props.department}
-                    </Text>
-                  </div>
-                )}
-              </div>
-
-
-
-
-              <div className="flex flex-wrap  rounded-[14px] bg-gray-100_01 px-[5px]">
-                <Text
-                  as="p"
-                  className="self-start !text-light_blue-A700 !text-xs px-1 py-0.5 text-center"
-                >
-                  {text}
-                </Text>
-                <Text
-                  as="p"
-                  className="self-end !text-light_blue-A700 !text-xs px-1 py-0.5 text-center"
-                >
-                  {applicants}
-                </Text>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-1 px-2">
-            <Dropdown
-              menu={{
-                items: [
-                  // {
-                  //   key: "2",
-                  //   label: <div>Promote</div>,
-                  //   hide: props.published,  
-                  //   onClick: () => {
-                  //     const accessToken = user?.metaAccessToken;
-                  //     if (!accessToken) return (window.location.href = oauthUri);
-
-                  //     if (
-                  //       !user?.metaAccessExpiry ||
-                  //       new Date(user?.metaAccessExpiry * 1000) < new Date()
-                  //     ) {
-                  //       return (window.location.href = oauthUri);
-                  //     }
-
-                  //     if (!AILoading && !backendLoading) handleGenerateAt(record);
-                  //   },
-                  // },
-
-                  {
-                    key: "97",
-                    label: <div>Duplicate</div>,
-                    onClick: onDuplicate,
-                  },
-                  {
-                    key: "197",
-                    label: (
-                      <Link href={`/dashboard/ats?id=${props._id}`}>ATS</Link>
-                    ),
-                  },
-                  {
-                    key: "98",
-                    label: <div>Rename</div>,
-                    onClick: onRename,
-                  },
-                  {
-                    key: "99",
-                    label: <div>Delete</div>,
-                    danger: true,
-                    onClick: async () => {
-                      await CrudService.delete("LandingPageData", record._id);
-                      await fetchData();
-                    },
-                  },
-                ].filter((a) => !a?.hide),
+    <div
+      {...props}
+      className={`${props.className} h-full w-full max-w-xs shadow-sm hover:shadow-md transition-shadow border border-gray-200 bg-white rounded-lg overflow-hidden`}
+    >
+      <div className="flex flex-col h-full">
+        {/* Preview Section - Compact */}
+        <div className="relative h-32 bg-slate-100 overflow-hidden">
+          <Template1Preview landingPageData={props} />
+          {/* Status Toggle - Overlay */}
+          <div className="absolute top-2 right-2">
+            <Switch
+              size="small"
+              loading={isSwitchLoading}
+              checked={props?.published}
+              onChange={async (e) => {
+                setIsSwitchLoading(true);
+                try {
+                  await CrudService.update(
+                    "LandingPageData",
+                    props._id,
+                    {
+                      published: e,
+                      publishedAt: e ? new Date() : null,
+                      uppublishedAt: e ? null : new Date(),
+                    }
+                  );
+                  await fetchData();
+                  if (e) message.success("Funnel is live!");
+                } catch (error) {
+                  message.error("Failed to update status");
+                } finally {
+                  setIsSwitchLoading(false);
+                }
               }}
-            >
-              <a
-                onClick={(e) => e.preventDefault()}
-                className="flex w-full justify-center rounded-[14px] rounded-e-none bg-gray-50_01   cursor-pointer py-2"
-              >
-                <Img
-                  src="/images/more-vertical.svg"
-                  alt="image"
-                  className="h-[16px] "
-                />
-              </a>
-            </Dropdown>
-
-            <Link
-              href={`/lp/${record._id}`}
-              target="_blank"
-              className="flex justify-center py-2 w-full bg-gray-50_01"
-            >
-              <Eye className="h-4 w-4 !text-gray-500 !hover:text-black" />
-            </Link>
-
-            <Link
-              href={`/edit-page/${record._id}`}
-              className="flex w-full justify-center rounded-[14px] rounded-s-none bg-gray-50_01  py-2"
-            >
-              <Pencil className="h-4 w-4 !text-gray-500 hover:text-black" />
-            </Link>
+            />
           </div>
         </div>
+        
+        {/* Content Section - Compact */}
+        <div className="flex-1 p-3">
+          {/* Title */}
+          <h3 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-2 leading-tight">
+            {heading}
+          </h3>
+          
+          {/* Location - Inline */}
+          {props?.location?.length > 0 && (
+            <div className="flex items-center gap-1 mb-2 text-xs text-gray-600">
+              <MapPin size={12} className="flex-shrink-0" />
+              <span className="truncate">
+                {Array.isArray(props?.location)
+                  ? props?.location.join(", ")
+                  : props?.location}
+              </span>
+            </div>
+          )}
+
+          {/* Department - Compact */}
+          {props.department && (
+            <div className="mb-2">
+              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 rounded">
+                {props.department}
+              </span>
+            </div>
+          )}
+
+          {/* Analytics - Colorful Tags */}
+          <div className="flex flex-wrap gap-2 items-start">
+            {/* Visits Tag */}
+            <div className="flex items-center gap-1 bg-blue-50 rounded-full px-2 py-1">
+              <Eye size={12} className="text-blue-600" />
+              <span className="text-blue-600 text-xs font-medium">{visits} visits</span>
+            </div>
+
+            {/* Average Time Spent Tag */}
+            <div className="flex items-center gap-1 bg-green-50 rounded-full px-2 py-1">
+              <Clock size={12} className="text-green-600" />
+              <span className="text-green-600 text-xs font-medium">{avgTimeSpent}s avg</span>
+            </div>
+
+            {/* Applicants Tag */}
+            <div className="flex items-center gap-1 bg-purple-50 rounded-full px-2 py-1">
+              <span className="text-purple-600 text-xs font-medium">{applicants} applicants</span>
+            </div>
+
+            {/* Days Live Tag */}
+            <div className="flex items-center gap-1 bg-orange-50 rounded-full px-2 py-1">
+              <span className="text-orange-600 text-xs font-medium">{daysLive} days live</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Action Bar - Compact */}
+        <div className="flex border-t border-gray-100 bg-gray-50">
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: "97",
+                  label: <div>Duplicate</div>,
+                  onClick: onDuplicate,
+                },
+                {
+                  key: "197",
+                  label: (
+                    <Link href={`/dashboard/ats?id=${props._id}`}>ATS</Link>
+                  ),
+                },
+                {
+                  key: "98",
+                  label: <div>Rename</div>,
+                  onClick: onRename,
+                },
+                {
+                  key: "99",
+                  label: <div>Delete</div>,
+                  danger: true,
+                  onClick: async () => {
+                    await CrudService.delete("LandingPageData", record._id);
+                    await fetchData();
+                  },
+                },
+              ].filter((a) => !a?.hide),
+            }}
+          >
+            <button className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 transition-colors">
+              <Img
+                src="/images/more-vertical.svg"
+                alt="menu"
+                className="h-4 w-4"
+              />
+            </button>
+          </Dropdown>
+
+          <Link
+            href={`/lp/${record._id}`}
+            target="_blank"
+            className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 transition-colors border-l border-gray-200"
+          >
+            <Eye className="h-4 w-4 text-gray-600" />
+          </Link>
+
+          <Link
+            href={`/edit-page/${record._id}`}
+            className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 transition-colors border-l border-gray-200"
+          >
+            <Pencil className="h-4 w-4 text-gray-600" />
+          </Link>
+        </div>
       </div>
-    )
+    </div>
   );
 }

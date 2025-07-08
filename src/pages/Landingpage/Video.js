@@ -362,7 +362,7 @@ const Template2 = ({
 
             {/* Video player */}
             <div className="relative pt-20 mx-auto w-full max-w-4xl">
-              <div className="bg-[#0E87FE] bg-opacity-20 h-[150px] w-[150px] rounded-full absolute left-[-60px] top-[30px]"></div>
+              <div className="bg-[#5207CD] bg-opacity-20 h-[150px] w-[150px] rounded-full absolute left-[-60px] top-[30px]"></div>
               <div className="relative aspect-video rounded-xl  shadow-2xl bg-gray-400  border-[1rem] border-white">
                 {/* Video element */}
                 {landingPageData.myVideo && (
@@ -472,7 +472,7 @@ const Template2 = ({
                   className="absolute inset-0 rounded-full filter blur-[200px]"
                   style={{
                     background:
-                      "radial-gradient(circle, #0E87FE 100%, transparent 100%)",
+                      "radial-gradient(circle, #5207CD 100%, transparent 100%)",
                   }}
                 ></div>
               </div>

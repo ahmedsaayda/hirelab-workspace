@@ -31,7 +31,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Spin } from "antd";
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import Link from "next/link";
 import {
@@ -51,7 +51,8 @@ import {
   Settings, 
   ToggleRight, 
   LogOut ,
-  UserPlus
+  UserPlus,
+  ExternalLink
 } from "lucide-react";
 
 import  {InviteModal}  from "../onboarding/components/invite-modal.jsx";
@@ -62,6 +63,8 @@ import {
   selectUser,
 } from "../../redux/auth/selectors.js";
 import { partner } from "../../constants.js";
+import CrudService from "../../services/CrudService.js";
+import debounce from "lodash/debounce";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -80,10 +83,85 @@ export default function Example({
   const loading = useSelector(selectLoading);
   const [showInviteModal, setShowInviteModal] = useState(false);
 
+  // Search functionality state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+
   const { width } = useWindowDimensions();
 
   console.log('useruseruseruser',{user , navigation});
 
+  // Debounced search function
+  const debouncedSearch = useMemo(
+    () =>
+      debounce(async (query) => {
+        if (!query.trim() || !user) {
+          setSearchResults([]);
+          setSearchLoading(false);
+          return;
+        }
+
+        setSearchLoading(true);
+        try {
+          const result = await CrudService.search("LandingPageData", 5, 1, {
+            text: query,
+            filters: {
+              user_id: user._id,
+            },
+            sort: { createdAt: "desc" },
+          });
+          
+          setSearchResults(result.data.items || []);
+        } catch (error) {
+          console.error("Search error:", error);
+          setSearchResults([]);
+        } finally {
+          setSearchLoading(false);
+        }
+      }, 300),
+    [user]
+  );
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    if (value.trim()) {
+      setShowSearchDropdown(true);
+      debouncedSearch(value);
+    } else {
+      setShowSearchDropdown(false);
+      setSearchResults([]);
+    }
+  };
+
+  // Handle search focus
+  const handleSearchFocus = () => {
+    setSearchFocused(true);
+    if (searchQuery.trim()) {
+      setShowSearchDropdown(true);
+    }
+  };
+
+  // Handle search blur
+  const handleSearchBlur = () => {
+    setSearchFocused(false);
+    // Delay hiding dropdown to allow clicking on results
+    setTimeout(() => {
+      setShowSearchDropdown(false);
+    }, 200);
+  };
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowSearchDropdown(false);
+  };
 
   const handleCloseModal = () => {
     setShowInviteModal(false);
@@ -93,6 +171,13 @@ export default function Example({
     setShowInviteModal(true);
    
   };
+
+  // Cleanup debounced function on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   return (
     <div>
@@ -182,46 +267,66 @@ export default function Example({
                                   {category.name}
                                 </h1>
                                 {category.subitems.map((item) => (
-                                  <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    target={item?.target}
-                                    className={classNames(
-                                      item.current
-                                        ? "bg-indigo-500 text-white current dark:bg-gray-600 dark:text-gray-400"
-                                        : "hover:text-white hover:bg-indigo-500 dark:hover:bg-gray-600",
-                                      `submenu-item-box transition-all duration-200 ${
-                                        collapsed ? "flex justify-center" : ""
-                                      }`
-                                    )}
-                                  >
-                                    <div className=" flex p-2 text-sm font-semibold leading-6 rounded-md group gap-x-3">
-                                      <item.icon
-                                        className={classNames(
-                                          item.current
-                                            ? "text-white current"
-                                            : "group-hover:text-white",
-                                          "h-6 w-6 shrink-0 submenu-item-icon"
-                                        )}
-                                        aria-hidden="true"
-                                      />
-                                      {!collapsed && item.name}
-
-                                      { item?.isOnboardingCompleted === false &&(
-
-                                        <span className="relative flex items-center">
-                                          {item.name === "Brand Kit" && (
-                                            <div className="relative flex items-center justify-center">
-                                              <span className=" inline-flex h-4 w-4 rounded-full bg-red-400 opacity-50 animate-ping">
-                                              </span>
-                                              <span className="absolute  inline-flex h-[8px] w-[7.9px] rounded-full bg-red-600">
-                                              </span>
-                                            </div>
-                                          )}
-                                        </span>
+                                  item.grayout ? (
+                                    <div
+                                      key={item.name}
+                                      className={classNames(
+                                        "opacity-50 cursor-not-allowed",
+                                        `submenu-item-box transition-all duration-200 ${
+                                          collapsed ? "flex justify-center" : ""
+                                        }`
                                       )}
+                                    >
+                                      <div className=" flex p-2 text-sm font-semibold leading-6 rounded-md group gap-x-3">
+                                        <item.icon
+                                          className="h-6 w-6 shrink-0 submenu-item-icon text-gray-400"
+                                          aria-hidden="true"
+                                        />
+                                        {!collapsed && <span className="text-gray-400">{item.name}</span>}
+                                      </div>
                                     </div>
-                                  </Link>
+                                  ) : (
+                                    <Link
+                                      key={item.name}
+                                      href={item.href}
+                                      target={item?.target}
+                                      className={classNames(
+                                        item.current
+                                          ? "bg-indigo-500 text-white current dark:bg-gray-600 dark:text-gray-400"
+                                          : "hover:text-white hover:bg-indigo-500 dark:hover:bg-gray-600",
+                                        `submenu-item-box transition-all duration-200 ${
+                                          collapsed ? "flex justify-center" : ""
+                                        }`
+                                      )}
+                                    >
+                                      <div className=" flex p-2 text-sm font-semibold leading-6 rounded-md group gap-x-3">
+                                        <item.icon
+                                          className={classNames(
+                                            item.current
+                                              ? "text-white current"
+                                              : "group-hover:text-white",
+                                            "h-6 w-6 shrink-0 submenu-item-icon"
+                                          )}
+                                          aria-hidden="true"
+                                        />
+                                        {!collapsed && item.name}
+
+                                        { item?.isOnboardingCompleted === false &&(
+
+                                          <span className="relative flex items-center">
+                                            {item.name === "Brand Kit" && (
+                                              <div className="relative flex items-center justify-center">
+                                                <span className=" inline-flex h-4 w-4 rounded-full bg-red-400 opacity-50 animate-ping">
+                                                </span>
+                                                <span className="absolute  inline-flex h-[8px] w-[7.9px] rounded-full bg-red-600">
+                                                </span>
+                                              </div>
+                                            )}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </Link>
+                                  )
                                 ))}
                               </div>
                             ))}
@@ -311,45 +416,65 @@ export default function Example({
                           {category.name}
                         </h1>
                         {category.subitems.map((item) => (
-                          <Link
-                            key={item.name}
-                            href={item.href}
-                            target={item?.target}
-                            className={classNames(
-                              item.current
-                                ? "bg-indigo-500 text-white current dark:bg-gray-600 dark:text-gray-400"
-                                : "hover:text-white hover:bg-indigo-500 dark:hover:bg-gray-600",
-                              `submenu-item-box transition-all duration-200 ${
-                                collapsed ? "flex justify-center" : ""
-                              }`
-                            )}
-                          >
-                            <div className="flex p-2 text-xs lgr:text-sm font-semibold leading-6 rounded-md group gap-x-3">
-                              <item.icon
-                                className={classNames(
-                                  item.current
-                                    ? "text-white current"
-                                    : "group-hover:text-white",
-                                  "h-6 w-6 shrink-0 submenu-item-icon"
-                                )}
-                                aria-hidden="true"
-                              />
-                              {!collapsed && item.name}
-                                     { item?.isOnboardingCompleted === false &&(
-
-                                        <span className="relative flex items-center">
-                                          {item.name === "Brand Kit" && (
-                                            <div className="relative flex items-center justify-center">
-                                              <span className=" inline-flex h-4 w-4 rounded-full bg-red-400 opacity-50 animate-ping">
-                                              </span>
-                                              <span className="absolute  inline-flex h-[8px] w-[7.9px] rounded-full bg-red-600">
-                                              </span>
-                                            </div>
-                                          )}
-                                        </span>
-                                      )}
+                          item.grayout ? (
+                            <div
+                              key={item.name}
+                              className={classNames(
+                                "opacity-50 cursor-not-allowed",
+                                `submenu-item-box transition-all duration-200 ${
+                                  collapsed ? "flex justify-center" : ""
+                                }`
+                              )}
+                            >
+                              <div className="flex p-2 text-xs lgr:text-sm font-semibold leading-6 rounded-md group gap-x-3">
+                                <item.icon
+                                  className="h-6 w-6 shrink-0 submenu-item-icon text-gray-400"
+                                  aria-hidden="true"
+                                />
+                                {!collapsed && <span className="text-gray-400">{item.name}</span>}
+                              </div>
                             </div>
-                          </Link>
+                          ) : (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              target={item?.target}
+                              className={classNames(
+                                item.current
+                                  ? "bg-indigo-500 text-white current dark:bg-gray-600 dark:text-gray-400"
+                                  : "hover:text-white hover:bg-indigo-500 dark:hover:bg-gray-600",
+                                `submenu-item-box transition-all duration-200 ${
+                                  collapsed ? "flex justify-center" : ""
+                                }`
+                              )}
+                            >
+                              <div className="flex p-2 text-xs lgr:text-sm font-semibold leading-6 rounded-md group gap-x-3">
+                                <item.icon
+                                  className={classNames(
+                                    item.current
+                                      ? "text-white current"
+                                      : "group-hover:text-white",
+                                    "h-6 w-6 shrink-0 submenu-item-icon"
+                                  )}
+                                  aria-hidden="true"
+                                />
+                                {!collapsed && item.name}
+                                       { item?.isOnboardingCompleted === false &&(
+
+                                          <span className="relative flex items-center">
+                                            {item.name === "Brand Kit" && (
+                                              <div className="relative flex items-center justify-center">
+                                                <span className=" inline-flex h-4 w-4 rounded-full bg-red-400 opacity-50 animate-ping">
+                                                </span>
+                                                <span className="absolute  inline-flex h-[8px] w-[7.9px] rounded-full bg-red-600">
+                                                </span>
+                                              </div>
+                                            )}
+                                          </span>
+                                        )}
+                              </div>
+                            </Link>
+                          )
                         ))}
                       </div>
                     ))}
@@ -411,25 +536,88 @@ export default function Example({
                   <LogoIcon height={32} className="hidden lg:block" />
                   {loading && <Spin />}
                 </div>
-                <form
-                  className="relative flex justify-center flex-1 hidden lg:block h-full"
-                  action="#"
-                  method="GET"
-                >
-                  <div className="top-search-wrapper flex items-center h-full">
+                <div className="relative flex justify-center flex-1 hidden lg:block h-full">
+                  <div className="top-search-wrapper flex items-center h-full relative">
                     <label htmlFor="search-field" className="sr-only">
                       Search
                     </label>
                     <SearchrIcon />
                     <input
                       id="search-field"
-                      className="block w-full h-full py-0 pl-0 pr-0 bg-transparent border-0 border-transparent"
-                      placeholder="Search"
-                      type="search"
-                      style={{ height: "100%" }}
+                      className="block w-full h-full py-0 pl-0 pr-0 bg-transparent border-0 border-transparent focus:border-0 focus:outline-none focus:ring-0"
+                      placeholder="Search vacancies..."
+                      type="text"
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      onFocus={handleSearchFocus}
+                      onBlur={handleSearchBlur}
+                      style={{ height: "145%" }}
                     />
+                    
+                    {/* Search Dropdown */}
+                    {showSearchDropdown && (searchResults.length > 0 || searchLoading || searchQuery.trim()) && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-80 overflow-y-auto">
+                        {searchLoading && (
+                          <div className="px-4 py-3 text-center">
+                            <Spin size="small" />
+                            <span className="ml-2 text-sm text-gray-500">Searching...</span>
+                          </div>
+                        )}
+                        
+                        {!searchLoading && searchResults.length === 0 && searchQuery.trim() && (
+                          <div className="px-4 py-3 text-center text-sm text-gray-500">
+                            No vacancies found for "{searchQuery}"
+                          </div>
+                        )}
+                        
+                        {!searchLoading && searchResults.length > 0 && (
+                          <>
+                            <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
+                              Vacancies ({searchResults.length})
+                            </div>
+                                                         {searchResults.map((vacancy) => (
+                               <Link
+                                 key={vacancy._id}
+                                 href={`/edit-page/${vacancy._id}`}
+                                 onClick={() => {
+                                   clearSearch();
+                                 }}
+                                 className="flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                               >
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    {vacancy.vacancyTitle || "Untitled Vacancy"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    {vacancy.location && (
+                                      <span className="mr-3">📍 {Array.isArray(vacancy.location) ? vacancy.location.join(", ") : vacancy.location}</span>
+                                    )}
+                                    {vacancy.department && (
+                                      <span className="mr-3">🏢 {vacancy.department}</span>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-gray-400 mt-1">
+                                    Created: {new Date(vacancy.createdAt).toLocaleDateString()}
+                                  </div>
+                                </div>
+                                <ExternalLink className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
+                              </Link>
+                            ))}
+                            {searchResults.length === 5 && (
+                              <Link
+                                href={`/dashboard/vacancies?search=${encodeURIComponent(searchQuery)}`}
+                                onClick={clearSearch}
+                                className="block px-4 py-3 text-center text-sm text-indigo-600 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium"
+                              >
+                                View all results →
+                              </Link>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </form>
+                </div>
                 <div className="flex items-center justify-end flex-1 gap-x-4 lg:gap-x-6 h-full">
                   <button
                     type="button"
@@ -505,7 +693,7 @@ export default function Example({
                       leaveTo="transform opacity-0 scale-95"
                     >
 
-                      <Menu.Items className="absolute right-0 z-40 mt-2.5 w-48 origin-top-right rounded-md bg-white dark:bg-gray-600 py-2 shadow-lg dark:shadow-gray-400/50 hover:shadow-gray-600/50  ring-1 ring-gray-900/5 focus:outline-none">
+                      <Menu.Items className="absolute z-40 mt-2.5 w-48 origin-top-right rounded-md bg-white dark:bg-gray-600 py-2 shadow-lg dark:shadow-gray-400/50 hover:shadow-gray-600/50  ring-1 ring-gray-900/5 focus:outline-none" style={{ top: '100%', right: '0px', left: 'auto', transform: 'translateX(-5px)' }}>
                           {/*  */}
                           <div className="flex items-center gap-3 p-2 pt-0">
                           {user?.avatar && (
@@ -533,19 +721,24 @@ export default function Example({
                               console.log("item.logo",item.logo )
                               return (
                                 <div className={classNames(
+                                  item.grayout ? "opacity-50 cursor-not-allowed" : 
                                   active ? "bg-gray-50 dark:bg-gray-700  px-4 transition-all duration-300" : `${item.name === "Sign out" ? "text-red-500 dark:text-red-500" : ""}`,
                                   `flex items-center gap-x-2  px-3 py-1 text-sm leading-6 text-gray-900 dark:text-gray-400 `
                                 )}
                                 >
-                                {item.logo && <item.logo className="w-4 h-4" />}
-                                <Link
-                                  href={item.href}
-                                  target={item?.target}
-                                  onClick={item.onClick}
-                                  
-                                >
-                                  {item.name}
-                                </Link>
+                                {item.logo && <item.logo className={classNames("w-4 h-4", item.grayout ? "text-gray-400" : "")} />}
+                                {item.grayout ? (
+                                  <span className="text-gray-400">{item.name}</span>
+                                ) : (
+                                  <Link
+                                    href={item.href}
+                                    target={item?.target}
+                                    onClick={item.onClick}
+                                    
+                                  >
+                                    {item.name}
+                                  </Link>
+                                )}
                                 </div>                                
                               )
 

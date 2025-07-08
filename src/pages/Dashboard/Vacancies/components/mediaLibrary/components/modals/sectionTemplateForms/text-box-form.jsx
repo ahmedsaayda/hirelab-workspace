@@ -111,7 +111,7 @@ const TextBoxForm = ({ initialData, onSave, isSaving }) => {
       <Button
         onClick={handleSave}
         loading={isSaving}
-        className="mt-6 rounded-lg bg-[#0E87FE] text-white hover:bg-[#0B6ECD]"
+        className="mt-6 rounded-lg bg-[#5207CD] text-white hover:bg-[#0B6ECD]"
       >
         {initialData ? "Update Text Box" : "Create Text Box"}
       </Button>

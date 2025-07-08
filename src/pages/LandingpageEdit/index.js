@@ -1574,7 +1574,7 @@ export default function LandingpageEdit({paramsId}) {
                   shape="round"
                   className={`${
                     landingPageData?.templateId === `${i + 1}`
-                      ? "bg-[#0E87FE] text-[#FFFFFF]"
+                      ? "bg-[#5207CD] text-[#FFFFFF]"
                       : "bg-[#FFFFFF] text-blue_gray-800_01 border border-solid border-blue_gray-100"
                   } w-full font-semibold smx:px-5 whitespace-nowrap`}
                 >

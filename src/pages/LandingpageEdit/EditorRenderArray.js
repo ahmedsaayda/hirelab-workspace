@@ -159,7 +159,7 @@ const EditorRenderArray = React.memo(({
                       {landingPageData?.[a.key] ? (
                         <div className="flex gap-1 items-center text-gray-400">
                           <div>Select Icon </div>
-                          <div className="p-1 border-2 rounded-sm text-[#0E87FE] border-[#0E87FE]">
+                          <div className="p-1 border-2 rounded-sm text-[#5207CD] border-[#5207CD]">
                             <IconRenderer icon={landingPageData?.[a.key]} />
                           </div>
                         </div>
@@ -189,7 +189,7 @@ const EditorRenderArray = React.memo(({
                           />
                           <path
                             d="M20.0003 12.5001H23.5003C24.9005 12.5001 25.6005 12.5001 26.1353 12.7726C26.6057 13.0122 26.9882 13.3947 27.2278 13.8651C27.5003 14.3999 27.5003 15.1 27.5003 16.5001V23.5001C27.5003 24.9002 27.5003 25.6003 27.2278 26.1351C26.9882 26.6055 26.6057 26.9879 26.1353 27.2276C25.6005 27.5001 24.9005 27.5001 23.5003 27.5001H16.5003C15.1002 27.5001 14.4001 27.5001 13.8653 27.2276C13.3949 26.9879 13.0125 26.6055 12.7728 26.1351C12.5003 25.6003 12.5003 24.9002 12.5003 23.5001V20.0001M16.667 20.8334V24.1667M23.3337 19.1667V24.1667M20.0003 15.8334V24.1667M11.667 14.1667L14.167 11.6667M14.167 11.6667L16.667 14.1667M14.167 11.6667L14.167 16.6667"
-                            stroke="#0E87FE"
+                            stroke="#5207CD"
                             stroke-width="1.66667"
                             stroke-linecap="round"
                             stroke-linejoin="round"

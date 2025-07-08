@@ -318,7 +318,7 @@ const FormEditor = ({ landingPageData, setLandingPageData }) => {
               setChanged(false);
             }}
             shape="round"
-            className={`w-full border border-solid  bg-[#0E87FE] text-white-A700 font-semibold smx:px-5 ${
+            className={`w-full border border-solid  bg-[#5207CD] text-white-A700 font-semibold smx:px-5 ${
               changed ? "" : "opacity-50 !cursor-default"
             }`}
           >

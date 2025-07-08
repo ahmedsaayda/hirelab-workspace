@@ -153,7 +153,7 @@ export default function Templates({ isOpen, ...props }) {
                             onClick={() => setSearchBarValue151("")}
                             height={18}
                             width={18}
-                            fillColor="#0E87FEff"
+                            fillColor="#5207CDff"
                           />
                         ) : null
                       }
@@ -249,7 +249,7 @@ export default function Templates({ isOpen, ...props }) {
                             onClick={() => setSearchBarValue150("")}
                             height={18}
                             width={18}
-                            fillColor="#0E87FEff"
+                            fillColor="#5207CDff"
                           />
                         ) : null
                       }
