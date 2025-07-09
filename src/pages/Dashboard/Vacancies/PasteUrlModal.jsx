@@ -1,5 +1,5 @@
 import { Modal } from "antd";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Heading } from "./components/components/index.jsx";
 import ChooseTemplate from "./ChooseTemplate.jsx";
 import AiService from "../../../services/AiService.js";
@@ -10,17 +10,59 @@ import { message as antdMessage, Select } from "antd";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation.jsx";
 import { departmentOptions } from "./departmentOptions";
 
-function PasteUrlModal({ onClose, ongoBack }) {
+function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
   const user = useSelector(selectUser);
   const router = useRouter();;
 
   const [step, setStep] = useState(0);
-  const [url, setURL] = useState("");
-  const [department, setDepartment] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState(-1);
+  const [url, setUrl] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_url_progress');
+    console.log('PasteUrlModal - Loading saved progress:', savedProgress);
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('PasteUrlModal - Parsed data:', data);
+      return data?.url || "";
+    }
+    return "";
+  });
+  const [department, setDepartment] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_url_progress');
+    console.log('PasteUrlModal - Loading saved department:', savedProgress);
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('PasteUrlModal - Parsed department data:', data);
+      return data?.department || "";
+    }
+    return "";
+  });
+  const [selectedTemplate, setSelectedTemplate] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_url_progress');
+    console.log('PasteUrlModal - Loading saved template:', savedProgress);
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('PasteUrlModal - Parsed template data:', data);
+      return data?.selectedTemplate ?? -1;
+    }
+    return -1;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [backendLoading, setBackendLoading] = useState(false);
   const [urlError, setUrlError] = useState(null);
+
+  useEffect(() => {
+    const saveProgress = () => {
+      const dataToSave = { 
+        url,
+        department,
+        selectedTemplate
+      };
+      console.log('PasteUrlModal - Saving progress:', dataToSave);
+      sessionStorage.setItem('vacancy_url_progress', JSON.stringify(dataToSave));
+      console.log('PasteUrlModal - Verification - Just saved:', sessionStorage.getItem('vacancy_url_progress'));
+    };
+
+    saveProgress();
+  }, [url, department, selectedTemplate]);
 
   const brandingDetails = {
     companyName: user?.companyName,
@@ -67,7 +109,8 @@ function PasteUrlModal({ onClose, ongoBack }) {
 
   const handleUrlChange = (e) => {
     const newUrl = e.target.value;
-    setURL(newUrl);
+    console.log('PasteUrlModal - URL changed to:', newUrl);
+    setUrl(newUrl);
     if (urlError) {
       setUrlError(null);
     }
@@ -145,6 +188,7 @@ function PasteUrlModal({ onClose, ongoBack }) {
       };
 
       const res = await AiService.createVacancy(vacancyPayload);
+      onRefresh();
       router.push(`/edit-page/${res.data.data.result._id}`);
 
     } catch (error) {
@@ -211,9 +255,18 @@ function PasteUrlModal({ onClose, ongoBack }) {
     return null;
   };
 
+  const handleClose = () => {
+    console.log('PasteUrlModal - Closing modal. Current data:', { url, department, selectedTemplate });
+    if (!url && !department && selectedTemplate === -1) {
+      console.log('PasteUrlModal - Cleaning up empty form data');
+      sessionStorage.removeItem('vacancy_url_progress');
+    }
+    onClose();
+  };
+
   return (
     <div>
-      <Modal title="" open={true} onCancel={onClose} footer={null} style={{
+      <Modal title="" open={true} onCancel={handleClose} footer={null} style={{
         maxHeight: "80vh",
         overflowY: "auto",
         top: 20,

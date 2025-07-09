@@ -137,7 +137,7 @@ const PromptViewer = ({ prompt }) => {
   );
 };
 
-function PasteUrlModalExperimental({ onClose }) {
+function PasteUrlModalExperimental({ onClose ,onRefresh}) {
   const COMPONENT_NAME = 'PasteUrlModalExperimental';
   
   const [url, setUrl] = useState("");

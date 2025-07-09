@@ -20,7 +20,7 @@ const languageOptions = Object.entries(languages).map(([_, name]) => ({
   label: name,
 }));
 
-const FromScratchModal = ({ onClose ,ongoBack }) => {
+const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
   const user = useSelector(selectUser);
   console.log("user", user);
   const brandingDetails = {
@@ -42,8 +42,24 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
   const [step, setStep] = useState(1);
   console.log("step", step);
   const [jobTitleModal, setJobTitleModal] = useState(false);
-  const [jobTitle, setJobTitle] = useState("");
-  const [department, setDepartment] = useState("");
+  const [jobTitle, setJobTitle] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_scratch_progress');
+    console.log('FromScratchModal - Loading saved progress:', savedProgress);
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('FromScratchModal - Parsed data:', data);
+      return data?.jobTitle || "";
+    }
+    return "";
+  });
+  const [department, setDepartment] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_scratch_progress');
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      return data?.department || "";
+    }
+    return "";
+  });
   const [loading, setLoading] = useState(false);
   const [useAI, setUseAI] = useState(true);
   const [vacancyDescription, setVacancyDescription] = useState("");
@@ -66,6 +82,103 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
   const [showDebugLogs, setShowDebugLogs] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(-1);
   const [isCreatingWithoutAI, setIsCreatingWithoutAI] = useState(false);
+  const [selectedLanguages, setSelectedLanguages] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_scratch_progress');
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      return data?.selectedLanguages || [];
+    }
+    return [];
+  });
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  // Load saved progress when modal opens
+  useEffect(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_scratch_progress');
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('FromScratchModal - Loading saved progress:', data);
+      // Step 1 data
+      if (data.jobTitle) setJobTitle(data.jobTitle);
+      if (data.department) setDepartment(data.department);
+      if (data.selectedLanguages) setSelectedLanguages(data.selectedLanguages);
+      if (data.step) setStep(data.step);
+      if (data.selectedTemplate) setSelectedTemplate(data.selectedTemplate);
+      // Step 2 data
+      if (data.vacancyDescription) setVacancyDescription(data.vacancyDescription);
+      if (data.perksAndBenefits) setPerksAndBenefits(data.perksAndBenefits);
+      if (data.tags) setTags(data.tags);
+      if (data.tone) setTone(data.tone);
+      if (data.language) setLanguage(data.language);
+    }
+  }, []);
+
+  // Save progress effect
+  useEffect(() => {
+    if (step === 1) return; // Don't save on initial render
+    const saveProgress = () => {
+      const dataToSave = {
+        // Step 1 data
+        jobTitle,
+        department,
+        selectedLanguages,
+        step,
+        selectedTemplate,
+        // Step 2 data
+        vacancyDescription,
+        perksAndBenefits,
+        tags,
+        tone,
+        language
+      };
+      console.log('FromScratchModal - Saving progress:', dataToSave);
+      sessionStorage.setItem('vacancy_scratch_progress', JSON.stringify(dataToSave));
+    };
+
+    saveProgress();
+  }, [
+    // Step 1 dependencies
+    jobTitle, 
+    department, 
+    selectedLanguages, 
+    step, 
+    selectedTemplate,
+    // Step 2 dependencies
+    vacancyDescription,
+    perksAndBenefits,
+    tags,
+    tone,
+    language
+  ]);
+
+  // Cleanup on unmount or when modal closes
+  useEffect(() => {
+    return () => {
+      if (!jobTitle && !department && selectedLanguages.length === 0 &&
+          !vacancyDescription && !perksAndBenefits && (!tags || tags.length === 0)) {
+        console.log('FromScratchModal - Cleaning up empty form data');
+        sessionStorage.removeItem('vacancy_scratch_progress');
+      }
+    };
+  }, [jobTitle, department, selectedLanguages, vacancyDescription, perksAndBenefits, tags]);
+
+  // Autosave effect
+  useEffect(() => {
+    const saveProgress = () => {
+      const dataToSave = {
+        jobTitle,
+        department,
+        selectedLanguages,
+        currentStep
+      };
+      console.log('FromScratchModal - Saving progress:', dataToSave);
+      sessionStorage.setItem('vacancy_scratch_progress', JSON.stringify(dataToSave));
+      console.log('FromScratchModal - Verification - Just saved:', sessionStorage.getItem('vacancy_scratch_progress'));
+    };
+
+    saveProgress();
+  }, [jobTitle, department, selectedLanguages, currentStep]);
 
   // Add cleanup function for socket and intervals
   useEffect(() => {
@@ -305,7 +418,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                   Vacancy description
                 </label>
                 <div className="flex justify-center items-center w-4 h-4 rounded-full border cursor-help">
-                  <Tooltip title="Describe the vacancy in one or two sentences. Mention the role, key responsibilities, and what kind of candidate you’re looking for. E.g. ‘Write a technical job description for a medium experienced Python Developer for our Core App dev team.">
+                  <Tooltip title="Describe the vacancy in one or two sentences. Mention the role, key responsibilities, and what kind of candidate you're looking for. E.g. 'Write a technical job description for a medium experienced Python Developer for our Core App dev team.">
                   ?
                   </Tooltip>
                 </div>
@@ -324,7 +437,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                   List perks/benefits
                 </label>
                 <div className="flex justify-center items-center w-4 h-4 rounded-full border cursor-help">
-                  <Tooltip title="List all perks and benefits the role offers, separated by commas. E.g. ‘30 holidays, 70/30 Pension Arrangement, Daycare allowance children, 2500,- Euro Education Budget, Remote Working promoted.’ The more detailed, the better.">
+                  <Tooltip title="List all perks and benefits the role offers, separated by commas. E.g. '30 holidays, 70/30 Pension Arrangement, Daycare allowance children, 2500,- Euro Education Budget, Remote Working promoted.' The more detailed, the better.">
                   ?
                   </Tooltip>
                 </div>
@@ -343,7 +456,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
                   Add tags (optional)
                 </label>
                 <div className="flex justify-center items-center w-4 h-4 rounded-full border cursor-help">
-                  <Tooltip title="Add keywords that describe the role (e.g. ‘Developer’, ‘Sales’, ‘Remote’). Tags help organize and optimize your recruitment campaigns and find back relevant campaigns or pieces of content easier.">
+                  <Tooltip title="Add keywords that describe the role (e.g. 'Developer', 'Sales', 'Remote'). Tags help organize and optimize your recruitment campaigns and find back relevant campaigns or pieces of content easier.">
                   ?
                   </Tooltip>
                 </div>
@@ -667,7 +780,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
           templateId: selectedTemplate,
           user_id: user?._id
         });
-
+        onRefresh()
         setJobTitleModal(false);
         router.push(`/edit-page/${res.data.result._id}`);
       }
@@ -678,8 +791,16 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
     }
   };
 
-  const onCancel = () => {
-    console.log("onCancel");
+  const handleClose = () => {
+    console.log('FromScratchModal - Closing modal. Current data:', {
+      jobTitle,
+      department,
+      selectedLanguages
+    });
+    if (!jobTitle && !department && selectedLanguages.length === 0) {
+      console.log('FromScratchModal - Cleaning up empty form data');
+      sessionStorage.removeItem('vacancy_scratch_progress');
+    }
     onClose();
   };
 
@@ -687,7 +808,7 @@ const FromScratchModal = ({ onClose ,ongoBack }) => {
 
   return (
     <>
-      <Modal title="" open={true} onCancel={onCancel} footer={null} width={600} style={{
+      <Modal title="" open={true} onCancel={handleClose} footer={null} width={600} style={{
         maxHeight: "80vh",
         overflowY: "auto",
         top: 20,

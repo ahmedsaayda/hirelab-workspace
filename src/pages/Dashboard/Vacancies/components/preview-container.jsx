@@ -125,7 +125,7 @@ export function PreviewContainer({
     };
   } else {
     setdevicebasedonfullscreen = {
-      desktop: { width: 1440, height: 980 }, // ALWAYS 1440px for desktop
+      desktop: { width: 1960, height: 1080 }, // ALWAYS 1440px for desktop
       mobile: { width: 475, height: 750 },
     };
   }
@@ -410,7 +410,7 @@ export function PreviewContainer({
               {fullscreen ? (
                   <button
                   
-                  className="fixed top-12 right-2 z-[9999] px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 flex gap-2 items-center justify-center shadow-lg transition-all duration-200"
+                  className="fixed top-1 right-2 z-[9999] px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 flex gap-2 items-center justify-center shadow-lg transition-all duration-200"
                   style={{ zIndex: 10000 }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

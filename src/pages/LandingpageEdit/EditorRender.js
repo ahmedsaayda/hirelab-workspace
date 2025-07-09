@@ -234,6 +234,11 @@ const EditorRender = React.memo(({
   jobsLoading,
   lpId
 }) => {
+  console.log("editor render",lpId)
+  const router = useRouter();
+  const { lpId: routerLpId } = router.query;
+  if(!lpId) lpId = routerLpId;
+  console.log("editor render",lpId)
   const [changed, setChanged] = useState(false);
   const { setFocusRef } = useFocusContext();
   const [activeKeys, setActiveKeys] = useState([]); // Change to plural to indicate array
@@ -255,7 +260,7 @@ const EditorRender = React.memo(({
           await CrudService.update("LandingPageData", lpId, {
             ...landingPageData,
             _id: undefined,
-          });
+          },"editor render -- auto save");
           setChanged(false);
         } catch (error) {
           console.error("Auto-save failed:", error);
@@ -275,7 +280,7 @@ const EditorRender = React.memo(({
     await CrudService.update("LandingPageData", lpId, {
       ...landingPageData,
       _id: undefined,
-    }).then(() => {
+    },"editor render -- handle save").then(() => {
       message.success("Data saved successfully");
     });
     setChanged(false);
@@ -404,13 +409,13 @@ const EditorRender = React.memo(({
   }, [items]);
 
   return (
-    <div className="flex relative flex-col flex-grow">
+    <div className="flex relative flex-col flex-grow text-sm">
       <div className="px-2">
       {bulletListItems.map((parentItem, index) => (
           <Checkbox.Group
-            className="flex flex-wrap gap-2 justify-between"
+            className="flex flex-wrap gap-1 justify-between"
             key={index}
-            style={{ marginBottom: "16px" }}
+            style={{ marginBottom: "10px" }}
             value={landingPageData[parentItem.key]
               .map((item, index) => (item.enabled ? index : null))
               .filter((index) => index !== null)}
@@ -428,13 +433,13 @@ const EditorRender = React.memo(({
       </div>
 
       <div
-        className="flex relative flex-wrap gap-2 justify-start items-start px-2"
+        className="flex relative flex-wrap gap-1 justify-start items-start px-2"
         onBlur={async () => {
           if (changed) {
             await CrudService.update("LandingPageData", lpId, {
               ...landingPageData,
               _id: undefined,
-            });
+            },"editor render -- blur bullet list");
             setChanged(false);
           }
         }}
@@ -445,7 +450,7 @@ const EditorRender = React.memo(({
               <Text size="4xl" className="!text-light_blue-A700 mb-2 font-bold">
                 {a.label}
               </Text>
-              <div className="flex gap-2 items-center"></div>{" "}
+              <div className="flex gap-1 items-center"></div>{" "}
               {Array.isArray(landingPageData[a.key]) &&
                 landingPageData[a.key].map((x, idx) => {
                   const maxArrayLength = a.maxArrayLength || 10000;
@@ -468,7 +473,7 @@ const EditorRender = React.memo(({
                         showArrow={false}
                         className="border-none"
                         header={
-                          <div className="flex gap-2 items-center">
+                          <div className="flex gap-1 items-center">
                             <span>
                               {x?.title ? x.title : a.label + "-" + (idx + 1)}
                             </span>
@@ -506,7 +511,7 @@ const EditorRender = React.memo(({
                                   style: { display: "none" },
                                 }}
                                 description={
-                                  <div className="flex gap-2 justify-end mt-3">
+                                  <div className="flex gap-1 justify-end mt-3">
                                     <button
                                       className="px-3 py-1 text-black bg-gray-300 rounded"
                                       onClick={() =>
@@ -657,7 +662,7 @@ const EditorRender = React.memo(({
               onMouseLeave={handleMouseLeave}
               className={`
             w-full  
-            flex flex-col gap-2 
+            flex flex-col gap-1 
             ${a.halfWidth ? "md:w-[calc(50%-4px)]" : "md:w-full"}
             hover:bg-gray-50 transition-colors duration-200 p-2 rounded
             relative
@@ -718,7 +723,7 @@ const EditorRender = React.memo(({
                 </>
               ) : a.type === "video" ? (
                 <>
-                  <div className="flex gap-2 items-center">
+                  <div className="flex gap-1 items-center">
                     <Text
                       as="p"
                       className="!text-blue_gray-700 font-medium text-sm py-2"
@@ -772,7 +777,7 @@ const EditorRender = React.memo(({
                 />
               ) : (
                 <Input
-                  className="border outline-none focus-within:border-light_blue-A700"
+                  className="border outline-none focus-within:border-light_blue-A700 text-sm"
                   shape="round"
                   type={a.inputType}
                   name="input_one"

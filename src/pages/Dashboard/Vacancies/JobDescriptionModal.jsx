@@ -1,5 +1,5 @@
 import { Modal } from "antd";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Heading } from "./components/components/index.jsx";
 import ChooseTemplate from "./ChooseTemplate.jsx";
 import AiService from "../../../services/AiService.js";
@@ -10,18 +10,70 @@ import { message as antdMessage, Select } from "antd";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation.jsx";
 import { departmentOptions } from "./departmentOptions";
 
-function JobDescriptionModal({ onClose ,ongoBack }) {
+function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
   const user = useSelector(selectUser);
   const router = useRouter();;
 
   // State variables
   const [step, setStep] = useState(0);
-  const [jobTitle, setJobTitle] = useState("");
-  const [department, setDepartment] = useState("");
-  const [jobDescription, setJobDescription] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState(-1);
+  const [jobTitle, setJobTitle] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_description_progress');
+    console.log('JobDescriptionModal - Loading saved progress:', savedProgress);
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('JobDescriptionModal - Parsed data:', data);
+      return data?.jobTitle || "";
+    }
+    return "";
+  });
+  const [department, setDepartment] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_description_progress');
+    console.log('JobDescriptionModal - Loading saved department:', savedProgress);
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('JobDescriptionModal - Parsed department data:', data);
+      return data?.department || "";
+    }
+    return "";
+  });
+  const [jobDescription, setJobDescription] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_description_progress');
+    console.log('JobDescriptionModal - Loading saved progress for description:', savedProgress);
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('JobDescriptionModal - Parsed data for description:', data);
+      return data?.jobDescription || "";
+    }
+    return "";
+  });
+  const [selectedTemplate, setSelectedTemplate] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_description_progress');
+    console.log('JobDescriptionModal - Loading saved template:', savedProgress);
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('JobDescriptionModal - Parsed template data:', data);
+      return data?.selectedTemplate ?? -1;
+    }
+    return -1;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [backendLoading, setBackendLoading] = useState(false);
+
+  useEffect(() => {
+    const saveProgress = () => {
+      const dataToSave = {
+        jobTitle,
+        jobDescription,
+        department,
+        selectedTemplate
+      };
+      console.log('JobDescriptionModal - Saving progress:', dataToSave);
+      sessionStorage.setItem('vacancy_description_progress', JSON.stringify(dataToSave));
+      console.log('JobDescriptionModal - Verification - Just saved:', sessionStorage.getItem('vacancy_description_progress'));
+    };
+
+    saveProgress();
+  }, [jobTitle, jobDescription, department, selectedTemplate]);
 
   // Branding details from user profile
   const brandingDetails = {
@@ -285,6 +337,7 @@ function JobDescriptionModal({ onClose ,ongoBack }) {
         }
       });
 
+      onRefresh();
       router.push(`/edit-page/${res.data.data.result._id}`);
 
     } catch (error) {
@@ -307,9 +360,23 @@ function JobDescriptionModal({ onClose ,ongoBack }) {
     }
   };
 
+  const handleClose = () => {
+    console.log('JobDescriptionModal - Closing modal. Current data:', {
+      jobTitle,
+      jobDescription,
+      department,
+      selectedTemplate
+    });
+    if (!jobTitle && !jobDescription && !department && selectedTemplate === -1) {
+      console.log('JobDescriptionModal - Cleaning up empty form data');
+      sessionStorage.removeItem('vacancy_description_progress');
+    }
+    onClose();
+  };
+
   return (
     <div>
-      <Modal title="" open={true} onCancel={onClose} footer={null} style={{
+      <Modal title="" open={true} onCancel={handleClose} footer={null} style={{
         maxHeight: "80vh",
         overflowY: "auto",
         top: 20,

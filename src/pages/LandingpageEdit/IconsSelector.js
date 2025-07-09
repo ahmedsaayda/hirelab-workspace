@@ -28,7 +28,7 @@ export const IconRenderer = ({ icon, className, size = 24, ...props }) => {
   return null;
 };
 
-const IconsSelector = ({ visible, onSelect, onCancel }) => {
+const IconsSelector = ({ visible, onSelect, onCancel=()=>{} }) => {
   const [search, setSearch] = useState("");
   const [selectedIcon, setSelectedIcon] = useState(null);
 

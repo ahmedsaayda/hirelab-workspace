@@ -35,7 +35,7 @@ export default function FormEdit({paramsId}) {
 
   const fetchData = useCallback(() => {
     if (lpId) {
-      CrudService.getSingle("LandingPageData", lpId).then((res) => {
+      CrudService.getSingle("LandingPageData", lpId,"form edit").then((res) => {
         if (res.data) {
           setLandingPageData(res.data);
           // Ensure all fields have visible: true if not set

@@ -413,7 +413,6 @@ const currencyOptions = Object.entries(Currency).map(
   })
 );
 
-console.log("currencyOptions", currencyOptions);
 
 const hoursUnitOptions = [
   // { label: "Hours", value: "Hours" },
@@ -762,7 +761,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                           const value = e.target.value.replace(/[^0-9.]/g, ""); // Allow only numbers and decimal points
                           handleChange("salaryMin", value);
                         }}
-                        className="w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5"
+                        className="w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5 text-sm"
                         onMouseEnter={() => setHoveredField("salaryMin")}
                         onMouseLeave={() => setHoveredField(null)}
                         ref={setFocusRef("salaryMin")}
@@ -802,7 +801,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                           const value = e.target.value.replace(/[^0-9.]/g, ""); // Allow only numbers and decimal points
                           handleChange("salaryMax", value);
                         }}
-                        className="border border-solid border-blue_gray-100 sm:pr-5"
+                        className="border border-solid border-blue_gray-100 sm:pr-5 text-sm"
                         onMouseEnter={() => setHoveredField("salaryMax")}
                         onMouseLeave={() => setHoveredField(null)}
                         ref={setFocusRef("salaryMax")}
@@ -911,7 +910,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                           const value = e.target.value.replace(/[^0-9.]/g, "");
                           handleChange("hoursMin", value);
                         }}
-                        className="!w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5"
+                        className="!w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5 text-sm"
                         onMouseEnter={() => setHoveredField("hoursMin")}
                         onMouseLeave={() => setHoveredField(null)}
                         ref={setFocusRef("hoursMin")}
@@ -929,7 +928,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                           (o) => o.value === landingPageData?.hoursUnit
                         )}
                         onChange={(e) => handleChange("hoursUnit", e.value)}
-                        className="w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5"
+                        className="w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5 text-sm"
                         onMouseEnter={() => setHoveredField("hoursUnit")}
                         onMouseLeave={() => setHoveredField(null)}
                         ref={setFocusRef("hoursUnit")}

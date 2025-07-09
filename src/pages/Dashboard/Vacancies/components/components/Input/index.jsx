@@ -33,7 +33,7 @@ const Input = React.forwardRef(
       onChange,
       shape,
       variant = "fill",
-      size = "md",
+      size = "sm",
       color = "",
       ignoreSuffixClick,
       textarea,
@@ -49,7 +49,7 @@ const Input = React.forwardRef(
     return (
       <>
         <label
-          className={`${className} p-0 flex border border-[#D0D5DD] items-center justify-center cursor-text bg-white ${
+          className={`${className} p-0 flex border border-[#D0D5DD] items-center justify-center cursor-text bg-white text-sm ${
             (shape && shapes[shape]) || ""
           } ${variants[variant]?.[color] || variants[variant] || ""} ${
             sizes[size] || ""
@@ -64,7 +64,7 @@ const Input = React.forwardRef(
               name={name}
               onChange={handleChange}
               placeholder={placeholder}
-              className="flex-1 h-full bg-transparent border-none rounded-lg outline-none focus:ring-0"
+              className="flex-1 h-full bg-transparent border-none rounded-lg outline-none focus:ring-0 text-sm"
               rows={4}
               {...restProps}
             />
@@ -75,7 +75,7 @@ const Input = React.forwardRef(
               name={name}
               onChange={handleChange}
               placeholder={placeholder}
-              className="flex-1 h-full bg-transparent border-none rounded-lg outline-none focus:ring-0"
+              className="flex-1 h-full bg-transparent border-none rounded-lg outline-none focus:ring-0 text-sm"
               {...restProps}
             />
           )}

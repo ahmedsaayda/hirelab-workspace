@@ -108,11 +108,14 @@ const EditorRenderArray = React.memo(({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4 mb-0">
+      <div className="grid grid-cols-2 gap-4 mb-0"
+     
+      >
         {items.map((a, i) => {
           const hide = a.toggle && !landingPageData?.[a.toggleKey];
           const isVideoSection = a.type === "video";
           const isImageSection = a.type === "image";
+          console.log(a)
           
           return (
             <div
@@ -245,31 +248,93 @@ const EditorRenderArray = React.memo(({
                     />
                   )}
                 </>
-              ) : a.type === "bulletPoints" ? (
-                <>
-                  {landingPageData?.[a.key]?.map((bullet, index) => (
-                    <div className="flex items-center" key={index}>
-                      <Input
-                        className="border outline-none focus-within:border-light_blue-A700"
-                        shape="round"
-                        type="text"
-                        name={`bullet_${index}`}
-                        value={bullet.bullet}
-                        onChange={(e) => {
-                           setChanged(true);
-                           const value = e.target.value;
-                           handleBulletChange(value, index, 'bullet', a.key)
-                        }}
+              ) : a.type === "bullets" ? (
+                <div className="flex flex-col gap-2">
+                  {landingPageData?.bulletPoints &&
+                    (landingPageData?.bulletPoints || []).map((bullet, idx) => (
+                      <div key={idx} className="flex flex-col gap-1">
+                        <div className="flex gap-2 items-center w-full">
+                          <Input
+                            ref={(el) => {
+                              const refKey = getFieldKey("bulletPoints", idx);
+                              console.log(
+                                "Registering bullet point ref:",
+                                refKey
+                              );
+                              setFocusRef(refKey)(el);
+                            }}
+                            onMouseEnter={() => {
+                              const hoverKey = getFieldKey("bulletPoints", idx);
+                              console.log("Hovering:", hoverKey);
+                              setHoveredField(hoverKey);
+                            }}
+                            onMouseLeave={() => setHoveredField(null)}
+                            shape="round"
+                            value={bullet.bullet}
+                            onChange={(e) =>
+                              handleBulletChange(
+                                e.slice(0, a.bulletPoints?.[0]?.max || 9999),
+                                idx,
+                                "bullet",
+                                a.key
+                              )
+                            }
+                            className="flex-1 outline-none focus:outline-none text-sm"
+                            onFocus={() => {
+                              setLastScrollToSection(null)
+                            }}
+                          />
+                          <button
+                            onClick={() => removeBulletPoint(idx, a.key)}
+                            className="p-2 text-red-500"
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                            >
+                              <path
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="flex justify-end pr-2">
+                          <Text
+                            as="p"
+                            className="!font-normal !text-xs !text-blue_gray-700_01"
+                          >
+                            {bullet.bullet?.length || 0}/{a.bulletPoints?.[0]?.max || 100}
+                          </Text>
+                        </div>
+                      </div>
+                    ))}
+                  <button
+                    onClick={() => addBulletPoint(a.key)}
+                    className="flex gap-2 items-center mt-2 text-blue-600"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path
+                        d="M12 4v16m8-8H4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
-                      <button onClick={() => removeBulletPoint(index, a.key)}>
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                  <button onClick={() => addBulletPoint(a.key)}>
-                    Add Bullet
+                    </svg>
+                    Add Bullet Point
                   </button>
-                </>
+                </div>
               ) : a.type === "datetime" ? (
                 <DateTimeSlot
                   onChange={(timeSlot) => handleDateChange(timeSlot, a.key)}
@@ -288,7 +353,7 @@ const EditorRenderArray = React.memo(({
                         setHoveredField(hoverKey);
                       }}
                       onMouseLeave={() => setHoveredField(null)}
-                      className="!text-gray-500_01 leading-[150%] font-inter"
+                      className="!text-gray-500_01 leading-[150%] font-inter text-sm"
                       shape="round"
                       type={a.inputType}
                       name="input_one"
@@ -327,6 +392,9 @@ const EditorRenderArray = React.memo(({
         onSelect={(icon) => {
           setLandingPageData(icon, selectedItemForIcon);
           setChanged(true);
+          setShowIconsSelector(false);
+        }}
+        onCancel={()=>{
           setShowIconsSelector(false);
         }}
       />

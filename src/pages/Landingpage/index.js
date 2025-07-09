@@ -220,6 +220,8 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
           fullscreen={fullscreen}
           showBackToEditButton={showBackToEditButton}
           setFullscreen={setFullscreen}
+          lpId={lpId}
+          
         />
 
         <HeroSection landingPageData={landingPageData} fetchData={fetchData} />

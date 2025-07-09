@@ -10,9 +10,11 @@ import { getFonts } from "./getFonts.js";
 import ApplyCustomFont from "./ApplyCustomFont.jsx";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import {ArrowLeftOutlined } from '@ant-design/icons';
-import { Alert, message,Modal as AntModal, Button  as AntButton} from "antd";
-import {ClipboardCheck } from "lucide-react";
+import { Modal as AntModal, Switch, Input, Spin, Button as AntButton } from "antd";
+import { message } from "antd";
+import { ClipboardCheck } from "lucide-react";
 import { LinkOutlined,CheckCircleFilled} from '@ant-design/icons';
+import CrudService from "../../services/CrudService";
 // import XIcon from "../../assets/img/x_icon.png";
 // import Mail from "../../assets/img/mail.webp";
 // public\assets\x_icon.png
@@ -208,7 +210,7 @@ const Template2 = ({ landingPageData, onClickApply }) => {
                   {...({} )}
                   color="light_blue_A700"
                   size="lg"
-                  className="w-full rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
+                  className="w-full  rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
                   onClick={() => {}} // Open form editor when "Apply now" is clicked
                 >
                   {landingPageData?.ctaApply}
@@ -222,245 +224,8 @@ const Template2 = ({ landingPageData, onClickApply }) => {
   );
 };
 
-const Template1Old = ({ landingPageData, onClickApply }) => {
-  // Extract colors for dependency tracking
-  const primaryColor = landingPageData?.primaryColor || "#2e9eac";
-  const secondaryColor = landingPageData?.secondaryColor || "#e1ce11";
-  const tertiaryColor = landingPageData?.tertiaryColor || "#44b566";
-  const x = {
-    primaryColor: "#2e9eac",
-    secondaryColor: "#e1ce11",
-    tertiaryColor: "#44b566",
-  };
 
-  
-
-  // Use our template palette hook with the default colors
-  const { getColor } = useTemplatePalette(
-    {
-      primaryColor: "#2e9eac",
-      secondaryColor: "#e1ce11",
-      tertiaryColor: "#44b566",
-      heroBackgroundColor: "white",
-    },
-    // Pass landingPageData colors as customColors to ensure updates
-    {
-      primaryColor,
-      secondaryColor,
-      tertiaryColor,
-      heroBackgroundColor: "white",
-    }
-  );
-
-  // Background color for the hero section (dark teal)
-  const bgColor = "#1a3e4c";
-  const navBgColor = "#1a4a5c";
-  const logo = landingPageData?.companyLogo || "/images3/Button.png";
-  const [isFixed, setIsFixed] = useState(false);
-  const [isTemplate3NavFixed, setIsTemplate3NavFixed] = useState(false);
-  const [currentHash, setCurrentHash] = useState(
-    window.location.hash.slice(1) || "job-specifications"
-  );
-
-  const menuItemsArray = landingPageData?.menuItems?.map((item) => item.key);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsFixed(window.scrollY > 64);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("navFixed-template3", () => {
-      setIsTemplate3NavFixed(true);
-    });
-    window.addEventListener("navUnfixed-template3", () => {
-      setIsTemplate3NavFixed(false);
-    });
-  }, []);
-
-  // Listen for hash changes
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1);
-      setCurrentHash(hash || "job-specifications");
-    };
-
-    // Set initial hash
-    handleHashChange();
-
-    // Add event listener for hash changes
-    window.addEventListener("hashchange", handleHashChange);
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
-
-
-  const handleNavigate = (id) => {
-    // Dispatch a custom event that the iframe can listen to
-    const event = new CustomEvent('navigateToSection', { detail: { id } });
-    window.dispatchEvent(event);
-    // Update the URL hash
-    window.location.hash = `#${id}`;
-  };
-  const textColor = calculateTextColor(getColor("primary", 900));
-  const navigationTextColor = calculateTextColor(getColor("primary", 800));
-  return (
-    <>
-      <header
-        style={{
-          backgroundColor: !isTemplate3NavFixed
-            ? "transparent"
-            : getColor("primary", 800),
-          zIndex: 999,
-          transition: "background-color 0.6s ease",
-        }}
-        className={`flex ${
-          isFixed ? "fixed top-0" : "absolute"
-        }  items-center px-4 w-full h-16 sm:px-6 lg:px-8`}
-      >
-        <div className="w-full max-w-[1500px] mx-auto flex items-center ">
-          <div className="flex items-center">
-            <img src={logo} alt="Logo" className="mr-10 w-auto h-8" />
-          </div>
-          <div className="flex gap-3 justify-end w-full ">
-            <button
-              style={{
-                color: textColor,
-                borderColor: textColor,
-              }}
-              className="px-6 py-2 text-sm text-white rounded-full border transition hover:opacity-50"
-            >
-              <Share2 size={20} />
-            </button>
-            <button
-              className="px-6 py-2 text-sm font-medium text-black rounded-full transition hover:bg-yellow-300"
-              style={{
-                backgroundColor: getColor("primary", 800),
-                color: textColor,
-                fontSize: "20px",
-              }}
-            >
-              Apply Now
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {isTemplate3NavFixed && (
-        <div
-          className="fixed top-16 left-0 right-0 h-16 mx-auto transition-all duration-100 z-[88888]"
-          style={{
-            backgroundColor: getColor("primary", 800),
-            zIndex: 100,
-            width: "100%",
-          }}
-        >
-          <div
-            className="flex justify-center items-center mx-auto"
-            style={{
-              width: "100%",
-            }}
-          >
-            <div className="flex overflow-x-auto items-center scrollbar-hide">
-              {[
-                {
-                  id: "job-specifications",
-                  label: "Summary",
-                  enabled: menuItemsArray?.includes("Job Specifications"),
-                },
-                {
-                  id: "recruiter-contact",
-                  label: "Contacts",
-                  enabled: menuItemsArray?.includes("Recruiter Contact"),
-                },
-                {
-                  id: "job-description",
-                  label: "Description",
-                  enabled: menuItemsArray?.includes("Job Description"),
-                },
-                {
-                  id: "agenda",
-                  label: "Agenda",
-                  enabled: menuItemsArray?.includes("Agenda"),
-                },
-                {
-                  id: "about-the-company",
-                  label: "About Us",
-                  enabled: menuItemsArray?.includes("About The Company"),
-                },
-                {
-                  id: "company-facts",
-                  label: "Company Facts",
-                  enabled: menuItemsArray?.includes("Company Facts"),
-                },
-                {
-                  id: "leader-introduction",
-                  label: "Leader Intro",
-                  enabled: menuItemsArray?.includes("Leader Introduction"),
-                },
-                {
-                  id: "testimonials",
-                  label: "Testimonials",
-                  enabled: menuItemsArray?.includes("Employee Testimonials"),
-                },
-                {
-                  id: "application-process",
-                  label: "Application Process",
-                  enabled: menuItemsArray?.includes("Candidate Process"),
-                },
-                {
-                  id: "growth-path",
-                  label: "Growth Path",
-                  enabled: menuItemsArray?.includes("Growth Path"),
-                },
-              ]
-                .filter((tab) => tab.enabled)
-                ?.map((tab, index) => (
-                  <>
-                    <button
-                      key={index}
-                      onClick={() => handleNavigate(tab.id)}
-                      className="px-4 py-3 md:px-5 md:py-4 text-xs md:text-sm whitespace-nowrap transition-colors"
-                      style={{
-                        color:
-                          currentHash === tab.id
-                            ? getColor("secondary", 500)
-                            : navigationTextColor,
-                        opacity: currentHash === tab.id ? 1 : 0.6,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = getColor(
-                          "secondary",
-                          500
-                        );
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color =
-                          currentHash === tab.id
-                            ? getColor("secondary", 500)
-                            : navigationTextColor;
-                      }}
-                    >
-                      {tab.label}
-                    </button>
-                  </>
-                ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-};
-const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen,lpId ,isEdit}) => {
+const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData }) => {
   console.log("lpId",lpId);
   // Get device from global variable set by PreviewContainer
   const [device, setDevice] = useState((window ).__previewDevice || "desktop");
@@ -527,8 +292,54 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   const[shareIcon, setShareIcon] = useState(<Share2 size={20}/>);
   const [modalVisible, setModalVisible] = useState(false);
   const [link, setLink] = useState('');
+  const [applyLinkModalVisible, setApplyLinkModalVisible] = useState(false);
+  const [ctaLink, setCtaLink] = useState("");
+  const [initialCtaLink, setInitialCtaLink] = useState("");
+  const [isPublishing, setIsPublishing] = useState(false);
 
-const handleShareClick = () => {
+  useEffect(() => {
+    if (landingPageData) {
+      setCtaLink(landingPageData.cta2Link || '#apply');
+      setInitialCtaLink(landingPageData.cta2Link || '#apply');
+    }
+  }, [landingPageData]);
+
+  const handleSaveCtaLink = () => {
+    if (!ctaLink.trim()) {
+      message.warning("Please enter a valid URL");
+      return;
+    }
+
+    CrudService.update("LandingPageData", lpId, {
+      cta2Link: ctaLink
+    }).then(() => {
+      setLandingPageData((d) => ({
+        ...d,
+        cta2Link: ctaLink
+      }));
+      setInitialCtaLink(ctaLink);
+      message.success("Apply button URL updated successfully");
+      setApplyLinkModalVisible(false);
+    }).catch(err => {
+      message.error("Failed to update Apply button URL: " + (err.message || "Unknown error"));
+    });
+  };
+
+  const handleApplyClick = () => {
+    if (isEdit) {
+      setCtaLink(landingPageData?.cta2Link || '');
+      setApplyLinkModalVisible(true);
+    } else {
+      // Ensure URL has protocol, add https:// if missing
+      let url = landingPageData?.cta2Link || '';
+      if (url && !url.match(/^https?:\/\//i)) {
+        url = 'https://' + url;
+      }
+      window.open(url, '_blank');
+    }
+  };
+
+  const handleShareClick = () => {
     const generatedLink = `${process.env.NEXT_PUBLIC_LIVE_URL}/lp/${lpId}`;
     setLink(generatedLink); // Save the generated link
     setModalVisible(true); // Show the modal
@@ -693,12 +504,12 @@ const handlemediaLink = (platform) => {
       className="px-4 z-50"
     >
       <ApplyCustomFont landingPageData={landingPageData} />
-      <header className={`flex items-center px-4 w-full h-16 sm:px-6 lg:px-8`}>
+      <header className={`flex items-center px-4 w-full sm:h-16 py-2 sm:py-0 sm:px-6 lg:px-8`}>
         <div className="w-full mx-auto flex items-center">
           <div className="flex items-center">
             <img src={logo} alt="Logo" className="mr-10 w-auto h-8" />
           </div>
-          <div className="flex gap-3 justify-end w-full">
+          <div className="flex gap-3 justify-end w-full flex-wrap">
             {isEditPage && lpId && !isScrolled && showBackToEditButton && fullscreen && device === "desktop" && (
               <button
                 onClick={() => {
@@ -718,14 +529,38 @@ const handlemediaLink = (platform) => {
                 color: getColor("primary", 800),
                 borderColor: getColor("primary", 800),
                 height: "45px",
-                fontSize: "16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px"
               }}
-              className="px-6 py-4 text-sm rounded-lg border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
+              className="px-6 py-4 text-xs md:text-base whitespace-nowrap  rounded-full border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
               onClick={handleShareClick}
             >
               Share {shareIcon}
             </button>
-            <AntModal
+
+
+            <button
+              className="px-6 py-2 text-xs md:text-base whitespace-nowrap  font-medium rounded-full transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 "
+              style={{
+                backgroundColor: getColor("primary", 500),
+                color: textColor,
+                
+                height: "45px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px"
+              }}
+              onClick={handleApplyClick}
+            >
+              Apply Now
+            </button>
+          </div>
+        </div>
+      </header>
+      <AntModal
               title={null}
               visible={modalVisible}
               onCancel={handleModalClose}
@@ -785,29 +620,57 @@ const handlemediaLink = (platform) => {
                 </div>
               </div>
             </AntModal>
-
-            <button
-              className="px-6 py-2 text-sm font-medium text-black rounded-lg transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 smx:text-xs"
-              style={{
-                backgroundColor: getColor("primary", 500),
-                color: textColor,
-                fontSize: "16px",
-              }}
-              // onClick={onClickApply}
-              onClick={()=>{
-                // Ensure URL has protocol, add https:// if missing
-                let url = landingPageData?.cta2Link || '';
-                if (url && !url.match(/^https?:\/\//i)) {
-                  url = 'https://' + url;
-                }
-                window.open(url, '_blank');
-              }}
+      {/* Apply Link Modal */}
+      <AntModal
+        title="Set Apply Button URL"
+        open={applyLinkModalVisible}
+        onCancel={() => setApplyLinkModalVisible(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <div className="py-4">
+          <div className="mb-6">
+            <p className="text-gray-600 mb-4">
+              Before publishing your landing page, please set the URL where candidates will be directed when they click the Apply button.
+            </p>
+          </div>
+          
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Apply Button URL *
+            </label>
+            <Input
+              value={ctaLink}
+              onChange={(e) => setCtaLink(e.target.value)}
+              placeholder="https://example.com/apply"
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              This should be your application form or job posting URL
+            </p>
+          </div>
+          
+          <div className="flex justify-end gap-3">
+            <AntButton
+              onClick={() => setApplyLinkModalVisible(false)}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
             >
-              Apply Now
-            </button>
+              Cancel
+            </AntButton>
+            <AntButton
+              onClick={handleSaveCtaLink}
+              disabled={!ctaLink.trim()}
+              className={`px-4 py-2 rounded-md ${
+                ctaLink.trim()
+                  ? 'bg-[#5207CD] text-white hover:bg-[#0C7CE6]'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              Save URL
+            </AntButton>
           </div>
         </div>
-      </header>
+      </AntModal>
 
       <div
         className="w-full h-16 mx-auto transition-all duration-100 z-[88888] border-t border-gray-200"
@@ -919,7 +782,7 @@ const handlemediaLink = (platform) => {
   );
 };
 
-const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen,lpId }) => {
+const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData }) => {
   if (landingPageData?.templateId?.toLowerCase() === "3")
     return (
       <Template3
@@ -942,6 +805,9 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
         showBackToEditButton={showBackToEditButton}
         fullscreen={fullscreen}
         setFullscreen={setFullscreen}
+        lpId={lpId}
+        isEdit={isEdit}
+        setLandingPageData={setLandingPageData}
       />
     );
   return (
@@ -951,6 +817,9 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
       showBackToEditButton={showBackToEditButton}
       fullscreen={fullscreen}
       setFullscreen={setFullscreen}
+      lpId={lpId}
+      isEdit={isEdit}
+      setLandingPageData={setLandingPageData}
     />
   );
 };

@@ -432,48 +432,19 @@ export default function Header({
                   shape="round"
                   className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${i === 0
                       ? landingPageData?.templateId === `${i + 1}`
-                        ? "bg-[#5207CD] text-[#FFFFFF]"
+                        ? "bg-blue-500 text-[#FFFFFF]"
                         : "bg-[#FFFFFF] text-blue_gray-800_01 border rounded-full border-solid border-blue_gray-100"
                       : "bg-gray-200  cursor-not-allowed"
                   }`}
                 >
-                  {i === 0 ? "Choose Template" : "Coming Soonnn"}
+                  {i === 0 ? "Choose Template" : "Coming Soon"}
                 </Button>
               </div>
             </div>
           ))}
         </div>
         
-        {/* Apply Button URL Input */}
-        <div className="mt-6 border-t pt-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-1">Apply Button URL</h3>
-            <p className="text-sm text-gray-500">Set the URL where users will be directed when they click the Apply button</p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex-grow">
-              <Input
-                value={ctaLink}
-                onChange={(e) => setCtaLink(e.target.value)}
-                placeholder="Enter URL (https://example.com/apply)"
-                className="w-full"
-              />
-             
-            </div>
-            <Button
-              onClick={handleSaveCtaLink}
-              disabled={ctaLink === initialCtaLink || !ctaLink.trim()}
-              className={`${
-                ctaLink !== initialCtaLink && ctaLink.trim() 
-                  ? 'bg-[#5207CD] text-white' 
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              Save URL
-            </Button>
-          </div>
-        </div>
+     
       </Modal>
 
       {/* Apply Link Modal */}
