@@ -7,7 +7,7 @@ import { login } from "../../redux/auth/actions";
 import { store } from "../../redux/store";
 import AuthService from "../../services/AuthService";
 
-import { Checkbox } from "antd";
+import { Checkbox, message } from "antd";
 import { useSelector } from "react-redux";
 import { getPartner, selectLoading } from "../../redux/auth/selectors";
 import { Button } from "../Landing/Button";
@@ -15,6 +15,7 @@ import { TextField } from "../Landing/Fields";
 import { Logo } from "../Landing/Logo";
 import { SlimLayout } from "../Landing/SlimLayout";
 import { partner } from "../../constants";
+import TeamService from "../../services/TeamService";
 
 const Login = () => {
 
@@ -51,7 +52,65 @@ const Login = () => {
 
       store.dispatch(login(me.data.me));
 
-      router.push("/auth/otpemail");
+      // Check for return URL from query params (team invitation)
+      const returnUrl = router.query.returnUrl;
+      let hasTeamInvite = false;
+      
+
+      
+      // If returnUrl contains a team join link, extract the invite link
+      if (returnUrl && returnUrl.includes('/team/join/')) {
+        const urlParts = returnUrl.split('/team/join/');
+        if (urlParts.length === 2) {
+          const inviteLink = urlParts[1];
+          localStorage.setItem("pendingTeamInvite", inviteLink);
+          Cookies.set("pendingTeamInvite", inviteLink, { expires: 1 });
+          hasTeamInvite = true;
+          console.log("🔥 Registration: Set team invite cookie", inviteLink);
+        }
+      }
+
+      // Check for pending invitation (email invite) - check both localStorage and cookies
+      let pendingInvitation = localStorage.getItem("pendingInvitation") || Cookies.get("pendingInvitation");
+      if (pendingInvitation) {
+        try {
+          await TeamService.acceptInvitation(pendingInvitation);
+          localStorage.removeItem("pendingInvitation");
+          Cookies.remove("pendingInvitation");
+          hasTeamInvite = true;
+          console.log("Registration: Successfully accepted email invitation", pendingInvitation);
+        } catch (error) {
+          console.error("Error accepting invitation:", error);
+          localStorage.removeItem("pendingInvitation");
+          Cookies.remove("pendingInvitation");
+        }
+      }
+
+      // Check for pending team invite link (shareable link)
+      const pendingTeamInvite = localStorage.getItem("pendingTeamInvite");
+      if (pendingTeamInvite) {
+        try {
+          const response = await TeamService.joinTeamByLink(pendingTeamInvite);
+          if (response.success) {
+            TeamService.setCurrentTeam(response.team);
+            localStorage.removeItem("pendingTeamInvite");
+            Cookies.remove("pendingTeamInvite");
+            hasTeamInvite = true;
+          }
+        } catch (error) {
+          console.error("Error joining team:", error);
+          localStorage.removeItem("pendingTeamInvite");
+          Cookies.remove("pendingTeamInvite");
+        }
+      }
+      
+      // If user joined via team invite, skip onboarding and go to dashboard
+      // Otherwise, continue with normal onboarding flow
+      if (hasTeamInvite) {
+        router.push("/dashboard");
+      } else {
+        router.push("/auth/otpemail");
+      }
     },
     [router]
   );
@@ -71,7 +130,7 @@ const Login = () => {
           <p className="mt-3 text-[#667085] dark:text-gray-300 text-base font-normal ">
             Already registered?{" "}
             <Link
-              href="/auth/login"
+              href={`/auth/login${router.query.returnUrl ? `?returnUrl=${router.query.returnUrl}` : ''}`}
               className="font-medium text-blue-600 hover:underline"
             >
               Sign in

@@ -30,10 +30,11 @@ import {
   UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { Spin } from "antd";
+import { Spin, message } from "antd";
 import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import Link from "next/link";
+import Cookies from "js-cookie";
 import {
   BellrIcon,
   LogoIcon,
@@ -64,7 +65,9 @@ import {
 } from "../../redux/auth/selectors.js";
 import { partner } from "../../constants.js";
 import CrudService from "../../services/CrudService.js";
+import TeamService from "../../services/TeamService.js";
 import debounce from "lodash/debounce";
+import { useRouter } from "next/router";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -82,6 +85,13 @@ export default function Example({
   const user = useSelector(selectUser);
   const loading = useSelector(selectLoading);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  
+  // Team management state
+  const [userTeams, setUserTeams] = useState([]);
+  const [currentTeam, setCurrentTeam] = useState(null);
+  const [currentUserRole, setCurrentUserRole] = useState("viewer");
+  const [loadingTeams, setLoadingTeams] = useState(false);
+  const router = useRouter();
 
   // Search functionality state
   const [searchQuery, setSearchQuery] = useState("");
@@ -167,10 +177,188 @@ export default function Example({
     setShowInviteModal(false);
    
   };
-  const handleOpenModal = () => {
-    setShowInviteModal(true);
-   
+  const handleOpenModal = async () => {
+    try {
+      setLoadingTeams(true);
+      
+      // First, refresh the user's teams to ensure we have the latest data
+      const response = await TeamService.getUserTeams();
+      const userTeams = response.teams || [];
+      setUserTeams(userTeams);
+      
+      // Validate current team - check if user is still a member
+      let validCurrentTeam = null;
+      if (currentTeam && userTeams.length > 0) {
+        validCurrentTeam = userTeams.find(t => t._id === currentTeam._id);
+        if (!validCurrentTeam) {
+          console.warn("Current team is no longer accessible, clearing it");
+          setCurrentTeam(null);
+          TeamService.removeCurrentTeam();
+        }
+      }
+      
+      // If no valid current team, try to set one from available teams
+      if (!validCurrentTeam && userTeams.length > 0) {
+        validCurrentTeam = userTeams[0];
+        setCurrentTeam(validCurrentTeam);
+        setCurrentUserRole(validCurrentTeam.role || "viewer");
+        TeamService.setCurrentTeam(validCurrentTeam);
+        console.log("Set new current team:", validCurrentTeam.name);
+      }
+      
+      // If still no team, try to create one
+      if (!validCurrentTeam) {
+        console.log("No teams found, creating new team");
+        try {
+          const createResponse = await TeamService.createTeamForUser();
+          
+          if (createResponse.success) {
+            validCurrentTeam = createResponse.team;
+            setCurrentTeam(validCurrentTeam);
+            setCurrentUserRole("owner");
+            TeamService.setCurrentTeam(validCurrentTeam);
+            
+            // Refresh team list to include the new team
+            await loadUserTeams();
+            
+            console.log('Team created successfully:', validCurrentTeam.name);
+            message.success('New team created successfully!');
+          } else {
+            console.error('Failed to create team:', createResponse.message);
+            message.error('Failed to create team. Please try again.');
+            setLoadingTeams(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error creating team:', error);
+          message.error('Unable to create team. Please contact support.');
+          setLoadingTeams(false);
+          return;
+        }
+      }
+      
+      setLoadingTeams(false);
+      
+      // Open modal with validated team
+      if (validCurrentTeam) {
+        console.log("Opening modal for team:", validCurrentTeam.name);
+        setShowInviteModal(true);
+      } else {
+        message.error('Unable to access or create a team. Please contact support.');
+      }
+    } catch (error) {
+      console.error('Error in handleOpenModal:', error);
+      message.error('Something went wrong. Please try again.');
+      setLoadingTeams(false);
+    }
   };
+
+  // Team management functions
+  const loadUserTeams = async () => {
+    if (!user) return;
+    
+    try {
+      setLoadingTeams(true);
+      const response = await TeamService.getUserTeams();
+      const userTeams = response.teams || [];
+      setUserTeams(userTeams);
+      
+      // Clear any existing team references
+      setCurrentTeam(null);
+      setCurrentUserRole("viewer");
+      
+      // Validate and set current team
+      const storedTeam = TeamService.getCurrentTeam();
+      let teamToSet = null;
+      
+      if (storedTeam && userTeams.length > 0) {
+        // Only use stored team if user is actually a member of it
+        teamToSet = userTeams.find(t => t._id === storedTeam._id);
+        
+        if (!teamToSet) {
+          // Stored team is invalid, clear it and use first available team
+          console.warn("Stored team is no longer accessible, clearing localStorage");
+          TeamService.removeCurrentTeam();
+          teamToSet = userTeams[0];
+        }
+      } else if (userTeams.length > 0) {
+        // No stored team or empty teams, use first available
+        teamToSet = userTeams[0];
+      }
+      
+      // Set the validated team
+      if (teamToSet) {
+        setCurrentTeam(teamToSet);
+        setCurrentUserRole(teamToSet.role || "viewer");
+        TeamService.setCurrentTeam(teamToSet);
+        console.log("Set current team:", teamToSet.name, "Role:", teamToSet.role);
+      } else {
+        // No teams available, clear everything
+        console.log("No teams available for user");
+        TeamService.removeCurrentTeam();
+        setCurrentTeam(null);
+        setCurrentUserRole("viewer");
+      }
+    } catch (error) {
+      console.error("Error loading teams:", error);
+      // Clear team references on error
+      setCurrentTeam(null);
+      setCurrentUserRole("viewer");
+      TeamService.removeCurrentTeam();
+    } finally {
+      setLoadingTeams(false);
+    }
+  };
+
+  const handleSwitchTeam = async (team) => {
+    try {
+      console.log(`🔄 Frontend: Switching to team ${team.name} (${team._id})`);
+      console.log(`🔄 Current user role in this team: ${team.role}`);
+      
+      await TeamService.switchTeam(team._id);
+      setCurrentTeam(team);
+      setCurrentUserRole(team.role || "viewer");
+      TeamService.setCurrentTeam(team);
+      
+      // Clear any stale localStorage data
+      console.log(`🔄 Clearing localStorage and reloading...`);
+      localStorage.removeItem("pendingInvitation");
+      localStorage.removeItem("teamMemberState");
+      
+      // Add cache busting to force clean reload
+      window.location.href = window.location.pathname + "?t=" + Date.now();
+    } catch (error) {
+      console.error("Error switching team:", error);
+    }
+  };
+
+  // Load teams on component mount
+  useEffect(() => {
+    if (user) {
+      loadUserTeams();
+    }
+  }, [user]);
+
+  // 🔥 Check if user has pending EMAIL invitations and redirect
+  useEffect(() => {
+    const checkPendingInvitations = async () => {
+      if (user && user.email) {
+        try {
+          // Check if user has pending invitations by email
+          const response = await TeamService.getInvitationByEmail(user.email);
+          if (response.success && response.invitation) {
+            console.log("🔥 User has pending invitation, redirecting:", response.invitation.token);
+            router.push(`/team/invitation/${response.invitation.token}`);
+          }
+        } catch (error) {
+          // No pending invitations, continue normally
+          console.log("No pending invitations for user");
+        }
+      }
+    };
+
+    checkPendingInvitations();
+  }, [user, router]);
 
   // Cleanup debounced function on unmount
   useEffect(() => {
@@ -634,11 +822,25 @@ export default function Example({
                           selectedTopRightOption === "invite"
                             ? "active"
                             : ""
-                        } cursor-pointer flex items-center h-full`}
+                        } cursor-pointer flex items-center h-full ${
+                          loadingTeams ? "opacity-50" : ""
+                        }`}
                       >
-                        <UserPlus />
+                        {loadingTeams ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-transparent"></div>
+                        ) : (
+                          <UserPlus />
+                        )}
                       </div>
-                      {showInviteModal && <InviteModal open={showInviteModal} onClose={handleCloseModal} />}
+                      {showInviteModal && (
+                        <InviteModal 
+                          open={showInviteModal} 
+                          onClose={handleCloseModal} 
+                          teamId={currentTeam?._id}
+                          teamName={currentTeam?.name}
+                          currentUserRole={currentUserRole}
+                        />
+                      )}
                       <div
                         onClick={() => {
                           setSelectedTopRightOption("notifications");
@@ -713,6 +915,43 @@ export default function Example({
                             <span className="text-[10px] px-1 rounded-lg border w-fit bg-white-A700_33">Free</span>
                           </div>
                         </div>
+
+                        {/* Team Switcher */}
+                        {userTeams.length > 0 && (
+                          <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                              Current Team
+                            </div>
+                            <div className="space-y-1">
+                              {userTeams.map((team) => (
+                                <button
+                                  key={team._id}
+                                  onClick={() => handleSwitchTeam(team)}
+                                  className={`w-full flex items-center gap-2 px-2 py-1 text-sm rounded-md transition-colors ${
+                                    currentTeam?._id === team._id
+                                      ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
+                                      : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                  }`}
+                                >
+                                  <div className="w-6 h-6 rounded bg-indigo-500 flex items-center justify-center text-white text-xs font-medium">
+                                    {team.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex-1 text-left">
+                                    <div className="font-medium">{team.name}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      {team.role === 'owner' ? 'Owner' : 
+                                       team.role === 'admin' ? 'Admin' : 
+                                       team.role === 'editor' ? 'Editor' : 'Viewer'}
+                                    </div>
+                                  </div>
+                                  {currentTeam?._id === team._id && (
+                                    <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                           {userNavigation.map((item) => (
                           <Menu.Item key={item.name}>

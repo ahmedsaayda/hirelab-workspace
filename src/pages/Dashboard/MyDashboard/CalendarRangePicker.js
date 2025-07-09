@@ -22,13 +22,13 @@ export default function CalendarRangePicker() {
           pb: -2,
           width: "100px",
       [`& .MuiPickersDay-today`]: {
-        backgroundColor: 'dodgerblue',
+        backgroundColor: '#5207CD',
         borderRadius: '50%', 
         border: '1px solid black',
         color: 'white',
       },
       [`& .MuiPickersDay-root.Mui-selected`]: {
-        backgroundColor: 'dodgerblue',
+        backgroundColor: '#5207CD',
         color: 'white',
         borderRadius: '50%',
       },

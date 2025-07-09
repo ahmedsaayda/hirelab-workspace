@@ -864,6 +864,8 @@ export default function BrandStyleForm() {
   // const textColors = useSelector((state:any) => state.theme.textColors);
   const theme = useSelector((state) => state.theme);
   console.log("theme", theme);
+
+
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [selectedColorType, setSelectedColorType] = useState("");
   const [brandColors, setBrandColors] = useState([]);

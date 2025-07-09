@@ -2,31 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --indigo-50: #edfaff;
-  --indigo-100: #d6f2ff;
-  --indigo-200: #b5eaff;
-  --indigo-300: #83dfff;
-  --indigo-400: #48cbff;
-  --indigo-500: #1eadff;
-  --indigo-600: #068fff;
-  --indigo-700: #007bff;
-  --indigo-800: #085ec5;
-  --indigo-900: #0d519b;
-  --indigo-950: #0e315d;
-  --blue-50: #edfaff;
-  --blue-100: #d6f2ff;
-  --blue-200: #b5eaff;
-  --blue-300: #83dfff;
-  --blue-400: #48cbff;
-  --blue-500: #1eadff;
-  --blue-600: #068fff;
-  --blue-700: #007bff;
-  --blue-800: #085ec5;
-  --blue-900: #0d519b;
-  --blue-950: #0e315d;
-}
 
+:root {
+  --indigo-50: #f4efff;
+  --indigo-100: #e3d7ff;
+  --indigo-200: #c7adff;
+  --indigo-300: #a27bff;
+  --indigo-400: #804dff;
+  --indigo-500: #5207cd; /* Base color */
+  --indigo-600: #4705b5;
+  --indigo-700: #3a0496;
+  --indigo-800: #2f0378;
+  --indigo-900: #25025f;
+  --indigo-950: #180039;
+  --blue-50: #f4efff;
+  --blue-100: #e3d7ff;
+  --blue-200: #c7adff;
+  --blue-300: #a27bff;
+  --blue-400: #804dff;
+  --blue-500: #5207cd; /* Base color */
+  --blue-600: #4705b5;
+  --blue-700: #3a0496;
+  --blue-800: #2f0378;
+  --blue-900: #25025f;
+  --blue-950: #180039;
+}
 
 
 body {

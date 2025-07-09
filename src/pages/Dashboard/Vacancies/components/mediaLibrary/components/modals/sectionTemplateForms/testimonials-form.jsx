@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Input, Button, Switch, Form, message } from "antd";
 import { PlusOutlined, CloseOutlined } from "@ant-design/icons";
 import { SmartTags } from "../../smart-tags.jsx";
+import ImageUploader from "../../../../../../../LandingpageEdit/ImageUploader.js";
 // import ImageUploader from "..."; const ImageUploader = () => <div>Image Uploader Placeholder</div>;
 
 const { TextArea } = Input;

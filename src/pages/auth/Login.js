@@ -13,6 +13,7 @@ import { Button } from "../Landing/Button";
 import { TextField } from "../Landing/Fields";
 import { Logo } from "../Landing/Logo";
 import { SlimLayout } from "../Landing/SlimLayout";
+import TeamService from "../../../src/services/TeamService";
 
 const Login = () => {
   const router = useRouter();
@@ -34,6 +35,53 @@ const Login = () => {
 
     store.dispatch(login(me.data.me));
 
+    // Check for return URL from query params (team invitation)
+    const returnUrl = router.query.returnUrl;
+    
+    // If returnUrl contains a team join link, extract the invite link
+    if (returnUrl && returnUrl.includes('/team/join/')) {
+      const urlParts = returnUrl.split('/team/join/');
+      if (urlParts.length === 2) {
+        const inviteLink = urlParts[1];
+        localStorage.setItem("pendingTeamInvite", inviteLink);
+        Cookies.set("pendingTeamInvite", inviteLink, { expires: 1 });
+        console.log("Login: Set team invite cookie", inviteLink);
+      }
+    }
+
+    // Check for pending invitation (email invite) - check both localStorage and cookies
+    let pendingInvitation = localStorage.getItem("pendingInvitation") || Cookies.get("pendingInvitation");
+    if (pendingInvitation) {
+      try {
+        await TeamService.acceptInvitation(pendingInvitation);
+        localStorage.removeItem("pendingInvitation");
+        Cookies.remove("pendingInvitation");
+        console.log("Login: Successfully accepted email invitation", pendingInvitation);
+      } catch (error) {
+        console.error("Error accepting invitation:", error);
+        localStorage.removeItem("pendingInvitation");
+        Cookies.remove("pendingInvitation");
+      }
+    }
+
+    // Check for pending team invite link (shareable link)
+    const pendingTeamInvite = localStorage.getItem("pendingTeamInvite");
+    if (pendingTeamInvite) {
+      try {
+        const response = await TeamService.joinTeamByLink(pendingTeamInvite);
+        if (response.success) {
+          TeamService.setCurrentTeam(response.team);
+          localStorage.removeItem("pendingTeamInvite");
+          Cookies.remove("pendingTeamInvite");
+        }
+      } catch (error) {
+        console.error("Error joining team:", error);
+        localStorage.removeItem("pendingTeamInvite");
+        Cookies.remove("pendingTeamInvite");
+      }
+    }
+
+    // Redirect to dashboard (team will be set if user joined via invite)
     router.push("/dashboard");
   };
 
@@ -51,7 +99,7 @@ const Login = () => {
         <p className="mt-3 text-[#667085] dark:text-gray-300 text-base font-normal">
           Sign in to your account. Don't have an account?{" "}
           <Link
-            href="/auth/register"
+            href={`/auth/register${router.query.returnUrl ? `?returnUrl=${router.query.returnUrl}` : ''}`}
             className="font-medium text-blue-600 hover:underline"
           >
             Sign up

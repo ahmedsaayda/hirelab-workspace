@@ -160,7 +160,8 @@ export async function middleware(request) {
   // If no access token, redirect to login and save the intended destination
   if (!accessToken) {
     const loginUrl = new URL('/auth/login', request.url);
-    // Store the intended destination
+    // Store the intended destination as a query parameter
+    loginUrl.searchParams.set('returnUrl', request.url);
     const response = NextResponse.redirect(loginUrl);
     return response;
   }
