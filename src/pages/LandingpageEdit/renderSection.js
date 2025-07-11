@@ -23,22 +23,47 @@ export const renderSection = ({
   fetchData,
   landingPageData = defaultLandingPageData,
   setLandingPageData,
-  key = Math.random(),
+  key= Math.random(),
+  similarJobs,
+  similarJobsLoading,
 }) => {
   console.log("section", section);
   console.log("landingPageData", landingPageData);
+  
+  // Map section keys to HTML IDs for navigation
+  const sectionKeyToIdMap = {
+    "Job Specifications": "job-specifications",
+    "Recruiter Contact": "recruiter-contact", 
+    "Job Description": "job-description",
+    "Agenda": "agenda",
+    "About The Company": "about-the-company",
+    "Company Facts": "company-facts",
+    "Leader Introduction": "leader-introduction",
+    "Employee Testimonials": "testimonials",
+    "Candidate Process": "candidate-process",
+    "Growth Path": "growth-path",
+    "EVP / Mission": "evp-mission",
+    "Image Carousel": "image-carousel",
+    "Video": "video",
+    "Text Box": "text-box",
+  };
+  
+  const sectionId = sectionKeyToIdMap[section?.key];
+  
   // This function should render the corresponding section based on its key.
+  let sectionContent;
   switch (section?.key) {
     case "flexaligntop":
-      return (
+      sectionContent = (
         <HeroSection
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
     case "form-editor":
-      return (
+      sectionContent = (
         <FormE
           showFormEditor={false}
           setShowFormEditor={() => {}}
@@ -46,45 +71,51 @@ export const renderSection = ({
           noModal
         />
       );
+      break;
     case "flexalign":
-      return (
+      sectionContent = (
         <Footer key={key} fetchData={fetchData} landingPageData={landingPageData} />
       );
+      break;
     case "Employee Testimonials":
-      return (
+      sectionContent = (
         <EmployerTestimonial
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
 
     case "Leader Introduction":
-      return (
+      sectionContent = (
         <LeaderIntroduction
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
     case "Company Facts":
-      return (
+      sectionContent = (
         <CompanyFacts
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
     case "Recruiter Contact":
-      return (
+      sectionContent = (
         <RecruiterContact
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
     case "Agenda":
-      return (
+      sectionContent = (
         <Agenda
           key={key}
           fetchData={fetchData}
@@ -92,67 +123,88 @@ export const renderSection = ({
           setLandingPageData={setLandingPageData}
         />
       );
+      break;
     case "Job Specifications":
-      return (
+      sectionContent = (
         <JobSpecification
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
     case "Job Description":
-      return (
+      sectionContent = (
         <JobDescription
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
     case "About The Company":
-      return (
+      sectionContent = (
         <AboutCompany
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
 
     case "Image Carousel":
-      return (
+      sectionContent = (
         <Photos key={key} fetchData={fetchData} landingPageData={landingPageData} />
       );
+      break;
     case "EVP / Mission":
-      return (
+      sectionContent = (
         <EVPMission
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
     case "Candidate Process":
-      return (
+      sectionContent = (
         <CandidateProcess
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
     case "Growth Path":
-      return (
+      sectionContent = (
         <GrowthPath
           key={key}
           fetchData={fetchData}
           landingPageData={landingPageData}
         />
       );
+      break;
     case "Video":
-      return <Video key={key} fetchData={fetchData} landingPageData={landingPageData} />;
+      sectionContent = <Video key={key} fetchData={fetchData} landingPageData={landingPageData} />;
+      break;
     case "Text Box":
-      return (
+      sectionContent = (
         <TextBox key={key} fetchData={fetchData} landingPageData={landingPageData} />
       );
+      break;
 
     default:
-      return <></>;
+      sectionContent = <></>;
   }
+  
+  // Wrap with ID for navigation if we have a section ID
+  if (sectionId) {
+    return (
+      <div id={sectionId} key={key} className="w-full">
+        {sectionContent}
+      </div>
+    );
+  }
+  
+  return sectionContent;
 }; 

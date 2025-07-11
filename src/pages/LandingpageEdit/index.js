@@ -1183,6 +1183,7 @@ export default function LandingpageEdit({paramsId}) {
                 landingPageData={landingPageData}
                 onClickApply={() => {}}
                 fullscreen={fullscreen}
+                setFullscreen={setFullscreen}
                 showBackToEditButton={true}
               />
               <div
@@ -1254,8 +1255,8 @@ export default function LandingpageEdit({paramsId}) {
       <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3">
         <div
           className={` py-4 flex  flex-grow ${
-            fullscreen ? "w-0 overflow-hidden" : "w-[45%]"
-          } transition-all duration-300 justify-center mdx:w-full smx:flex-col`}
+            fullscreen ? "w-0 overflow-hidden" : "w-full lg:w-[45%]"
+          } transition-all duration-300 justify-center  `}
           style={{ scrollbarWidth: "none" ,}}
         >
           <Sidebar17
@@ -1424,15 +1425,17 @@ export default function LandingpageEdit({paramsId}) {
         >
          
 
-          <div className=" h-[650px] overflow-x-hidden overflow-y-auto lg:h-[calc(100vh-100px)] min-h-[450px] mt-4 text-sm text-center text-gray-400 border border-blue-600 rounded-lg"
+          <div className=" h-[650px] overflow-x-hidden overflow-y-auto lg:h-[calc(100vh-100px)] min-h-[450px]  text-sm text-center text-gray-400 border border-blue-600 rounded-lg"
             style={{
               scrollbarWidth: "none",
-
-            }}>
+              padding:0,
+              }}>
 
           <PreviewContainer
             pageComponent={
-              <>
+              <div style={{
+                width:"100%",
+              }}>
                 <NavBar
                   landingPageData={landingPageData}
                   onClickApply={() => {}}
@@ -1482,7 +1485,7 @@ export default function LandingpageEdit({paramsId}) {
                     </div>
                   );
                 })}
-              </>
+              </div>
             }
             landingPageData={landingPageData}
             fullscreen={fullscreen}

@@ -1768,7 +1768,7 @@ const handleLogoUpload = async (url) => {
             className="h-[24px] w-[24px] top-1 right-0 cursor-pointer"
             onClick={() => setShowModal(true)}
           />
-        <div className="flex items-center justify-center w-full">
+        <div className="md:flex items-center justify-center w-full hidden">
          
           <div className="flex gap-4">
             {steps.map((step, index) => {
@@ -2500,7 +2500,7 @@ const Preview = ({ logo, landingPageData, fullscreen, setFullscreen }) => {
         setFullscreen={setFullscreen}
         pageComponent={
           <div className=" w-full h-full">
-            <NavBar landingPageData={landingPageData} showBackToEditButton={false} onClickApply={() => {}} fullscreen={fullscreen} setFullscreen={setFullscreen} />
+            <NavBar landingPageData={landingPageData} showBackToEditButton={false} onClickApply={() => {}} fullscreen={fullscreen} setFullscreen={setFullscreen} isEdit={true} />
                      <HeroSection landingPageData={landingPageData} />
             {(landingPageData?.menuItems ?? [])?.map((section, index) => {
               return (

@@ -90,8 +90,8 @@ const AiLoadingStateAnimation = ({
 
       {/* Tips section */}
       {showTips && (
-        <div className="p-4 mt-6 max-w-md bg-indigo-50 rounded-lg">
-          <h4 className="mb-2 text-sm font-semibold text-indigo-800">
+        <div className="p-4 mt-6 max-w-md bg-[#E0FFFF] rounded-lg">
+          <h4 className="mb-2 text-sm font-semibold text-blue-800">
             Did you know?
           </h4>
           <p className="text-sm text-gray-700 min-h-[3rem] transition-opacity duration-500">

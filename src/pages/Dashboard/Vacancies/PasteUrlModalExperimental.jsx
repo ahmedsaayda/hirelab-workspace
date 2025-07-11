@@ -357,27 +357,8 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
     if (!data) return null;
 
     return (
-      <div className="mx-auto h-[650px] overflow-x-hidden overflow-y-auto scrollbar-hide lg:h-[calc(100vh-50px)] lg:min-h-[450px] xl:h-[calc(100vh-50px)] xl:min-h-[700px] min-h-[450px] mt-4 text-sm text-center text-gray-400 border border-blue-600 rounded-lg">
-        <PreviewContainer
-          landingPageData={data}
-          pageComponent={
-            <div className="w-full h-[600px] overflow-y-auto">
-              <NavBar landingPageData={data} showBackToEditButton={false} onClickApply={() => {}} fullscreen={false} setFullscreen={() => {}} />
-              <HeroSection landingPageData={data} />
-              {(data?.menuItems ?? [])?.map((section, index) => (
-                <div key={index}>
-                  {renderSection({
-                    section,
-                    landingPageData: data,
-                    fetchData: () => {},
-                    setLandingPageData: () => {},
-                  })}
-                </div>
-              ))}
-              <Footer landingPageData={data} fetchData={() => {}} />
-            </div>
-          }
-        />
+      <div className="mx-auto ] overflow-x-hidden overflow-y-auto scrollbar-hide lg:h-[calc(100vh-50px)] lg:min-h-[450px] xl:h-[calc(100vh-50px)] xl:min-h-[700px] min-h-[450px] mt-4 text-sm text-center text-gray-400  rounded-lg">
+
       </div>
     );
   };

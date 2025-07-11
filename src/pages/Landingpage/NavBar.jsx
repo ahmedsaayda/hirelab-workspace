@@ -451,11 +451,70 @@ const handlemediaLink = (platform) => {
   
 
   const handleNavigate = (id) => {
-    // Dispatch a custom event that the iframe can listen to
-    const event = new CustomEvent('navigateToSection', { detail: { id } });
-    window.dispatchEvent(event);
-    // Update the URL hash
-    window.location.hash = `#${id}`;
+    console.log('Navigating to:', id);
+    console.log(`isEdit: ${isEdit}, isEditPage: ${isEditPage}`);
+    
+    let targetDocument;
+    let targetWindow;
+    
+    if (isEdit || isEditPage) {
+      // In edit mode, we need to find the iframe and access its document
+      const iframes = document.querySelectorAll('iframe');
+      console.log('Found iframes:', iframes.length);
+      
+      if (iframes.length > 0) {
+        // Get the last iframe (most likely the preview iframe)
+        const iframe = iframes[iframes.length - 1];
+        targetDocument = iframe.contentDocument || iframe.contentWindow.document;
+        targetWindow = iframe.contentWindow;
+        console.log('Using iframe document');
+      } else {
+        targetDocument = window.document;
+        targetWindow = window;
+        console.log('No iframe found, using window document');
+      }
+    } else {
+      // In public view, use the current window
+      targetDocument = window.document;
+      targetWindow = window;
+      console.log('Using current window document');
+    }
+
+    const element = targetDocument.getElementById(id);
+    console.log('Found element:', element);
+
+    if (element) {
+      const navbarHeight = 128;
+      const elementRect = element.getBoundingClientRect();
+      const currentScrollTop = targetWindow.pageYOffset || targetWindow.scrollY || 0;
+      const offsetPosition = elementRect.top + currentScrollTop - navbarHeight;
+      
+      console.log('Element rect top:', elementRect.top);
+      console.log('Current scroll top:', currentScrollTop);
+      console.log('Calculated offset position:', offsetPosition);
+      
+      targetWindow.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+      
+      // Update URL hash if possible
+      try {
+        if (targetWindow.history && targetWindow.history.pushState) {
+          targetWindow.history.pushState(null, null, `#${id}`);
+        } else {
+          targetWindow.location.hash = `#${id}`;
+        }
+      } catch (e) {
+        // Silently fail if we can't update the URL (cross-origin iframe restrictions)
+        console.log('Could not update URL hash:', e);
+      }
+    } else {
+      console.log(`Element with id "${id}" not found`);
+      // List all elements with IDs for debugging
+      const allElementsWithIds = Array.from(targetDocument.querySelectorAll('[id]')).map(el => el.id);
+      console.log('Available IDs:', allElementsWithIds);
+    }
   };
 
 
@@ -495,7 +554,7 @@ const handlemediaLink = (platform) => {
         zIndex: 999,
         transition: "background-color 0.6s ease",
         position: "fixed",
-        top: -2,
+        top:fullscreen?44: 0,
         left: 0,
         right: 0,
         width: "100%",
@@ -534,7 +593,7 @@ const handlemediaLink = (platform) => {
                 justifyContent: "center",
                 gap: "8px"
               }}
-              className="px-6 py-4 text-xs md:text-base whitespace-nowrap  rounded-full border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
+              className="px-6  text-xs md:text-base whitespace-nowrap  rounded-md border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
               onClick={handleShareClick}
             >
               Share {shareIcon}
@@ -542,7 +601,7 @@ const handlemediaLink = (platform) => {
 
 
             <button
-              className="px-6 py-2 text-xs md:text-base whitespace-nowrap  font-medium rounded-full transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 "
+              className="px-6  text-xs md:text-base whitespace-nowrap  font-medium rounded-md transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 "
               style={{
                 backgroundColor: getColor("primary", 500),
                 color: textColor,
@@ -693,7 +752,7 @@ const handlemediaLink = (platform) => {
 
           <div
             ref={scrollRef}
-            className="flex overflow-x-auto items-center scrollbar-hide"
+            className={`flex items-center scrollbar-hide ${isEditPage ? 'overflow-x-auto' : ''}`}
             style={{ scrollBehavior: "smooth", paddingLeft: "1px", paddingRight: "1px" }}
           >
             {[

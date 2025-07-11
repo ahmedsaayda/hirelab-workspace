@@ -96,6 +96,8 @@ export const IFrame = ({
       style={{
         margin: "auto",
         scrollbarWidth: "none",
+        paddingTop: "0px",
+        
       }}
     >
       {mountNode && createPortal(children, mountNode)}
@@ -115,27 +117,84 @@ export function PreviewContainer({
   showBackToEditButton,
 }) {
 
-  // Device sizes based on fullscreen mode
-  let setdevicebasedonfullscreen;
+  // State to track window dimensions
+  const [windowDimensions, setWindowDimensions] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1440,
+    height: typeof window !== 'undefined' ? window.innerHeight : 980,
+  });
 
-  if (fullscreen) {
-    setdevicebasedonfullscreen = {
-      desktop: { width: 1440, height: 848 }, // ALWAYS 1440px for desktop
-      mobile: { width: 475, height: 800 },
+  // Device state management
+  const [device, setDevice] = useState("desktop");
+
+  // Listen for device changes from navbar
+  useEffect(() => {
+    const handleDeviceChange = (event) => {
+      if (event.detail?.device) {
+        setDevice(event.detail.device);
+      }
     };
-  } else {
-    setdevicebasedonfullscreen = {
-      desktop: { width: 1960, height: 1080 }, // ALWAYS 1440px for desktop
-      mobile: { width: 475, height: 750 },
+    
+    window.addEventListener('deviceChange', handleDeviceChange);
+    return () => window.removeEventListener('deviceChange', handleDeviceChange);
+  }, []);
+
+  // Expose setDevice to window for navbar access
+  useEffect(() => {
+    window.__setPreviewDevice = (newDevice) => {
+      setDevice(newDevice);
+      // Dispatch event for any other components that need to know about device changes
+      window.dispatchEvent(
+        new CustomEvent('deviceChange', { detail: { device: newDevice } })
+      );
     };
-  }
-  
-  const deviceSizes = setdevicebasedonfullscreen;
-  const router = useRouter();;
+    return () => {
+      delete window.__setPreviewDevice;
+    };
+  }, []);
+
+  // Update window.__previewDevice when device changes
+  useEffect(() => {
+    window.__previewDevice = device;
+  }, [device]);
+
+  // Update window dimensions on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Device sizes based on fullscreen mode and current window size
+  const deviceSizes = React.useMemo(() => {
+    if (fullscreen) {
+      return {
+        desktop: { 
+          width: windowDimensions.width, 
+          height: windowDimensions.height - 40 // Minimal UI space
+        },
+        mobile: { width: 475, height: windowDimensions.height - 40 },
+      };
+    } else {
+      return {
+        desktop: { 
+          width: 1440, // Keep standard desktop width for consistent scaling
+          height: windowDimensions.height - 80 // Reduced from 120 for more space
+        },
+        mobile: { width: 475, height: windowDimensions.height - 80 },
+      };
+    }
+  }, [fullscreen, windowDimensions]);
+
+  const router = useRouter();
   const { baseColors, variants, gradients } = useSelector(
     (state) => state.theme
   );
-  const [device, setDevice] = useState("desktop");
   const [containerHeight, setContainerHeight] = useState(
     deviceSizes[device].height
   );
@@ -289,24 +348,42 @@ export function PreviewContainer({
     }
   }, [fonts]);
 
+  // Updated scale calculation to fill available space
   const calculateScale = () => {
     if (!containerRef.current) return 1;
     const containerWidth = containerRef.current.clientWidth;
     const containerHeight = containerRef.current.clientHeight;
     
-    if (device === "desktop") {
-      // Desktop: ALWAYS calculate based on 1440px width
-      const widthScale = containerWidth / 1440;
-      const heightScale = containerHeight / deviceSizes[device].height;
-      return Math.min(widthScale, heightScale, 1);
-    } else {
-      // Mobile: use device width
-      const { width, height } = deviceSizes[device];
-      const widthScale = containerWidth / width;
-      const heightScale = containerHeight / height;
-      return Math.min(widthScale, heightScale, 1);
-    }
+    // Base dimensions for scaling reference
+    const baseWidth = device === "desktop" ? 1440 : 475;
+    const baseHeight = device === "desktop" ? 900 : 800; // Use fixed base heights
+    
+    // Calculate scale to fill the entire parent container
+    const widthScale = containerWidth / baseWidth;
+    const heightScale = containerHeight / baseHeight;
+    
+    // Use the smaller scale to maintain aspect ratio, but fill as much as possible
+    return Math.min(widthScale, heightScale);
   };
+
+  // option 2 = take all width , weired height
+
+  // const calculateScale = () => {
+  //   if (!containerRef.current) return 1;
+  //   const containerWidth = containerRef.current.clientWidth;
+  //   const containerHeight = containerRef.current.clientHeight;
+    
+  //   if (device === "desktop") {
+  //     // Desktop: Always scale to fit the container width, ignoring height constraints
+  //     return containerWidth / 1440;
+  //   } else {
+  //     // Mobile: use device width and height
+  //     const { width, height } = deviceSizes[device];
+  //     const widthScale = containerWidth / width;
+  //     const heightScale = containerHeight / height;
+  //     return Math.min(widthScale, heightScale, 1);
+  //   }
+  // };
 
   useEffect(() => {
     const updateScale = () => setScale(calculateScale());
@@ -314,18 +391,18 @@ export function PreviewContainer({
       setContainerHeight(
         containerRef?.current?.clientHeight || deviceSizes[device].height
       );
+    
     updateScale();
     updateHeight();
-    window.addEventListener("resize", () => {
+    
+    const handleResize = () => {
       updateScale();
       updateHeight();
-    });
-    return () =>
-      window.removeEventListener("resize", () => {
-        updateScale();
-        updateHeight();
-      });
-  }, [device]);
+    };
+    
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [device, deviceSizes, fullscreen]);
 
      useEffect(() => {
     // Handle URL hash change
@@ -352,24 +429,9 @@ export function PreviewContainer({
   }, [pageComponent, device]);
 
   return (
-    <div className="flex flex-col h-full relative">
-      {/* Floating Back to Edit Button for Mobile */}
-      {showBackToEditButton && fullscreen && device === "mobile" && (
-        <button
-          onClick={() => {
-            setFullscreen && setFullscreen(false);
-          }}
-          className="fixed top-8 right-4 z-[9999] px-3 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 flex gap-2 items-center justify-center shadow-lg transition-all duration-200"
-          style={{ zIndex: 10000 }}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to edit
-        </button>
-      )}
-      
-      <div className="flex relative gap-2 justify-center items-center pt-2 px-6">
+    <div className="flex flex-col h-full relative w-full">
+      {/* Preview header with device switcher */}
+     {fullscreen && <div className="fixed top-0 left-0 right-0 flex gap-2 justify-center items-center pt-2 px-0 flex-shrink-0 bg-white border-b z-[9999]">
         <Heading
           size="4xl"
           as="h3"
@@ -377,48 +439,104 @@ export function PreviewContainer({
         >
           Preview
         </Heading>
-        <div className="flex p-1 rounded-lg ">
+         
+          <div className="flex p-1 rounded-lg">
+            <button
+              onClick={() => {
+                setDevice("mobile");
+                window.__previewDevice = "mobile";
+                window.dispatchEvent(
+                  new CustomEvent('deviceChange', { detail: { device: 'mobile' } })
+                );
+              }}
+              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
+                device === "mobile"
+                  ? "bg-[#5207CD] text-[#EFF8FF]"
+                  : "text-[#5207CD] hover:bg-gray-100"
+              }`}
+            >
+              Mobile
+            </button>
+            <button
+              onClick={() => {
+                setDevice("desktop");
+                window.__previewDevice = "desktop";
+                window.dispatchEvent(
+                  new CustomEvent('deviceChange', { detail: { device: 'desktop' } })
+                );
+              }}
+              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
+                device === "desktop"
+                  ? "bg-[#5207CD] text-[#EFF8FF]"
+                  : "text-[#5207CD] hover:bg-gray-100"
+              }`}
+            >
+              Desktop
+            </button>
+          </div>
+
           <button
-            onClick={() => setDevice("mobile")}
-            className={`h-[24px]  px-2 rounded-md flex items-center justify-center font-medium transition ${
-              device === "mobile"
-                ? "bg-[#5207CD] text-[#EFF8FF]"
-                : "text-[#5207CD]"
-            }`}
+            onClick={() => setFullscreen(false)}
+            className="absolute right-3 flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-[#5207CD] rounded-md hover:bg-[#4506ac] transition-colors"
           >
-            Mobile
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Go Back
           </button>
-          <button
-            onClick={() => setDevice("desktop")}
-            className={`h-[24px] px-2 rounded-md flex items-center justify-center font-medium transition ${
-              device === "desktop"
-                ? "bg-[#5207CD] text-[#EFF8FF]"
-                : "text-[#5207CD]"
-            }`}
-          >
-            Desktop
-          </button>
-        </div>
-        {setFullscreen && (
+     
+      </div>}
+     {!fullscreen && <div className="flex relative gap-2 justify-center items-center pt-2 px-6 flex-shrink-0 bg-white border-b z-[9999] ">
+        <Heading
+          size="4xl"
+          as="h3"
+          className="!text-black-900_01 absolute left-3 px-2"
+        >
+          Preview
+        </Heading>
+        {!fullscreen && (
+          <div className="flex p-1 rounded-lg">
+            <button
+              onClick={() => {
+                setDevice("mobile");
+                window.__previewDevice = "mobile";
+                window.dispatchEvent(
+                  new CustomEvent('deviceChange', { detail: { device: 'mobile' } })
+                );
+              }}
+              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
+                device === "mobile"
+                  ? "bg-[#5207CD] text-[#EFF8FF]"
+                  : "text-[#5207CD] hover:bg-gray-100"
+              }`}
+            >
+              Mobile
+            </button>
+            <button
+              onClick={() => {
+                setDevice("desktop");
+                window.__previewDevice = "desktop";
+                window.dispatchEvent(
+                  new CustomEvent('deviceChange', { detail: { device: 'desktop' } })
+                );
+              }}
+              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
+                device === "desktop"
+                  ? "bg-[#5207CD] text-[#EFF8FF]"
+                  : "text-[#5207CD] hover:bg-gray-100"
+              }`}
+            >
+              Desktop
+            </button>
+          </div>
+        )}
+        {!fullscreen && (
           <div className="absolute right-0">
             <button
               className="flex items-center justify-center h-[28px] w-[28px] rounded hover:bg-gray-100"
-              onClick={() => {
-                // router.push(`/lp/${landingPageData?._id}`);
-                setFullscreen((prev) => !prev)}}
+              onClick={() => setFullscreen((prev) => !prev)}
             >
-              {fullscreen ? (
-                  <button
-                  
-                  className="fixed top-1 right-2 z-[9999] px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 flex gap-2 items-center justify-center shadow-lg transition-all duration-200"
-                  style={{ zIndex: 10000 }}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  Go Back
-                </button>
-              ) : (
+              {!fullscreen && (
                 <img
                   src="/images/expand-06.svg"
                   alt="expand"
@@ -428,29 +546,80 @@ export function PreviewContainer({
             </button>
           </div>
         )}
-      </div>
-      <div ref={containerRef} className="flex flex-1 justify-center" style={{overflow: "hidden"}}>
+      </div>}
+
+    
+
+      {/* Preview content */}
+      <div ref={containerRef} className="flex flex-1 flex-col items-center justify-start min-h-0 relative w-full " 
+        style={{
+          overflow: "hidden",
+          padding: 0,
+          margin: 0,
+        }}>
+
+        {fullscreen && device === "desktop" && <div style={{
+          height: 52,
+          width: "100%",
+        }}/>}
+        
         <div
           style={{
-            width: device === "desktop" ? "1440px" : `${deviceSizes[device].width}px`,
-            height: "100%",
-            transform: `scale(${scale})`,
+            width: fullscreen && device === "desktop" ? "100%" : (device === "desktop" ? "1440px" : "475px"),
+            height: fullscreen && device === "desktop" ? "100%" : (device === "desktop" ? "900px" : "800px"),
+            transform: fullscreen && device === "desktop" ? "none" : `scale(${scale})`,
             transformOrigin: "center top",
             scrollbarWidth: "none",
+            margin: 0,
+            padding: 0,
           }}
-          className="mb-auto"
+          className="mb-auto "
         >
-          <IFrame
-            styles={styles + fontStyles}
-            baseColors={baseColors}
-            variants={variants}
-            gradients={gradients}
-            width={device === "desktop" ? 1440 : deviceSizes[device].width}
-            height={deviceSizes[device].height}
-            className="border-0 scrollbar-hide"
-          >
-            {pageComponent}
-          </IFrame>
+          {fullscreen && device === "desktop" ? (
+            <div 
+              style={{ 
+                
+                width: "100%", 
+                height: "100%",
+                '--primary-color': baseColors.primary,
+                '--secondary-color': baseColors.secondary,
+                '--tertiary-color': baseColors.tertiary,
+                '--text-color': baseColors.text,
+                '--background-color': baseColors.background,
+                ...Object.keys(baseColors).reduce((acc, key) => {
+                  acc[`--${key}-color`] = baseColors[key];
+                  return acc;
+                }, {}),
+                ...Object.keys(variants).reduce((acc, variant) => {
+                  Object.keys(variants[variant]).forEach((lightDark) => {
+                    variants[variant][lightDark].forEach((color, index) => {
+                      acc[`--${variant}-${lightDark}-${index + 1}`] = color;
+                    });
+                  });
+                  return acc;
+                }, {}),
+                ...Object.keys(gradients).reduce((acc, gradient) => {
+                  acc[`--${gradient}-gradient`] = gradients[gradient];
+                  return acc;
+                }, {}),
+              }}
+            >
+              <style dangerouslySetInnerHTML={{ __html: styles + fontStyles }} />
+              {pageComponent}
+            </div>
+          ) : (
+            <IFrame
+              styles={styles + fontStyles}
+              baseColors={baseColors}
+              variants={variants}
+              gradients={gradients}
+              width={device === "desktop" ? 1440 : 475}
+              height={device === "desktop" ? 900 : 800}
+              className="border-0 scrollbar-hide containerrr"
+            >
+              {pageComponent}
+            </IFrame>
+          )}
         </div>
       </div>
     </div>

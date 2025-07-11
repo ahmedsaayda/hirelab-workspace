@@ -138,7 +138,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
         scroll-padding-top: var(--navbar-height, 128px);
       }
       body {
-        padding-top: ${fullscreen ? '0' : 'var(--navbar-height, 128px)'};
+        padding-top: var(--navbar-height, 128px);
       }
     `;
     document.head.appendChild(style);
@@ -146,7 +146,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     return () => {
       document.head.removeChild(style);
     };
-  }, [fullscreen]);
+  }, []);
 
   const fetchData = useCallback(() => {
     if (lpId) {

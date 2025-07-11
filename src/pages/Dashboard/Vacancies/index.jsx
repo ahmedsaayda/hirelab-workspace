@@ -884,7 +884,10 @@ Respond with json that adheres to the following jsonschema:
 
               {/* Active Sort Pills */}
               {sorters.map((sorter) => (
-                <div key={sorter.key} className="inline-flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg border border-blue-200">
+                <div key={sorter.key} 
+                // className="inline-flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg border border-blue-200"
+                className="inline-flex items-center gap-1 px-3 py-2  text-blue-700 text-sm font-medium rounded-lg border border-blue-200"
+                >
                   <span>
                     {sorter.key === "createdAt" ? (sorter.direction === "asc" ? "Oldest" : "Newest") :
                       sorter.key === "salary" ? (sorter.direction === "asc" ? "Lowest Salary" : "Highest Salary") :
