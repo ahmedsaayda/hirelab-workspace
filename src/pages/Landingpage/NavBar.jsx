@@ -15,6 +15,7 @@ import { message } from "antd";
 import { ClipboardCheck } from "lucide-react";
 import { LinkOutlined,CheckCircleFilled} from '@ant-design/icons';
 import CrudService from "../../services/CrudService";
+import { getTranslation } from "../../utils/translations";
 // import XIcon from "../../assets/img/x_icon.png";
 // import Mail from "../../assets/img/mail.webp";
 // public\assets\x_icon.png
@@ -378,7 +379,7 @@ const handlemediaLink = (platform) => {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(link).then(() => {
       setShareIcon(<ClipboardCheck size={20} />);  
-      message.success('Link copied to clipboard!');
+      message.success(getTranslation(landingPageData?.lang, 'linkCopiedToClipboard'));
       setTimeout(() => {
         setShareIcon(<Share2 size={20} />);
       }, 3000);
@@ -596,7 +597,7 @@ const handlemediaLink = (platform) => {
               className="px-6  text-xs md:text-base whitespace-nowrap  rounded-md border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
               onClick={handleShareClick}
             >
-              Share {shareIcon}
+              {getTranslation(landingPageData?.lang, 'share')} {shareIcon}
             </button>
 
 
@@ -614,7 +615,7 @@ const handlemediaLink = (platform) => {
               }}
               onClick={handleApplyClick}
             >
-              Apply Now
+              {getTranslation(landingPageData?.lang, 'applyNow')}
             </button>
           </div>
         </div>
@@ -630,10 +631,10 @@ const handlemediaLink = (platform) => {
             >
               <div>
                 <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
-                  Page Published<CheckCircleFilled style={{ color: 'green', fontSize: 24,marginLeft: '8px' }} />
+                  {getTranslation(landingPageData?.lang, 'pagePublished')}<CheckCircleFilled style={{ color: 'green', fontSize: 24,marginLeft: '8px' }} />
                 </div>
                 <div style={{ color: '#888', marginBottom: '24px' }}>
-                  Let's Share with the World !..
+                  {getTranslation(landingPageData?.lang, 'letsShareWithTheWorld')}
                 </div>
 
                 <div
@@ -650,12 +651,12 @@ const handlemediaLink = (platform) => {
                 >
                   <span style={{ color: '#000' }}>{link}</span>
                   <AntButton type="primary" onClick={handleCopyLink}>
-                    Copy Link <LinkOutlined />
+                    {getTranslation(landingPageData?.lang, 'copyLink')} <LinkOutlined />
                   </AntButton>
                 </div>
 
                 <div style={{ color: '#666', marginBottom: '10px' }}>
-                  Share with your loved ones:
+                  {getTranslation(landingPageData?.lang, 'shareWithYourLovedOnes')}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
                   <AntButton shape="circle"  onClick={()=>handlemediaLink('linkedin')}>
@@ -681,7 +682,7 @@ const handlemediaLink = (platform) => {
             </AntModal>
       {/* Apply Link Modal */}
       <AntModal
-        title="Set Apply Button URL"
+        title={getTranslation(landingPageData?.lang, 'setApplyButtonUrl')}
         open={applyLinkModalVisible}
         onCancel={() => setApplyLinkModalVisible(false)}
         footer={null}
@@ -690,13 +691,13 @@ const handlemediaLink = (platform) => {
         <div className="py-4">
           <div className="mb-6">
             <p className="text-gray-600 mb-4">
-              Before publishing your landing page, please set the URL where candidates will be directed when they click the Apply button.
+              {getTranslation(landingPageData?.lang, 'beforePublishing')}
             </p>
           </div>
           
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Apply Button URL *
+              {getTranslation(landingPageData?.lang, 'applyButtonUrl')} *
             </label>
             <Input
               value={ctaLink}
@@ -705,7 +706,7 @@ const handlemediaLink = (platform) => {
               className="w-full"
             />
             <p className="text-xs text-gray-500 mt-1">
-              This should be your application form or job posting URL
+              {getTranslation(landingPageData?.lang, 'thisUrlWillBeUsed')}
             </p>
           </div>
           
@@ -714,7 +715,7 @@ const handlemediaLink = (platform) => {
               onClick={() => setApplyLinkModalVisible(false)}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
             >
-              Cancel
+              {getTranslation(landingPageData?.lang, 'cancel')}
             </AntButton>
             <AntButton
               onClick={handleSaveCtaLink}
@@ -725,7 +726,7 @@ const handlemediaLink = (platform) => {
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
-              Save URL
+              {getTranslation(landingPageData?.lang, 'saveUrl')}
             </AntButton>
           </div>
         </div>
@@ -758,52 +759,52 @@ const handlemediaLink = (platform) => {
             {[
               {
                 id: "job-specifications",
-                label: "Summary",
+                label: getTranslation(landingPageData?.lang, 'summary'),
                 enabled: menuItemsArray?.includes("Job Specifications"),
               },
               {
                 id: "recruiter-contact",
-                label: "Contacts",
+                label: getTranslation(landingPageData?.lang, 'contacts'),
                 enabled: menuItemsArray?.includes("Recruiter Contact"),
               },
               {
                 id: "job-description",
-                label: "Description",
+                label: getTranslation(landingPageData?.lang, 'description'),
                 enabled: menuItemsArray?.includes("Job Description"),
               },
               {
                 id: "agenda",
-                label: "Agenda",
+                label: getTranslation(landingPageData?.lang, 'agenda'),
                 enabled: menuItemsArray?.includes("Agenda"),
               },
               {
                 id: "about-the-company",
-                label: "About Us",
+                label: getTranslation(landingPageData?.lang, 'aboutUs'),
                 enabled: menuItemsArray?.includes("About The Company"),
               },
               {
                 id: "company-facts",
-                label: "Company Facts",
+                label: getTranslation(landingPageData?.lang, 'companyFacts'),
                 enabled: menuItemsArray?.includes("Company Facts"),
               },
               {
                 id: "leader-introduction",
-                label: "Leader Intro",
+                label: getTranslation(landingPageData?.lang, 'leaderIntro'),
                 enabled: menuItemsArray?.includes("Leader Introduction"),
               },
               {
                 id: "testimonials",
-                label: "Testimonials",
+                label: getTranslation(landingPageData?.lang, 'testimonials'),
                 enabled: menuItemsArray?.includes("Employee Testimonials"),
               },
               {
                 id: "candidate-process",
-                label: "Application Process",
+                label: getTranslation(landingPageData?.lang, 'applicationProcess'),
                 enabled: menuItemsArray?.includes("Candidate Process"),
               },
               {
                 id: "growth-path",
-                label: "Growth Path",
+                label: getTranslation(landingPageData?.lang, 'growthPath'),
                 enabled: menuItemsArray?.includes("Growth Path"),
               },
             ]

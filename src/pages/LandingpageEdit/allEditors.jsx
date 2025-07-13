@@ -419,7 +419,6 @@ const hoursUnitOptions = [
   { label: "Day", value: "Day" },
   { label: "Week", value: "Week" },
   { label: "Month", value: "Month" },
-  { label: "Hour", value: "Hour" },
 ];
 
 const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
@@ -854,7 +853,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                 className="border-none"
                 header={
                   <div className="flex gap-2 items-center">
-                    <span className="text-gray-900_01 font-inter !text-blue_gray-700 font-medium text-xs lgr:text-sm ">
+                    <span className="text-gray-900_01  !text-blue_gray-700 font-medium text-xs lgr:text-sm ">
                       Hours Range
                     </span>
                     <svg
@@ -1055,11 +1054,11 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
             <div
               onMouseEnter={() => setHoveredField("heroImage")}
               onMouseLeave={() => setHoveredField(null)}
-              className="flex flex-col col-span-2 gap-2 mt-5 w-full"
+              className="flex flex-col col-span-2 gap-2 mt-5 w-full px-2"
             >
-              <Text as="p" className="self-start !text-blue_gray-700">
+              <label as="p" className="self-start !text-blue_gray-700">
                 Image
-              </Text>
+              </label>
               {/* @ts-ignore */}
               <ImageUploader
                 defaultImage={landingPageData?.heroImage}

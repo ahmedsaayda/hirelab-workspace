@@ -18,6 +18,7 @@ import { FiBriefcase } from "react-icons/fi";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils.js";
 import cn from "classnames";
+import { getTranslation, getTimeUnitTranslation, getSalaryTimeTranslation } from "../../utils/translations";
 // hirelab-frontend\src\pages\Landingpage\HeroSection.js
 // hirelab-frontend\src\utils\destructureTheme.js
 //
@@ -470,7 +471,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 }}
                 className="mb-4 text-xs md:text-sm"
               >
-                👋 WE'RE HIRING
+                {getTranslation(landingPageData?.lang, 'weAreHiring')}
               </span>
 
               <h2
@@ -581,7 +582,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         intToHumanReadablePrice(landingPageData?.salaryMax)}
                       {landingPageData?.salaryCurrency &&
                         ` ${landingPageData?.salaryCurrency}`}
-                      /{landingPageData?.salaryTime?.toLowerCase?.() || "year"}
+                      /{getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime)?.toLowerCase?.() || getSalaryTimeTranslation(landingPageData?.lang, "Year")?.toLowerCase?.()}
                     </p>
                   </div>
                 </div>
@@ -656,7 +657,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                   style={{
                     color:textColor
                   }}
-                  > H / </span>
+                  > {getTranslation(landingPageData?.lang, 'hour')} / </span>
                   <span
                     ref={refs.hoursUnitRef}
                     onClick={() => handleItemClick("hoursUnit")}
@@ -664,7 +665,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       color: textColor
                     }}
                   >
-                    {landingPageData?.hoursUnit || "daily"}
+                    {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit)}
                   </span>
                 </span>
               </div>
@@ -762,7 +763,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       }}
                     >
                       <div className="flex justify-between items-center px-4 py-2 border-b border-white/10">
-                        <span className="text-xs font-medium ">Locations</span>
+                        <span className="text-xs font-medium ">{getTranslation(landingPageData?.lang, 'locations')}</span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -902,7 +903,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                             color:textColor
                           }}
                         >
-                          {landingPageData?.salaryTime || "month"}
+                          {getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime)?.toLowerCase?.() || getSalaryTimeTranslation(landingPageData?.lang, "Month")?.toLowerCase?.()}
                         </span>
                       </span>
                     </div>
@@ -1044,7 +1045,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                               }}
                               
                               >
-                                Locations
+                                {getTranslation(landingPageData?.lang, 'locations')}
                               </span>
                               <button
                                 onClick={(e) => {
@@ -1192,7 +1193,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           style={{
                             color:textColor
                           }}
-                        > Hours / </span>
+                        > {getTranslation(landingPageData?.lang, 'hours')} / </span>
                         <span
                           ref={refs.hoursUnitRef}
                           onClick={() => {
@@ -1202,7 +1203,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                             color:textColor
                           }}
                         >
-                          {landingPageData?.hoursUnit || "daily"}
+                          {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit)}
                         </span>
                       </span>
                     </div>

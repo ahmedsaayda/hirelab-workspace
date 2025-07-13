@@ -14,11 +14,13 @@ import ChooseTemplate from "./ChooseTemplate";
 import AiService from "../../../services/AiService";
 import { departmentOptions } from "./departmentOptions";
 
-// Convert the language object to array of options
-const languageOptions = Object.entries(languages).map(([_, name]) => ({
+// Convert the language object to array of options and remove duplicates
+const languageOptions = Array.from(
+  new Set(Object.values(languages))
+).map(name => ({
   value: name,
   label: name,
-}));
+})).sort((a, b) => a.label.localeCompare(b.label));
 
 const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
   const user = useSelector(selectUser);

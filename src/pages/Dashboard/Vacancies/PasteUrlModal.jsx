@@ -9,6 +9,15 @@ import { useRouter } from "next/router";
 import { message as antdMessage, Select } from "antd";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation.jsx";
 import { departmentOptions } from "./departmentOptions";
+import languages from "./lang.json";
+
+// Convert the language object to array of options and remove duplicates
+const languageOptions = Array.from(
+  new Set(Object.values(languages))
+).map(name => ({
+  value: name,
+  label: name,
+})).sort((a, b) => a.label.localeCompare(b.label));
 
 function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
   const user = useSelector(selectUser);
@@ -35,6 +44,16 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
     }
     return "";
   });
+  const [language, setLanguage] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_url_progress');
+    console.log('PasteUrlModal - Loading saved language:', savedProgress);
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('PasteUrlModal - Parsed language data:', data);
+      return data?.lang || "English";
+    }
+    return "English";
+  });
   const [selectedTemplate, setSelectedTemplate] = useState(() => {
     const savedProgress = sessionStorage.getItem('vacancy_url_progress');
     console.log('PasteUrlModal - Loading saved template:', savedProgress);
@@ -54,6 +73,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
       const dataToSave = { 
         url,
         department,
+        language,
         selectedTemplate
       };
       console.log('PasteUrlModal - Saving progress:', dataToSave);
@@ -62,7 +82,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
     };
 
     saveProgress();
-  }, [url, department, selectedTemplate]);
+  }, [url, department, language, selectedTemplate]);
 
   const brandingDetails = {
     companyName: user?.companyName,
@@ -80,7 +100,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
   };
 
   const isButtonDisabled = () => {
-    if (step === 0) return !url || !department || isLoading;
+    if (step === 0) return !url || !department || !language || isLoading;
     if (step === 1) return selectedTemplate === -1 || isLoading;
     return false;
   };
@@ -136,14 +156,17 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
       }
 
       const { markdown, metadata } = scrapeResponse.data.data.content;
+      console.log("markdown", markdown);
+      console.log("metadata", metadata);
       
       // Step 2: Process with AI
       const aiResponse = await AiService.processContentWithAI({
         url: url,
         content: {
-          markdown,
-          metadata
-        }
+          markdown: markdown?.slice(0, 30000) || "",
+          // metadata
+        },
+        language: language
       });
 
       if (!aiResponse.data.success) {
@@ -184,7 +207,8 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
           ...recruiter,
           recruiterPhoneEnabled: recruiter.recruiterPhone ? true : false,
           recruiterEmailEnabled: recruiter.recruiterEmail ? true : false
-        }))
+        })),
+        lang: language
       };
 
       const res = await AiService.createVacancy(vacancyPayload);
@@ -256,8 +280,8 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
   };
 
   const handleClose = () => {
-    console.log('PasteUrlModal - Closing modal. Current data:', { url, department, selectedTemplate });
-    if (!url && !department && selectedTemplate === -1) {
+    console.log('PasteUrlModal - Closing modal. Current data:', { url, department, language, selectedTemplate });
+    if (!url && !department && !language && selectedTemplate === -1) {
       console.log('PasteUrlModal - Cleaning up empty form data');
       sessionStorage.removeItem('vacancy_url_progress');
     }
@@ -313,6 +337,19 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
                     onChange={(value) => setDepartment(value)}
                     placeholder="Select a department"
                     options={departmentOptions}
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="mt-4">
+                  <div className="flex gap-2 items-center mb-2">
+                    <label className="text-sm font-medium">Language</label>
+                  </div>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={language}
+                    onChange={(value) => setLanguage(value)}
+                    placeholder="Select a language"
+                    options={languageOptions}
                     disabled={isLoading}
                   />
                 </div>

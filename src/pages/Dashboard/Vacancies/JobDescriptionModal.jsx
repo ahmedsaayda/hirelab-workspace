@@ -9,6 +9,15 @@ import { useRouter } from "next/router";
 import { message as antdMessage, Select } from "antd";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation.jsx";
 import { departmentOptions } from "./departmentOptions";
+import languages from "./lang.json";
+
+// Convert the language object to array of options and remove duplicates
+const languageOptions = Array.from(
+  new Set(Object.values(languages))
+).map(name => ({
+  value: name,
+  label: name,
+})).sort((a, b) => a.label.localeCompare(b.label));
 
 function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
   const user = useSelector(selectUser);
@@ -35,6 +44,16 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
       return data?.department || "";
     }
     return "";
+  });
+  const [language, setLanguage] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_description_progress');
+    console.log('JobDescriptionModal - Loading saved language:', savedProgress);
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      console.log('JobDescriptionModal - Parsed language data:', data);
+      return data?.lang || "English";
+    }
+    return "English";
   });
   const [jobDescription, setJobDescription] = useState(() => {
     const savedProgress = sessionStorage.getItem('vacancy_description_progress');
@@ -65,6 +84,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         jobTitle,
         jobDescription,
         department,
+        language,
         selectedTemplate
       };
       console.log('JobDescriptionModal - Saving progress:', dataToSave);
@@ -73,7 +93,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
     };
 
     saveProgress();
-  }, [jobTitle, jobDescription, department, selectedTemplate]);
+  }, [jobTitle, jobDescription, department, language, selectedTemplate]);
 
   // Branding details from user profile
   const brandingDetails = {
@@ -93,7 +113,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
 
   const isButtonDisabled =
     step === 0
-      ? !jobTitle || !department || !jobDescription || jobDescription.length < 1 || isLoading
+      ? !jobTitle || !department || !language || !jobDescription || jobDescription.length < 1 || isLoading
       : selectedTemplate === -1;
 
   const renderButton = () => {
@@ -192,11 +212,10 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         companyInfo: user?.companyInfo
       };
 
-      const aiResponse = await AiService.processContentWithAI(
-        "",  // No URL for direct text input
-        JSON.stringify(content),  // Use as scraped content
-        jobDescription  // Use as copied content
-      );
+      const aiResponse = await AiService.processContentWithAI({
+        content: JSON.stringify(content),
+        language: language
+      });
 
       if (!aiResponse.data.success) {
         throw new Error(aiResponse.data.error || 'AI processing failed');
@@ -365,9 +384,10 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
       jobTitle,
       jobDescription,
       department,
+      language,
       selectedTemplate
     });
-    if (!jobTitle && !jobDescription && !department && selectedTemplate === -1) {
+    if (!jobTitle && !jobDescription && !department && !language && selectedTemplate === -1) {
       console.log('JobDescriptionModal - Cleaning up empty form data');
       sessionStorage.removeItem('vacancy_description_progress');
     }
@@ -417,6 +437,18 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
                     onChange={(value) => setDepartment(value)}
                     placeholder="Select a department"
                     options={departmentOptions}
+                  />
+                </div>
+                <div>
+                  <div className="flex gap-2 items-center mb-2">
+                    <label className="text-sm font-medium">Language</label>
+                  </div>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={language}
+                    onChange={(value) => setLanguage(value)}
+                    placeholder="Select a language"
+                    options={languageOptions}
                   />
                 </div>
                 <textarea
