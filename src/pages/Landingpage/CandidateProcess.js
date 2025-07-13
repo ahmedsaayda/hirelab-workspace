@@ -375,19 +375,22 @@ const Template1 = ({ landingPageData, fetchData }) => {
   };
 
   const handleScroll = useCallback(() => {
-    if (sliderRef.current && !isDragging) {
+    if (sliderRef.current) {
       const scrollPosition = sliderRef.current.scrollLeft;
-      const containerWidth = sliderRef.current.clientWidth;
-      const newActiveSlide = Math.round(scrollPosition / containerWidth);
-      if (newActiveSlide !== activeSlide) {
+      const slideWidth = sliderRef.current.clientWidth;
+      const newActiveSlide = Math.round(scrollPosition / slideWidth);
+      
+      if (newActiveSlide !== activeSlide && newActiveSlide >= 0 && newActiveSlide < processSteps.length) {
         setActiveSlide(newActiveSlide);
       }
     }
-  }, [isDragging, activeSlide]);
+  }, [activeSlide, processSteps.length]);
 
   const debouncedHandleScroll = useCallback(() => {
-    clearTimeout(window.candidateProcessScrollTimeout);
-    window.candidateProcessScrollTimeout = setTimeout(handleScroll, 100);
+    if (window.candidateProcessScrollTimeout) {
+      clearTimeout(window.candidateProcessScrollTimeout);
+    }
+    window.candidateProcessScrollTimeout = setTimeout(handleScroll, 50);
   }, [handleScroll]);
 
   const handleMouseDown = (e) => {
@@ -395,29 +398,31 @@ const Template1 = ({ landingPageData, fetchData }) => {
     setStartX(e.pageX - sliderRef.current.offsetLeft);
     setScrollLeft(sliderRef.current.scrollLeft);
   };
+
   const handleTouchStart = (e) => {
     setIsDragging(true);
     setStartX(e.touches[0].pageX - sliderRef.current.offsetLeft);
     setScrollLeft(sliderRef.current.scrollLeft);
   };
+
   const handleMouseMove = (e) => {
     if (!isDragging) return;
     e.preventDefault();
     const x = e.pageX - sliderRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
+    const walk = (x - startX);
     sliderRef.current.scrollLeft = scrollLeft - walk;
   };
+
   const handleTouchMove = (e) => {
     if (!isDragging) return;
     const x = e.touches[0].pageX - sliderRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
+    const walk = (x - startX);
     sliderRef.current.scrollLeft = scrollLeft - walk;
   };
+
   const handleDragEnd = () => {
     setIsDragging(false);
-    setTimeout(() => {
-      handleScroll();
-    }, 50);
+    handleScroll(); // Immediately check scroll position when drag ends
   };
 
   return (
