@@ -508,8 +508,8 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
         fontFamily: bodyFont?.family,
       }}
     >
-      {MemoizedGridPattern}
-      {/* <Template1Perks/> */}
+    
+      
       <div className="mx-auto max-w-3xl relative">
         <div className="mb-8 text-center">
           <h2
@@ -534,7 +534,8 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
         </div>
 
         {/* Agenda Items */}
-        <div className="space-y-4">
+        <div className="space-y-4 relative">
+        {MemoizedGridPattern}
           {agendaItems.map((item, index) => {
             const originalIndex =
               item.originalIndex !== undefined ? item.originalIndex : index;
