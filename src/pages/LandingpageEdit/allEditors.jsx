@@ -157,6 +157,7 @@ const AgendaEdit = (props) => {
               {
                 key: "dateTimeSlot",
                 label: "Time Slot",
+                type: "timeslot",
               },
               {
                 key: "description",

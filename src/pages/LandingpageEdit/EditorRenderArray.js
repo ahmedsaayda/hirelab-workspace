@@ -344,6 +344,80 @@ const EditorRenderArray = React.memo(({
                       : undefined
                   }
                 />
+              ) : a.type === "timeslot" ? (
+                <div className="flex gap-2 items-center">
+                  <div className="flex-1">
+                    <Text
+                      as="label"
+                      className="!text-xs !text-blue_gray-700 mb-1 block"
+                    >
+                      Start Time
+                    </Text>
+                    <Input
+                      type="time"
+                      value={landingPageData?.[a.key]?.startTime || ""}
+                      onChange={(e) => {
+                        console.log("e",e)
+                        console.log(e)
+                        const currentTimeSlot = landingPageData?.[a.key] || {};
+                        setLandingPageData(
+                          {
+                            ...currentTimeSlot,
+                            startTime: e,
+                          },
+                          a.key
+                        );
+                        setChanged(true);
+                      }}
+                      onMouseEnter={() => {
+                        const hoverKey = getFieldKey(a.key);
+                        setHoveredField(hoverKey);
+                      }}
+                      onMouseLeave={() => setHoveredField(null)}
+                      className="!text-gray-500_01 leading-[150%] font-inter text-sm"
+                      shape="round"
+                      ref={setFocusRef(getFieldKey(a.key))}
+                      onFocus={() => {
+                        setLastScrollToSection(null)
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Text
+                      as="label"
+                      className="!text-xs !text-blue_gray-700 mb-1 block"
+                    >
+                      End Time
+                    </Text>
+                    <Input
+                      type="time"
+                      value={landingPageData?.[a.key]?.endTime || ""}
+                      onChange={(e) => {
+                        console.log("e",e)
+                        console.log(e)
+                        const currentTimeSlot = landingPageData?.[a.key] || {};
+                        setLandingPageData(
+                          {
+                            ...currentTimeSlot,
+                            endTime: e,
+                          },
+                          a.key
+                        );
+                        setChanged(true);
+                      }}
+                      onMouseEnter={() => {
+                        const hoverKey = getFieldKey(a.key);
+                        setHoveredField(hoverKey);
+                      }}
+                      onMouseLeave={() => setHoveredField(null)}
+                      className="!text-gray-500_01 leading-[150%] font-inter text-sm"
+                      shape="round"
+                      onFocus={() => {
+                        setLastScrollToSection(null)
+                      }}
+                    />
+                  </div>
+                </div>
               ) : (
                 <>
                   {!hide && (
