@@ -418,6 +418,10 @@ const EditorRenderArray = React.memo(({
                     />
                   </div>
                 </div>
+              ) : a.type === "icon" ? (
+                // Icon types are handled by the button in the label area above
+                // No input field needed for icon types
+                null
               ) : (
                 <>
                   {!hide && (

@@ -486,7 +486,7 @@ export function PreviewContainer({
           </button>
      
       </div>}
-     {!fullscreen && <div className="flex relative gap-2 justify-center items-center pt-2 px-6 flex-shrink-0 bg-white border-b z-[9999] ">
+     {!fullscreen && <div className="flex relative gap-2 justify-center items-center pt-2 px-6 flex-shrink-0 bg-white border-b  ">
         <Heading
           size="4xl"
           as="h3"
