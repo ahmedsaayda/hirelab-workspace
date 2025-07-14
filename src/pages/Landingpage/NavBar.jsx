@@ -566,7 +566,7 @@ const handlemediaLink = (platform) => {
       <ApplyCustomFont landingPageData={landingPageData} />
       <header className={`flex items-center px-4 w-full sm:h-16 py-2 sm:py-0 sm:px-6 lg:px-8`}>
         <div className="w-full mx-auto flex items-center">
-          <div className="flex items-center">
+          <div className="flex items-center gap-5">
             <img src={logo} alt="Logo" className="mr-10 w-auto h-8" />
           </div>
           <div className="flex gap-3 justify-end w-full flex-wrap">
