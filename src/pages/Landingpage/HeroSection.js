@@ -810,7 +810,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     "https://res.cloudinary.com/dvq0ouupb/image/upload/v1746205547/cyhnkwxsuac5euqhrypd.jpg"
                   }
                   alt="Project Manager candidate"
-                  className="object-cover w-full lg:w-[50vw] xl:w-[75vw] xl:mb-0 max-h-[650px] smx:max-h-[500px] rounded-t-[64px] max-w-[684px] mx-auto"
+                  className="object-cover  aspect-[200/140] w-full lg:w-[50vw] xl:w-[75vw] xl:mb-0 max-h-[450px] smx:max-h-[300px] rounded-t-[64px] max-w-[684px] mx-auto"
                   style={{
                     border: "10px solid transparent" /*2*/,
 
@@ -823,11 +823,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         "linear-gradient(#000 0 0)",
                       "mask-composite": "exclude",`,
                        objectPosition: landingPageData?.imageAdjustment
-                        ?.leaderIntroductionAvatar?.objectPosition
-                        ? `${landingPageData.imageAdjustment.leaderIntroductionAvatar.objectPosition.x}% ${landingPageData.imageAdjustment.leaderIntroductionAvatar.objectPosition.y}%`
+                        ?.heroImage?.objectPosition
+                        ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
                         : "50% 50%",
                       objectFit:
-                        landingPageData?.imageAdjustment?.leaderIntroductionAvatar
+                        landingPageData?.imageAdjustment?.heroImage
                           ?.objectFit || "cover",
                       transition: "object-position 0.3s ease-in-out",
                   }}    

@@ -31,7 +31,7 @@ const ImageUploader = ({
   imageAdjustments = {},
   onImageAdjustmentChange,
   fieldKey,
-  isSettingDisabled = true,
+  isSettingDisabled = false,
   autosave = false,
   type = "all",
   isLogo = false,
@@ -514,7 +514,7 @@ const ImageUploader = ({
               </div>
             )}
           </div>
-       {isSettingDisabled && (
+       {!isSettingDisabled && (
         <div className="flex gap-2">
             <button
               onClick={(e) => {

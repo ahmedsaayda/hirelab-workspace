@@ -1062,8 +1062,21 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
               {/* @ts-ignore */}
               <ImageUploader
                 defaultImage={landingPageData?.heroImage}
+                imageAdjustments={landingPageData?.imageAdjustment || {}}
+                fieldKey="heroImage"
+                isSettingDisabled={false}
                 onImageUpload={(url) => {
                   handleChange("heroImage", url);
+                  document.dispatchEvent(new CustomEvent("HANDLE.CHANGED"));
+                }}
+                onImageAdjustmentChange={(fieldKey, adjustments) => {
+                  setLandingPageData((d) => ({
+                    ...d,
+                    imageAdjustment: {
+                      ...(d.imageAdjustment || {}),
+                      [fieldKey]: adjustments,
+                    },
+                  }));
                   document.dispatchEvent(new CustomEvent("HANDLE.CHANGED"));
                 }}
                 allowedTabs={["image"]}
