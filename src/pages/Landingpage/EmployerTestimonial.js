@@ -523,63 +523,70 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
   // Function to navigate directly to a specific slide
   const goToSlide = (index) => {
-    if (sliderRef.current) {
+    if (sliderRef.current && cardRefs.current[index]) {
       const safeIndex = Math.max(0, Math.min(index, finalTestimonials.length - 1));
       setActiveSlide(safeIndex);
       setIsProgrammaticScroll(true);
-      const containerWidth = sliderRef.current.clientWidth;
-      const itemWidth = containerWidth / visibleItemsCount;
-      const scrollPosition = safeIndex * itemWidth;
-      sliderRef.current.scrollTo({
-        left: scrollPosition,
-        behavior: "smooth",
-      });
+      
+      // Use the actual card position instead of calculated position
+      const targetCard = cardRefs.current[safeIndex];
+      if (targetCard) {
+        const containerRect = sliderRef.current.getBoundingClientRect();
+        const cardRect = targetCard.getBoundingClientRect();
+        const scrollPosition = sliderRef.current.scrollLeft + (cardRect.left - containerRect.left);
+        
+        sliderRef.current.scrollTo({
+          left: scrollPosition,
+          behavior: "smooth",
+        });
+        
+        // Reset programmatic scroll flag after animation completes
+        setTimeout(() => {
+          setIsProgrammaticScroll(false);
+        }, 500);
+      }
     }
   };
 
-  // Handle automatic scrolling to the active slide (only for programmatic scrolls)
-  useEffect(() => {
-    if (sliderRef.current && activeSlide !== undefined && isProgrammaticScroll) {
-      const containerWidth = sliderRef.current.clientWidth;
-      const itemWidth = containerWidth / visibleItemsCount;
-      const scrollPosition = activeSlide * itemWidth;
-      sliderRef.current.scrollTo({
-        left: scrollPosition,
-        behavior: "smooth",
-      });
-      setIsProgrammaticScroll(false);
-    }
-  }, [activeSlide, finalTestimonials.length, visibleItemsCount, isProgrammaticScroll]);
+  // Handle automatic scrolling to the active slide (removed to prevent conflicts)
+  // The goToSlide function now handles all navigation directly
 
   // Store refs for each card to track their offsetLeft
   const cardRefs = useRef([]);
 
-  // Update handleScroll to use offsetLeft for accurate active dot
+  // Update handleScroll to use getBoundingClientRect for accurate active dot
   const handleScroll = React.useCallback(() => {
-    if (sliderRef.current && !isDragging) {
-      const scrollPosition = sliderRef.current.scrollLeft;
-      // Find the card whose offsetLeft is closest to scrollLeft
+    if (sliderRef.current && !isDragging && !isProgrammaticScroll) {
+      const containerRect = sliderRef.current.getBoundingClientRect();
+      const containerCenter = containerRect.left + containerRect.width / 2;
+      
+      // Find the card that's closest to the center of the viewport
       let closestIdx = 0;
-      let minDiff = Infinity;
+      let minDistance = Infinity;
+      
       cardRefs.current.forEach((card, idx) => {
         if (card) {
-          const diff = Math.abs(card.offsetLeft - scrollPosition);
-          if (diff < minDiff) {
-            minDiff = diff;
+          const cardRect = card.getBoundingClientRect();
+          const cardCenter = cardRect.left + cardRect.width / 2;
+          const distance = Math.abs(cardCenter - containerCenter);
+          
+          if (distance < minDistance) {
+            minDistance = distance;
             closestIdx = idx;
           }
         }
       });
+      
       if (closestIdx !== activeSlide) {
         setActiveSlide(closestIdx);
       }
     }
-  }, [isDragging, finalTestimonials.length, activeSlide]);
+  }, [isDragging, isProgrammaticScroll, activeSlide]);
 
-  // Debounced scroll handler
+  // Debounced scroll handler with faster response
   const debouncedHandleScroll = React.useCallback(() => {
     clearTimeout(window.scrollTimeout);
-    window.scrollTimeout = setTimeout(handleScroll, 100);
+    window.scrollTimeout = setTimeout(handleScroll, 50);
   }, [handleScroll]);
 
   // Mouse and touch event handlers for dragging
@@ -612,10 +619,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
   const handleDragEnd = () => {
     setIsDragging(false);
+    setIsProgrammaticScroll(false);
     // Use a small delay to ensure the scroll position has settled
     setTimeout(() => {
       handleScroll();
-    }, 50);
+    }, 100);
   };
 
   // Check if navigation should be shown
@@ -732,14 +740,20 @@ const Template1 = ({ landingPageData, fetchData }) => {
         {/* Testimonial Slider - with padding at beginning to prevent first item from being cropped */}
         <div
           ref={sliderRef}
-          className="flex overflow-x-auto justify-start snap-x snap-mandatory pl-[1px] scroll-smooth"
+          className={`flex overflow-x-auto snap-x snap-mandatory pl-[1px] scroll-smooth ${
+            finalTestimonials.length < 3 ? 'justify-center' : 'justify-start'
+          }`}
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
             WebkitOverflowScrolling: "touch",
             scrollSnapType: "x mandatory",
           }}
-          onScroll={debouncedHandleScroll}
+          onScroll={() => {
+            if (!isProgrammaticScroll) {
+              debouncedHandleScroll();
+            }
+          }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleDragEnd}
