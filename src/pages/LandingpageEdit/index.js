@@ -1254,8 +1254,8 @@ export default function LandingpageEdit({paramsId}) {
       />
       <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3">
         <div
-          className={` py-4 flex  flex-grow ${
-            fullscreen ? "w-0 overflow-hidden" : "w-full lg:w-[45%]"
+          className={` py-4 flex flex-shrink-0  lg:min-w-[550px] flex-grow ${
+            fullscreen ? "w-0 overflow-hidden" : "w-full lg:w-[35%]"
           } transition-all duration-300 justify-center  `}
           style={{ scrollbarWidth: "none" ,}}
         >
@@ -1272,7 +1272,7 @@ export default function LandingpageEdit({paramsId}) {
             }}
             setActiveIdx={setActiveIdx}
           />
-          <div className="lg:min-w-[400px] flex flex-grow flex-col border-r border-solid border-blue_gray-50  p-0 smx:self-stretch max-h-full">
+          <div className="lg:min-w-[450px] flex flex-grow flex-col border-r border-solid border-blue_gray-50  p-0 smx:self-stretch max-h-full">
             <div className="flex flex-col gap-[15px]  flex-grow lg:overflow-auto relative ">
               <div className="h-px bg-blue_gray-50" />
               <div className="flex gap-5 justify-between items-center mx-3">
