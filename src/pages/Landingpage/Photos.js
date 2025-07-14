@@ -326,22 +326,40 @@ const Template1 = ({ landingPageData, fetchData }) => {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
+  // Go to slide by index
+  const goToSlide = React.useCallback((index) => {
+    if (sliderRef.current) {
+      setCurrentImageIndex(index);
+      const containerWidth = sliderRef.current.clientWidth;
+      const scrollPosition = index * containerWidth;
+      sliderRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: "smooth",
+      });
+    }
+  }, []);
+
   // Scroll handler to update active dot
   const handleScroll = React.useCallback(() => {
     if (sliderRef.current && !isDragging) {
       const scrollPosition = sliderRef.current.scrollLeft;
       const containerWidth = sliderRef.current.clientWidth;
       const newActiveSlide = Math.round(scrollPosition / containerWidth);
-      if (newActiveSlide !== currentImageIndex) {
+      if (newActiveSlide !== currentImageIndex && newActiveSlide >= 0 && newActiveSlide < images.length) {
         setCurrentImageIndex(newActiveSlide);
       }
     }
-  }, [isDragging, currentImageIndex]);
+  }, [isDragging, currentImageIndex, images.length]);
+
+  // Scroll timeout ref
+  const scrollTimeoutRef = useRef(null);
 
   // Debounced scroll handler
   const debouncedHandleScroll = React.useCallback(() => {
-    clearTimeout(window.photosScrollTimeout);
-    window.photosScrollTimeout = setTimeout(handleScroll, 100);
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(handleScroll, 100);
   }, [handleScroll]);
 
   // Mouse/touch drag handlers
@@ -368,16 +386,18 @@ const Template1 = ({ landingPageData, fetchData }) => {
     const walk = (x - startX) * 2;
     sliderRef.current.scrollLeft = scrollLeft - walk;
   };
-  const handleDragEnd = () => {
+  const handleDragEnd = React.useCallback(() => {
     setIsDragging(false);
+    // Small delay to ensure scroll position has settled before checking
     setTimeout(() => {
       handleScroll();
-    }, 50);
-  };
+    }, 150);
+  }, [handleScroll]);
 
   // Responsive state for mobile/desktop
   const [isMd, setIsMd] = useState(false);
   const containerRef = useRef(null);
+  
   useEffect(() => {
     if (!containerRef.current) return;
     const checkSize = () => {
@@ -395,6 +415,31 @@ const Template1 = ({ landingPageData, fetchData }) => {
       resizeObserver.disconnect();
     };
   }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Add scroll event listener for better detection
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    const handleScrollEvent = (e) => {
+      debouncedHandleScroll();
+    };
+
+    slider.addEventListener('scroll', handleScrollEvent, { passive: true });
+    
+    return () => {
+      slider.removeEventListener('scroll', handleScrollEvent);
+    };
+  }, [debouncedHandleScroll]);
 
   return (
     <div
@@ -452,7 +497,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 {Array.from({ length: images.length }).map((_, index) => (
                   <button
                     key={index}
-                    onClick={() => setCurrentImageIndex(index)}
+                    onClick={() => goToSlide(index)}
                     className="w-2 h-2 rounded-full transition-colors"
                     style={{
                       backgroundColor:

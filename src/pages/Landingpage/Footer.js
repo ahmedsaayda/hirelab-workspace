@@ -641,7 +641,7 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
 
         {/* Job Details */}
         <div className="flex flex-col flex-grow py-6 ">
-          <h3 className="text-xl font-bold  mb-2">{job.vacancyTitle}</h3>
+          <h3 className="text-xl font-bold mb-2 h-[56px] line-clamp-2 overflow-hidden text-ellipsis leading-tight">{job.vacancyTitle}</h3>
           <p className="line-clamp-2 h-[40px] mb-4 text-sm overflow-hidden text-ellipsis">
             {job.heroDescription}
           </p>
