@@ -650,12 +650,12 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
           <div className="flex flex-wrap gap-4 mb-6">
             {!!job.salaryMin && (
               <div
-                className="flex items-center text-sm"
+                className="flex items-center text-sm gap-1"
                 style={jobCardStyles.badge}
               >
                 <svg
-                  width="12"
-                  height="10"
+                  width="9"
+                  height="9"
                   viewBox="0 0 12 10"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -674,12 +674,12 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
               </div>
             )}
             <div
-              className="flex items-center text-sm"
+              className="flex items-center text-sm gap-1"
               style={jobCardStyles.badge}
             >
               <svg
-                width="12"
-                height="12"
+                width="9"
+                height="9"
                 viewBox="0 0 12 12"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -695,12 +695,12 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
               {workType}
             </div>
             <div
-              className="flex items-center text-sm"
+              className="flex items-center text-sm gap-1"
               style={jobCardStyles.badge}
             >
               <svg
-                width="12"
-                height="12"
+                width="9"
+                height="9"
                 viewBox="0 0 12 12"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
