@@ -462,7 +462,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 msOverflowStyle: "none",
                 WebkitOverflowScrolling: "touch",
                 scrollSnapType: "x mandatory",
-                height: "326px",
+                height: "400px", // Increased height to accommodate larger images
               }}
               onScroll={debouncedHandleScroll}
               onMouseDown={handleMouseDown}
@@ -473,23 +473,36 @@ const Template1 = ({ landingPageData, fetchData }) => {
               onTouchMove={handleTouchMove}
               onTouchEnd={handleDragEnd}
             >
-              {images.map((img, index) => (
-                <div
-                  key={index}
-                  className="flex-shrink-0 w-full px-2 snap-start"
-                  style={{
-                    scrollSnapAlign: "start",
-                    width: isMd ? "100%" : "100%",
-                    height: "326px",
-                  }}
-                >
-                  <Img
-                    src={img ?? "/dhwise-images/placeholder.png"}
-                    alt={`Company Image ${index + 1}`}
-                    className="object-contain w-full h-full rounded"
-                  />
-                </div>
-              ))}
+              {images.map((img, index) => {
+                // Images 1, 3, 5 (indices 0, 2, 4) are larger
+                // Images 2, 4 (indices 1, 3) are smaller
+                const isLargeImage = index % 2 === 0;
+                // More square-like dimensions to match Figma design
+                const imageHeight = isLargeImage ? "320px" : "240px";
+                const imageWidth = isLargeImage ? "320px" : "240px";
+                
+                return (
+                  <div
+                    key={index}
+                    className="flex-shrink-0 px-2 snap-start flex justify-center items-center"
+                    style={{
+                      scrollSnapAlign: "start",
+                      width: isMd ? "100%" : "100%",
+                      height: "400px",
+                    }}
+                  >
+                    <Img
+                      src={img ?? "/dhwise-images/placeholder.png"}
+                      alt={`Company Image ${index + 1}`}
+                      className="object-cover rounded"
+                      style={{
+                        width: imageWidth,
+                        height: imageHeight,
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
             {/* Navigation Dots */}
             {showNavigation && (
