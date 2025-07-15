@@ -7,20 +7,37 @@ import * as React from "react";
 
 export default function CalendarRangePicker() {
   return (
-    <div className="mx-auto ">
+    <div className="mx-auto">
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <StaticDateRangePicker
         displayStaticWrapperAs=""
         displayWeekNumber=""
         calendars={1}
-        toolbar={<>a</>}
+        toolbar={<></>}
         // defaultValue={[dayjs("2022-04-17"), dayjs("2022-04-21")]}
         sx={{
           alignItems: "center",
           justifyContent: "center",
-          pt: 2,
-          pb: -2,
-          width: "100px",
+          pt: 1,
+          pb: 0,
+          maxWidth: "280px",
+          transform: "scale(0.85)",
+          transformOrigin: "top center",
+          '& .MuiPickersCalendarHeader-root': {
+            paddingLeft: 1,
+            paddingRight: 1,
+            marginBottom: 0.5,
+          },
+          '& .MuiDayCalendar-weekDayLabel': {
+            width: '32px',
+            height: '32px',
+            fontSize: '0.75rem',
+          },
+          '& .MuiPickersDay-root': {
+            width: '32px',
+            height: '32px',
+            fontSize: '0.75rem',
+          },
       [`& .MuiPickersDay-today`]: {
         backgroundColor: '#5207CD',
         borderRadius: '50%', 

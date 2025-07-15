@@ -12,6 +12,7 @@ import { Heading, Img, Text } from "../index.jsx";
 import HeroSection from "../../../../../Landingpage/HeroSection.js";
 import { MapPin, Clock, Coins, Component, Pencil, Eye } from "lucide-react";
 import Template1Preview from "./TemplatePreviews/Template1Preview.jsx";
+import HeroThumbnail from "./HeroThumbnail.jsx";
 
 export const oauthUri = `https://www.facebook.com/v19.0/dialog/oauth?response_type=token&display=popup&client_id=${process.env.NEXT_PUBLIC_META_APP_KEY
   }&redirect_uri=${encodeURIComponent(
@@ -48,7 +49,7 @@ export default function VacanciesCard({
       <div className="flex flex-col h-full">
         {/* Preview Section - Compact */}
         <div className="relative h-32 bg-slate-100 overflow-hidden">
-          <Template1Preview landingPageData={props} />
+          <HeroThumbnail landingPageData={props} />
           {/* Status Toggle - Overlay */}
           <div className="absolute top-2 right-2">
             <Switch

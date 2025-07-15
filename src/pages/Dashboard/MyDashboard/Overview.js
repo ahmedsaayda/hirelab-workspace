@@ -390,7 +390,7 @@ const Overview = () => {
           Total summary
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2 w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 w-full">
           {totalSummary.map((step, i) => {
             // Determine if this card should show "coming soon"
             const isComingSoon = step.name === "Awareness" || step.name === "Hiring pipeline";
@@ -665,8 +665,8 @@ const Overview = () => {
               </span>
             </div>
           )}
-          <div className={`grid justify-center grid-cols-1 gap-3 lg:grid-cols-2 sm:grid-cols-2 mdr:grid-cols-3 xl:grid-cols-4  ${showAllActive ? "h-[50vh]" : "h-fit"}  p-2 overflow-x-hidden`}>
-            {(showAllActive ? activeVacancies : activeVacancies.slice(0, 4)).map((d, index) => (
+          <div className={`grid justify-center grid-cols-1 gap-3 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3  ${showAllActive ? "h-[50vh]" : "h-fit"}  p-2 overflow-x-hidden`}>
+            {(showAllActive ? activeVacancies : activeVacancies.slice(0, 3)).map((d, index) => (
               <VacanciesCard
                 {...d}
                 key={"vacancies_active_" + index}
@@ -707,8 +707,8 @@ const Overview = () => {
               </span>
             </div>
           )}
-          <div className={`grid justify-center grid-cols-1 gap-3 lg:grid-cols-2 sm:grid-cols-1 lgr:grid-cols-3 xl:grid-cols-4 p-2  overflow-x-hidden  ${showAllUnpublished ? "h-[50vh]" : "h-fit"} `}>
-            {(showAllUnpublished ? unpublishedVacancies : unpublishedVacancies.slice(0, 4)).map((d, index) => (
+          <div className={`grid justify-center grid-cols-1 gap-3 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 p-2  overflow-x-hidden  ${showAllUnpublished ? "h-[50vh]" : "h-fit"} `}>
+            {(showAllUnpublished ? unpublishedVacancies : unpublishedVacancies.slice(0, 3)).map((d, index) => (
               <VacanciesCard
                 {...d}
                 key={"vacancies_unpublished_" + index}
