@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Input, Button, message, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { SmartTags } from '../smart-tags.jsx';
+import { SmartTags } from '../components/smart-tags.jsx';
 
 const EditMediaModal = ({
   visible,
@@ -56,7 +56,7 @@ const EditMediaModal = ({
   return (
     <Modal
       title={`Edit ${mediaItem?.type === 'video' ? 'Video' : 'Image'}`}
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
       footer={[
         <div className="flex flex-col gap-2 sm:flex-row" key="footer">
@@ -74,7 +74,6 @@ const EditMediaModal = ({
         </div>
       ]}
       width={600}
-      centered
     >
       {mediaItem && (
         <>
@@ -142,5 +141,4 @@ const EditMediaModal = ({
   );
 };
 
-export { EditMediaModal };
-export default EditMediaModal;
+export default EditMediaModal; 

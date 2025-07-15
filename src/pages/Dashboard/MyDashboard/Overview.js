@@ -308,7 +308,7 @@ const Overview = () => {
 
   useEffect(() => {
     getData()
-  }, [showAllActive, showAllUnpublished, user._id])
+  }, [showAllActive, showAllUnpublished, user?._id])
 
   const activeVacancies = landingPages.filter((d) => d.published);
   const unpublishedVacancies = landingPages.filter((d) => !d.published);

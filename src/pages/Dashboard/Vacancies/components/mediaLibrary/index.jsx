@@ -36,6 +36,7 @@ import { SearchBar } from "./components/search-bar.jsx";
 import { FiltersSection } from "./components/filters-section.jsx";
 import { FiltersBar } from "./components/filters-bar.jsx";
 import { EditMediaModal } from "./components/modals/edit-media-modal.jsx";
+import EditMediaModalNew from "./ImageModal/EditMediaModal.jsx";
 import { AddMediaModal } from "./components/modals/add-media-modal.jsx";
 import { SelectTemplateModal } from "./components/modals/select-template-modal.jsx";
 import { FilterModal } from "./components/modals/filter-modal.jsx";
@@ -178,7 +179,7 @@ const TestimonialReorder = ({ testimonials, onReorder }) => {
 
 
 
-export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedMedia, activeSection, setIsMediaLiOpen, mediaLimits, landingPageData, ImageModal ,allowedTabs =["all","image","video","section-template"]}) {
+export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedMedia, activeSection, setIsMediaLiOpen, mediaLimits, landingPageData, ImageModal ,allowedTabs =["all","image","video"]}) {
   console.log("activeSection", activeSection);
   const user = useSelector(selectUser);
   const [currentPage, setCurrentPage] = useState(1);
@@ -201,7 +202,6 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
   );
 
   const [selectedMedia, setSelectedMedia] = useState(null)
-  const [newMediaTitle, setNewMediaTitle] = useState("")
 
   const [renameModal, setRenameModal] = useState(false);
   const [isReorderImage, setIsReorderImage] = useState(false);
@@ -217,9 +217,8 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
   const [allMediaData, setAllMediaData] = useState([]);
 
   const [selectedTab, setSelectedTab] = useState(() => {
-      if (ImageModal === undefined) return "4";       //  section template
       if (ImageModal) return "2";                      // image section
-      return "3";                                     // video section
+      return "1";                                     // all section (default)
     });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -299,24 +298,6 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
         baseFilters.type = 'image';
       } else if (selectedTab === '3') {
         baseFilters.type = 'video';
-      } else if (selectedTab === '4') {
-        baseFilters.type = 'section-template';
-        if (selectedTab === "4" && activeSection && mediaLimits) {
-          let sectionName = "";
-          switch (activeSection) {
-            case "flexaligntop":
-              sectionName = "Hero Section";
-              break;
-            case "Employee Testimonials":
-              sectionName = "testimonial";
-              break;
-            default:
-              sectionName = activeSection;
-              break;
-          }
-
-          baseFilters.sectionName = sectionName;
-        }
       }
 
       
@@ -396,15 +377,7 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
       return;
     }
 
-    // Special rule for Tab '4': allow only one selection
-    if (selectedTab === '4') {
-      if (selectedItems.length >= 1) {
-        message.warning("You can select only one item in this section.");
-        return;
-      }
-      setSelectedItems([id]);
-      return;
-    }
+    // No special selection rules needed for images and videos
 
     // Enforce limits based on mediaType
     if (activeSection && currentSectionLimits) {
@@ -489,35 +462,36 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
     }) || null;
 
     setSelectedMedia(item);
-
-    if (item && item.title) {
-      setNewMediaTitle(item.title);
-    } else {
-      setNewMediaTitle("");
-    }
     setRenameModal(true);
   };
 
-  const handleRename = async () => {
-    if (!newMediaTitle.trim()) {
-      message.info("Please enter a new title");
-      return;
-    }
+  const handleRename = async (updatedData) => {
+    if (!selectedMedia) return;
+    
     try {
-      if (selectedMedia) {
-        const { _id } = selectedMedia;
-        await CrudService.update("MediaLibrary", _id, { title: newMediaTitle });
-        message.success("Media renamed successfully");
-        setMediaData((prevData) =>
-          prevData.map((media) =>
-            media._id === _id ? { ...media, title: newMediaTitle } : media
-          )
-        );
-      }
+      const { _id } = selectedMedia;
+      await CrudService.update("MediaLibrary", _id, updatedData);
+      message.success("Media updated successfully");
+      setMediaData((prevData) =>
+        prevData.map((media) =>
+          media._id === _id ? { ...media, ...updatedData } : media
+        )
+      );
       setRenameModal(false);
+      setSelectedMedia(null);
+      // Refresh the data
+      fetchMediaData({
+        user,
+        searchValue,
+        filters,
+        sorters,
+        activeSorter,
+        currentPage,
+        itemsPerPage,
+      });
     } catch (error) {
-      console.error("Error renaming media:", error);
-      message.error("Failed to rename media. Please try again.");
+      console.error("Error updating media:", error);
+      message.error("Failed to update media. Please try again.");
     }
   };
 
@@ -650,7 +624,6 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
     if (!isProgrammaticTabChange) {
       const onlyImages = allMediaData.filter(item => item.type === 'image');
       const onlyVideos = allMediaData.filter(item => item.type === 'video');
-      const sectionTemplate = allMediaData.filter(item => item.type === 'section-template');
 
       if (key === '1') {
         setMediaData(filterWithSearch(allMediaData));
@@ -658,8 +631,6 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
         setMediaData(filterWithSearch(onlyImages));
       } else if (key === '3') {
         setMediaData(filterWithSearch(onlyVideos));
-      } else if (key === '4') {
-        setMediaData(filterWithSearch(sectionTemplate));
       }
     }
     setSelectedTab(key);
@@ -831,37 +802,17 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
 
 
 
-                  {
-                    selectedTab === "4" && !activeSection && (
-                      <>
-                        <Button
-                          type="primary"
-                          icon={<PlusOutlined />}
-                          onClick={() => setIsCreateTemplateModalOpen(true)}
-                          size="medium"
-                          className="w-full sm:w-auto custom-button"
-                        >
-                          Add section template
-                        </Button>
-
-                      </>
-
-                    )}
-                  {
-                    selectedTab !== "4" && !activeSection && (
-                      <>
-                        <Button
-                          type="primary"
-                          icon={<PlusOutlined />}
-                          onClick={() => setIsAddModalOpen(true)}
-                          size="large"
-                          className="w-full sm:w-auto custom-button"
-                        >
-                          Add image / video
-                        </Button>
-                      </>
-
-                    )}
+                  {!activeSection && (
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => setIsAddModalOpen(true)}
+                      size="large"
+                      className="w-full sm:w-auto custom-button"
+                    >
+                      Add image / video
+                    </Button>
+                  )}
 
                 </div>
               </div>
@@ -912,13 +863,7 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
 
 
             <Tabs activeKey={selectedTab} onChange={handleTabChange} type="line">
-              {/* <TabPane 
-              tab="All" 
-              key="1" 
-              disabled={!!currentSectionLimits?.mediaType} // Disable if mediaType is specified
-            ></TabPane> */}
               {!activeSection && (
-
                 <TabPane
                   tab="All"
                   key="1"
@@ -934,16 +879,14 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
               <TabPane
                 tab="Videos"
                 key="3"
-                // disabled={currentSectionLimits?.images === 0 || currentSectionLimits?.mediaType === 'image'} // Disable if only images allowed
                 disabled={!allowedTabs.includes("video")}
               ></TabPane>
-              <TabPane
+              {/* Hide section templates for now */}
+              {/* <TabPane
                 tab="Section templates"
                 key="4"
                 disabled={!allowedTabs.includes("section-template")}
-              // disabled={currentSectionLimits?.mediaType && 
-              //   currentSectionLimits.mediaType !== 'section-template'}
-              ></TabPane>
+              ></TabPane> */}
             </Tabs>
 
             {/* Search and Actions */}
@@ -1231,26 +1174,20 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
           }
           mediaItem={editItem}
         />
-        <Modal
-          open={renameModal}
-          onCancel={() => setRenameModal(false)}
-          title="Rename Media"
-          footer={
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", width: "100%" }}>
-              <Button type='text' className="w-1/2 border border-[#D0D5DD]" onClick={() => setRenameModal(false)}>Cancel</Button>
-              <Button type="primary" className="custom-button w-1/2" onClick={handleRename}>
-                Rename
-              </Button>
-            </div>
-          }
-        >
-          <Input
-            placeholder="Enter new title for the vacancy"
-            value={newMediaTitle || ""}
-            onChange={(e) => setNewMediaTitle(e.target.value)}
-            className="mt-4 rounded-lg border border-[#1187FE] custom-text"
-          />
-        </Modal>
+        <EditMediaModalNew
+          visible={renameModal}
+          onCancel={() => {
+            setRenameModal(false);
+            setSelectedMedia(null);
+          }}
+          onSave={handleRename}
+          initialValues={{
+            fileName: selectedMedia?.title || '',
+            description: selectedMedia?.description || '',
+            tags: selectedMedia?.tags || [],
+          }}
+          mediaItem={selectedMedia}
+        />
 
         <AddMediaModal
           open={isAddModalOpen}

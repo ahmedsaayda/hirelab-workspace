@@ -222,30 +222,21 @@ export function MediaCard({
             </div>
           )}
         </div>
-        <div className="flex  gap-1 !bg-blue-red-400">
-          {/* <Button
-            type="text"
-            icon={<MoreOutlined />}
-            className="text-gray-400  bg-[#F8F8F8] rounded-full w-20 h-6 flex items-center justify-center"
-          /> */}
+        <div className="flex gap-1">
           <Dropdown
             menu={{
               items: [
                 {
                   key: "98",
-                  label: <div>Rename</div>,
+                  label: <div>Edit {type === "video" ? "Video" : "Image"}</div>,
                   onClick: () => {
-                    onRename?.(_id);
+                    onEdit?.(_id);
                   },
                 },
                 {
                   key: "99",
                   label: <div>Delete</div>,
                   danger: true,
-                  // onClick: async () => {
-                  //   await CrudService.delete("LandingPageData", record._id);
-                  //   await fetchData();
-                  // },
                   onClick: () => {
                     onDelete?.(_id);
                   },
@@ -254,268 +245,234 @@ export function MediaCard({
             }}
           >
             <button
-              title="Move Up"
+              title="More Options"
               onClick={(e) => e.preventDefault()}
               className="flex w-full justify-center rounded-[14px] rounded-e-none bg-gray-50_01 hover:text-black-900 py-2"
             >
               <Img
                 src="/images/more-vertical.svg"
-                alt="image"
-                className="h-[16px] "
+                alt="more options"
+                className="h-[16px]"
               />
             </button>
           </Dropdown>
 
-          {/* <Button
-            type="text"
-            icon={<EyeOutlined />}
-            className="text-gray-400  bg-[#F8F8F8] rounded-full w-20 h-6 flex items-center justify-center"
-          /> */}
-          {/* <Button
-            type="text"
-            icon={<EditOutlined  />}
-            className="text-gray-400  bg-[#F8F8F8] rounded-full w-20 h-6 flex items-center justify-center"
-            onClick={() => onEdit?.(_id)} 
-           /> */}
-          <Modal
-            title="Media Preview"
-            open={isModalOpen}
-            onCancel={() => setIsModalOpen(false)}
-            footer={null}
-            width={1000}
-          >
-            <div className="flex flex-col lg:flex-row gap-4 h-full">
-              {/* Media Section */}
-              <div className="lg:w-1/2 flex items-start ">
-                {type === "video" ? (
-                  <video
-                    src={thumbnail}
-                    className="w-full h-auto max-h-full object-cover"
-                    controls
-                  />
-                ) : (
-                  <img
-                    src={thumbnail}
-                    alt={title}
-                    className="w-full h-auto max-h-full object-cover"
-                  />
-                )}
-              </div>
-
-              {/* Information Section */}
-              <div className="lg:w-1/2 flex flex-col justify-center overflow-y-auto">
-                <h3 className="font-semibold">{title}</h3>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${getTagStyle(
-                        tag.type
-                      )}`}
-                    >
-                      {tag.text}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-gray-500 text-sm">{description}</p>
-                {size && <p className="text-gray-600 text-xs">Size: {size}</p>}
-                {resolution && (
-                  <p className="text-gray-600 text-xs">
-                    Resolution: {resolution}
-                  </p>
-                )}
-
-                <div className="w-full flex gap-1 mt-2">
-                  {/* Rename Button */}
-                  <button
-                    onClick={() => onRename?.(_id)}
-                    className="group flex w-full justify-center items-center gap-1 rounded-[14px] rounded-e-none bg-gray-50_01 hover:bg-blue-400 hover:text-white py-2"
-                  >
-                    <PencilLineIcon
-                      className="text-gray-600 group-hover:text-white"
-                      size={15}
-                    />
-                    Rename
-                  </button>
-
-                  {/* Edit Button */}
-                  {
-                    templateData && (
-<button
-                    onClick={() => onEdit?.(_id)}
-                    className="group flex w-full justify-center items-center gap-1 bg-gray-50_01 hover:bg-green-400 hover:text-white py-2"
-                  >
-                    <SquarePen
-                      className="text-gray-600 group-hover:text-white"
-                      size={15}
-                    />
-                    Edit
-                  </button>
-
-                     )
-                  }
-
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => onDelete?.(_id)}
-                    className="group flex w-full justify-center items-center gap-1 rounded-[14px] rounded-s-none bg-gray-50_01 hover:bg-red-400 hover:text-white py-2"
-                  >
-                    <Trash2
-                      className="text-gray-600 group-hover:text-white"
-                      size={15}
-                    />
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Modal>
-
-          {type === "section-template" && (
-            <Modal
-              title={`Edit ${title}`}
-              open={isEditModalOpenForSection}
-              onCancel={() => setIsEditModalOpenForSection(false)}
-              footer={null}
-              width={800}
-              destroyOnClose
-            >
-              {templateData?.type === "hero" && (
-                <HeroForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === 'testimonial' && (
-                  <TestimonialsForm
-                    initialData={templateData}
-                    onSave={handleSendTemplateParent}
-                    isSaving={isSaving}
-                  />
-                )}
-              {templateData?.type === "leaderIntro" && (
-                <LeaderIntroductionForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "jobDescription" && (
-                <JobDescriptionForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "companyFacts" && (
-                <CompanyFactsForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "recruiterContact" && (
-                <RecruiterContactForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "candidateProcess" && (
-                <CandidateProcessForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "videoSection" && (
-                <VideoSectionForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "photoCarousel" && (
-                <PhotoCarouselForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "aboutCompany" && (
-                <AboutCompanyForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "jobSpecification" && (
-                <JobSpecificationsForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "agenda" && (
-                <AgendaForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-
-              {templateData?.type === "evpMission" && (
-                <EVPMissionForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "growthPath" && (
-                <GrowthPathForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {templateData?.type === "textBox" && (
-                <TextBoxForm
-                  initialData={templateData}
-                  onSave={handleSendTemplateParent}
-                  isSaving={isSaving}
-                />
-              )}
-              {/* Add more template types as needed */}
-            </Modal>
-          )}
-
           <button
-            title={"View"}
+            title="View"
             onClick={() => setIsModalOpen(true)}
-            className="flex w-full justify-center  bg-gray-50_01 hover:text-black-900 py-2"
+            className="flex w-full justify-center bg-gray-50_01 hover:text-black-900 py-2"
           >
             <Eye className="h-4 w-4 text-gray-500 hover:text-black" />
           </button>
 
-          {
-            templateData && (
-              <button
-            title={"Edit"}
-            onClick={() => {
-              setIsEditModalOpenForSection(true);
-              if (type !== "section-template" && onEdit) {
-                onEdit(_id);
-              }
-            }}
-            className="flex w-full justify-center rounded-[14px] rounded-s-none bg-gray-50_01 hover:text-black-900 py-2"
-          >
-            <Pencil className="h-4 w-4 text-gray-500 hover:text-black" />
-          </button>
-            )
-          }
+          {templateData && (
+            <button
+              title="Edit Template"
+              onClick={() => {
+                setIsEditModalOpenForSection(true);
+                if (type !== "section-template" && onEdit) {
+                  onEdit(_id);
+                }
+              }}
+              className="flex w-full justify-center rounded-[14px] rounded-s-none bg-gray-50_01 hover:text-black-900 py-2"
+            >
+              <Pencil className="h-4 w-4 text-gray-500 hover:text-black" />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Preview Modal */}
+      <Modal
+        title="Media Preview"
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+        width={1000}
+      >
+        <div className="flex flex-col lg:flex-row gap-4 h-full">
+          <div className="lg:w-1/2 flex items-start">
+            {type === "video" ? (
+              <video
+                src={thumbnail}
+                className="w-full h-auto max-h-full object-cover"
+                controls
+              />
+            ) : (
+              <img
+                src={thumbnail}
+                alt={title}
+                className="w-full h-auto max-h-full object-cover"
+              />
+            )}
+          </div>
+
+          <div className="lg:w-1/2 flex flex-col justify-center overflow-y-auto">
+            <h3 className="font-semibold">{title}</h3>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${getTagStyle(
+                    tag.type
+                  )}`}
+                >
+                  {tag.text}
+                </span>
+              ))}
+            </div>
+            <p className="text-gray-500 text-sm">{description}</p>
+            {size && <p className="text-gray-600 text-xs">Size: {size}</p>}
+            {resolution && (
+              <p className="text-gray-600 text-xs">Resolution: {resolution}</p>
+            )}
+
+            <div className="w-full flex gap-1 mt-2">
+              <button
+                onClick={() => onRename?.(_id)}
+                className="group flex w-full justify-center items-center gap-1 rounded-[14px] rounded-e-none bg-gray-50_01 hover:bg-blue-400 hover:text-white py-2"
+              >
+                <PencilLineIcon
+                  className="text-gray-600 group-hover:text-white"
+                  size={15}
+                />
+                Edit {type === "video" ? "Video" : "Image"}
+              </button>
+
+              <button
+                onClick={() => onDelete?.(_id)}
+                className="group flex w-full justify-center items-center gap-1 rounded-[14px] rounded-s-none bg-gray-50_01 hover:bg-red-400 hover:text-white py-2"
+              >
+                <Trash2
+                  className="text-gray-600 group-hover:text-white"
+                  size={15}
+                />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Template Edit Modal */}
+      {type === "section-template" && (
+        <Modal
+          title={`Edit ${title}`}
+          open={isEditModalOpenForSection}
+          onCancel={() => setIsEditModalOpenForSection(false)}
+          footer={null}
+          width={800}
+          destroyOnClose
+        >
+          {templateData?.type === "hero" && (
+            <HeroForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === 'testimonial' && (
+              <TestimonialsForm
+                initialData={templateData}
+                onSave={handleSendTemplateParent}
+                isSaving={isSaving}
+              />
+            )}
+          {templateData?.type === "leaderIntro" && (
+            <LeaderIntroductionForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "jobDescription" && (
+            <JobDescriptionForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "companyFacts" && (
+            <CompanyFactsForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "recruiterContact" && (
+            <RecruiterContactForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "candidateProcess" && (
+            <CandidateProcessForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "videoSection" && (
+            <VideoSectionForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "photoCarousel" && (
+            <PhotoCarouselForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "aboutCompany" && (
+            <AboutCompanyForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "jobSpecification" && (
+            <JobSpecificationsForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "agenda" && (
+            <AgendaForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+
+          {templateData?.type === "evpMission" && (
+            <EVPMissionForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "growthPath" && (
+            <GrowthPathForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {templateData?.type === "textBox" && (
+            <TextBoxForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
+          {/* Add more template types as needed */}
+        </Modal>
+      )}
     </div>
   );
 }

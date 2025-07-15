@@ -15,7 +15,7 @@ import { MediaCard } from "../components/media-card.jsx";
 import { Skeleton ,Box } from '@mui/material';
 import HeroForm from "../components/modals/sectionTemplateForms/hero-form.jsx";
 import TestimonialsForm from "../components/modals/sectionTemplateForms/testimonials-form.jsx";
-
+import EditMediaModal from "./EditMediaModal.jsx";
 
 
 const { TabPane } = Tabs;
@@ -32,7 +32,7 @@ const ImageSelectionModal = ({
   autosave = false,
   currentSectionLimits=Infinity,
   isLogo=false,
-  allowedTabs =["all","image","video","section-template"]
+  allowedTabs =["all","image","video"] // Removed "section-template"
 }) => {
   const user = useSelector(selectUser);
   const [activeOption, setActiveOption] = useState("upload");
@@ -42,9 +42,7 @@ const ImageSelectionModal = ({
   const [recentMedia, setRecentMedia] = useState([]);
   const [recentLoading, setRecentLoading] = useState(false);
   const [editingMedia, setEditingMedia] = useState(null);
-  const [isEditModalOpenForSection, setIsEditModalOpenForSection] = useState(false);
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [renameValue, setRenameValue] = useState("");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState(() => {
     if (type === "video") return "videos";
     if (type === "image") return "images";
@@ -303,9 +301,8 @@ const ImageSelectionModal = ({
   const handleEdit = (id) => {
     const media = recentMedia.find((m) => m._id === id);
     if (media) {
-      console.log("media",media);
       setEditingMedia(media);
-      setIsEditModalOpenForSection(true);
+      setIsEditModalOpen(true);
     }
   };
 
@@ -321,38 +318,19 @@ const ImageSelectionModal = ({
     }
   };
 
-  // Handler for Rename
-  const handleRename = (id) => {
-    const media = recentMedia.find((m) => m._id === id);
-    if (media) {
-      setEditingMedia(media);
-      setRenameValue(media.title || "");
-      setIsRenaming(true);
-    }
-  };
-
-  const handleRenameSave = async () => {
-    if (!renameValue.trim() || !editingMedia) return;
-    try {
-      await CrudService.update("MediaLibrary", editingMedia._id, { title: renameValue });
-      setRecentMedia((prev) => prev.map((m) => m._id === editingMedia._id ? { ...m, title: renameValue } : m));
-      setIsRenaming(false);
-      setEditingMedia(null);
-      message.success("Media renamed successfully");
-    } catch (error) {
-      message.error("Failed to rename media. Please try again.");
-    }
-  };
-
-  // Handler for Edit Save (for section-template types)
+  // Update handleEditSave to handle the full media data
   const handleEditSave = async (updatedData) => {
     if (!editingMedia) return;
     try {
       await CrudService.update("MediaLibrary", editingMedia._id, updatedData);
-      setRecentMedia((prev) => prev.map((m) => m._id === editingMedia._id ? { ...m, ...updatedData } : m));
-      setIsEditModalOpenForSection(false);
+      setRecentMedia((prev) => prev.map((m) => 
+        m._id === editingMedia._id ? { ...m, ...updatedData } : m
+      ));
+      setIsEditModalOpen(false);
       setEditingMedia(null);
       message.success("Media updated successfully");
+      // Refresh the media list to show updated data
+      fetchRecent();
     } catch (error) {
       message.error("Failed to update media. Please try again.");
     }
@@ -524,7 +502,6 @@ const ImageSelectionModal = ({
                               onSelect={() => handleSelectRecent(media)}
                               onEdit={handleEdit}
                               onDelete={handleDelete}
-                              onRename={handleRename}
                               hideDescription={true}
                             />
                           </div>
@@ -579,36 +556,26 @@ const ImageSelectionModal = ({
       </Modal>
 
       {/* Edit Modal for section-template types */}
-      {editingMedia && isEditModalOpenForSection && editingMedia.templateData && (
-        <Modal
-          isOpen={isEditModalOpenForSection}
-          onClose={() => { setIsEditModalOpenForSection(false); setEditingMedia(null); }}
-          title={`Edit ${editingMedia.title}`}
-        >
-          {editingMedia.templateData.type === "hero" && (
-            <HeroForm initialData={editingMedia.templateData} onSave={handleEditSave} isSaving={false} />
-          )}
-          {editingMedia.templateData.type === "testimonial" && (
-            <TestimonialsForm initialData={editingMedia.templateData} onSave={handleEditSave} isSaving={false} />
-          )}
-        </Modal>
-      )}
-
-      {/* Rename Modal */}
-      {isRenaming && (
-        <Modal isOpen={isRenaming} onClose={() => { setIsRenaming(false); setEditingMedia(null); }} title="Rename Media">
-          <input
-            type="text"
-            value={renameValue}
-            onChange={e => setRenameValue(e.target.value)}
-            className="w-full p-2 border rounded mb-4"
-            placeholder="Enter new title"
-          />
-          <div className="flex justify-end gap-2">
-            <button onClick={() => { setIsRenaming(false); setEditingMedia(null); }} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
-            <button onClick={handleRenameSave} className="px-4 py-2 bg-blue-500 text-white rounded">Rename</button>
-          </div>
-        </Modal>
+      {editingMedia && isEditModalOpen && (
+        <EditMediaModal
+          visible={isEditModalOpen}
+          onCancel={() => {
+            setIsEditModalOpen(false);
+            setEditingMedia(null);
+          }}
+          onSave={handleEditSave}
+          initialValues={
+            editingMedia
+              ? {
+                  fileName: editingMedia.title,
+                  description: editingMedia.description,
+                  tags: editingMedia.tags || [],
+                  image: editingMedia.thumbnail,
+                }
+              : undefined
+          }
+          mediaItem={editingMedia}
+        />
       )}
     </>
   );

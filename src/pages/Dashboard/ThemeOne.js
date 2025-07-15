@@ -907,10 +907,10 @@ export default function Example({
                           )}
                           <div className="flex flex-col">
                             <span className="font-semibold text-gray-900 dark:text-white">
-                              {user.firstName + " " + user.lastName}
+                              {user?.firstName + " " + user?.lastName}
                             </span>
                             <span className="text-sm text-gray-500 dark:text-gray-400">
-                              {user.email}
+                              {user?.email}
                             </span>
                             <span className="text-[10px] px-1 rounded-lg border w-fit bg-white-A700_33">Free</span>
                           </div>
