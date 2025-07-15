@@ -42,6 +42,8 @@ import CalendlyService from "../../services/CalendlyService";
 import SMTPService from "../../services/SMTPService";
 import UploadService from "../../services/UploadService";
 import { partner } from "../../constants";
+import { login } from "../../redux/auth/actions";
+import { store } from "../../redux/store";
 
 function getColorFun(r, g, b) {
   return (
@@ -157,7 +159,8 @@ export default function Example() {
     setMe(res.data.me);
     setOnboardingStatus(res.data.onboardingStatus);
     document.dispatchEvent(new CustomEvent("REFRESH.PROFILE"));
-
+    const me = await AuthService.me();
+    store.dispatch(login(me.data.me));
 
   }, [softValue]);
 
