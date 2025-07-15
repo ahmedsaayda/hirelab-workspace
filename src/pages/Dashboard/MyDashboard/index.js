@@ -233,7 +233,7 @@ const MyDashboard = () => {
 
   return (
     <div className="flex flex-col mdr:flex-row gap-[10px]">
-      <div className="ml-[10px] w-full rounded-xl bg-white p-[24px] pr-2  2xl:w-2/3 flex flex-col gap-[24px] pt-0">
+      <div className="ml-[10px] w-full rounded-xl bg-white p-[24px] pr-2 lg:w-[70%] flex flex-col gap-[24px] pt-0">
         <div className="flex flex-col md:flex-row items-center gap-4 w-full mt-4">
           <Heading size="11xl" as="h1" className="!text-gray-900">
             Dashboard
@@ -265,7 +265,7 @@ const MyDashboard = () => {
         <Overview />
       </div>
 
-      <div className=" w-[50%] mdx:w-full flex flex-col gap-[32px]  bg-white dark:bg-black px-[10px] py-[24px] rounded-xl overflow-auto ">
+      <div className="w-full lg:w-[30%] flex flex-col gap-[32px] bg-white dark:bg-black px-[10px] py-[24px] rounded-xl overflow-auto">
         <CalendarRangePicker />
         {calendarEvents.map((calEvent, i) => (
           <div
