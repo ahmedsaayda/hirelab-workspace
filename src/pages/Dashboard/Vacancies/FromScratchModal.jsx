@@ -94,6 +94,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
   });
   const [currentStep, setCurrentStep] = useState(1);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [generateApplicationForm, setGenerateApplicationForm] = useState(true);
 
   // Load saved progress when modal opens
   useEffect(() => {
@@ -515,6 +516,27 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
                 />
               </div>
             </div>
+
+            {/* AI Form Generation Option */}
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="generateApplicationForm"
+                  checked={generateApplicationForm}
+                  onChange={(e) => setGenerateApplicationForm(e.target.checked)}
+                  className="mt-1"
+                />
+                <div>
+                  <label htmlFor="generateApplicationForm" className="text-sm font-medium cursor-pointer">
+                    Auto-generate application form with AI
+                  </label>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Create a custom application form tailored to this job position. Form fields will be automatically generated based on the job requirements.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -766,8 +788,36 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         const aiResult = JSON.parse(aiResponse.data.data.content);
         console.log("aiResult", aiResult);
 
+        // Generate application form if option is selected
+        let generatedForm = null;
+        if (formData.generateApplicationForm) {
+          try {
+            console.log("🤖 Generating application form with AI...");
+            const formResponse = await AiService.generateApplicationForm({
+              inputType: 'text',
+              inputData: {
+                jobTitle: formData.jobTitle,
+                jobDescription: formData.description,
+                location: aiResult.location || [],
+                companyInfo: user?.companyInfo || ''
+              },
+              language: formData.language === 'Dutch' ? 'en' : 'en', // Map to supported language codes
+              formComplexity: 'standard'
+            });
+
+            if (formResponse.data.success) {
+              generatedForm = formResponse.data.data.form;
+              console.log("🤖 AI Form Generated:", generatedForm);
+            } else {
+              console.warn("Failed to generate form, proceeding without it");
+            }
+          } catch (formError) {
+            console.warn("Form generation failed, proceeding without it:", formError);
+          }
+        }
+
         // Create the vacancy
-        const res = await CrudService.create("LandingPageData", {
+        const vacancyData = {
           ...aiResult,
           specifications: aiResult.specifications?.map((spec) => ({
             ...spec,
@@ -780,8 +830,16 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
           })),
           ...brandingDetails,
           templateId: selectedTemplate,
-          user_id: user?._id
-        });
+          user_id: user?._id,
+          applyType: generatedForm ? 'form' : 'url' // Set apply type based on form generation
+        };
+
+        // Add the generated form if available
+        if (generatedForm) {
+          vacancyData.form = generatedForm;
+        }
+
+        const res = await CrudService.create("LandingPageData", vacancyData);
         onRefresh()
         setJobTitleModal(false);
         router.push(`/edit-page/${res.data.result._id}`);
@@ -927,6 +985,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
                         language: language,
                         tone: tone,
                         templateId: selectedTemplate,
+                        generateApplicationForm: generateApplicationForm,
                       });
                     }}
                     className="py-2 px-4 text-white bg-[#5207CD] rounded-md hover:bg-blue-600"
