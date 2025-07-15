@@ -2044,10 +2044,10 @@ const handleLogoUpload = async (url) => {
                       <div className="grid grid-cols-3 gap-4 mb-4">
                         {/* Title Font Card */}
                         <div
-                          className={`p-3 border rounded-lg cursor-pointer ${
+                          className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
                             selectedFontStyle === "h1"
-                              ? "border-blue-600 bg-blue-50"
-                              : "border-gray-200"
+                              ? "border-2 border-blue-600"
+                              : "border-gray-200 hover:border-blue-300"
                           }`}
                           onClick={() => setSelectedFontStyle("h1")}
                         >
@@ -2069,10 +2069,10 @@ const handleLogoUpload = async (url) => {
 
                         {/* Subheader Font Card */}
                         <div
-                          className={`p-3 border rounded-lg cursor-pointer ${
+                          className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
                             selectedFontStyle === "h2"
-                              ? "border-blue-600 bg-blue-50"
-                              : "border-gray-200"
+                              ? "border-2 border-blue-600"
+                              : "border-gray-200 hover:border-blue-300"
                           }`}
                           onClick={() => setSelectedFontStyle("h2")}
                         >
@@ -2094,10 +2094,10 @@ const handleLogoUpload = async (url) => {
 
                         {/* Body Font Card */}
                         <div
-                          className={`p-3 border rounded-lg cursor-pointer ${
+                          className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
                             selectedFontStyle === "h3"
-                              ? "border-blue-600 bg-blue-50"
-                              : "border-gray-200"
+                              ? "border-2 border-blue-600"
+                              : "border-gray-200 hover:border-blue-300"
                           }`}
                           onClick={() => setSelectedFontStyle("h3")}
                         >
