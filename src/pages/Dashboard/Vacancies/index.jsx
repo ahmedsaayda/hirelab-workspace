@@ -957,7 +957,7 @@ Respond with json that adheres to the following jsonschema:
             )}
 
           </div>
-          <div className="grid grid-cols-1 gap-3 justify-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 justify-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 place-items-center sm:place-items-stretch">
             {landingPages.map((d, index) => {
               return (
                 <VacanciesCard
