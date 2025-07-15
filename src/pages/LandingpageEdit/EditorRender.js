@@ -249,6 +249,7 @@ const EditorRender = React.memo(({
   const [visiblePopconfirm, setVisiblePopconfirm] = useState({});
   const [selectedIndices, setSelectedIndices] = useState({});
   const autoSaveTimeout = useRef(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const debouncedAutoSave = useCallback(() => {
     if (autoSaveTimeout.current) {
@@ -256,17 +257,21 @@ const EditorRender = React.memo(({
     }
     autoSaveTimeout.current = setTimeout(async () => {
       if (changed && lpId) {
+        setIsSaving(true);
         try {
           await CrudService.update("LandingPageData", lpId, {
             ...landingPageData,
             _id: undefined,
           },"editor render -- auto save");
           setChanged(false);
+          console.log("Auto-saved form data");
         } catch (error) {
           console.error("Auto-save failed:", error);
+        } finally {
+          setIsSaving(false);
         }
       }
-    }, 3000);
+    }, 1000); // Reduced from 3000ms to 1000ms for faster autosave
   }, [changed, lpId, landingPageData]);
 
   useEffect(() => {
@@ -806,6 +811,12 @@ const EditorRender = React.memo(({
         {!hideFooter && <div className="mt-auto h-6" />}
       </div>
       <div className="sticky right-0 bottom-0 left-0 h-5 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+      {isSaving && (
+        <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50">
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-sm">Auto-saving...</span>
+        </div>
+      )}
     </div>
   );
 });

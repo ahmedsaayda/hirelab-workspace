@@ -55,6 +55,11 @@ class AiService {
   analyzeUrlWithAgentQL(url) {
     return this.api.post("/analyze-url-agentql", { url });
   }
+
+  // Generate application form using AI
+  generateApplicationForm(data) {
+    return this.api.post("/generate-application-form", data);
+  }
 }
 
 export default new AiService(`${getBackendUrl()}/ai`);

@@ -18,6 +18,7 @@ export default function Header({
   reload,
   isAutoSaving,
   lpId,
+  isFormEditor = false,
   ...props
 }) {
   const [templateMenu, setTemplateMenu] = useState(false);
@@ -222,7 +223,7 @@ export default function Header({
     >
       <div className="flex gap-5 justify-between items-center w-full mdx:flex-col">
         <div className="flex items-center justify-left mdx:w-full">
-          <Link href="/dashboard/vacancies">
+          <Link href={isFormEditor ? `/edit-page/${lpId}` : "/dashboard/vacancies"}>
             <Img
               src="/images/img_arrow_right_blue_gray_400.svg"
               alt="arrowright"
@@ -241,6 +242,11 @@ export default function Header({
               className="!text-blue_gray-700 whitespace-nowrap"
             >
               {landingPageData?.vacancyTitle}
+              {isFormEditor && (
+                <span className="ml-2 text-xs px-2 py-0.5 bg-purple-100 text-purple-800 rounded-full">
+                  Form Editor
+                </span>
+              )}
               {hasUnpublishedChanges && (
                 <span className="ml-2 text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">
                   Unpublished changes
