@@ -297,47 +297,75 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   const [ctaLink, setCtaLink] = useState("");
   const [initialCtaLink, setInitialCtaLink] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
+  const [applyType, setApplyType] = useState("url"); // "form" or "url"
+  const [initialApplyType, setInitialApplyType] = useState("url");
 
   useEffect(() => {
     if (landingPageData) {
       setCtaLink(landingPageData.cta2Link || '#apply');
       setInitialCtaLink(landingPageData.cta2Link || '#apply');
+      // Determine apply type based on existing data
+      const currentApplyType = landingPageData.applyType || 
+        (landingPageData.cta2Link === '#apply' || !landingPageData.cta2Link ? 'form' : 'url');
+      setApplyType(currentApplyType);
+      setInitialApplyType(currentApplyType);
     }
   }, [landingPageData]);
 
   const handleSaveCtaLink = () => {
-    if (!ctaLink.trim()) {
+    if (applyType === 'url' && !ctaLink.trim()) {
       message.warning("Please enter a valid URL");
       return;
     }
 
-    CrudService.update("LandingPageData", lpId, {
-      cta2Link: ctaLink
-    }).then(() => {
+    const updateData = {
+      applyType: applyType,
+      cta2Link: applyType === 'form' ? '#apply' : ctaLink
+    };
+
+    CrudService.update("LandingPageData", lpId, updateData).then(() => {
       setLandingPageData((d) => ({
         ...d,
-        cta2Link: ctaLink
+        ...updateData
       }));
-      setInitialCtaLink(ctaLink);
-      message.success("Apply button URL updated successfully");
+      setInitialCtaLink(updateData.cta2Link);
+      setInitialApplyType(applyType);
+      message.success("Apply button configuration updated successfully");
       setApplyLinkModalVisible(false);
     }).catch(err => {
-      message.error("Failed to update Apply button URL: " + (err.message || "Unknown error"));
+      message.error("Failed to update Apply button configuration: " + (err.message || "Unknown error"));
     });
   };
 
   const handleApplyClick = () => {
     if (isEdit) {
       setCtaLink(landingPageData?.cta2Link || '');
+      const currentApplyType = landingPageData?.applyType || 
+        (landingPageData?.cta2Link === '#apply' || !landingPageData?.cta2Link ? 'form' : 'url');
+      setApplyType(currentApplyType);
       setApplyLinkModalVisible(true);
     } else {
-      // Ensure URL has protocol, add https:// if missing
-      let url = landingPageData?.cta2Link || '';
-      if (url && !url.match(/^https?:\/\//i)) {
-        url = 'https://' + url;
+      const currentApplyType = landingPageData?.applyType || 
+        (landingPageData?.cta2Link === '#apply' || !landingPageData?.cta2Link ? 'form' : 'url');
+      
+      if (currentApplyType === 'form') {
+        // Redirect to custom form
+        const formUrl = `/lp/${lpId}/apply`;
+        window.open(formUrl, '_blank');
+      } else {
+        // Redirect to external URL
+        let url = landingPageData?.cta2Link || '';
+        if (url && !url.match(/^https?:\/\//i)) {
+          url = 'https://' + url;
+        }
+        window.open(url, '_blank');
       }
-      window.open(url, '_blank');
     }
+  };
+
+  const handleOpenFormEditor = () => {
+    const formEditorUrl = `/form-editor/${lpId}`;
+    window.open(formEditorUrl, '_blank');
   };
 
   const handleShareClick = () => {
@@ -682,51 +710,138 @@ const handlemediaLink = (platform) => {
             </AntModal>
       {/* Apply Link Modal */}
       <AntModal
-        title={getTranslation(landingPageData?.lang, 'setApplyButtonUrl')}
+        title="Configure Apply Button"
         open={applyLinkModalVisible}
         onCancel={() => setApplyLinkModalVisible(false)}
         footer={null}
         destroyOnClose
+        width={600}
       >
         <div className="py-4">
           <div className="mb-6">
             <p className="text-gray-600 mb-4">
-              {getTranslation(landingPageData?.lang, 'beforePublishing')}
+              Choose how candidates should apply for this position
             </p>
           </div>
           
+          {/* Apply Type Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {getTranslation(landingPageData?.lang, 'applyButtonUrl')} *
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Apply Method *
             </label>
-            <Input
-              value={ctaLink}
-              onChange={(e) => setCtaLink(e.target.value)}
-              placeholder="https://example.com/apply"
-              className="w-full"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {getTranslation(landingPageData?.lang, 'thisUrlWillBeUsed')}
-            </p>
+            <div className="space-y-3">
+              <div 
+                className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                  applyType === 'form' 
+                    ? 'border-[#5207CD] bg-purple-50' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => setApplyType('form')}
+              >
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    name="applyType"
+                    value="form"
+                    checked={applyType === 'form'}
+                    onChange={() => setApplyType('form')}
+                    className="mr-3"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">Custom Application Form</div>
+                    <div className="text-sm text-gray-500">
+                      Candidates will fill out your custom form on the landing page
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div 
+                className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                  applyType === 'url' 
+                    ? 'border-[#5207CD] bg-purple-50' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => setApplyType('url')}
+              >
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    name="applyType"
+                    value="url"
+                    checked={applyType === 'url'}
+                    onChange={() => setApplyType('url')}
+                    className="mr-3"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">External Link</div>
+                    <div className="text-sm text-gray-500">
+                      Redirect candidates to an external application URL
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Custom Form Options */}
+          {applyType === 'form' && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-gray-900 mb-1">
+                    Custom Application Form
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Candidates will be redirected to: <code className="bg-gray-200 px-1 rounded">/lp/{lpId}/apply</code>
+                  </div>
+                </div>
+                <AntButton
+                  type="primary"
+                  onClick={handleOpenFormEditor}
+                  className="bg-[#5207CD] hover:bg-[#0C7CE6]"
+                >
+                  Edit Form
+                </AntButton>
+              </div>
+            </div>
+          )}
+
+          {/* External URL Input */}
+          {applyType === 'url' && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                External Application URL *
+              </label>
+              <Input
+                value={ctaLink}
+                onChange={(e) => setCtaLink(e.target.value)}
+                placeholder="https://example.com/apply"
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                This URL will be opened when candidates click the Apply button
+              </p>
+            </div>
+          )}
           
           <div className="flex justify-end gap-3">
             <AntButton
               onClick={() => setApplyLinkModalVisible(false)}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
             >
-              {getTranslation(landingPageData?.lang, 'cancel')}
+              Cancel
             </AntButton>
             <AntButton
               onClick={handleSaveCtaLink}
-              disabled={!ctaLink.trim()}
+              disabled={applyType === 'url' && !ctaLink.trim()}
               className={`px-4 py-2 rounded-md ${
-                ctaLink.trim()
+                (applyType === 'form' || (applyType === 'url' && ctaLink.trim()))
                   ? 'bg-[#5207CD] text-white hover:bg-[#0C7CE6]'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {getTranslation(landingPageData?.lang, 'saveUrl')}
+              Save Configuration
             </AntButton>
           </div>
         </div>

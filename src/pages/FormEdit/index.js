@@ -14,6 +14,7 @@ import ApplicationformAddQuestions, {
 } from "../Dashboard/Vacancies/modals/ApplicationformAddQuestions";
 import FormE from "../Landingpage/Form";
 import EditorRender from "../LandingpageEdit/EditorRender";
+import ApplyPagePreview from "./ApplyPagePreview";
 import {FaGripVertical,FaTrash} from "react-icons/fa6";
 import { DragDropContext as BeautifulDragDropContext, Droppable as BeautifulDroppable, Draggable as BeautifulDraggable } from "@hello-pangea/dnd";
 import {PlusOutlined} from "@ant-design/icons";
@@ -568,9 +569,9 @@ export default function FormEdit({paramsId}) {
   if (!landingPageData) return <Skeleton active />;     
 
   return (
-    <div className="">
-      <div className="w-full bg-gray-50_01">
-        <div className="flex flex-col  pt-6 smx:pt-5 overflow-hidden ">
+    <div className="h-screen overflow-hidden">
+      <div className="w-full bg-gray-50_01 h-full flex flex-col">
+        <div className="flex flex-col pt-6 smx:pt-5 h-full">
           <Header
             className="p-[20px] mdx:w-full mdx:p-5"
             landingPageData={landingPageData}
@@ -613,16 +614,16 @@ export default function FormEdit({paramsId}) {
             lpId={lpId}
             isFormEditor={true}
           />
-          <div className=" smx:pb-5">
-            <div className="flex gap-4 justify-center items-start p-3 container-sm mdx:flex-col">
-              <div className="w-full">
-                <div className="flex rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col">
-                  {/* Left Sidebar */}
-                  <div className="flex flex-col border-r border-solid border-blue_gray-50  pl-2 py-[10px] mdx:p-5 mdx:pb-5 smx:py-5 W-[140px] mdx:w-full group sidebar-transition" style={{ transition: 'width 0.3s', width: '100px' }}
-                    onMouseEnter={e => e.currentTarget.style.width = '140px'}
-                    onMouseLeave={e => e.currentTarget.style.width = '100px'}
-                  >
-                    <div className="flex flex-col items-center gap-[10px] w-full">
+          <div className="flex-1 flex flex-col smx:pb-5 overflow-hidden">
+            <div className="flex gap-4 justify-center items-start p-3 container-sm mdx:flex-col h-full">
+                              <div className="w-full h-full">
+                  <div className="flex rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col h-full">
+                                      {/* Left Sidebar */}
+                    <div className="flex flex-col border-r border-solid border-blue_gray-50  pl-2 py-[10px] mdx:p-5 mdx:pb-5 smx:py-5 W-[140px] mdx:w-full group sidebar-transition h-full" style={{ transition: 'width 0.3s', width: '100px' }}
+                      onMouseEnter={e => e.currentTarget.style.width = '140px'}
+                      onMouseLeave={e => e.currentTarget.style.width = '100px'}
+                    >
+                                          <div className="flex flex-col items-center gap-[10px] w-full h-full">
                       <Heading
                         size="5xl"
                         as="h3"
@@ -648,7 +649,7 @@ export default function FormEdit({paramsId}) {
                             <div
                               {...provided.droppableProps}
                               ref={provided.innerRef}
-                              className="w-full flex flex-col gap-4 max-h-[75vh] overflow-y-auto overflow-x-hidden p-1"
+                              className="w-full flex flex-col gap-4 flex-1 p-1"
                             >
                               {/* Header (not draggable) */}
                               <div
@@ -748,17 +749,7 @@ export default function FormEdit({paramsId}) {
                               ))}
                               {provided.placeholder}
                               {/* Footer (not draggable) */}
-                              <div
-                                className="flex items-center  rounded-lg select-none mt-2 cursor-pointer"
-                                onClick={() => {
-                                  setSelectedSection({ id: 'flexalign', type: 'footer' });
-                                  setIsEditingForm(false);
-                                }}
-                              >
-                                <div className="flex-1 flex group-hover:justify-start items-center p-2">
-                                  <img src="/images/img_flex_align.svg" alt="flexalign" className="w-5 h-5" />
-                                </div>
-                              </div>
+                            
                             </div>
                           )}
                         </BeautifulDroppable>
@@ -767,8 +758,8 @@ export default function FormEdit({paramsId}) {
                   </div>
 
                   {/* Middle Section */}
-                  <div className="flex flex-col gap-3 border-r border-solid border-blue_gray-50 p-8 mdx:self-stretch mdx:p-5 justify-between w-[560px] h-[100vh] overflow-y-scroll ">
-                    <div className="flex flex-col gap-[30px]">
+                  <div className="flex flex-col gap-3 border-r border-solid border-blue_gray-50 p-8 mdx:self-stretch mdx:p-5 justify-between w-[560px] h-full overflow-hidden">
+                    <div className="flex flex-col gap-[30px] flex-1 overflow-auto">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
@@ -819,18 +810,7 @@ export default function FormEdit({paramsId}) {
                           </div>
                         </div>
                         
-                        {/* Close/Back Button */}
-                        <button
-                          onClick={() => {
-                            setSelectedSection(null);
-                            setIsEditingForm(true);
-                          }}
-                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
+                        
                       </div>
 
                       {isEditingForm ? (
@@ -1132,21 +1112,24 @@ export default function FormEdit({paramsId}) {
                       position: 'fixed',
                       top: 0,
                       left: 0,
-                      width: '125vw',
-                      height: '125vh',
+                      width: '100vw',
+                      height: '100vh',
                       zIndex: 9999,
                       background: 'white',
-                      overflow: 'auto',
-                      padding: 32,
+                      padding: '20px',
                       display: 'flex',
                       flexDirection: 'column',
-                    } : { maxHeight: '125vh', overflow: 'auto' }}
+                    } : { height: '100%', display: 'flex', flexDirection: 'column' }}
                   >
-                    <div className="flex gap-4 justify-between items-center mb-2">
+                    <div className="flex gap-4 justify-between items-center mb-2 relative">
+                      {/* Back Button for Fullscreen */}
+                    
+                      
                       <Heading
                         size="7xl"
                         as="h5"
                         className="!text-black-900_01"
+                        style={{ marginLeft: fullscreen ? '100px' : '0' }}
                       >
                         Preview
                       </Heading>
@@ -1173,18 +1156,6 @@ export default function FormEdit({paramsId}) {
                           >
                             Form
                           </button>
-                          <button
-                            onClick={() => {
-                              if (landingPageData?.applyType === 'form') {
-                                window.open(`/lp/${lpId}/apply`, '_blank');
-                              } else {
-                                message.info('Please set Apply Type to "Create Custom Form" first');
-                              }
-                            }}
-                            className="h-[24px] px-2 rounded-md flex items-center justify-center font-medium transition text-xs text-blue-600 hover:bg-blue-50"
-                          >
-                            Preview Live
-                          </button>
                         </div>
                       </div>
                       {/* Expand/Collapse Button */}
@@ -1201,22 +1172,17 @@ export default function FormEdit({paramsId}) {
                       </button>
                     </div>
                     <div
-                      className="flex flex-col items-start justify-center gap-[2px] mdx:pb"
+                      className="flex flex-col items-start justify-center gap-[2px] mdx:pb flex-1"
                       style={
                         device === "mobile"
-                          ? { width: 390, minHeight: 700, background: "white", margin: "0 auto", borderRadius: 12, boxShadow: "0 2px 12px #0001" }
-                          : { width: "100%" }
+                          ? { width: 390, background: "white", margin: "0 auto", borderRadius: 12, boxShadow: "0 2px 12px #0001", height: "100%", maxHeight: fullscreen ? 'calc(100vh - 100px)' : '100%' }
+                          : { width: "100%", height: "100%", maxHeight: fullscreen ? 'calc(100vh - 100px)' : '100%' }
                       }
                     >
                       {formSections.length > 0 ? (
-                        <div className="w-full ">
-                          <FormE
-                            showFormEditor={false}
-                            setShowFormEditor={() => {}}
+                        <div className="w-full h-full">
+                          <ApplyPagePreview
                             landingPageData={landingPageData}
-                            noModal
-                            maxH="90vh"
-                            onFieldUpdate={handleFieldUpdate}
                           />
                         </div>
                       ) : (
