@@ -6,6 +6,38 @@ import CrudService from '../../../src/services/CrudService';
 import PublicService from '../../../src/services/PublicService';
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
+// 🎨 BRANDING IMPORTS
+import useTemplatePalette from '../../hooks/useTemplatePalette';
+
+// Country detection utility
+const getCountryFromLocation = async () => {
+  try {
+    // First try to get country from IP geolocation
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    if (data.country_code) {
+      return data.country_code.toLowerCase();
+    }
+  } catch (error) {
+    console.log('Geolocation detection failed, using default country');
+  }
+  
+  // Fallback to browser locale
+  try {
+    const locale = navigator.language || navigator.languages[0];
+    if (locale) {
+      const countryCode = locale.split('-')[1];
+      if (countryCode) {
+        return countryCode.toLowerCase();
+      }
+    }
+  } catch (error) {
+    console.log('Locale detection failed');
+  }
+  
+  // Default to US
+  return 'us';
+};
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -103,6 +135,120 @@ export default function ApplyPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formFields, setFormFields] = useState([]);
+  const [detectedCountry, setDetectedCountry] = useState('us');
+
+  // 🎨 DYNAMIC BRAND COLORS - NO HARDCODING!
+  const [stableColors, setStableColors] = useState({
+    primary: landingPageData?.primaryColor || null  // NO hardcoded colors!
+  });
+  
+  // Update colors when landing page data changes
+  useEffect(() => {
+    if (landingPageData?.primaryColor) {
+      const realPrimary = landingPageData.primaryColor;
+      
+      console.log("🎨 APPLY: USING REAL USER COLOR:", {
+        realPrimary,
+        landingPageData: !!landingPageData
+      });
+      
+      setStableColors({
+        primary: realPrimary
+      });
+    }
+  }, [landingPageData]);
+  
+  // Use real user colors - NO defaults if not loaded yet
+  const primaryColor = stableColors.primary || landingPageData?.primaryColor;
+  const secondaryColor = primaryColor; // SAME as primary!
+  const tertiaryColor = primaryColor;
+  
+  // 🎨 ENHANCED DEBUG: Log all color sources in apply page
+  console.log("🎨 APPLY PAGE REAL COLORS FROM DATABASE:", {
+    "FINAL_USED": { primaryColor, secondaryColor, tertiaryColor },
+    "landingPageData": !!landingPageData,
+    "landingPageColors": {
+      primary: landingPageData?.primaryColor,
+      secondary: landingPageData?.primaryColor,
+      tertiary: landingPageData?.primaryColor
+    },
+    "expectedTurquoise": "#11dade",
+    "expectedPink": "#e0237e",
+    "isUsingCorrectColors": primaryColor === "#11dade" && secondaryColor === "#e0237e",
+    "hasColors": !!(landingPageData?.primaryColor)
+  });
+  
+  // 🔥 APPLY COLORS ONLY WHEN WE HAVE REAL USER COLORS
+  useEffect(() => {
+    // ONLY apply if we have real user colors - NO defaults!
+    if (!primaryColor) {
+      console.log("⏳ APPLY: Waiting for real user colors...");
+      return;
+    }
+    
+    console.log("🔥 APPLY: APPLYING REAL USER COLOR:", {
+      primaryColor,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Function to apply ONLY real user primary color
+    const applyRealUserColor = () => {
+      const applyContainer = document.querySelector('.apply-form-container');
+      if (!applyContainer) {
+        console.log('❌ Apply container not found');
+        return;
+      }
+      
+      const allButtons = applyContainer.querySelectorAll('button, .ant-btn, [class*="ant-btn"]');
+      console.log(`🎯 APPLY: FOUND ${allButtons.length} BUTTONS - APPLYING REAL COLOR: ${primaryColor}`);
+      
+      allButtons.forEach((btn, i) => {
+        const text = btn.textContent?.trim() || '';
+        console.log(`🔥 APPLY: REAL COLOR on "${text}": ${primaryColor}`);
+        
+        // Force ONLY real user color
+        btn.style.setProperty('background', primaryColor, 'important');
+        btn.style.setProperty('background-color', primaryColor, 'important');
+        btn.style.setProperty('border-color', primaryColor, 'important');
+        btn.style.setProperty('border', `1px solid ${primaryColor}`, 'important');
+        btn.style.setProperty('color', 'white', 'important');
+        btn.style.setProperty('background-image', 'none', 'important');
+        btn.style.setProperty('box-shadow', 'none', 'important');
+        
+        // NO hover effects
+        btn.onmouseenter = null;
+        btn.onmouseleave = null;
+      });
+    };
+    
+    // Apply immediately and with delays
+    applyRealUserColor();
+    setTimeout(applyRealUserColor, 100);
+    setTimeout(applyRealUserColor, 500);
+    setTimeout(applyRealUserColor, 1000);
+    
+  }, [primaryColor, landingPageData, currentStep]);
+  
+  // Template palette hook for consistent color application
+  const { getColor, getPrimary } = useTemplatePalette(
+    {
+      primaryColor: "#5207CD",
+      secondaryColor: "#0C7CE6", 
+      tertiaryColor: "#6B46C1",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
+
+  // Detect user's country for phone input
+  useEffect(() => {
+    getCountryFromLocation().then(country => {
+      setDetectedCountry(country);
+    });
+  }, []);
 
   useEffect(() => {
     if (lpId) {
@@ -116,11 +262,52 @@ export default function ApplyPage() {
       const res = await CrudService.getSingle("LandingPageData", lpId, "apply page");
       if (res.data) {
         console.log('Apply page data loaded:', res.data);
-        setLandingPageData(res.data);
+        
+        // 🎨 ENHANCED: Populate landing page data with user brand data
+        const landingPage = res.data;
+        
+        // If landing page doesn't have brand data, try to get it from user
+        if (!landingPage.primaryColor && landingPage.user_id) {
+          try {
+            const userRes = await CrudService.getSingle("User", landingPage.user_id, "brand data");
+            if (userRes.data) {
+              landingPage.primaryColor = userRes.data.primaryColor;
+              landingPage.secondaryColor = userRes.data.secondaryColor;
+              landingPage.tertiaryColor = userRes.data.tertiaryColor;
+              landingPage.titleFont = userRes.data.titleFont;
+              landingPage.bodyFont = userRes.data.bodyFont;
+              landingPage.subheaderFont = userRes.data.subheaderFont;
+              landingPage.companyLogo = userRes.data.companyLogo;
+            }
+          } catch (error) {
+            console.log('Could not fetch user brand data:', error);
+          }
+        }
+        
+        setLandingPageData(landingPage);
         // Filter visible fields (treat undefined as visible for backwards compatibility)
         const visibleFields = (res.data?.form?.fields || []).filter(field => field.visible !== false);
         console.log('Visible fields:', visibleFields);
-        setFormFields(visibleFields);
+        
+        // Group lead capture fields together on first step
+        const leadCaptureFields = visibleFields.filter(field => field.isLeadCapture);
+        const otherFields = visibleFields.filter(field => !field.isLeadCapture);
+        
+        // If we have lead capture fields, combine them into one step, then add other fields as separate steps
+        if (leadCaptureFields.length > 0) {
+          setFormFields([
+            { 
+              id: 'lead-capture-step', 
+              type: 'lead-capture-group', 
+              label: 'Contact Information', 
+              fields: leadCaptureFields,
+              required: true 
+            },
+            ...otherFields
+          ]);
+        } else {
+          setFormFields(visibleFields);
+        }
       }
       setLoading(false);
     } catch (error) {
@@ -140,8 +327,35 @@ export default function ApplyPage() {
     // Validate current step
     const currentField = formFields[currentStep - 1]; // -1 because step 0 is intro
     if (currentStep > 0 && currentField?.required) {
-      // Special validation for contact fields
-      if (currentField.type === 'contact') {
+      // Special validation for lead capture group
+      if (currentField.type === 'lead-capture-group') {
+        let hasError = false;
+        let errorMessage = '';
+        
+        currentField.fields.forEach(field => {
+          if (field.type === 'contact') {
+            const firstNameValue = formData[`${field.id}_firstName`];
+            const lastNameValue = formData[`${field.id}_lastName`];
+            
+            if (field.firstName?.required && !firstNameValue?.trim()) {
+              hasError = true;
+              errorMessage = 'First name is required';
+            }
+            if (field.lastName?.required && !lastNameValue?.trim()) {
+              hasError = true;
+              errorMessage = 'Last name is required';
+            }
+          } else if (field.required && !formData[field.id]?.trim()) {
+            hasError = true;
+            errorMessage = `${field.label || field.type} is required`;
+          }
+        });
+        
+        if (hasError) {
+          message.warning(errorMessage);
+          return;
+        }
+      } else if (currentField.type === 'contact') {
         const firstNameValue = formData[`${currentField.id}_firstName`];
         const lastNameValue = formData[`${currentField.id}_lastName`];
         
@@ -203,7 +417,19 @@ export default function ApplyPage() {
       
       // Process form fields to match the expected format
       formFields.forEach(field => {
-        if (field.type === 'address') {
+        if (field.type === 'lead-capture-group') {
+          // Process each field in the lead capture group
+          field.fields.forEach(subField => {
+            if (subField.type === 'contact') {
+              processedFormData[`firstname`] = formData[`${subField.id}_firstName`] || "";
+              processedFormData[`lastname`] = formData[`${subField.id}_lastName`] || "";
+            } else if (subField.type === 'email') {
+              processedFormData[`email`] = formData[subField.id] || "";
+            } else if (subField.type === 'phone') {
+              processedFormData[`phone`] = formData[subField.id] || "";
+            }
+          });
+        } else if (field.type === 'address') {
           processedFormData[`line1`] = formData[`${field.id}_line1`] || "";
           processedFormData[`line2`] = formData[`${field.id}_line2`] || "";
           processedFormData[`city`] = formData[`${field.id}_city`] || "";
@@ -213,6 +439,10 @@ export default function ApplyPage() {
         } else if (field.type === 'contact') {
           processedFormData[`firstname`] = formData[`${field.id}_firstName`] || "";
           processedFormData[`lastname`] = formData[`${field.id}_lastName`] || "";
+        } else if (field.type === 'email') {
+          processedFormData[`email`] = formData[field.id] || "";
+        } else if (field.type === 'phone') {
+          processedFormData[`phone`] = formData[field.id] || "";
         } else if (field.type === 'date') {
           // Combine date fields into a formatted date string
           const month = formData[`${field.id}_month`] || "";
@@ -232,6 +462,9 @@ export default function ApplyPage() {
             }
           }
           processedFormData[field.id] = formattedDate;
+        } else {
+          // Handle other field types
+          processedFormData[field.id] = formData[field.id] || "";
         }
       });
 
@@ -242,6 +475,8 @@ export default function ApplyPage() {
         form: landingPageData?.form,
         searchIndex: `${processedFormData.firstname || ''} ${processedFormData.lastname || ''} ${processedFormData.email || ''}`.trim()
       };
+
+      console.log('Submitting application data:', applicationData);
 
       // Use the correct model name: VacancySubmission
       await CrudService.create("VacancySubmission", applicationData);
@@ -257,10 +492,101 @@ export default function ApplyPage() {
     }
   };
 
+  const renderSingleField = (field) => {
+    const value = formData[field.id] || '';
+
+    switch (field.type) {
+      case 'contact':
+        return (
+          <div className="grid grid-cols-2 gap-4">
+            {field.firstName?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-xs text-gray-600">
+                  {field.firstName?.label || 'First Name'}
+                  {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
+                </label>
+                <Input
+                  value={formData[`${field.id}_firstName`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
+                  placeholder={field.firstName?.placeholder || "First name"}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+            {field.lastName?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-xs text-gray-600">
+                  {field.lastName?.label || 'Last Name'}
+                  {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
+                </label>
+                <Input
+                  value={formData[`${field.id}_lastName`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
+                  placeholder={field.lastName?.placeholder || "Last name"}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+          </div>
+        );
+
+      case 'email':
+        return (
+          <Input
+            type="email"
+            value={value}
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            placeholder={field.customPlaceholder || field.placeholder || "Email address"}
+            className="rounded-lg"
+            size="large"
+          />
+        );
+
+      case 'phone':
+        return (
+          <PhoneInput
+            defaultCountry={detectedCountry}
+            inputClassName="rounded-lg w-full !h-10"
+            placeholder={field.customPlaceholder || field.placeholder || "Phone number"}
+            value={value}
+            onChange={(phoneValue) => handleInputChange(field.id, phoneValue)}
+            className="p-1"
+          />
+        );
+
+      default:
+        return (
+          <Input
+            value={value}
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            placeholder={field.placeholder || "Your answer"}
+            className="rounded-lg"
+            size="large"
+          />
+        );
+    }
+  };
+
   const renderField = (field) => {
     const value = formData[field.id] || '';
 
     switch (field.type) {
+      case 'lead-capture-group':
+        return (
+          <div className="space-y-6">
+            {field.fields.map((subField) => (
+              <div key={subField.id}>
+                <label className="block mb-2 font-semibold text-sm">
+                  {subField.customLabel || subField.label}
+                  {subField.required && <span className="ml-1 text-red-500">*</span>}
+                </label>
+                {renderSingleField(subField)}
+              </div>
+            ))}
+          </div>
+        );
       case 'contact':
         return (
           <div className="grid grid-cols-2 gap-4">
@@ -303,7 +629,7 @@ export default function ApplyPage() {
             type="email"
             value={value}
             onChange={(e) => handleInputChange(field.id, e.target.value)}
-            placeholder={field.placeholder || "Email address"}
+            placeholder={field.customPlaceholder || field.placeholder || "Email address"}
             className="rounded-lg"
             size="large"
           />
@@ -312,9 +638,9 @@ export default function ApplyPage() {
       case 'phone':
         return (
           <PhoneInput
-            defaultCountry="us"
+            defaultCountry={detectedCountry}
             inputClassName="rounded-lg w-full !h-10"
-            placeholder={field.placeholder || "Phone number"}
+            placeholder={field.customPlaceholder || field.placeholder || "Phone number"}
             value={value}
             onChange={(phoneValue) => handleInputChange(field.id, phoneValue)}
             className="p-1"
@@ -595,7 +921,38 @@ export default function ApplyPage() {
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 apply-form-container">{/* UNIQUE APPLY CLASS */}
+      {/* 🎨 APPLY-ONLY BRAND STYLES - ONLY REAL USER COLORS */}
+      {primaryColor && (
+        <style jsx key={`brand-${primaryColor}`}>{`
+          /* Progress bar */
+          .ant-progress-bg {
+            background-color: ${primaryColor} !important;
+          }
+          
+          /* ONLY BUTTONS INSIDE APPLY CONTAINER - ONLY REAL USER COLOR */
+          .apply-form-container button,
+          .apply-form-container .ant-btn,
+          .apply-form-container .ant-btn-primary {
+            background: ${primaryColor} !important;
+            background-color: ${primaryColor} !important;
+            border: 1px solid ${primaryColor} !important;
+            border-color: ${primaryColor} !important;
+            color: white !important;
+            background-image: none !important;
+            box-shadow: none !important;
+          }
+          
+          /* NO HOVER EFFECTS - KEEP USER COLOR ALWAYS */
+          .apply-form-container button:hover,
+          .apply-form-container .ant-btn:hover,
+          .apply-form-container .ant-btn-primary:hover {
+            background: ${primaryColor} !important;
+            background-color: ${primaryColor} !important;
+            border-color: ${primaryColor} !important;
+          }
+        `}</style>
+      )}
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-2xl mx-auto px-4 py-4">
@@ -631,7 +988,7 @@ export default function ApplyPage() {
             <Progress 
               percent={progressPercentage} 
               showInfo={false}
-              strokeColor="#5207CD"
+              strokeColor={primaryColor}
               className="mb-2"
             />
           </div>
@@ -654,7 +1011,14 @@ export default function ApplyPage() {
                 type="primary" 
                 size="large"
                 onClick={handleNext}
-                className="bg-[#5207CD] hover:bg-[#0C7CE6]"
+                className="brand-button !border-0"
+                style={{
+                  backgroundColor: primaryColor,
+                  borderColor: primaryColor,
+                  color: 'white',
+                  background: primaryColor,
+                  border: `1px solid ${primaryColor}`
+                }}
               >
                 Start Application
               </Button>
@@ -695,7 +1059,14 @@ export default function ApplyPage() {
                 type="primary"
                 onClick={handleNext}
                 loading={submitting}
-                className="flex items-center space-x-2 bg-[#5207CD] hover:bg-[#0C7CE6]"
+                className="brand-button flex items-center space-x-2 !border-0"
+                style={{
+                  backgroundColor: primaryColor,
+                  borderColor: primaryColor,
+                  color: 'white',
+                  background: primaryColor, 
+                  border: `1px solid ${primaryColor}`
+                }}
               >
                 <span>{currentStep === formFields.length ? 'Submit Application' : 'Next'}</span>
                 <ArrowRight size={16} />

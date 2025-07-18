@@ -297,16 +297,16 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   const [ctaLink, setCtaLink] = useState("");
   const [initialCtaLink, setInitialCtaLink] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
-  const [applyType, setApplyType] = useState("url"); // "form" or "url"
-  const [initialApplyType, setInitialApplyType] = useState("url");
+  const [applyType, setApplyType] = useState("form"); // "form" or "url" - 🚀 Default to form
+  const [initialApplyType, setInitialApplyType] = useState("form"); // 🚀 Default to form
 
   useEffect(() => {
     if (landingPageData) {
       setCtaLink(landingPageData.cta2Link || '#apply');
       setInitialCtaLink(landingPageData.cta2Link || '#apply');
-      // Determine apply type based on existing data
-      const currentApplyType = landingPageData.applyType || 
-        (landingPageData.cta2Link === '#apply' || !landingPageData.cta2Link ? 'form' : 'url');
+      // 🚀 DEFAULT TO CUSTOM APPLICATION FORM
+      // Determine apply type based on existing data - default to 'form' instead of 'url'
+      const currentApplyType = landingPageData.applyType || 'form'; // Always default to form
       setApplyType(currentApplyType);
       setInitialApplyType(currentApplyType);
     }
@@ -339,33 +339,33 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
 
   const handleApplyClick = () => {
     if (isEdit) {
-      setCtaLink(landingPageData?.cta2Link || '');
-      const currentApplyType = landingPageData?.applyType || 
-        (landingPageData?.cta2Link === '#apply' || !landingPageData?.cta2Link ? 'form' : 'url');
+      setCtaLink(landingPageData?.cta2Link || '#apply');
+      // 🚀 DEFAULT TO CUSTOM APPLICATION FORM
+      const currentApplyType = landingPageData?.applyType || 'form'; // Always default to form
       setApplyType(currentApplyType);
       setApplyLinkModalVisible(true);
     } else {
-      const currentApplyType = landingPageData?.applyType || 
-        (landingPageData?.cta2Link === '#apply' || !landingPageData?.cta2Link ? 'form' : 'url');
+      // 🚀 DEFAULT TO CUSTOM APPLICATION FORM
+      const currentApplyType = landingPageData?.applyType || 'form'; // Always default to form
       
       if (currentApplyType === 'form') {
         // Redirect to custom form
         const formUrl = `/lp/${lpId}/apply`;
-        window.open(formUrl, '_blank');
+        router.push(formUrl);
       } else {
         // Redirect to external URL
-        let url = landingPageData?.cta2Link || '';
-        if (url && !url.match(/^https?:\/\//i)) {
-          url = 'https://' + url;
-        }
-        window.open(url, '_blank');
+      let url = landingPageData?.cta2Link || '';
+      if (url && !url.match(/^https?:\/\//i)) {
+        url = 'https://' + url;
+      }
+      router.push(url);
       }
     }
   };
 
   const handleOpenFormEditor = () => {
     const formEditorUrl = `/form-editor/${lpId}`;
-    window.open(formEditorUrl, '_blank');
+    router.push(formEditorUrl);
   };
 
   const handleShareClick = () => {
@@ -799,7 +799,18 @@ const handlemediaLink = (platform) => {
                 <AntButton
                   type="primary"
                   onClick={handleOpenFormEditor}
-                  className="bg-[#5207CD] hover:bg-[#0C7CE6]"
+                  style={{
+                    backgroundColor: getColor("primary", 600),
+                    borderColor: getColor("primary", 600),
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = getColor("secondary", 600);
+                    e.target.style.borderColor = getColor("secondary", 600);
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = getColor("primary", 600);
+                    e.target.style.borderColor = getColor("primary", 600);
+                  }}
                 >
                   Edit Form
                 </AntButton>
@@ -809,20 +820,20 @@ const handlemediaLink = (platform) => {
 
           {/* External URL Input */}
           {applyType === 'url' && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
                 External Application URL *
-              </label>
-              <Input
-                value={ctaLink}
-                onChange={(e) => setCtaLink(e.target.value)}
-                placeholder="https://example.com/apply"
-                className="w-full"
-              />
-              <p className="text-xs text-gray-500 mt-1">
+            </label>
+            <Input
+              value={ctaLink}
+              onChange={(e) => setCtaLink(e.target.value)}
+              placeholder="https://example.com/apply"
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500 mt-1">
                 This URL will be opened when candidates click the Apply button
-              </p>
-            </div>
+            </p>
+          </div>
           )}
           
           <div className="flex justify-end gap-3">

@@ -306,7 +306,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
       debugData.finalResult = cleanResponse;
 
       // Ensure specifications are enabled if they exist
-      if (cleanResponse.specifications && Array.isArray(cleanResponse.specifications)) {
+      if (cleanResponse?.specifications && Array.isArray(cleanResponse.specifications)) {
         cleanResponse.specifications = cleanResponse.specifications.map(spec => ({
           ...spec,
           enabled: true
@@ -321,6 +321,74 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
             specificationsCount: cleanResponse.specifications.length,
             enabledCount: cleanResponse.specifications.filter(s => s.enabled).length
           }
+        });
+      }
+
+      // 🤖 AUTO-GENERATE APPLICATION FORM FOR AI VACANCIES
+      let generatedForm = null;
+      try {
+        console.log("🤖 Auto-generating application form with AI...");
+        debugData.steps.push({
+          step: 5.5,
+          name: "Auto-generating Application Form",
+          timestamp: new Date(),
+          status: "in_progress"
+        });
+
+        // 🔧 IMPROVED: Build comprehensive description for better AI generation
+        let fullJobDescription = jobDescription;
+        if (cleanResponse.specifications && cleanResponse.specifications.length > 0) {
+          fullJobDescription += '\n\nJob Specifications:\n';
+          cleanResponse.specifications.forEach(spec => {
+            if (spec.enabled && spec.bulletPoints && spec.bulletPoints.length > 0) {
+              fullJobDescription += `\n${spec.title}:\n`;
+              spec.bulletPoints.forEach(point => {
+                fullJobDescription += `- ${point.bullet}\n`;
+              });
+            }
+          });
+        }
+
+        const formResponse = await AiService.generateApplicationForm({
+          inputType: 'text',
+          inputData: {
+            jobTitle: jobTitle,
+            jobDescription: fullJobDescription,
+            location: cleanResponse.location || [],
+            companyInfo: user?.companyInfo || ''
+          },
+          language: language,
+          formComplexity: 'standard'
+        });
+
+        if (formResponse.data.success) {
+          generatedForm = formResponse.data.data.form;
+          console.log("🤖 AI Form Auto-Generated:", generatedForm);
+          debugData.steps.push({
+            step: 5.5,
+            name: "Auto-generated Application Form",
+            timestamp: new Date(),
+            status: "success",
+            data: { fieldsCount: generatedForm.fields?.length || 0 }
+          });
+        } else {
+          console.warn("Auto form generation failed, backend will handle it");
+          debugData.steps.push({
+            step: 5.5,
+            name: "Auto-generated Application Form",
+            timestamp: new Date(),
+            status: "warning",
+            data: { message: "Failed, backend will handle" }
+          });
+        }
+      } catch (formError) {
+        console.warn("Auto form generation failed, backend will handle it:", formError);
+        debugData.steps.push({
+          step: 5.5,
+          name: "Auto-generated Application Form",
+          timestamp: new Date(),
+          status: "warning",
+          data: { error: formError.message }
         });
       }
 
@@ -339,8 +407,15 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         templateId: selectedTemplate,
         vacancyTitle: jobTitle,
         department: department,
-        user_id: user?._id
+        user_id: user?._id,
+        applyType: 'form', // 🚀 Always default to custom form
+        cta2Link: '#apply' // 🚀 Always default to apply action
       };
+
+      // Add the generated form if available (backend will generate if this fails)
+      if (generatedForm) {
+        vacancyPayload.form = generatedForm;
+      }
 
       const res = await AiService.createVacancy(vacancyPayload);
       console.log("Vacancy created successfully");

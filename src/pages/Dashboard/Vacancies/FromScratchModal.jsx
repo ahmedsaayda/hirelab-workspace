@@ -256,7 +256,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
           }
         : {};
 
-      // Non-AI path remains the same...
+      // Non-AI path - also default to custom form
       const res = await CrudService.create("LandingPageData", {
         vacancyTitle: formData.jobTitle,
         heroDescription: formData.description,
@@ -266,6 +266,8 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         ...companyFactsData,
         templateId: selectedTemplate,
         user_id: user?._id,
+        applyType: 'form', // 🚀 Always default to custom form
+        cta2Link: '#apply' // 🚀 Always default to apply action
       });
       console.log("Vacancy created without AI:", res);
       router.push(`/edit-page/${res.data.result._id}?from=scratch`);
@@ -788,32 +790,45 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         const aiResult = JSON.parse(aiResponse.data.data.content);
         console.log("aiResult", aiResult);
 
-        // Generate application form if option is selected
+        // 🤖 AUTO-GENERATE APPLICATION FORM FOR ALL AI VACANCIES
+        // Always generate form for AI-created vacancies
         let generatedForm = null;
-        if (formData.generateApplicationForm) {
-          try {
-            console.log("🤖 Generating application form with AI...");
-            const formResponse = await AiService.generateApplicationForm({
-              inputType: 'text',
-              inputData: {
-                jobTitle: formData.jobTitle,
-                jobDescription: formData.description,
-                location: aiResult.location || [],
-                companyInfo: user?.companyInfo || ''
-              },
-              language: formData.language === 'Dutch' ? 'en' : 'en', // Map to supported language codes
-              formComplexity: 'standard'
+        try {
+          console.log("🤖 Auto-generating application form with AI...");
+          // 🔧 IMPROVED: Build comprehensive description for better AI generation
+          let fullJobDescription = formData.description;
+          if (aiResult.specifications && aiResult.specifications.length > 0) {
+            fullJobDescription += '\n\nJob Specifications:\n';
+            aiResult.specifications.forEach(spec => {
+              if (spec.enabled && spec.bulletPoints && spec.bulletPoints.length > 0) {
+                fullJobDescription += `\n${spec.title}:\n`;
+                spec.bulletPoints.forEach(point => {
+                  fullJobDescription += `- ${point.bullet}\n`;
+                });
+              }
             });
-
-            if (formResponse.data.success) {
-              generatedForm = formResponse.data.data.form;
-              console.log("🤖 AI Form Generated:", generatedForm);
-            } else {
-              console.warn("Failed to generate form, proceeding without it");
-            }
-          } catch (formError) {
-            console.warn("Form generation failed, proceeding without it:", formError);
           }
+
+          const formResponse = await AiService.generateApplicationForm({
+            inputType: 'text',
+            inputData: {
+              jobTitle: formData.jobTitle,
+              jobDescription: fullJobDescription,
+              location: aiResult.location || [],
+              companyInfo: user?.companyInfo || ''
+            },
+            language: formData.language === 'Dutch' ? 'en' : 'en', // Map to supported language codes
+            formComplexity: 'standard'
+          });
+
+          if (formResponse.data.success) {
+            generatedForm = formResponse.data.data.form;
+            console.log("🤖 AI Form Auto-Generated:", generatedForm);
+          } else {
+            console.warn("Auto form generation failed, backend will handle it");
+          }
+        } catch (formError) {
+          console.warn("Auto form generation failed, backend will handle it:", formError);
         }
 
         // Create the vacancy
@@ -831,10 +846,11 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
           ...brandingDetails,
           templateId: selectedTemplate,
           user_id: user?._id,
-          applyType: generatedForm ? 'form' : 'url' // Set apply type based on form generation
+          applyType: 'form', // 🚀 Always default to custom form
+          cta2Link: '#apply' // 🚀 Always default to apply action
         };
 
-        // Add the generated form if available
+        // Add the generated form if available (backend will generate if this fails)
         if (generatedForm) {
           vacancyData.form = generatedForm;
         }

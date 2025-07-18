@@ -3,6 +3,41 @@ import { Button, Input, Radio, Checkbox, Select, Progress, message } from 'antd'
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
+// 🎨 BRANDING IMPORTS
+import { useSelector } from "react-redux";
+import { selectUser } from "../../redux/auth/selectors";
+import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
+import ApplyCustomFont from "../Landingpage/ApplyCustomFont";
+
+// Country detection utility
+const getCountryFromLocation = async () => {
+  try {
+    // First try to get country from IP geolocation
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    if (data.country_code) {
+      return data.country_code.toLowerCase();
+    }
+  } catch (error) {
+    console.log('Geolocation detection failed, using default country');
+  }
+  
+  // Fallback to browser locale
+  try {
+    const locale = navigator.language || navigator.languages[0];
+    if (locale) {
+      const countryCode = locale.split('-')[1];
+      if (countryCode) {
+        return countryCode.toLowerCase();
+      }
+    }
+  } catch (error) {
+    console.log('Locale detection failed');
+  }
+  
+  // Default to US
+  return 'us';
+};
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -91,15 +126,155 @@ const FileUpload = ({ value, onChange, placeholder }) => (
 );
 
 export default function ApplyPagePreview({ landingPageData }) {
+  // 🎨 BRAND COLORS FROM DATABASE  
+  const user = useSelector(selectUser);
+  
+  // STATE DECLARATIONS (MOVED UP TO MATCH APPLY.JS)
   const [formData, setFormData] = useState({});
   const [currentStep, setCurrentStep] = useState(0);
   const [formFields, setFormFields] = useState([]);
+  const [detectedCountry, setDetectedCountry] = useState('us');
+  
+  // 🎨 DYNAMIC BRAND COLORS - NO HARDCODING!
+  const [stableColors, setStableColors] = useState({
+    primary: landingPageData?.primaryColor || null  // NO hardcoded colors!
+  });
+  
+  // Update colors when landing page data changes (SAME AS APPLY.JS)
+  useEffect(() => {
+    if (landingPageData?.primaryColor) {
+      const realPrimary = landingPageData.primaryColor;
+      
+      console.log("🎨 PREVIEW: USING REAL USER COLOR:", {
+        realPrimary,
+        landingPageData: !!landingPageData
+      });
+      
+      setStableColors({
+        primary: realPrimary
+      });
+    }
+  }, [landingPageData]);
+  
+  // Use real user colors - NO defaults if not loaded yet (SAME AS APPLY.JS)
+  const primaryColor = stableColors.primary || landingPageData?.primaryColor;
+  const secondaryColor = primaryColor; // SAME as primary!
+  const tertiaryColor = primaryColor;
+  
+  // 🎨 Check if we have brand data loaded
+  const hasBrandData = !!(landingPageData?.primaryColor);
+  
+  // 🎨 ENHANCED DEBUG: Log ALL color sources in preview
+  console.log("🎨 PREVIEW REAL COLORS FROM DATABASE:", {
+    "FINAL_USED": { primaryColor, secondaryColor, tertiaryColor },
+    "hasBrandData": hasBrandData,
+    "landingPageColors": {
+      primary: landingPageData?.primaryColor,
+      secondary: landingPageData?.primaryColor,
+      tertiary: landingPageData?.primaryColor
+    },
+    "expectedTurquoise": "#11dade",
+    "expectedPink": "#e0237e",
+    "isUsingCorrectColors": primaryColor === "#11dade" && secondaryColor === "#e0237e",
+    "hasColors": !!(landingPageData?.primaryColor)
+  });
+  
+  // 🔥 APPLY COLORS ONLY WHEN WE HAVE REAL USER COLORS (SAME AS APPLY.JS)
+  useEffect(() => {
+    // ONLY apply if we have real user colors - NO defaults!
+    if (!primaryColor) {
+      console.log("⏳ PREVIEW: Waiting for real user colors...");
+      return;
+    }
+    
+    console.log("🔥 PREVIEW: APPLYING REAL USER COLOR:", {
+      primaryColor,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Function to apply ONLY real user primary color
+    const applyRealUserColor = () => {
+      const previewContainer = document.querySelector('.preview-form-container');
+      if (!previewContainer) {
+        console.log('❌ Preview container not found');
+        return;
+      }
+      
+      const allButtons = previewContainer.querySelectorAll('button, .ant-btn, [class*="ant-btn"]');
+      console.log(`🎯 PREVIEW: FOUND ${allButtons.length} BUTTONS - APPLYING REAL COLOR: ${primaryColor}`);
+      
+      allButtons.forEach((btn, i) => {
+        const text = btn.textContent?.trim() || '';
+        console.log(`🔥 PREVIEW: REAL COLOR on "${text}": ${primaryColor}`);
+        
+        // Force ONLY real user color
+        btn.style.setProperty('background', primaryColor, 'important');
+        btn.style.setProperty('background-color', primaryColor, 'important');
+        btn.style.setProperty('border-color', primaryColor, 'important');
+        btn.style.setProperty('border', `1px solid ${primaryColor}`, 'important');
+        btn.style.setProperty('color', 'white', 'important');
+        btn.style.setProperty('background-image', 'none', 'important');
+        btn.style.setProperty('box-shadow', 'none', 'important');
+        
+        // NO hover effects
+        btn.onmouseenter = null;
+        btn.onmouseleave = null;
+      });
+    };
+    
+    // Apply immediately and with delays
+    applyRealUserColor();
+    setTimeout(applyRealUserColor, 100);
+    setTimeout(applyRealUserColor, 500);
+    setTimeout(applyRealUserColor, 1000);
+    
+  }, [primaryColor, landingPageData, currentStep]);
+  
+  // Template palette hook for consistent color application
+  const { getColor, getPrimary } = useTemplatePalette(
+    {
+      primaryColor: "#5207CD",
+      secondaryColor: "#0C7CE6", 
+      tertiaryColor: "#6B46C1",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
+
+  // Detect user's country for phone input
+  useEffect(() => {
+    getCountryFromLocation().then(country => {
+      setDetectedCountry(country);
+    });
+  }, []);
 
   useEffect(() => {
     if (landingPageData) {
       // Filter visible fields (treat undefined as visible for backwards compatibility)
       const visibleFields = (landingPageData?.form?.fields || []).filter(field => field.visible !== false);
-      setFormFields(visibleFields);
+      
+      // Group lead capture fields together on first step
+      const leadCaptureFields = visibleFields.filter(field => field.isLeadCapture);
+      const otherFields = visibleFields.filter(field => !field.isLeadCapture);
+      
+      // If we have lead capture fields, combine them into one step, then add other fields as separate steps
+      if (leadCaptureFields.length > 0) {
+        setFormFields([
+          { 
+            id: 'lead-capture-step', 
+            type: 'lead-capture-group', 
+            label: 'Contact Information', 
+            fields: leadCaptureFields,
+            required: true 
+          },
+          ...otherFields
+        ]);
+      } else {
+        setFormFields(visibleFields);
+      }
       
       // Reset to intro step when form fields change
       setCurrentStep(0);
@@ -118,10 +293,27 @@ export default function ApplyPagePreview({ landingPageData }) {
     // Basic validation for preview (simplified)
     const currentField = formFields[currentStep - 1];
     if (currentStep > 0 && currentField?.required) {
-      const value = formData[currentField.id];
-      if (!value || (Array.isArray(value) && value.length === 0)) {
-        message.warning('This field is required in the actual form');
-        return;
+      if (currentField.type === 'lead-capture-group') {
+        // Validate all lead capture fields
+        let hasError = false;
+        currentField.fields.forEach(field => {
+          if (field.type === 'contact') {
+            if (field.firstName?.required && !formData[`${field.id}_firstName`]?.trim()) hasError = true;
+            if (field.lastName?.required && !formData[`${field.id}_lastName`]?.trim()) hasError = true;
+          } else if (field.required && !formData[field.id]?.trim()) {
+            hasError = true;
+          }
+        });
+        if (hasError) {
+          message.warning('Please fill in all required contact fields');
+          return;
+        }
+      } else {
+        const value = formData[currentField.id];
+        if (!value || (Array.isArray(value) && value.length === 0)) {
+          message.warning('This field is required in the actual form');
+          return;
+        }
       }
     }
 
@@ -141,10 +333,115 @@ export default function ApplyPagePreview({ landingPageData }) {
     }
   };
 
+  const renderSingleField = (field, contactField = null) => {
+    const value = formData[field.id] || '';
+
+    switch (field.type) {
+      case 'contact':
+        return (
+          <div className="grid grid-cols-2 gap-4">
+            {field.firstName?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-xs text-gray-600">
+                  {field.firstName?.label || 'First Name'}
+                  {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
+                </label>
+                <Input
+                  value={formData[`${field.id}_firstName`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
+                  placeholder={field.firstName?.placeholder || "First name"}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+            {field.lastName?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-xs text-gray-600">
+                  {field.lastName?.label || 'Last Name'}
+                  {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
+                </label>
+                <Input
+                  value={formData[`${field.id}_lastName`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
+                  placeholder={field.lastName?.placeholder || "Last name"}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+          </div>
+        );
+
+      case 'email':
+        const emailPlaceholder = contactField?.email?.placeholder || field.placeholder || field.customPlaceholder || "Email address";
+        return (
+          <Input
+            type="email"
+            value={value}
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            placeholder={emailPlaceholder}
+            className="rounded-lg"
+            size="large"
+          />
+        );
+
+      case 'phone':
+        const phonePlaceholder = contactField?.phone?.placeholder || field.placeholder || field.customPlaceholder || "Phone number";
+        return (
+          <PhoneInput
+            defaultCountry={detectedCountry}
+            inputClassName="rounded-lg w-full !h-10"
+            placeholder={phonePlaceholder}
+            value={value}
+            onChange={(phoneValue) => handleInputChange(field.id, phoneValue)}
+            className="p-1"
+          />
+        );
+
+      default:
+        return (
+          <Input
+            value={value}
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            placeholder={field.placeholder || "Your answer"}
+            className="rounded-lg"
+            size="large"
+          />
+        );
+    }
+  };
+
   const renderField = (field) => {
     const value = formData[field.id] || '';
 
     switch (field.type) {
+      case 'lead-capture-group':
+        return (
+          <div className="space-y-6">
+            {field.fields.map((subField) => {
+              // 🔥 DIRECT FIX: For email/phone, read from contact field if available
+              const contactField = field.fields.find(f => f.type === 'contact');
+              let displayLabel = subField.label || subField.customLabel;
+              
+              if (subField.type === 'email' && contactField?.email?.label) {
+                displayLabel = contactField.email.label;
+              } else if (subField.type === 'phone' && contactField?.phone?.label) {
+                displayLabel = contactField.phone.label;
+              }
+              
+              return (
+                <div key={subField.id}>
+                  <label className="block mb-2 font-semibold text-sm">
+                    {displayLabel}
+                    {subField.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  {renderSingleField(subField, contactField)}
+                </div>
+              );
+            })}
+          </div>
+        );
       case 'contact':
         return (
           <div className="grid grid-cols-2 gap-4">
@@ -182,23 +479,25 @@ export default function ApplyPagePreview({ landingPageData }) {
         );
 
       case 'email':
+        const emailPlaceholder2 = field.placeholder || field.customPlaceholder || "Email address";
         return (
           <Input
             type="email"
             value={value}
             onChange={(e) => handleInputChange(field.id, e.target.value)}
-            placeholder={field.placeholder || "Email address"}
+            placeholder={emailPlaceholder2}
             className="rounded-lg"
             size="large"
           />
         );
 
       case 'phone':
+        const phonePlaceholder2 = field.placeholder || field.customPlaceholder || "Phone number";
         return (
           <PhoneInput
-            defaultCountry="us"
+            defaultCountry={detectedCountry}
             inputClassName="rounded-lg w-full !h-10"
-            placeholder={field.placeholder || "Phone number"}
+            placeholder={phonePlaceholder2}
             value={value}
             onChange={(phoneValue) => handleInputChange(field.id, phoneValue)}
             className="p-1"
@@ -434,7 +733,46 @@ export default function ApplyPagePreview({ landingPageData }) {
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
   return (
-    <div className="bg-gray-50 rounded-lg overflow-hidden h-full flex flex-col">
+    <div className="min-h-screen bg-gray-50 preview-form-container">{/* UNIQUE PREVIEW CLASS */}
+      {/* 🎨 APPLY CUSTOM FONTS */}
+      <ApplyCustomFont landingPageData={{
+        ...landingPageData,
+        titleFont: landingPageData?.titleFont || user?.titleFont,
+        bodyFont: landingPageData?.bodyFont || user?.bodyFont,
+        subheaderFont: landingPageData?.subheaderFont || user?.subheaderFont,
+      }} />
+      
+      {/* 🎨 PREVIEW-ONLY BRAND STYLES - ONLY REAL USER COLORS */}
+      {primaryColor && (
+        <style jsx key={`brand-${primaryColor}`}>{`
+          /* Progress bar */
+          .ant-progress-bg {
+            background-color: ${primaryColor} !important;
+          }
+          
+          /* ONLY BUTTONS INSIDE PREVIEW CONTAINER - ONLY REAL USER COLOR */
+          .preview-form-container button,
+          .preview-form-container .ant-btn,
+          .preview-form-container .ant-btn-primary {
+            background: ${primaryColor} !important;
+            background-color: ${primaryColor} !important;
+            border: 1px solid ${primaryColor} !important;
+            border-color: ${primaryColor} !important;
+            color: white !important;
+            background-image: none !important;
+            box-shadow: none !important;
+          }
+          
+          /* NO HOVER EFFECTS - KEEP USER COLOR ALWAYS */
+          .preview-form-container button:hover,
+          .preview-form-container .ant-btn:hover,
+          .preview-form-container .ant-btn-primary:hover {
+            background: ${primaryColor} !important;
+            background-color: ${primaryColor} !important;
+            border-color: ${primaryColor} !important;
+          }
+        `}</style>
+      )}
       {/* Header */}
       <div className="bg-white shadow-sm border-b flex-shrink-0">
         <div className="px-4 py-3">
@@ -464,7 +802,7 @@ export default function ApplyPagePreview({ landingPageData }) {
             <Progress 
               percent={progressPercentage} 
               showInfo={false}
-              strokeColor="#5207CD"
+              strokeColor={primaryColor}
               className="mb-2"
             />
           </div>
@@ -482,13 +820,20 @@ export default function ApplyPagePreview({ landingPageData }) {
                   {landingPageData.form?.title || "Application Form"}
                 </h2>
                 <p className="text-gray-600 mb-6 text-sm">
-                  {landingPageData.form?.description || "Please fill out the form below to apply!!!!"}
+                  {landingPageData.form?.description || "Please fill out the form below to apply!"}
                 </p>
                 <Button 
                   type="primary" 
                   size="large"
                   onClick={handleNext}
-                  className="bg-[#5207CD] hover:bg-[#0C7CE6]"
+                  className="brand-button !border-0"
+                  style={{
+                    backgroundColor: primaryColor,
+                    borderColor: primaryColor,
+                    color: 'white',
+                    background: primaryColor,
+                    border: `1px solid ${primaryColor}`
+                  }}
                 >
                   Start Application
                 </Button>
@@ -529,7 +874,14 @@ export default function ApplyPagePreview({ landingPageData }) {
               <Button 
                 type="primary"
                 onClick={handleNext}
-                className="flex items-center space-x-2 bg-[#5207CD] hover:bg-[#0C7CE6] text-sm"
+                className="brand-button flex items-center space-x-2 text-sm !border-0"
+                style={{
+                  backgroundColor: primaryColor,
+                  borderColor: primaryColor,
+                  color: 'white',
+                  background: primaryColor, 
+                  border: `1px solid ${primaryColor}`
+                }}
               >
                 <span>{currentStep === formFields.length ? 'Submit Application' : 'Next'}</span>
                 <ArrowRight size={14} />

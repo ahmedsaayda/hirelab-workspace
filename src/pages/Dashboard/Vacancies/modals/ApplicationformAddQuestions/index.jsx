@@ -60,9 +60,11 @@ export default function ApplicationformAddQuestions({
   const [searchBarValue, setSearchBarValue] = React.useState("");
   const [selected, setSelected] = React.useState("");
 
-  // Filter formItems based on search input (case insensitive)
+  // Filter formItems based on search input and exclude lead capture fields
+  const leadCaptureTypes = ["contact", "email", "phone"];
   const filteredItems = formItems.filter((item) =>
-    item.text.toLowerCase().includes(searchBarValue.toLowerCase())
+    item.text.toLowerCase().includes(searchBarValue.toLowerCase()) &&
+    !leadCaptureTypes.includes(item.type)
   );
 
   return (
