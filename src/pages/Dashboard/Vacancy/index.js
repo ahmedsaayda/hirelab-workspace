@@ -3,34 +3,49 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import CrudService from "../../../services/CrudService";
 import ATS from "./ATS";
+import NewATS from "./NewATS";
 
 const Vacancy = () => {
   const [vacancyData, setVacancyData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { query } = router;
-  console.log("vacancyData", vacancyData);
+  
   useEffect(() => {
     const id = query.id;
-    if (!id) return;
-    setVacancyData(null);
+    setLoading(true);
+    
+    if (!id) {
+      // No ID means multi-job overview - no specific vacancy data needed
+      setVacancyData(null);
+      setLoading(false);
+      return;
+    }
 
-    CrudService.getSingle("LandingPageData", id,"vacancy page")
+    // Fetch specific vacancy data when ID is provided
+    setVacancyData(null);
+    CrudService.getSingle("LandingPageData", id, "vacancy page")
       .then((res) => {
-        console.log(res);
-        if (!res.data) return;
-        setVacancyData(res.data);
+        console.log("Single vacancy data:", res);
+        if (res.data) {
+          setVacancyData(res.data);
+        }
+        setLoading(false);
       })
       .catch((err) => {
-        console.log(err);
+        console.log("Error fetching vacancy:", err);
+        setLoading(false);
       });
   }, [query.id]);
 
-  if (!vacancyData) return <Skeleton active />;
+  if (loading) return <Skeleton active />;
+  
   return (
     <>
-      <ATS
-        VacancyId={vacancyData._id}
-        vacancyInfo={{ name: vacancyData.vacancyTitle, ...vacancyData }}
+      <NewATS
+        VacancyId={vacancyData?._id || null}
+        vacancyInfo={vacancyData ? { name: vacancyData.vacancyTitle, ...vacancyData } : null}
+        isMultiJobView={!query.id}
       />
     </>
   );

@@ -44,14 +44,14 @@ export default function ATSTable({
       render: (data, record) => {
         console.log(record);
         const getName = () => {
-          return data.fullname?.trim() ? data.fullname : data.email;
+          return data?.fullname?.trim() ? data?.fullname : data?.email;
         };
         return (
           <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => onCardOptionClick(record._id, "details-modal")}
           >
-            {renderAvatar({ fullname: getName(), avatar: data.avatar })}
+            {renderAvatar({ fullname: getName(), avatar: data?.avatar })}
             <span className="font-medium">{getName()}</span>
           </div>
         );
@@ -86,7 +86,7 @@ export default function ATSTable({
         return (
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <span className="font-medium">{stage.name}</span>
+              <span className="font-medium">{stage?.name}</span>
 
               <Dropdown
                 menu={{
@@ -253,7 +253,7 @@ export default function ATSTable({
     console.log(name);
     return (
       <span className="flex items-center justify-center w-6 font-medium text-white bg-gray-500 rounded-full text-md aspect-square">
-        {name[0]}
+        {name?.[0]}
       </span>
     );
   };

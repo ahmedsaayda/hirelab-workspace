@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import MegaMenu1 from "../MegaMenu1";
 import { Heading, Img } from "..";
-import { ChartPieIcon, HomeIcon, UsersIcon } from "@heroicons/react/24/outline";
+import { ChartPieIcon, HomeIcon, UsersIcon, UserGroupIcon, ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import { EyeOutlined, LinkOutlined } from "@ant-design/icons";
 
 import CrudService from "../../../../../../services/CrudService";
@@ -280,6 +280,23 @@ export default function Header({
               <ul className="flex items-center gap-4">
                 {[
                   {
+                    id: "ats",
+                    label: "ATS",
+                    link: (id) => `/dashboard/ats?id=${id}`,
+                    bgColor: "bg-[#10B981]",
+                    textColor: "!text-[white]",
+                    icon: (
+                      <ClipboardDocumentListIcon style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        color: 'white',
+                        strokeWidth: 2 
+                      }} />
+                    ),
+                    className: "rounded-lg",
+                    disabled: false,
+                  },
+                  {
                     id: "copyLink",
                     label: "Copy Link",
                     action: handleCopyLink,
@@ -314,6 +331,10 @@ export default function Header({
                     disabled: isPublishing,
                   },
                 ].filter(item => {
+                  // Always show ATS button
+                  if (item.id === "ats") {
+                    return true
+                  }
                   // Only show copy link button when page is published AND there are no unpublished changes
                   if (item.id === "copyLink") {
                     return landingPageData?.published && !hasUnpublishedChanges
@@ -333,11 +354,7 @@ export default function Header({
                         href={item.link(landingPageData?._id)}
                           className="flex gap-2 justify-center items-center cursor-pointer"
                         >
-                          <Img
-                            src={item.icon}
-                            alt="check"
-                            className="h-[16px] w-[16px]"
-                          />
+                          {item.icon}
                           <Heading
                             size="3xl"
                             as="p"

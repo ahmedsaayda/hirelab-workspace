@@ -88,7 +88,7 @@ const GeneralWorkflowConfigurator = ({ VacancyId }) => {
           </Select.Option>
           {stages.map((stage) => (
             <Select.Option key={stage._id} value={stage._id}>
-              {stage.name}
+              {stage?.name}
             </Select.Option>
           ))}
         </Select>
@@ -118,7 +118,7 @@ const GeneralWorkflowConfigurator = ({ VacancyId }) => {
           </Select.Option>
           {stages.map((stage) => (
             <Select.Option key={stage._id} value={stage._id}>
-              {stage.name}
+              {stage?.name}
             </Select.Option>
           ))}
         </Select>
@@ -163,7 +163,7 @@ const GeneralWorkflowConfigurator = ({ VacancyId }) => {
           </Select.Option>
           {stages.map((stage) => (
             <Select.Option key={stage._id} value={stage._id}>
-              {stage.name}
+              {stage?.name}
             </Select.Option>
           ))}
         </Select>
@@ -193,7 +193,7 @@ const GeneralWorkflowConfigurator = ({ VacancyId }) => {
           </Select.Option>
           {stages.map((stage) => (
             <Select.Option key={stage._id} value={stage._id}>
-              {stage.name}
+              {stage?.name}
             </Select.Option>
           ))}
         </Select>
@@ -223,7 +223,7 @@ const GeneralWorkflowConfigurator = ({ VacancyId }) => {
           </Select.Option>
           {stages.map((stage) => (
             <Select.Option key={stage._id} value={stage._id}>
-              {stage.name}
+              {stage?.name}
             </Select.Option>
           ))}
         </Select>
@@ -252,7 +252,7 @@ const GeneralWorkflowConfigurator = ({ VacancyId }) => {
           </Select.Option>
           {stages.map((stage) => (
             <Select.Option key={stage._id} value={stage._id}>
-              {stage.name}
+              {stage?.name}
             </Select.Option>
           ))}
         </Select>
@@ -282,7 +282,7 @@ const GeneralWorkflowConfigurator = ({ VacancyId }) => {
           </Select.Option>
           {stages.map((stage) => (
             <Select.Option key={stage._id} value={stage._id}>
-              {stage.name}
+              {stage?.name}
             </Select.Option>
           ))}
         </Select>
@@ -553,7 +553,7 @@ const WorkflowConfigurator = ({ workflow, VacancyId }) => {
               </Select.Option>
               {stages.map((stage) => (
                 <Select.Option key={stage._id} value={stage._id}>
-                  {stage.name}
+                  {stage?.name}
                 </Select.Option>
               ))}
             </Select>
@@ -798,7 +798,7 @@ const WorkflowConfigurator = ({ workflow, VacancyId }) => {
             </Select.Option>
             {stages.map((stage) => (
               <Select.Option key={stage._id} value={stage._id}>
-                {stage.name}
+                {stage?.name}
               </Select.Option>
             ))}
           </Select>
