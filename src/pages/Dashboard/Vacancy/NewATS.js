@@ -228,6 +228,10 @@ const headerStyles = `
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
     transition: all 0.2s ease !important;
     background: white !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
   }
   
   .ats-header .ats-search-input .ant-input-search:hover {
@@ -246,6 +250,9 @@ const headerStyles = `
     background: transparent !important;
     font-size: 14px !important;
     color: #374151 !important;
+    height: 38px !important;
+    padding: 0 16px !important;
+    line-height: 1.4 !important;
   }
   
   .ats-header .ats-search-input .ant-input::placeholder {
@@ -257,17 +264,28 @@ const headerStyles = `
     border: none !important;
     background: #3b82f6 !important;
     color: white !important;
-    border-radius: 0 6px 6px 0 !important;
+    border-radius: 0 8px 8px 0 !important;
     font-weight: 500 !important;
-    height: 100% !important;
+    height: 40px !important;
+    min-height: 40px !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: center !important;
     padding: 0 16px !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    font-size: 14px !important;
   }
   
   .ats-header .ats-search-input .ant-input-search-button:hover {
     background: #2563eb !important;
     box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2) !important;
+    transform: none !important;
+  }
+  
+  .ats-header .ats-search-input .ant-input-search-button:active {
+    background: #1d4ed8 !important;
+    transform: none !important;
   }
   
   .ats-header .ats-search-input .ant-input-clear-icon {
@@ -284,12 +302,54 @@ const headerStyles = `
     position: relative;
   }
   
+
+  
+  .ats-header .ats-search-input .ant-input-group {
+    display: flex !important;
+    height: 40px !important;
+  }
+  
+  .ats-header .ats-search-input .ant-input-group-addon {
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: stretch !important;
+  }
+  
+  .ats-header .ats-search-input .ant-input-search-button .anticon {
+    font-size: 14px !important;
+    margin-right: 4px !important;
+  }
+  
+  /* Fix any potential border conflicts */
+  .ats-header .ats-search-input .ant-input-group .ant-input:last-child {
+    border-radius: 8px 0 0 8px !important;
+  }
+  
+  /* Ensure proper alignment and no overflow issues */
+  .ats-header .ats-search-input * {
+    box-sizing: border-box !important;
+  }
+  
+  .ats-header .ats-search-input .ant-input-search .ant-input-group {
+    width: 100% !important;
+    display: flex !important;
+  }
+  
+  .ats-header .ats-search-input .ant-input-search .ant-input-group .ant-input {
+    flex: 1 !important;
+  }
+  
   .ats-header .ats-search-input .ant-input-affix-wrapper {
     border-radius: 8px !important;
     border: 1px solid #d1d5db !important;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
     transition: all 0.2s ease !important;
     background: white !important;
+    height: 40px !important;
+    overflow: hidden !important;
   }
   
   .ats-header .ats-search-input .ant-input-affix-wrapper:hover {
@@ -1980,11 +2040,12 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 }}
                 loading={searchPending}
                 className="w-full ats-search-input"
-                size="large"
+                size="default"
                 allowClear
                 enterButton="Search"
                 style={{
                   borderRadius: '8px',
+                  height: '40px'
                 }}
               />
               {searchPending && (

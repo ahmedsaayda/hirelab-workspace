@@ -38,8 +38,8 @@ const drawerStyles = `
   .candidate-profile-drawer .ant-drawer-body {
     display: flex !important;
     flex-direction: column !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+    height: 100% !important;
+    max-height: 100% !important;
     padding: 0 !important;
     overflow: hidden !important;
   }
@@ -172,13 +172,10 @@ const drawerStyles = `
   
   /* Force specific height calculation */
   .candidate-profile-drawer .ant-drawer {
-    height: 100vh !important;
-    max-height: 100vh !important;
+    /* Let Ant Design handle drawer height */
   }
   
   .candidate-profile-drawer .ant-drawer-content-wrapper {
-    height: 100vh !important;
-    max-height: 100vh !important;
     overflow: hidden !important;
   }
   
@@ -221,11 +218,7 @@ const drawerStyles = `
   
   /* Make sure drawer positioning is correct */
   .candidate-profile-drawer {
-    position: fixed !important;
-    top: 0 !important;
-    right: 0 !important;
-    height: 100vh !important;
-    z-index: 1000 !important;
+    /* Remove fixed positioning to let Ant Design handle drawer positioning */
   }
   
   /* Compact action buttons */
@@ -1298,18 +1291,14 @@ const CandidateProfile = ({
       bodyStyle={{ 
         padding: 0, 
         backgroundColor: '#ffffff',
-        overflow: 'hidden',
-        height: '100vh',
-        maxHeight: '100vh'
+        overflow: 'hidden'
       }}
       headerStyle={{ display: 'none' }}
       maskClosable={true}
       destroyOnClose={false}
       getContainer={() => document.body}
       style={{ 
-        overflow: 'hidden',
-        height: '100vh',
-        maxHeight: '100vh'
+        overflow: 'hidden'
       }}
     >
       {/* Custom Header */}
