@@ -4,15 +4,17 @@ import { NextResponse } from 'next/server';
 const userValidationCache = new Map();
 const CACHE_DURATION = 30000; // 30 seconds
 
-// Cleanup expired cache entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of userValidationCache.entries()) {
-    if (now - value.timestamp > CACHE_DURATION) {
-      userValidationCache.delete(key);
+// Cleanup expired cache entries (only in non-serverless environments)
+if (typeof process !== 'undefined' && !process.env.VERCEL) {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of userValidationCache.entries()) {
+      if (now - value.timestamp > CACHE_DURATION) {
+        userValidationCache.delete(key);
+      }
     }
-  }
-}, CACHE_DURATION); // Clean up every 30 seconds
+  }, CACHE_DURATION); // Clean up every 30 seconds
+}
 
 // Define paths that don't require authentication
 const publicPaths = [
@@ -92,7 +94,20 @@ function isOnboardingPath(pathname) {
   return onboardingPaths.some(path => pathname.startsWith(path));
 }
 
+// Clean expired cache entries before each request (for serverless)
+function cleanExpiredCache() {
+  const now = Date.now();
+  for (const [key, value] of userValidationCache.entries()) {
+    if (now - value.timestamp > CACHE_DURATION) {
+      userValidationCache.delete(key);
+    }
+  }
+}
+
 async function fetchUserData(accessToken) {
+  // Clean expired entries first
+  cleanExpiredCache();
+  
   // Check cache first
   const cacheKey = accessToken;
   const cached = userValidationCache.get(cacheKey);
@@ -105,6 +120,12 @@ async function fetchUserData(accessToken) {
       ? "http://localhost:5155/api" 
       : process.env.NEXT_PUBLIC_BACKEND_URL;
       
+    // Ensure backend URL is configured in production
+    if (!backendUrl) {
+      console.error('Backend URL not configured');
+      throw new Error('Backend URL not configured');
+    }
+      
     const response = await fetch(`${backendUrl}/auth/me`, {
       method: 'GET',
       headers: {
@@ -112,12 +133,16 @@ async function fetchUserData(accessToken) {
         'access_token': accessToken
       },
       // Add timeout to prevent hanging requests
-      signal: AbortSignal.timeout(5000) // 5 second timeout
+      signal: (() => {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        return controller.signal;
+      })()
     });
     
     if (!response.ok) {
-      // Only treat 401/403 as actual auth failures
-      if (response.status === 401 || response.status === 403) {
+      // Treat 400/401/403 as auth failures (invalid/expired token)
+      if (response.status === 400 || response.status === 401 || response.status === 403) {
         const authError = { authError: true };
         // Cache auth errors briefly to avoid repeated calls
         userValidationCache.set(cacheKey, { data: authError, timestamp: Date.now() });
@@ -137,12 +162,20 @@ async function fetchUserData(accessToken) {
     // If it's an auth error, return that specifically
     if (error.name === 'AbortError') {
       console.warn('Request timed out - allowing user to continue');
+      return { networkError: true };
     }
     
-    // Don't log out for network/timeout errors, only for auth errors
-    const networkError = { networkError: true };
-    // Don't cache network errors - allow retry on next request
-    return networkError;
+    // For connection errors, treat as network issue
+    if (error.message?.includes('ECONNREFUSED') || 
+        error.message?.includes('ENOTFOUND') || 
+        error.message?.includes('Network request failed')) {
+      console.warn('Network connectivity issue - allowing user to continue');
+      return { networkError: true };
+    }
+    
+    // For other errors, log them but don't log user out unless it's clearly auth-related
+    console.error('Unexpected error in user validation:', error);
+    return { networkError: true };
   }
 }
 
@@ -153,6 +186,9 @@ export async function middleware(request) {
   if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
+
+  // Production error handling wrapper
+  try {
 
   // Get access token from cookies
   const accessToken = request.cookies.get('accessToken')?.value;
@@ -248,6 +284,15 @@ export async function middleware(request) {
   }
 
   return NextResponse.next();
+  
+  } catch (error) {
+    // Critical error in middleware - log and redirect to login for safety
+    console.error('Critical middleware error:', error);
+    const loginUrl = new URL('/auth/login', request.url);
+    const response = NextResponse.redirect(loginUrl);
+    response.cookies.delete('accessToken');
+    return response;
+  }
 }
 
 // Configure which routes the middleware runs on
