@@ -457,7 +457,6 @@ const Template1 = ({ landingPageData, fetchData }) => {
         }}
       >
         {MemoizedGridPattern}
-        {/* {svgString} */}
         {/* Blur effect at the top center of the hero section like a lamp is glowing through the top */}
         <div className="absolute top-0 left-0 w-1/2 translate-x-1/2  bg-gradient-to-r from-white  to-white opacity-10 blur-[50px] rounded-full" />
         <div className=" mx-auto rounded-b-xl ">
@@ -525,8 +524,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                   }}
                   className="text-sm leading-relaxed md:text-base text-white/80"
                   dangerouslySetInnerHTML={{
-                    __html: landingPageData?.heroDescription ||
-                      "Are you a dynamic and experienced project manager looking for your next challenge? We're seeking a talented to join our team as a Project Manager."
+                    __html: landingPageData?.heroDescription ||"Provide a compelling description of the job and the company. This will be displayed in the hero section of the landing page."
                   }}
                 >
                 </p>

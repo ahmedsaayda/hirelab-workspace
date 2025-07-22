@@ -858,8 +858,9 @@ const handlemediaLink = (platform) => {
         </div>
       </AntModal>
 
+{/* Sections navigation */}
       <div
-        className="w-full h-16 mx-auto transition-all duration-100 z-[88888] border-t border-gray-200"
+        className="h-16 w-full transition-all duration-100 z-[88888] border-t border-gray-200"
         style={{
           backgroundColor: "white",
           zIndex: 100,
@@ -867,20 +868,27 @@ const handlemediaLink = (platform) => {
         }}
       >
         <div
-          className="relative flex justify-between items-center mx-auto"
-          style={{ width: "100%" }}
+          className="relative flex items-center justify-center max-w-7xl mx-auto px-12"
+          style={{
+            height: "100%",
+          }}
         >
           <button
             onClick={() => scrollTabs("left")}
-            className="m-auto p-1 z-10 rounded-full bg-white shadow-md hover:bg-gray-200"
+            className="absolute left-0 z-10 p-1 rounded-full bg-white shadow-md hover:bg-gray-200"
           >
             <ChevronLeft size={25} className={getColor("primary", 500)} />
           </button>
 
           <div
             ref={scrollRef}
-            className={`flex items-center scrollbar-hide ${isEditPage ? 'overflow-x-auto' : ''}`}
-            style={{ scrollBehavior: "smooth", paddingLeft: "1px", paddingRight: "1px" }}
+            className="flex items-center scrollbar-hide overflow-x-auto space-x-6 px-4"
+            style={{ 
+              scrollBehavior: "smooth",
+              width: "100%",
+              msOverflowStyle: "none",  // Hide scrollbar in IE/Edge
+              scrollbarWidth: "none",    // Hide scrollbar in Firefox
+            }}
           >
             {[
               {
@@ -939,7 +947,7 @@ const handlemediaLink = (platform) => {
                 <button
                   key={index}
                   onClick={() => handleNavigate(tab.id)}
-                  className="px-2 py-2 md:px-5 md:py-4 text-sm md:text-lg whitespace-nowrap transition-all"
+                  className="px-2 py-2 md:px-5 md:py-4 text-sm md:text-lg whitespace-nowrap transition-all flex-shrink-0"
                   style={{
                     color: textColor === "#000000" ? textColor : getColor("primary", 500),
                     fontWeight: currentHash === tab.id ? "700" : "400",
@@ -958,7 +966,7 @@ const handlemediaLink = (platform) => {
           </div>
           <button
             onClick={() => scrollTabs("right")}
-            className="m-auto z-10 p-1 rounded-full bg-white shadow-md hover:bg-gray-100"
+            className="absolute right-0 z-10 p-1 rounded-full bg-white shadow-md hover:bg-gray-100"
           >
             <ChevronRight size={25} className={getColor("primary", 500)} />
           </button>
