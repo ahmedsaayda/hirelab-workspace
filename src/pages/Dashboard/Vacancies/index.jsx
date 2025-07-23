@@ -299,6 +299,7 @@ const Vacancies = () => {
                   }
                   return acc;
                 }, {})
+                console.log("formattedFilters", formattedFilters)
               const result = await CrudService.search(
                 "LandingPageData",
                 itemsPerPage,
@@ -576,6 +577,21 @@ const Vacancies = () => {
   };
 
   const handleGenerateLP = ({ jobDescription, jobTitle }) => {
+    // Safety check: Verify user hasn't reached limit before starting AI generation
+    // Use actual landingPages count for accurate current usage
+    const currentFunnelCount = landingPages?.length ?? 0;
+    const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
+    
+    if (hasReachedLimit) {
+      console.log('🚫 SAFETY CHECK: Blocking AI generation - user at funnel limit');
+      antdmessage.warning(`You've reached your funnel limit (${maxFunnels}). Please upgrade your plan to create more funnels.`);
+      setUpgradeModalVisible(true);
+      setAILoading(false);
+      setAddNew(null);
+      return;
+    }
+
     socket.current = new WebSocket(
       `wss://booklified-chat-socket.herokuapp.com`
     );
@@ -642,26 +658,44 @@ const Vacancies = () => {
           throw new Error("Missing required fields in AI response");
         }
 
-        const res = await CrudService.create("LandingPageData", {
-          ...result,
-          ...brandingDetails,
-        });
+        try {
+          const res = await CrudService.create("LandingPageData", {
+            ...result,
+            ...brandingDetails,
+          });
 
-        setAILoading(false);
-        setAtsURL("");
-        setJobDescription("");
-        setJobTitleX("");
-        setAddNew(null);
-        if (socketPing.current) clearInterval(socketPing.current);
+          setAILoading(false);
+          setAtsURL("");
+          setJobDescription("");
+          setJobTitleX("");
+          setAddNew(null);
+          if (socketPing.current) clearInterval(socketPing.current);
 
-        router.push(`/edit-page/${res.data.result._id}`);
+          router.push(`/edit-page/${res.data.result._id}`);
+        } catch (createError) {
+          // Handle plan limit errors from the API
+          if (createError.response?.data?.error === "PLAN_LIMIT_EXCEEDED") {
+            console.log("Plan limit exceeded, showing upgrade modal");
+            antdmessage.error(createError.response?.data?.message || "You've reached your plan limit");
+            setUpgradeModalVisible(true);
+            setAILoading(false);
+            setAddNew(null);
+            if (socketPing.current) clearInterval(socketPing.current);
+            return;
+          }
+          
+          // Re-throw other errors
+          throw createError;
+        }
       } catch (error) {
         console.error("Error processing AI response:", error);
         antdmessage.error(
           "Failed to create vacancy: " +
-          (error.message || "Invalid response from AI")
+          (error.response?.data?.message || error.message || "Invalid response from AI")
         );
+        setAILoading(false);
         setBackendLoading(false);
+        if (socketPing.current) clearInterval(socketPing.current);
       }
     });
   };
@@ -766,7 +800,15 @@ Respond with json that adheres to the following jsonschema:
       await fetchData();
     } catch (error) {
       console.error("Error duplicating vacancy:", error);
-      antdmessage.error("Failed to duplicate vacancy. Please try again.");
+      
+      // Handle plan limit errors from the API
+      if (error.response?.data?.error === "PLAN_LIMIT_EXCEEDED") {
+        console.log("Plan limit exceeded during duplication, showing upgrade modal");
+        setUpgradeModalVisible(true);
+        return;
+      }
+      
+      antdmessage.error(error.response?.data?.message || "Failed to duplicate vacancy. Please try again.");
     }
   };
 
@@ -820,20 +862,58 @@ Respond with json that adheres to the following jsonschema:
   const upgradeNeeded = user?.upgradeNeeded;
 
   const handleCreateNewVacancy = () => {
-    setAddNewModal(true);
+    // Use actual landingPages count for accurate current usage
+    const currentFunnelCount = landingPages?.length ?? 0;
+    const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
+    const tierName = user?.tier?.name ?? tier?.name ?? 'Unknown';
+    
+    console.log('🎯 CREATE VACANCY LIMIT CHECK:', {
+      currentFunnelCount,
+      maxFunnels,
+      hasReachedLimit,
+      tierName
+    });
 
-    return;
-    // Check if user has reached their funnel limit
-    if (tier.maxFunnels !== null && landingPageNum >= tier.maxFunnels) {
+    if (hasReachedLimit) {
+      console.log('🚫 BLOCKING: User has reached funnel limit, showing upgrade modal');
       setUpgradeModalVisible(true);
-    } else {
-      setAddNewModal(true);
+      return; // Explicitly prevent further execution
     }
+
+    console.log('✅ ALLOWING: User can create new vacancy');
+    setAddNewModal(true);
   };
 
   const handleRefreshAfterVacancyCreation = () => {
     fetchData();
-  }
+  };
+
+  // Add function to refresh user data
+  const refreshUserData = async () => {
+    try {
+      // Force refresh of user data to get updated plan limits
+      const userData = await AuthService.me();
+      console.log('Refreshed user data:', userData.data);
+      // The user data will be updated through Redux/context automatically
+      window.location.reload(); // Force full refresh to ensure all data is updated
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    }
+  };
+
+  // Enhanced logging for debugging plan limits
+  useEffect(() => {
+    if (user) {
+      console.log('User plan data:', {
+        tier: user.tier,
+        usage: user.usage,
+        upgradeNeeded: user.upgradeNeeded,
+        landingPageNum: user.landingPageNum,
+        plans: user.plans
+      });
+    }
+  }, [user]);
 
   if (facebookLoading) return <Skeleton active />;
   return (
@@ -843,17 +923,113 @@ Respond with json that adheres to the following jsonschema:
           <h1 className="text-2xl font-semibold text-gray-900">
             Vacancies
           </h1>
-          <button
-            onClick={handleCreateNewVacancy}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors duration-200 shadow-sm"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Create New Vacancy
-          </button>
+          {(() => {
+            // Use actual landingPages count for accurate current usage
+            const currentFunnelCount = landingPages?.length ?? 0;
+            const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+            const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
+            const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
+
+            console.log('🔍 CORRECTED FUNNEL COUNT:', {
+              currentFunnelCount,
+              landingPagesLength: landingPages?.length,
+              maxFunnels,
+              hasReachedLimit,
+              tierName,
+              userUsage: user?.usage,
+              userLandingPageNum: user?.landingPageNum
+            });
+
+            return (
+              <div className="flex flex-col items-end gap-2">
+                {/* Usage indicator */}
+                <div className="text-sm text-gray-500">
+                  {maxFunnels === null ? 
+                    `${currentFunnelCount} funnels (Unlimited)` : 
+                    `${currentFunnelCount} / ${maxFunnels} funnels used`
+                  }
+                  <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
+                    {tierName} Plan
+                  </span>
+                </div>
+                
+                {/* Create button */}
+                <button
+                  onClick={hasReachedLimit ? () => setUpgradeModalVisible(true) : handleCreateNewVacancy}
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm ${
+                    hasReachedLimit 
+                      ? 'text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100' 
+                      : 'text-white bg-indigo-600 hover:bg-indigo-700'
+                  }`}
+                  title={hasReachedLimit ? `You've reached your ${maxFunnels} funnel limit. Click to upgrade.` : 'Create a new vacancy'}
+                >
+                  {hasReachedLimit ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      Upgrade to Create More
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Create New Vacancy
+                    </>
+                  )}
+                </button>
+              </div>
+            );
+          })()}
         </div>
         <div className="flex flex-col gap-6">
+          {/* Plan Limit Alert Banner */}
+          {(() => {
+            // Use actual landingPages count for accurate current usage
+            const currentFunnelCount = landingPages?.length ?? 0;
+            const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+            const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
+            const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
+
+            if (hasReachedLimit) {
+              return (
+                <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <svg className="w-5 h-5 text-orange-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.382 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-orange-800">
+                        Funnel Limit Reached
+                      </h3>
+                      <div className="mt-1 text-sm text-orange-700">
+                        <p>
+                          You've reached your limit of {maxFunnels} funnel{maxFunnels !== 1 ? 's' : ''} on the {tierName} plan. 
+                          Upgrade your plan to create more recruitment funnels and unlock additional features.
+                        </p>
+                      </div>
+                      <div className="mt-3">
+                        <button
+                          onClick={() => setUpgradeModalVisible(true)}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-100 hover:bg-orange-200 rounded-md transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                          </svg>
+                          Upgrade Now
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           <div className="">
             <div className="flex gap-3 w-full smx:flex-col">
               {/* Modern Search Bar */}
@@ -1025,70 +1201,178 @@ Respond with json that adheres to the following jsonschema:
         destroyOnClose
         closable={false}
       >
-        <div className="flex flex-col gap-[29px] rounded-[12px] bg-white-A700 py-1 pl-6 pr-[23px] sm:p-5">
-          <div className="flex gap-5 justify-center items-center w-full md:pl-5">
-            <Heading
-              size="7xl"
-              as="h1"
-              className="!text-black-900_01 w-full text-center"
-            >
-              Create a new vacancy
-            </Heading>
+        {(() => {
+          // Use actual landingPages count for accurate current usage
+          const currentFunnelCount = landingPages?.length ?? 0;
+          const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+          const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
+          const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 
-            <Img
-              src="/images/img_arrow_right_blue_gray_400.svg"
-              alt="arrowright"
-              className="h-[24px] w-[24px] self-start cursor-pointer"
-              onClick={() => setAddNewModal(false)}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-6 justify-center smx:grid-cols-1">
-            {[
-              {
-                text: "Start from scratch",
-                subtext:"Best used when you don't have a job description ready",
-                imageIcon: "/images/img_plus.svg",
-                onClick: async () => {
-                  setAddNew("scratch");
-                  setAddNewModal(false);
-                },
-                locked: false,
-              },
-              {
-                text: "Paste a URL",
-                subtext:"Best used with public job page URLs (ie. URLs from your company career site)",
-                imageIcon: "/images/folder.svg",
-                onClick: () => {
-                  setAddNewModal(false);
-                  setAddNew("url");
-                },
-                locked: false,
-              },
-              {
-                text: "Paste existing job text",
-                subtext:"Best used for gated or private job pages. (ie job boards like Indeed)",
-                imageIcon: "/images/magic-wand-01.svg",
-                onClick: () => {
-                  setAddNewModal(false);
-                  setAddNew("job-description");
-                },
-                locked: false,
-              },
-              {
-                text: "Import from ATS",
-                subtext:"Used only with direct external ATS integation",
-                imageIcon: "/images/layout-alt-01.svg",
-                onClick: () => {
-                  setAddNewModal(false);
-                  setAddNew("import-ats");
-                },
-                locked: true,
-              },
-            ]?.map((d, index) => (
-              <CreateANewVacancyInput {...d} key={"gridplusone" + index} />
-            ))}
-          </div>
-        </div>
+          if (hasReachedLimit) {
+            // Show upgrade prompt instead of creation options
+            return (
+              <div className="flex flex-col gap-6 rounded-[12px] bg-white-A700 py-6 px-6 sm:p-5">
+                <div className="flex gap-5 justify-center items-center w-full">
+                  <Heading
+                    size="7xl"
+                    as="h1"
+                    className="!text-black-900_01 w-full text-center"
+                  >
+                    Upgrade Required
+                  </Heading>
+                  <Img
+                    src="/images/img_arrow_right_blue_gray_400.svg"
+                    alt="arrowright"
+                    className="h-[24px] w-[24px] self-start cursor-pointer"
+                    onClick={() => setAddNewModal(false)}
+                  />
+                </div>
+                
+                <div className="flex flex-col items-center gap-4 text-center">
+                  {/* Limit reached icon */}
+                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  
+                  {/* Main message */}
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      You've reached your funnel limit
+                    </h3>
+                    <p className="text-gray-600 max-w-md">
+                      You're currently using <span className="font-medium">{currentFunnelCount} of {maxFunnels}</span> funnels 
+                      available on the <span className="font-medium">{tierName} plan</span>. 
+                      Upgrade your plan to create more recruitment funnels and unlock additional features.
+                    </p>
+                  </div>
+                  
+                  {/* Upgrade benefits */}
+                  <div className="bg-gray-50 rounded-lg p-4 w-full max-w-md">
+                    <h4 className="font-medium text-gray-800 mb-2">Upgrade to unlock:</h4>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        More recruitment funnels
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Advanced customization options
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Priority support
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Analytics and insights
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  {/* Action buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md pt-2">
+                    <button
+                      onClick={() => {
+                        setAddNewModal(false);
+                        setUpgradeModalVisible(true);
+                      }}
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                      Upgrade Now
+                    </button>
+                    <button
+                      onClick={() => setAddNewModal(false)}
+                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Show normal creation options if under limit
+          return (
+            <div className="flex flex-col gap-[29px] rounded-[12px] bg-white-A700 py-1 pl-6 pr-[23px] sm:p-5">
+              <div className="flex gap-5 justify-center items-center w-full md:pl-5">
+                <Heading
+                  size="7xl"
+                  as="h1"
+                  className="!text-black-900_01 w-full text-center"
+                >
+                  Create a new vacancy
+                </Heading>
+
+                <Img
+                  src="/images/img_arrow_right_blue_gray_400.svg"
+                  alt="arrowright"
+                  className="h-[24px] w-[24px] self-start cursor-pointer"
+                  onClick={() => setAddNewModal(false)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-6 justify-center smx:grid-cols-1">
+                {[
+                  {
+                    text: "Start from scratch",
+                    subtext:"Best used when you don't have a job description ready",
+                    imageIcon: "/images/img_plus.svg",
+                    onClick: async () => {
+                      setAddNew("scratch");
+                      setAddNewModal(false);
+                    },
+                    locked: false,
+                  },
+                  {
+                    text: "Paste a URL",
+                    subtext:"Best used with public job page URLs (ie. URLs from your company career site)",
+                    imageIcon: "/images/folder.svg",
+                    onClick: () => {
+                      setAddNewModal(false);
+                      setAddNew("url");
+                    },
+                    locked: false,
+                  },
+                  {
+                    text: "Paste existing job text",
+                    subtext:"Best used for gated or private job pages. (ie job boards like Indeed)",
+                    imageIcon: "/images/magic-wand-01.svg",
+                    onClick: () => {
+                      setAddNewModal(false);
+                      setAddNew("job-description");
+                    },
+                    locked: false,
+                  },
+                  {
+                    text: "Import from ATS",
+                    subtext:"Used only with direct external ATS integation",
+                    imageIcon: "/images/layout-alt-01.svg",
+                    onClick: () => {
+                      setAddNewModal(false);
+                      setAddNew("import-ats");
+                    },
+                    locked: true,
+                  },
+                ]?.map((d, index) => (
+                  <CreateANewVacancyInput {...d} key={"gridplusone" + index} />
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
 
       {false && (
@@ -1422,10 +1706,17 @@ Respond with json that adheres to the following jsonschema:
 
       <UpgradeModal
         open={upgradeModalVisible}
-        onClose={() => setUpgradeModalVisible(false)}
-        currentTier={tier.name}
-        requiredTier={upgradeNeeded?.name || 'a higher tier'}
-        feature="vacancy"
+        onClose={() => {
+          setUpgradeModalVisible(false);
+          // Refresh user data to get updated limits
+          refreshUserData();
+        }}
+        currentTier={tier}
+        requiredTier={upgradeNeeded}
+        feature="funnel"
+        usage={user?.usage}
+        plans={user?.plans || []}
+        upgradeReason="limit"
       />
     </>
   );

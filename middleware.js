@@ -24,6 +24,8 @@ const publicPaths = [
   '/auth/passwordreset',
   '/auth/reset',
   '/lp/',
+  '/lp1/',
+  '/lp2/',
   '/funnel',
   '/cv',
   '/jobportal',

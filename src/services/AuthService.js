@@ -113,8 +113,14 @@ class AuthService {
     );
   }
 
-  createSubscription({ tier, return_url, interval }) {
-    return this.api.post("/createSubscription", { tier, return_url, interval });
+  createSubscription({ tier, return_url, interval, trial = false, explicitBillingChange = false }) {
+    return this.api.post("/createSubscription", { 
+      tier, 
+      return_url, 
+      interval, 
+      trial,
+      explicitBillingChange 
+    });
   }
 
   upgradeTeamSubscription({ tier, interval }) {
@@ -126,6 +132,12 @@ class AuthService {
       return_url: window.location.href,
     });
   }
+
+  reactivateSubscription() {
+    return this.api.post("/subscription/reactivate");
+  }
+
+
 }
 
 export default new AuthService(`${getBackendUrl()}/auth`);
