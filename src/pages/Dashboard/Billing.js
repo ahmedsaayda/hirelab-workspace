@@ -25,13 +25,48 @@ const Billing = () => {
   const [frequency, setFrequency] = useState(0); // 0: monthly, 1: annual
   const [initialFrequency, setInitialFrequency] = useState(0); // Track initial state
   const [userChangedFrequency, setUserChangedFrequency] = useState(false);
+  const [plans, setPlans] = useState([]);
+  const [currentTier, setCurrentTier] = useState(null);
+  const [usage, setUsage] = useState(null);
+  const [plansLoading, setPlansLoading] = useState(true);
   const user = useSelector(selectUser);
   const globalLoading = useSelector(selectLoading);
   const router = useRouter();
 
-  // Detect current billing cycle and set as default
+  // Fetch plans with pricing from API
   useEffect(() => {
-    if (user?.subscription?.paid) {
+    const fetchPlans = async () => {
+      try {
+        setPlansLoading(true);
+        const response = await AuthService.getPlansWithPricing();
+        if (response.data) {
+          setPlans(response.data.plans || []);
+          setCurrentTier(response.data.currentTier);
+          setUsage(response.data.usage);
+          
+          // Set billing frequency based on current subscription
+          if (response.data.user?.subscription?.paid) {
+            const currentBilling = response.data.user.subscription?.billing_cycle || 'month';
+            const currentFreq = currentBilling === 'year' ? 1 : 0;
+            setFrequency(currentFreq);
+            setInitialFrequency(currentFreq);
+            console.log('Detected current billing cycle:', currentBilling);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching plans:', error);
+        message.error('Failed to load plans');
+      } finally {
+        setPlansLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  // Detect current billing cycle and set as default (fallback)
+  useEffect(() => {
+    if (user?.subscription?.paid && !plansLoading) {
       // For existing paid subscribers, try to detect their current billing cycle
       // This would ideally come from the subscription details
       const currentBilling = user.subscription?.billing_cycle || 'month';
@@ -40,7 +75,7 @@ const Billing = () => {
       setInitialFrequency(currentFreq);
       console.log('Detected current billing cycle:', currentBilling);
     }
-  }, [user?.subscription]);
+  }, [user?.subscription, plansLoading]);
 
   const handleFrequencyChange = (e) => {
     const newFreq = e.target.value;
@@ -54,80 +89,8 @@ const Billing = () => {
     }
   };
 
-     // Mock plans data - this should ideally come from API
-   const plans = [
-     {
-       id: 'free',
-       name: 'Start',
-       monthlyPrice: 0,
-       annualPrice: 0,
-       description: 'The applicant journey you\'ve always wanted. Created in minutes.',
-       features: [
-         '1 recruitment funnel',
-         'Auto page and form builder',
-         'Full AI Capabilities',
-         'Free ATS up to 50 Applicants',
-         '3 Premium page templates',
-         'Engagement Analytics',
-         'Mobile responsiveness'
-       ],
-       cta: 'Current Plan',
-       featured: false,
-       maxFunnels: 1,
-       maxCandidates: 50,
-       tier: 1
-     },
-     {
-       id: 'create',
-       name: 'Create',
-       monthlyPrice: 99,
-       annualPrice: 49,
-       description: 'For forward thinking teams serious about recruitment marketing.',
-       features: [
-         'All Free features plus:',
-         'Create up to 5 funnels',
-         'Free ATS - Unlimited Applicants',
-         'Complete Page Templates Library',
-         'Job bundle Widget',
-         'Custom Domains',
-         'Remove HireLab branding',
-         'Advanced Analytics',
-         'A/B Testing',
-         'Tag Automation',
-         'Priority Support'
-       ],
-       cta: 'START DIRECTLY',
-       featured: true,
-       maxFunnels: 5,
-       maxCandidates: null,
-       tier: 2
-     },
-     {
-       id: 'scale',
-       name: 'Scale',
-       monthlyPrice: 199,
-       annualPrice: 99,
-       description: 'For growing teams that need advanced recruitment capabilities.',
-       features: [
-         'All Create features plus:',
-         'Create up to 15 funnels',
-         'External ATS Integrations',
-         'Advanced Team Management',
-         'White-label Options',
-         'API Access',
-         'Custom Reporting',
-         'Live Chat Support'
-       ],
-       cta: 'SCALE UP',
-       featured: false,
-       maxFunnels: 15,
-       maxCandidates: null,
-       tier: 3
-     }
-   ];
-
-  const currentTier = user?.tier || { id: 'free', name: 'Start', maxFunnels: 1 };
-  const currentPlan = plans.find(p => p.id === currentTier.id) || plans[0];
+  // Find current plan from fetched data
+  const currentPlan = plans.find(p => p.id === (currentTier?.id || 'start')) || plans[0];
   
   // Helper function to get plan relationship
   const getPlanRelationship = (planId) => {
@@ -136,9 +99,19 @@ const Billing = () => {
     
     if (!currentPlanObj || !targetPlan) return 'unknown';
     
-    if (currentPlanObj.tier === targetPlan.tier) return 'current';
-    if (currentPlanObj.tier < targetPlan.tier) return 'upgrade';
-    if (currentPlanObj.tier > targetPlan.tier) return 'downgrade';
+    // Define tier hierarchy if not present
+    const tierHierarchy = {
+      'start': 1,
+      'create': 2, 
+      'scale': 3
+    };
+    
+    const currentTierNum = currentPlanObj.tier || tierHierarchy[currentPlanObj.id] || 1;
+    const targetTierNum = targetPlan.tier || tierHierarchy[targetPlan.id] || 1;
+    
+    if (currentTierNum === targetTierNum) return 'current';
+    if (currentTierNum < targetTierNum) return 'upgrade';
+    if (currentTierNum > targetTierNum) return 'downgrade';
     
     return 'unknown';
   };
@@ -266,34 +239,41 @@ const Billing = () => {
     }
   };
 
-  const getUsageData = () => {
-    const funnelsUsed = user?.landingPages?.length || user?.landingPageNum || 0;
-    const maxFunnels = currentPlan?.maxFunnels || currentTier?.maxFunnels || 1;
-    
-    // Get candidates count - this would typically come from user data or API
-    const candidatesUsed = user?.totalCandidates || 0;
-    const maxCandidates = currentPlan?.maxCandidates || currentTier?.maxCandidates || 50;
-    
-    return {
-      funnels: {
-        current: funnelsUsed,
-        limit: maxFunnels,
-        unlimited: maxFunnels === null
-      },
-      candidates: {
-        current: candidatesUsed,
-        limit: maxCandidates,
-        unlimited: maxCandidates === null
-      }
-    };
+  // Use the usage data from API if available, otherwise fallback to user data
+  const usageData = usage || {
+    funnels: {
+      current: user?.landingPages?.length || user?.landingPageNum || 0,
+      limit: currentPlan?.maxFunnels || currentTier?.maxFunnels || 1,
+      unlimited: (currentPlan?.maxFunnels || currentTier?.maxFunnels) === null
+    },
+    candidates: {
+      current: user?.totalCandidates || 0,
+      limit: currentPlan?.maxCandidates || currentTier?.maxCandidates || 50,
+      unlimited: (currentPlan?.maxCandidates || currentTier?.maxCandidates) === null
+    }
   };
 
-  const usage = getUsageData();
-
-  if (globalLoading) {
+  if (globalLoading || plansLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <Spin size="large" />
+      </div>
+    );
+  }
+
+  // Return early if no data
+  if (!plans.length || !currentTier) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <p>Unable to load billing information.</p>
+          <Button 
+            type="primary" 
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
@@ -367,42 +347,42 @@ const Billing = () => {
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-lg">
-                        {usage.funnels.current}
+                        {usageData.funnels.current}
                         <span className="text-gray-500 font-normal text-sm">
-                          {usage.funnels.unlimited ? ' / ∞' : ` / ${usage.funnels.limit}`}
+                          {usageData.funnels.unlimited ? ' / ∞' : ` / ${usageData.funnels.limit}`}
                         </span>
                       </div>
-                      {!usage.funnels.unlimited && (
+                      {!usageData.funnels.unlimited && (
                         <div className="text-xs text-gray-500">
-                          {Math.max(0, usage.funnels.limit - usage.funnels.current)} remaining
+                          {Math.max(0, usageData.funnels.limit - usageData.funnels.current)} remaining
                         </div>
                       )}
                     </div>
                   </div>
-                  {!usage.funnels.unlimited && (
+                  {!usageData.funnels.unlimited && (
                     <div className="relative">
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
                           className={`h-2 rounded-full ${
-                            usage.funnels.current >= usage.funnels.limit 
+                            usageData.funnels.current >= usageData.funnels.limit 
                               ? 'bg-red-500' 
-                              : usage.funnels.current >= usage.funnels.limit * 0.8 
+                              : usageData.funnels.current >= usageData.funnels.limit * 0.8 
                                 ? 'bg-yellow-500' 
                                 : 'bg-blue-500'
                           }`}
                           style={{ 
-                            width: `${Math.min((usage.funnels.current / usage.funnels.limit) * 100, 100)}%` 
+                            width: `${Math.min((usageData.funnels.current / usageData.funnels.limit) * 100, 100)}%` 
                           }}
                         ></div>
                       </div>
-                      {usage.funnels.current >= usage.funnels.limit && (
+                      {usageData.funnels.current >= usageData.funnels.limit && (
                         <div className="text-xs text-red-600 mt-1 font-medium">
-                          ⚠️ Over limit by {usage.funnels.current - usage.funnels.limit}
+                          ⚠️ Over limit by {usageData.funnels.current - usageData.funnels.limit}
                         </div>
                       )}
                     </div>
                   )}
-                  {usage.funnels.unlimited && (
+                  {usageData.funnels.unlimited && (
                     <div className="text-sm text-green-600 font-medium">
                       ✨ Unlimited funnels
                     </div>
@@ -418,42 +398,42 @@ const Billing = () => {
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-lg">
-                        {usage.candidates.current}
+                        {usageData.candidates.current}
                         <span className="text-gray-500 font-normal text-sm">
-                          {usage.candidates.unlimited ? ' / ∞' : ` / ${usage.candidates.limit}`}
+                          {usageData.candidates.unlimited ? ' / ∞' : ` / ${usageData.candidates.limit}`}
                         </span>
                       </div>
-                      {!usage.candidates.unlimited && (
+                      {!usageData.candidates.unlimited && (
                         <div className="text-xs text-gray-500">
-                          {Math.max(0, usage.candidates.limit - usage.candidates.current)} remaining
+                          {Math.max(0, usageData.candidates.limit - usageData.candidates.current)} remaining
                         </div>
                       )}
                     </div>
                   </div>
-                  {!usage.candidates.unlimited && (
+                  {!usageData.candidates.unlimited && (
                     <div className="relative">
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
                           className={`h-2 rounded-full ${
-                            usage.candidates.current >= usage.candidates.limit 
+                            usageData.candidates.current >= usageData.candidates.limit 
                               ? 'bg-red-500' 
-                              : usage.candidates.current >= usage.candidates.limit * 0.8 
+                              : usageData.candidates.current >= usageData.candidates.limit * 0.8 
                                 ? 'bg-yellow-500' 
                                 : 'bg-green-500'
                           }`}
                           style={{ 
-                            width: `${Math.min((usage.candidates.current / usage.candidates.limit) * 100, 100)}%` 
+                            width: `${Math.min((usageData.candidates.current / usageData.candidates.limit) * 100, 100)}%` 
                           }}
                         ></div>
                       </div>
-                      {usage.candidates.current >= usage.candidates.limit && (
+                      {usageData.candidates.current >= usageData.candidates.limit && (
                         <div className="text-xs text-red-600 mt-1 font-medium">
-                          ⚠️ Over limit by {usage.candidates.current - usage.candidates.limit}
+                          ⚠️ Over limit by {usageData.candidates.current - usageData.candidates.limit}
                         </div>
                       )}
                     </div>
                   )}
-                  {usage.candidates.unlimited && (
+                  {usageData.candidates.unlimited && (
                     <div className="text-sm text-green-600 font-medium">
                       ✨ Unlimited candidates
                     </div>
@@ -478,8 +458,8 @@ const Billing = () => {
         {/* Action Buttons */}
         <div className="flex gap-2 flex-wrap">
           {(() => {
-            const isOverLimit = (usage.funnels.current > (usage.funnels.limit || 0) && !usage.funnels.unlimited) ||
-                               (usage.candidates.current > (usage.candidates.limit || 0) && !usage.candidates.unlimited);
+            const isOverLimit = (usageData.funnels.current > (usageData.funnels.limit || 0) && !usageData.funnels.unlimited) ||
+                               (usageData.candidates.current > (usageData.candidates.limit || 0) && !usageData.candidates.unlimited);
             const isOnHighestPlan = currentTier?.id === 'scale';
             
             if (isOverLimit && isOnHighestPlan) {

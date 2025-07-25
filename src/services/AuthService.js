@@ -137,6 +137,9 @@ class AuthService {
     return this.api.post("/subscription/reactivate");
   }
 
+  getPlansWithPricing() {
+    return this.api.get("/plans");
+  }
 
 }
 
