@@ -1287,6 +1287,8 @@ const handleContinue = () => {
       modal.destroy(); 
     }, 2000);
 
+
+    console.log("vacancyLenth", vacancyLenth)
     if (vacancyLenth === 0){
     router.push("/dashboard/vacancies?new=true");
     } else{

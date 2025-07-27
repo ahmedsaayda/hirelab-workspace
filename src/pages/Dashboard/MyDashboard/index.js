@@ -9,6 +9,7 @@ import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
 import UpgradeModal from "../Vacancies/components/UpgradeModal.jsx";
 import { selectUser } from "../../../redux/auth/selectors.js";
+import AuthService from "../../../services/AuthService";
 
 const calendarEvents = [
   {
@@ -172,6 +173,29 @@ const calendarEvents = [
       </svg>
     ),
   },
+  {
+    title: "Agenda",
+    start: "08:00",
+    end: "08:30",
+    background: "#EFF8FF",
+    dot: (
+      <svg
+        width={10}
+        height={11}
+        viewBox="0 0 10 11"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          id="Vertical container"
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
+          fill="#5207CD"
+        />
+      </svg>
+    ),
+  },
 ];
 
 const MyDashboard = () => {
@@ -195,6 +219,31 @@ const MyDashboard = () => {
   const landingPageNum = user?.landingPageNum || 0;
   const tier = user?.tier || { id: 'free', name: 'Free Forever', maxFunnels: 1 };
   const upgradeNeeded = user?.upgradeNeeded;
+
+  // Add function to refresh user data
+  const refreshUserData = async () => {
+    try {
+      // Force refresh of user data to get updated plan limits
+      const userData = await AuthService.me();
+      console.log('Dashboard - Refreshed user data:', userData.data);
+      window.location.reload(); // Force full refresh to ensure all data is updated
+    } catch (error) {
+      console.error('Dashboard - Error refreshing user data:', error);
+    }
+  };
+
+  // Enhanced logging for debugging plan limits
+  useEffect(() => {
+    if (user) {
+      console.log('Dashboard - User plan data:', {
+        tier: user.tier,
+        usage: user.usage,
+        upgradeNeeded: user.upgradeNeeded,
+        landingPageNum: user.landingPageNum,
+        plans: user.plans
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     var aTags = document.getElementsByTagName("div");
@@ -220,15 +269,33 @@ const MyDashboard = () => {
   };
 
   const handleCreateNewVacancy = () => {
+    // We need to fetch actual landing pages count for accurate usage
+    // For now, we'll rely on the current method but this should be improved
+    console.log('🎯 DASHBOARD CREATE VACANCY LIMIT CHECK');
+    
+    // Note: In dashboard we don't have landingPages array, 
+    // so we'll use available user data but this should be synchronized
+    const currentFunnelCount = user?.landingPageNum ?? 0;
+    const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
+    const tierName = user?.tier?.name ?? tier?.name ?? 'Unknown';
+    
+    console.log('Dashboard limit check:', {
+      currentFunnelCount,
+      maxFunnels,
+      hasReachedLimit,
+      tierName,
+      note: 'Dashboard uses user.landingPageNum - should sync with vacancies page'
+    });
 
-    router.push("/dashboard/vacancies?new=true");
-    return
-    // Check if user has reached their funnel limit
-    if (tier.maxFunnels !== null && landingPageNum >= tier.maxFunnels) {
+    if (hasReachedLimit) {
+      console.log('🚫 DASHBOARD BLOCKING: User has reached funnel limit, showing upgrade modal');
       setUpgradeModalVisible(true);
-    } else {
-      router.push("/dashboard/vacancies?new=true");
+      return; // Explicitly prevent further execution
     }
+
+    console.log('✅ DASHBOARD ALLOWING: User can create new vacancy');
+    router.push("/dashboard/vacancies?new=true");
   };
 
   return (
@@ -241,21 +308,58 @@ const MyDashboard = () => {
           <div className="justify-end flex flex-col md:flex-row items-center gap-4 w-full mt-4">
             {showInviteModal && (
               <>
-                <Button
-                  shape="round"
-                  onClick={handleCreateNewVacancy}
-                  size="3xl"
-                  leftIcon={
-                    <Img
-                      src="/images/img_plus_white_a700.svg"
-                      alt="text input"
-                      className="h-[20px] w-[20px]"
-                    />
-                  }
-                  className="min-w-[225px] gap-1.5 font-semibold bg-[#5207CD] text-white px-[4px]"
-                >
-                  Create a New Vacancy
-                </Button>
+                {(() => {
+                  // Note: Dashboard uses user.landingPageNum for consistency with handleCreateNewVacancy
+                  const currentFunnelCount = user?.landingPageNum ?? 0;
+                  const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+                  const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
+                  const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
+
+                  return (
+                    <div className="flex flex-col items-end gap-2">
+                      {/* Usage indicator */}
+                      <div className="text-sm text-gray-500 text-right">
+                        {maxFunnels === null ? 
+                          `${currentFunnelCount} funnels (Unlimited)` : 
+                          `${currentFunnelCount} / ${maxFunnels} funnels used`
+                        }
+                        <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
+                          {tierName} Plan
+                        </span>
+                      </div>
+                      
+                      {/* Create button */}
+                      <Button
+                        shape="round"
+                        onClick={hasReachedLimit ? () => setUpgradeModalVisible(true) : handleCreateNewVacancy}
+                        size="3xl"
+                        leftIcon={
+                          hasReachedLimit ? (
+                            <Img
+                              src="/images/img_lock.svg"
+                              alt="upgrade icon"
+                              className="h-[20px] w-[20px]"
+                            />
+                          ) : (
+                            <Img
+                              src="/images/img_plus_white_a700.svg"
+                              alt="text input"
+                              className="h-[20px] w-[20px]"
+                            />
+                          )
+                        }
+                        className={`min-w-[225px] gap-1.5 font-semibold px-[4px] ${
+                          hasReachedLimit 
+                            ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                            : 'bg-[#5207CD] text-white'
+                        }`}
+                        title={hasReachedLimit ? `You've reached your ${maxFunnels} funnel limit. Click to upgrade.` : 'Create a new vacancy'}
+                      >
+                        {hasReachedLimit ? 'Upgrade to Create More' : 'Create a New Vacancy'}
+                      </Button>
+                    </div>
+                  );
+                })()}
               </>
             )}
           </div>
@@ -287,10 +391,17 @@ const MyDashboard = () => {
 
       <UpgradeModal
         open={upgradeModalVisible}
-        onClose={() => setUpgradeModalVisible(false)}
-        currentTier={tier.name}
-        requiredTier={upgradeNeeded?.name || 'a higher tier'}
-        feature="vacancy"
+        onClose={() => {
+          setUpgradeModalVisible(false);
+          // Refresh user data to get updated limits
+          refreshUserData();
+        }}
+        currentTier={tier}
+        requiredTier={upgradeNeeded}
+        feature="funnel"
+        usage={user?.usage}
+        plans={user?.plans || []}
+        upgradeReason="limit"
       />
     </div>
   );

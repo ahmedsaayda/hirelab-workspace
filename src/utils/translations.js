@@ -15,7 +15,7 @@ const coreTranslations = {
     weAreHiring: "👋 WE'RE HIRING",
     hours: "Hours", hour: "Hour", year: "Year", month: "Month", week: "Week", day: "Day",
     daily: "Daily", weekly: "Weekly", monthly: "Monthly", yearly: "Yearly",
-    remote: "Remote", hybrid: "Hybrid", summary: "Summary", contacts: "Contacts",
+    remote: "Remote",Hybrid:"Hybrid", hybrid: "Hybrid", summary: "Summary", contacts: "Contacts",
     description: "Description", agenda: "Agenda", aboutUs: "About Us", companyFacts: "Company Facts",
     leaderIntro: "Leader Intro", testimonials: "Testimonials", applicationProcess: "Application Process",
     growthPath: "Growth Path", applyNow: "Apply Now", share: "Share", locations: "Locations",
@@ -43,7 +43,7 @@ const coreTranslations = {
     weAreHiring: "👋 WIR STELLEN EIN",
     hours: "Stunden", hour: "Stunde", year: "Jahr", month: "Monat", week: "Woche", day: "Tag",
     daily: "Täglich", weekly: "Wöchentlich", monthly: "Monatlich", yearly: "Jährlich",
-    remote: "Remote", hybrid: "Hybrid", summary: "Zusammenfassung", contacts: "Kontakte",
+    remote: "Remote",Hybrid:"Hybrid!!", hybrid: "Hybrid", summary: "Zusammenfassung", contacts: "Kontakte",
     description: "Beschreibung", agenda: "Agenda", aboutUs: "Über Uns", companyFacts: "Unternehmensfakten",
     leaderIntro: "Führungskraft Intro", testimonials: "Testimonials", applicationProcess: "Bewerbungsprozess",
     growthPath: "Wachstumspfad", applyNow: "Jetzt Bewerben", share: "Teilen", locations: "Standorte",
@@ -424,7 +424,7 @@ export const getTranslation = (language, key) => {
 export const getTimeUnitTranslation = (language, unit) => {
   const unitMap = {
     Days: 'day',
-    Weeks: 'week', 
+    Week: 'week', 
     Month: 'month',
     daily: 'daily',
     weekly: 'weekly',

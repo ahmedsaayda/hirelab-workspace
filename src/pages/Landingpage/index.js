@@ -16,9 +16,9 @@ import { useFocus } from "../../contexts/FocusContext.js";
 import { useHover } from "../../contexts/HoverContext.js";
 import CrudService from "../../services/CrudService.js";
 
-export default function LandingpagePage({ paramsId, overrideParamId = null, fullscreen = false, showBackToEditButton = false, setFullscreen }) {
+export default function LandingpagePage({ paramsId, overrideParamId = null, fullscreen = false, showBackToEditButton = false, setFullscreen,defaultLandingPageData = null }) {
   const lpId = overrideParamId ?? paramsId;
-  const [landingPageData, setLandingPageData] = useState(null);
+  const [landingPageData, setLandingPageData] = useState(defaultLandingPageData);
   console.log(landingPageData);
   const [showApplyButton, setShowApplyButton] = useState(false);
   const [showFormEditor, setShowFormEditor] = useState(false); // New state for form editor visibility
@@ -149,15 +149,15 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   }, []);
 
   const fetchData = useCallback(() => {
-    if (lpId) {
+    if (lpId && !defaultLandingPageData) {
       PublicService.getLP(lpId).then((res) => {
         if (res.data?.lp) setLandingPageData(res.data.lp);
       });
-      PublicService.getLPBrand(lpId).then((res) => {
-        if (res.data?.color) {
-          // changeIndigoShades(generateTailwindPalette(res.data?.color));
-        }
-      });
+      // PublicService.getLPBrand(lpId).then((res) => {
+      //   if (res.data?.color) {
+      //     // changeIndigoShades(generateTailwindPalette(res.data?.color));
+      //   }
+      // });
     }
   }, [lpId]);
 

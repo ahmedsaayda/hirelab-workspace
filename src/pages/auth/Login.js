@@ -17,7 +17,8 @@ import TeamService from "../../../src/services/TeamService";
 
 const Login = () => {
   const router = useRouter();
-  const loading = useSelector(selectLoading);
+  const loading = false&&useSelector(selectLoading);
+  console.log("loading",loading)
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -86,7 +87,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex h-[100vh] flex-col">
+    <div className="flex min-h-[100vh]  flex-col">
       <SlimLayout>
         <div className="flex justify-center">
           <Link href="/" aria-label="Home">

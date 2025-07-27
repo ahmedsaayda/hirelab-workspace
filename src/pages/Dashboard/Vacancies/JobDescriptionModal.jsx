@@ -221,20 +221,20 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         throw new Error(aiResponse.data.error || 'AI processing failed');
       }
 
-      console.log("AI processing completed successfully");
+      console.log("AI processing completed successfully", aiResponse);
       debugData.steps.push({
         step: 2,
         name: "AI Processing Completed",
         timestamp: new Date(),
         status: "success",
         data: {
-          aiResponse: aiResponse.data,
-          resultLength: aiResponse.data.data?.data?.length || 0
+          aiResponse: aiResponse?.data?.data?.content,
+          resultLength: aiResponse?.data?.data?.content?.length || 0
         }
       });
 
       // Use the combined result from AI processing
-      const aiResult = aiResponse.data.data.data;
+      const aiResult = aiResponse?.data?.data?.content;
       debugData.steps.push({
         step: 3,
         name: "AI Result Retrieved",
@@ -242,10 +242,12 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         status: "success",
         data: { 
           method: "combined", 
-          rawResult: aiResponse.data.data,
+          rawResult: aiResponse?.data?.data?.content,
           resultType: typeof aiResult
         }
       });
+
+      console.log("aiResult", aiResult)
 
       // Clean up the AI response to ensure valid JSON
       let cleanResponse = aiResult;
@@ -306,8 +308,8 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
       debugData.finalResult = cleanResponse;
 
       // Ensure specifications are enabled if they exist
-      if (cleanResponse?.specifications && Array.isArray(cleanResponse.specifications)) {
-        cleanResponse.specifications = cleanResponse.specifications.map(spec => ({
+      if (cleanResponse?.specifications && Array.isArray(cleanResponse?.specifications)) {
+        cleanResponse.specifications = cleanResponse?.specifications?.map(spec => ({
           ...spec,
           enabled: true
         }));
@@ -318,8 +320,8 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
           timestamp: new Date(),
           status: "success",
           data: {
-            specificationsCount: cleanResponse.specifications.length,
-            enabledCount: cleanResponse.specifications.filter(s => s.enabled).length
+            specificationsCount: cleanResponse?.specifications?.length,
+            enabledCount: cleanResponse?.specifications?.filter(s => s.enabled)?.length
           }
         });
       }
@@ -401,6 +403,8 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         status: "in_progress"
       });
 
+      console.log("cleanResponse", cleanResponse)
+
       const vacancyPayload = {
         ...cleanResponse,
         ...brandingDetails,
@@ -409,7 +413,8 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         department: department,
         user_id: user?._id,
         applyType: 'form', // 🚀 Always default to custom form
-        cta2Link: '#apply' // 🚀 Always default to apply action
+        cta2Link: '#apply', // 🚀 Always default to apply action
+        lang: language
       };
 
       // Add the generated form if available (backend will generate if this fails)
@@ -417,6 +422,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         vacancyPayload.form = generatedForm;
       }
 
+      console.log("vacancyPayload", vacancyPayload)
       const res = await AiService.createVacancy(vacancyPayload);
       console.log("Vacancy created successfully");
       
