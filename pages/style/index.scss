@@ -4,16 +4,16 @@
 @use "./tutorial.scss";
 
 .ant-btn-primary {
-  background-color: #0080ff !important;
-  border: 1px solid #0080ff;
+  background-color: #5207CD !important;
+  border: 1px solid #5207CD;
   &:hover {
-    color: #5207CD !important;
+    color: #FFFFFF !important;
     background-color: rgba(0, 0, 0, 0) !important;
   }
 }
 
 .ant-btn.ant-btn-primary:not(.ant-btn-dangerous) {
-  background-color: #0080ff;
+  background-color: #5207CD;
 }
 button.ant-switch {
   background-color: rgba(0, 0, 0, 0.25);

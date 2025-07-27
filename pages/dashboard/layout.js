@@ -19,6 +19,8 @@ import {
   BrandKit,
   ToolrIcon,
   GroupOfPeople,
+  CustomDomainsIcon,
+  AdsPublishingIcon,
 } from "../../src/pages/Dashboard/Vacancies/components/Icons.js";
 import {
   User,
@@ -304,6 +306,17 @@ const Layout = ({children}) => {
           isOnboardingCompleted: isOnboardingCompleted,
           icon: BrandKit,
         },
+        {
+          name: "Ads Publishing",
+          href: "/dashboard/ads-publishing",
+          icon: AdsPublishingIcon,
+        },
+        {
+          name: "Domains",
+          href: "/dashboard/custom-domains",
+          icon: CustomDomainsIcon,
+        },
+
         // {
         //   name: "Analytics",
         //   href: "/dashboard/analytics",

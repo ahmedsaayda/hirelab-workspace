@@ -28,6 +28,7 @@ const publicPaths = [
   '/cv',
   '/jobportal',
   '/survey',
+  '/candidate-chat/', // Public candidate chat access via tokenized links
   '/test', // Your test page
   '/_next', // Next.js assets
   '/favicon.ico',

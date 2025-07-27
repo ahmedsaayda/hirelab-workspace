@@ -19,6 +19,10 @@ class ATSService {
   deleteStage(id) {
     return this.api.delete(`/deleteStage?id=${id}`);
   }
+  
+  updateStage(id, updateData) {
+    return this.api.put(`/updateStage?id=${id}`, updateData);
+  }
   countApplicants(funnels) {
     return this.api.post(`/countApplicants`, { funnels });
   }
@@ -100,6 +104,20 @@ class ATSService {
   }
   getApplyToken(id) {
     return this.api.post(`/get-apply-token/${id}`);
+  }
+
+  // Team assignment methods
+  assignCandidateToTeamMember(candidateId, assignToUserId) {
+    return this.api.post("/assignCandidateToTeamMember", {
+      candidateId,
+      assignToUserId,
+    });
+  }
+
+  unassignCandidateFromTeamMember(candidateId) {
+    return this.api.post("/unassignCandidateFromTeamMember", {
+      candidateId,
+    });
   }
 }
 

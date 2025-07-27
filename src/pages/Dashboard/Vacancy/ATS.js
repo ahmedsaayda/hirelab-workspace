@@ -192,6 +192,7 @@ const ATS = ({ VacancyId, vacancyInfo }) => {
       CrudService.search("VacancySubmission", LOAD_PER_PAGE, pages[id] + 1, {
         filters,
         sort: { sort: 1, createdAt: -1 },
+        populate: "stageId LandingPageDataId",
       }).then(({ data }) => {
         console.log("data", data);
         if (data.items.length > 0) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { 
   Button, 
   Input, 
@@ -29,6 +30,7 @@ import {
   CalendarOutlined,
   EditOutlined,
   DeleteOutlined,
+  DragOutlined,
   StarOutlined,
   AppstoreOutlined,
   BarsOutlined,
@@ -36,18 +38,25 @@ import {
   ReloadOutlined,
   DownOutlined,
   CloseOutlined,
-  LeftOutlined
+  LeftOutlined,
+  MessageOutlined,
+  CheckOutlined
 } from '@ant-design/icons';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useRouter } from 'next/router';
 import ATSService from '../../../services/ATSService';
 import CrudService from '../../../services/CrudService';
+import TeamService from '../../../services/TeamService';
+import CandidateChatService from '../../../services/CandidateChatService';
 import moment from 'moment';
+import { selectUser } from '../../../redux/auth/selectors';
 
 // Import modern component sub-components
 import CandidateCard from './components/CandidateCard';
 import AddCandidateModal from './components/AddCandidateModal';
 import CandidateProfile from './components/CandidateProfile';
+import AssignmentModal from './components/AssignmentModal';
+import InterviewSchedulingModal from './components/InterviewSchedulingModal';
 
 // Add table styles for enhanced sorting UI
 const tableStyles = `
@@ -77,7 +86,7 @@ const tableStyles = `
   
   .candidate-table .ant-table-column-sorter-up.active,
   .candidate-table .ant-table-column-sorter-down.active {
-    color: #3b82f6;
+    color: #5207cd;
   }
   
   .candidate-table .ant-table-tbody > tr:hover > td {
@@ -113,8 +122,8 @@ const tableStyles = `
   }
   
   .candidate-table .ant-pagination-item-active {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: #5207cd;
+    border-color: #5207cd;
   }
   
   .candidate-table .ant-pagination-item-active a {
@@ -175,7 +184,7 @@ const tableStyles = `
     width: 12px;
     height: 12px;
     border: 1.5px solid #e5e7eb;
-    border-top: 1.5px solid #3b82f6;
+    border-top: 1.5px solid #5207cd;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -235,12 +244,12 @@ const headerStyles = `
   }
   
   .ats-header .ats-search-input .ant-input-search:hover {
-    border-color: #3b82f6 !important;
+    border-color: #5207cd !important;
     box-shadow: 0 1px 3px 0 rgba(59, 130, 246, 0.1) !important;
   }
   
   .ats-header .ats-search-input .ant-input-search:focus-within {
-    border-color: #3b82f6 !important;
+    border-color: #5207cd !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
   }
   
@@ -262,7 +271,7 @@ const headerStyles = `
   
   .ats-header .ats-search-input .ant-input-search-button {
     border: none !important;
-    background: #3b82f6 !important;
+    background: #5207cd !important;
     color: white !important;
     border-radius: 0 8px 8px 0 !important;
     font-weight: 500 !important;
@@ -278,7 +287,7 @@ const headerStyles = `
   }
   
   .ats-header .ats-search-input .ant-input-search-button:hover {
-    background: #2563eb !important;
+    background: #4a06b9 !important;
     box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2) !important;
     transform: none !important;
   }
@@ -353,12 +362,12 @@ const headerStyles = `
   }
   
   .ats-header .ats-search-input .ant-input-affix-wrapper:hover {
-    border-color: #3b82f6 !important;
+    border-color: #5207cd !important;
     box-shadow: 0 1px 3px 0 rgba(59, 130, 246, 0.1) !important;
   }
   
   .ats-header .ats-search-input .ant-input-affix-wrapper-focused {
-    border-color: #3b82f6 !important;
+    border-color: #5207cd !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
   }
   
@@ -466,14 +475,16 @@ const headerStyles = `
   }
   
   .ats-header .ant-btn-primary {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-    border-color: #3b82f6 !important;
+    background: linear-gradient(135deg, #5207cd 0%, #4a06b9 100%) !important;
+    border-color: #5207cd !important;
+    color: white !important;
     box-shadow: 0 1px 2px 0 rgba(59, 130, 246, 0.2) !important;
   }
   
   .ats-header .ant-btn-primary:hover {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
-    border-color: #2563eb !important;
+    background: linear-gradient(135deg, #4a06b9 0%, #1d4ed8 100%) !important;
+    border-color: #4a06b9 !important;
+    color: white !important;
     box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4) !important;
   }
   
@@ -505,9 +516,21 @@ const { Search } = Input;
 const { TabPane } = Tabs;
 
 const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
+  // Get current user
+  const user = useSelector(selectUser);
+  
+  // Debug: Log component props
+  console.log('🔍 NewATS Component Props:', {
+    VacancyId,
+    vacancyInfo: vacancyInfo?.name,
+    isMultiJobView,
+    user: user?._id
+  });
+  
   // State management
   const [viewMode, setViewMode] = useState('pipeline'); // 'pipeline' | 'table'
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true); // Only for first load
+  const [dataRefreshing, setDataRefreshing] = useState(false); // Non-blocking refresh
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [searchPending, setSearchPending] = useState(false);
@@ -516,6 +539,11 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   // Bulk action states
   const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  
+  // Granular loading states for better UX
+  const [columnsLoading, setColumnsLoading] = useState(false);
+  const [candidatesLoading, setCandidatesLoading] = useState(false);
+  const [columnOperationLoading, setColumnOperationLoading] = useState({});
   
   // Rating update states
   const [updatingRatings, setUpdatingRatings] = useState(new Set());
@@ -526,7 +554,8 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     stages: [], // array of stage IDs
     ratings: [], // array of rating values (1-5)
     dateRange: null, // { start: Date, end: Date }
-    showRejected: false
+    showRejected: false,
+    assignees: [] // array of assignee user IDs
   });
   const [showFilters, setShowFilters] = useState(false);
 
@@ -590,7 +619,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
           message.error('Failed to update rating');
           
           // Revert optimistic update on error
-          loadATSData();
+          loadATSData({ isBackgroundRefresh: true });
         } finally {
           // Remove from updating set
           setUpdatingRatings(prev => {
@@ -616,7 +645,19 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   const [addCandidateModal, setAddCandidateModal] = useState(false);
   const [selectedStageForAdd, setSelectedStageForAdd] = useState(null);
   const [candidateProfile, setCandidateProfile] = useState(null);
+  const [assignmentModal, setAssignmentModal] = useState(false);
+  const [selectedCandidateForAssignment, setSelectedCandidateForAssignment] = useState(null);
+  const [interviewSchedulingModal, setInterviewSchedulingModal] = useState(false);
+  const [selectedCandidateForScheduling, setSelectedCandidateForScheduling] = useState(null);
+  const [schedulingLoading, setSchedulingLoading] = useState(false);
+  const [addingColumn, setAddingColumn] = useState(false);
+  const [editingColumnId, setEditingColumnId] = useState(null);
+  const [newColumnTitle, setNewColumnTitle] = useState('');
   const [candidates, setCandidates] = useState([]);
+  
+  // Team states
+  const [currentTeam, setCurrentTeam] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
 
   // Keyboard shortcuts for bulk actions and rating
   useEffect(() => {
@@ -672,22 +713,53 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   const [pipelineData, setPipelineData] = useState({
     columns: []
   });
+  const [allVacancies, setAllVacancies] = useState([]); // Store all user vacancies for filter dropdown
 
   const router = useRouter();
 
   // Load ATS data with enhanced search using VacancySubmissions
-  const loadATSData = useCallback(async () => {
-    setLoading(true);
+  const loadATSData = useCallback(async (options = {}) => {
+    // Don't load data if user is not available yet
+    if (!user || !user._id) {
+      console.log('⏳ Waiting for user to be available...');
+      return;
+    }
+    
+    const { 
+      isInitialLoad = false, 
+      isBackgroundRefresh = false, 
+      skipCandidates = false,
+      skipStages = false 
+    } = options;
+    
+    // Smart loading state management
+    if (isInitialLoad) {
+      setInitialLoading(true);
+    } else if (!isBackgroundRefresh) {
+      setDataRefreshing(true);
+    }
+    
+    if (!skipCandidates) setCandidatesLoading(true);
+    if (!skipStages) setColumnsLoading(true);
     try {
       if (isMultiJobView) {
-        console.log('🔄 Loading ATS data for ALL vacancies (multi-job view)');
+        console.log('🔄 Loading ATS data for ALL vacancies (multi-job view) - User:', user._id);
       } else {
-        console.log('🔄 Loading ATS data for vacancy:', VacancyId);
+        console.log('🔄 Loading ATS data for vacancy:', VacancyId, '- User:', user._id);
       }
       
       // First, ensure we have default stages
+      console.log('🔄 LOAD DEBUG: About to call ensureDefaultStages...');
+      console.log('🔄 LOAD DEBUG: VacancyId:', VacancyId);
+      console.log('🔄 LOAD DEBUG: Current time:', new Date().toISOString());
       let stages = await ensureDefaultStages();
-      console.log('📋 Loaded stages:', stages);
+      console.log('📋 LOAD DEBUG: Loaded stages from ensureDefaultStages:', stages.map(s => ({ name: s.name, id: s._id })));
+      console.log(`📊 LOAD DEBUG: Total stage count: ${stages.length}`);
+      
+      if (stages.length === 0) {
+        console.log('🚨 WARNING: ensureDefaultStages returned empty array!');
+        console.log('🚨 This means no stages will be displayed!');
+      }
       
       if (isMultiJobView) {
         console.log('🔍 Searching for ALL candidates across all user vacancies');
@@ -697,21 +769,48 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       
       // Try multiple search approaches
       let allCandidates = [];
-      let allVacancies = [];
+      let fetchedVacancies = [];
+      
+      // Always fetch user's vacancies for filter dropdown (both single and multi-job view)
+      try {
+        console.log('🔍 Fetching user vacancies for filter dropdown - User ID:', user?._id);
+        const vacanciesResponse = await CrudService.search('LandingPageData', 1000, 1, {
+          filters: {
+            user_id: user._id
+          },
+          sort: { createdAt: -1 }
+        });
+        fetchedVacancies = vacanciesResponse.data?.items || vacanciesResponse.data?.data || [];
+        console.log('📋 Total vacancies found for user:', fetchedVacancies.length);
+        
+        if (fetchedVacancies.length > 0) {
+          console.log('📋 First 3 vacancies:', fetchedVacancies.slice(0, 3).map(v => ({
+            id: v._id,
+            title: v.vacancyTitle,
+            location: v.location,
+            department: v.department
+          })));
+        }
+        
+        // Store for filter dropdown
+        setAllVacancies(fetchedVacancies);
+        
+              } catch (error) {
+          console.error('❌ Error fetching vacancies:', error);
+          // Set empty array as fallback to prevent UI errors
+          setAllVacancies([]);
+        }
       
       if (isMultiJobView) {
         // Multi-job view: Get all candidates across all user vacancies
         try {
           console.log('🔍 Fetching all candidates for multi-job view');
-          const candidatesResponse = await CrudService.search('VacancySubmission', 1000, 1, {});
+          const candidatesResponse = await CrudService.search('VacancySubmission', 1000, 1, {
+            populate: "assignedTo"
+          });
           console.log('👥 All candidates response:', candidatesResponse);
           allCandidates = candidatesResponse.data?.items || candidatesResponse.data?.data || [];
           console.log('👥 Total candidates found (all vacancies):', allCandidates.length);
-          
-          // Also fetch all vacancies to get vacancy names
-          const vacanciesResponse = await CrudService.search('LandingPageData', 1000, 1, {});
-          allVacancies = vacanciesResponse.data?.items || vacanciesResponse.data?.data || [];
-          console.log('📋 Total vacancies found:', allVacancies.length);
           
         } catch (error) {
           console.error('❌ Error fetching all candidates:', error);
@@ -721,7 +820,8 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         try {
           console.log('🔍 Attempting search with params:', { LandingPageDataId: VacancyId });
           const candidatesResponse1 = await CrudService.search('VacancySubmission', 1000, 1, {
-            filters: { LandingPageDataId: VacancyId }
+            filters: { LandingPageDataId: VacancyId },
+            populate: "assignedTo"
           });
           console.log('👥 Raw candidates response:', candidatesResponse1);
           console.log('👥 Response data structure:', candidatesResponse1.data);
@@ -738,7 +838,9 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         if (allCandidates.length === 0 && !isMultiJobView) {
           try {
             console.log('🔄 Trying fallback approach - get all candidates');
-            const candidatesResponse2 = await CrudService.search('VacancySubmission', 1000, 1, {});
+            const candidatesResponse2 = await CrudService.search('VacancySubmission', 1000, 1, {
+              populate: "assignedTo"
+            });
             console.log('👥 All candidates response:', candidatesResponse2);
             const allSubmissions = candidatesResponse2.data?.items || candidatesResponse2.data?.data || [];
             
@@ -787,7 +889,8 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
             const alternativeResponse = await CrudService.search('VacancySubmission', 1000, 1, {
               filters: { LandingPageDataId: VacancyId },
               text: "",
-              sort: { createdAt: -1 }
+              sort: { createdAt: -1 },
+              populate: "assignedTo"
             });
             console.log('👥 Alternative CrudService response:', alternativeResponse);
             allCandidates = alternativeResponse.data?.items || alternativeResponse.data?.data || [];
@@ -798,9 +901,9 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         }
       
       // Enrich candidates with vacancy information for multi-job view
-      if (isMultiJobView && allVacancies.length > 0) {
+      if (isMultiJobView && fetchedVacancies.length > 0) {
         const vacancyMap = {};
-        allVacancies.forEach(vacancy => {
+        fetchedVacancies.forEach(vacancy => {
           vacancyMap[vacancy._id] = {
             name: vacancy.vacancyTitle || 'Untitled Vacancy',
             location: vacancy.location,
@@ -808,16 +911,28 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
           };
         });
         
-        allCandidates = allCandidates.map(candidate => ({
-          ...candidate,
-          vacancyInfo: vacancyMap[candidate.LandingPageDataId] || { 
-            name: 'Unknown Vacancy', 
-            location: '', 
-            department: '' 
-          }
-        }));
+        console.log('🗺️ Created vacancy map:', Object.keys(vacancyMap).length, 'vacancies');
+        console.log('🗺️ Vacancy map sample:', Object.entries(vacancyMap).slice(0, 3));
+        
+        allCandidates = allCandidates.map(candidate => {
+          const vacancyInfo = vacancyMap[candidate.LandingPageDataId];
+          console.log(`👤 Candidate ${candidate._id}: LandingPageDataId=${candidate.LandingPageDataId}, found vacancy=${!!vacancyInfo}`);
+          return {
+            ...candidate,
+            vacancyInfo: vacancyInfo || { 
+              name: 'Unknown Vacancy', 
+              location: '', 
+              department: '' 
+            }
+          };
+        });
         
         console.log('✨ Enriched candidates with vacancy info for multi-job view');
+        console.log('✨ Sample enriched candidate:', allCandidates[0] ? {
+          id: allCandidates[0]._id,
+          landingPageId: allCandidates[0].LandingPageDataId,
+          vacancyInfo: allCandidates[0].vacancyInfo
+        } : 'No candidates found');
       }
       
       if (allCandidates.length > 0) {
@@ -921,10 +1036,29 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
             return false;
           }
           
-          // 5. Vacancy filter (multi-job view only)
+          // 5. Vacancy filter (for multi-job view)
           if (isMultiJobView && filters.vacancies && filters.vacancies.length > 0) {
             const candidateVacancy = candidate.vacancyInfo?.name;
             if (!candidateVacancy || !filters.vacancies.includes(candidateVacancy)) {
+              return false;
+            }
+          }
+          
+          // 6. Assignee filter
+          if (filters.assignees.length > 0) {
+            const candidateAssigneeId = candidate.assignedTo?._id || candidate.assignedTo;
+            const isUnassigned = !candidateAssigneeId;
+            
+            // Check if "unassigned" is selected and candidate is unassigned
+            if (filters.assignees.includes('unassigned') && isUnassigned) {
+              // Allow unassigned candidates if "unassigned" is selected
+            }
+            // Check if candidate is assigned to a selected team member
+            else if (candidateAssigneeId && filters.assignees.includes(candidateAssigneeId)) {
+              // Allow assigned candidates if their assignee is selected
+            }
+            // Otherwise, filter out this candidate
+            else {
               return false;
             }
           }
@@ -999,7 +1133,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
               }
             }
             
-            return {
+            const cardData = {
               id: candidate._id,
               fullname: fullname || 'Unknown',
               email: email,
@@ -1009,8 +1143,25 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
               createdAt: candidate.createdAt,
               position: vacancyInfo?.name || 'Position',
               stageId: stage._id,
-              rejected: candidate.rejected || false
+              rejected: candidate.rejected || false,
+              // Include original fields for vacancy matching (but not vacancyInfo unless needed)
+              LandingPageDataId: candidate.LandingPageDataId,
+              vacancyId: candidate.vacancyId,
+              // Assignment data
+              assignedTo: candidate.assignedTo,
+              assignedAt: candidate.assignedAt,
+              assignedBy: candidate.assignedBy
             };
+            
+            // ABSOLUTELY DO NOT add vacancyInfo in single-job view to prevent purple "Applied to" text
+            if (isMultiJobView && candidate.vacancyInfo) {
+              cardData.vacancyInfo = candidate.vacancyInfo;
+              console.log(`✅ Adding vacancyInfo to candidate ${candidate._id} in multi-job view:`, candidate.vacancyInfo);
+            } else {
+              console.log(`❌ NOT adding vacancyInfo to candidate ${candidate._id} - isMultiJobView: ${isMultiJobView}, hasVacancyInfo: ${!!candidate.vacancyInfo}`);
+            }
+            
+            return cardData;
           })
         };
       }).sort((a, b) => a.sort - b.sort);
@@ -1042,11 +1193,23 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       
       // Flatten for table view
       const flatCandidates = boardColumns.flatMap(col =>
-        col.cards.map(card => ({
-          ...card,
-          stage: col.title,
-          stageId: col.id
-        }))
+        col.cards.map(card => {
+          const baseCard = {
+            ...card,
+            stage: col.title,
+            stageId: col.id,
+            // Ensure vacancy reference fields are preserved for table view
+            LandingPageDataId: card.LandingPageDataId,
+            vacancyId: card.vacancyId
+          };
+          
+          // Only add vacancyInfo if we're in multi-job view
+          if (isMultiJobView && card.vacancyInfo) {
+            baseCard.vacancyInfo = card.vacancyInfo;
+          }
+          
+          return baseCard;
+        })
       );
       
       console.log('📊 Filtering results:', {
@@ -1057,41 +1220,155 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         activeStageFilter: filters.stages.length > 0 ? filters.stages : 'none'
       });
       
+      console.log('🔍 Debug candidate data for vacancy counting:', {
+        isMultiJobView,
+        VacancyId,
+        candidatesWithVacancyInfo: flatCandidates.map(c => ({
+          id: c.id,
+          name: c.fullname,
+          LandingPageDataId: c.LandingPageDataId,
+          vacancyId: c.vacancyId,
+          vacancyInfo: c.vacancyInfo
+        }))
+      });
+      
       setCandidates(flatCandidates);
       
     } catch (error) {
       console.error('Error loading ATS data:', error);
-      message.error('Failed to load candidates');
+      if (!isBackgroundRefresh) {
+        message.error('Failed to load candidates');
+      }
     } finally {
-      setLoading(false);
+      // Clean up all loading states
+      if (isInitialLoad) setInitialLoading(false);
+      if (!isBackgroundRefresh) setDataRefreshing(false);
+      setCandidatesLoading(false);
+      setColumnsLoading(false);
     }
-  }, [VacancyId, debouncedSearchTerm, vacancyInfo, filters, isMultiJobView]);
+  }, [VacancyId, debouncedSearchTerm, vacancyInfo, filters, isMultiJobView, user]);
+
+  // Counter to track how many times this function is called
+  let ensureDefaultStagesCallCount = 0;
 
   // Ensure default stages exist and return them
   const ensureDefaultStages = async () => {
     try {
-      console.log('🔍 Checking stages for vacancy:', VacancyId);
+      ensureDefaultStagesCallCount++;
+      console.log(`🔍 STAGE LOAD: ensureDefaultStages() called #${ensureDefaultStagesCallCount} for vacancy:`, VacancyId);
+      console.log('🔍 STAGE LOAD: Call stack:', new Error().stack.split('\n').slice(1, 4).join('\n'));
+      
       const existingStages = await CrudService.search('VacancyStage', 100, 1, {
         filters: { vacancyId: VacancyId }
       });
       
-      console.log('📋 Existing stages response:', existingStages);
-      
       const stages = existingStages.data?.items || [];
-      console.log('📊 Found stages:', stages.length, stages.map(s => s.name));
+      console.log('📊 STAGE LOAD: Found existing stages:', stages.length);
+      console.log('📋 STAGE LOAD: Stage names:', stages.map(s => s.name));
+      console.log('🆔 STAGE LOAD: Stage IDs:', stages.map(s => ({ name: s.name, id: s._id })));
       
       if (stages.length === 0) {
-        console.log('🔨 No stages found, creating default stages...');
+        console.log('🚨 STAGE LOAD: No stages found, calling createDefaultStages...');
+        console.log('🔍 STAGE LOAD: Creating default stages for new vacancy');
         return await createDefaultStages();
       } else {
-        console.log('✅ Using existing stages:', stages.length);
-        // Take only the first 5 stages to avoid duplicates
-        const uniqueStages = stages.slice(0, 5).sort((a, b) => (a.sort || 0) - (b.sort || 0));
-        console.log('📊 Using first 5 stages:', uniqueStages.map(s => s.name));
-        return uniqueStages;
+        console.log('✅ STAGE LOAD: Using existing stages, skipping creation');
+        console.log('⚠️ STAGE LOAD: If duplicates appear, they are NOT from this function!');
+        
+        // Check if we have the minimum required stages (don't auto-create if missing)
+        const hasApplied = stages.some(s => s.name === 'Applied');
+        const hasHired = stages.some(s => s.name === 'Hired');
+        
+        // AGGRESSIVE DUPLICATE CLEANUP - Actually delete duplicates from database
+        console.log('🔍 CLEANUP: Starting aggressive duplicate cleanup...');
+        console.log('📊 CLEANUP: Total stages fetched:', stages.length);
+        
+        // Group stages by name to identify duplicates
+        const stagesByName = {};
+        stages.forEach(stage => {
+          if (!stagesByName[stage.name]) {
+            stagesByName[stage.name] = [];
+          }
+          stagesByName[stage.name].push(stage);
+        });
+        
+        // Find and delete duplicates for each stage name
+        const stagesToKeep = [];
+        const stagesToDelete = [];
+        
+        for (const [stageName, stageGroup] of Object.entries(stagesByName)) {
+          if (stageGroup.length > 1) {
+            console.log(`🚨 CLEANUP: Found ${stageGroup.length} duplicates for "${stageName}"`);
+            
+            // Sort by creation time or sort order to keep the "best" one
+            stageGroup.sort((a, b) => {
+              // Prefer stages with proper sort values
+              if (a.sort && !b.sort) return -1;
+              if (!a.sort && b.sort) return 1;
+              // Then by sort order
+              if (a.sort && b.sort) return (a.sort || 0) - (b.sort || 0);
+              // Finally by creation time (older first)
+              return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+            });
+            
+            // Keep the first (best) one
+            stagesToKeep.push(stageGroup[0]);
+            console.log(`✅ CLEANUP: Keeping "${stageName}" with ID: ${stageGroup[0]._id}`);
+            
+            // Mark the rest for deletion
+            for (let i = 1; i < stageGroup.length; i++) {
+              stagesToDelete.push(stageGroup[i]);
+              console.log(`🗑️ CLEANUP: Marking for deletion "${stageName}" with ID: ${stageGroup[i]._id}`);
+            }
+          } else {
+            // No duplicates, keep as is
+            stagesToKeep.push(stageGroup[0]);
+          }
+        }
+        
+        // Actually delete the duplicate stages from the database
+        if (stagesToDelete.length > 0) {
+          console.log(`🚨 CLEANUP: Deleting ${stagesToDelete.length} duplicate stages from database...`);
+          
+          const deletePromises = stagesToDelete.map(async (stage) => {
+            try {
+              console.log(`🗑️ CLEANUP: Deleting duplicate "${stage.name}" (ID: ${stage._id})...`);
+              await ATSService.deleteStage(stage._id);
+              console.log(`✅ CLEANUP: Successfully deleted duplicate "${stage.name}" (ID: ${stage._id})`);
+              return true;
+            } catch (error) {
+              console.error(`❌ CLEANUP: Failed to delete duplicate "${stage.name}" (ID: ${stage._id}):`, error);
+              return false;
+            }
+          });
+          
+          const deleteResults = await Promise.all(deletePromises);
+          const successfulDeletes = deleteResults.filter(result => result).length;
+          
+          console.log(`📊 CLEANUP: Deleted ${successfulDeletes}/${stagesToDelete.length} duplicate stages`);
+          if (successfulDeletes > 0) {
+            console.log('✅ CLEANUP: Database cleanup completed successfully!');
+          }
+        } else {
+          console.log('✅ CLEANUP: No duplicates found - database is clean!');
+        }
+        
+        // Sort the stages to keep
+        let cleanedStages = stagesToKeep.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+        
+        // Ensure proper sort values
+        cleanedStages = cleanedStages.map((stage, index) => ({
+          ...stage,
+          sort: stage.sort || (index + 1)
+        }));
+        
+        console.log('🧹 FINAL STAGES:', cleanedStages.map(s => ({ name: s.name, id: s._id })));
+        return cleanedStages;
       }
     } catch (error) {
       console.error('❌ Error checking stages:', error);
+      console.log('🚨 CRITICAL ERROR: ensureDefaultStages failed!');
+      console.log('🚨 ERROR DETAILS:', error.message);
       // Fallback: create default stages if there's an error
       console.log('🔄 Fallback: creating default stages due to error');
       return await createDefaultStages();
@@ -1152,6 +1429,10 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
 
   // Create default stages
   const createDefaultStages = async () => {
+    console.log('🚨🚨🚨 CRITICAL: createDefaultStages() CALLED!!!');
+    console.log('🔍 Stack trace:', new Error().stack);
+    console.log('🔨 Creating default stages...');
+    
     // First delete any existing stages
     await deleteExistingStages();
     
@@ -1219,9 +1500,56 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     return () => clearTimeout(timer);
   }, [searchTerm, debouncedSearchTerm]);
 
+  // Track if this is the first load
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  
   useEffect(() => {
-    loadATSData();
-  }, [loadATSData]);
+    loadATSData({ isInitialLoad: !hasLoadedOnce });
+    if (!hasLoadedOnce) setHasLoadedOnce(true);
+  }, [loadATSData, hasLoadedOnce]);
+
+  // Load current team information
+  useEffect(() => {
+    const loadCurrentTeam = async () => {
+      try {
+        const storedTeam = TeamService.getCurrentTeam();
+        if (storedTeam) {
+          setCurrentTeam(storedTeam);
+          
+          // Also load team members for assignment filter
+          try {
+            const response = await TeamService.getTeamMembers(storedTeam._id);
+            setTeamMembers(response.members || []);
+          } catch (error) {
+            console.error('Error loading team members:', error);
+            setTeamMembers([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading current team:', error);
+      }
+    };
+
+    if (user) {
+      loadCurrentTeam();
+    }
+  }, [user]);
+
+  // Debug: Log vacancies when they change
+  useEffect(() => {
+    console.log('🔍 All vacancies state updated:', allVacancies.length, 'vacancies');
+    console.log('👤 Current user:', user?._id, user?.fullname);
+    if (allVacancies.length > 0) {
+      console.log('📋 User\'s vacancies:', allVacancies.map(v => ({
+        id: v._id,
+        title: v.vacancyTitle,
+        published: v.published,
+        user_id: v.user_id
+      })));
+    } else {
+      console.log('📋 No vacancies found for user or still loading...');
+    }
+  }, [allVacancies, user]);
 
   // Reset pagination when search or filters change
   useEffect(() => {
@@ -1248,13 +1576,19 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
 
   // Handle drag and drop
   const handleDragEnd = async (result) => {
-    const { destination, source, draggableId } = result;
+    const { destination, source, draggableId, type } = result;
     
     if (!destination) return;
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
     try {
-      // Update UI optimistically
+      // Handle column reordering
+      if (type === 'COLUMN') {
+        await handleColumnReorder(source.index, destination.index);
+        return;
+      }
+
+      // Handle candidate movement (existing logic)
       const newColumns = [...pipelineData.columns];
       const sourceColumn = newColumns.find(col => col.id === source.droppableId);
       const destColumn = newColumns.find(col => col.id === destination.droppableId);
@@ -1270,11 +1604,10 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         stageId: destination.droppableId
       });
 
-      message.success('Candidate moved successfully');
     } catch (error) {
-      console.error('Error moving candidate:', error);
-      message.error('Failed to move candidate');
-      loadATSData(); // Revert on error
+      console.error('Error in drag operation:', error);
+      message.error('Failed to complete drag operation');
+      loadATSData({ isBackgroundRefresh: true }); // Revert on error
     }
   };
 
@@ -1294,8 +1627,21 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         try {
           console.log('🗑️ Deleting candidate:', candidateId);
           await CrudService.delete('VacancySubmission', candidateId);
-          message.success('Candidate deleted successfully');
-          loadATSData(); // Reload to update the UI
+          
+          // Optimistic update - remove from local state immediately
+          setCandidates(prevCandidates => 
+            prevCandidates.filter(candidate => candidate.id !== candidateId)
+          );
+          setPipelineData(prevData => ({
+            ...prevData,
+            columns: prevData.columns.map(col => ({
+              ...col,
+              cards: col.cards.filter(card => card.id !== candidateId)
+            }))
+          }));
+          
+          // Background refresh to ensure consistency
+          loadATSData({ isBackgroundRefresh: true });
         } catch (error) {
           console.error('❌ Error deleting candidate:', error);
           message.error('Failed to delete candidate');
@@ -1317,12 +1663,26 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       
       await Promise.all(deletePromises);
       
+      // Optimistic update - remove all deleted candidates from local state
+      setCandidates(prevCandidates => 
+        prevCandidates.filter(candidate => !selectedCandidates.includes(candidate.id))
+      );
+      setPipelineData(prevData => ({
+        ...prevData,
+        columns: prevData.columns.map(col => ({
+          ...col,
+          cards: col.cards.filter(card => !selectedCandidates.includes(card.id))
+        }))
+      }));
+      
       message.success(`Successfully deleted ${selectedCandidates.length} candidate${selectedCandidates.length !== 1 ? 's' : ''}`);
       
-      // Clear selection and reload data
+      // Clear selection and close modal
       setSelectedCandidates([]);
       setBulkDeleteModal(false);
-      loadATSData();
+      
+      // Background refresh to ensure consistency
+      loadATSData({ isBackgroundRefresh: true });
       
     } catch (error) {
       console.error('❌ Error bulk deleting candidates:', error);
@@ -1345,12 +1705,34 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       
       await Promise.all(movePromises);
       
+      // Optimistic update - move candidates in local state immediately
+      setPipelineData(prevData => {
+        const newColumns = prevData.columns.map(col => ({
+          ...col,
+          cards: col.cards.filter(card => !selectedCandidates.includes(card.id))
+        }));
+        
+        // Find target column and moved cards
+        const targetColumnIndex = newColumns.findIndex(col => col.id === stageId);
+        const movedCards = prevData.columns.flatMap(col => 
+          col.cards.filter(card => selectedCandidates.includes(card.id))
+        ).map(card => ({ ...card, stageId }));
+        
+        if (targetColumnIndex >= 0) {
+          newColumns[targetColumnIndex].cards = [...newColumns[targetColumnIndex].cards, ...movedCards];
+        }
+        
+        return { ...prevData, columns: newColumns };
+      });
+      
       const stageName = pipelineData.columns.find(col => col.id === stageId)?.title || 'Unknown Stage';
       message.success(`Successfully moved ${selectedCandidates.length} candidate${selectedCandidates.length !== 1 ? 's' : ''} to ${stageName}`);
       
-      // Clear selection and reload data
+      // Clear selection 
       setSelectedCandidates([]);
-      loadATSData();
+      
+      // Background refresh to ensure consistency
+      loadATSData({ isBackgroundRefresh: true });
       
     } catch (error) {
       console.error('❌ Error bulk moving candidates:', error);
@@ -1378,6 +1760,327 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     } else {
       message.warning('No phone number available for this candidate');
     }
+  };
+
+  // Assignment handlers
+  const handleAssignCandidate = (candidate) => {
+    setSelectedCandidateForAssignment(candidate);
+    setAssignmentModal(true);
+  };
+
+  // Chat handler
+  const handleStartChatWithCandidate = async (candidate) => {
+    if (!candidate?.email) {
+      message.warning('Cannot start chat: No email address available for this candidate');
+      return;
+    }
+
+    try {
+      // Start a new chat with the candidate
+      const response = await CandidateChatService.startChat(candidate.id);
+      
+      if (response.data.chatId) {
+        
+        // Redirect to chat interface with the specific chat
+        router.push(`/dashboard/candidate-chat?chatId=${response.data.chatId}`);
+      }
+    } catch (error) {
+      console.error('Error starting chat with candidate:', error);
+      message.error('Failed to start chat with candidate. Please try again.');
+    }
+  };
+
+  // Interview scheduling handler
+  const handleScheduleInterview = (candidate) => {
+    setSelectedCandidateForScheduling(candidate);
+    setInterviewSchedulingModal(true);
+  };
+
+  // Send interview suggestions to candidate
+  const handleSendInterviewSuggestions = async (suggestions) => {
+    if (!selectedCandidateForScheduling || !suggestions || suggestions.length === 0) {
+      message.error('Please select valid interview times');
+      return;
+    }
+
+    setSchedulingLoading(true);
+    try {
+      // Start a chat with the candidate first if not exists
+      const chatResponse = await CandidateChatService.startChat(selectedCandidateForScheduling.id);
+      
+      if (!chatResponse.data.chatId) {
+        throw new Error('Failed to create chat');
+      }
+
+      // Prepare the interview scheduling message
+      const suggestionText = suggestions.map((s, index) => 
+        `Option ${index + 1}: ${s.displayText}`
+      ).join('\n');
+
+      const message_text = `🗓️ Interview Invitation\n\nHi ${selectedCandidateForScheduling.fullname || selectedCandidateForScheduling.email},\n\nWe would like to schedule an interview with you! Please select one of the following available times:\n\n${suggestionText}\n\nPlease reply with your preferred option, and we'll send you the meeting details.\n\nLooking forward to speaking with you!`;
+
+      // Send the scheduling message with special interview type
+      const sendResponse = await CandidateChatService.sendMessage(chatResponse.data.chatId, {
+        message: message_text,
+        messageType: 'interview_scheduling',
+        interviewSuggestions: suggestions,
+        attachments: []
+      });
+
+      if (sendResponse.data) {
+        setInterviewSchedulingModal(false);
+        setSelectedCandidateForScheduling(null);
+        
+        // Optionally redirect to chat
+        setTimeout(() => {
+          router.push(`/dashboard/candidate-chat?chatId=${chatResponse.data.chatId}`);
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error sending interview suggestions:', error);
+      message.error('Failed to send interview suggestions. Please try again.');
+    } finally {
+      setSchedulingLoading(false);
+    }
+  };
+
+  // Handle adding new column
+  const handleAddColumn = async () => {
+    if (!newColumnTitle.trim()) {
+      message.error('Please enter a column title');
+      return;
+    }
+
+    if (user?.accessLevel === "read") {
+      message.error("Your access is read-only");
+      return;
+    }
+
+    try {
+      // Get the highest sort value
+      const maxSort = Math.max(...pipelineData.columns.map(col => col.sort || 0), 0);
+      
+      // Use consistent vacancyId - prioritize VacancyId (from URL/state) over vacancyInfo._id
+      const targetVacancyId = VacancyId || vacancyInfo?._id || searchParams.get('vacancyId');
+      
+      console.log('➕ Adding column with vacancyId:', targetVacancyId);
+      
+      console.log('🚨🚨🚨 CRITICAL: CREATING NEW STAGE IN FRONTEND (ADD COLUMN)!!!');
+      console.log('🔍 Stack trace:', new Error().stack);
+      console.log('📝 Stage name:', newColumnTitle.trim());
+      console.log('🆔 VacancyId:', targetVacancyId);
+      
+      // Create new stage in backend
+      const newStage = await CrudService.create("VacancyStage", {
+        name: newColumnTitle.trim(),
+        sort: maxSort + 1,
+        vacancyId: targetVacancyId,
+        user_id: user._id,
+        partner: user.partner
+      });
+
+      console.log('✅ New stage created:', newStage);
+
+      // Optimistic update - add to local state immediately
+      const newColumn = {
+        id: newStage.data?._id || newStage._id,
+        title: newColumnTitle.trim(),
+        sort: maxSort + 1,
+        cards: []
+      };
+      
+      setPipelineData(prevData => ({
+        ...prevData,
+        columns: [...prevData.columns, newColumn]
+      }));
+      
+      // Background refresh to ensure consistency
+      setTimeout(() => {
+        loadATSData({ isBackgroundRefresh: true, skipCandidates: true });
+      }, 500);
+      
+      // Reset form
+      setAddingColumn(false);
+      setNewColumnTitle('');
+      
+    } catch (error) {
+      console.error('Error adding column:', error);
+      message.error('Failed to add column');
+    }
+  };
+
+  // Handle renaming column
+  const handleRenameColumn = async (columnId, newTitle) => {
+    if (!newTitle.trim()) {
+      message.error('Please enter a column title');
+      return;
+    }
+
+    if (user?.accessLevel === "read") {
+      message.error("Your access is read-only");
+      return;
+    }
+
+          try {
+        console.log(`🏷️ RENAME DEBUG: Starting rename of column ${columnId} to "${newTitle.trim()}"`);
+        
+        // ONLY use direct ATS service - no fallbacks that could cause duplicates
+        console.log('🔄 RENAME DEBUG: Calling ATSService.updateStage...');
+        const response = await ATSService.updateStage(columnId, { 
+          name: newTitle.trim() 
+        });
+        console.log('✅ RENAME DEBUG: ATSService.updateStage response:', response);
+
+        // Update local state immediately for better UX
+        setPipelineData(prevData => ({
+          ...prevData,
+          columns: prevData.columns.map(col => 
+            col.id === columnId ? { ...col, title: newTitle.trim() } : col
+          )
+        }));
+
+        setEditingColumnId(null);
+        
+        // Background refresh to ensure consistency (non-blocking)
+        console.log('🔄 RENAME DEBUG: Background refresh after rename...');
+        setTimeout(() => {
+          loadATSData({ isBackgroundRefresh: true, skipCandidates: true });
+        }, 1000);
+        
+      } catch (error) {
+        console.error('❌ RENAME ERROR: Column rename failed completely:', error);
+        console.error('❌ RENAME ERROR: Full error object:', error);
+        message.error(`Failed to rename column: ${error.message}`);
+        
+        // Revert optimistic update and background refresh
+        setPipelineData(prevData => ({
+          ...prevData,
+          columns: prevData.columns.map(col => 
+            col.id === columnId ? { ...col, title: col.originalTitle || col.title } : col
+          )
+        }));
+        
+        loadATSData({ isBackgroundRefresh: true, skipCandidates: true });
+      }
+  };
+
+  // Handle deleting column
+  const handleDeleteColumn = async (columnId, columnTitle) => {
+    if (user?.accessLevel === "read") {
+      message.error("Your access is read-only");
+      return;
+    }
+
+    // Check if column has candidates
+    const column = pipelineData.columns.find(col => col.id === columnId);
+    const candidatesInColumn = column?.cards || [];
+    
+    if (candidatesInColumn.length > 0) {
+      message.error(`Cannot delete "${columnTitle}" - it contains ${candidatesInColumn.length} candidate(s). Please move them to another column first.`);
+      return;
+    }
+
+    // Prevent deletion if only one column remains
+    if (pipelineData.columns.length <= 1) {
+      message.error('Cannot delete the last remaining column');
+      return;
+    }
+
+    // Show confirmation modal
+    Modal.confirm({
+      title: 'Delete Column',
+      content: `Are you sure you want to delete the "${columnTitle}" column? This action cannot be undone.`,
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          console.log('🗑️ Deleting column:', columnId, columnTitle);
+          
+          // Delete stage from backend
+          await CrudService.delete("VacancyStage", columnId);
+
+          // Remove from local state immediately for better UX
+          setPipelineData(prevData => ({
+            ...prevData,
+            columns: prevData.columns.filter(col => col.id !== columnId)
+          }));
+
+        } catch (error) {
+          console.error('Error deleting column:', error);
+          message.error('Failed to delete column');
+          // Background refresh in case of error
+          loadATSData({ isBackgroundRefresh: true, skipCandidates: true });
+        }
+      }
+    });
+  };
+
+  // Handle sorting/reordering columns
+  const handleColumnReorder = async (sourceIndex, destinationIndex) => {
+    if (user?.accessLevel === "read") {
+      message.error("Your access is read-only");
+      return;
+    }
+
+    if (sourceIndex === destinationIndex) return;
+
+    try {
+      console.log('🔄 Reordering columns:', sourceIndex, '->', destinationIndex);
+      
+      // Update local state immediately for better UX
+      const newColumns = Array.from(pipelineData.columns);
+      const [reorderedColumn] = newColumns.splice(sourceIndex, 1);
+      newColumns.splice(destinationIndex, 0, reorderedColumn);
+
+      // Update sort values
+      const updatedColumns = newColumns.map((col, index) => ({
+        ...col,
+        sort: index + 1
+      }));
+
+      setPipelineData(prevData => ({
+        ...prevData,
+        columns: updatedColumns
+      }));
+
+      // Update sort values in backend
+      const updatePromises = updatedColumns.map(col => 
+        CrudService.update("VacancyStage", col.id, { sort: col.sort })
+      );
+
+      await Promise.all(updatePromises);
+      
+    } catch (error) {
+      console.error('Error reordering columns:', error);
+      message.error('Failed to reorder columns');
+      // Background refresh in case of error
+      loadATSData({ isBackgroundRefresh: true, skipCandidates: true });
+    }
+  };
+
+  const handleAssignmentUpdate = (candidateId, assignmentData) => {
+    // Update candidate in both pipeline and table data
+    setCandidates(prevCandidates =>
+      prevCandidates.map(candidate =>
+        candidate.id === candidateId
+          ? { ...candidate, ...assignmentData }
+          : candidate
+      )
+    );
+
+    // Update pipeline data
+    setPipelineData(prevPipelineData => ({
+      ...prevPipelineData,
+      columns: prevPipelineData.columns.map(column => ({
+        ...column,
+        cards: column.cards.map(candidate =>
+          candidate.id === candidateId
+            ? { ...candidate, ...assignmentData }
+            : candidate
+        )
+      }))
+    }));
   };
 
   // Get stage color based on stage name
@@ -1412,13 +2115,27 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
 
   // Pipeline View Component
   const PipelineView = () => (
-          <div className="flex-1 bg-gray-100 p-6">
+          <div className="flex-1 bg-gray-100 p-6 relative">
+
 
       
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-5 overflow-x-auto pb-6">
-          {pipelineData.columns.map((column, index) => (
-            <div key={`column-${column.id || index}`} className="flex-shrink-0 w-72 pipeline-column">
+        <Droppable droppableId="all-columns" direction="horizontal" type="COLUMN">
+          {(provided, snapshot) => (
+            <div 
+              className="flex gap-5 overflow-x-auto pb-6"
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+            >
+              {pipelineData.columns.map((column, index) => (
+                <Draggable key={`column-${column.id}`} draggableId={`column-${column.id}`} index={index}>
+                  {(provided, snapshot) => (
+                    <div 
+                      key={`column-${column.id || index}`} 
+                      className={`flex-shrink-0 w-72 pipeline-column group transition-all duration-200 ${snapshot.isDragging ? 'opacity-50 shadow-lg scale-105 rotate-2' : ''}`}
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                    >
               {/* Column Header with Color Bar */}
               <div className="bg-white border pipeline-stage-header">
                 {/* Color Bar */}
@@ -1433,9 +2150,85 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 {/* Header Content */}
                 <div className="p-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900 text-base">
-                      {column.title}
-                    </h3>
+                    {editingColumnId === column.id ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <Input
+                          value={newColumnTitle}
+                          onChange={(e) => setNewColumnTitle(e.target.value)}
+                          onPressEnter={() => handleRenameColumn(column.id, newColumnTitle)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              setEditingColumnId(null);
+                              setNewColumnTitle('');
+                            }
+                          }}
+                          onBlur={() => {
+                            if (newColumnTitle.trim()) {
+                              handleRenameColumn(column.id, newColumnTitle);
+                            } else {
+                              setEditingColumnId(null);
+                              setNewColumnTitle('');
+                            }
+                          }}
+                          autoFocus
+                          className="text-base font-semibold"
+                          style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                        />
+                        <Button 
+                          type="text" 
+                          size="small" 
+                          icon={<CheckOutlined />}
+                          onClick={() => handleRenameColumn(column.id, newColumnTitle)}
+                          className="text-green-600 hover:text-green-700"
+                        />
+                        <Button 
+                          type="text" 
+                          size="small" 
+                          icon={<CloseOutlined />}
+                          onClick={() => {
+                            setEditingColumnId(null);
+                            setNewColumnTitle('');
+                          }}
+                          className="text-gray-400 hover:text-gray-600"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-1">
+                        <div 
+                          {...provided.dragHandleProps}
+                          className="flex items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors"
+                          title="Drag to reorder column"
+                        >
+                          <DragOutlined className="text-gray-400 hover:text-gray-600 cursor-move opacity-0 group-hover:opacity-100 transition-opacity text-sm" />
+                        </div>
+                        <h3 className="font-semibold text-gray-900 text-base flex-1">
+                          {column.title}
+                        </h3>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button 
+                            type="text" 
+                            size="small" 
+                            icon={<EditOutlined />}
+                            onClick={() => {
+                              setEditingColumnId(column.id);
+                              setNewColumnTitle(column.title);
+                            }}
+                            className="text-gray-400 hover:text-gray-600"
+                            title={`Rename ${column.title}`}
+                          />
+                          {pipelineData.columns.length > 1 && (
+                            <Button 
+                              type="text" 
+                              size="small" 
+                              icon={<DeleteOutlined />}
+                              onClick={() => handleDeleteColumn(column.id, column.title)}
+                              className="text-red-400 hover:text-red-600"
+                              title={`Delete ${column.title}`}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2">
                       <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
                         {column.cards?.length || 0}
@@ -1498,8 +2291,11 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                               onDelete={() => handleDeleteCandidate(candidate.id)}
                               onEmail={() => handleEmailCandidate(candidate)}
                               onPhone={() => handlePhoneCandidate(candidate)}
+                              onChat={() => handleStartChatWithCandidate(candidate)}
                               onRatingUpdate={handleRatingUpdate}
-                              showVacancyInfo={isMultiJobView}
+                              onAssign={() => handleAssignCandidate(candidate)}
+                              onScheduleInterview={() => handleScheduleInterview(candidate)}
+                              showVacancyInfo={false}
                             />
                           </div>
                         )}
@@ -1519,8 +2315,68 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 )}
               </Droppable>
             </div>
-          ))}
-        </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+          
+          {/* Add Column Button */}
+          <div className="flex-shrink-0 w-72">
+            {addingColumn ? (
+              <div className="bg-white border rounded-lg p-4">
+                <div className="space-y-3">
+                  <Input
+                    value={newColumnTitle}
+                    onChange={(e) => setNewColumnTitle(e.target.value)}
+                    onPressEnter={handleAddColumn}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setAddingColumn(false);
+                        setNewColumnTitle('');
+                      }
+                    }}
+                    placeholder="Enter column title"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <Button 
+                      type="primary" 
+                      size="small"
+                      onClick={handleAddColumn}
+                      disabled={!newColumnTitle.trim()}
+                      className="!bg-purple-500 hover:!bg-purple-600 !border-purple-500 hover:!border-purple-600"
+                      style={{
+                        backgroundColor: '#8B5CF6',
+                        borderColor: '#8B5CF6',
+                      }}
+                    >
+                      Add
+                    </Button>
+                    <Button 
+                      size="small"
+                      onClick={() => {
+                        setAddingColumn(false);
+                        setNewColumnTitle('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div 
+                className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg h-40 flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-100 transition-colors"
+                onClick={() => setAddingColumn(true)}
+              >
+                <PlusOutlined className="text-2xl text-gray-400 mb-2" />
+                <span className="text-gray-600 font-medium">Add Column</span>
+              </div>
+            )}
+          </div>
+            </div>
+          )}
+        </Droppable>
       </DragDropContext>
     </div>
   );
@@ -1694,6 +2550,19 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                   key: 'email',
                   label: 'Send Email',
                   icon: <MailOutlined />,
+                  onClick: () => handleEmailCandidate(record),
+                },
+                {
+                  key: 'chat',
+                  label: 'Start Chat',
+                  icon: <MessageOutlined />,
+                  onClick: () => handleStartChatWithCandidate(record),
+                },
+                {
+                  key: 'schedule',
+                  label: 'Schedule Interview',
+                  icon: <CalendarOutlined />,
+                  onClick: () => handleScheduleInterview(record),
                 },
                 {
                   type: 'divider',
@@ -1917,7 +2786,16 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                     trigger={['click']}
                     placement="topRight"
                   >
-                    <Button size="small" type="primary" loading={bulkActionLoading}>
+                    <Button 
+                      size="small" 
+                      type="primary" 
+                      loading={bulkActionLoading}
+                      className="!bg-purple-500 hover:!bg-purple-600 !border-purple-500 hover:!border-purple-600"
+                      style={{
+                        backgroundColor: '#8B5CF6',
+                        borderColor: '#8B5CF6',
+                      }}
+                    >
                       Bulk Actions <DownOutlined />
                     </Button>
                   </Dropdown>
@@ -1930,16 +2808,30 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     );
   };
 
-  if (loading) {
+  // Only show skeleton during initial load or when user is not available
+  if (initialLoading || !user || !user._id) {
     return (
       <div className="p-4 md:p-6 min-h-screen">
         <Skeleton active />
+        {!user && (
+          <div className="text-center mt-4 text-gray-500">
+            Loading user information...
+          </div>
+        )}
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Background refresh indicator */}
+      {dataRefreshing && (
+        <div className="fixed top-4 right-4 z-50 bg-purple-100 border border-purple-300 rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-500 border-t-transparent"></div>
+          <span className="text-sm text-purple-700">Refreshing data...</span>
+        </div>
+      )}
+      
       {/* Modern Header */}
       <div className="ats-header bg-white border-b border-gray-200 shadow-sm">
         <div className="px-6 py-4">
@@ -2020,7 +2912,11 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                   setSelectedStageForAdd(null);
                   setAddCandidateModal(true);
                 }}
-                className="bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700 h-9 px-4 font-medium shadow-sm"
+                className="!bg-purple-500 hover:!bg-purple-600 !border-purple-500 hover:!border-purple-600 h-9 px-4 font-medium shadow-sm"
+                style={{
+                  backgroundColor: '#8B5CF6',
+                  borderColor: '#8B5CF6',
+                }}
               >
                 Add Candidate
               </Button>
@@ -2036,7 +2932,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onSearch={(value) => {
                   setSearchTerm(value);
-                  loadATSData();
+                  loadATSData({ isBackgroundRefresh: true });
                 }}
                 loading={searchPending}
                 className="w-full ats-search-input"
@@ -2048,12 +2944,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                   height: '40px'
                 }}
               />
-              {searchPending && (
-                <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
-                  <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  Searching...
-                </div>
-              )}
+       
             </div>
             
             {/* Filter Actions */}
@@ -2068,9 +2959,9 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 } transition-all duration-200 h-9 px-3`}
               >
                 Filters
-                {(filters.stages.length > 0 || filters.ratings.length > 0 || filters.dateRange || !filters.showRejected) && (
+                {(filters.stages.length > 0 || filters.ratings.length > 0 || filters.dateRange || !filters.showRejected || filters.assignees.length > 0 || (isMultiJobView && filters.vacancies && filters.vacancies.length > 0)) && (
                   <span className="ml-2 bg-blue-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                    {filters.stages.length + filters.ratings.length + (filters.dateRange ? 1 : 0) + (!filters.showRejected ? 0 : 1)}
+                    {filters.stages.length + filters.ratings.length + (filters.dateRange ? 1 : 0) + (!filters.showRejected ? 0 : 1) + filters.assignees.length + (isMultiJobView && filters.vacancies ? filters.vacancies.length : 0)}
                   </span>
                 )}
               </Button>
@@ -2082,7 +2973,9 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                     stages: [],
                     ratings: [],
                     dateRange: null,
-                    showRejected: false
+                    showRejected: false,
+                    assignees: [],
+                    ...(isMultiJobView && { vacancies: [] })
                   });
                   setSearchTerm('');
                 }}
@@ -2100,7 +2993,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       {showFilters && (
         <div className="bg-white border-b shadow-sm">
           <div className="p-6">
-            <div className={`grid grid-cols-1 md:grid-cols-2 ${isMultiJobView ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-6`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 ${isMultiJobView ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-6`}>
               
               {/* Vacancy Filter (Multi-job view only) */}
               {isMultiJobView && (
@@ -2114,15 +3007,42 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                     value={filters.vacancies || []}
                     onChange={(values) => setFilters(prev => ({ ...prev, vacancies: values }))}
                     style={{ width: '100%' }}
-                    options={Array.from(new Set(candidates.map(c => c.vacancyInfo?.name).filter(Boolean)))
-                      .map(vacancyName => {
-                        const count = candidates.filter(c => c.vacancyInfo?.name === vacancyName).length;
+                    options={allVacancies
+                      .filter(vacancy => vacancy.published !== false) // Only show published vacancies
+                      .map(vacancy => {
+                        const vacancyName = vacancy.vacancyTitle || 'Untitled Vacancy';
+                        const vacancyId = vacancy._id;
+                        
+                        // Count candidates for this vacancy - check by vacancy ID for accuracy
+                        let count = 0;
+                                                 if (isMultiJobView) {
+                           // In multi-job view, count candidates that belong to this specific vacancy
+                           count = candidates.filter(c => {
+                             // Check multiple possible ways the vacancy might be linked
+                             const matchByVacancyInfo = c.vacancyInfo?.name === vacancyName;
+                             const matchByLandingPageId = c.LandingPageDataId === vacancyId;
+                             const matchByVacancyId = c.vacancyId === vacancyId;
+                             
+                             return matchByVacancyInfo || matchByLandingPageId || matchByVacancyId;
+                           }).length;
+                        } else {
+                          // In single view, if we're looking at a specific vacancy, show all candidates for that vacancy
+                          if (VacancyId === vacancyId) {
+                            count = candidates.length;
+                          } else {
+                            count = 0;
+                          }
+                        }
+                        
+                        console.log(`📊 Vacancy "${vacancyName}" (${vacancyId}) has ${count} candidates`);
+                        
                         return {
-                          label: `${vacancyName} (${count})`,
+                          label: `${vacancyName} (${count} candidate${count !== 1 ? 's' : ''})`,
                           value: vacancyName
                         };
                       })}
                     maxTagCount="responsive"
+                    notFoundContent={allVacancies.length === 0 ? "No vacancies found" : "No matching vacancies"}
                   />
                 </div>
               )}
@@ -2199,6 +3119,32 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 />
               </div>
 
+              {/* Assignee Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filter by Assignee
+                </label>
+                <Select
+                  mode="multiple"
+                  placeholder="Select assignees"
+                  value={filters.assignees}
+                  onChange={(values) => setFilters(prev => ({ ...prev, assignees: values }))}
+                  style={{ width: '100%' }}
+                  options={[
+                    {
+                      label: 'Unassigned',
+                      value: 'unassigned'
+                    },
+                    ...teamMembers.map(member => ({
+                      label: `${member.user.firstName} ${member.user.lastName}`,
+                      value: member.user._id
+                    }))
+                  ]}
+                  maxTagCount="responsive"
+                  notFoundContent={teamMembers.length === 0 ? "No team members found" : "No matching members"}
+                />
+              </div>
+
               {/* Additional Options */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2221,7 +3167,8 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                           ratings: [],
                           dateRange: null,
                           showRejected: false,
-                          vacancies: []
+                          assignees: [],
+                          ...(isMultiJobView && { vacancies: [] })
                         });
                       }}
                       className="text-gray-500 hover:text-gray-700"
@@ -2299,10 +3246,20 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
             </div>
 
             {/* Active Filters Summary */}
-            {(filters.stages.length > 0 || filters.ratings.length > 0 || filters.dateRange || filters.showRejected) && (
+            {(filters.stages.length > 0 || filters.ratings.length > 0 || filters.dateRange || filters.showRejected || (isMultiJobView && filters.vacancies && filters.vacancies.length > 0)) && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-medium text-gray-700">Active filters:</span>
+                  
+                  {isMultiJobView && filters.vacancies && filters.vacancies.length > 0 && (
+                    <Tag 
+                      closable 
+                      onClose={() => setFilters(prev => ({ ...prev, vacancies: [] }))}
+                      color="purple"
+                    >
+                      Vacancies: {filters.vacancies.join(', ')}
+                    </Tag>
+                  )}
                   
                   {filters.stages.length > 0 && (
                     <Tag 
@@ -2368,12 +3325,14 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         onSuccess={() => {
           setAddCandidateModal(false);
           setSelectedStageForAdd(null);
-          loadATSData();
+          loadATSData({ isBackgroundRefresh: true });
         }}
         vacancyId={VacancyId}
         stages={pipelineData.columns}
         editData={typeof addCandidateModal === 'object' ? addCandidateModal : null}
         defaultStageId={selectedStageForAdd}
+        allVacancies={allVacancies}
+        currentVacancy={vacancyInfo}
       />
 
       {/* Bulk Delete Confirmation Modal */}
@@ -2445,11 +3404,33 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
             setCandidateProfile(newCandidateId);
           } else {
             // Just refresh data
-            loadATSData();
+            loadATSData({ isBackgroundRefresh: true });
           }
         }}
         stages={pipelineData.columns}
         allCandidateIds={candidates.map(c => c.id)}
+      />
+
+      <AssignmentModal
+        visible={assignmentModal}
+        onCancel={() => {
+          setAssignmentModal(false);
+          setSelectedCandidateForAssignment(null);
+        }}
+        candidate={selectedCandidateForAssignment}
+        onAssignmentUpdate={handleAssignmentUpdate}
+        currentTeam={currentTeam}
+      />
+
+      <InterviewSchedulingModal
+        visible={interviewSchedulingModal}
+        onCancel={() => {
+          setInterviewSchedulingModal(false);
+          setSelectedCandidateForScheduling(null);
+        }}
+        onSchedule={handleSendInterviewSuggestions}
+        candidate={selectedCandidateForScheduling}
+        loading={schedulingLoading}
       />
     </div>
   );

@@ -27,11 +27,15 @@ import {
   CloseOutlined,
   EditOutlined,
   FileTextOutlined,
-  StarOutlined
+  StarOutlined,
+  MessageOutlined,
+  ClockCircleOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
 import CrudService from '../../../../services/CrudService';
 import UploadService from '../../../../services/UploadService';
+import CandidateChatService from '../../../../services/CandidateChatService';
+import { useRouter } from 'next/router';
 
 // Add custom styles for the drawer
 const drawerStyles = `
@@ -83,7 +87,7 @@ const drawerStyles = `
   
   .candidate-profile-drawer .ant-tabs-tab-active {
     background: transparent;
-    color: #3b82f6;
+    color: #5207cd;
     font-weight: 600;
   }
   
@@ -94,7 +98,7 @@ const drawerStyles = `
     left: 0;
     right: 0;
     height: 2px;
-    background: #3b82f6;
+    background: #5207cd;
   }
   
   .candidate-profile-drawer .ant-tabs-content-holder {
@@ -231,14 +235,14 @@ const drawerStyles = `
   }
   
   .candidate-actions .ant-btn-primary {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: #5207cd;
+    border-color: #5207cd;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
   
   .candidate-actions .ant-btn-primary:hover {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: #4a06b9;
+    border-color: #4a06b9;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   }
   
@@ -325,6 +329,34 @@ const CandidateProfile = ({
   const [allCandidates, setAllCandidates] = useState([]);
   const [resumeUrl, setResumeUrl] = useState(null);
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [lastCommunication, setLastCommunication] = useState(null);
+  const [updatingCommunication, setUpdatingCommunication] = useState(false);
+  
+  const router = useRouter();
+
+  // Handle starting chat with candidate
+  const handleStartChat = async () => {
+    if (!candidate?.email) {
+      message.warning('Cannot start chat: No email address available for this candidate');
+      return;
+    }
+
+    try {
+      // Start a new chat with the candidate
+      const response = await CandidateChatService.startChat(candidate.id);
+      
+      if (response.data.chatId) {
+        message.success('Chat started! Redirecting to chat interface...');
+        
+        // Close the modal and redirect to chat interface
+        onClose();
+        router.push(`/dashboard/candidate-chat?chatId=${response.data.chatId}`);
+      }
+    } catch (error) {
+      console.error('Error starting chat with candidate:', error);
+      message.error('Failed to start chat with candidate. Please try again.');
+    }
+  };
 
   useEffect(() => {
     if (candidateId) {
@@ -449,6 +481,12 @@ const CandidateProfile = ({
           stage: stages.find(stage => stage.id === response.data.stageId)?.title || 'Applied'
         };
         setCandidate(transformedCandidate);
+        
+        // Set last communication date
+        const communicationDate = response.data.lastCommunication 
+          ? moment(response.data.lastCommunication) 
+          : null;
+        setLastCommunication(communicationDate);
         
         // Debug resume URL loading
         const resumeUrlFromResponse = response.data.resumeUrl || formData.resumeUrl || null;
@@ -615,7 +653,7 @@ const CandidateProfile = ({
     } else if (progress <= 50) {
       return '#f59e0b'; // amber-500 - in progress
     } else if (progress <= 75) {
-      return '#3b82f6'; // blue-500 - making good progress
+      return '#5207cd'; // blue-500 - making good progress
     } else {
       return '#10b981'; // emerald-500 - almost complete/hired
     }
@@ -666,6 +704,43 @@ const CandidateProfile = ({
     }
   };
 
+  const updateLastCommunication = async (date) => {
+    setUpdatingCommunication(true);
+    try {
+      const dateToSave = date ? date.toISOString() : null;
+      
+      console.log('🔄 Updating last communication:', {
+        candidateId,
+        date: date ? date.format('YYYY-MM-DD') : null,
+        dateToSave
+      });
+      
+      const response = await CrudService.update('VacancySubmission', candidateId, { 
+        lastCommunication: dateToSave 
+      });
+      
+      console.log('✅ Last communication update response:', response);
+      
+      setLastCommunication(date);
+      message.success('Last communication date updated');
+      
+      // Notify parent component to refresh data
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (error) {
+      console.error('❌ Error updating last communication:', error);
+      console.error('Error details:', {
+        candidateId,
+        error: error.message,
+        response: error.response?.data
+      });
+      message.error('Failed to update last communication date');
+    } finally {
+      setUpdatingCommunication(false);
+    }
+  };
+
   const renderHeader = () => (
     <div className="candidate-header relative">
       {/* Close Button */}
@@ -701,7 +776,6 @@ const CandidateProfile = ({
               {candidate?.position || 'des'}
             </Text>
             <div className="flex items-center gap-2">
-              <StarOutlined className="text-yellow-400 text-xs" />
               <Rate 
                 value={candidate?.stars || 0}
                 onChange={updateRating}
@@ -745,6 +819,14 @@ const CandidateProfile = ({
           Call
         </Button>
         
+        <Button 
+          icon={<MessageOutlined />}
+          onClick={handleStartChat}
+          size="small"
+          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
+        >
+          Start Chat
+        </Button>
 
       </div>
     </div>
@@ -951,22 +1033,6 @@ const CandidateProfile = ({
   const renderOverviewTab = () => (
     <div className="space-y-4">
       {/* Application Info Card */}
-      <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <EditOutlined className="text-white text-sm" />
-            </div>
-            <div>
-              <Text className="text-sm font-medium text-gray-900">Applied For</Text>
-              <Text className="text-xs text-blue-600 block">{moment(candidate?.createdAt).format('MMM DD, YYYY')}</Text>
-            </div>
-          </div>
-          <Text className="text-base font-semibold text-gray-900">
-            {candidate?.position || 'Position Not Specified'}
-          </Text>
-        </div>
-      </div>
 
       {/* Stage Progress Card */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -1007,7 +1073,7 @@ const CandidateProfile = ({
               </Text>
             </div>
             <Text className="text-xs text-gray-500">
-              {stages.length - getCurrentStagePosition()} remaining
+              {stages.length - getCurrentStagePosition()} phases in pipeline remaining
             </Text>
           </div>
         </div>
@@ -1026,7 +1092,7 @@ const CandidateProfile = ({
           <div className="flex items-center gap-3 p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
             <MailOutlined className="text-blue-500 text-sm" />
             <div className="flex-1 min-w-0">
-              <Text className="text-xs text-gray-500">Email</Text>
+              <div className='min-w-[100px] inline flex flex-1'><Text className="text-xs text-gray-500 ">Email</Text></div>
               <Text className="text-sm font-medium text-gray-900 truncate">{candidate?.email || 'Not provided'}</Text>
             </div>
             {candidate?.email && (
@@ -1044,7 +1110,7 @@ const CandidateProfile = ({
             <div className="flex items-center gap-3 p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
               <PhoneOutlined className="text-green-500 text-sm" />
               <div className="flex-1">
-                <Text className="text-xs text-gray-500">Phone</Text>
+                <div className='min-w-[100px] inline flex flex-1'><Text className="text-xs text-gray-500 ">Phone</Text></div>
                 <Text className="text-sm font-medium text-gray-900">{candidate.phone}</Text>
               </div>
               <Button 
@@ -1057,15 +1123,69 @@ const CandidateProfile = ({
             </div>
           )}
           
-          <div className="flex items-center gap-3 p-2 bg-gray-50 rounded">
-            <CalendarOutlined className="text-purple-500 text-sm" />
+          {/* Last Communication Field */}
+          <div className="flex items-center gap-3 p-2 bg-orange-50 rounded hover:bg-orange-100 transition-colors border border-orange-200">
+            <ClockCircleOutlined className="text-orange-500 text-sm" />
             <div className="flex-1">
-              <Text className="text-xs text-gray-500">Applied</Text>
-              <Text className="text-sm font-medium text-gray-900">
-                {moment(candidate?.createdAt).format('MMM DD, YYYY [at] HH:mm')}
-              </Text>
+              <div className='min-w-[100px] inline flex flex-1'>
+                <Text className="text-xs text-orange-600 font-medium">Last Communication</Text>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={lastCommunication ? lastCommunication.format('YYYY-MM-DD') : ''}
+                  onChange={(e) => {
+                    const dateValue = e.target.value;
+                    if (dateValue) {
+                      updateLastCommunication(moment(dateValue));
+                    } else {
+                      updateLastCommunication(null);
+                    }
+                  }}
+                  disabled={updatingCommunication}
+                  className="border-none bg-transparent text-sm font-medium text-gray-900 focus:outline-none focus:ring-0 p-0 cursor-pointer"
+                  style={{
+                    fontWeight: 500,
+                    color: '#1f2937',
+                    fontSize: '14px',
+                    background: 'transparent',
+                    border: 'none'
+                  }}
+                />
+                {lastCommunication && (
+                  <Text className="text-xs text-orange-600">
+                    ({moment().diff(lastCommunication, 'days')} days ago)
+                  </Text>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-1">
+              <Button 
+                size="small" 
+                type="text" 
+                icon={<CalendarOutlined />}
+                onClick={() => {
+                  // Quick action to set today's date
+                  updateLastCommunication(moment());
+                }}
+                className="w-6 h-6 p-0 hover:bg-orange-100 hover:text-orange-600"
+                title="Mark as contacted today"
+              />
+              {lastCommunication && (
+                <Button 
+                  size="small" 
+                  type="text" 
+                  icon={<CloseOutlined />}
+                  onClick={() => {
+                    updateLastCommunication(null);
+                  }}
+                  className="w-6 h-6 p-0 hover:bg-red-100 hover:text-red-600"
+                  title="Clear date"
+                />
+              )}
             </div>
           </div>
+         
         </div>
       </div>
 
