@@ -4,9 +4,25 @@ const path = require('path');
 const nextConfig = {
   images: {
     domains: ['localhost'],
+    unoptimized: true, // Disable image optimization to prevent Sharp issues
   },
   transpilePackages: ['rc-util', 'antd', '@ant-design/icons', 'rc-tree', 'rc-table'],
+  experimental: {
+    largePageDataBytes: 128 * 1000, // 128KB
+  },
   webpack: (config, { isServer }) => {
+    // Optimize for build performance and file limits
+    config.optimization = {
+      ...config.optimization,
+      moduleIds: 'deterministic',
+    };
+
+    // Reduce concurrent file operations
+    if (!isServer) {
+      config.cache = {
+        type: 'memory'
+      };
+    }
     // Fix for rc-util ES module import issues
     config.resolve.fallback = {
       ...config.resolve.fallback,
