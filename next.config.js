@@ -17,12 +17,33 @@ const nextConfig = {
       moduleIds: 'deterministic',
     };
 
-    // Reduce concurrent file operations
+    // Only apply splitChunks to client-side builds
     if (!isServer) {
-      config.cache = {
-        type: 'memory'
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
       };
     }
+
+    // Reduce concurrent file operations and memory usage
+    config.cache = {
+      type: 'memory'
+    };
+
+    // Reduce parallelism to avoid file handle limits
+    config.infrastructureLogging = {
+      level: 'error'
+    };
+
+    // Limit concurrent operations to avoid file handle limits
+    config.parallelism = 2;
+
     // Fix for rc-util ES module import issues
     config.resolve.fallback = {
       ...config.resolve.fallback,
