@@ -272,7 +272,7 @@ const EditorRender = React.memo(({
         }
       }
     }, 1000); // Reduced from 3000ms to 1000ms for faster autosave
-  }, [changed, lpId]); // Remove landingPageData from dependencies to prevent excessive re-renders
+  }, [changed, lpId, landingPageData]);
 
   useEffect(() => {
     if (sectionName) {
@@ -281,7 +281,7 @@ const EditorRender = React.memo(({
   }, [sectionName]);
 
 
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     await CrudService.update("LandingPageData", lpId, {
       ...landingPageData,
       _id: undefined,
@@ -289,7 +289,7 @@ const EditorRender = React.memo(({
       message.success("Data saved successfully");
     });
     setChanged(false);
-  }, [lpId, landingPageData]);
+  };
 
   useEffect(() => {
     eventEmitter.on("triggerSave", handleSave); // Store function globally
@@ -322,10 +322,10 @@ const EditorRender = React.memo(({
     };
   }, [changed]);
 
-  const handleChanged = useCallback(() => {
+  const handleChanged = () => {
     setChanged(true);
     debouncedAutoSave();
-  }, [debouncedAutoSave]);
+  };
   
   useEffect(() => {
     document.addEventListener("HANDLE.CHANGED", handleChanged);
