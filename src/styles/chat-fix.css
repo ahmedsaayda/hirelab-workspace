@@ -1,0 +1,226 @@
+/* Chat UI fixes - Simple and working approach */
+
+/* Fix chat sidebar overflow - PRIORITY FIX */
+.sidebar {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.sidebar .entry {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.sidebar .entry * {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
+.sidebar .truncate {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.sidebar .flex-1 {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.sidebar .min-w-0 {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Force sidebar width constraints - AGGRESSIVE */
+.md\:w-1\/3,
+.md\:w-1\/3 *,
+.sidebar,
+.sidebar * {
+  max-width: 300px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.xl\:w-1\/4,
+.xl\:w-1\/4 * {
+  max-width: 250px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Specific fix for the problematic text */
+.sidebar .entry .flex-1,
+.sidebar .entry .flex-1 *,
+.sidebar .entry .min-w-0,
+.sidebar .entry .min-w-0 * {
+  max-width: 200px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: block !important;
+}
+
+/* Nuclear option for sidebar overflow */
+.sidebar .entry {
+  max-width: 300px !important;
+  width: 300px !important;
+}
+
+/* Fix chat message containers */
+.chat-container {
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.message-container {
+  max-width: 100% !important;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.chat-message-content {
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  overflow: hidden;
+}
+
+.chat-message-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Hide debug content classes */
+.debug-content,
+.console-log,
+.request-body,
+.creating-message,
+.recruiter-message-debug,
+.candidate-message-debug,
+.json-content,
+.object-id-content,
+.chat-id-content,
+.sender-id-content,
+.object-id,
+.mongoose-content,
+.created-at,
+.updated-at,
+.error-content,
+.middleware-content,
+.connection-error {
+  display: none !important;
+}
+
+/* Fix attachment containers */
+.chat-attachments {
+  max-width: 100%;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+/* Fix scroll areas */
+.overflow-auto {
+  overflow-x: hidden !important;
+  overflow-y: auto;
+}
+
+/* General safety for all chat elements */
+.chat-container *,
+.sidebar * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* EMERGENCY sidebar container fix */
+.sidebar-container,
+.chat-list-container,
+div[class*="sidebar"],
+div[class*="w-1/3"],
+div[class*="w-1/4"] {
+  max-width: 350px !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+}
+
+/* Force all text in sidebar to truncate */
+.sidebar p,
+.sidebar span,
+.sidebar div:not(.entry) {
+  max-width: 250px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: block !important;
+}
+
+/* Hard limit on any flex containers in sidebar */
+.sidebar .flex,
+.sidebar .flex-1,
+.sidebar .flex-2 {
+  max-width: 200px !important;
+  overflow: hidden !important;
+} 
+
+/* Force purple branding for Send buttons - Override Ant Design defaults */
+/* Apply to all primary buttons to maintain brand consistency */
+.ant-btn-primary {
+  background-color: #8B5CF6 !important;
+  border-color: #8B5CF6 !important;
+}
+
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background-color: #7C3AED !important;
+  border-color: #7C3AED !important;
+}
+
+.ant-btn-primary:active {
+  background-color: #6D28D9 !important;
+  border-color: #6D28D9 !important;
+}
+
+.ant-btn-primary[disabled],
+.ant-btn-primary[disabled]:hover,
+.ant-btn-primary[disabled]:focus {
+  background-color: #D1D5DB !important;
+  border-color: #D1D5DB !important;
+}
+
+.ant-btn-primary.ant-btn-loading,
+.ant-btn-primary.ant-btn-loading:hover,
+.ant-btn-primary.ant-btn-loading:focus {
+  background-color: #8B5CF6 !important;
+  border-color: #8B5CF6 !important;
+}
+
+/* Specific override for chat Send buttons */
+.chat-container .ant-btn-primary,
+.chat-container .ant-btn-primary:hover,
+.chat-container .ant-btn-primary:focus,
+.chat-container .ant-btn-primary:active {
+  background-color: #8B5CF6 !important;
+  border-color: #8B5CF6 !important;
+}
+
+.chat-container .ant-btn-primary:hover {
+  background-color: #7C3AED !important;
+  border-color: #7C3AED !important;
+}
+
+.chat-container .ant-btn-primary:active {
+  background-color: #6D28D9 !important;
+  border-color: #6D28D9 !important;
+}

@@ -29,12 +29,15 @@ const AddCandidateModal = ({
   vacancyId, 
   stages = [], 
   editData = null,
-  defaultStageId = null 
+  defaultStageId = null,
+  allVacancies = [],
+  currentVacancy = null
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
   const [candidateData, setCandidateData] = useState(null);
+  const [currentPosition, setCurrentPosition] = useState(null);
 
   // Load candidate data if editing
   useEffect(() => {
@@ -44,13 +47,29 @@ const AddCandidateModal = ({
       form.resetFields();
       setImageUrl(null);
       setCandidateData(null);
+      setCurrentPosition(null);
       
-      // Set default stage if provided (when clicking + on a specific column)
+      // Auto-select current vacancy position and default stage
+      const defaultValues = {};
+      
       if (defaultStageId && !editData) {
-        form.setFieldsValue({ stage: defaultStageId });
+        defaultValues.stage = defaultStageId;
+      }
+      
+      // Auto-select the current vacancy position when adding new candidate
+      if (currentVacancy && !editData) {
+        const currentVacancyTitle = currentVacancy.vacancyTitle || currentVacancy.name;
+        if (currentVacancyTitle) {
+          defaultValues.position = currentVacancyTitle;
+          setCurrentPosition(currentVacancyTitle);
+        }
+      }
+      
+      if (Object.keys(defaultValues).length > 0) {
+        form.setFieldsValue(defaultValues);
       }
     }
-  }, [editData, form, defaultStageId]);
+  }, [editData, form, defaultStageId, currentVacancy]);
 
   // Helper function to extract name from various possible formData structures
   const extractCandidateName = (formData) => {
@@ -167,11 +186,13 @@ const AddCandidateModal = ({
         });
         
         setImageUrl(formData.avatar);
+        const position = formData.position || 'Position';
+        setCurrentPosition(position);
         form.setFieldsValue({
           fullname: candidateName,
           email: candidateEmail,
           phone: candidatePhone,
-          position: formData.position || 'Position',
+          position: position,
           stage: response.data.stageId,
         });
       }
@@ -350,12 +371,12 @@ const AddCandidateModal = ({
   };
 
   const uploadButton = (
-    <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors">
-      <div className="text-blue-500 mb-2">
+    <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-all duration-200 cursor-pointer group">
+      <div className="text-purple-500 mb-2 group-hover:text-purple-600 transition-colors">
         <UploadOutlined className="text-2xl" />
       </div>
       <div className="text-center">
-        <p className="text-sm font-medium text-blue-600">Click to upload or drag and drop</p>
+        <p className="text-sm font-medium text-purple-600 group-hover:text-purple-700">Click to upload or drag and drop</p>
         <p className="text-xs text-gray-500 mt-1">SVG, PNG, JPG or GIF (max. 800x400px)</p>
       </div>
     </div>
@@ -365,7 +386,7 @@ const AddCandidateModal = ({
     <Modal
       title={
         <div className="flex items-center gap-2">
-          <UserOutlined className="text-blue-600" />
+          <UserOutlined className="text-purple-600" />
           <span className="text-lg font-semibold">
             {editData?.editId ? 'Edit candidate' : 'Add candidate'}
           </span>
@@ -376,7 +397,7 @@ const AddCandidateModal = ({
       footer={null}
       width={500}
       destroyOnHidden
-      className="modern-modal"
+      className="modern-modal add-candidate-modal"
       maskClosable={true}
     >
       <Form
@@ -394,7 +415,7 @@ const AddCandidateModal = ({
           <Input 
             placeholder="John Smith"
             size="large"
-            className="rounded-lg"
+            className="rounded-lg border-gray-300 hover:border-purple-400 focus:border-purple-500"
           />
         </Form.Item>
 
@@ -402,13 +423,69 @@ const AddCandidateModal = ({
         <Form.Item
           name="position"
           label={<span className="text-sm font-medium text-gray-700">Position Applied to</span>}
-          rules={[{ required: true, message: 'Please enter the position' }]}
+          rules={[{ required: true, message: 'Please select the position' }]}
+          extra={
+            <span className="text-xs text-gray-500">
+              {currentVacancy && !editData ? 
+                `Auto-selected current job: ${currentVacancy.vacancyTitle || currentVacancy.name}` :
+                'Choose an existing job position or select "Open Application" for general applications'
+              }
+            </span>
+          }
         >
-          <Input 
-            placeholder="Design Lead"
+          <Select 
+            placeholder="Select a position or job"
             size="large"
             className="rounded-lg"
-          />
+            style={{
+              borderRadius: '8px',
+            }}
+            dropdownStyle={{
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+            showSearch
+            filterOption={(input, option) =>
+              option?.children?.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
+            notFoundContent="No positions found"
+            onChange={(value) => {
+              setCurrentPosition(value);
+            }}
+          >
+            <Option value="Open Application">
+              <div className="flex items-center gap-2">
+                <span className="text-purple-600">📋</span>
+                <span>Open Application</span>
+                <span className="text-xs text-gray-500 ml-auto">(General application)</span>
+              </div>
+            </Option>
+            
+            {/* Show current position if it doesn't match any vacancy */}
+            {currentPosition && 
+             currentPosition !== "Open Application" &&
+             !allVacancies.some(v => (v.vacancyTitle || v.title) === currentPosition) && (
+              <Option key="current-position" value={currentPosition}>
+                <div className="flex items-center gap-2">
+                  <span className="text-orange-600">✏️</span>
+                  <span>{currentPosition}</span>
+                  <span className="text-xs text-gray-500 ml-auto">(Current)</span>
+                </div>
+              </Option>
+            )}
+            
+            {allVacancies.map((vacancy) => (
+              <Option key={vacancy._id} value={vacancy.vacancyTitle || vacancy.title || 'Untitled Position'}>
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-600">💼</span>
+                  <span>{vacancy.vacancyTitle || vacancy.title || 'Untitled Position'}</span>
+                  {vacancy.location && (
+                    <span className="text-xs text-gray-500 ml-auto">📍 {vacancy.location}</span>
+                  )}
+                </div>
+              </Option>
+            ))}
+          </Select>
         </Form.Item>
 
         {/* Stage */}
@@ -421,6 +498,13 @@ const AddCandidateModal = ({
             placeholder="New applied"
             size="large"
             className="rounded-lg"
+            style={{
+              borderRadius: '8px',
+            }}
+            dropdownStyle={{
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
           >
             {stages.map((stage, index) => (
               <Option key={`stage-option-${stage.id || index}`} value={stage.id || `stage-${index}`}>
@@ -442,7 +526,7 @@ const AddCandidateModal = ({
           <Input 
             placeholder="john@example.com"
             size="large"
-            className="rounded-lg"
+            className="rounded-lg border-gray-300 hover:border-purple-400 focus:border-purple-500"
           />
         </Form.Item>
 
@@ -454,7 +538,7 @@ const AddCandidateModal = ({
           <Input 
             placeholder="+1 (555) 123-4567"
             size="large"
-            className="rounded-lg"
+            className="rounded-lg border-gray-300 hover:border-purple-400 focus:border-purple-500"
           />
         </Form.Item>
 
@@ -465,38 +549,41 @@ const AddCandidateModal = ({
           <div className="flex items-center gap-4">
             {imageUrl ? (
               <div className="relative">
-                <Avatar size={64} src={imageUrl} />
+                <Avatar size={64} src={imageUrl} className="border-2 border-purple-100" />
                 <Button
                   type="text"
                   size="small"
                   icon={<CloseOutlined />}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm transition-colors"
                   onClick={() => setImageUrl(null)}
                 />
               </div>
             ) : (
-              <Upload
-                name="avatar"
-                listType="picture"
-                showUploadList={false}
-                customRequest={handleImageUpload}
-                accept="image/*"
-                beforeUpload={(file) => {
-                  const isImage = file.type.startsWith('image/');
-                  if (!isImage) {
-                    message.error('You can only upload image files!');
-                    return false;
-                  }
-                  // Size check is handled by UploadService
-                  return true;
-                }}
-                onError={(error) => {
-                  console.warn('Upload component error:', error);
-                  // Don't show error message here, handleImageUpload will handle it
-                }}
-              >
-                {uploadButton}
-              </Upload>
+              <div className="w-full">
+                <Upload.Dragger
+                  name="avatar"
+                  showUploadList={false}
+                  customRequest={handleImageUpload}
+                  accept="image/*"
+                  className="!p-0 !border-0 !bg-transparent hover:!bg-transparent"
+                  style={{ background: 'transparent' }}
+                  beforeUpload={(file) => {
+                    const isImage = file.type.startsWith('image/');
+                    if (!isImage) {
+                      message.error('You can only upload image files!');
+                      return false;
+                    }
+                    // Size check is handled by UploadService
+                    return true;
+                  }}
+                  onError={(error) => {
+                    console.warn('Upload component error:', error);
+                    // Don't show error message here, handleImageUpload will handle it
+                  }}
+                >
+                  {uploadButton}
+                </Upload.Dragger>
+              </div>
             )}
           </div>
         </Form.Item>
@@ -511,7 +598,11 @@ const AddCandidateModal = ({
             htmlType="submit" 
             loading={loading}
             size="large"
-            className="bg-blue-600 hover:bg-blue-700"
+            className="!bg-purple-500 hover:!bg-purple-600 !border-purple-500 hover:!border-purple-600"
+            style={{
+              backgroundColor: '#8B5CF6',
+              borderColor: '#8B5CF6',
+            }}
           >
             {editData?.editId ? 'Save Changes' : 'Add candidate'}
           </Button>

@@ -525,7 +525,7 @@ export const defaultLandingPageData = {
 
 /**
  * Generates a harmonious color scheme based on color theory principles
- * @param primaryHex - The primary color in hex format (e.g., "#3b82f6")
+ * @param primaryHex - The primary color in hex format (e.g., "#5207cd")
  * @returns A color scheme with primary, secondary, tertiary, and heroBackground colors
  */
 function generateColorScheme(primaryHex) {
@@ -2334,7 +2334,7 @@ const handleLogoUpload = async (url) => {
                               }}
                               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                               style={{
-                                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((yiqThreshold - 100) / 80) * 100}%, #e5e7eb ${((yiqThreshold - 100) / 80) * 100}%, #e5e7eb 100%)`,
+                                background: `linear-gradient(to right, #5207cd 0%, #5207cd ${((yiqThreshold - 100) / 80) * 100}%, #e5e7eb ${((yiqThreshold - 100) / 80) * 100}%, #e5e7eb 100%)`,
                                 outline: 'none'
                               }}
                             />

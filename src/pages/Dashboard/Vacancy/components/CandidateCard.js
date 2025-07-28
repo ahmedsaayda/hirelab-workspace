@@ -7,7 +7,9 @@ import {
   PhoneOutlined,
   EditOutlined,
   DeleteOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  MessageOutlined,
+  CalendarOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
 
@@ -73,8 +75,11 @@ const CandidateCard = ({
   onEdit, 
   onEmail, 
   onPhone, 
+  onChat,
   onDelete,
   onRatingUpdate,
+  onAssign,
+  onScheduleInterview,
   showVacancyInfo = false 
 }) => {
   const [isUpdatingRating, setIsUpdatingRating] = useState(false);
@@ -152,18 +157,27 @@ const CandidateCard = ({
         onView && onView();
       },
     },
-    {
-      key: 'edit',
-      label: 'Edit',
-      icon: <EditOutlined />,
-      onClick: (e) => {
-        e?.domEvent?.stopPropagation();
-        onEdit && onEdit();
-      },
-    },
-    {
-      type: 'divider',
-    },
+            {
+          key: 'edit',
+          label: 'Edit',
+          icon: <EditOutlined />,
+          onClick: (e) => {
+            e?.domEvent?.stopPropagation();
+            onEdit && onEdit();
+          },
+        },
+        {
+          key: 'assign',
+          label: candidate.assignedTo ? 'Reassign' : 'Assign Team Member',
+          icon: <UserOutlined />,
+          onClick: (e) => {
+            e?.domEvent?.stopPropagation();
+            onAssign && onAssign();
+          },
+        },
+        {
+          type: 'divider',
+        },
     {
       key: 'email',
       label: 'Send Email',
@@ -180,6 +194,24 @@ const CandidateCard = ({
       onClick: (e) => {
         e?.domEvent?.stopPropagation();
         onPhone && onPhone();
+      },
+    },
+    {
+      key: 'chat',
+      label: 'Send Message',
+      icon: <MessageOutlined />,
+      onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        onChat && onChat();
+      },
+    },
+    {
+      key: 'schedule',
+      label: 'Schedule Interview',
+      icon: <CalendarOutlined />,
+      onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        onScheduleInterview && onScheduleInterview();
       },
     },
     {
@@ -238,16 +270,26 @@ const CandidateCard = ({
       </div>
 
       {/* Contact Info */}
-      {candidate.phone && (
-        <div className="flex items-center gap-2 mb-3">
-          <PhoneOutlined className="text-gray-400 text-xs" />
-          <span className="text-xs text-gray-600">{candidate.phone}</span>
+ 
+
+      {/* Assignment Info */}
+      {candidate.assignedTo && (
+        <div className="mb-1 p-2 bg-green-50 rounded border border-green-100">
+          <div className="flex items-center gap-2">
+            <UserOutlined className="text-green-600 text-xs" />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-medium text-green-800">
+                Assigned to: {candidate.assignedTo.firstName} {candidate.assignedTo.lastName}
+              </div>
+            
+            </div>
+          </div>
         </div>
       )}
 
       {/* Vacancy Info (Multi-job view) */}
       {showVacancyInfo && candidate.vacancyInfo && (
-        <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-100">
+        <div className="mb-1 p-2 bg-blue-50 rounded border border-blue-100">
           <div className="text-xs font-medium text-blue-700 mb-1">Applied to:</div>
           <div className="text-xs text-blue-600 font-medium">{candidate.vacancyInfo.name}</div>
           {candidate.vacancyInfo.location && (
@@ -288,10 +330,10 @@ const CandidateCard = ({
         </div>
 
         {/* Time Applied */}
-        <div className="flex items-center gap-1 text-gray-400">
+    {/*     <div className="flex items-center gap-1 text-gray-400">
           <ClockCircleOutlined className="text-xs" />
           <span className="text-xs font-medium">{getTimeAgo()}</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Additional Info */}

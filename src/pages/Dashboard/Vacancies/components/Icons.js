@@ -292,5 +292,64 @@ export const BrandKit = (props) => {
   )
 };
 
+export const CustomDomainsIcon = (props) => (
+  <svg
+    {...props}
+    width={24}
+    height={25}
+    viewBox="0 0 24 25"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M12 2.5C17.5228 2.5 22 6.97715 22 12.5C22 18.0228 17.5228 22.5 12 22.5C6.47715 22.5 2 18.0228 2 12.5C2 6.97715 6.47715 2.5 12 2.5ZM12 4.5C7.58172 4.5 4 8.08172 4 12.5C4 16.9183 7.58172 20.5 12 20.5C16.4183 20.5 20 16.9183 20 12.5C20 8.08172 16.4183 4.5 12 4.5ZM12 6.5C15.3137 6.5 18 9.18629 18 12.5C18 15.8137 15.3137 18.5 12 18.5C8.68629 18.5 6 15.8137 6 12.5C6 9.18629 8.68629 6.5 12 6.5ZM12 8.5C9.79086 8.5 8 10.2909 8 12.5C8 14.7091 9.79086 16.5 12 16.5C14.2091 16.5 16 14.7091 16 12.5C16 10.2909 14.2091 8.5 12 8.5Z"
+      stroke="#344054"
+      strokeWidth="1.67"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M8.5 12.5H15.5M12 8.5V16.5"
+      stroke="#344054"
+      strokeWidth="1.67"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const AdsPublishingIcon = (props) => (
+  <svg
+    {...props}
+    width={24}
+    height={25}
+    viewBox="0 0 24 25"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M10 2.5L16 12.5L10 22.5L4 12.5L10 2.5Z"
+      stroke="#344054"
+      strokeWidth="1.67"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M14 8.5L20 12.5L14 16.5"
+      stroke="#344054"
+      strokeWidth="1.67"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M8 8.5L2 12.5L8 16.5"
+      stroke="#344054"
+      strokeWidth="1.67"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 
 

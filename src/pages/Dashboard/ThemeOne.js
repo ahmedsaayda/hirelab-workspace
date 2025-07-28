@@ -179,77 +179,21 @@ export default function Example({
   };
   const handleOpenModal = async () => {
     try {
-      setLoadingTeams(true);
-      
-      // First, refresh the user's teams to ensure we have the latest data
-      const response = await TeamService.getUserTeams();
-      const userTeams = response.teams || [];
-      setUserTeams(userTeams);
-      
-      // Validate current team - check if user is still a member
-      let validCurrentTeam = null;
-      if (currentTeam && userTeams.length > 0) {
-        validCurrentTeam = userTeams.find(t => t._id === currentTeam._id);
-        if (!validCurrentTeam) {
-          console.warn("Current team is no longer accessible, clearing it");
-          setCurrentTeam(null);
-          TeamService.removeCurrentTeam();
-        }
+      // Ensure teams are loaded (team creation now happens automatically in loadUserTeams)
+      if (!currentTeam) {
+        await loadUserTeams();
       }
       
-      // If no valid current team, try to set one from available teams
-      if (!validCurrentTeam && userTeams.length > 0) {
-        validCurrentTeam = userTeams[0];
-        setCurrentTeam(validCurrentTeam);
-        setCurrentUserRole(validCurrentTeam.role || "viewer");
-        TeamService.setCurrentTeam(validCurrentTeam);
-        console.log("Set new current team:", validCurrentTeam.name);
-      }
-      
-      // If still no team, try to create one
-      if (!validCurrentTeam) {
-        console.log("No teams found, creating new team");
-        try {
-          const createResponse = await TeamService.createTeamForUser();
-          
-          if (createResponse.success) {
-            validCurrentTeam = createResponse.team;
-            setCurrentTeam(validCurrentTeam);
-            setCurrentUserRole("owner");
-            TeamService.setCurrentTeam(validCurrentTeam);
-            
-            // Refresh team list to include the new team
-            await loadUserTeams();
-            
-            console.log('Team created successfully:', validCurrentTeam.name);
-            message.success('New team created successfully!');
-          } else {
-            console.error('Failed to create team:', createResponse.message);
-            message.error('Failed to create team. Please try again.');
-            setLoadingTeams(false);
-            return;
-          }
-        } catch (error) {
-          console.error('Error creating team:', error);
-          message.error('Unable to create team. Please contact support.');
-          setLoadingTeams(false);
-          return;
-        }
-      }
-      
-      setLoadingTeams(false);
-      
-      // Open modal with validated team
-      if (validCurrentTeam) {
-        console.log("Opening modal for team:", validCurrentTeam.name);
+      // Open modal if we have a current team
+      if (currentTeam) {
+        console.log("Opening modal for team:", currentTeam.name);
         setShowInviteModal(true);
       } else {
-        message.error('Unable to access or create a team. Please contact support.');
+        message.error('Unable to access your team. Please refresh the page and try again.');
       }
     } catch (error) {
       console.error('Error in handleOpenModal:', error);
       message.error('Something went wrong. Please try again.');
-      setLoadingTeams(false);
     }
   };
 
@@ -293,11 +237,34 @@ export default function Example({
         TeamService.setCurrentTeam(teamToSet);
         console.log("Set current team:", teamToSet.name, "Role:", teamToSet.role);
       } else {
-        // No teams available, clear everything
-        console.log("No teams available for user");
-        TeamService.removeCurrentTeam();
-        setCurrentTeam(null);
-        setCurrentUserRole("viewer");
+        // No teams available, create one automatically
+        console.log("No teams available for user, creating one automatically");
+        try {
+          const createResponse = await TeamService.createTeamForUser();
+          
+          if (createResponse.success) {
+            const newTeam = createResponse.team;
+            setCurrentTeam(newTeam);
+            setCurrentUserRole("owner");
+            TeamService.setCurrentTeam(newTeam);
+            setUserTeams([newTeam]); // Update the userTeams state
+            
+            console.log('✅ Team created automatically:', newTeam.name);
+            message.success(`Welcome! Your team "${newTeam.name}" has been created.`);
+          } else {
+            console.error('❌ Failed to create team automatically:', createResponse.message);
+            // Fallback: clear everything
+            TeamService.removeCurrentTeam();
+            setCurrentTeam(null);
+            setCurrentUserRole("viewer");
+          }
+        } catch (error) {
+          console.error('❌ Error creating team automatically:', error);
+          // Fallback: clear everything  
+          TeamService.removeCurrentTeam();
+          setCurrentTeam(null);
+          setCurrentUserRole("viewer");
+        }
       }
     } catch (error) {
       console.error("Error loading teams:", error);
@@ -722,7 +689,6 @@ export default function Example({
               <div className="flex items-center justify-between w-full gap-x-4 lg:gap-x-6 h-full">
                 <div className="flex items-center flex-1 gap-3 h-full">
                   <LogoIcon height={32} className="hidden lg:block" />
-                  {loading && <Spin />}
                 </div>
                 <div className="relative flex justify-center flex-1 hidden lg:block h-full">
                   <div className="top-search-wrapper flex items-center h-full relative">
@@ -855,7 +821,7 @@ export default function Example({
                       </div>
                       <div
                         onClick={() => {
-                          setSelectedTopRightOption("chat");
+                          router.push('/dashboard/candidate-chat');
                         }}
                         className={`top-right-inner-circle ${
                           selectedTopRightOption === "chat" ? "active" : ""
