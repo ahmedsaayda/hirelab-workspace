@@ -456,7 +456,8 @@ const CandidateChat = () => {
         message: messageText,
         messageType: 'interview_scheduling',
         interviewSuggestions: suggestions,
-        attachments: []
+        attachments: [],
+        baseURL: window.location.origin
       });
 
       if (response.data) {

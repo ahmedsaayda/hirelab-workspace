@@ -1824,7 +1824,8 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         message: message_text,
         messageType: 'interview_scheduling',
         interviewSuggestions: suggestions,
-        attachments: []
+        attachments: [],
+        baseURL: window.location.origin
       });
 
       if (sendResponse.data) {
