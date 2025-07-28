@@ -29,6 +29,7 @@ import {
 import axios from "axios";
 import Cookies from "js-cookie";
 import moment from "moment";
+import TransferModal from "./TransferModal";
 
 const { Option } = Select;
 
@@ -51,6 +52,8 @@ const UserManagement = () => {
   const [accessLevelFilter, setAccessLevelFilter] = useState([]);
   const [statusFilter, setStatusFilter] = useState([]);
   const [visiblePopconfirm, setVisiblePopconfirm] = useState(null);
+  const [isTransferModalVisible, setIsTransferModalVisible] = useState(false);
+  const [selectedUserForTransfer, setSelectedUserForTransfer] = useState(null);
 
   // Fetch all users
   const fetchUsers = async () => {
@@ -427,6 +430,15 @@ const UserManagement = () => {
           >
             Edit
           </Button>
+          <Button
+            type=""
+            onClick={() => {
+              setSelectedUserForTransfer(record);
+              setIsTransferModalVisible(true);
+            }}
+          >
+            Transfer Pages
+          </Button>
           <Popconfirm
             title="Are you sure?"
             open={visiblePopconfirm === record._id}
@@ -705,6 +717,18 @@ const UserManagement = () => {
           </div>
         </Form>
       </Modal>
+
+      {isTransferModalVisible && (
+        <TransferModal
+          visible={isTransferModalVisible}
+          onClose={() => setIsTransferModalVisible(false)}
+          user={selectedUserForTransfer}
+          onTransferSuccess={() => {
+            fetchUsers();
+            setIsTransferModalVisible(false);
+          }}
+        />
+      )}
 
       <style jsx>{`
         .custom-table .ant-table-thead > tr > th {

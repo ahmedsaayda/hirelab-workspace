@@ -119,6 +119,13 @@ class ATSService {
       candidateId,
     });
   }
+
+  transferLandingPage(landingPageId, newOwnerId) {
+    return this.api.post("/transfer-landing-page", {
+      landingPageId,
+      newOwnerId,
+    });
+  }
 }
 
 export default new ATSService(`${getBackendUrl()}/ats`);
