@@ -173,7 +173,7 @@ const UserManagement = () => {
     try {
       const token = Cookies.get("accessToken");
 
-      await axios.post(`${BASE_URL}/auth/register`, values, {
+      await axios.post(`${BASE_URL}/admin/users`, values, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -185,7 +185,7 @@ const UserManagement = () => {
       fetchUsers();
     } catch (error) {
       console.error("Error creating user:", error);
-      message.error("Failed to create user");
+      message.error(error.response?.data?.message || "Failed to create user");
     } finally {
       setLoading(false);
     }
