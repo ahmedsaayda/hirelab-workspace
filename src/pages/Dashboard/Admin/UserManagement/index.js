@@ -29,6 +29,7 @@ import {
 import axios from "axios";
 import Cookies from "js-cookie";
 import moment from "moment";
+import TransferModal from "./TransferModal";
 
 const { Option } = Select;
 
@@ -51,6 +52,8 @@ const UserManagement = () => {
   const [accessLevelFilter, setAccessLevelFilter] = useState([]);
   const [statusFilter, setStatusFilter] = useState([]);
   const [visiblePopconfirm, setVisiblePopconfirm] = useState(null);
+  const [isTransferModalVisible, setIsTransferModalVisible] = useState(false);
+  const [selectedUserForTransfer, setSelectedUserForTransfer] = useState(null);
 
   // Fetch all users
   const fetchUsers = async () => {
@@ -173,7 +176,7 @@ const UserManagement = () => {
     try {
       const token = Cookies.get("accessToken");
 
-      await axios.post(`${BASE_URL}/auth/register`, values, {
+      await axios.post(`${BASE_URL}/admin/users`, values, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -185,7 +188,7 @@ const UserManagement = () => {
       fetchUsers();
     } catch (error) {
       console.error("Error creating user:", error);
-      message.error("Failed to create user");
+      message.error(error.response?.data?.message || "Failed to create user");
     } finally {
       setLoading(false);
     }
@@ -426,6 +429,15 @@ const UserManagement = () => {
             }}
           >
             Edit
+          </Button>
+          <Button
+            type=""
+            onClick={() => {
+              setSelectedUserForTransfer(record);
+              setIsTransferModalVisible(true);
+            }}
+          >
+            Transfer Pages
           </Button>
           <Popconfirm
             title="Are you sure?"
@@ -705,6 +717,18 @@ const UserManagement = () => {
           </div>
         </Form>
       </Modal>
+
+      {isTransferModalVisible && (
+        <TransferModal
+          visible={isTransferModalVisible}
+          onClose={() => setIsTransferModalVisible(false)}
+          user={selectedUserForTransfer}
+          onTransferSuccess={() => {
+            fetchUsers();
+            setIsTransferModalVisible(false);
+          }}
+        />
+      )}
 
       <style jsx>{`
         .custom-table .ant-table-thead > tr > th {
