@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { Button } from 'antd';
 import { CheckCircle } from 'lucide-react';
 import CrudService from '../../../src/services/CrudService';
+import PublicService from '../../../src/services/PublicService';
 
 export default function ThankYouPage() {
   const router = useRouter();
@@ -19,9 +20,10 @@ export default function ThankYouPage() {
 
   const fetchData = async () => {
     try {
-      const res = await CrudService.getSingle("LandingPageData", lpId, "thank you page");
-      if (res.data) {
-        setLandingPageData(res.data);
+      // const res = await CrudService.getSingle("LandingPageData", lpId, "thank you page");
+      const res = await PublicService.getLP(lpId);
+      if (res.data?.lp) {
+        setLandingPageData(res.data?.lp);
       }
       setLoading(false);
     } catch (error) {
