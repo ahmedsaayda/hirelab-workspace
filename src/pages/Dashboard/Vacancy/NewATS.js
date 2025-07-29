@@ -806,7 +806,13 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         try {
           console.log('🔍 Fetching all candidates for multi-job view');
           const candidatesResponse = await CrudService.search('VacancySubmission', 1000, 1, {
-            populate: "assignedTo"
+            populate: "assignedTo",
+            filters: {
+              // LandingPageDataId: {
+              //   $in: fetchedVacancies.map(v => v._id)
+              // }
+              user_id: user._id
+            }
           });
           console.log('👥 All candidates response:', candidatesResponse);
           allCandidates = candidatesResponse.data?.items || candidatesResponse.data?.data || [];

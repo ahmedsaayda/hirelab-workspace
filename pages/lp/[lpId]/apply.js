@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Button, Input, Radio, Checkbox, Select, Progress, message, Form } from 'antd';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import CrudService from '../../../src/services/CrudService';
 import PublicService from '../../../src/services/PublicService';
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
@@ -259,53 +258,49 @@ export default function ApplyPage() {
   const fetchData = async () => {
     try {
       console.log('Fetching apply page data for lpId:', lpId);
-      const res = await CrudService.getSingle("LandingPageData", lpId, "apply page");
+      //      const res = await CrudService.getSingle("LandingPageData", lpId, "apply page");
+
+      const res = await PublicService.getLP(lpId);
       if (res.data) {
-        console.log('Apply page data loaded:', res.data);
+        console.log('Apply page data loaded:', res.data?.lp);
         
         // 🎨 ENHANCED: Populate landing page data with user brand data
-        const landingPage = res.data;
+        const landingPage = res.data?.lp;
         
-        // If landing page doesn't have brand data, try to get it from user
-        if (!landingPage.primaryColor && landingPage.user_id) {
+        if (true ||!landingPage.primaryColor && landingPage.user_id) {
           try {
-            const userRes = await CrudService.getSingle("User", landingPage.user_id, "brand data");
-            if (userRes.data) {
-              landingPage.primaryColor = userRes.data.primaryColor;
-              landingPage.secondaryColor = userRes.data.secondaryColor;
-              landingPage.tertiaryColor = userRes.data.tertiaryColor;
-              landingPage.titleFont = userRes.data.titleFont;
-              landingPage.bodyFont = userRes.data.bodyFont;
-              landingPage.subheaderFont = userRes.data.subheaderFont;
-              landingPage.companyLogo = userRes.data.companyLogo;
+            // Fetch public-side recruiter brand data
+            const userRes = await PublicService.getRecruiterData(landingPage.user_id, "");
+            console.log("userRes", userRes);
+
+            const recruiter = userRes?.data?.recruiter;
+            console.log("recruiter", recruiter);
+            if (recruiter) {
+              landingPage.primaryColor = recruiter.primaryColor || recruiter.themeColor;
+              landingPage.secondaryColor = recruiter.secondaryColor;
+              landingPage.tertiaryColor = recruiter.tertiaryColor;
+              landingPage.titleFont = recruiter.titleFont;
+              landingPage.bodyFont = recruiter.bodyFont;
+              landingPage.subheaderFont = recruiter.subheaderFont;
+              landingPage.companyLogo = recruiter.companyLogo || recruiter.logo;
             }
           } catch (error) {
-            console.log('Could not fetch user brand data:', error);
+            console.log('Could not fetch user brand data (public):', error);
           }
         }
         
         setLandingPageData(landingPage);
         // Filter visible fields (treat undefined as visible for backwards compatibility)
-        const visibleFields = (res.data?.form?.fields || []).filter(field => field.visible !== false);
-        console.log('Visible fields:', visibleFields);
+        console.log("all fieldsss", res.data?.lp?.form?.fields);
+        const visibleFields = (res.data?.lp?.form?.fields || []).filter(field => field.visible !== false);
+        console.log('Visible fieldsss:', visibleFields);
         
         // Always create Contact Information step as first step
         const leadCaptureFields = visibleFields.filter(field => field.isLeadCapture);
-        const contactFields = visibleFields.filter(field => 
-          field.type === 'contact' || field.type === 'email' || field.type === 'phone'
-        );
-        const otherFields = visibleFields.filter(field => 
-          !field.isLeadCapture && 
-          field.type !== 'contact' && 
-          field.type !== 'email' && 
-          field.type !== 'phone'
-        );
+        const otherFields = visibleFields.filter(field => !field.isLeadCapture);
         
-        // Use lead capture fields if available, otherwise use basic contact fields
-        const contactStepFields = leadCaptureFields.length > 0 ? leadCaptureFields : contactFields;
-        
-        // Always create Contact Information step if we have any contact-related fields
-        if (contactStepFields.length > 0) {
+        // If we have lead capture fields, combine them into one step, then add other fields as separate steps
+        if (leadCaptureFields.length > 0) {
           setFormFields([
             { 
               id: 'lead-capture-step', 
@@ -515,8 +510,8 @@ export default function ApplyPage() {
 
       console.log('Submitting application data:', applicationData);
 
-      // Use the correct model name: VacancySubmission
-      await CrudService.create("VacancySubmission", applicationData);
+      // Public endpoint – no authentication required
+      await PublicService.createVacancySubmission(applicationData);
       
       message.success('Application submitted successfully!');
       // Redirect to thank you page or success message
