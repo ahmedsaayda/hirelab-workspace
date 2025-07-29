@@ -164,7 +164,7 @@ export const defaultLandingPageData = {
   createdWithText: "Created with HireLab",
   vacancyTitle: "Senior Director Customer Leadership",
   heroDescription:
-    "Join Coca-Cola as a Senior Director and lead strategic customer relationships in the foodservice sector.fesagrdsaes",
+    "Join Coca-Cola as a Senior Director and lead strategic customer relationships in the foodservice sector.",
   heroImage: "/images3/img_hero_section.png",
   salaryRange: true,
   salaryMin: "169000",

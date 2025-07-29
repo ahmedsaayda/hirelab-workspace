@@ -434,7 +434,7 @@ const ImageSelectionModal = ({
                             disabled={isUploading||files.length===0}
                             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
                           >
-                            {isUploading ? "Uploading..." : `Choose ${type === "image" ? "Image" : "Video"}`}
+                            {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : "Video"}`}
                           </button>
                         </div>
                       )}

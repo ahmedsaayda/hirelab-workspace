@@ -80,12 +80,12 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
   const {  subheaderFont, bodyFont } = getFonts(landingPageData);
   return (
-    <div className="w-full bg-white" ref={sectionRef}>
-      <div className="flex justify-center bg-[#ffffff] py-[38px] smx:py-5 h-fit">
-        <div className="container flex justify-center px-6 mb-14 mdx:px-5">
+    <div className="w-full bg-white py-16 md:py-24" ref={sectionRef}>
+      <div className="flex justify-center bg-[#ffffff]">
+        <div className="container flex justify-center px-6 mdx:px-5">
           <div className="flex justify-center items-start px-14 w-full mdx:flex-col mdx:px-5">
-            <div className="relative mb-[46px] min-h-[354px] w-[58%] mdx:w-full">
-              <div className="absolute bottom-[-0.13px] left-0 right-0 m-auto flex w-[76%] flex-col items-start gap-6">
+            <div className="relative w-[58%] mdx:w-full">
+              <div className="flex w-[76%] flex-col items-start gap-6">
                 {landingPageData?.textBoxImage || (
                   <Img
                     src={landingPageData?.textBoxImage || "https://res.cloudinary.com/dvq0ouupb/image/upload/v1742810526/f8adpqdf3bhfp3bqgauk.png"}
@@ -131,7 +131,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 </p>
               </div>
               <div 
-                className="absolute left-0 top-0 m-auto h-[156px] w-[156px] rounded-[78px]" 
+                className="absolute left-[-78px] top-[-78px] h-[156px] w-[156px] rounded-[78px] -z-10" 
                 style={{
                   background: `linear-gradient(to bottom, ${getColor("primary", 100)}19, ${getColor("primary", 500)}19)`
                 }}
@@ -174,14 +174,14 @@ const Template3 = ({ landingPageData, fetchData }) => {
   const restWords = textBoxTitleParts.slice(1).join(" ");
   const {  subheaderFont, bodyFont } = getFonts(landingPageData);
   return (
-    <div className="w-full bg-white" ref={sectionRef}
+    <div className="w-full bg-white py-16 md:py-24" ref={sectionRef}
     style={{color:"black",fontFamily: bodyFont?.family}}
     >
-      <div className="flex justify-center bg-[#ffffff] py-[38px] smx:py-5">
-        <div className="container flex justify-center px-6 mb-14 mdx:px-5">
+      <div className="flex justify-center bg-[#ffffff]">
+        <div className="container flex justify-center px-6 mdx:px-5">
           <div className="flex justify-center items-start px-14 w-full mdx:flex-col mdx:px-5">
-            <div className="relative mb-[46px] h-[354px] w-[58%] mdx:w-full">
-              <div className="absolute bottom-[-0.13px] left-0 right-0 m-auto flex w-[76%] flex-col items-start gap-6">
+            <div className="relative w-[58%] mdx:w-full">
+              <div className="flex w-[76%] flex-col items-start gap-6">
                 <h2
                   onClick={() => handleItemClick("textBoxTitle")}
                   ref={titleRef}
@@ -221,7 +221,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                 </p>
               </div>
               <div 
-                className="absolute left-0 top-0 m-auto h-[156px] w-[156px] rounded-3xl" 
+                className="absolute left-[-78px] top-[-78px] h-[156px] w-[156px] rounded-3xl -z-10" 
                 style={{
                   background: `linear-gradient(to bottom, ${getColor("tertiary", 100)}19, ${getColor("tertiary", 500)}19)`
                 }}

@@ -289,24 +289,61 @@ export default function ApplyPage() {
         const visibleFields = (res.data?.form?.fields || []).filter(field => field.visible !== false);
         console.log('Visible fields:', visibleFields);
         
-        // Group lead capture fields together on first step
+        // Always create Contact Information step as first step
         const leadCaptureFields = visibleFields.filter(field => field.isLeadCapture);
-        const otherFields = visibleFields.filter(field => !field.isLeadCapture);
+        const contactFields = visibleFields.filter(field => 
+          field.type === 'contact' || field.type === 'email' || field.type === 'phone'
+        );
+        const otherFields = visibleFields.filter(field => 
+          !field.isLeadCapture && 
+          field.type !== 'contact' && 
+          field.type !== 'email' && 
+          field.type !== 'phone'
+        );
         
-        // If we have lead capture fields, combine them into one step, then add other fields as separate steps
-        if (leadCaptureFields.length > 0) {
+        // Use lead capture fields if available, otherwise use basic contact fields
+        const contactStepFields = leadCaptureFields.length > 0 ? leadCaptureFields : contactFields;
+        
+        // Always create Contact Information step if we have any contact-related fields
+        if (contactStepFields.length > 0) {
           setFormFields([
             { 
               id: 'lead-capture-step', 
               type: 'lead-capture-group', 
               label: 'Contact Information', 
-              fields: leadCaptureFields,
+              fields: contactStepFields,
               required: true 
             },
             ...otherFields
           ]);
         } else {
-          setFormFields(visibleFields);
+          // Fallback: if no contact fields found, still create basic contact step
+          setFormFields([
+            { 
+              id: 'lead-capture-step', 
+              type: 'lead-capture-group', 
+              label: 'Contact Information', 
+              fields: [
+                {
+                  id: 'default_contact',
+                  type: 'contact',
+                  label: 'Full Name',
+                  required: true,
+                  firstName: { required: true, placeholder: 'First name' },
+                  lastName: { required: true, placeholder: 'Last name' }
+                },
+                {
+                  id: 'default_email',
+                  type: 'email',
+                  label: 'Email',
+                  required: true,
+                  placeholder: 'Email address'
+                }
+              ],
+              required: true 
+            },
+            ...visibleFields
+          ]);
         }
       }
       setLoading(false);

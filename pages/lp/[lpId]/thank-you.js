@@ -96,14 +96,21 @@ export default function ThankYouPage() {
               Back to Job Posting
             </Button>
             
-            <Button 
-              type="primary"
-              size="large"
-              onClick={() => router.push('/')}
-              className="bg-[#5207CD] hover:bg-[#0C7CE6] px-8"
-            >
-              Explore More Jobs
-            </Button>
+            {landingPageData?.companyUrl && (
+              <Button 
+                type="primary"
+                size="large"
+                onClick={() => {
+                  const url = landingPageData.companyUrl.startsWith('https://') || landingPageData.companyUrl.startsWith('http://') 
+                    ? landingPageData.companyUrl 
+                    : `https://${landingPageData.companyUrl}`;
+                  window.open(url, '_blank');
+                }}
+                className="bg-[#5207CD] hover:bg-[#0C7CE6] px-8"
+              >
+                Learn More
+              </Button>
+            )}
           </div>
         </div>
       </div>
