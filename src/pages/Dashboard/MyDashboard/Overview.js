@@ -1,6 +1,6 @@
 import {
   Button,
-  Input, Modal, Progress, Switch, message as antdmessage,
+  Input, Modal, Progress, Switch, message as antdmessage, Select, DatePicker,
 } from "antd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { DotIcon } from "../Vacancies/components/Icons";
@@ -43,7 +43,7 @@ const steps = [
 ];
 
 const totalSummary = [
-  {
+/*   {
     name: "Awareness",
     color: "rgba(14, 135, 254, 1)",
     iconBackground: "#EFF8FF",
@@ -68,7 +68,7 @@ const totalSummary = [
       </svg>
     ),
     metrics: [{ title: "Reach", value: 25 }],
-  },
+  }, */
   {
     name: "Consideration",
     color: "rgba(247, 86, 86, 1)",
@@ -150,7 +150,7 @@ const totalSummary = [
         </g>
       </svg>
     ),
-    metrics: [{ title: "New applicants", value: 45 }],
+    metrics: [{ title: "Candidates", value: 45 }],
   },
 ];
 
@@ -202,6 +202,11 @@ const Overview = () => {
     avgTimeSpent: '0min',
     newApplicants: 0
   });
+  
+  // Filter states
+  const [filterVacancy, setFilterVacancy] = useState('all');
+  const [filterTimeFrame, setFilterTimeFrame] = useState('all'); // 'all', '30days', '7days'
+  const [availableVacancies, setAvailableVacancies] = useState([]);
   const { defaultAlgorithm, darkAlgorithm } = theme;
   const router = useRouter();;
 
@@ -209,6 +214,23 @@ const Overview = () => {
     if( !user._id) return
     try {
       setLoadingVacancy(true);
+      
+      // Calculate time filter for analytics
+      const getTimeFilter = () => {
+        const now = new Date();
+        switch (filterTimeFrame) {
+          case '7days':
+            return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          case '30days':
+            return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          default:
+            return null;
+        }
+      };
+
+      const timeFilter = getTimeFilter();
+      
+      // Fetch landing pages
       const result = await CrudService.search(
         "LandingPageData",
         9999,
@@ -217,12 +239,31 @@ const Overview = () => {
           text: '',
           filters: {
             user_id: user._id,
-            // ...formattedFilters,
           },
-          sort:
-            {}
+          sort: {}
         }
       );
+
+      // Filter vacancies based on selected filters for analytics calculation
+      let filteredVacancies = result.data.items;
+      
+      // Filter by specific vacancy if selected
+      if (filterVacancy !== 'all') {
+        filteredVacancies = filteredVacancies.filter(item => item._id === filterVacancy);
+        console.log('🎯 Filtered to specific vacancy:', filterVacancy, 'found:', filteredVacancies.length);
+      }
+
+      // Apply time filtering to visits/engagement data (not vacancy creation time)
+      // For visits/engagement, we need to filter the individual visit data, not the vacancy creation date
+      // Since we don't have visit-level timestamps, we'll keep all vacancies but note the limitation
+      console.log('📊 Vacancies for analytics calculation:', filteredVacancies.length);
+
+      // Set available vacancies for dropdown
+      setAvailableVacancies(result.data.items.map(item => ({
+        value: item._id,
+        label: item.vacancyTitle || 'Untitled Vacancy'
+      })));
+
       const processedPages = result.data.items.map((i) => {
         const visits = i.visits || 0;
         const avgTimeSpent = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
@@ -234,10 +275,9 @@ const Overview = () => {
           heading: i.vacancyTitle,
           deadlinetwo: "Deadline:",
           mar42024: moment(i.createdAt).format("MMM Do YYYY"),
-          // Real analytics data for individual cards
           visits: visits,
           avgTimeSpent: avgTimeSpent,
-          applicants: 0, // For now, showing as 0
+          applicants: 0,
           daysLive: daysLive,
           key: i._id,
         };
@@ -245,29 +285,72 @@ const Overview = () => {
 
       setLandingPages(processedPages);
 
-      // Calculate analytics data
-      const totalVisits = result.data.items.reduce((sum, item) => sum + (item.visits || 0), 0);
-      const totalTimeSpent = result.data.items.reduce((sum, item) => sum + (item.totalTimeSpent || 0), 0);
+      // Fetch candidate data from VacancySubmission for hiring pipeline
+      console.log('🔍 Fetching candidates with filters:', { filterVacancy, filterTimeFrame, timeFilter });
+      
+      let candidatesFilters = {};
+      
+      // Always filter by user's vacancies (more reliable than user_id)
+      const vacancyIds = result.data.items.map(item => item._id);
+      console.log('👥 User vacancy IDs:', vacancyIds);
+      
+      if (filterVacancy !== 'all') {
+        // Filter by specific vacancy
+        candidatesFilters.LandingPageDataId = filterVacancy;
+      } else if (vacancyIds.length > 0) {
+        // Filter by all user's vacancies
+        candidatesFilters.LandingPageDataId = { $in: vacancyIds };
+      }
+
+      console.log('📝 Candidate filters (before time):', candidatesFilters);
+
+      const candidatesResult = await CrudService.search(
+        "VacancySubmission",
+        9999,
+        1,
+        {
+          filters: candidatesFilters,
+          sort: { createdAt: -1 }
+        }
+      );
+
+      let candidates = candidatesResult.data.items || [];
+      console.log('👥 Total candidates found:', candidates.length);
+
+      // Apply time filter after fetching (client-side filtering for better debugging)
+      if (timeFilter) {
+        const originalCount = candidates.length;
+        candidates = candidates.filter(candidate => {
+          const candidateDate = new Date(candidate.createdAt);
+          const isAfterFilter = candidateDate >= timeFilter;
+          console.log('⏰ Candidate time check:', {
+            candidateDate: candidateDate.toISOString(),
+            timeFilter: timeFilter.toISOString(),
+            isAfterFilter
+          });
+          return isAfterFilter;
+        });
+        console.log(`⏰ Time filter applied: ${originalCount} → ${candidates.length} candidates`);
+      }
+      
+      // Calculate analytics data based on filtered data
+      const totalVisits = filteredVacancies.reduce((sum, item) => sum + (item.visits || 0), 0);
+      const totalTimeSpent = filteredVacancies.reduce((sum, item) => sum + (item.totalTimeSpent || 0), 0);
       const avgTimeInSeconds = totalVisits > 0 ? Math.round(totalTimeSpent / totalVisits) : 0;
       
-      // Debug logging
+      // Real candidate count from ATS
+      const newApplicants = candidates.length;
+
       console.log('Analytics Debug:', {
-        totalItems: result.data.items.length,
+        filteredVacancies: filteredVacancies.length,
+        totalVacancies: result.data.items.length,
+        candidates: candidates.length,
         totalVisits,
         totalTimeSpent,
         avgTimeInSeconds,
-        sampleItem: result.data.items[0] ? {
-          visits: result.data.items[0].visits,
-          totalTimeSpent: result.data.items[0].totalTimeSpent,
-          vacancyTitle: result.data.items[0].vacancyTitle
-        } : 'No items'
+        timeFilter: filterTimeFrame,
+        vacancyFilter: filterVacancy
       });
-      
-      // Count new applicants (you can adjust this logic based on your needs)
-      const newApplicants = result.data.items.reduce((sum, item) => {
-        // Assuming you have an applicants field or similar
-        return sum + (item.applicantsCount || 0);
-      }, 0);
 
       setAnalyticsData({
         totalVisits,
@@ -308,7 +391,7 @@ const Overview = () => {
 
   useEffect(() => {
     getData()
-  }, [showAllActive, showAllUnpublished, user?._id])
+  }, [showAllActive, showAllUnpublished, user?._id, filterVacancy, filterTimeFrame])
 
   const activeVacancies = landingPages.filter((d) => d.published);
   const unpublishedVacancies = landingPages.filter((d) => !d.published);
@@ -386,14 +469,58 @@ const Overview = () => {
         </div>
       </div>
       <div>
-        <div className="text-xl font-semibold leading-8 mb-[12px]">
-          Total summary
+        <div className="flex items-center justify-between mb-[12px]">
+          <div className="flex items-center gap-2">
+            <div className="text-xl font-semibold leading-8">
+              Total summary
+            </div>
+            {(filterVacancy !== 'all' || filterTimeFrame !== 'all') && (
+              <div className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+                Filtered
+              </div>
+            )}
+          </div>
+          
+          {/* Compact Filter Controls */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Vacancy:</span>
+              <Select
+                value={filterVacancy}
+                onChange={setFilterVacancy}
+                size="small"
+                style={{ width: 160 }}
+                placeholder="All Vacancies"
+              >
+                <Select.Option value="all">All Vacancies</Select.Option>
+                {availableVacancies.map(vacancy => (
+                  <Select.Option key={vacancy.value} value={vacancy.value}>
+                    {vacancy.label}
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Period:</span>
+              <Select
+                value={filterTimeFrame}
+                onChange={setFilterTimeFrame}
+                size="small"
+                style={{ width: 120 }}
+              >
+                <Select.Option value="all">All Time</Select.Option>
+                <Select.Option value="30days">30 Days</Select.Option>
+                <Select.Option value="7days">7 Days</Select.Option>
+              </Select>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 w-full">
           {totalSummary.map((step, i) => {
             // Determine if this card should show "coming soon"
-            const isComingSoon = step.name === "Awareness" || step.name === "Hiring pipeline";
+            const isComingSoon = step.name === "Awareness"; // Only Awareness is coming soon now
             
             // Get dynamic values based on card type
             let dynamicValue = step.metrics[0].value;

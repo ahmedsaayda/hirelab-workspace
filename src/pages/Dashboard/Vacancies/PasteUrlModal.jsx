@@ -192,32 +192,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
   add recruiterPhoneEnabled: true, and
           recruiterEmailEnabled: true, if recruiterEmail and recruiterPhone are not empty
       */
-      // 🤖 AUTO-GENERATE APPLICATION FORM FOR AI VACANCIES
-      let generatedForm = null;
-      try {
-        console.log("🤖 Auto-generating application form with AI...");
-        // 🔧 IMPROVED: Use comprehensive job data instead of just URL
-        const formResponse = await AiService.generateApplicationForm({
-          inputType: 'text', // Use text instead of URL for better results
-          inputData: {
-            jobTitle: aiResult.vacancyTitle || 'Position',
-            jobDescription: markdown || aiResult.heroDescription || aiResult.jobDescription || '',
-            location: aiResult.location || [],
-            companyInfo: aiResult.companyInfo || aiResult.aboutTheCompanyDescription || ''
-          },
-          language: language,
-          formComplexity: 'standard'
-        });
 
-        if (formResponse.data.success) {
-          generatedForm = formResponse.data.data.form;
-          console.log("🤖 AI Form Auto-Generated:", generatedForm);
-        } else {
-          console.warn("Auto form generation failed, backend will handle it");
-        }
-      } catch (formError) {
-        console.warn("Auto form generation failed, backend will handle it:", formError);
-      }
 
       // Step 3: Create the vacancy
       const vacancyPayload = {
@@ -240,10 +215,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
         cta2Link: '#apply' // 🚀 Always default to apply action
       };
 
-      // Add the generated form if available (backend will generate if this fails)
-      if (generatedForm) {
-        vacancyPayload.form = generatedForm;
-      }
+
 
       const res = await AiService.createVacancy(vacancyPayload);
       onRefresh();

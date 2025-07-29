@@ -57,6 +57,7 @@ import AddCandidateModal from './components/AddCandidateModal';
 import CandidateProfile from './components/CandidateProfile';
 import AssignmentModal from './components/AssignmentModal';
 import InterviewSchedulingModal from './components/InterviewSchedulingModal';
+import InitialMessageModal from './components/InitialMessageModal';
 
 // Add table styles for enhanced sorting UI
 const tableStyles = `
@@ -650,6 +651,9 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   const [interviewSchedulingModal, setInterviewSchedulingModal] = useState(false);
   const [selectedCandidateForScheduling, setSelectedCandidateForScheduling] = useState(null);
   const [schedulingLoading, setSchedulingLoading] = useState(false);
+  const [initialMessageModal, setInitialMessageModal] = useState(false);
+  const [selectedCandidateForChat, setSelectedCandidateForChat] = useState(null);
+  const [initialMessageLoading, setInitialMessageLoading] = useState(false);
   const [addingColumn, setAddingColumn] = useState(false);
   const [editingColumnId, setEditingColumnId] = useState(null);
   const [newColumnTitle, setNewColumnTitle] = useState('');
@@ -1775,17 +1779,37 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   };
 
   // Chat handler
-  const handleStartChatWithCandidate = async (candidate) => {
+  const handleStartChatWithCandidate = (candidate) => {
     if (!candidate?.email) {
       message.warning('Cannot start chat: No email address available for this candidate');
       return;
     }
 
+    // Open initial message configuration modal
+    setSelectedCandidateForChat(candidate);
+    setInitialMessageModal(true);
+  };
+
+  // Handle sending initial message and starting chat
+  const handleSendInitialMessage = async (messageText) => {
+    if (!selectedCandidateForChat) return;
+
+    setInitialMessageLoading(true);
     try {
       // Start a new chat with the candidate
-      const response = await CandidateChatService.startChat(candidate.id);
+      const response = await CandidateChatService.startChat(selectedCandidateForChat.id);
       
       if (response.data.chatId) {
+        // Send the configured initial message
+        await CandidateChatService.sendMessage(response.data.chatId, {
+          message: messageText,
+          attachments: [],
+          messageType: 'text',
+          baseURL: window.location.origin
+        });
+        
+        setInitialMessageModal(false);
+        setSelectedCandidateForChat(null);
         
         // Redirect to chat interface with the specific chat
         router.push(`/dashboard/candidate-chat?chatId=${response.data.chatId}`);
@@ -1793,6 +1817,8 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     } catch (error) {
       console.error('Error starting chat with candidate:', error);
       message.error('Failed to start chat with candidate. Please try again.');
+    } finally {
+      setInitialMessageLoading(false);
     }
   };
 
@@ -1803,7 +1829,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   };
 
   // Send interview suggestions to candidate
-  const handleSendInterviewSuggestions = async (suggestions) => {
+  const handleSendInterviewSuggestions = async (suggestions, messageTemplate) => {
     if (!selectedCandidateForScheduling || !suggestions || suggestions.length === 0) {
       message.error('Please select valid interview times');
       return;
@@ -1823,7 +1849,12 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         `Option ${index + 1}: ${s.displayText}`
       ).join('\n');
 
-      const message_text = `🗓️ Interview Invitation\n\nHi ${selectedCandidateForScheduling.fullname || selectedCandidateForScheduling.email},\n\nWe would like to schedule an interview with you! Please select one of the following available times:\n\n${suggestionText}\n\nPlease reply with your preferred option, and we'll send you the meeting details.\n\nLooking forward to speaking with you!`;
+      // Use custom template if provided, otherwise use default
+      const template = messageTemplate || `🗓️ Interview Invitation\n\nHi {candidateName},\n\nWe would like to schedule an interview with you! Please select one of the following available times:\n\n{timeOptions}\n\nPlease reply with your preferred option, and we'll send you the meeting details.\n\nLooking forward to speaking with you!`;
+      
+      const message_text = template
+        .replace(/\{candidateName\}/g, selectedCandidateForScheduling.fullname || selectedCandidateForScheduling.email)
+        .replace(/\{timeOptions\}/g, suggestionText);
 
       // Send the scheduling message with special interview type
       const sendResponse = await CandidateChatService.sendMessage(chatResponse.data.chatId, {
@@ -1837,6 +1868,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       if (sendResponse.data) {
         setInterviewSchedulingModal(false);
         setSelectedCandidateForScheduling(null);
+        message.success('Interview suggestions sent successfully!');
         
         // Optionally redirect to chat
         setTimeout(() => {
@@ -3438,6 +3470,17 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         onSchedule={handleSendInterviewSuggestions}
         candidate={selectedCandidateForScheduling}
         loading={schedulingLoading}
+      />
+
+      <InitialMessageModal
+        visible={initialMessageModal}
+        onCancel={() => {
+          setInitialMessageModal(false);
+          setSelectedCandidateForChat(null);
+        }}
+        onSend={handleSendInitialMessage}
+        candidate={selectedCandidateForChat}
+        loading={initialMessageLoading}
       />
     </div>
   );

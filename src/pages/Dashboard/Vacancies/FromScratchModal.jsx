@@ -94,7 +94,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
   });
   const [currentStep, setCurrentStep] = useState(1);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [generateApplicationForm, setGenerateApplicationForm] = useState(true);
+
 
   // Load saved progress when modal opens
   useEffect(() => {
@@ -519,26 +519,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
               </div>
             </div>
 
-            {/* AI Form Generation Option */}
-            <div className="border-t pt-4 mt-4">
-              <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  id="generateApplicationForm"
-                  checked={generateApplicationForm}
-                  onChange={(e) => setGenerateApplicationForm(e.target.checked)}
-                  className="mt-1"
-                />
-                <div>
-                  <label htmlFor="generateApplicationForm" className="text-sm font-medium cursor-pointer">
-                    Auto-generate application form with AI
-                  </label>
-                  <p className="text-xs text-gray-600 mt-1">
-                    Create a custom application form tailored to this job position. Form fields will be automatically generated based on the job requirements.
-                  </p>
-                </div>
-              </div>
-            </div>
+
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -790,46 +771,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         const aiResult = JSON.parse(aiResponse.data.data.content);
         console.log("aiResult", aiResult);
 
-        // 🤖 AUTO-GENERATE APPLICATION FORM FOR ALL AI VACANCIES
-        // Always generate form for AI-created vacancies
-        let generatedForm = null;
-        try {
-          console.log("🤖 Auto-generating application form with AI...");
-          // 🔧 IMPROVED: Build comprehensive description for better AI generation
-          let fullJobDescription = formData.description;
-          if (aiResult.specifications && aiResult.specifications.length > 0) {
-            fullJobDescription += '\n\nJob Specifications:\n';
-            aiResult.specifications.forEach(spec => {
-              if (spec.enabled && spec.bulletPoints && spec.bulletPoints.length > 0) {
-                fullJobDescription += `\n${spec.title}:\n`;
-                spec.bulletPoints.forEach(point => {
-                  fullJobDescription += `- ${point.bullet}\n`;
-                });
-              }
-            });
-          }
 
-          const formResponse = await AiService.generateApplicationForm({
-            inputType: 'text',
-            inputData: {
-              jobTitle: formData.jobTitle,
-              jobDescription: fullJobDescription,
-              location: aiResult.location || [],
-              companyInfo: user?.companyInfo || ''
-            },
-            language: formData.language === 'Dutch' ? 'en' : 'en', // Map to supported language codes
-            formComplexity: 'standard'
-          });
-
-          if (formResponse.data.success) {
-            generatedForm = formResponse.data.data.form;
-            console.log("🤖 AI Form Auto-Generated:", generatedForm);
-          } else {
-            console.warn("Auto form generation failed, backend will handle it");
-          }
-        } catch (formError) {
-          console.warn("Auto form generation failed, backend will handle it:", formError);
-        }
 
         // Create the vacancy
         const vacancyData = {
@@ -850,10 +792,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
           cta2Link: '#apply' // 🚀 Always default to apply action
         };
 
-        // Add the generated form if available (backend will generate if this fails)
-        if (generatedForm) {
-          vacancyData.form = generatedForm;
-        }
+
 
         const res = await CrudService.create("LandingPageData", vacancyData);
         onRefresh()
@@ -1001,7 +940,6 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
                         language: language,
                         tone: tone,
                         templateId: selectedTemplate,
-                        generateApplicationForm: generateApplicationForm,
                       });
                     }}
                     className="py-2 px-4 text-white bg-[#5207CD] rounded-md hover:bg-blue-600"

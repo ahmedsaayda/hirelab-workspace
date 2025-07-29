@@ -438,7 +438,7 @@ const CandidateChat = () => {
     setInterviewSchedulingModal(true);
   };
 
-  const handleSendInterviewSuggestions = async (suggestions) => {
+  const handleSendInterviewSuggestions = async (suggestions, messageTemplate) => {
     if (!currentChat || !suggestions || suggestions.length === 0) {
       message.error('Please select valid interview times');
       return;
@@ -450,7 +450,12 @@ const CandidateChat = () => {
         `Option ${index + 1}: ${s.displayText}`
       ).join('\n');
 
-      const messageText = `🗓️ Interview Invitation\n\nHi ${currentChat.candidateName},\n\nWe would like to schedule an interview with you! Please select one of the following available times:\n\n${suggestionText}\n\nPlease reply with your preferred option, and we'll send you the meeting details.\n\nLooking forward to speaking with you!`;
+      // Use custom template if provided, otherwise use default
+      const template = messageTemplate || `🗓️ Interview Invitation\n\nHi {candidateName},\n\nWe would like to schedule an interview with you! Please select one of the following available times:\n\n{timeOptions}\n\nPlease reply with your preferred option, and we'll send you the meeting details.\n\nLooking forward to speaking with you!`;
+      
+      const messageText = template
+        .replace(/\{candidateName\}/g, currentChat.candidateName)
+        .replace(/\{timeOptions\}/g, suggestionText);
 
       const response = await CandidateChatService.sendMessage(currentChat._id, {
         message: messageText,
