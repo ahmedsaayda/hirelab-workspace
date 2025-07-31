@@ -10,6 +10,8 @@ import { useSelector } from "react-redux";
 import UpgradeModal from "../Vacancies/components/UpgradeModal.jsx";
 import { selectUser } from "../../../redux/auth/selectors.js";
 import AuthService from "../../../services/AuthService";
+import { CrownOutlined, PlusOutlined } from "@ant-design/icons";
+import { refreshUserData } from "../../../utils/userRefresh.js";
 
 const calendarEvents = [
   {
@@ -220,17 +222,10 @@ const MyDashboard = () => {
   const tier = user?.tier || { id: 'free', name: 'Free Forever', maxFunnels: 1 };
   const upgradeNeeded = user?.upgradeNeeded;
 
-  // Add function to refresh user data
-  const refreshUserData = async () => {
-    try {
-      // Force refresh of user data to get updated plan limits
-      const userData = await AuthService.me();
-      console.log('Dashboard - Refreshed user data:', userData.data);
-      window.location.reload(); // Force full refresh to ensure all data is updated
-    } catch (error) {
-      console.error('Dashboard - Error refreshing user data:', error);
-    }
-  };
+  // Add effect to check for subscription changes
+  useEffect(() => {
+    refreshUserData();
+  }, []);
 
   // Enhanced logging for debugging plan limits
   useEffect(() => {
@@ -335,17 +330,9 @@ const MyDashboard = () => {
                         size="3xl"
                         leftIcon={
                           hasReachedLimit ? (
-                            <Img
-                              src="/images/img_lock.svg"
-                              alt="upgrade icon"
-                              className="h-[20px] w-[20px]"
-                            />
+                            <CrownOutlined className="mr-2 text-yellow-500" />
                           ) : (
-                            <Img
-                              src="/images/img_plus_white_a700.svg"
-                              alt="text input"
-                              className="h-[20px] w-[20px]"
-                            />
+                           <PlusOutlined className="mr-2 text-white" />
                           )
                         }
                         className={`min-w-[225px] gap-1.5 font-semibold px-[4px] ${

@@ -30,11 +30,16 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import moment from "moment";
 import TransferModal from "./TransferModal";
+import { useDispatch } from "react-redux";
+import { login } from "../../../../redux/auth/actions";
+import { refreshUserData } from "../../../../utils/userRefresh";
+import AuthService from "../../../../services/AuthService";
 
 const { Option } = Select;
 
 const UserManagement = () => {
   const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const dispatch = useDispatch();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -212,6 +217,65 @@ const UserManagement = () => {
     } catch (error) {
       console.error("Error deleting user:", error);
       message.error("Failed to delete user");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle user impersonation
+  const handleImpersonate = async (userId) => {
+    setLoading(true);
+    try {
+      const token = Cookies.get("accessToken");
+
+      // Save current admin info to localStorage before impersonation
+      const currentAdminToken = token;
+      const currentRefreshToken = Cookies.get("refreshToken");
+      
+      // Get current admin data from the /me endpoint
+      const currentAdminResponse = await AuthService.me();
+
+      // Store admin session info in localStorage
+      localStorage.setItem("adminSessionBackup", JSON.stringify({
+        accessToken: currentAdminToken,
+        refreshToken: currentRefreshToken,
+        adminData: currentAdminResponse.data.me
+      }));
+
+      // Set impersonation flag
+      localStorage.setItem("isImpersonating", "true");
+
+      const response = await axios.post(
+        `${BASE_URL}/admin/users/${userId}/impersonate`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Store new tokens
+      Cookies.set("accessToken", response.data.accessToken);
+      Cookies.set("refreshToken", response.data.refreshToken);
+
+      // Update Redux store with the impersonated user data (like a login action)
+      dispatch(login(response.data.user));
+
+      // Refresh user data to ensure all components have the latest data
+      await refreshUserData();
+
+      message.success(`Successfully accessing ${response.data.user.firstName}'s account`);
+      
+      // Small delay to ensure all data is updated, then redirect
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 500);
+      
+    } catch (error) {
+      console.error("Error impersonating user:", error);
+      message.error(error.response?.data?.message || "Failed to access user account");
     } finally {
       setLoading(false);
     }
@@ -429,6 +493,15 @@ const UserManagement = () => {
             }}
           >
             Edit
+          </Button>
+          <Button
+            type=""
+            icon={<LockOutlined />}
+            className="!bg-blue-100 !text-blue-500 font-semibold !border-blue-300 shadow-sm !hover:bg-blue-300 hover-fix"
+            onClick={() => handleImpersonate(record._id)}
+            loading={loading}
+          >
+            Access Account
           </Button>
           <Button
             type=""

@@ -1195,10 +1195,10 @@ const handleContinue = () => {
       message.error("Please select a tertiary color");
       return false;
     }
-    if (!heroBackgroundColor) {
-      message.error("Please select a hero background color");
-      return false;
-    }
+    // if (!heroBackgroundColor) {
+    //   message.error("Please select a hero background color");
+    //   return false;
+    // }
     if (!selectedFont && !titleFont) {
       message.error("Please upload or select a font for titles (H1)");
       return false;

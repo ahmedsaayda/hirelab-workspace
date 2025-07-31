@@ -19,6 +19,7 @@ import AuthService from "../../services/AuthService";
 import { useSelector } from "react-redux";
 import { selectUser, selectLoading } from "../../redux/auth/selectors";
 import { useRouter } from "next/router";
+import { refreshUserData } from "../../utils/userRefresh";
 
 const Billing = () => {
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,20 @@ const Billing = () => {
         setPlansLoading(false);
       }
     };
+
+    // Check if user returned from payment (refresh user data if so)
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentSuccess = urlParams.get('payment') === 'success' || urlParams.get('success') === 'true';
+    
+    if (paymentSuccess) {
+      console.log('🎉 Payment success detected, refreshing user data...');
+      refreshUserData().then(() => {
+        console.log('✅ User data refreshed after payment success');
+        // Clean up URL parameters
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      });
+    }
 
     fetchPlans();
   }, []);
@@ -201,7 +216,7 @@ const Billing = () => {
       
       if (response.data) {
         message.success("Downgrade cancelled successfully! Your current plan will continue.");
-        window.location.reload();
+        await refreshUserData();
       }
     } catch (error) {
       console.error("Error cancelling downgrade:", error);
@@ -229,7 +244,7 @@ const Billing = () => {
         window.location.href = response.data.paymentLink;
       } else {
         message.success("Plan updated successfully");
-        window.location.reload();
+        await refreshUserData();
       }
     } catch (error) {
       console.error("Error updating plan:", error);

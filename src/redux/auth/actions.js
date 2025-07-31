@@ -5,12 +5,19 @@ import {
   LOGOUT,
   PHONE,
   SET_PARTNER,
+  REFRESH_USER,
 } from "./constants";
 
 export const login = (user) => ({
   type: LOGIN,
   payload: user,
 });
+
+export const refreshUser = (user) => ({
+  type: REFRESH_USER,
+  payload: user,
+});
+
 export const setPartner = (partner) => ({
   type: SET_PARTNER,
   payload: partner,

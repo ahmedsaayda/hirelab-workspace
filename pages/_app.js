@@ -19,6 +19,7 @@ import { persistor, store } from "../src/redux/store";
 import { HoverProvider } from "../src/contexts/HoverContext";
 import ThemeUpdater from "../src/pages/Dashboard/Vacancies/components/ThemeUpdater";
 import { FocusProvider } from '../src/contexts/FocusContext';
+import AdminReturnButton from "../src/components/AdminReturnButton";
 
 export default function App({Component, pageProps}) {
   return (
@@ -35,11 +36,12 @@ export default function App({Component, pageProps}) {
               <ThemeUpdater>
                 <HoverProvider>
                 <ConfigProvider theme={{
-        token: {
-          colorPrimary: '#5207CD', // or any other color
-        },
-      }}>
+                  token: {
+                    colorPrimary: '#5207CD', // or any other color
+                  },
+                }}>
                   <FocusProvider>
+        <AdminReturnButton />
         <Component {...pageProps} />
                   </FocusProvider>
                   </ConfigProvider>

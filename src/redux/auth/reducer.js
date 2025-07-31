@@ -5,6 +5,7 @@ import {
   LOGOUT,
   PHONE,
   SET_PARTNER,
+  REFRESH_USER,
 } from "./constants";
 
 const initialState = {
@@ -17,6 +18,7 @@ const initialState = {
 const authReducer = (state = initialState, action) => {
   switch (action.type) {
     case LOGIN:
+    case REFRESH_USER:
       return {
         ...state,
         user: action.payload,

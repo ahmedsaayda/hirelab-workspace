@@ -9,6 +9,7 @@ import {
   GiftOutlined 
 } from "@ant-design/icons";
 import AuthService from "../../../../services/AuthService";
+import { refreshUserData } from "../../../../utils/userRefresh";
 
 const UpgradeModal = ({
   open,
@@ -38,9 +39,9 @@ const UpgradeModal = ({
         window.location.href = response.data.paymentLink;
       } else {
         message.success("Plan upgraded successfully");
+        // Refresh user data to get updated billing info
+        await refreshUserData();
         onClose();
-        // Force a page refresh to get updated user data
-        window.location.reload();
       }
     } catch (error) {
       console.error("Error upgrading plan:", error);

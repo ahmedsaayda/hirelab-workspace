@@ -1,4 +1,4 @@
-import { CloseOutlined } from "@ant-design/icons";
+import { CloseOutlined, CrownOutlined } from "@ant-design/icons";
 import {
   message as antdmessage,
   Divider,
@@ -36,6 +36,7 @@ import AuthService from "../../../services/AuthService.js";
 import CrudService from "../../../services/CrudService.js";
 import PublicService from "../../../services/PublicService.js";
 import UserService from "../../../services/UserService.js";
+import { refreshUserData } from "../../../utils/userRefresh.js";
 
 import debounce from "lodash/debounce";
 import moment from "moment";
@@ -116,7 +117,7 @@ const Vacancies = () => {
   const darkMode = useSelector(selectDarkMode);
   const [backendLoading, setBackendLoading] = useState(false);
   const user = useSelector(selectUser);
-  console.log("user", user);
+  console.log("user?.usage", user?.usage);
   const [loadingFetchData, setLoading] = useState(true);
   const brandingDetails = {
     companyName: user?.companyName,
@@ -671,6 +672,8 @@ const Vacancies = () => {
           setAddNew(null);
           if (socketPing.current) clearInterval(socketPing.current);
 
+          // Refresh user data to update usage after successful vacancy creation
+          await refreshUserData();
           router.push(`/edit-page/${res.data.result._id}`);
         } catch (createError) {
           // Handle plan limit errors from the API
@@ -798,6 +801,7 @@ Respond with json that adheres to the following jsonschema:
       });
       antdmessage.success("Vacancy duplicated successfully");
       await fetchData();
+      await refreshUserData();
     } catch (error) {
       console.error("Error duplicating vacancy:", error);
       
@@ -885,21 +889,10 @@ Respond with json that adheres to the following jsonschema:
     setAddNewModal(true);
   };
 
-  const handleRefreshAfterVacancyCreation = () => {
-    fetchData();
-  };
-
-  // Add function to refresh user data
-  const refreshUserData = async () => {
-    try {
-      // Force refresh of user data to get updated plan limits
-      const userData = await AuthService.me();
-      console.log('Refreshed user data:', userData.data);
-      // The user data will be updated through Redux/context automatically
-      window.location.reload(); // Force full refresh to ensure all data is updated
-    } catch (error) {
-      console.error('Error refreshing user data:', error);
-    }
+  const handleRefreshAfterVacancyCreation = async () => {
+    // Refresh both vacancy list and user data (for updated usage/limits)
+    await fetchData();
+    await refreshUserData();
   };
 
   // Enhanced logging for debugging plan limits
@@ -965,9 +958,8 @@ Respond with json that adheres to the following jsonschema:
                 >
                   {hasReachedLimit ? (
                     <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
+                                  <CrownOutlined className="mr-2 text-yellow-500" />
+
                       Upgrade to Create More
                     </>
                   ) : (
