@@ -299,6 +299,11 @@ export default function ApplyPage() {
         const leadCaptureFields = visibleFields.filter(field => field.isLeadCapture);
         const otherFields = visibleFields.filter(field => !field.isLeadCapture);
         
+        // Define contact fields from visible fields
+        const contactFields = visibleFields.filter(field => 
+          field.type === 'contact' || field.type === 'email' || field.type === 'phone'
+        );
+        
         // If we have lead capture fields, combine them into one step, then add other fields as separate steps
         if (leadCaptureFields.length > 0) {
           setFormFields([
@@ -306,7 +311,7 @@ export default function ApplyPage() {
               id: 'lead-capture-step', 
               type: 'lead-capture-group', 
               label: 'Contact Information', 
-              fields: contactStepFields,
+              fields: leadCaptureFields,
               required: true 
             },
             ...otherFields
