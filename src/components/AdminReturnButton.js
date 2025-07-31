@@ -123,7 +123,8 @@ const AdminReturnButton = () => {
       style={{
         position: 'fixed',
         top: '10px',
-        right: '20px',
+        right: '50%',
+        transform: 'translateX(50%)',
         zIndex: 9999,
         backgroundColor: '#fff',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
