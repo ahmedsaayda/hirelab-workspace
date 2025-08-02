@@ -22,6 +22,7 @@ export default function Header({
   isFormEditor = false,
   ...props
 }) {
+  const router = useRouter();
   const [templateMenu, setTemplateMenu] = useState(false);
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
@@ -217,6 +218,22 @@ export default function Header({
     });
   };
 
+  // Function to check if a navigation item is active
+  const isNavItemActive = (itemId) => {
+    const currentPath = router.pathname;
+    
+    switch (itemId) {
+      case 'pageBuilder':
+        return currentPath.includes('/edit-page/');
+      case 'formBuilder':
+        return currentPath.includes('/form-editor/');
+      case 'ats':
+        return currentPath.includes('/dashboard/ats');
+      default:
+        return false;
+    }
+  };
+
   return (
     <header
       {...props}
@@ -324,11 +341,11 @@ export default function Header({
           <div className="flex items-center gap-3 mdx:w-full mdx:justify-center">
             <ul className="flex items-center gap-2 mdx:flex-wrap mdx:justify-center">
               {[
-                ...(isFormEditor ? [{
+                {
                   id: "pageBuilder",
                   label: "Page",
                   link: (id) => `/edit-page/${id}`,
-                  bgColor: "bg-[#7C3AED]",
+                  bgColor: isNavItemActive("pageBuilder") ? "bg-[#5207CD]" : "bg-[#7C3AED]",
                   textColor: "!text-[white]",
                   icon: (
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -336,13 +353,14 @@ export default function Header({
                       <path d="M1 5h14M5 2v12" stroke="white" strokeWidth="1.5"/>
                     </svg>
                   ),
-                  className: "rounded-lg",
+                  className: `rounded-lg ${isNavItemActive("pageBuilder") ? "ring-2 ring-[#5207CD] ring-opacity-50 shadow-lg animate-pulse-subtle" : ""}`,
                   disabled: false,
-                }] : [{
+                },
+                {
                   id: "formBuilder",
                   label: "Form",
                   link: (id) => `/form-editor/${id}`,
-                  bgColor: "bg-[#7C3AED]",
+                  bgColor: isNavItemActive("formBuilder") ? "bg-[#5207CD]" : "bg-[#7C3AED]",
                   textColor: "!text-[white]",
                   icon: (
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -350,14 +368,14 @@ export default function Header({
                       <path d="M4 6h8M4 9h6M4 12h4" stroke="white" strokeWidth="1.5"/>
                     </svg>
                   ),
-                  className: "rounded-lg",
+                  className: `rounded-lg ${isNavItemActive("formBuilder") ? "ring-2 ring-[#5207CD] ring-opacity-50 shadow-lg animate-pulse-subtle" : ""}`,
                   disabled: false,
-                }]),
+                },
                 {
                   id: "ats",
                   label: "ATS",
                   link: (id) => `/dashboard/ats?id=${id}`,
-                  bgColor: "bg-[#10B981]",
+                  bgColor: isNavItemActive("ats") ? "bg-[#059669]" : "bg-[#10B981]",
                   textColor: "!text-[white]",
                   icon: (
                     <ClipboardDocumentListIcon style={{ 
@@ -367,7 +385,7 @@ export default function Header({
                       strokeWidth: 2 
                     }} />
                   ),
-                  className: "rounded-lg",
+                  className: `rounded-lg ${isNavItemActive("ats") ? "ring-2 ring-[#059669] ring-opacity-50 shadow-lg animate-pulse-subtle" : ""}`,
                   disabled: false,
                 },
                 ...(landingPageData?.published ? [{
@@ -383,7 +401,7 @@ export default function Header({
               ].map((item) => (
                 <li key={item.id}>
                   <div
-                    className={`flex items-center gap-2 rounded-lg border border-solid px-2 py-[10px] shadow-sm ${item.bgColor} smx:px-1 smx:py-2`}
+                    className={`flex items-center gap-2 border border-solid px-2 py-[10px] shadow-sm ${item.bgColor} ${item.className || "rounded-lg"} smx:px-1 smx:py-2 transition-all duration-200`}
                   >
                     {item.link ? (
                       <Link
@@ -661,6 +679,20 @@ export default function Header({
         .highlight-pulse {
           animation: highlight-pulse 0.8s ease-in-out;
           border-radius: 50%;
+        }
+        @keyframes pulse-subtle {
+          0% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.8;
+          }
+          100% {
+            opacity: 1;
+          }
+        }
+        .animate-pulse-subtle {
+          animation: pulse-subtle 2s ease-in-out infinite;
         }
       `}</style>
     </header>

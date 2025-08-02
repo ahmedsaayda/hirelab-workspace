@@ -295,135 +295,24 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   const [modalVisible, setModalVisible] = useState(false);
   const [link, setLink] = useState('');
   const [applyLinkModalVisible, setApplyLinkModalVisible] = useState(false);
-  const [ctaLink, setCtaLink] = useState("");
-  const [initialCtaLink, setInitialCtaLink] = useState("");
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [applyType, setApplyType] = useState("form"); // "form" or "url" - 🚀 Default to form
-  const [initialApplyType, setInitialApplyType] = useState("form"); // 🚀 Default to form
-  
-  // New states for step-based modal flow
-  const [modalStep, setModalStep] = useState(1); // 1: Choose apply method, 2: Choose AI vs Manual (if form selected)
   const [useAIFormCreation, setUseAIFormCreation] = useState(false);
-  const [urlError, setUrlError] = useState('');
   const [isGeneratingForm, setIsGeneratingForm] = useState(false);
-  
-  // URL validation function
-  const validateUrl = (url) => {
-    if (!url || url.trim() === '') {
-      return 'URL is required';
-    }
-    
-    // Remove whitespace
-    const trimmedUrl = url.trim();
-    
-    // Check if it starts with http:// or https://
-    if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
-      return 'URL must start with http:// or https://';
-    }
-    
-    try {
-      const urlObj = new URL(trimmedUrl);
-      // Basic validation - must have a valid host
-      if (!urlObj.hostname || urlObj.hostname.length < 3) {
-        return 'Please enter a valid URL';
-      }
-      return '';
-    } catch (error) {
-      return 'Please enter a valid URL';
-    }
-  };
 
-  useEffect(() => {
-    if (landingPageData) {
-      setCtaLink(landingPageData.cta2Link || '#apply');
-      setInitialCtaLink(landingPageData.cta2Link || '#apply');
-      // 🚀 DEFAULT TO CUSTOM APPLICATION FORM
-      // Determine apply type based on existing data - default to 'form' instead of 'url'
-      const currentApplyType = landingPageData.applyType || 'form'; // Always default to form
-      setApplyType(currentApplyType);
-      setInitialApplyType(currentApplyType);
-    }
-  }, [landingPageData]);
-
-  // Handle URL input changes with validation
-  const handleUrlChange = (e) => {
-    const newUrl = e.target.value;
-    setCtaLink(newUrl);
-    
-    if (applyType === 'url') {
-      const error = validateUrl(newUrl);
-      setUrlError(error);
-    }
-  };
-
-  // Validate URL when apply type changes to 'url'
-  useEffect(() => {
-    if (applyType === 'url') {
-      const error = validateUrl(ctaLink);
-      setUrlError(error);
-    } else {
-      setUrlError(''); // Clear error when not URL type
-    }
-  }, [applyType, ctaLink]);
-
-  const handleSaveCtaLink = () => {
-    if (applyType === 'url') {
-      const error = validateUrl(ctaLink);
-      if (error) {
-        setUrlError(error);
-        message.warning('Please enter a valid URL');
-        return;
-      }
-    }
-
-    const updateData = {
-      applyType: applyType,
-      cta2Link: applyType === 'form' ? '#apply' : ctaLink
-    };
-
-    CrudService.update("LandingPageData", lpId, updateData).then(() => {
-      setLandingPageData((d) => ({
-        ...d,
-        ...updateData
-      }));
-      setInitialCtaLink(updateData.cta2Link);
-      setInitialApplyType(applyType);
-      message.success("Apply button configuration updated successfully");
-      setApplyLinkModalVisible(false);
-      setModalStep(1); // Reset to first step
-      setUrlError(''); // Clear any URL errors
-    }).catch(err => {
-      message.error("Failed to update Apply button configuration: " + (err.message || "Unknown error"));
-    });
-  };
 
   const handleApplyClick = () => {
     if (isEdit) {
-      const currentLink = landingPageData?.cta2Link || '';
-      setCtaLink(currentLink);
-      setUrlError(''); // Reset URL error
-      // 🚀 DEFAULT TO CUSTOM APPLICATION FORM
-      const currentApplyType = landingPageData?.applyType || 'form'; // Always default to form
-      setApplyType(currentApplyType);
-      setModalStep(1); // Reset to first step
-      setUseAIFormCreation(false); // Reset AI preference
-      setApplyLinkModalVisible(true);
-    } else {
-      // 🚀 DEFAULT TO CUSTOM APPLICATION FORM
-      const currentApplyType = landingPageData?.applyType || 'form'; // Always default to form
-      
-      if (currentApplyType === 'form') {
-        // Redirect to custom form
-        const formUrl = `/lp/${lpId}/apply`;
-        router.push(formUrl);
+      // In edit mode, check if form exists, if not show simplified creation modal
+      if (!landingPageData?.form?.fields || landingPageData.form.fields.length === 0) {
+        setUseAIFormCreation(false); // Reset AI preference
+        setApplyLinkModalVisible(true);
       } else {
-        // Redirect to external URL
-      let url = landingPageData?.cta2Link || '';
-      if (url && !url.match(/^https?:\/\//i)) {
-        url = 'https://' + url;
+        // Form exists, open form editor directly
+        handleOpenFormEditor();
       }
-      router.push(url);
-      }
+    } else {
+      // Public view - always redirect to custom form
+      const formUrl = `/lp/${lpId}/apply`;
+      router.push(formUrl);
     }
   };
 
@@ -501,11 +390,99 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
         const generatedForm = formResponse.data.data.form;
         console.log("🤖 AI Form Generated Successfully:", generatedForm);
 
-        // Update the landing page with the generated form and save configuration
+        // Ensure contact information is first and properly localized
+        const ensureContactFirst = (form) => {
+          if (!form.fields || form.fields.length === 0) return form;
+          
+          // Find contact field
+          const contactFieldIndex = form.fields.findIndex(field => field.type === 'contact');
+          
+          if (contactFieldIndex === -1) {
+            // No contact field exists, create one with proper language
+            const contactField = {
+              id: `contact_${Date.now()}`,
+              type: 'contact',
+              label: getTranslation(landingPageData?.lang, 'contactInformation') || 'Contact Information',
+              placeholder: '',
+              required: true,
+              visible: true,
+              isLeadCapture: true,
+              firstName: { 
+                visible: true, 
+                required: true,
+                label: getTranslation(landingPageData?.lang, 'firstName') || 'First Name',
+                placeholder: getTranslation(landingPageData?.lang, 'firstNamePlaceholder') || 'Enter your first name'
+              },
+              lastName: { 
+                visible: true, 
+                required: true,
+                label: getTranslation(landingPageData?.lang, 'lastName') || 'Last Name',
+                placeholder: getTranslation(landingPageData?.lang, 'lastNamePlaceholder') || 'Enter your last name'
+              },
+              email: { 
+                visible: true, 
+                required: true,
+                label: getTranslation(landingPageData?.lang, 'email') || 'Email',
+                placeholder: getTranslation(landingPageData?.lang, 'emailPlaceholder') || 'Enter your email address'
+              },
+              phone: { 
+                visible: true, 
+                required: false,
+                label: getTranslation(landingPageData?.lang, 'phone') || 'Phone',
+                placeholder: getTranslation(landingPageData?.lang, 'phonePlaceholder') || 'Enter your phone number'
+              }
+            };
+            return {
+              ...form,
+              fields: [contactField, ...form.fields]
+            };
+          } else if (contactFieldIndex !== 0) {
+            // Contact field exists but not first, move it to first position
+            const contactField = form.fields[contactFieldIndex];
+            const otherFields = form.fields.filter((_, index) => index !== contactFieldIndex);
+            
+            // Update labels to match page language
+            const updatedContactField = {
+              ...contactField,
+              label: getTranslation(landingPageData?.lang, 'contactInformation') || contactField.label,
+              firstName: {
+                ...contactField.firstName,
+                label: getTranslation(landingPageData?.lang, 'firstName') || contactField.firstName?.label || 'First Name',
+                placeholder: getTranslation(landingPageData?.lang, 'firstNamePlaceholder') || contactField.firstName?.placeholder || 'Enter your first name'
+              },
+              lastName: {
+                ...contactField.lastName,
+                label: getTranslation(landingPageData?.lang, 'lastName') || contactField.lastName?.label || 'Last Name',
+                placeholder: getTranslation(landingPageData?.lang, 'lastNamePlaceholder') || contactField.lastName?.placeholder || 'Enter your last name'
+              },
+              email: {
+                ...contactField.email,
+                label: getTranslation(landingPageData?.lang, 'email') || contactField.email?.label || 'Email',
+                placeholder: getTranslation(landingPageData?.lang, 'emailPlaceholder') || contactField.email?.placeholder || 'Enter your email address'
+              },
+              phone: {
+                ...contactField.phone,
+                label: getTranslation(landingPageData?.lang, 'phone') || contactField.phone?.label || 'Phone',
+                placeholder: getTranslation(landingPageData?.lang, 'phonePlaceholder') || contactField.phone?.placeholder || 'Enter your phone number'
+              }
+            };
+            
+            return {
+              ...form,
+              fields: [updatedContactField, ...otherFields]
+            };
+          }
+          
+          return form;
+        };
+
+        const optimizedForm = ensureContactFirst(generatedForm);
+
+        // Update the landing page with the optimized form
         const updateData = {
-          form: generatedForm,
+          form: optimizedForm,
           applyType: 'form',
-          cta2Link: '#apply' // Save the apply type configuration
+          cta2Link: '#apply'
         };
 
         await CrudService.update("LandingPageData", lpId, updateData);
@@ -513,17 +490,16 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
         // Update local state
         setLandingPageData(prev => ({
           ...prev,
-          form: generatedForm,
+          form: optimizedForm,
           applyType: 'form',
           cta2Link: '#apply'
         }));
 
-        message.success("🤖 AI form generated successfully!");
+        message.success("🤖 AI form generated successfully! Contact information has been prioritized first.");
         
         // Close modal and reset state after successful generation
         setApplyLinkModalVisible(false);
-        setModalStep(1);
-        setUrlError('');
+        setUseAIFormCreation(false);
         
         // Open form editor to show the generated form
         handleOpenFormEditor();
@@ -878,314 +854,106 @@ const handlemediaLink = (platform) => {
                 </div>
               </div>
             </AntModal>
-      {/* Apply Link Modal */}
+      {/* Apply Form Creation Modal */}
       <AntModal
-        title={modalStep === 1 ? "How do you want candidates to apply?" : "Create your application form"}
+        title="Create your application form"
         open={applyLinkModalVisible}
         onCancel={() => {
           setApplyLinkModalVisible(false);
-          setModalStep(1); // Reset to first step when modal closes
-          setUrlError(''); // Clear any URL errors
+          setUseAIFormCreation(false); // Reset AI preference
         }}
         footer={null}
         destroyOnClose
         width={600}
       >
         <div className="py-4">
-                    {modalStep === 1 && (
-            <>
-              <div className="mb-6">
-                <p className="text-gray-600 mb-6 text-center">
-                  Choose the best application method for your candidates
-                </p>
-              </div>
-              
-              {/* Step 1: Simple Apply Type Selection */}
-              <div className="space-y-4 mb-8">
-                <div 
-                  className={`border-2 rounded-xl p-6 cursor-pointer transition-all ${
-                    applyType === 'form' 
-                      ? 'border-[#5207CD] bg-purple-50' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                  onClick={() => setApplyType('form')}
-                >
-                  <div className="flex items-start">
-                    <input
-                      type="radio"
-                      name="applyType"
-                      value="form"
-                      checked={applyType === 'form'}
-                      onChange={() => setApplyType('form')}
-                      className="mr-4 mt-1"
-                    />
-                    <div className="flex-1">
-                      <div className="font-semibold text-lg text-gray-900 mb-2">📝 Custom Application Form</div>
-                      <div className="text-gray-600">
-                        Create a custom form on your landing page. Perfect for collecting specific information and maintaining your brand experience.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div 
-                  className={`border-2 rounded-xl p-6 cursor-pointer transition-all ${
-                    applyType === 'url' 
-                      ? 'border-[#5207CD] bg-purple-50' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    setApplyType('url');
-                    // Set a default URL template if current URL is empty or invalid
-                    if (!ctaLink || ctaLink === '#apply') {
-                      setCtaLink('https://');
-                    }
-                  }}
-                >
-                  <div className="flex items-start">
-                    <input
-                      type="radio"
-                      name="applyType"
-                      value="url"
-                      checked={applyType === 'url'}
-                      onChange={() => {
-                        setApplyType('url');
-                        // Set a default URL template if current URL is empty or invalid
-                        if (!ctaLink || ctaLink === '#apply') {
-                          setCtaLink('https://');
-                        }
-                      }}
-                      className="mr-4 mt-1"
-                    />
-                    <div className="flex-1">
-                      <div className="font-semibold text-lg text-gray-900 mb-2">🔗 External Application</div>
-                      <div className="text-gray-600">
-                        Redirect candidates to your existing application system or job board.
-                      </div>
-                    </div>
+          <div className="mb-6">
+            <p className="text-gray-600 mb-6 text-center">
+              How would you like to create your application form? Contact information will be collected first.
+            </p>
+          </div>
+          
+          {/* AI vs Manual Form Creation */}
+          <div className="space-y-4 mb-8">
+            <div 
+              className={`border-2 rounded-xl p-6 cursor-pointer transition-all ${
+                useAIFormCreation 
+                  ? 'border-[#5207CD] bg-purple-50' 
+                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+              onClick={() => setUseAIFormCreation(true)}
+            >
+              <div className="flex items-start">
+                <input
+                  type="radio"
+                  name="formCreationType"
+                  value="ai"
+                  checked={useAIFormCreation}
+                  defaultChecked={true}
+                  onChange={() => setUseAIFormCreation(true)}
+                  className="mr-4 mt-1"
+                />
+                <div className="flex-1">
+                  <div className="font-semibold text-lg text-gray-900 mb-2">🤖 Generate with AI</div>
+                  <div className="text-gray-600">
+                    Let AI create a customized application form based on your job requirements. Contact information will be collected first, followed by relevant job-specific questions.
                   </div>
                 </div>
               </div>
-
-              {/* Form already exists - show edit option */}
-              {applyType === 'form' && landingPageData?.form?.fields?.length > 0 && (
-                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-blue-900 mb-1">
-                        ✅ Form Already Created
-                      </div>
-                      <div className="text-sm text-blue-700">
-                        Your custom application form is ready. You can edit it or switch to external application.
-                      </div>
-                    </div>
-                    <AntButton
-                      type="primary"
-                      onClick={() => {
-                        handleOpenFormEditor();
-                        setApplyLinkModalVisible(false);
-                        setModalStep(1);
-                        setUrlError('');
-                      }}
-                      style={{
-                        backgroundColor: getColor("primary", 600),
-                        borderColor: getColor("primary", 600),
-                      }}
-                    >
-                      Edit Form
-                    </AntButton>
-                  </div>
-                </div>
-              )}
-
-              {/* External URL Input for Step 1 */}
-              {applyType === 'url' && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    External Application URL *
-                  </label>
-                  <Input
-                    value={ctaLink}
-                    onChange={handleUrlChange}
-                    placeholder="https://example.com/apply"
-                    className={`w-full ${urlError ? 'border-red-500' : ''}`}
-                    status={urlError ? 'error' : ''}
-                  />
-                  {urlError && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {urlError}
-                    </p>
-                  )}
-                  {!urlError && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      This URL will open when candidates click the Apply button
-                    </p>
-                  )}
-                </div>
-              )}
-              
-              <div className="flex justify-between items-center">
-                <AntButton
-                  onClick={() => {
+            </div>
+         
+          </div>
+          
+          <div className="flex justify-end items-center gap-3">
+            <AntButton
+              onClick={() => {
+                setApplyLinkModalVisible(false);
+                setUseAIFormCreation(false);
+              }}
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </AntButton>
+           
+            <AntButton
+              onClick={async () => {
+                if (useAIFormCreation) {
+                  // For AI generation, keep modal open and start generation
+                  await handleGenerateAIForm();
+                } else {
+                  // For manual creation, ensure contact-first configuration and open form editor
+                  const updateData = {
+                    applyType: 'form',
+                    cta2Link: '#apply'
+                  };
+                  
+                  try {
+                    await CrudService.update("LandingPageData", lpId, updateData);
+                    setLandingPageData((d) => ({
+                      ...d,
+                      ...updateData
+                    }));
+                    message.success("Form configuration saved");
                     setApplyLinkModalVisible(false);
-                    setModalStep(1);
-                    setUrlError('');
-                  }}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </AntButton>
-                
-                <div className="flex gap-3">
-                  {applyType === 'form' && landingPageData?.form?.fields?.length > 0 && (
-                    <AntButton
-                      onClick={handleSaveCtaLink}
-                      className="px-6 py-2 bg-[#5207CD] text-white rounded-md hover:bg-[#0C7CE6]"
-                    >
-                      Save Configuration
-                    </AntButton>
-                  )}
-                  
-                  {applyType === 'form' && (!landingPageData?.form?.fields || landingPageData.form.fields.length === 0) && (
-                    <AntButton
-                      onClick={() => setModalStep(2)}
-                      className="px-6 py-2 bg-[#5207CD] text-white rounded-md hover:bg-[#0C7CE6]"
-                    >
-                      Continue
-                    </AntButton>
-                  )}
-                  
-                  {applyType === 'url' && (
-                    <AntButton
-                      onClick={handleSaveCtaLink}
-                      disabled={!ctaLink.trim() || !!urlError}
-                      className={`px-6 py-2 rounded-md ${
-                        ctaLink.trim() && !urlError
-                          ? 'bg-[#5207CD] text-white hover:bg-[#0C7CE6]'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      Save Configuration
-                    </AntButton>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-
-          {modalStep === 2 && (
-            <>
-              <div className="mb-6">
-                <p className="text-gray-600 mb-6 text-center">
-                  How would you like to create your first application form?
-                </p>
-              </div>
-              
-              {/* Step 2: AI vs Manual Form Creation */}
-              <div className="space-y-4 mb-8">
-                <div 
-                  className={`border-2 rounded-xl p-6 cursor-pointer transition-all ${
-                    useAIFormCreation 
-                      ? 'border-[#5207CD] bg-purple-50' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                  onClick={() => setUseAIFormCreation(true)}
-                >
-                  <div className="flex items-start">
-                    <input
-                      type="radio"
-                      name="formCreationType"
-                      value="ai"
-                      checked={useAIFormCreation}
-                      onChange={() => setUseAIFormCreation(true)}
-                      className="mr-4 mt-1"
-                    />
-                    <div className="flex-1">
-                      <div className="font-semibold text-lg text-gray-900 mb-2">🤖 Generate with AI</div>
-                      <div className="text-gray-600">
-                        Let AI create a customized application form based on your job requirements. Quick and intelligent setup.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div 
-                  className={`border-2 rounded-xl p-6 cursor-pointer transition-all ${
-                    !useAIFormCreation 
-                      ? 'border-[#5207CD] bg-purple-50' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                  onClick={() => setUseAIFormCreation(false)}
-                >
-                  <div className="flex items-start">
-                    <input
-                      type="radio"
-                      name="formCreationType"
-                      value="manual"
-                      checked={!useAIFormCreation}
-                      onChange={() => setUseAIFormCreation(false)}
-                      className="mr-4 mt-1"
-                    />
-                    <div className="flex-1">
-                      <div className="font-semibold text-lg text-gray-900 mb-2">✏️ Create Manually</div>
-                      <div className="text-gray-600">
-                        Build your form from scratch with complete control over every field and question.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <AntButton
-                  onClick={() => setModalStep(1)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-                >
-                  Back
-                </AntButton>
-                
-                                 <div className="flex gap-3">
-                   <AntButton
-                     onClick={() => {
-                       setApplyLinkModalVisible(false);
-                       setModalStep(1);
-                       setUrlError('');
-                     }}
-                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-                   >
-                     Cancel
-                   </AntButton>
-                  
-                                     <AntButton
-                     onClick={async () => {
-                       if (useAIFormCreation) {
-                         // For AI generation, keep modal open and start generation
-                         await handleGenerateAIForm();
-                       } else {
-                         // For manual creation, save configuration and close modal
-                         handleSaveCtaLink();
-                         handleOpenFormEditor();
-                         // Close modal and reset state
-                         setApplyLinkModalVisible(false);
-                         setModalStep(1);
-                         setUrlError('');
-                       }
-                     }}
-                     loading={isGeneratingForm}
-                     disabled={isGeneratingForm}
-                     className="px-6 py-2 bg-[#5207CD] text-white rounded-md hover:bg-[#0C7CE6]"
-                   >
-                     {isGeneratingForm 
-                       ? '🤖 Generating...' 
-                       : useAIFormCreation 
-                         ? '🤖 Generate with AI' 
-                         : 'Create Form'
-                     }
-                   </AntButton>
-                </div>
-              </div>
-            </>
-          )}
+                    setUseAIFormCreation(false);
+                    handleOpenFormEditor();
+                  } catch (err) {
+                    message.error("Failed to save configuration: " + (err.message || "Unknown error"));
+                  }
+                }
+              }}
+              loading={isGeneratingForm}
+              disabled={isGeneratingForm}
+              className="px-6 py-2 bg-[#5207CD] text-white rounded-md hover:bg-[#0C7CE6]"
+            >
+              {isGeneratingForm 
+                ? '🤖 Generating...' 
+                : useAIFormCreation 
+                  ? '🤖 Generate with AI' 
+                  : 'Create Form'
+              }
+            </AntButton>
+          </div>
         </div>
       </AntModal>
 

@@ -10,6 +10,7 @@ import { message as antdMessage, Select } from "antd";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation.jsx";
 import { departmentOptions } from "./departmentOptions";
 import languages from "./lang.json";
+import { getTranslation } from "../../../utils/translations";
 
 // Convert the language object to array of options and remove duplicates
 const languageOptions = Array.from(
@@ -428,51 +429,49 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
               as="h1"
               className="!text-black-900_01 text-center"
             >
-              Paste Job Text
+              {getTranslation(language, 'pasteJobText')}
             </Heading>
             {step === 0 && (
               <div className="flex flex-col gap-4">
                 <input
                   type="text"
                   className="p-2 w-full text-sm rounded-lg border border-gray-300 dark:bg-gray-900 outline-gray-300"
-                  placeholder="Enter Job Title"
+                  placeholder={getTranslation(language, 'enterJobTitle')}
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
                 />
                 <div>
                   <div className="flex gap-2 items-center mb-2">
-                    <label className="text-sm font-medium">Department</label>
+                    <label className="text-sm font-medium">{getTranslation(language, 'department')}</label>
                   </div>
                   <Select
                     style={{ width: "100%" }}
                     value={department}
                     onChange={(value) => setDepartment(value)}
-                    placeholder="Select a department"
+                    placeholder={getTranslation(language, 'selectDepartment')}
                     options={departmentOptions}
                   />
                 </div>
                 <div>
                   <div className="flex gap-2 items-center mb-2">
-                    <label className="text-sm font-medium">Language</label>
+                    <label className="text-sm font-medium">{getTranslation(language, 'language')}</label>
                   </div>
                   <Select
                     style={{ width: "100%" }}
                     value={language}
                     onChange={(value) => setLanguage(value)}
-                    placeholder="Select a language"
+                    placeholder={getTranslation(language, 'selectLanguage')}
                     options={languageOptions}
                   />
                 </div>
                 <textarea
                   className="p-2 w-full h-64 text-sm rounded-lg border border-gray-300 dark:bg-gray-900 outline-gray-300"
-                  placeholder="Paste Job Description (Ctrl+V)"
+                  placeholder={getTranslation(language, 'pasteJobDescription')}
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
                 />
                 <p className="text-xs text-gray-500">
-                  Tip: Copy (Ctrl+C) the entire job posting from a website and
-                  paste (Ctrl+V) it here. Our AI will extract all relevant
-                  information.
+                  {getTranslation(language, 'pasteJobTip')}
                 </p>
               </div>
             )}

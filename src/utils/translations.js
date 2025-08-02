@@ -29,7 +29,15 @@ const coreTranslations = {
     contactInformation: "Contact Information", fieldLabel: "Field Label", placeholder: "Placeholder",
     required: "Required", visible: "Visible", previous: "Previous", next: "Next", submit: "Submit",
     startApplication: "Start Application", formFields: "Form Fields", addField: "Add Field",
-    configureField: "Configure Field", clickToConfigure: "Click to configure"
+    configureField: "Configure Field", clickToConfigure: "Click to configure",
+    // Placeholder translations
+    firstNamePlaceholder: "Enter your first name", lastNamePlaceholder: "Enter your last name",
+    emailPlaceholder: "Enter your email address", phonePlaceholder: "Enter your phone number",
+    // Modal translations
+    pasteJobText: "Paste Job Text", enterJobTitle: "Enter Job Title", department: "Department",
+    selectDepartment: "Select a department", language: "Language", selectLanguage: "Select a language",
+    pasteJobDescription: "Paste Job Description (Ctrl+V)", 
+    pasteJobTip: "Tip: Copy (Ctrl+C) the entire job posting from a website and paste (Ctrl+V) it here. Our AI will extract all relevant information."
   },
   Dutch: {
     weAreHiring: "👋 WE ZOEKEN PERSONEEL",
@@ -49,7 +57,15 @@ const coreTranslations = {
     contactInformation: "Contactgegevens", fieldLabel: "Veldlabel", placeholder: "Tijdelijke aanduiding",
     required: "Verplicht", visible: "Zichtbaar", previous: "Vorige", next: "Volgende", submit: "Versturen",
     startApplication: "Start Sollicitatie", formFields: "Formuliervelden", addField: "Veld Toevoegen",
-    configureField: "Veld Configureren", clickToConfigure: "Klik om te configureren"
+    configureField: "Veld Configureren", clickToConfigure: "Klik om te configureren",
+    // Placeholder translations
+    firstNamePlaceholder: "Voer je voornaam in", lastNamePlaceholder: "Voer je achternaam in",
+    emailPlaceholder: "Voer je e-mailadres in", phonePlaceholder: "Voer je telefoonnummer in",
+    // Modal translations
+    pasteJobText: "Plak Vacaturetekst", enterJobTitle: "Voer Functietitel In", department: "Afdeling",
+    selectDepartment: "Selecteer een afdeling", language: "Taal", selectLanguage: "Selecteer een taal",
+    pasteJobDescription: "Plak Vacaturebeschrijving (Ctrl+V)",
+    pasteJobTip: "Tip: Kopieer (Ctrl+C) de hele vacature van een website en plak (Ctrl+V) deze hier. Onze AI haalt alle relevante informatie eruit."
   },
   German: {
     weAreHiring: "👋 WIR STELLEN EIN",
@@ -69,7 +85,15 @@ const coreTranslations = {
     contactInformation: "Kontaktinformationen", fieldLabel: "Feldbezeichnung", placeholder: "Platzhalter",
     required: "Erforderlich", visible: "Sichtbar", previous: "Zurück", next: "Weiter", submit: "Absenden",
     startApplication: "Bewerbung Starten", formFields: "Formularfelder", addField: "Feld Hinzufügen",
-    configureField: "Feld Konfigurieren", clickToConfigure: "Klicken zum Konfigurieren"
+    configureField: "Feld Konfigurieren", clickToConfigure: "Klicken zum Konfigurieren",
+    // Placeholder translations
+    firstNamePlaceholder: "Geben Sie Ihren Vornamen ein", lastNamePlaceholder: "Geben Sie Ihren Nachnamen ein",
+    emailPlaceholder: "Geben Sie Ihre E-Mail-Adresse ein", phonePlaceholder: "Geben Sie Ihre Telefonnummer ein",
+    // Modal translations
+    pasteJobText: "Stellentext Einfügen", enterJobTitle: "Stellentitel Eingeben", department: "Abteilung",
+    selectDepartment: "Wählen Sie eine Abteilung", language: "Sprache", selectLanguage: "Wählen Sie eine Sprache",
+    pasteJobDescription: "Stellenbeschreibung Einfügen (Strg+V)",
+    pasteJobTip: "Tipp: Kopieren Sie (Strg+C) die gesamte Stellenausschreibung von einer Website und fügen Sie sie (Strg+V) hier ein. Unsere KI extrahiert alle relevanten Informationen."
   },
   French: {
     weAreHiring: "👋 NOUS RECRUTONS",
