@@ -28,6 +28,66 @@ const AIFormGeneratorModal = ({
   const [chatbotStep, setChatbotStep] = useState(0);
   const [chatbotResponses, setChatbotResponses] = useState({});
 
+  // Helper function to ensure contact section is always present
+  const ensureContactSection = (formData) => {
+    if (!formData?.form?.fields) {
+      return formData;
+    }
+
+    const fields = formData.form.fields;
+    const hasContactSection = fields.some(field => field.type === 'contact');
+
+    if (hasContactSection) {
+      console.log("✅ Contact section already exists in AI-generated form");
+      return formData;
+    }
+
+    // Create contact section if missing
+    const contactSection = {
+      id: `contact_${Date.now()}`,
+      type: 'contact',
+      label: 'Contact Information',
+      placeholder: '',
+      required: true,
+      visible: true,
+      isLeadCapture: true,
+      firstName: { 
+        visible: true, 
+        required: true,
+        label: 'First Name',
+        placeholder: ''
+      },
+      lastName: { 
+        visible: true, 
+        required: true,
+        label: 'Last Name',
+        placeholder: ''
+      },
+      email: { 
+        visible: true, 
+        required: true,
+        label: 'Email',
+        placeholder: ''
+      },
+      phone: { 
+        visible: true, 
+        required: false,
+        label: 'Phone',
+        placeholder: ''
+      }
+    };
+
+    console.log("🔧 Adding missing contact section to AI-generated form");
+    
+    return {
+      ...formData,
+      form: {
+        ...formData.form,
+        fields: [contactSection, ...fields]
+      }
+    };
+  };
+
   const chatbotQuestions = [
     {
       key: "jobTitle",
@@ -109,12 +169,27 @@ const AIFormGeneratorModal = ({
         inputType,
         inputData,
         language,
-        formComplexity
+        formComplexity,
+        // 🔥 FIXED: Always include contact information as mandatory
+        requiredSections: [
+          {
+            type: "contact",
+            label: "Contact Information",
+            required: true,
+            isLeadCapture: true,
+            description: "Always include contact fields: first name, last name, email, and phone number"
+          }
+        ],
+        instructions: "IMPORTANT: Always include a contact information section as the first section with fields for first name, last name, email address, and phone number. This is mandatory for all forms."
       });
 
       if (response.data.success) {
+        // 🔥 ENSURE CONTACT SECTION: Double-check that contact info is included
+        const generatedForm = response.data.data;
+        const ensuredForm = ensureContactSection(generatedForm);
+        
         message.success("Application form generated successfully!");
-        onFormGenerated(response.data.data);
+        onFormGenerated(ensuredForm);
         resetForm();
       } else {
         throw new Error(response.data.error || "Failed to generate form");
@@ -426,6 +501,15 @@ const AIFormGeneratorModal = ({
 
         <Divider />
 
+        {/* Contact Information Notice */}
+        <Alert
+          message="Contact Information Included"
+          description="All generated forms will automatically include a contact information section with first name, last name, email, and phone number fields as the first section."
+          type="info"
+          showIcon
+          className="mb-4"
+        />
+
         {/* Form settings */}
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -453,9 +537,9 @@ const AIFormGeneratorModal = ({
               onChange={setFormComplexity}
               className="w-full"
             >
-              <Option value="simple">Simple (3-5 fields)</Option>
-              <Option value="standard">Standard (6-10 fields)</Option>
-              <Option value="comprehensive">Comprehensive (10-15 fields)</Option>
+              <Option value="simple">Simple (3-5 fields + Contact Info)</Option>
+              <Option value="standard">Standard (6-10 fields + Contact Info)</Option>
+              <Option value="comprehensive">Comprehensive (10-15 fields + Contact Info)</Option>
             </Select>
           </div>
         </div>

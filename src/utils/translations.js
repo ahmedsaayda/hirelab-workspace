@@ -23,7 +23,13 @@ const coreTranslations = {
     copyLink: "Copy Link", shareWithYourLovedOnes: "Share with your loved ones:",
     linkCopiedToClipboard: "Link copied to clipboard!", setApplyButtonUrl: "Set Apply Button URL",
     applyButtonUrl: "Apply Button URL", thisUrlWillBeUsed: "This should be your application form or job posting URL",
-    cancel: "Cancel", saveUrl: "Save URL", beforePublishing: "Before publishing your landing page, please set the URL where candidates will be directed when they click the Apply button."
+    cancel: "Cancel", saveUrl: "Save URL", beforePublishing: "Before publishing your landing page, please set the URL where candidates will be directed when they click the Apply button.",
+    // Form field translations
+    firstName: "First Name", lastName: "Last Name", email: "Email", phone: "Phone Number", 
+    contactInformation: "Contact Information", fieldLabel: "Field Label", placeholder: "Placeholder",
+    required: "Required", visible: "Visible", previous: "Previous", next: "Next", submit: "Submit",
+    startApplication: "Start Application", formFields: "Form Fields", addField: "Add Field",
+    configureField: "Configure Field", clickToConfigure: "Click to configure"
   },
   Dutch: {
     weAreHiring: "👋 WE ZOEKEN PERSONEEL",
@@ -37,7 +43,13 @@ const coreTranslations = {
     copyLink: "Link Kopiëren", shareWithYourLovedOnes: "Deel met je dierbaren:",
     linkCopiedToClipboard: "Link gekopieerd naar klembord!", setApplyButtonUrl: "Solliciteer Button URL Instellen",
     applyButtonUrl: "Solliciteer Button URL", thisUrlWillBeUsed: "Dit moet je sollicitatieformulier of vacature URL zijn",
-    cancel: "Annuleren", saveUrl: "URL Opslaan", beforePublishing: "Voordat je je landingspagina publiceert, stel je de URL in waar kandidaten naartoe worden geleid wanneer ze op de solliciteer knop klikken."
+    cancel: "Annuleren", saveUrl: "URL Opslaan", beforePublishing: "Voordat je je landingspagina publiceert, stel je de URL in waar kandidaten naartoe worden geleid wanneer ze op de solliciteer knop klikken.",
+    // Form field translations
+    firstName: "Voornaam", lastName: "Achternaam", email: "E-mail", phone: "Telefoonnummer", 
+    contactInformation: "Contactgegevens", fieldLabel: "Veldlabel", placeholder: "Tijdelijke aanduiding",
+    required: "Verplicht", visible: "Zichtbaar", previous: "Vorige", next: "Volgende", submit: "Versturen",
+    startApplication: "Start Sollicitatie", formFields: "Formuliervelden", addField: "Veld Toevoegen",
+    configureField: "Veld Configureren", clickToConfigure: "Klik om te configureren"
   },
   German: {
     weAreHiring: "👋 WIR STELLEN EIN",
@@ -51,7 +63,13 @@ const coreTranslations = {
     copyLink: "Link Kopieren", shareWithYourLovedOnes: "Teile mit deinen Liebsten:",
     linkCopiedToClipboard: "Link in die Zwischenablage kopiert!", setApplyButtonUrl: "Bewerbung Button URL Einstellen",
     applyButtonUrl: "Bewerbung Button URL", thisUrlWillBeUsed: "Das sollte dein Bewerbungsformular oder Stellenanzeige URL sein",
-    cancel: "Abbrechen", saveUrl: "URL Speichern", beforePublishing: "Bevor du deine Landingpage veröffentlichst, stelle die URL ein, wohin Kandidaten geleitet werden, wenn sie auf den Bewerbungsbutton klicken."
+    cancel: "Abbrechen", saveUrl: "URL Speichern", beforePublishing: "Bevor du deine Landingpage veröffentlichst, stelle die URL ein, wohin Kandidaten geleitet werden, wenn sie auf den Bewerbungsbutton klicken.",
+    // Form field translations
+    firstName: "Vorname", lastName: "Nachname", email: "E-Mail", phone: "Telefonnummer", 
+    contactInformation: "Kontaktinformationen", fieldLabel: "Feldbezeichnung", placeholder: "Platzhalter",
+    required: "Erforderlich", visible: "Sichtbar", previous: "Zurück", next: "Weiter", submit: "Absenden",
+    startApplication: "Bewerbung Starten", formFields: "Formularfelder", addField: "Feld Hinzufügen",
+    configureField: "Feld Konfigurieren", clickToConfigure: "Klicken zum Konfigurieren"
   },
   French: {
     weAreHiring: "👋 NOUS RECRUTONS",

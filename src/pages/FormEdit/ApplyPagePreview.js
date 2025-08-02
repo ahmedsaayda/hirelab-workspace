@@ -1,43 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Radio, Checkbox, Select, Progress, message } from 'antd';
+import { Button, Input, Radio, Checkbox, Select, Progress, message, DatePicker } from 'antd';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { PhoneInput } from 'react-international-phone';
-import 'react-international-phone/style.css';
+import dayjs from 'dayjs';
+// Removed PhoneInput - using regular Input instead
 // 🎨 BRANDING IMPORTS
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/auth/selectors";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import ApplyCustomFont from "../Landingpage/ApplyCustomFont";
+import { getTranslation } from "../../utils/translations";
 
-// Country detection utility
-const getCountryFromLocation = async () => {
-  try {
-    // First try to get country from IP geolocation
-    const response = await fetch('https://ipapi.co/json/');
-    const data = await response.json();
-    if (data.country_code) {
-      return data.country_code.toLowerCase();
-    }
-  } catch (error) {
-    console.log('Geolocation detection failed, using default country');
-  }
-  
-  // Fallback to browser locale
-  try {
-    const locale = navigator.language || navigator.languages[0];
-    if (locale) {
-      const countryCode = locale.split('-')[1];
-      if (countryCode) {
-        return countryCode.toLowerCase();
-      }
-    }
-  } catch (error) {
-    console.log('Locale detection failed');
-  }
-  
-  // Default to US
-  return 'us';
-};
+// Removed country detection since we're using regular Input instead of PhoneInput
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -125,15 +98,15 @@ const FileUpload = ({ value, onChange, placeholder }) => (
   </div>
 );
 
-export default function ApplyPagePreview({ landingPageData }) {
+export default function ApplyPagePreview({ landingPageData, initialStep = 0, isPreviewMode = true, onStepChange }) {
   // 🎨 BRAND COLORS FROM DATABASE  
   const user = useSelector(selectUser);
   
   // STATE DECLARATIONS (MOVED UP TO MATCH APPLY.JS)
   const [formData, setFormData] = useState({});
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [formFields, setFormFields] = useState([]);
-  const [detectedCountry, setDetectedCountry] = useState('us');
+  // Removed detectedCountry since we're using regular Input instead of PhoneInput
   
   // 🎨 DYNAMIC BRAND COLORS - NO HARDCODING!
   const [stableColors, setStableColors] = useState({
@@ -244,80 +217,35 @@ export default function ApplyPagePreview({ landingPageData }) {
     }
   );
 
-  // Detect user's country for phone input
-  useEffect(() => {
-    getCountryFromLocation().then(country => {
-      setDetectedCountry(country);
-    });
-  }, []);
+  // Removed country detection since we're using regular Input instead of PhoneInput
 
   useEffect(() => {
     if (landingPageData) {
       // Filter visible fields (treat undefined as visible for backwards compatibility)
       const visibleFields = (landingPageData?.form?.fields || []).filter(field => field.visible !== false);
       
-      // Always create Contact Information step as first step
-      const leadCaptureFields = visibleFields.filter(field => field.isLeadCapture);
-      const contactFields = visibleFields.filter(field => 
-        field.type === 'contact' || field.type === 'email' || field.type === 'phone'
-      );
-      const otherFields = visibleFields.filter(field => 
-        !field.isLeadCapture && 
-        field.type !== 'contact' && 
-        field.type !== 'email' && 
-        field.type !== 'phone'
-      );
+      // Simple 1:1 mapping - use form fields as they are
+      // Each field becomes one step in the preview
+      setFormFields(visibleFields);
       
-      // Use lead capture fields if available, otherwise use basic contact fields
-      const contactStepFields = leadCaptureFields.length > 0 ? leadCaptureFields : contactFields;
-      
-      // Always create Contact Information step if we have any contact-related fields
-      if (contactStepFields.length > 0) {
-        setFormFields([
-          { 
-            id: 'lead-capture-step', 
-            type: 'lead-capture-group', 
-            label: 'Contact Information', 
-            fields: contactStepFields,
-            required: true 
-          },
-          ...otherFields
-        ]);
-      } else {
-        // Fallback: if no contact fields found, still create basic contact step
-        setFormFields([
-          { 
-            id: 'lead-capture-step', 
-            type: 'lead-capture-group', 
-            label: 'Contact Information', 
-            fields: [
-              {
-                id: 'default_contact',
-                type: 'contact',
-                label: 'Full Name',
-                required: true,
-                firstName: { required: true, placeholder: 'First name' },
-                lastName: { required: true, placeholder: 'Last name' }
-              },
-              {
-                id: 'default_email',
-                type: 'email',
-                label: 'Email',
-                required: true,
-                placeholder: 'Email address'
-              }
-            ],
-            required: true 
-          },
-          ...visibleFields
-        ]);
+      // Only reset step if we're at step 0 or form structure changed dramatically
+      // Don't reset if user is already navigating through the form
+      if (currentStep === 0 || !formFields.length) {
+        setCurrentStep(initialStep);
+        setFormData({});
       }
-      
-      // Reset to intro step when form fields change
-      setCurrentStep(0);
-      setFormData({});
     }
   }, [landingPageData]);
+
+  // Update current step when initialStep changes (only when not undefined)
+  useEffect(() => {
+    if (initialStep !== undefined) {
+      console.log('🔄 Preview: Editor driving - setting step to:', initialStep);
+      setCurrentStep(initialStep);
+    } else {
+      console.log('🔄 Preview: Preview driving - maintaining current step:', currentStep);
+    }
+  }, [initialStep]);
 
   const handleInputChange = (fieldId, value) => {
     setFormData(prev => ({
@@ -327,28 +255,115 @@ export default function ApplyPagePreview({ landingPageData }) {
   };
 
   const handleNext = () => {
+    console.log('🔄 handleNext: currentStep =', currentStep, 'formFields.length =', formFields.length);
+    
+    // Skip validation in preview mode for form building
+    if (isPreviewMode) {
+      if (currentStep < formFields.length) {
+        const newStep = currentStep + 1;
+        console.log('🔄 handleNext: Moving from step', currentStep, 'to step', newStep);
+        setCurrentStep(newStep);
+        
+        // Notify parent about step change to update editor
+        if (onStepChange) {
+          if (newStep === 0) {
+            // Step 0 is intro - clear editor selection
+            console.log('🔄 Preview next: Going to intro step, clearing editor selection');
+            onStepChange(newStep, null);
+          } else {
+            // Step > 0 - select corresponding field (simple array mapping)
+            const fieldIndex = newStep - 1; // Convert step to array index
+            const activeField = formFields[fieldIndex];
+            console.log('🔄 Preview next: Going to step', newStep, 'selecting field:', activeField?.label || activeField?.id);
+            onStepChange(newStep, activeField);
+          }
+        }
+      } else {
+        // Preview "submission"
+        console.log('🔄 handleNext: Submitting form, going back to intro');
+        message.success('This is a preview - form would be submitted here');
+        const newStep = 0;
+        setCurrentStep(newStep);
+        setFormData({});
+        // Notify parent about step change to clear editor selection
+        if (onStepChange) {
+          console.log('🔄 Preview submit: Form submitted, going back to intro step, clearing editor selection');
+          onStepChange(newStep, null);
+        }
+      }
+      return;
+    }
+
     // Basic validation for preview (simplified)
     const currentField = formFields[currentStep - 1];
     if (currentStep > 0 && currentField?.required) {
-      if (currentField.type === 'lead-capture-group') {
-        // Validate all lead capture fields
+      if (currentField.type === 'contact') {
+        // Validate contact field (first name, last name, email, phone)
         let hasError = false;
-        currentField.fields.forEach(field => {
-          if (field.type === 'contact') {
-            if (field.firstName?.required && !formData[`${field.id}_firstName`]?.trim()) hasError = true;
-            if (field.lastName?.required && !formData[`${field.id}_lastName`]?.trim()) hasError = true;
-          } else if (field.required && !formData[field.id]?.trim()) {
-            hasError = true;
-          }
-        });
+        if (currentField.firstName?.required && !formData[`${currentField.id}_firstName`]?.trim()) hasError = true;
+        if (currentField.lastName?.required && !formData[`${currentField.id}_lastName`]?.trim()) hasError = true;
+        if (currentField.email?.required && !formData[`${currentField.id}_email`]?.trim()) hasError = true;
+        if (currentField.phone?.required && !formData[`${currentField.id}_phone`]?.trim()) hasError = true;
+        
         if (hasError) {
           message.warning('Please fill in all required contact fields');
           return;
         }
+      } else if (currentField.type === 'date') {
+        // Enhanced date field validation for preview
+        const dateValue = formData[currentField.id];
+        
+        if (!dateValue?.trim()) {
+          message.warning('Please select a date');
+          return;
+        }
+        
+        // Validate the date format and value
+        const date = dayjs(dateValue);
+        if (!date.isValid()) {
+          message.warning('Please enter a valid date');
+          return;
+        }
+      } else if (currentField.type === 'email') {
+        // Email validation for preview
+        const email = formData[currentField.id];
+        if (!email?.trim()) {
+          message.warning('Email is required');
+          return;
+        }
+        
+        // Basic email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+          message.warning('Please enter a valid email address');
+          return;
+        }
+      } else if (currentField.type === 'phone') {
+        // Phone validation for preview
+        const phone = formData[currentField.id];
+        if (!phone?.trim()) {
+          message.warning('Phone number is required');
+          return;
+        }
+        
+        // Basic phone format validation (at least 10 digits)
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+          message.warning('Please enter a valid phone number');
+          return;
+        }
+      } else if (currentField.type === 'multiselect') {
+        // Multi-select validation for preview
+        const values = formData[currentField.id];
+        if (!values || !Array.isArray(values) || values.length === 0) {
+          message.warning('Please select at least one option');
+          return;
+        }
       } else {
+        // General field validation for preview
         const value = formData[currentField.id];
-        if (!value || (Array.isArray(value) && value.length === 0)) {
-          message.warning('This field is required in the actual form');
+        if (!value || (typeof value === 'string' && !value.trim()) || (Array.isArray(value) && value.length === 0)) {
+          message.warning(`${currentField.label || 'This field'} is required in the actual form`);
           return;
         }
       }
@@ -365,8 +380,29 @@ export default function ApplyPagePreview({ landingPageData }) {
   };
 
   const handlePrevious = () => {
+    console.log('🔄 handlePrevious: currentStep =', currentStep);
+    
     if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
+      const newStep = currentStep - 1;
+      console.log('🔄 handlePrevious: Moving from step', currentStep, 'to step', newStep);
+      setCurrentStep(newStep);
+      
+      // Notify parent about step change to update editor
+      if (onStepChange) {
+        if (newStep === 0) {
+          // Step 0 is intro - clear editor selection
+          console.log('🔄 Preview prev: Going back to intro step, clearing editor selection');
+          onStepChange(newStep, null);
+        } else {
+          // Step > 0 - select corresponding field (simple array mapping)
+          const fieldIndex = newStep - 1; // Convert step to array index
+          const activeField = formFields[fieldIndex];
+          console.log('🔄 Preview prev: Going back to step', newStep, 'selecting field:', activeField?.label || activeField?.id);
+          onStepChange(newStep, activeField);
+        }
+      }
+    } else {
+      console.log('🔄 handlePrevious: Already at step 0, cannot go back further');
     }
   };
 
@@ -376,37 +412,101 @@ export default function ApplyPagePreview({ landingPageData }) {
     switch (field.type) {
       case 'contact':
         return (
-          <div className="grid grid-cols-2 gap-4">
-            {field.firstName?.visible !== false && (
+          <div className="space-y-4">
+            {/* First Name and Last Name in a row */}
+            <div className="grid grid-cols-2 gap-4">
+              {field.firstName?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-xs text-gray-600">
+                    {field.firstName?.label || getTranslation(landingPageData?.lang, 'firstName') || 'First Name'}
+                    {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_firstName`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
+                    placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang, 'firstName') || "First name"}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+              {field.lastName?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-xs text-gray-600">
+                    {field.lastName?.label || getTranslation(landingPageData?.lang, 'lastName') || 'Last Name'}
+                    {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_lastName`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
+                    placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang, 'lastName') || "Last name"}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+            </div>
+            
+            {/* Email field */}
+            {field.email?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-xs text-gray-600">
-                  {field.firstName?.label || 'First Name'}
-                  {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
+                  {field.email?.label || getTranslation(landingPageData?.lang, 'email') || 'Email'}
+                  {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
-                  value={formData[`${field.id}_firstName`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
-                  placeholder={field.firstName?.placeholder || "First name"}
+                  type="email"
+                  value={formData[`${field.id}_email`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_email`, e.target.value)}
+                  placeholder={field.email?.placeholder || getTranslation(landingPageData?.lang, 'email') || "Email address"}
                   className="rounded-lg"
                   size="large"
                 />
               </div>
             )}
-            {field.lastName?.visible !== false && (
+            
+            {/* Phone field */}
+            {field.phone?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-xs text-gray-600">
-                  {field.lastName?.label || 'Last Name'}
-                  {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
+                  {field.phone?.label || getTranslation(landingPageData?.lang, 'phone') || 'Phone'}
+                  {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
-                  value={formData[`${field.id}_lastName`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
-                  placeholder={field.lastName?.placeholder || "Last name"}
+                  type="tel"
+                  value={formData[`${field.id}_phone`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_phone`, e.target.value)}
+                  placeholder={field.phone?.placeholder || getTranslation(landingPageData?.lang, 'phone') || "Phone number"}
                   className="rounded-lg"
                   size="large"
                 />
               </div>
             )}
+
+            {/* Additional contact fields */}
+            {field.additionalFields?.map((additionalField) => {
+              console.log("🔍 PREVIEW: Rendering additional field in renderSingleField:", additionalField.key, field[additionalField.key]);
+              
+              // Show the field if it exists and is not explicitly hidden
+              const fieldData = field[additionalField.key] || additionalField;
+              const isVisible = fieldData?.visible !== false;
+              
+              return isVisible && (
+                <div key={additionalField.key}>
+                  <label className="block mb-1 font-semibold text-xs text-gray-600">
+                    {fieldData?.label || additionalField.label || 'Custom Field'}
+                    {fieldData?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_${additionalField.key}`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_${additionalField.key}`, e.target.value)}
+                    placeholder={fieldData?.placeholder || additionalField.placeholder || 'Enter value'}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              );
+            })}
           </div>
         );
 
@@ -426,13 +526,13 @@ export default function ApplyPagePreview({ landingPageData }) {
       case 'phone':
         const phonePlaceholder = contactField?.phone?.placeholder || field.placeholder || field.customPlaceholder || "Phone number";
         return (
-          <PhoneInput
-            defaultCountry={detectedCountry}
-            inputClassName="rounded-lg w-full !h-10"
-            placeholder={phonePlaceholder}
+          <Input
+            type="tel"
             value={value}
-            onChange={(phoneValue) => handleInputChange(field.id, phoneValue)}
-            className="p-1"
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            placeholder={phonePlaceholder}
+            className="rounded-lg"
+            size="large"
           />
         );
 
@@ -451,67 +551,111 @@ export default function ApplyPagePreview({ landingPageData }) {
 
   const renderField = (field) => {
     const value = formData[field.id] || '';
+    console.log("field", field)
 
     switch (field.type) {
-      case 'lead-capture-group':
+
+      case 'contact':
+        console.log("🔍 PREVIEW CONTACT FIELD:", field);
+        console.log("🔍 PREVIEW ADDITIONAL FIELDS:", field.additionalFields);
         return (
-          <div className="space-y-6">
-            {field.fields.map((subField) => {
-              // 🔥 DIRECT FIX: For email/phone, read from contact field if available
-              const contactField = field.fields.find(f => f.type === 'contact');
-              let displayLabel = subField.label || subField.customLabel;
-              
-              if (subField.type === 'email' && contactField?.email?.label) {
-                displayLabel = contactField.email.label;
-              } else if (subField.type === 'phone' && contactField?.phone?.label) {
-                displayLabel = contactField.phone.label;
-              }
-              
-              return (
-                <div key={subField.id}>
-                  <label className="block mb-2 font-semibold text-sm">
-                    {displayLabel}
-                    {subField.required && <span className="ml-1 text-red-500">*</span>}
+          <div className="space-y-4">
+            {/* First Name and Last Name in a row */}
+            <div className="grid grid-cols-2 gap-4">
+              {field.firstName?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">
+                    {field.firstName?.label || getTranslation(landingPageData?.lang, 'firstName') || 'First Name'}
+                    {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  {renderSingleField(subField, contactField)}
+                  <Input
+                    value={formData[`${field.id}_firstName`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
+                    placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang, 'firstName') || "First name"}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+              {field.lastName?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">
+                    {field.lastName?.label || getTranslation(landingPageData?.lang, 'lastName') || 'Last Name'}
+                    {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_lastName`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
+                    placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang, 'lastName') || "Last name"}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+            </div>
+            
+            {/* Email field */}
+            {field.email?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-sm">
+                  {field.email?.label || getTranslation(landingPageData?.lang, 'email') || 'Email'}
+                  {field.email?.required && <span className="ml-1 text-red-500">*</span>}
+                </label>
+                <Input
+                  type="email"
+                  value={formData[`${field.id}_email`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_email`, e.target.value)}
+                  placeholder={field.email?.placeholder || getTranslation(landingPageData?.lang, 'email') || "Email address"}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+            
+            {/* Phone field */}
+            {field.phone?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-sm">
+                  {field.phone?.label || getTranslation(landingPageData?.lang, 'phone') || 'Phone'}
+                  {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
+                </label>
+                <Input
+                  type="tel"
+                  value={formData[`${field.id}_phone`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_phone`, e.target.value)}
+                  placeholder={field.phone?.placeholder || getTranslation(landingPageData?.lang, 'phone') || "Phone number"}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+
+            {/* Additional contact fields */}
+            {field.additionalFields?.map((additionalField) => {
+              console.log("🔍 PREVIEW: Rendering additional field:", additionalField.key, field[additionalField.key]);
+              console.log("🔍 PREVIEW: Field object:", field);
+              console.log("🔍 PREVIEW: Additional fields array:", field.additionalFields);
+              
+              // Show the field if it exists and is not explicitly hidden
+              const fieldData = field[additionalField.key] || additionalField;
+              const isVisible = fieldData?.visible !== false;
+              
+              return isVisible && (
+                <div key={additionalField.key}>
+                  <label className="block mb-1 font-semibold text-sm">
+                    {fieldData?.label || additionalField.label || 'Custom Field'}
+                    {fieldData?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_${additionalField.key}`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_${additionalField.key}`, e.target.value)}
+                    placeholder={fieldData?.placeholder || additionalField.placeholder || 'Enter value'}
+                    className="rounded-lg"
+                    size="large"
+                  />
                 </div>
               );
             })}
-          </div>
-        );
-      case 'contact':
-        return (
-          <div className="grid grid-cols-2 gap-4">
-            {field.firstName?.visible !== false && (
-              <div>
-                <label className="block mb-1 font-semibold text-sm">
-                  First Name
-                  {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
-                </label>
-                <Input
-                  value={formData[`${field.id}_firstName`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
-                  placeholder={field.firstName?.placeholder || "First name"}
-                  className="rounded-lg"
-                  size="large"
-                />
-              </div>
-            )}
-            {field.lastName?.visible !== false && (
-              <div>
-                <label className="block mb-1 font-semibold text-sm">
-                  Last Name
-                  {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
-                </label>
-                <Input
-                  value={formData[`${field.id}_lastName`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
-                  placeholder={field.lastName?.placeholder || "Last name"}
-                  className="rounded-lg"
-                  size="large"
-                />
-              </div>
-            )}
           </div>
         );
 
@@ -531,13 +675,13 @@ export default function ApplyPagePreview({ landingPageData }) {
       case 'phone':
         const phonePlaceholder2 = field.placeholder || field.customPlaceholder || "Phone number";
         return (
-          <PhoneInput
-            defaultCountry={detectedCountry}
-            inputClassName="rounded-lg w-full !h-10"
-            placeholder={phonePlaceholder2}
+          <Input
+            type="tel"
             value={value}
-            onChange={(phoneValue) => handleInputChange(field.id, phoneValue)}
-            className="p-1"
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            placeholder={phonePlaceholder2}
+            className="rounded-lg"
+            size="large"
           />
         );
 
@@ -695,42 +839,28 @@ export default function ApplyPagePreview({ landingPageData }) {
         );
 
       case 'date':
+        const dateValue = formData[field.id] ? dayjs(formData[field.id]) : null;
+        const currentYear = new Date().getFullYear();
+        
         return (
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block mb-1 font-semibold text-sm">Month</label>
-              <Input
-                value={formData[`${field.id}_month`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_month`, e.target.value)}
-                placeholder="MM"
-                className="rounded-lg"
-                size="large"
-                maxLength={2}
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-semibold text-sm">Day</label>
-              <Input
-                value={formData[`${field.id}_day`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_day`, e.target.value)}
-                placeholder="DD"
-                className="rounded-lg"
-                size="large"
-                maxLength={2}
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-semibold text-sm">Year</label>
-              <Input
-                value={formData[`${field.id}_year`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_year`, e.target.value)}
-                placeholder="YYYY"
-                className="rounded-lg"
-                size="large"
-                maxLength={4}
-              />
-            </div>
-          </div>
+          <DatePicker
+            value={dateValue}
+            onChange={(date) => {
+              const dateString = date ? date.format('YYYY-MM-DD') : '';
+              handleInputChange(field.id, dateString);
+            }}
+            placeholder={field.placeholder || field.customPlaceholder || "Select date"}
+            className="rounded-lg w-full"
+            size="large"
+            format={field.dateFormat === 'DDMMYYYY' ? 'DD/MM/YYYY' : field.dateFormat === 'YYYYMMDD' ? 'YYYY/MM/DD' : 'MM/DD/YYYY'}
+            disabledDate={(current) => {
+              // Disable dates more than 100 years ago or 10 years in the future
+              return current && (
+                current < dayjs().subtract(100, 'years') || 
+                current > dayjs().add(10, 'years')
+              );
+            }}
+          />
         );
 
       case 'file':
@@ -769,6 +899,7 @@ export default function ApplyPagePreview({ landingPageData }) {
   const totalSteps = formFields.length + 1; // +1 for intro step
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
+  console.log("formFields[currentStep - 1] ",formFields[currentStep - 1])
   return (
     <div className="min-h-screen bg-gray-50 preview-form-container">{/* UNIQUE PREVIEW CLASS */}
       {/* 🎨 APPLY CUSTOM FONTS */}
@@ -831,7 +962,6 @@ export default function ApplyPagePreview({ landingPageData }) {
                 </p>
               </div>
             </div>
-            <div className="text-xs text-gray-400">PREVIEW</div>
           </div>
           
           {/* Progress Bar */}
@@ -872,7 +1002,7 @@ export default function ApplyPagePreview({ landingPageData }) {
                     border: `1px solid ${primaryColor}`
                   }}
                 >
-                  Start Application
+                  {getTranslation(landingPageData?.lang, 'startApplication')}
                 </Button>
               </div>
             ) : (
@@ -905,7 +1035,7 @@ export default function ApplyPagePreview({ landingPageData }) {
                 disabled={currentStep === 0}
               >
                 <ArrowLeft size={14} />
-                <span>Previous</span>
+                                  <span>{getTranslation(landingPageData?.lang, 'previous')}</span>
               </Button>
 
               <Button 
@@ -920,7 +1050,7 @@ export default function ApplyPagePreview({ landingPageData }) {
                   border: `1px solid ${primaryColor}`
                 }}
               >
-                <span>{currentStep === formFields.length ? 'Submit Application' : 'Next'}</span>
+                <span>{currentStep === formFields.length ? getTranslation(landingPageData?.lang, 'submit') : getTranslation(landingPageData?.lang, 'next')}</span>
                 <ArrowRight size={14} />
               </Button>
             </div>

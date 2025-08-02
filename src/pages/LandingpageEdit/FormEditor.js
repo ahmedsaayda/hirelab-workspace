@@ -307,7 +307,32 @@ const FormEditor = ({ landingPageData, setLandingPageData }) => {
         </Space>
 
         <div className="h-px mt-4 bg-blue_gray-50_01" />
-        <div className="flex gap-5 mt-2">
+        
+        {/* Advanced Form Builder Navigation */}
+        <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Advanced Form Builder</h3>
+              <p className="text-sm text-gray-600">
+                Create sophisticated forms with AI assistance, custom validation, and advanced field types.
+              </p>
+            </div>
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => router.push(`/form-editor/${lpId}`)}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+              style={{
+                background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)',
+                border: 'none'
+              }}
+            >
+              🚀 Open Form Builder
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex gap-5 mt-4">
           <Button
             disabled={!changed}
             onClick={async () => {

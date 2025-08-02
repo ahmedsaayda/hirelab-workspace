@@ -1,7 +1,7 @@
 "use client";
 
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { Form, Input, Modal, Radio, Skeleton, Switch, message, Spin } from "antd";
+import { Form, Input, Modal, Radio, Skeleton, Switch, message, Spin, Tooltip } from "antd";
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import CrudService from "../../services/CrudService";
@@ -25,6 +25,7 @@ import { selectUser } from "../../redux/auth/selectors";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import ApplyCustomFont from "../Landingpage/ApplyCustomFont";
 import { getFonts } from "../Landingpage/getFonts";
+import { getTranslation } from "../../utils/translations";
 
 const { TextArea } = Input;
 
@@ -77,6 +78,8 @@ export default function FormEdit({paramsId}) {
   const [isEditingForm, setIsEditingForm] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [device, setDevice] = useState('desktop');
+  const previewNavigatingRef = useRef(false); // Track if preview is currently navigating
+
   const [forceUpdate, setForceUpdate] = useState(0); // Force re-render key
   const [aiFormModalVisible, setAiFormModalVisible] = useState(false);
   
@@ -158,54 +161,93 @@ export default function FormEdit({paramsId}) {
             return processedField;
           });
 
-          // 🔥 LEAD CAPTURE ENFORCEMENT: Ensure lead capture fields always exist
+          // 🔥 SIMPLIFIED LEAD CAPTURE: Only ensure contact field exists (which includes all contact info)
           const ensureLeadCaptureFields = (fields) => {
-            const leadCaptureTypes = ['contact', 'email', 'phone'];
-            const existingTypes = fields.map(f => f.type);
-            const missingLeadTypes = leadCaptureTypes.filter(type => !existingTypes.includes(type));
+            const existingContactField = fields.find(f => f.type === 'contact');
             
-            // Create missing lead capture fields
-            const newLeadFields = missingLeadTypes.map(type => {
+            // If no contact field exists, create one with all contact information
+            if (!existingContactField) {
               const generateUniqueId = () => {
                 const timestamp = Date.now();
                 const random = Math.floor(Math.random() * 1000);
-                return `${type}_${timestamp}_${random}`;
+                return `contact_${timestamp}_${random}`;
               };
 
-              const baseField = {
+              const contactField = {
                 id: generateUniqueId(),
-                type,
-                label: formItems.find((item) => item.type === type)?.text || "",
+                type: 'contact',
+                label: 'Contact Information',
                 placeholder: "",
-                required: true, // Lead capture is always required
+                required: true,
                 visible: true,
-                isLeadCapture: true // Mark as non-removable
+                isLeadCapture: true,
+                firstName: { 
+                  visible: true, 
+                  required: true,
+                  label: getTranslation(landingPageData?.lang, 'firstName') || 'First Name',
+                  placeholder: ''
+                },
+                lastName: { 
+                  visible: true, 
+                  required: true,
+                  label: getTranslation(landingPageData?.lang, 'lastName') || 'Last Name',
+                  placeholder: ''
+                },
+                email: { 
+                  visible: true, 
+                  required: true,
+                  label: getTranslation(landingPageData?.lang, 'email') || 'Email',
+                  placeholder: ''
+                },
+                phone: { 
+                  visible: true, 
+                  required: false,
+                  label: getTranslation(landingPageData?.lang, 'phone') || 'Phone',
+                  placeholder: ''
+                }
               };
 
-              if (type === 'contact') {
-                return {
-                  ...baseField,
-                  firstName: { visible: true, required: true },
-                  lastName: { visible: true, required: true }
-                };
-              }
+              // Remove any standalone email/phone fields since they're now in contact
+              const nonContactFields = fields.filter(f => !['email', 'phone'].includes(f.type));
+              return [contactField, ...nonContactFields];
+            }
 
-              return baseField;
-            });
-
-            // Separate lead capture and other fields
-            const leadCaptureFields = fields.filter(f => ['contact', 'email', 'phone'].includes(f.type));
-            const otherFields = fields.filter(f => !['contact', 'email', 'phone'].includes(f.type));
-
-            // Mark existing lead capture fields as non-removable
-            const markedLeadFields = leadCaptureFields.map(field => ({
-              ...field,
+            // If contact field exists, ensure it has all necessary subfields and remove standalone email/phone
+            const updatedContactField = {
+              ...existingContactField,
               isLeadCapture: true,
-              required: true // Ensure lead capture is always required
-            }));
+              required: true,
+              firstName: existingContactField.firstName || { 
+                visible: true, 
+                required: true,
+                label: getTranslation(landingPageData?.lang, 'firstName') || 'First Name',
+                placeholder: ''
+              },
+              lastName: existingContactField.lastName || { 
+                visible: true, 
+                required: true,
+                label: getTranslation(landingPageData?.lang, 'lastName') || 'Last Name',
+                placeholder: ''
+              },
+              email: existingContactField.email || { 
+                visible: true, 
+                required: true,
+                label: getTranslation(landingPageData?.lang, 'email') || 'Email',
+                placeholder: ''
+              },
+              phone: existingContactField.phone ? {
+                ...existingContactField.phone
+              } : { 
+                visible: true, 
+                required: false,
+                label: getTranslation(landingPageData?.lang, 'phone') || 'Phone',
+                placeholder: ''
+              }
+            };
 
-            // Return lead capture first, then other fields
-            return [...markedLeadFields, ...newLeadFields, ...otherFields];
+            // Remove standalone email/phone fields and replace/add the unified contact field
+            const otherFields = fields.filter(f => !['contact', 'email', 'phone'].includes(f.type));
+            return [updatedContactField, ...otherFields];
           };
 
           fields = ensureLeadCaptureFields(fields);
@@ -217,6 +259,13 @@ export default function FormEdit({paramsId}) {
             if (field.firstName && field.lastName) {
               console.log(`      First Name: visible: ${field.firstName.visible}, required: ${field.firstName.required}`);
               console.log(`      Last Name: visible: ${field.lastName.visible}, required: ${field.lastName.required}`);
+            }
+            if (field.email) {
+              console.log(`      Email: visible: ${field.email.visible}, required: ${field.email.required}`);
+            }
+            if (field.phone) {
+              console.log(`      Phone: visible: ${field.phone.visible}, required: ${field.phone.required}`);
+              console.log(`      Phone field full object:`, field.phone);
             }
           });
           
@@ -267,18 +316,20 @@ export default function FormEdit({paramsId}) {
     
     console.log("✅ New sections order:", newSections.map(s => `${s.type}(${s.isLeadCapture ? 'lead' : 'regular'})`));
     
-    // updateFormData will handle setFormSections
-    updateFormData(newSections);
+    // updateFormData will handle setFormSections - force update for structural changes
+    updateFormData(newSections, true);
   };
 
-  const updateFormData = (fields) => {
+  const updateFormData = (fields, shouldForceUpdate = false) => {
     console.log("📋 updateFormData with fields:", fields);
     
     // Update formSections state immediately and synchronously
     setFormSections(fields);
     
-    // Force UI update to reflect new state immediately
-    setForceUpdate(prev => prev + 1);
+    // Only force UI update when structure changes (like adding/removing fields)
+    if (shouldForceUpdate) {
+      setForceUpdate(prev => prev + 1);
+    }
     
     // Build complete updated data
     const updatedData = {
@@ -339,6 +390,13 @@ export default function FormEdit({paramsId}) {
       const response = await CrudService.update("LandingPageData", lpId, cleanedData);
       console.log("✅ Direct save successful", response);
       setLastSaved(new Date().toLocaleTimeString());
+      
+      // 🔥 FIX: Update landingPageData with the response to get the latest updatedAt timestamp
+      if (response?.data) {
+        setLandingPageData(response.data);
+        console.log("📅 Updated landingPageData with latest timestamp:", response.data.updatedAt);
+      }
+      
       return true;
     } catch (error) {
       console.error("❌ Direct save failed:", error);
@@ -409,6 +467,25 @@ export default function FormEdit({paramsId}) {
     };
 
     // 🔒 LEAD CAPTURE PROTECTION: Prevent adding duplicate lead capture fields
+    // If trying to add email/phone but contact field exists, prevent it
+    if (type === "email" || type === "phone") {
+      const contactExists = formSections.find((section) => section.type === "contact");
+      if (contactExists) {
+        message.error(`${type === 'email' ? 'Email' : 'Phone'} field is already included in the Contact Information section`);
+        return;
+      }
+    }
+    
+    // If trying to add contact but email/phone exists, prevent it
+    if (type === "contact") {
+      const emailExists = formSections.find((section) => section.type === "email");
+      const phoneExists = formSections.find((section) => section.type === "phone");
+      if (emailExists || phoneExists) {
+        message.error("Contact Information field cannot be added when separate Email or Phone fields exist. Please remove them first.");
+        return;
+      }
+    }
+    
     const leadCaptureTypes = ["email", "contact", "phone"];
     if (leadCaptureTypes.includes(type)) {
       const typeExist = formSections.find((section) => section.type === type);
@@ -449,8 +526,8 @@ export default function FormEdit({paramsId}) {
       updatedSections = [...formSections, newSection];
     }
 
-    // updateFormData will handle setFormSections
-    updateFormData(updatedSections);
+    // updateFormData will handle setFormSections - force update for adding fields
+    updateFormData(updatedSections, true);
     setQuestionModal(false);
   };
 
@@ -466,8 +543,8 @@ export default function FormEdit({paramsId}) {
     const updatedSections = formSections.filter(
       (section) => section.id !== sectionId
     );
-    // updateFormData will handle setFormSections
-    updateFormData(updatedSections);
+    // updateFormData will handle setFormSections - force update for removing fields
+    updateFormData(updatedSections, true);
     if (selectedSection?.id === sectionId) {
       setSelectedSection(null);
       setIsEditingForm(true);
@@ -561,8 +638,8 @@ export default function FormEdit({paramsId}) {
     console.log("📊 ALL UPDATED SECTIONS:", updatedSections);
     console.log("💾 AUTO-SAVING CHANGES IMMEDIATELY");
     
-    // Trigger immediate autosave
-    updateFormData(updatedSections);
+    // Trigger immediate autosave - no force update for property changes
+    updateFormData(updatedSections, false);
 
     // Update the selectedSection state
     if (selectedSection && selectedSection.id === sectionId) {
@@ -574,8 +651,8 @@ export default function FormEdit({paramsId}) {
     const updatedSections = formSections.map((section) =>
       section.id === updatedField.id ? updatedField : section
     );
-    // updateFormData will handle setFormSections
-    updateFormData(updatedSections);
+    // updateFormData will handle setFormSections - no force update for field value changes
+    updateFormData(updatedSections, false);
   };
 
   // Handle AI-generated form data with auto-save
@@ -601,7 +678,7 @@ export default function FormEdit({paramsId}) {
     
     // Update both landing page data and form sections with auto-save
     setLandingPageData(updatedLandingPageData);
-    updateFormData(aiFormFields); // This will trigger auto-save
+    updateFormData(aiFormFields, true); // Force update for AI-generated fields
     
     // Show success message
     message.success(`AI generated ${aiFormFields.length} form fields and auto-saved them!`);
@@ -620,10 +697,225 @@ export default function FormEdit({paramsId}) {
 
     if (!currentSection) return null;
 
+    // Handle contact fields with clean vertical layout
+    if (currentSection.type === "contact") {
+      return (
+        <Form layout="vertical" className="space-y-4">
+          <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Field Label</span>}>
+            <Input
+              value={currentSection.label}
+              onChange={(e) =>
+                handleUpdateSection(currentSection.id, { label: e.target.value })
+              }
+              className="rounded-lg"
+            />
+          </Form.Item>
+
+          <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Placeholder</span>}>
+            <Input
+              value={currentSection.placeholder}
+              onChange={(e) =>
+                handleUpdateSection(currentSection.id, {
+                  placeholder: e.target.value,
+                })
+              }
+              className="rounded-lg"
+            />
+          </Form.Item>
+
+          {/* Core contact fields with borders and separation */}
+          {[
+            { key: 'firstName', label: 'First Name', required: true },
+            { key: 'lastName', label: 'Last Name', required: true },
+            { key: 'email', label: 'Email', required: true },
+            { key: 'phone', label: 'Phone Number', required: false }
+          ].map((contactField) => (
+            <div key={contactField.key} className="p-4 border border-gray-200 rounded-lg bg-gray-50/30 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-[14px] text-[#475647]">{contactField.label} Field</span>
+                {contactField.required && (
+                  <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[10px]">Required</span>
+                )}
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[12px] text-gray-600 mb-1">Label</label>
+                  <Input
+                    value={currentSection[contactField.key]?.label || contactField.label}
+                    onChange={(e) => {
+                      handleUpdateSection(currentSection.id, {
+                        [contactField.key]: {
+                          ...currentSection[contactField.key],
+                          label: e.target.value
+                        }
+                      });
+                    }}
+                    className="rounded-lg"
+                    placeholder={contactField.label}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-[12px] text-gray-600 mb-1">Placeholder</label>
+                  <Input
+                    value={currentSection[contactField.key]?.placeholder || ''}
+                    onChange={(e) => {
+                      handleUpdateSection(currentSection.id, {
+                        [contactField.key]: {
+                          ...currentSection[contactField.key],
+                          placeholder: e.target.value
+                        }
+                      });
+                    }}
+                    className="rounded-lg"
+                    placeholder={`${contactField.label.toLowerCase()}`}
+                  />
+                </div>
+
+              </div>
+            </div>
+          ))}
+
+          {/* Additional contact fields with borders */}
+          {currentSection.additionalFields?.map((field, index) => (
+            <div key={index} className="p-4 border border-gray-200 rounded-lg bg-gray-50/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[14px] text-[#475647]">{field.label} Field</span>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    const newAdditionalFields = (currentSection.additionalFields || []).filter((_, i) => i !== index);
+                    handleUpdateSection(currentSection.id, {
+                      additionalFields: newAdditionalFields,
+                      [field.key]: undefined
+                    });
+                  }}
+                  className="p-0 bg-transparent border-none shadow-none text-red-500 hover:text-red-700"
+                  type="text"
+                >
+                  <img
+                    src="/images2/img_trash_01_red_700.svg"
+                    alt="remove"
+                    className="h-[16px] w-[16px]"
+                  />
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[12px] text-gray-600 mb-1">Label</label>
+                  <Input
+                    value={field.label}
+                    onChange={(e) => {
+                      const newAdditionalFields = [...(currentSection.additionalFields || [])];
+                      newAdditionalFields[index] = { ...field, label: e.target.value };
+                      handleUpdateSection(currentSection.id, {
+                        additionalFields: newAdditionalFields,
+                        [field.key]: { ...currentSection[field.key], label: e.target.value }
+                      });
+                    }}
+                    className="rounded-lg"
+                    placeholder="Field label"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-[12px] text-gray-600 mb-1">Placeholder</label>
+                  <Input
+                    value={field.placeholder || ''}
+                    onChange={(e) => {
+                      const newAdditionalFields = [...(currentSection.additionalFields || [])];
+                      newAdditionalFields[index] = { ...field, placeholder: e.target.value };
+                      handleUpdateSection(currentSection.id, {
+                        additionalFields: newAdditionalFields,
+                        [field.key]: { ...currentSection[field.key], placeholder: e.target.value }
+                      });
+                    }}
+                    className="rounded-lg"
+                    placeholder="Placeholder text"
+                  />
+                </div>
+
+              </div>
+            </div>
+          ))}
+          
+          <Button
+            size="large"
+            onClick={() => {
+              // Generate a unique key for the new field
+              const timestamp = Date.now();
+              const randomId = Math.random().toString(36).substr(2, 5);
+              const newFieldKey = `custom_${timestamp}_${randomId}`;
+              
+              const newField = {
+                key: newFieldKey,
+                label: 'Custom Field',
+                placeholder: 'Enter value'
+              };
+              
+              const newAdditionalFields = [
+                ...(currentSection.additionalFields || []),
+                newField
+              ];
+              
+              handleUpdateSection(currentSection.id, {
+                additionalFields: newAdditionalFields,
+                [newFieldKey]: {
+                  visible: true,
+                  required: false,
+                  label: 'Custom Field',
+                  placeholder: 'Enter value'
+                }
+              });
+            }}
+            className="mt-4 w-full text-[14px] text-[#475647] font-bold border-dashed"
+            disabled={(currentSection.additionalFields || []).length >= 10}
+            type="dashed"
+          >
+            <PlusOutlined /> Add Custom Field
+          </Button>
+        </Form>
+      );
+    }
+
+    // Default field editor for all other field types
     return (
       <Form layout="vertical" className="space-y-4">
-      <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Field Label</span>}>
+        {/* Visible/Required Settings at top right */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex-1">
+            <span className="font-bold text-[14px] text-[#475647]">Field Settings</span>
+          </div>
+          <div className="flex items-center gap-6 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={currentSection.visible !== false}
+                onChange={(checked) => {
+                  handleUpdateSection(currentSection.id, {
+                    visible: checked
+                  });
+                }}
+              />
+              <span className="text-sm text-gray-700">Visible</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={currentSection.required || false}
+                onChange={(checked) => {
+                  handleUpdateSection(currentSection.id, {
+                    required: checked
+                  });
+                }}
+              />
+              <span className="text-sm text-gray-700">Required</span>
+            </div>
+          </div>
+        </div>
 
+        <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">{getTranslation(landingPageData?.lang, 'fieldLabel')}</span>}>
           <Input
             value={currentSection.label}
             onChange={(e) =>
@@ -634,7 +926,7 @@ export default function FormEdit({paramsId}) {
         </Form.Item>
 
         {/* <Form.Item label="Placeholder"> */}
-      <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Placeholder</span>}>
+      <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">{getTranslation(landingPageData?.lang, 'placeholder')}</span>}>
 
           <Input
             value={currentSection.placeholder}
@@ -736,154 +1028,7 @@ export default function FormEdit({paramsId}) {
           </Form.Item>
         )}
 
-        {/* Contact Field Editor */}
-        {currentSection.type === "contact" && (
-          <div className="space-y-4">
-            <div className="border rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-3">First Name Field</h4>
-              <div className="space-y-3">
-                <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Label</span>}>
-                  <Input
-                    value={currentSection.firstName?.label || 'First Name'}
-                    onChange={(e) =>
-                      handleUpdateSection(currentSection.id, {
-                        firstName: {
-                          ...currentSection.firstName,
-                          label: e.target.value
-                        }
-                      })
-                    }
-                    className="rounded-lg"
-                    placeholder="e.g., First Name, Given Name"
-                  />
-                </Form.Item>
-                <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Placeholder</span>}>
-                  <Input
-                    value={currentSection.firstName?.placeholder || 'First name'}
-                    onChange={(e) =>
-                      handleUpdateSection(currentSection.id, {
-                        firstName: {
-                          ...currentSection.firstName,
-                          placeholder: e.target.value
-                        }
-                      })
-                    }
-                    className="rounded-lg"
-                    placeholder="e.g., Enter your first name"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-            
-            <div className="border rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-3">Last Name Field</h4>
-              <div className="space-y-3">
-                <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Label</span>}>
-                  <Input
-                    value={currentSection.lastName?.label || 'Last Name'}
-                    onChange={(e) =>
-                      handleUpdateSection(currentSection.id, {
-                        lastName: {
-                          ...currentSection.lastName,
-                          label: e.target.value
-                        }
-                      })
-                    }
-                    className="rounded-lg"
-                    placeholder="e.g., Last Name, Family Name, Surname"
-                  />
-                </Form.Item>
-                <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Placeholder</span>}>
-                  <Input
-                    value={currentSection.lastName?.placeholder || 'Last name'}
-                    onChange={(e) =>
-                      handleUpdateSection(currentSection.id, {
-                        lastName: {
-                          ...currentSection.lastName,
-                          placeholder: e.target.value
-                        }
-                      })
-                    }
-                    className="rounded-lg"
-                    placeholder="e.g., Enter your last name"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-            
-            <div className="border rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-3">Email Field</h4>
-              <div className="space-y-3">
-                <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Label</span>}>
-                  <Input
-                    value={currentSection.email?.label || 'Email'}
-                    onChange={(e) =>
-                      handleUpdateSection(currentSection.id, {
-                        email: {
-                          ...currentSection.email,
-                          label: e.target.value
-                        }
-                      })
-                    }
-                    className="rounded-lg"
-                    placeholder="e.g., Email Address, Work Email, Contact Email"
-                  />
-                </Form.Item>
-                <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Placeholder</span>}>
-                  <Input
-                    value={currentSection.email?.placeholder || 'Email address'}
-                    onChange={(e) =>
-                      handleUpdateSection(currentSection.id, {
-                        email: {
-                          ...currentSection.email,
-                          placeholder: e.target.value
-                        }
-                      })
-                    }
-                    className="rounded-lg"
-                    placeholder="e.g., Enter your email address"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-            
-            <div className="border rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-3">Phone Field</h4>
-              <div className="space-y-3">
-                <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Label</span>}>
-                  <Input
-                    value={currentSection.phone?.label || 'Phone Number'}
-                    onChange={(e) =>
-                      handleUpdateSection(currentSection.id, {
-                        phone: {
-                          ...currentSection.phone,
-                          label: e.target.value
-                        }
-                      })
-                    }
-                    className="rounded-lg"
-                    placeholder="e.g., Phone Number, Mobile Number, Contact Number"
-                  />
-                </Form.Item>
-                <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Placeholder</span>}>
-                  <Input
-                    value={currentSection.phone?.placeholder || 'Phone number'}
-                    onChange={(e) =>
-                      handleUpdateSection(currentSection.id, {
-                        phone: {
-                          ...currentSection.phone,
-                          placeholder: e.target.value
-                        }
-                      })
-                    }
-                    className="rounded-lg"
-                    placeholder="e.g., Enter your phone number"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-          </div>
-        )}
+
 
    
         {/* Date Field Editor */}
@@ -923,7 +1068,7 @@ export default function FormEdit({paramsId}) {
   if (!landingPageData) return <Skeleton active />;     
 
   return (
-    <div className="h-screen overflow-hidden">
+    <>
       {/* 🎨 APPLY CUSTOM FONTS */}
       <ApplyCustomFont landingPageData={{
         ...landingPageData,
@@ -932,11 +1077,16 @@ export default function FormEdit({paramsId}) {
         subheaderFont: userBrandData?.subheaderFont || user?.subheaderFont,
       }} />
       
-      <div className="w-full bg-gray-50_01 h-full flex flex-col">
+      <div className="h-screen overflow-hidden">
+        <div className="w-full bg-gray-50_01 h-full flex flex-col">
         <div className="flex flex-col pt-6 smx:pt-5 h-full">
           <Header
             className="p-[20px] mdx:w-full mdx:p-5"
             landingPageData={landingPageData}
+            isAutoSaving={isSaving}
+            lastSaved={lastSaved}
+            isFormEditor={true}
+            lpId={lpId}
             setPublished={async (e) => {
               console.log("🚀 Publishing changes...");
               
@@ -973,8 +1123,6 @@ export default function FormEdit({paramsId}) {
             }}
             setLandingPageData={setLandingPageData}
             reload={fetchData}
-            lpId={lpId}
-            isFormEditor={true}
           />
           <div className="flex-1 flex flex-col smx:pb-5 overflow-hidden main-container">
             <div className="flex gap-2 smx:gap-1 md:gap-4 justify-center items-start p-2 smx:p-1 md:p-3 container-sm h-full">
@@ -1028,19 +1176,24 @@ export default function FormEdit({paramsId}) {
                               </div>
                               {/* Lead Capture Group - Consistent with other items */}
                               {formSections.some(s => s.isLeadCapture) && (
-                                <div
-                                  className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group ${
-                                    selectedSection?.isLeadCapture && !isEditingForm
-                                      ? "bg-gray-50" 
-                                      : "hover:bg-gray-50"
-                                  }`}
-                                  onClick={() => {
-                                    // Select the first lead capture field for editing
-                                    const firstLeadCaptureField = formSections.find(s => s.isLeadCapture);
-                                    setSelectedSection(firstLeadCaptureField);
-                                    setIsEditingForm(false);
-                                  }}
+                                <Tooltip 
+                                  title="Contact Information - Essential lead capture fields (Name, Email, Phone)"
+                                  placement="right"
+                                  mouseEnterDelay={0.3}
                                 >
+                                  <div
+                                    className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group ${
+                                      selectedSection?.isLeadCapture && !isEditingForm
+                                        ? "bg-gray-50" 
+                                        : "hover:bg-gray-50"
+                                    }`}
+                                    onClick={() => {
+                                      // Select the first lead capture field for editing
+                                      const firstLeadCaptureField = formSections.find(s => s.isLeadCapture);
+                                      setSelectedSection(firstLeadCaptureField);
+                                      setIsEditingForm(false);
+                                    }}
+                                  >
                                   <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '140px'}}>
                                     <div className={`rounded-full p-1 ${
                                       selectedSection?.isLeadCapture && !isEditingForm
@@ -1069,7 +1222,8 @@ export default function FormEdit({paramsId}) {
                                       </svg>
                                     </div>
                                   </div>
-                                </div>
+                                  </div>
+                                </Tooltip>
                               )}
                               
                               {/* Regular form sections (non-lead capture) */}
@@ -1082,39 +1236,67 @@ export default function FormEdit({paramsId}) {
                                   {(provided, snapshot) => {
                                     const isActive = selectedSection?.id === section.id;
                                     const isDragging = snapshot.isDragging;
+                                    
+                                    const tooltips = {
+                                      'text': 'Text Field - Short text input',
+                                      'longtext': 'Textarea - Long text input',
+                                      'motivation': 'Motivation Letter - Multi-line text for motivation',
+                                      'number': 'Number Field - Numeric input with min/max',
+                                      'date': 'Date Field - Date picker input',
+                                      'email': 'Email Field - Email address input',
+                                      'phone': 'Phone Field - Phone number input',
+                                      'address': 'Address Field - Location/address input',
+                                      'file': 'File Upload - Document/image upload',
+                                      'multichoice': 'Multiple Choice - Radio buttons',
+                                      'dropdown': 'Dropdown - Select from list',
+                                      'multiselect': 'Multi-Select - Multiple checkboxes',
+                                      'yesno': 'Yes/No Question - Boolean choice',
+                                      'boolean': 'Boolean Field - True/false toggle',
+                                      'website': 'Website Field - URL input',
+                                      'contact': 'Contact Information - Name, email, phone fields'
+                                    };
+                                    
                                     return (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        style={{
-                                          ...provided.draggableProps.style,
-                                          opacity: 1,
-                                          width: '140px', // Match sidebar width
-                                          ...(isDragging
-                                            ? {
-                                                padding: "8px",
-                                                background: "#f5faff",
-                                                borderRadius: "8px",
-                                                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.15)",
-                                                zIndex: 9999,
-                                                height: "auto !important",
-                                                minWidth: "40px",
-                                                minHeight: "40px",
-                                                overflow: "visible",
-                                                border: "1.5px solid #e0e7ef",
-                                              }
-                                            : {}),
-                                        }}
-                                        className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group${isDragging ? " dragging" : ""} ${
-                                          isActive 
-                                            ? "bg-gray-50" 
-                                            : "hover:bg-gray-50"
-                                        }`}
-                                        onClick={() => {
-                                          setSelectedSection(section);
-                                          setIsEditingForm(false);
-                                        }}
+                                      <Tooltip 
+                                        title={tooltips[section.type] || `${section.type} field`}
+                                        placement="right"
+                                        mouseEnterDelay={0.3}
+                                        open={isDragging ? false : undefined} // Hide tooltip when dragging
                                       >
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          style={{
+                                            ...provided.draggableProps.style,
+                                            opacity: 1,
+                                            width: '140px', // Match sidebar width
+                                            ...(isDragging
+                                              ? {
+                                                  padding: "8px",
+                                                  background: "#f5faff",
+                                                  borderRadius: "8px",
+                                                  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.15)",
+                                                  zIndex: 9999,
+                                                  height: "auto !important",
+                                                  minWidth: "40px",
+                                                  minHeight: "40px",
+                                                  overflow: "visible",
+                                                  border: "1.5px solid #e0e7ef",
+                                                }
+                                              : {}),
+                                          }}
+                                          className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group${isDragging ? " dragging" : ""} ${
+                                            isActive 
+                                              ? "bg-gray-50" 
+                                              : "hover:bg-gray-50"
+                                          }`}
+                                          onClick={() => {
+                                            console.log('🖱️ Editor click: Selecting section from sidebar:', section?.label || section?.id);
+                                            previewNavigatingRef.current = false; // Editor is driving navigation
+                                            setSelectedSection(section);
+                                            setIsEditingForm(false);
+                                          }}
+                                        >
                                         {/* Icon area only, no label */}
                                         <div className="flex-1 flex items-center justify-start group-hover:justify-start transition-all pr-2" style={{width: '140px'}}>
                                           <div className={isActive ? "bg-[#5207CD] rounded-full p-1" : "bg-gray-100 rounded-full p-1"}>
@@ -1175,7 +1357,8 @@ export default function FormEdit({paramsId}) {
                                             />
                                           </button>
                                         </div>
-                                      </div>
+                                        </div>
+                                      </Tooltip>
                                     );
                                   }}
                                 </BeautifulDraggable>
@@ -1183,11 +1366,15 @@ export default function FormEdit({paramsId}) {
                               {provided.placeholder}
                               
                               {/* Add Button - Consistent with other items */}
-                              <div
-                                className="w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group hover:bg-gray-50"
-                                onClick={() => setQuestionModal(true)}
+                              <Tooltip 
                                 title="Add new field"
+                                placement="right"
+                                mouseEnterDelay={0.3}
                               >
+                                <div
+                                  className="w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group hover:bg-gray-50"
+                                  onClick={() => setQuestionModal(true)}
+                                >
                                 <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '140px'}}>
                                   <div className="bg-gray-100 rounded-full p-1 group-hover:bg-purple-100 transition-colors">
                                     <svg className="w-5 h-5 text-gray-600 group-hover:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1195,7 +1382,8 @@ export default function FormEdit({paramsId}) {
                                     </svg>
                                   </div>
                                 </div>
-                              </div>
+                                </div>
+                              </Tooltip>
                               
                               {/* Footer (not draggable) */}
                             
@@ -1211,6 +1399,7 @@ export default function FormEdit({paramsId}) {
                     <div className="flex flex-col gap-[30px] flex-1 overflow-auto">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
+                          
                           <div className="flex items-center gap-3 mb-2">
                             <div className="w-8 h-8 smx:w-6 smx:h-6 md:w-10 md:h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
                               <svg className="w-4 h-4 smx:w-3 smx:h-3 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1234,28 +1423,6 @@ export default function FormEdit({paramsId}) {
                                 }
                               </p>
                             </div>
-                          </div>
-                          
-                          {/* Modern Autosave Status */}
-                          <div className="flex items-center mt-4">
-                            {isSaving ? (
-                              <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-                                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                <span className="text-sm font-medium text-blue-700">Auto-saving changes...</span>
-                              </div>
-                            ) : lastSaved ? (
-                              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
-                                <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span className="text-sm font-medium text-green-700">Auto-saved at {lastSaved}</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                                <span className="text-sm font-medium text-gray-600">Auto-save enabled</span>
-                              </div>
-                            )}
                           </div>
                         </div>
                         
@@ -1327,30 +1494,36 @@ export default function FormEdit({paramsId}) {
                                 <h3 className="text-lg font-semibold text-gray-900">Form Fields</h3>
                                 <p className="text-sm text-gray-500">Configure your form fields</p>
                               </div>
-                              <button
-                                onClick={() => setAiFormModalVisible(true)}
-                                className="px-4 py-2 text-white rounded-lg text-sm font-medium hover:scale-105 transition-transform"
-                                style={{
-                                  background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                                }}
-                              >
-                                ⚡ {formSections.length > 0 ? "Regenerate" : "Generate"}
-                              </button>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setQuestionModal(true)}
+                                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                                >
+                                  ➕ Add Field
+                                </button>
+                                <button
+                                  onClick={() => setAiFormModalVisible(true)}
+                                  className="px-4 py-2 text-white rounded-lg text-sm font-medium hover:scale-105 transition-transform shadow-md"
+                                  style={{
+                                    background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+                                  }}
+                                >
+                                  ⚡ {formSections.length > 0 ? "Regenerate with AI" : "Generate with AI"}
+                                </button>
+                              </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-4 px-4 py-3 bg-gray-50/50 rounded-lg mb-3">
-                              <div className="text-sm font-medium text-gray-600">Field</div>
-                              <div className="text-sm font-medium text-gray-600 text-center">👁️ Visible</div>
-                              <div className="text-sm font-medium text-gray-600 text-center">⚠️ Required</div>
+                            <div className="px-4 py-3 bg-gray-50/50 rounded-lg mb-3">
+                              <div className="text-sm font-medium text-gray-600">{getTranslation(landingPageData?.lang, 'formFields')}</div>
                             </div>
                             
                          
-                            {/* AI-Powered Form Generation - Enhanced */}
+                            {/* Simplified Form Creation - No AI options */}
                             {formSections.length === 0 && (
-                              <div className="text-center py-12 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-xl border-2 border-dashed border-indigo-200">
+                              <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-200">
                                 <div className="max-w-md mx-auto">
-                                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                                  <div className="w-16 h-16 bg-gradient-to-br from-gray-500 to-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
                                   </div>
                                   <h3 className="text-xl font-bold text-gray-900 mb-3">
@@ -1366,14 +1539,6 @@ export default function FormEdit({paramsId}) {
                                       className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                       style={{
                                         background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                                      }}
-                                      onMouseEnter={(e) => {
-                                        e.target.style.opacity = '0.9';
-                                        e.target.style.transform = 'translateY(-2px)';
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.target.style.opacity = '1';
-                                        e.target.style.transform = 'translateY(0)';
                                       }}
                                     >
                                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1395,37 +1560,43 @@ export default function FormEdit({paramsId}) {
                               </div>
                             )}
 
-                            {/* Contact Information */}
-                            {formSections.some(s => s.isLeadCapture) && (
-                              <div className="grid grid-cols-3 gap-4 items-center p-4 rounded-lg mb-3 bg-blue-50/30 border border-blue-100">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-lg">
-                                    👤
-                                  </div>
-                                  <div>
-                                    <div className="font-medium text-gray-900 text-sm">Contact Information</div>
-                                    <div className="text-xs text-gray-500">Name, Email, Phone • Always required</div>
-                                  </div>
+                                        {/* Contact Information */}
+            {formSections.some(s => s.isLeadCapture) && (
+              <Tooltip title="Configure contact information fields (First Name, Last Name, Email, Phone)" placement="right">
+                <div className="flex items-center gap-3 p-4 rounded-lg mb-3 bg-blue-50/30 border border-blue-100 cursor-pointer hover:bg-blue-50/50 transition-colors"
+                  onClick={() => {
+                    const firstLeadCaptureField = formSections.find(s => s.isLeadCapture);
+                    setSelectedSection(firstLeadCaptureField);
+                    setIsEditingForm(false);
+                  }}
+                >
+                                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-lg">
+                                  👤
                                 </div>
-                                <div className="flex justify-center">
-                                  <div className="text-green-500 text-lg">✅</div>
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 text-sm">{getTranslation(landingPageData?.lang, 'contactInformation')}</div>
+                                  <div className="text-xs text-gray-500">{getTranslation(landingPageData?.lang, 'firstName')}, {getTranslation(landingPageData?.lang, 'email')}, {getTranslation(landingPageData?.lang, 'phone')} • {getTranslation(landingPageData?.lang, 'required')} • {getTranslation(landingPageData?.lang, 'clickToConfigure')}</div>
                                 </div>
-                                <div className="flex justify-center">
-                                  <div className="text-amber-500 text-lg">⚠️</div>
-                                </div>
-                              </div>
-                            )}
+                                                  <div className="text-blue-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </Tooltip>
+            )}
                             
                             {/* Regular fields (non-lead capture) */}
                             {formSections.filter(section => !section.isLeadCapture).map((section, sectionIndex) => {
                               const formItem = formItems.find(item => item.type === section.type);
                               const actualIndex = formSections.findIndex(f => f.id === section.id);
-                              const baseKey = `${section.id}-${forceUpdate}`;
+                              const baseKey = section.id; // Stable key to prevent unnecessary re-mounting
                               
                               console.log(`🔍 RENDERING SWITCH - Section: ${section.type}, visible: ${section.visible}, required: ${section.required}`);
                               
                               if (section.type === "contact") {
-                                return [
+                                return (
+                                  <React.Fragment key={baseKey}>
                                   <div 
                                     key={`${baseKey}-firstName`} 
                                     className={`grid grid-cols-3 gap-4 items-center p-3 rounded-lg mb-2 transition-all duration-200 ${
@@ -1494,22 +1665,33 @@ export default function FormEdit({paramsId}) {
                                       <div className="text-amber-500 text-lg">⚠️</div>
                                     </div>
                                   </div>
-                                ];
+                                  </React.Fragment>
+                                );
                               }
                               return (
-                                                              <div 
-                                key={baseKey} 
-                                className={`grid grid-cols-3 gap-4 items-center p-3 rounded-lg mb-2 transition-all duration-200 ${
-                                  selectedSection?.id === section.id
-                                    ? 'bg-gradient-to-r from-blue-50 to-blue-25 border border-blue-200' 
-                                    : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                                }`}
-                              >
-                                  <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                      section.isLeadCapture ? 'bg-blue-100' : 'bg-gray-100'
-                                    }`}>
-                                      {section.isLeadCapture && (
+                                <React.Fragment key={baseKey}>
+                                  <Tooltip
+                                    title={`Click to configure ${section.label || formItem?.text || section.type} field settings`}
+                                    placement="right"
+                                  >
+                                    <div 
+                                    key={baseKey} 
+                                    className={`flex items-center gap-3 p-3 rounded-lg mb-2 transition-all duration-200 cursor-pointer ${
+                                      selectedSection?.id === section.id
+                                        ? 'bg-gradient-to-r from-blue-50 to-blue-25 border border-blue-200' 
+                                        : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                                    }`}
+                                    onClick={() => {
+                                      console.log('🖱️ Editor click: Selecting section from main area:', section?.label || section?.id);
+                                      previewNavigatingRef.current = false; // Editor is driving navigation
+                                      setSelectedSection(section);
+                                      setIsEditingForm(false);
+                                    }}
+                                  >
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                  section.isLeadCapture ? 'bg-blue-100' : 'bg-gray-100'
+                                }`}>
+                                  {section.isLeadCapture && (
                                         <svg className="w-3 h-3 text-blue-600 absolute top-1 right-1" fill="currentColor" viewBox="0 0 20 20">
                                           <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                                         </svg>
@@ -1536,11 +1718,11 @@ export default function FormEdit({paramsId}) {
                                           return iconMap[section.type] || '📝';
                                         })()}
                                       </span>
-                                    </div>
-                                    <div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-medium text-gray-900">{section.label || formItem?.text || section.type}</span>
-                                        {section.isLeadCapture && (
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-gray-900">{section.label || formItem?.text || section.type}</span>
+                                    {section.isLeadCapture && (
                                           <div className="flex items-center gap-1">
                                             <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                               <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
@@ -1550,49 +1732,30 @@ export default function FormEdit({paramsId}) {
                                         )}
                                       </div>
                                       <p className="text-xs text-gray-500 capitalize">
-                                        {section.type} field
-                                        {section.isLeadCapture && " • Required for all forms"}
+                                        {section.type} field • {getTranslation(landingPageData?.lang, 'clickToConfigure')}
                                       </p>
                                     </div>
+                                    <div className="text-gray-400">
+                                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                      </svg>
+                                    </div>
                                   </div>
-                                  <div className="flex justify-center">
-                                    <button
-                                      onClick={() => {
-                                        if (!section.isLeadCapture) {
-                                          handleUpdateSection(section.id, { visible: !section.visible });
-                                        }
-                                      }}
-                                      className={`text-lg ${section.isLeadCapture ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-110'} transition-transform`}
-                                      title={section.isLeadCapture ? "Lead capture fields must always be visible" : "Toggle field visibility"}
-                                    >
-                                      {section.visible ? '✅' : '❌'}
-                                    </button>
-                                  </div>
-                                  <div className="flex justify-center">
-                                    <button
-                                      onClick={() => {
-                                        if (!section.isLeadCapture && section.visible) {
-                                          handleUpdateSection(section.id, { required: !section.required });
-                                        }
-                                      }}
-                                      className={`text-lg ${section.isLeadCapture || !section.visible ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-110'} transition-transform`}
-                                      title={section.isLeadCapture ? "Lead capture fields must always be required" : "Toggle field requirement"}
-                                    >
-                                      {section.required ? '⚠️' : '⭕'}
-                                    </button>
-                                  </div>
-                                </div>
+                                  </Tooltip>
+                                </React.Fragment>
                               );
                             })}
                             
                             {/* Add Field Button - At the bottom */}
                             <div className="mt-4">
-                              <button
-                                onClick={() => setQuestionModal(true)}
-                                className="w-full p-4 border-2 border-dashed border-gray-200 rounded-lg text-gray-500 hover:border-gray-300 hover:text-gray-600 transition-colors flex items-center justify-center gap-2"
-                              >
-                                ➕ Add Field
-                              </button>
+                              <Tooltip title="Add a new form field to your application form" placement="right">
+                                <button
+                                  onClick={() => setQuestionModal(true)}
+                                  className="w-full p-4 border-2 border-dashed border-gray-200 rounded-lg text-gray-500 hover:border-gray-300 hover:text-gray-600 transition-colors flex items-center justify-center gap-2"
+                                >
+                                  ➕ {getTranslation(landingPageData?.lang, 'addField')}
+                                </button>
+                              </Tooltip>
                             </div>
                           </div>
                         </>
@@ -1721,6 +1884,52 @@ export default function FormEdit({paramsId}) {
                               subheaderFont: userBrandData?.subheaderFont || user?.subheaderFont,
                               companyLogo: userBrandData?.companyLogo || user?.companyLogo,
                             }}
+                            isPreviewMode={true}
+                            onStepChange={(step, field) => {
+                              console.log('🔄 Preview navigation: step', step, 'field:', field?.label || field?.id);
+                              previewNavigatingRef.current = true; // Preview is driving navigation
+                              
+                              if (step === 0) {
+                                // Step 0 = intro step - clear selection
+                                console.log('📝 Editor sync: Going to intro step, clearing selection');
+                                setSelectedSection(null);
+                                setIsEditingForm(true);
+                              } else if (field) {
+                                // Step > 0 - select the corresponding field
+                                console.log('📝 Editor sync: Selecting field from preview:', field?.label || field?.id);
+                                setSelectedSection(field);
+                                setIsEditingForm(false);
+                              }
+                              
+                              // Reset the flag after a short delay to allow for editor-driven navigation
+                              setTimeout(() => {
+                                previewNavigatingRef.current = false;
+                              }, 100);
+                            }}
+                            initialStep={(() => {
+                              // Don't recalculate if preview is currently navigating (prevents circular updates)
+                              if (previewNavigatingRef.current) {
+                                console.log('🔄 Preview is navigating, not recalculating initialStep');
+                                return undefined; // Let preview maintain its current step
+                              }
+                              
+                              // Simple 1:1 mapping: Step 0 = intro, Step 1 = first field, Step 2 = second field, etc.
+                              if (!selectedSection || isEditingForm) {
+                                console.log('🎯 Editor driving: Going to intro step (0)');
+                                return 0;
+                              }
+                              
+                              // Find the step for the selected field (simple array index + 1)
+                              const fieldIndex = formSections.findIndex(field => field.id === selectedSection.id);
+                              if (fieldIndex >= 0) {
+                                const step = fieldIndex + 1; // +1 because step 0 is intro
+                                console.log('🎯 Editor driving: Going to step', step, 'for field:', selectedSection.label);
+                                return step;
+                              }
+                              
+                              console.log('🎯 Editor driving: Field not found, defaulting to intro step');
+                              return 0;
+                            })()}
                           />
                         </div>
                       ) : (
@@ -1845,6 +2054,7 @@ export default function FormEdit({paramsId}) {
           overflow-x: hidden;
         }
       `}</style>
-    </div>
+      </div>
+    </>
   );
 }

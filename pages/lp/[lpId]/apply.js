@@ -1,42 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Button, Input, Radio, Checkbox, Select, Progress, message, Form } from 'antd';
+import { Button, Input, Radio, Checkbox, Select, Progress, message, Form, DatePicker } from 'antd';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import dayjs from 'dayjs';
 import PublicService from '../../../src/services/PublicService';
-import { PhoneInput } from 'react-international-phone';
-import 'react-international-phone/style.css';
+// Removed PhoneInput - using regular Input instead
 // 🎨 BRANDING IMPORTS
 import useTemplatePalette from '../../hooks/useTemplatePalette';
 
-// Country detection utility
-const getCountryFromLocation = async () => {
-  try {
-    // First try to get country from IP geolocation
-    const response = await fetch('https://ipapi.co/json/');
-    const data = await response.json();
-    if (data.country_code) {
-      return data.country_code.toLowerCase();
-    }
-  } catch (error) {
-    console.log('Geolocation detection failed, using default country');
-  }
-  
-  // Fallback to browser locale
-  try {
-    const locale = navigator.language || navigator.languages[0];
-    if (locale) {
-      const countryCode = locale.split('-')[1];
-      if (countryCode) {
-        return countryCode.toLowerCase();
-      }
-    }
-  } catch (error) {
-    console.log('Locale detection failed');
-  }
-  
-  // Default to US
-  return 'us';
-};
+// Removed country detection since we're using regular Input instead of PhoneInput
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -134,7 +106,7 @@ export default function ApplyPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formFields, setFormFields] = useState([]);
-  const [detectedCountry, setDetectedCountry] = useState('us');
+  // Removed detectedCountry since we're using regular Input instead of PhoneInput
 
   // 🎨 DYNAMIC BRAND COLORS - NO HARDCODING!
   const [stableColors, setStableColors] = useState({
@@ -242,12 +214,7 @@ export default function ApplyPage() {
     }
   );
 
-  // Detect user's country for phone input
-  useEffect(() => {
-    getCountryFromLocation().then(country => {
-      setDetectedCountry(country);
-    });
-  }, []);
+  // Removed country detection since we're using regular Input instead of PhoneInput
 
   useEffect(() => {
     if (lpId) {
@@ -304,14 +271,17 @@ export default function ApplyPage() {
           field.type === 'contact' || field.type === 'email' || field.type === 'phone'
         );
         
-        // If we have lead capture fields, combine them into one step, then add other fields as separate steps
-        if (leadCaptureFields.length > 0) {
+        // CRITICAL: Contact information must come FIRST for lead capture
+        // Use lead capture fields if available, otherwise use basic contact fields  
+        const contactStepFields = leadCaptureFields.length > 0 ? leadCaptureFields : contactFields;
+        
+        if (contactStepFields.length > 0) {
           setFormFields([
             { 
               id: 'lead-capture-step', 
               type: 'lead-capture-group', 
               label: 'Contact Information', 
-              fields: leadCaptureFields,
+              fields: contactStepFields,
               required: true 
             },
             ...otherFields
@@ -395,14 +365,40 @@ export default function ApplyPage() {
       } else if (currentField.type === 'contact') {
         const firstNameValue = formData[`${currentField.id}_firstName`];
         const lastNameValue = formData[`${currentField.id}_lastName`];
+        const emailValue = formData[`${currentField.id}_email`];
+        const phoneValue = formData[`${currentField.id}_phone`];
         
         if (currentField.firstName?.required && !firstNameValue?.trim()) {
-          message.warning('First name is required');
+          message.warning(currentField.firstName?.label ? `${currentField.firstName.label} is required` : 'First name is required');
           return;
         }
         if (currentField.lastName?.required && !lastNameValue?.trim()) {
-          message.warning('Last name is required');
+          message.warning(currentField.lastName?.label ? `${currentField.lastName.label} is required` : 'Last name is required');
           return;
+        }
+        if (currentField.email?.required && !emailValue?.trim()) {
+          message.warning(currentField.email?.label ? `${currentField.email.label} is required` : 'Email is required');
+          return;
+        }
+        if (currentField.email?.visible !== false && emailValue?.trim()) {
+          // Validate email format
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(emailValue.trim())) {
+            message.warning('Please enter a valid email address');
+            return;
+          }
+        }
+        if (currentField.phone?.required && !phoneValue?.trim()) {
+          message.warning(currentField.phone?.label ? `${currentField.phone.label} is required` : 'Phone is required');
+          return;
+        }
+        if (currentField.phone?.visible !== false && phoneValue?.trim()) {
+          // Validate phone format
+          const phoneDigits = phoneValue.replace(/\D/g, '');
+          if (phoneDigits.length < 10) {
+            message.warning('Please enter a valid phone number');
+            return;
+          }
         }
       } else if (currentField.type === 'address') {
         // Validate at least one address field is filled
@@ -415,19 +411,60 @@ export default function ApplyPage() {
           return;
         }
       } else if (currentField.type === 'date') {
-        // Validate date fields
-        const month = formData[`${currentField.id}_month`];
-        const day = formData[`${currentField.id}_day`];
-        const year = formData[`${currentField.id}_year`];
+        // Enhanced date field validation
+        const dateValue = formData[currentField.id];
         
-        if (!month?.trim() && !day?.trim() && !year?.trim()) {
-          message.warning('Please fill in the date');
+        if (!dateValue?.trim()) {
+          message.warning('Please select a date');
+          return;
+        }
+        
+        // Validate the date format and value
+        const date = dayjs(dateValue);
+        if (!date.isValid()) {
+          message.warning('Please enter a valid date');
+          return;
+        }
+      } else if (currentField.type === 'email') {
+        // Email validation
+        const email = formData[currentField.id];
+        if (!email?.trim()) {
+          message.warning('Email is required');
+          return;
+        }
+        
+        // Basic email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+          message.warning('Please enter a valid email address');
+          return;
+        }
+      } else if (currentField.type === 'phone') {
+        // Phone validation
+        const phone = formData[currentField.id];
+        if (!phone?.trim()) {
+          message.warning('Phone number is required');
+          return;
+        }
+        
+        // Basic phone format validation (at least 10 digits)
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+          message.warning('Please enter a valid phone number');
+          return;
+        }
+      } else if (currentField.type === 'multiselect') {
+        // Multi-select validation
+        const values = formData[currentField.id];
+        if (!values || !Array.isArray(values) || values.length === 0) {
+          message.warning('Please select at least one option');
           return;
         }
       } else {
+        // General field validation
         const value = formData[currentField.id];
-        if (!value || (Array.isArray(value) && value.length === 0)) {
-          message.warning('This field is required');
+        if (!value || (typeof value === 'string' && !value.trim()) || (Array.isArray(value) && value.length === 0)) {
+          message.warning(`${currentField.label || 'This field'} is required`);
           return;
         }
       }
@@ -535,37 +572,95 @@ export default function ApplyPage() {
     switch (field.type) {
       case 'contact':
         return (
-          <div className="grid grid-cols-2 gap-4">
-            {field.firstName?.visible !== false && (
+          <div className="space-y-4">
+            {/* First Name and Last Name in a row */}
+            <div className="grid grid-cols-2 gap-4">
+              {field.firstName?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-xs text-gray-600">
+                    {field.firstName?.label || 'First Name'}
+                    {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_firstName`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
+                    placeholder={field.firstName?.placeholder || "First name"}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+              {field.lastName?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-xs text-gray-600">
+                    {field.lastName?.label || 'Last Name'}
+                    {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_lastName`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
+                    placeholder={field.lastName?.placeholder || "Last name"}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+            </div>
+            
+            {/* Email field */}
+            {field.email?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-xs text-gray-600">
-                  {field.firstName?.label || 'First Name'}
-                  {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
+                  {field.email?.label || 'Email'}
+                  {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
-                  value={formData[`${field.id}_firstName`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
-                  placeholder={field.firstName?.placeholder || "First name"}
+                  type="email"
+                  value={formData[`${field.id}_email`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_email`, e.target.value)}
+                  placeholder={field.email?.placeholder || "Email address"}
                   className="rounded-lg"
                   size="large"
                 />
               </div>
             )}
-            {field.lastName?.visible !== false && (
+            
+            {/* Phone field */}
+            {field.phone?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-xs text-gray-600">
-                  {field.lastName?.label || 'Last Name'}
-                  {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
+                  {field.phone?.label || 'Phone'}
+                  {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
-                  value={formData[`${field.id}_lastName`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
-                  placeholder={field.lastName?.placeholder || "Last name"}
+                  type="tel"
+                  value={formData[`${field.id}_phone`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_phone`, e.target.value)}
+                  placeholder={field.phone?.placeholder || "Phone number"}
                   className="rounded-lg"
                   size="large"
                 />
               </div>
             )}
+
+            {/* Additional contact fields */}
+            {field.additionalFields?.map((additionalField) => (
+              (field[additionalField.key]?.visible !== false) && (
+                <div key={additionalField.key}>
+                  <label className="block mb-1 font-semibold text-xs text-gray-600">
+                    {field[additionalField.key]?.label || additionalField.label}
+                    {field[additionalField.key]?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_${additionalField.key}`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_${additionalField.key}`, e.target.value)}
+                    placeholder={field[additionalField.key]?.placeholder || additionalField.placeholder}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )
+            ))}
           </div>
         );
 
@@ -583,13 +678,13 @@ export default function ApplyPage() {
 
       case 'phone':
         return (
-          <PhoneInput
-            defaultCountry={detectedCountry}
-            inputClassName="rounded-lg w-full !h-10"
-            placeholder={field.customPlaceholder || field.placeholder || "Phone number"}
+          <Input
+            type="tel"
             value={value}
-            onChange={(phoneValue) => handleInputChange(field.id, phoneValue)}
-            className="p-1"
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            placeholder={field.customPlaceholder || field.placeholder || "Phone number"}
+            className="rounded-lg"
+            size="large"
           />
         );
 
@@ -613,50 +708,123 @@ export default function ApplyPage() {
       case 'lead-capture-group':
         return (
           <div className="space-y-6">
-            {field.fields.map((subField) => (
-              <div key={subField.id}>
-                <label className="block mb-2 font-semibold text-sm">
-                  {subField.customLabel || subField.label}
-                  {subField.required && <span className="ml-1 text-red-500">*</span>}
-                </label>
-                {renderSingleField(subField)}
-              </div>
-            ))}
+                         {field.fields.map((subField) => {
+               // Find contact field to get proper label configuration
+               const contactField = field.fields.find(f => f.type === 'contact');
+               let displayLabel = subField.customLabel || subField.label;
+               
+               // Use appropriate labels for contact fields
+               if (subField.type === 'email') {
+                 displayLabel = contactField?.email?.label || subField.customLabel || subField.label || 'Email';
+               } else if (subField.type === 'phone') {
+                 displayLabel = contactField?.phone?.label || subField.customLabel || subField.label || 'Phone Number';
+               } else if (subField.type === 'contact') {
+                 displayLabel = subField.customLabel || subField.label || 'Full Name';
+               }
+               
+               return (
+                 <div key={subField.id}>
+                   <label className="block mb-2 font-semibold text-sm">
+                     {displayLabel}
+                     {subField.required && <span className="ml-1 text-red-500">*</span>}
+                   </label>
+                   {renderSingleField(subField)}
+                 </div>
+               );
+             })}
           </div>
         );
       case 'contact':
         return (
-          <div className="grid grid-cols-2 gap-4">
-            {field.firstName?.visible !== false && (
+          <div className="space-y-4">
+            {/* First Name and Last Name in a row */}
+            <div className="grid grid-cols-2 gap-4">
+              {field.firstName?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">
+                    {field.firstName?.label || 'First Name'}
+                    {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_firstName`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
+                    placeholder={field.firstName?.placeholder || "First name"}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+              {field.lastName?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">
+                    {field.lastName?.label || 'Last Name'}
+                    {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_lastName`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
+                    placeholder={field.lastName?.placeholder || "Last name"}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+            </div>
+            
+            {/* Email field */}
+            {field.email?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-sm">
-                  First Name
-                  {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
+                  {field.email?.label || 'Email'}
+                  {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
-                  value={formData[`${field.id}_firstName`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
-                  placeholder={field.firstName?.placeholder || "First name"}
+                  type="email"
+                  value={formData[`${field.id}_email`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_email`, e.target.value)}
+                  placeholder={field.email?.placeholder || "Email address"}
                   className="rounded-lg"
                   size="large"
                 />
               </div>
             )}
-            {field.lastName?.visible !== false && (
+            
+            {/* Phone field */}
+            {field.phone?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-sm">
-                  Last Name
-                  {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
+                  {field.phone?.label || 'Phone'}
+                  {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
-                  value={formData[`${field.id}_lastName`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
-                  placeholder={field.lastName?.placeholder || "Last name"}
+                  type="tel"
+                  value={formData[`${field.id}_phone`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_phone`, e.target.value)}
+                  placeholder={field.phone?.placeholder || "Phone number"}
                   className="rounded-lg"
                   size="large"
                 />
               </div>
             )}
+
+            {/* Additional contact fields */}
+            {field.additionalFields?.map((additionalField) => (
+              (field[additionalField.key]?.visible !== false) && (
+                <div key={additionalField.key}>
+                  <label className="block mb-1 font-semibold text-sm">
+                    {field[additionalField.key]?.label || additionalField.label}
+                    {field[additionalField.key]?.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <Input
+                    value={formData[`${field.id}_${additionalField.key}`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_${additionalField.key}`, e.target.value)}
+                    placeholder={field[additionalField.key]?.placeholder || additionalField.placeholder}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )
+            ))}
           </div>
         );
 
@@ -674,13 +842,13 @@ export default function ApplyPage() {
 
       case 'phone':
         return (
-          <PhoneInput
-            defaultCountry={detectedCountry}
-            inputClassName="rounded-lg w-full !h-10"
-            placeholder={field.customPlaceholder || field.placeholder || "Phone number"}
+          <Input
+            type="tel"
             value={value}
-            onChange={(phoneValue) => handleInputChange(field.id, phoneValue)}
-            className="p-1"
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            placeholder={field.customPlaceholder || field.placeholder || "Phone number"}
+            className="rounded-lg"
+            size="large"
           />
         );
 
@@ -843,70 +1011,27 @@ export default function ApplyPage() {
         );
 
       case 'date':
-        // Enhanced date field with separate inputs like in preview
-        const dateFormat = field.dateFormat || "MMDDYYYY";
-        const dateSeparator = field.dateSeparator || "/";
+        const dateValue = formData[field.id] ? dayjs(formData[field.id]) : null;
         
-        const renderDateInput = (type) => {
-          if (type === 'month') {
-            return (
-              <div key="month" className="flex flex-col">
-                <label className="block mb-1 text-sm">Month</label>
-                <Input
-                  value={formData[`${field.id}_month`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_month`, e.target.value)}
-                  placeholder="MM"
-                  maxLength={2}
-                  className="w-[70px] h-[42px] text-xl bg-transparent border-b border-gray-400 rounded-lg text-gray-400"
-                />
-              </div>
-            );
-          } else if (type === 'day') {
-            return (
-              <div key="day" className="flex flex-col">
-                <label className="block mb-1 text-sm">Day</label>
-                <Input
-                  value={formData[`${field.id}_day`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_day`, e.target.value)}
-                  placeholder="DD"
-                  maxLength={2}
-                  className="w-16 text-xl h-[42px] bg-transparent border-b border-gray-400 rounded-lg text-gray-400"
-                />
-              </div>
-            );
-          } else if (type === 'year') {
-            return (
-              <div key="year" className="flex flex-col">
-                <label className="block mb-1 text-sm">Year</label>
-                <Input
-                  value={formData[`${field.id}_year`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_year`, e.target.value)}
-                  placeholder="YYYY"
-                  maxLength={4}
-                  className="w-[80px] text-xl h-[42px] bg-transparent border-b border-gray-400 rounded-lg text-gray-400"
-                />
-              </div>
-            );
-          }
-          return null;
-        };
-
-        let order = [];
-        if (dateFormat === 'MMDDYYYY') order = ['month', 'day', 'year'];
-        else if (dateFormat === 'DDMMYYYY') order = ['day', 'month', 'year'];
-        else if (dateFormat === 'YYYYMMDD') order = ['year', 'month', 'day'];
-
         return (
-          <div className="flex space-x-4 items-end">
-            {order.map((type, idx) => (
-              <React.Fragment key={type}>
-                {renderDateInput(type)}
-                {idx < order.length - 1 && (
-                  <span className="text-2xl text-gray-400 pb-[8px]">{dateSeparator}</span>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
+          <DatePicker
+            value={dateValue}
+            onChange={(date) => {
+              const dateString = date ? date.format('YYYY-MM-DD') : '';
+              handleInputChange(field.id, dateString);
+            }}
+            placeholder={field.placeholder || field.customPlaceholder || "Select date"}
+            className="rounded-lg w-full"
+            size="large"
+            format={field.dateFormat === 'DDMMYYYY' ? 'DD/MM/YYYY' : field.dateFormat === 'YYYYMMDD' ? 'YYYY/MM/DD' : 'MM/DD/YYYY'}
+            disabledDate={(current) => {
+              // Disable dates more than 100 years ago or 10 years in the future
+              return current && (
+                current < dayjs().subtract(100, 'years') || 
+                current > dayjs().add(10, 'years')
+              );
+            }}
+          />
         );
 
       case 'file':

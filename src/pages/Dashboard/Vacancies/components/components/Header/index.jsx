@@ -17,6 +17,7 @@ export default function Header({
   setLandingPageData,
   reload,
   isAutoSaving,
+  lastSaved,
   lpId,
   isFormEditor = false,
   ...props
@@ -267,130 +268,158 @@ export default function Header({
             className="h-[20px] w-[20px] ml-3.5 cursor-pointer settings-icon"
             onClick={handleTemplateOpen}
           />
-          {(isSaving || isAutoSaving) && (
-            <span className="ml-2 text-sm px-2 py-0.5  text-blue-800 rounded-full flex items-center gap-1">
-              <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-              Saving...
-            </span>
-          )}
-        </div>
-        <div className="flex justify-center mdx:w-full smx:hidden">
-          <div className="flex flex-col flex-1 items-center smx:self-stretch">
-            <div className="flex items-center gap-3">
-              <ul className="flex items-center gap-4">
-                {[
-                  {
-                    id: "ats",
-                    label: "ATS",
-                    link: (id) => `/dashboard/ats?id=${id}`,
-                    bgColor: "bg-[#10B981]",
-                    textColor: "!text-[white]",
-                    icon: (
-                      <ClipboardDocumentListIcon style={{ 
-                        width: '16px', 
-                        height: '16px', 
-                        color: 'white',
-                        strokeWidth: 2 
-                      }} />
-                    ),
-                    className: "rounded-lg",
-                    disabled: false,
-                  },
-                  {
-                    id: "copyLink",
-                    label: "Copy Link",
-                    action: handleCopyLink,
-                    bgColor: "bg-[#0080FF]",
-                    textColor: "!text-[white]",
-                    icon: <LinkOutlined style={{ fontSize: '16px', color: 'white' }} />,
-                    className: "rounded-lg",
-                    disabled: false,
-                  },
-                  {
-                    id: "publish",
-                    label: landingPageData?.published ? (hasUnpublishedChanges ? "Publish Changes" : "Published") : "Publish",
-                    action: (!landingPageData?.published || hasUnpublishedChanges) && !isPublishing ? handlePublish : handlePublish,
-                    bgColor: landingPageData?.published && !hasUnpublishedChanges ?
-                      "bg-[#ECFDF3]" :
-                      "bg-[#5207CD]",
-                    textColor: landingPageData?.published && !hasUnpublishedChanges ?
-                      "!text-[#039855]" :
-                      "!text-[#FFFFFF]",
-                    icon: isPublishing ? <Spin color="white" size="small" /> : (landingPageData?.published && !hasUnpublishedChanges ?
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="#17B26A" />
-                        <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
-                        <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-                      </svg>
-                      : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="white" />
-                        <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
-                        <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="#5207CD" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-                      </svg>
-                    ),
-                    disabled: isPublishing,
-                  },
-                ].filter(item => {
-                  // Always show ATS button
-                  if (item.id === "ats") {
-                    return true
-                  }
-                  // Only show copy link button when page is published AND there are no unpublished changes
-                  if (item.id === "copyLink") {
-                    return landingPageData?.published && !hasUnpublishedChanges
-                  }
-                  // Only show publish button if not published yet, or if there are unpublished changes
-                  if (item.id === "publish") {
-                    return true
-                  }
-                  return true;
-                }).map((item) => (
-                  <li key={item.id}>
-                    <div
-                      className={`flex items-center gap-2 rounded-lg border border-solid px-2 py-[10px] shadow-sm ${item.bgColor}`}
-                    >
-                      {item.link ? (
-                        <Link
-                        href={item.link(landingPageData?._id)}
-                          className="flex gap-2 justify-center items-center cursor-pointer"
-                        >
-                          {item.icon}
-                          <Heading
-                            size="3xl"
-                            as="p"
-                            className={item.textColor}
-                          >
-                            {item.label}
-                          </Heading>
-                        </Link>
-                      ) : (
-                        <button
-                          onClick={item.action}
-                          className={`flex gap-2 items-center ${!item.action || item.disabled ? 'cursor-default' : 'cursor-pointer'}`}
-                          disabled={!item.action || item.disabled}
-                          title={item.tooltip}
-                        >
-                          {/* <Img
-                            src={item.icon}
-                            alt="check"
-                            className="h-[16px] w-[16px]"
-                          /> */}
-                          {item.icon}
-                          <Heading
-                            size="3xl"
-                            as="p"
-                            className={item.textColor}
-                          >
-                            {item.label}
-                          </Heading>
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            
+          {/* Enhanced Auto-save Status */}
+          {(isSaving || isAutoSaving) ? (
+            <div className="ml-2 flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-xs font-medium text-blue-700">Saving...</span>
             </div>
+          ) : lastSaved ? (
+            <div className="ml-2 flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-lg">
+              <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-xs font-medium text-green-700">Saved at {lastSaved}</span>
+            </div>
+          ) : isFormEditor ? (
+            <div className="ml-2 flex items-center gap-2 px-3 py-1 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-xs font-medium text-gray-600 whitespace-nowrap">Auto-save enabled</span>
+            </div>
+          ) : null}
+        </div>
+        <div className="flex justify-between items-center w-full mdx:flex-col mdx:gap-3">
+          {/* Left side - Publish button */}
+          <div className="flex items-center mdx:w-full mdx:justify-center">
+            <div className={`flex items-center gap-2 rounded-lg border border-solid px-2 py-[10px] shadow-sm ${landingPageData?.published && !hasUnpublishedChanges ? "bg-[#ECFDF3]" : "bg-[#5207CD]"} mdx:w-full mdx:justify-center`}>
+              <button
+                onClick={(!landingPageData?.published || hasUnpublishedChanges) && !isPublishing ? handlePublish : handlePublish}
+                className={`flex gap-2 items-center ${!handlePublish || isPublishing ? 'cursor-default' : 'cursor-pointer'} mdx:justify-center`}
+                disabled={isPublishing}
+              >
+                {isPublishing ? <Spin color="white" size="small" /> : (landingPageData?.published && !hasUnpublishedChanges ?
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="#17B26A" />
+                    <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
+                    <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="white" />
+                    <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
+                    <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="#5207CD" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                )}
+                <Heading
+                  size="3xl"
+                  as="p"
+                  className={landingPageData?.published && !hasUnpublishedChanges ? "!text-[#039855]" : "!text-[#FFFFFF]"}
+                >
+                  {landingPageData?.published ? (hasUnpublishedChanges ? "Publish Changes" : "Published") : "Publish"}
+                </Heading>
+              </button>
+            </div>
+          </div>
+
+          {/* Right side - Navigation and Copy Link buttons */}
+          <div className="flex items-center gap-3 mdx:w-full mdx:justify-center">
+            <ul className="flex items-center gap-2 mdx:flex-wrap mdx:justify-center">
+              {[
+                ...(isFormEditor ? [{
+                  id: "pageBuilder",
+                  label: "Page",
+                  link: (id) => `/edit-page/${id}`,
+                  bgColor: "bg-[#7C3AED]",
+                  textColor: "!text-[white]",
+                  icon: (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M2 2h12a1 1 0 011 1v10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="white" strokeWidth="1.5" fill="none"/>
+                      <path d="M1 5h14M5 2v12" stroke="white" strokeWidth="1.5"/>
+                    </svg>
+                  ),
+                  className: "rounded-lg",
+                  disabled: false,
+                }] : [{
+                  id: "formBuilder",
+                  label: "Form",
+                  link: (id) => `/form-editor/${id}`,
+                  bgColor: "bg-[#7C3AED]",
+                  textColor: "!text-[white]",
+                  icon: (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M2 2h12a1 1 0 011 1v10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="white" strokeWidth="1.5" fill="none"/>
+                      <path d="M4 6h8M4 9h6M4 12h4" stroke="white" strokeWidth="1.5"/>
+                    </svg>
+                  ),
+                  className: "rounded-lg",
+                  disabled: false,
+                }]),
+                {
+                  id: "ats",
+                  label: "ATS",
+                  link: (id) => `/dashboard/ats?id=${id}`,
+                  bgColor: "bg-[#10B981]",
+                  textColor: "!text-[white]",
+                  icon: (
+                    <ClipboardDocumentListIcon style={{ 
+                      width: '16px', 
+                      height: '16px', 
+                      color: 'white',
+                      strokeWidth: 2 
+                    }} />
+                  ),
+                  className: "rounded-lg",
+                  disabled: false,
+                },
+                ...(landingPageData?.published ? [{
+                  id: "copyLink",
+                  label: "Copy Link",
+                  action: handleCopyLink,
+                  bgColor: "bg-[#0080FF]",
+                  textColor: "!text-[white]",
+                  icon: <LinkOutlined style={{ fontSize: '16px', color: 'white' }} />,
+                  className: "rounded-lg",
+                  disabled: false,
+                }] : [])
+              ].map((item) => (
+                <li key={item.id}>
+                  <div
+                    className={`flex items-center gap-2 rounded-lg border border-solid px-2 py-[10px] shadow-sm ${item.bgColor} smx:px-1 smx:py-2`}
+                  >
+                    {item.link ? (
+                      <Link
+                        href={item.link(lpId || landingPageData?._id)}
+                        className="flex gap-2 justify-center items-center cursor-pointer smx:gap-1"
+                      >
+                        {item.icon}
+                        <Heading
+                          size="3xl"
+                          as="p"
+                          className={`${item.textColor} smx:text-xs`}
+                        >
+                          {item.label}
+                        </Heading>
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={item.action}
+                        className={`flex gap-2 items-center cursor-pointer smx:gap-1`}
+                        disabled={item.disabled}
+                        title={item.tooltip}
+                      >
+                        {item.icon}
+                        <Heading
+                          size="3xl"
+                          as="p"
+                          className={`${item.textColor} smx:text-xs`}
+                        >
+                          {item.label}
+                        </Heading>
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>

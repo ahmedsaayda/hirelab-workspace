@@ -1,4 +1,4 @@
-import { Space, } from "antd";
+import { Space, Tooltip } from "antd";
 import React from "react";
 import { default as ModalProvider } from "react-modal";
 import { Button, CheckBox, Heading, Img, Input, Radio } from "../../components/components";
@@ -101,24 +101,29 @@ export default function ApplicationformAddQuestions({
                 filteredItems.map((item, i) => {
                   const isDisabled = disabledTypes.includes(item.type);
                   return (
-                    <div
+                    <Tooltip
                       key={i}
-                      className={`flex justify-left items-center px-[14px] py-[12px] gap-[12px] border border-[#D0D5DD] rounded-[8px] 
-                        ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} 
-                        ${selected === item.type ? "border-1 border-light_blue-A700" : ""}`}
-                      onClick={() => {
-                        if (!isDisabled) setSelected(item.type);
-                      }}
+                      title={`Add ${item.text} field to your form`}
+                      placement="top"
                     >
-                      <Img
-                        src={`/icons/${item.icon}`}
-                        alt="type-01"
-                        className="h-[18px] w-[18px]"
-                      />
-                      <div className="text-[#475467] text-md font-semibold">
-                        {item.text}
+                      <div
+                        className={`flex justify-left items-center px-[14px] py-[12px] gap-[12px] border border-[#D0D5DD] rounded-[8px] 
+                          ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} 
+                          ${selected === item.type ? "border-1 border-light_blue-A700" : ""}`}
+                        onClick={() => {
+                          if (!isDisabled) setSelected(item.type);
+                        }}
+                      >
+                        <Img
+                          src={`/icons/${item.icon}`}
+                          alt="type-01"
+                          className="h-[18px] w-[18px]"
+                        />
+                        <div className="text-[#475467] text-md font-semibold">
+                          {item.text}
+                        </div>
                       </div>
-                    </div>
+                    </Tooltip>
                   );
                 })
               ) : (
