@@ -1044,6 +1044,38 @@ const handleContinue = () => {
     }));
   }, [selectedTemplateId]);
 
+  // Update landing page data when company name or info changes
+  useEffect(() => {
+    if (companyName && companyName.trim() !== '') {
+      setLandingPageData((prevData) => ({
+        ...prevData,
+        heroDescription: `Join ${companyName} as a Senior Director and lead strategic customer relationships in the foodservice sector.`,
+        companyFactsTitle: `${companyName} Facts`,
+        companyFactsDescription: `Learn what makes ${companyName} a great place to work`,
+        aboutTheCompanyTitle: `About ${companyName}`,
+        aboutTheCompanyText: `Leading innovation since founded`,
+        aboutTheCompanyDescription: companyInfo || `${companyName} is a leading company specializing in innovative solutions. Our mission is to make a difference through our diverse portfolio of products and services. We believe in fostering an inclusive culture that nurtures talent and drives success.`,
+        footerDescription: `Apply today and take the next step in your career with ${companyName}.`,
+        ctaFooterLink: companyUrl ? `https://${companyUrl.replace(/^www\./, '').split('/')[0]}/careers` : prevData.ctaFooterLink,
+        recruiters: prevData.recruiters.map((recruiter, index) => {
+          if (index === 0) {
+            return {
+              ...recruiter,
+              recruiterEmail: companyUrl ? `careers@${companyUrl.replace(/^www\./, '').split('/')[0]}` : recruiter.recruiterEmail,
+            };
+          }
+          return recruiter;
+        }),
+      }));
+    } else if (companyInfo && companyInfo.trim() !== '') {
+      // Update only company info if no company name is set
+      setLandingPageData((prevData) => ({
+        ...prevData,
+        aboutTheCompanyDescription: companyInfo,
+      }));
+    }
+  }, [companyName, companyUrl, companyInfo]);
+
   const handleApplyThemeToLandingPage = () => {
     // message.info("Branding Theme Applied Successfully!");
     CrudService.update("LandingPageData", user._id, {
@@ -1762,7 +1794,20 @@ const handleLogoUpload = async (url) => {
   }
 
   return (
-    <div className="flex flex-col h-screen min-h-[600px] overflow-hidden bg-white px-4 sm:px-6 md:px-16 w-full py-4 sm:py-6">
+    <>
+      {/* CSS to fix salary badge positioning in preview mode */}
+      <style jsx global>{`
+        /* Hide only the desktop absolute positioned salary container */
+        .onboarding-preview-container div[class*="lg:block"][class*="absolute"][class*="-left-"][class*="w-1"][class*="h-full"] {
+          display: none !important;
+        }
+        
+        /* Keep mobile salary badges visible (they use lg:hidden) */
+        .onboarding-preview-container div[class*="lg:hidden"] {
+          display: flex !important;
+        }
+      `}</style>
+      <div className="flex flex-col h-screen min-h-[600px] overflow-hidden bg-white px-4 sm:px-6 md:px-16 w-full py-4 sm:py-6">
       <div>
         <Img
             src="/images/img_arrow_right_blue_gray_400.svg"
@@ -1863,7 +1908,7 @@ const handleLogoUpload = async (url) => {
 
           <div className="flex flex-col lg:flex-row gap-6 py-4 lg:py-6 xl:py-8 h-full">
               {/* Left Column - Form Steps */}
-              <div className="space-y-6 w-full lg:w-[33%] xl:w-[33%]">
+              <div className="space-y-6 w-full lg:w-[30%] xl:w-[28%]">
                 {/* Step 1 Content (Company Info) */}
                 {currentStep === 3 && (
                   <div className="space-y-4">
@@ -1874,11 +1919,13 @@ const handleLogoUpload = async (url) => {
                       </Typography.Text>
                       <Input
                         value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
+                        onChange={(e) => {
+                          setCompanyName(e.target.value?.slice?.(0,100))
+                        }}
                         placeholder="Enter the name"
                         className="rounded-md border-gray-300"
                         suffix={
-                          <span className="text-sm text-gray-400">18/800</span>
+                          <span className="text-sm text-gray-400">{companyName?.length}/100</span>
                         }
                       />
                     </div>
@@ -1888,7 +1935,16 @@ const handleLogoUpload = async (url) => {
                       </Typography.Text>
                       <Input
                         value={companyUrl}
-                        onChange={(e) => setCompanyUrl(e.target.value)}
+                        onChange={(e) => {
+                          let value = e.target.value;
+                          // Remove https:// if user pastes it
+                          if (value.startsWith('https://')) {
+                            value = value.substring(8);
+                          } else if (value.startsWith('http://')) {
+                            value = value.substring(7);
+                          }
+                          setCompanyUrl(value);
+                        }}
                         addonBefore="https://"
                         placeholder="www.company.com"
                         className="rounded-md custom-container"
@@ -2435,8 +2491,8 @@ const handleLogoUpload = async (url) => {
 
        
               {currentStep >= 1 && currentStep <= 3 && (
-                  <div className="w-full lg:w-[67%] xl:w-[67%] flex justify-center">
-                    <div className="w-full max-w-[1000px] h-[400px] sm:h-[500px] md:h-[600px] lg:h-[calc(100vh-200px)] xl:h-[calc(100vh-160px)] min-h-[400px] max-h-[800px] overflow-hidden text-sm text-center text-gray-400 border border-blue-600 rounded-lg">
+                  <div className="w-full lg:w-[70%] xl:w-[72%] flex justify-center">
+                    <div className="w-full max-w-[1600px] h-[550px] sm:h-[650px] md:h-[750px] lg:h-[calc(100vh-140px)] xl:h-[calc(100vh-100px)] min-h-[550px] max-h-[1100px] overflow-visible text-sm text-center text-gray-400 border border-blue-600 rounded-lg onboarding-preview-container">
                       <Preview logo={companyLogo} landingPageData={landingPageData} fullscreen={fullscreen} setFullscreen={setFullscreen} />
                     </div>
                   </div>
@@ -2445,6 +2501,7 @@ const handleLogoUpload = async (url) => {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
@@ -2477,6 +2534,13 @@ function applyCustomFont(
 }
 
 const Preview = ({ logo, landingPageData, fullscreen, setFullscreen }) => {
+  // Set a global flag for preview mode
+  useEffect(() => {
+    window.__isOnboardingPreview = true;
+    return () => {
+      delete window.__isOnboardingPreview;
+    };
+  }, []);
   const [device, setDevice] = useState("desktop");
   const user = useSelector(selectUser);
   console.log("user", user?.landingPageNum);

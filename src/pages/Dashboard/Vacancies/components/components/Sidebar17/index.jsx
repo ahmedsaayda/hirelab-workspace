@@ -302,7 +302,9 @@ export default function Sidebar17({
                           >
                             <Tooltip
                               title={getSectionDisplayName(item.key)}
-                              placement="right"
+                              placement="bottom"
+                              mouseEnterDelay={0.5}
+                              mouseLeaveDelay={0.1}
                               className="flex-shrink-0"
                             >
                               <div

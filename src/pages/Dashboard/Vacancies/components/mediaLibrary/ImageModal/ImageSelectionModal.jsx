@@ -187,6 +187,17 @@ const ImageSelectionModal = ({
     onClose();
   };
 
+  // Auto-apply selected images when modal is closed
+  const handleModalClose = () => {
+    if (!autosave && files.length > 0) {
+      const urls = files.map((f) => f.url).filter((u) => u.startsWith("http"));
+      if (urls.length > 0) {
+        onImageSelected(urls);
+      }
+    }
+    onClose();
+  };
+
   useEffect(() => {
     if(addingFromStockImage){
       const urls = files.map((f) => f.url).filter((u) => u.startsWith("http"));
@@ -373,7 +384,7 @@ const ImageSelectionModal = ({
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title="Media Library">
+      <Modal isOpen={isOpen} onClose={handleModalClose} title="Media Library">
         <div className="flex flex-col lg:flex-row h-[calc(100vh-200px)] max-h-[800px] w-full">
           {/* Sidebar */}
           <div className="p-2 lg:p-4 w-full lg:w-48 border-b lg:border-b-0 lg:border-r border-gray-100 flex-shrink-0">

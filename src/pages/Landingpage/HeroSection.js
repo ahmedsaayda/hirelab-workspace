@@ -837,7 +837,9 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
                 <div className="hidden absolute -left-[5%] lg:-left-[12%] xl:-left-[32%] top-0 w-1 h-full  lg:block ">
                   {/* Salary */}
-                  <div className=" absolute -left-0 top-[15%]">
+                  <div className=" absolute -left-0 top-[15%]"
+                  style={{transform: "translateX(-50px)"}}
+                  >
                     <div
                       className="flex gap-3 items-center p-3 rounded-xl border shadow-lg border-white/10 lg:min-h-[75px] relative z-[500]"
                       style={{
