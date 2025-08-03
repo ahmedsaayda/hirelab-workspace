@@ -260,11 +260,7 @@ export default function Header({
               className="!text-blue_gray-700 whitespace-nowrap"
             >
               {landingPageData?.vacancyTitle}
-              {isFormEditor && (
-                <span className="ml-2 text-xs px-2 py-0.5 bg-purple-100 text-purple-800 rounded-full">
-                  Form Editor
-                </span>
-              )}
+           
               {hasUnpublishedChanges && (
                 <span className="ml-2 text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">
                   Unpublished changes
