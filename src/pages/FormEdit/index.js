@@ -915,7 +915,7 @@ export default function FormEdit({paramsId}) {
           </div>
         </div>
 
-        <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">{getTranslation(landingPageData?.lang, 'fieldLabel')}</span>}>
+        <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Label</span>}>
           <Input
             value={currentSection.label}
             onChange={(e) =>
@@ -926,7 +926,9 @@ export default function FormEdit({paramsId}) {
         </Form.Item>
 
         {/* <Form.Item label="Placeholder"> */}
-      <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">{getTranslation(landingPageData?.lang, 'placeholder')}</span>}>
+      <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">
+        Placeholder
+      </span>}>
 
           <Input
             value={currentSection.placeholder}
