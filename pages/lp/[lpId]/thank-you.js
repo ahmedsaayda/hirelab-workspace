@@ -23,6 +23,7 @@ export default function ThankYouPage() {
       // const res = await CrudService.getSingle("LandingPageData", lpId, "thank you page");
       const res = await PublicService.getLP(lpId);
       if (res.data?.lp) {
+        console.log("res.data?.lp",res.data?.lp)
         setLandingPageData(res.data?.lp);
       }
       setLoading(false);
@@ -71,21 +72,35 @@ export default function ThankYouPage() {
           </div>
           
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Application Submitted Successfully!
+            {landingPageData?.thankYouTitle || "Application Submitted Successfully!"}
           </h1>
           
           <p className="text-lg text-gray-600 mb-8">
-            Thank you for applying to <strong>{landingPageData?.vacancyTitle}</strong> at{' '}
-            <strong>{landingPageData?.companyName || 'our company'}</strong>. 
-            We've received your application and will review it carefully.
+            {landingPageData?.thankYouMessage 
+              ? landingPageData.thankYouMessage
+                  .replace('{vacancyTitle}', landingPageData?.vacancyTitle || 'this position')
+                  .replace('{companyName}', landingPageData?.companyName || 'our company')
+              : `Thank you for applying to ${landingPageData?.vacancyTitle} at ${landingPageData?.companyName || 'our company'}. We've received your application and will review it carefully.`
+            }
           </p>
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-            <h3 className="font-semibold text-blue-900 mb-2">What happens next?</h3>
+            <h3 className="font-semibold text-blue-900 mb-2">
+              {landingPageData?.thankYouNextStepsTitle || "What happens next?"}
+            </h3>
             <ul className="text-left text-blue-800 space-y-2">
-              <li>• Our team will review your application within 2-3 business days</li>
-              <li>• If you're a good fit, we'll reach out to schedule an interview</li>
-              <li>• You'll receive email updates about your application status</li>
+              {landingPageData?.thankYouNextSteps && landingPageData.thankYouNextSteps.length > 0
+                ? landingPageData.thankYouNextSteps.map((step, index) => (
+                    <li key={index}>• {step}</li>
+                  ))
+                : (
+                  <>
+                    <li>• Our team will review your application within 2-3 business days</li>
+                    <li>• If you're a good fit, we'll reach out to schedule an interview</li>
+                    <li>• You'll receive email updates about your application status</li>
+                  </>
+                )
+              }
             </ul>
           </div>
 
@@ -95,7 +110,7 @@ export default function ThankYouPage() {
               onClick={() => router.push(`/lp/${lpId}`)}
               className="px-8"
             >
-              Back to Job Posting
+              {landingPageData?.thankYouBackButtonText || "Back to Job Posting"}
             </Button>
             
             {landingPageData?.companyUrl && (
@@ -110,7 +125,7 @@ export default function ThankYouPage() {
                 }}
                 className="bg-[#5207CD] hover:bg-[#0C7CE6] px-8"
               >
-                Learn More
+                {landingPageData?.thankYouLearnMoreButtonText || "Learn More"}
               </Button>
             )}
           </div>
