@@ -97,6 +97,7 @@ export const defaultLandingPageData = {
   secondaryColor: "#F7E733",
   tertiaryColor: "#44b566",
   yiqThreshold: 128,
+  metaPixelId: "",
   selectedFont: {
     family: "Poppins-Bold",
     src: "https://res.cloudinary.com/dvq0ouupb/raw/upload/v1742388170/fmo1ye9nswzixvzglc6v.ttf",

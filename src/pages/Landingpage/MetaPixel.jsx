@@ -1,0 +1,56 @@
+import { useEffect } from 'react';
+
+const MetaPixel = ({ metaPixelId }) => {
+  useEffect(() => {
+    if (!metaPixelId) return;
+
+    // Check if Meta Pixel is already loaded
+    if (window.fbq) return;
+
+    // Create and inject the Meta Pixel script
+    const script = document.createElement('script');
+    script.innerHTML = `
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      
+      fbq('init', '${metaPixelId}');
+      fbq('track', 'PageView');
+    `;
+    
+    document.head.appendChild(script);
+
+    // Create noscript fallback
+    const noscript = document.createElement('noscript');
+    const img = document.createElement('img');
+    img.height = 1;
+    img.width = 1;
+    img.style.display = 'none';
+    img.src = `https://www.facebook.com/tr?id=${metaPixelId}&ev=PageView&noscript=1`;
+    noscript.appendChild(img);
+    document.head.appendChild(noscript);
+
+    // Cleanup function
+    return () => {
+      // Remove the script and noscript elements if component unmounts
+      const existingScript = document.querySelector('script[src*="fbevents.js"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+      
+      const existingNoscript = document.querySelector('noscript img[src*="facebook.com/tr"]');
+      if (existingNoscript && existingNoscript.parentNode) {
+        existingNoscript.parentNode.remove();
+      }
+    };
+  }, [metaPixelId]);
+
+  return null;
+};
+
+export default MetaPixel; 

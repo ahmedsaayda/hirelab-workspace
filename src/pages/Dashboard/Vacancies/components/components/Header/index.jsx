@@ -443,9 +443,41 @@ export default function Header({
         okButtonProps={{ style: { display: "none" } }}
         cancelButtonProps={{ style: { display: "none" } }}
         destroyOnClose
-        title="Choose template"
+        title="Landing Page Settings"
+        width={800}
       >
-        <div className="grid grid-cols-3 gap-6 justify-center py-3 mdx:grid-cols-2">
+        <div className="py-4">
+          {/* Meta Pixel Configuration Section */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Analytics & Tracking</h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta Pixel ID (Facebook Pixel)
+                </label>
+                <Input
+                  value={landingPageData?.metaPixelId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setLandingPageData((d) => ({ ...d, metaPixelId: value }));
+                    CrudService.update("LandingPageData", lpId, {
+                      metaPixelId: value,
+                    });
+                  }}
+                  placeholder="Enter your Meta Pixel ID (e.g., 1234567890123456)"
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Add your Meta Pixel ID to track conversions and optimize your ads. You can find this in your Facebook Ads Manager.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Template Selection Section */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Choose Template</h3>
+            <div className="grid grid-cols-3 gap-6 justify-center mdx:grid-cols-2">
           {new Array(3).fill(0).map((a, i) => (
             <div
               key={i}
@@ -508,9 +540,9 @@ export default function Header({
               </div>
             </div>
           ))}
+            </div>
+          </div>
         </div>
-        
-     
       </Modal>
 
       {/* Apply Link Modal */}
