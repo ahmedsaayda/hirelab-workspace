@@ -12,6 +12,7 @@ import Form from "./Form.js"; // Import the new FormEditor component
 import HeroSection from "./HeroSection.js";
 import NavBar from "./NavBar.jsx";
 import ApplyCustomFont from "./ApplyCustomFont.jsx";
+import MetaPixel from "./MetaPixel.jsx";
 import { useFocus } from "../../contexts/FocusContext.js";
 import { useHover } from "../../contexts/HoverContext.js";
 import CrudService from "../../services/CrudService.js";
@@ -204,6 +205,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   return (
     <div className="w-full">
       <ApplyCustomFont landingPageData={landingPageData} />
+      <MetaPixel metaPixelId={landingPageData?.metaPixelId} />
       
       {/* Debug info - only show in development */}
       {process.env.NODE_ENV === 'development' && (
