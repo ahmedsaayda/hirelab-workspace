@@ -1403,27 +1403,16 @@ export default function FormEdit({paramsId}) {
                         <div className="flex-1">
                           
                           <div className="flex items-center gap-3 mb-2">
-                            <div className="w-8 h-8 smx:w-6 smx:h-6 md:w-10 md:h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                              <svg className="w-4 h-4 smx:w-3 smx:h-3 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            </div>
+                          
                             <div>
                         <Heading
                           size="7xl"
                           as="h4"
                                 className="!text-gray-900 !font-bold !text-lg smx:!text-base md:!text-2xl"
                         >
-                          {isEditingForm
-                                  ? "Application Form Builder"
-                                  : `Configure ${selectedSection?.label || "Field"}`}
+                          Edit Form
                         </Heading>
-                              <p className="text-xs smx:text-[10px] md:text-sm text-gray-600 mt-1">
-                                {isEditingForm 
-                                  ? "Design the perfect application experience for your candidates"
-                                  : "Customize field settings and validation rules"
-                                }
-                              </p>
+                             
                             </div>
                           </div>
                         </div>
@@ -1492,10 +1481,7 @@ export default function FormEdit({paramsId}) {
                           {/* Form Fields */}
                           <div className="mt-6">
                             <div className="flex justify-between items-center mb-4">
-                              <div>
-                                <h3 className="text-lg font-semibold text-gray-900">Form Fields</h3>
-                                <p className="text-sm text-gray-500">Configure your form fields</p>
-                              </div>
+                             
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => setQuestionModal(true)}
@@ -1514,9 +1500,7 @@ export default function FormEdit({paramsId}) {
                                 </button>
                               </div>
                             </div>
-                            <div className="px-4 py-3 bg-gray-50/50 rounded-lg mb-3">
-                              <div className="text-sm font-medium text-gray-600">{getTranslation(landingPageData?.lang, 'formFields')}</div>
-                            </div>
+                        
                             
                          
                             {/* Simplified Form Creation - No AI options */}
@@ -1562,203 +1546,9 @@ export default function FormEdit({paramsId}) {
                               </div>
                             )}
 
-                                        {/* Contact Information */}
-            {formSections.some(s => s.isLeadCapture) && (
-              <Tooltip title="Configure contact information fields (First Name, Last Name, Email, Phone)" placement="right">
-                <div className="flex items-center gap-3 p-4 rounded-lg mb-3 bg-blue-50/30 border border-blue-100 cursor-pointer hover:bg-blue-50/50 transition-colors"
-                  onClick={() => {
-                    const firstLeadCaptureField = formSections.find(s => s.isLeadCapture);
-                    setSelectedSection(firstLeadCaptureField);
-                    setIsEditingForm(false);
-                  }}
-                >
-                                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-lg">
-                                  👤
-                                </div>
-                                <div className="flex-1">
-                                  <div className="font-medium text-gray-900 text-sm">{getTranslation(landingPageData?.lang, 'contactInformation')}</div>
-                                  <div className="text-xs text-gray-500">{getTranslation(landingPageData?.lang, 'firstName')}, {getTranslation(landingPageData?.lang, 'email')}, {getTranslation(landingPageData?.lang, 'phone')} • {getTranslation(landingPageData?.lang, 'required')} • {getTranslation(landingPageData?.lang, 'clickToConfigure')}</div>
-                                </div>
-                                                  <div className="text-blue-600">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </Tooltip>
-            )}
+          
                             
-                            {/* Regular fields (non-lead capture) */}
-                            {formSections.filter(section => !section.isLeadCapture).map((section, sectionIndex) => {
-                              const formItem = formItems.find(item => item.type === section.type);
-                              const actualIndex = formSections.findIndex(f => f.id === section.id);
-                              const baseKey = section.id; // Stable key to prevent unnecessary re-mounting
-                              
-                              console.log(`🔍 RENDERING SWITCH - Section: ${section.type}, visible: ${section.visible}, required: ${section.required}`);
-                              
-                              if (section.type === "contact") {
-                                return (
-                                  <React.Fragment key={baseKey}>
-                                  <div 
-                                    key={`${baseKey}-firstName`} 
-                                    className={`grid grid-cols-3 gap-4 items-center p-3 rounded-lg mb-2 transition-all duration-200 ${
-                                      selectedSection?.id === section.id
-                                        ? 'bg-gradient-to-r from-blue-50 to-blue-25 border border-blue-200' 
-                                        : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100">
-                                        {section.isLeadCapture && (
-                                          <svg className="w-3 h-3 text-blue-600 absolute -top-1 -right-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                          </svg>
-                                        )}
-                                        <span className="text-lg">👤</span>
-                                      </div>
-                                      <div>
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-medium text-gray-900">First Name</span>
-                                        </div>
-                                        <p className="text-xs text-gray-500">
-                                          Contact field
-                                          {section.isLeadCapture && " • Required for all forms"}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="flex justify-center">
-                                      <div className="text-green-500 text-lg">✅</div>
-                                    </div>
-                                    <div className="flex justify-center">
-                                      <div className="text-amber-500 text-lg">⚠️</div>
-                                    </div>
-                                  </div>,
-                                  <div 
-                                    key={`${baseKey}-lastName`} 
-                                    className={`grid grid-cols-3 gap-4 items-center p-3 rounded-lg mb-2 transition-all duration-200 ${
-                                      selectedSection?.id === section.id
-                                        ? 'bg-gradient-to-r from-blue-50 to-blue-25 border border-blue-200' 
-                                        : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100">
-                                        {section.isLeadCapture && (
-                                          <svg className="w-3 h-3 text-blue-600 absolute -top-1 -right-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                          </svg>
-                                        )}
-                                        <span className="text-lg">👤</span>
-                                      </div>
-                                      <div>
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-medium text-gray-900">Last Name</span>
-                                        </div>
-                                        <p className="text-xs text-gray-500">
-                                          Contact field
-                                          {section.isLeadCapture && " • Required for all forms"}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="flex justify-center">
-                                      <div className="text-green-500 text-lg">✅</div>
-                                    </div>
-                                    <div className="flex justify-center">
-                                      <div className="text-amber-500 text-lg">⚠️</div>
-                                    </div>
-                                  </div>
-                                  </React.Fragment>
-                                );
-                              }
-                              return (
-                                <React.Fragment key={baseKey}>
-                                  <Tooltip
-                                    title={`Click to configure ${section.label || formItem?.text || section.type} field settings`}
-                                    placement="right"
-                                  >
-                                    <div 
-                                    key={baseKey} 
-                                    className={`flex items-center gap-3 p-3 rounded-lg mb-2 transition-all duration-200 cursor-pointer ${
-                                      selectedSection?.id === section.id
-                                        ? 'bg-gradient-to-r from-blue-50 to-blue-25 border border-blue-200' 
-                                        : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                                    }`}
-                                    onClick={() => {
-                                      console.log('🖱️ Editor click: Selecting section from main area:', section?.label || section?.id);
-                                      previewNavigatingRef.current = false; // Editor is driving navigation
-                                      setSelectedSection(section);
-                                      setIsEditingForm(false);
-                                    }}
-                                  >
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                  section.isLeadCapture ? 'bg-blue-100' : 'bg-gray-100'
-                                }`}>
-                                  {section.isLeadCapture && (
-                                        <svg className="w-3 h-3 text-blue-600 absolute top-1 right-1" fill="currentColor" viewBox="0 0 20 20">
-                                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                        </svg>
-                                      )}
-                                      <span className="text-lg">
-                                        {(() => {
-                                          const iconMap = {
-                                            'text': '📝',
-                                            'longtext': '📄',
-                                            'motivation': '💭',
-                                            'number': '🔢',
-                                            'date': '📅',
-                                            'email': '✉️',
-                                            'phone': '📱',
-                                            'address': '📍',
-                                            'file': '📎',
-                                            'multichoice': '◉',
-                                            'dropdown': '📋',
-                                            'multiselect': '☑️',
-                                            'yesno': '❓',
-                                            'boolean': '🔘',
-                                            'website': '🌐'
-                                          };
-                                          return iconMap[section.type] || '📝';
-                                        })()}
-                                      </span>
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-900">{section.label || formItem?.text || section.type}</span>
-                                    {section.isLeadCapture && (
-                                          <div className="flex items-center gap-1">
-                                            <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                            </svg>
-                                            <span className="text-xs text-blue-600 font-medium">Lead Capture</span>
-                                          </div>
-                                        )}
-                                      </div>
-                                      <p className="text-xs text-gray-500 capitalize">
-                                        {section.type} field • {getTranslation(landingPageData?.lang, 'clickToConfigure')}
-                                      </p>
-                                    </div>
-                                    <div className="text-gray-400">
-                                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                      </svg>
-                                    </div>
-                                  </div>
-                                  </Tooltip>
-                                </React.Fragment>
-                              );
-                            })}
-                            
-                            {/* Add Field Button - At the bottom */}
-                            <div className="mt-4">
-                              <Tooltip title="Add a new form field to your application form" placement="right">
-                                <button
-                                  onClick={() => setQuestionModal(true)}
-                                  className="w-full p-4 border-2 border-dashed border-gray-200 rounded-lg text-gray-500 hover:border-gray-300 hover:text-gray-600 transition-colors flex items-center justify-center gap-2"
-                                >
-                                  ➕ {getTranslation(landingPageData?.lang, 'addField')}
-                                </button>
-                              </Tooltip>
-                            </div>
+                       
                           </div>
                         </>
                       ) : (
@@ -1801,29 +1591,16 @@ export default function FormEdit({paramsId}) {
                     } : { height: '100%', flexDirection: 'column' }}
                   >
                     <div className="flex gap-4 justify-between items-center mb-2 relative">
-                      {/* Close Button for Fullscreen - Mobile */}
-                      {fullscreen && (
-                        <button
-                          onClick={() => setFullscreen(false)}
-                          className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors z-50"
-                          title="Close Preview"
-                        >
-                          <svg className="w-4 h-4 md:w-5 md:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
-                      
                       <Heading
                         size="7xl"
                         as="h5"
                         className="!text-black-900_01 !text-lg md:!text-xl"
-                        style={{ marginLeft: fullscreen ? '40px' : '0' }}
                       >
                         Preview
                       </Heading>
+                      
                       {/* Centered Preview Toggle */}
-                      <div className="flex-1 flex justify-center">
+                      <div className="absolute left-1/2 transform -translate-x-1/2">
                         <div className="flex p-1 rounded-lg bg-gray-100">
                           <button
                             onClick={() => setDevice("mobile")}
@@ -1843,22 +1620,35 @@ export default function FormEdit({paramsId}) {
                                 : "text-[#5207CD]"
                             }`}
                           >
-                            Form
+                            Desktop
                           </button>
                         </div>
                       </div>
-                      {/* Expand/Collapse Button */}
-                      <button
-                        className="h-[28px] w-[28px] flex items-center justify-center rounded hover:bg-gray-100"
-                        onClick={() => setFullscreen(f => !f)}
-                        style={{ marginLeft: 8 }}
-                      >
-                        <img
-                          src="/images/expand-06.svg"
-                          alt={fullscreen ? "collapse" : "expand"}
-                          className="h-[20px] w-[20px]"
-                        />
-                      </button>
+
+                      {/* Go Back Button for Fullscreen - Right Side */}
+                      {fullscreen ? (
+                        <button
+                          onClick={() => setFullscreen(false)}
+                          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-[#5207CD] rounded-md hover:bg-[#4506ac] transition-colors"
+                          title="Go Back"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Go Back
+                        </button>
+                      ) : (
+                        <button
+                          className="h-[28px] w-[28px] flex items-center justify-center rounded hover:bg-gray-100"
+                          onClick={() => setFullscreen(f => !f)}
+                        >
+                          <img
+                            src="/images/expand-06.svg"
+                            alt="expand"
+                            className="h-[20px] w-[20px]"
+                          />
+                        </button>
+                      )}
                     </div>
                     <div
                       className="flex flex-col items-start justify-center gap-[2px] mdx:pb flex-1"
