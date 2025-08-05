@@ -4,6 +4,7 @@ import { Button, Input, Radio, Checkbox, Select, Progress, message, Form, DatePi
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import dayjs from 'dayjs';
 import PublicService from '../../../src/services/PublicService';
+import { getTranslation } from '../../../src/utils/translations';
 // Removed PhoneInput - using regular Input instead
 // 🎨 BRANDING IMPORTS
 import useTemplatePalette from '../../hooks/useTemplatePalette';
@@ -1237,7 +1238,7 @@ export default function ApplyPage() {
                   border: `1px solid ${primaryColor}`
                 }}
               >
-                Start Application
+                {getTranslation(landingPageData?.lang, 'startApplication')}
               </Button>
             </div>
           ) : (
@@ -1269,7 +1270,7 @@ export default function ApplyPage() {
                 disabled={currentStep === 0}
               >
                 <ArrowLeft size={16} />
-                <span>Previous</span>
+                <span>{getTranslation(landingPageData?.lang, 'previous')}</span>
               </Button>
 
               <Button 
@@ -1285,7 +1286,7 @@ export default function ApplyPage() {
                   border: `1px solid ${primaryColor}`
                 }}
               >
-                <span>{currentStep === formFields.length ? 'Submit Application' : 'Next'}</span>
+                <span>{currentStep === formFields.length ? getTranslation(landingPageData?.lang, 'submit') : getTranslation(landingPageData?.lang, 'next')}</span>
                 <ArrowRight size={16} />
               </Button>
             </div>
