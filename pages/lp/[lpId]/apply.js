@@ -634,7 +634,7 @@ export default function ApplyPage() {
               {field.firstName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-xs text-gray-600">
-                    {field.firstName?.label || 'First Name'}
+                    {field.firstName?.label || getTranslation(landingPageData?.lang, 'firstName') || 'First Name'}
                     {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <Input
@@ -649,7 +649,7 @@ export default function ApplyPage() {
               {field.lastName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-xs text-gray-600">
-                    {field.lastName?.label || 'Last Name'}
+                    { getTranslation(landingPageData?.lang, 'lastName') ||field.lastName?.label || 'Last Name'}
                     {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <Input
@@ -666,8 +666,8 @@ export default function ApplyPage() {
             {/* Email field */}
             {field.email?.visible !== false && (
               <div>
-                <label className="block mb-1 font-semibold text-xs text-gray-600">
-                  {field.email?.label || 'Email'}
+                                  <label className="block mb-1 font-semibold text-xs text-gray-600">
+                  {field.email?.label || getTranslation(landingPageData?.lang, 'email') || 'Email'}
                   {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
@@ -684,8 +684,8 @@ export default function ApplyPage() {
             {/* Phone field */}
             {field.phone?.visible !== false && (
               <div>
-                <label className="block mb-1 font-semibold text-xs text-gray-600">
-                  {field.phone?.label || 'Phone'}
+                                  <label className="block mb-1 font-semibold text-xs text-gray-600">
+                  {field.phone?.label || getTranslation(landingPageData?.lang, 'phone') || 'Phone'}
                   {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
