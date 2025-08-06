@@ -729,6 +729,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
 
   // Load ATS data with enhanced search using VacancySubmissions
   const loadATSData = useCallback(async (options = {}) => {
+    console.log('🔄 LOAD DEBUG: Loading ATS data with options:', options);
     // Don't load data if user is not available yet
     if (!user || !user._id) {
       console.log('⏳ Waiting for user to be available...');
@@ -966,8 +967,21 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       console.log('🔍 Stage filtering:', {
         activeStageFilter: filters.stages,
         totalStages: stages.length,
-        stageNames: stages.map(s => s.name)
+        stageNames: stages.map(s => s.name),
+        stageIds: stages.map(s => s._id)
       });
+      
+      // Check for candidates with invalid stage IDs
+      const invalidStageIds = [...new Set(allCandidates
+        .filter(c => c.stageId && !stages.some(s => s._id === c.stageId))
+        .map(c => c.stageId))];
+      
+      if (invalidStageIds.length > 0) {
+        console.log('⚠️ Found candidates with invalid stage IDs:', invalidStageIds);
+        console.log('📋 Candidates affected:', allCandidates
+          .filter(c => invalidStageIds.includes(c.stageId))
+          .map(c => ({ id: c._id, name: c.formData?.firstname + ' ' + c.formData?.lastname, stageId: c.stageId })));
+      }
       
       const boardColumns = stages.map(stage => {
         // Skip stage if stage filter is active and this stage is not selected
@@ -981,10 +995,28 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
           };
         }
         
-        const stageCandidates = allCandidates.filter(candidate => 
-          candidate.stageId === stage._id ||
-          (!candidate.stageId && stage.name === 'Applied') // Default to "Applied" if no stage
-        );
+        const stageCandidates = allCandidates.filter(candidate => {
+          // Match candidates with this specific stage
+          if (candidate.stageId === stage._id) {
+            return true;
+          }
+          
+          // Default candidates without stage to "Applied" 
+          if (!candidate.stageId && stage.name === 'Applied') {
+            return true;
+          }
+          
+          // Handle candidates with invalid/missing stage IDs - put them in Applied
+          if (candidate.stageId && stage.name === 'Applied') {
+            const stageExists = stages.some(s => s._id === candidate.stageId);
+            if (!stageExists) {
+              console.log(`🔧 Candidate ${candidate._id} has invalid stageId ${candidate.stageId}, moving to Applied stage`);
+              return true;
+            }
+          }
+          
+          return false;
+        });
         
         // Apply comprehensive filters
         const filteredCandidates = stageCandidates.filter(candidate => {
