@@ -48,6 +48,7 @@ import ATSService from '../../../services/ATSService';
 import CrudService from '../../../services/CrudService';
 import TeamService from '../../../services/TeamService';
 import CandidateChatService from '../../../services/CandidateChatService';
+import VacancySelector from './VacancySelector.js';
 import moment from 'moment';
 import { selectUser } from '../../../redux/auth/selectors';
 
@@ -517,6 +518,11 @@ const { Search } = Input;
 const { TabPane } = Tabs;
 
 const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
+  // If no VacancyId is provided, show the vacancy selector
+  if (!VacancyId) {
+    return <VacancySelector />;
+  }
+
   // Get current user
   const user = useSelector(selectUser);
   
@@ -2881,13 +2887,13 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
               <Button
                 type="text"
                 icon={<LeftOutlined />}
-                onClick={() => router.back()}
+                onClick={() => router.push('/dashboard/ats')}
                 className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 h-9 w-9 flex items-center justify-center rounded-lg"
-                title="Go back"
+                title="Back to vacancy selection"
               />
               <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {isMultiJobView ? 'All Candidates' : (vacancyInfo?.name || 'Candidates')}
+                  {vacancyInfo?.vacancyTitle || vacancyInfo?.name || 'Candidates'}
                 </h1>
                 {isMultiJobView && (
                   <div className="text-sm text-gray-500">
@@ -2899,16 +2905,6 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
                   {candidates.length}
                 </div>
-                {!isMultiJobView && (
-                  <Button
-                    type="default"
-                    size="small"
-                    onClick={() => router.push('/dashboard/ats')}
-                    className="text-blue-600 border-blue-200 hover:border-blue-300 hover:text-blue-700"
-                  >
-                    View All Candidates
-                  </Button>
-                )}
               </div>
             </div>
             

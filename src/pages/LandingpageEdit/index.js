@@ -803,6 +803,17 @@ export default function LandingpageEdit({paramsId}) {
     setLandingPageData((d) => ({ ...d, menuItems: newMenuItems }));
   };
 
+  const handleSectionVisibilityUpdate = (sectionKey, visible) => {
+    const updatedMenuItems = (landingPageData?.menuItems ?? []).map((item) => {
+      if (item.key === sectionKey) {
+        return { ...item, visible };
+      }
+      return item;
+    });
+    
+    updateMenuItems(updatedMenuItems);
+  };
+
   //get selected Media card
   const getSelectedMedia = (data) => {
     if (activeSection.key === "flexaligntop") {
@@ -1271,6 +1282,7 @@ export default function LandingpageEdit({paramsId}) {
               else setActiveIdx(idx);
             }}
             setActiveIdx={setActiveIdx}
+            onSectionVisibilityUpdate={handleSectionVisibilityUpdate}
           />
           <div className="lg:min-w-[450px] flex flex-grow flex-col border-r border-solid border-blue_gray-50  p-0 smx:self-stretch max-h-full">
             <div className="flex flex-col gap-[15px]  flex-grow lg:overflow-auto relative ">

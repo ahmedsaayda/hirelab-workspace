@@ -229,9 +229,11 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
 
         <HeroSection landingPageData={landingPageData} fetchData={fetchData} />
 
-        {(landingPageData?.menuItems ?? [])?.map((section, idx) =>
-          renderSection({ section, landingPageData, fetchData, key: idx })
-        )}
+        {(landingPageData?.menuItems ?? [])
+          ?.filter(section => section.visible !== false)
+          ?.map((section, idx) =>
+            renderSection({ section, landingPageData, fetchData, key: idx })
+          )}
 
         <Footer landingPageData={landingPageData} fetchData={fetchData} />
 

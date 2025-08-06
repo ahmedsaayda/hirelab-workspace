@@ -67,6 +67,7 @@ import FunnelTemplateLibrary from "./FunnelTemplateLibrary.js";
 import ImportModule from "./ImportModule.js";
 import WorkflowConfigurator from "./WorkflowConfigurator.js";
 import ATSTable from "./ATSTable/index.jsx";
+import VacancySelector from "./VacancySelector.js";
 
 export const mappedVacancySubmission = [
   { value: "fullname", label: "Fullname" },
@@ -114,6 +115,11 @@ function getUrlParams() {
 const LOAD_PER_PAGE = 25;
 
 const ATS = ({ VacancyId, vacancyInfo }) => {
+  // If no VacancyId is provided, show the vacancy selector
+  if (!VacancyId) {
+    return <VacancySelector />;
+  }
+
   const [boardColumns, setBoardColumns] = useState([]);
   console.log("boardColumns", boardColumns);
   const [messageCandidate, setMessageCandidate] = useState(null);
