@@ -11,6 +11,7 @@ import { ConfigProvider, theme } from "antd";
 import { useSelector } from "react-redux";
 import { selectDarkMode, selectUser } from "../../../redux/auth/selectors";
 import VacanciesCard from "../Vacancies/components/components/VacanciesCard";
+import ATSService from "../../../services/ATSService";
 import CrudService from "../../../services/CrudService";
 import { Heading } from "../Vacancies/components/components";
 import { debounce } from "lodash";
@@ -264,7 +265,10 @@ const Overview = () => {
         label: item.vacancyTitle || 'Untitled Vacancy'
       })));
 
-      const processedPages = result.data.items.map((i) => {
+      // Get applicant counts for all landing pages
+      const landingPagesWithCounts = await ATSService.countApplicants(result.data.items);
+      
+      const processedPages = landingPagesWithCounts.data.map((i) => {
         const visits = i.visits || 0;
         const avgTimeSpent = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
         const daysLive = Math.ceil((new Date() - new Date(i.createdAt)) / (1000 * 60 * 60 * 24));
@@ -277,7 +281,7 @@ const Overview = () => {
           mar42024: moment(i.createdAt).format("MMM Do YYYY"),
           visits: visits,
           avgTimeSpent: avgTimeSpent,
-          applicants: 0,
+          applicants: i.numberApplicants || 0, // Now getting real applicant count
           daysLive: daysLive,
           key: i._id,
         };

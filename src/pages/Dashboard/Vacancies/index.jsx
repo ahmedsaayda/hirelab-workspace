@@ -32,6 +32,7 @@ import {
   selectLoading,
   selectUser,
 } from "../../../redux/auth/selectors.js";
+import ATSService from "../../../services/ATSService.js";
 import AuthService from "../../../services/AuthService.js";
 import CrudService from "../../../services/CrudService.js";
 import PublicService from "../../../services/PublicService.js";
@@ -321,8 +322,11 @@ const Vacancies = () => {
                   ...({}),
                 }
               );
+              // Get applicant counts for all landing pages
+              const landingPagesWithCounts = await ATSService.countApplicants(result.data.items);
+              
               setLandingPages(
-                result.data.items.map((i) => {
+                landingPagesWithCounts.data.map((i) => {
                   const visits = i.visits || 0;
                   const avgTimeSpent = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
                   const daysLive = Math.ceil((new Date() - new Date(i.createdAt)) / (1000 * 60 * 60 * 24));
@@ -336,7 +340,7 @@ const Vacancies = () => {
                     // Real analytics data
                     visits: visits,
                     avgTimeSpent: avgTimeSpent,
-                    applicants: 0, // For now, showing as 0
+                    applicants: i.numberApplicants || 0, // Now getting real applicant count
                     // Calculate days live
                     daysLive: daysLive,
                     key: i._id,
