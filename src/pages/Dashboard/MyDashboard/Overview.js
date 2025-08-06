@@ -265,8 +265,16 @@ const Overview = () => {
         label: item.vacancyTitle || 'Untitled Vacancy'
       })));
 
-      // Get applicant counts for all landing pages
-      const landingPagesWithCounts = await ATSService.countApplicants(result.data.items);
+      // Try to get applicant counts, but don't let it break the main functionality
+      let landingPagesWithCounts;
+      try {
+        landingPagesWithCounts = await ATSService.countApplicants(result.data.items);
+        console.log('✅ Successfully fetched applicant counts');
+      } catch (countError) {
+        console.warn('⚠️ Failed to fetch applicant counts, using fallback:', countError.message);
+        // Fallback: use original data with 0 applicants
+        landingPagesWithCounts = { data: result.data.items };
+      }
       
       const processedPages = landingPagesWithCounts.data.map((i) => {
         const visits = i.visits || 0;
@@ -281,7 +289,7 @@ const Overview = () => {
           mar42024: moment(i.createdAt).format("MMM Do YYYY"),
           visits: visits,
           avgTimeSpent: avgTimeSpent,
-          applicants: i.numberApplicants || 0, // Now getting real applicant count
+          applicants: i.numberApplicants || 0, // Real count if available, otherwise 0
           daysLive: daysLive,
           key: i._id,
         };
