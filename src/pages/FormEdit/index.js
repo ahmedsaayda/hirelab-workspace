@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 import CrudService from "../../services/CrudService";
 import PublicService from "../../services/PublicService";
 import { changeIndigoShades, generateTailwindPalette } from "../Dashboard";
-import { Button, Heading, Img, Text } from "../Dashboard/Vacancies/components/components";
+import { Button, Heading, Img, Text, Input as CustomInput } from "../Dashboard/Vacancies/components/components";
 import Header from "../Dashboard/Vacancies/components/components/Header";
 import ApplicationformAddQuestions, {
   formItems,
@@ -15,7 +15,8 @@ import ApplicationformAddQuestions, {
 import FormE from "../Landingpage/Form";
 import EditorRender from "../LandingpageEdit/EditorRender";
 import ApplyPagePreview from "./ApplyPagePreview";
-import {FaGripVertical,FaTrash} from "react-icons/fa6";
+import {FaGripVertical,FaTrash} from "react-icons/fa";
+import { IoTrashOutline } from "react-icons/io5";
 import { DragDropContext as BeautifulDragDropContext, Droppable as BeautifulDroppable, Draggable as BeautifulDraggable } from "@hello-pangea/dnd";
 import {PlusOutlined} from "@ant-design/icons";
 import AIFormGeneratorModal from "../Dashboard/Vacancies/AIFormGeneratorModal";
@@ -25,6 +26,7 @@ import { selectUser } from "../../redux/auth/selectors";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import ApplyCustomFont from "../Landingpage/ApplyCustomFont";
 import { getFonts } from "../Landingpage/getFonts";
+import { brandColor } from "../../data/constants";
 import { getTranslation } from "../../utils/translations";
 
 const { TextArea } = Input;
@@ -114,6 +116,33 @@ export default function FormEdit({paramsId}) {
       });
     }
   }, [user]);
+
+  // Set initial sidebar width based on screen size
+  useEffect(() => {
+    const setSidebarWidth = () => {
+      const sidebar = document.querySelector('.sidebar-transition');
+      if (sidebar) {
+        const width = window.innerWidth;
+        if (width >= 768) {
+          sidebar.style.width = '100px';
+        } else if (width >= 640) {
+          sidebar.style.width = '100px';
+        } else {
+          sidebar.style.width = '60px';
+        }
+      }
+    };
+
+    // Set initial width
+    setSidebarWidth();
+
+    // Add resize listener
+    window.addEventListener('resize', setSidebarWidth);
+
+    return () => {
+      window.removeEventListener('resize', setSidebarWidth);
+    };
+  }, []);
 
   const fetchData = useCallback(() => {
     if (lpId) {
@@ -697,30 +726,40 @@ export default function FormEdit({paramsId}) {
 
     if (!currentSection) return null;
 
+
     // Handle contact fields with clean vertical layout
     if (currentSection.type === "contact") {
       return (
+      <>
         <Form layout="vertical" className="space-y-4">
-          <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Field Label</span>}>
-            <Input
-              value={currentSection.label}
-              onChange={(e) =>
-                handleUpdateSection(currentSection.id, { label: e.target.value })
-              }
-              className="rounded-lg"
-            />
+          <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">{
+            currentSection.label
+            }</span>}>
+            <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+              <CustomInput
+                value={currentSection.label}
+                onChange={(value) =>
+                  handleUpdateSection(currentSection.id, { label: value })
+                }
+                className="border-none focus:ring-0 text-sm"
+                shape="round"
+              />
+            </div>
           </Form.Item>
 
           <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Placeholder</span>}>
-            <Input
-              value={currentSection.placeholder}
-              onChange={(e) =>
-                handleUpdateSection(currentSection.id, {
-                  placeholder: e.target.value,
-                })
-              }
-              className="rounded-lg"
-            />
+            <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+              <CustomInput
+                value={currentSection.placeholder}
+                onChange={(value) =>
+                  handleUpdateSection(currentSection.id, {
+                    placeholder: value,
+                  })
+                }
+                className="border-none focus:ring-0 text-sm"
+                shape="round"
+              />
+            </div>
           </Form.Item>
 
           {/* Core contact fields with borders and separation */}
@@ -877,42 +916,33 @@ export default function FormEdit({paramsId}) {
             <PlusOutlined /> Add Custom Field
           </Button>
         </Form>
+      </>
       );
     }
 
     // Default field editor for all other field types
     return (
       <Form layout="vertical" className="space-y-4">
-        {/* Visible/Required Settings at top right */}
+        {/* Field Settings Header */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex-1">
-            <span className="font-bold text-[14px] text-[#475647]">Field Settings</span>
-          </div>
-          <div className="flex items-center gap-6 p-3 bg-gray-50 rounded-lg">
-         
-            
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={currentSection.required || false}
-                onChange={(checked) => {
-                  handleUpdateSection(currentSection.id, {
-                    required: checked
-                  });
-                }}
-              />
-              <span className="text-sm text-gray-700">Required</span>
-            </div>
+            <span className="font-bold text-[14px] text-[#475647]">{
+              currentSection.label
+              }</span>
           </div>
         </div>
 
         <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">Label</span>}>
-          <Input
-            value={currentSection.label}
-            onChange={(e) =>
-              handleUpdateSection(currentSection.id, { label: e.target.value })
-            }
-            className="rounded-lg"
-          />
+          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+            <CustomInput
+              value={currentSection.label}
+              onChange={(value) =>
+                handleUpdateSection(currentSection.id, { label: value })
+              }
+              className="border-none focus:ring-0 text-sm"
+              shape="round"
+            />
+          </div>
         </Form.Item>
 
         {/* <Form.Item label="Placeholder"> */}
@@ -920,43 +950,52 @@ export default function FormEdit({paramsId}) {
         Placeholder
       </span>}>
 
-          <Input
-            value={currentSection.placeholder}
-            onChange={(e) =>
-              handleUpdateSection(currentSection.id, {
-                placeholder: e.target.value,
-              })
-            }
-            className="rounded-lg"
-          />
+          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+            <CustomInput
+              value={currentSection.placeholder}
+              onChange={(value) =>
+                handleUpdateSection(currentSection.id, {
+                  placeholder: value,
+                })
+              }
+              className="border-none focus:ring-0 text-sm"
+              shape="round"
+            />
+          </div>
         </Form.Item>
 
         {currentSection.type === "number" && (
           <div className="flex gap-4">
             <Form.Item label="Min Value" className="flex-1">
-              <Input
-                type="number"
-                value={currentSection.min}
-                onChange={(e) =>
-                  handleUpdateSection(currentSection.id, {
-                    min: e.target.value,
-                  })
-                }
-                className="rounded-lg"
-              />
+              <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                <CustomInput
+                  type="number"
+                  value={currentSection.min}
+                  onChange={(value) =>
+                    handleUpdateSection(currentSection.id, {
+                      min: value,
+                    })
+                  }
+                  className="border-none focus:ring-0 text-sm"
+                  shape="round"
+                />
+              </div>
             </Form.Item>
             <Form.Item label="Max Value" className="flex-1">
-              <Input
-                type="number"
-                value={currentSection.max}
-                placeholder="Enter Answers"
-                onChange={(e) =>
-                  handleUpdateSection(currentSection.id, {
-                    max: e.target.value,
-                  })
-                }
-                className="rounded-lg"
-              />
+              <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                <CustomInput
+                  type="number"
+                  value={currentSection.max}
+                  placeholder="Enter Answers"
+                  onChange={(value) =>
+                    handleUpdateSection(currentSection.id, {
+                      max: value,
+                    })
+                  }
+                  className="border-none focus:ring-0 text-sm"
+                  shape="round"
+                />
+              </div>
             </Form.Item>
           </div>
         )}
@@ -967,18 +1006,21 @@ export default function FormEdit({paramsId}) {
             <div className="space-y-2">
               {currentSection.options?.map((option, index) => (
                 <div key={index} className="relative flex items-center w-full mb-2">
-                  <Input
-                    value={option.text}
-                    onChange={(e) => {
-                      const newOptions = [...currentSection.options];
-                      newOptions[index] = { ...option, text: e.target.value };
-                      handleUpdateSection(currentSection.id, {
-                        options: newOptions,
-                      });
-                    }}
-                    className="rounded-lg  w-full mt-2"
-                    placeholder="Enter Option"
-                  />
+                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700 w-full mt-2">
+                    <CustomInput
+                      value={option.text}
+                      onChange={(value) => {
+                        const newOptions = [...currentSection.options];
+                        newOptions[index] = { ...option, text: value };
+                        handleUpdateSection(currentSection.id, {
+                          options: newOptions,
+                        });
+                      }}
+                      className="border-none focus:ring-0 text-sm"
+                      placeholder="Enter Option"
+                      shape="round"
+                    />
+                  </div>
                   <Button
                     size="xl"
                     onClick={() => {
@@ -1121,16 +1163,26 @@ export default function FormEdit({paramsId}) {
                               <div className="w-full h-full">
                   <div className="flex rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 h-full overflow-hidden">
                                       {/* Left Sidebar */}
-                    <div className="flex flex-col border-r border-solid border-blue_gray-50 pl-2 py-[10px] w-[100px] smx:w-[60px] md:w-[100px] group sidebar-transition h-full overflow-hidden" 
-                      style={{ transition: 'width 0.3s' }}
+                    <div className="flex flex-col border-r border-solid border-blue_gray-50 pl-2 py-[10px] group sidebar-transition h-full overflow-hidden" 
+                      style={{ transition: 'width 0.3s ease-in-out' }}
                       onMouseEnter={e => {
-                        if (window.innerWidth >= 768) {
+                        const width = window.innerWidth;
+                        if (width >= 768) {
+                          e.currentTarget.style.width = '180px'
+                        } else if (width >= 640) {
                           e.currentTarget.style.width = '140px'
+                        } else {
+                          e.currentTarget.style.width = '120px'
                         }
                       }}
                       onMouseLeave={e => {
-                        if (window.innerWidth >= 768) {
+                        const width = window.innerWidth;
+                        if (width >= 768) {
                           e.currentTarget.style.width = '100px'
+                        } else if (width >= 640) {
+                          e.currentTarget.style.width = '100px'
+                        } else {
+                          e.currentTarget.style.width = '60px'
                         }
                       }}
                     >
@@ -1154,15 +1206,36 @@ export default function FormEdit({paramsId}) {
                             >
                               {/* Header (not draggable) */}
                               <div
-                                className="w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group hover:bg-gray-50"
+                                className="w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group hover:bg-blue-50"
                                 onClick={() => {
                                   setSelectedSection({ id: 'flexaligntop', type: 'header' });
                                   setIsEditingForm(true);
                                 }}
                               >
-                                <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '140px'}}>
-                                  <div className="bg-gray-100 rounded-full p-1">
-                                    <img src="/images/img_flex_align_top.svg" alt="flexaligntop" className="w-5 h-5" />
+                                <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '160px'}}>
+                                  <div 
+                                    className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
+                                    style={
+                                      selectedSection?.id === 'flexaligntop' && isEditingForm
+                                        ? {
+                                            background: brandColor,
+                                            opacity: 0.6,
+                                          }
+                                        : {}
+                                    }
+                                  >
+                                    <img 
+                                      src="/images/img_flex_align_top.svg" 
+                                      alt="flexaligntop" 
+                                      className="h-[16px] w-[16px] transition-all"
+                                      style={
+                                        selectedSection?.id === 'flexaligntop' && isEditingForm
+                                          ? {
+                                              filter: "brightness(0) invert(1)",
+                                            }
+                                          : {}
+                                      }
+                                    />
                                   </div>
                                 </div>
                               </div>
@@ -1176,8 +1249,8 @@ export default function FormEdit({paramsId}) {
                                   <div
                                     className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group ${
                                       selectedSection?.isLeadCapture && !isEditingForm
-                                        ? "bg-gray-50" 
-                                        : "hover:bg-gray-50"
+                                        ? "bg-blue-50" 
+                                        : "hover:bg-blue-50"
                                     }`}
                                     onClick={() => {
                                       // Select the first lead capture field for editing
@@ -1186,24 +1259,33 @@ export default function FormEdit({paramsId}) {
                                       setIsEditingForm(false);
                                     }}
                                   >
-                                  <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '140px'}}>
-                                    <div className={`rounded-full p-1 ${
-                                      selectedSection?.isLeadCapture && !isEditingForm
-                                        ? "bg-[#5207CD]"
-                                        : "bg-gray-100"
-                                    }`}>
+                                  <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '160px'}}>
+                                    <div 
+                                      className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
+                                      style={
+                                        selectedSection?.isLeadCapture && !isEditingForm
+                                          ? {
+                                              background: brandColor,
+                                              opacity: 0.6,
+                                            }
+                                          : {}
+                                      }
+                                    >
                                       <img
                                         src="/icons/user-square.svg"
                                         alt="Lead Capture icon"
-                                        className={`w-5 h-5 transition-all duration-200 ease-in-out ${
+                                        className="h-[16px] w-[16px] transition-all"
+                                        style={
                                           selectedSection?.isLeadCapture && !isEditingForm
-                                            ? "brightness-0 invert"
-                                            : ""
-                                        }`}
+                                            ? {
+                                                filter: "brightness(0) invert(1)",
+                                              }
+                                            : {}
+                                        }
                                       />
                                     </div>
                                   </div>
-                                  <div className="flex gap-[0.9rem] items-center transition-all duration-300 absolute right-5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100">
+                                  <div className="flex gap-1 items-center transition-all duration-300 absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100">
                                     <div
                                       className="py-1 rounded text-xs cursor-not-allowed select-none"
                                       onClick={e => e.stopPropagation()}
@@ -1261,7 +1343,7 @@ export default function FormEdit({paramsId}) {
                                           style={{
                                             ...provided.draggableProps.style,
                                             opacity: 1,
-                                            width: '140px', // Match sidebar width
+                                            width: '160px', // Match sidebar width
                                             ...(isDragging
                                               ? {
                                                   padding: "8px",
@@ -1279,8 +1361,8 @@ export default function FormEdit({paramsId}) {
                                           }}
                                           className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group${isDragging ? " dragging" : ""} ${
                                             isActive 
-                                              ? "bg-gray-50" 
-                                              : "hover:bg-gray-50"
+                                              ? "bg-blue-50" 
+                                              : "hover:bg-blue-50"
                                           }`}
                                           onClick={() => {
                                             console.log('🖱️ Editor click: Selecting section from sidebar:', section?.label || section?.id);
@@ -1290,8 +1372,18 @@ export default function FormEdit({paramsId}) {
                                           }}
                                         >
                                         {/* Icon area only, no label */}
-                                        <div className="flex-1 flex items-center justify-start group-hover:justify-start transition-all pr-2" style={{width: '140px'}}>
-                                          <div className={isActive ? "bg-[#5207CD] rounded-full p-1" : "bg-gray-100 rounded-full p-1"}>
+                                        <div className="flex-1 flex items-center justify-start group-hover:justify-start transition-all pr-16" >
+                                          <div 
+                                            className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500 "
+                                            style={
+                                              isActive
+                                                ? {
+                                                    background: brandColor,
+                                                    opacity: 0.6,
+                                                  }
+                                                : {}
+                                            }
+                                          >
                                             <img
                                               src={
                                                 formItems.find(item => item.type === section.type)?.icon
@@ -1299,16 +1391,23 @@ export default function FormEdit({paramsId}) {
                                                   : "/images/default-icon.svg"
                                               }
                                               alt={`${section.type} icon`}
-                                              className={`w-5 h-5 transition-all duration-200 ease-in-out ${isActive ? "brightness-0 invert" : ""}`}
+                                              className="h-[20px] w-[20px] transition-all"
+                                              style={
+                                                isActive
+                                                  ? {
+                                                      filter: "brightness(0) invert(1)",
+                                                    }
+                                                  : {}
+                                              }
                                             />
                                           </div>
                                         </div>
                                         {/* Action buttons area */}
-                                        <div className={`flex gap-[0.9rem] items-center transition-all duration-300 absolute right-5 top-1/2 -translate-y-1/2 ${isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                                        <div className={`flex gap-1 items-center transition-all duration-300 absolute right-3 top-1/2 -translate-y-1/2 ${isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
                                           {section.isLeadCapture ? (
                                             // Lead capture: Show lock icon instead of drag handle
                                             <div
-                                              className="py-1 rounded text-xs cursor-not-allowed select-none"
+                                              className="flex items-center p-1 rounded text-xs cursor-not-allowed select-none"
                                               onClick={e => e.stopPropagation()}
                                               title="Lead capture fields cannot be reordered"
                                             >
@@ -1320,13 +1419,14 @@ export default function FormEdit({paramsId}) {
                                             // Regular fields: Show drag handle
                                             <div
                                               {...provided.dragHandleProps}
-                                              className="py-1 rounded text-xs cursor-grab select-none"
+                                              className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-100"
                                               onClick={e => e.stopPropagation()}
-                                              tabIndex={0}
-                                              role="button"
                                               style={{ userSelect: 'none' }}
                                             >
-                                              <FaGripVertical className="text-gray-600" />
+                                              <FaGripVertical
+                                                className="text-gray-400 hover:text-gray-600"
+                                                size={14}
+                                              />
                                             </div>
                                           )}
                                           {/* Visibility Toggle */}
@@ -1352,25 +1452,43 @@ export default function FormEdit({paramsId}) {
                                               </svg>
                                             )}
                                           </div>
-                                          <button
+                                          {/* Required Toggle */}
+                                          <div
                                             onClick={e => {
                                               e.stopPropagation();
-                                              handleRemoveSection(section.id);
+                                              handleUpdateSection(section.id, {
+                                                required: !(section.required || false)
+                                              });
                                             }}
-                                            className={`px-2 py-1 rounded text-xs ${
-                                              section.isLeadCapture 
-                                                ? "cursor-not-allowed opacity-50" 
-                                                : "hover:bg-red-200 cursor-pointer"
-                                            }`}
+                                            className="flex items-center cursor-pointer hover:bg-gray-100 p-1 rounded"
+                                            title={`${section.required ? 'Make optional' : 'Make required'}`}
+                                          >
+                                            {section.required ? (
+                                              <svg className="w-4 h-4 text-red-600 hover:text-red-800" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                              </svg>
+                                            ) : (
+                                              <svg className="w-4 h-4 text-gray-400 hover:text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                              </svg>
+                                            )}
+                                          </div>
+                                          <div
+                                            className={`flex items-center cursor-pointer hover:bg-gray-100 p-1 rounded ${section.isLeadCapture ? "opacity-50 cursor-not-allowed" : ""}`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (!section.isLeadCapture) {
+                                                handleRemoveSection(section.id);
+                                              }
+                                            }}
                                             title={section.isLeadCapture ? "Lead capture fields cannot be removed" : "Remove field"}
-                                            disabled={section.isLeadCapture}
                                           >
                                             <img
                                               src="/images2/img_trash_01_red_700.svg"
                                               alt="trash-01"
-                                              className={`h-[20px] w-[20px] ${section.isLeadCapture ? "opacity-50" : ""}`}
+                                              className="h-[16px] w-[16px]"
                                             />
-                                          </button>
+                                          </div>
                                         </div>
                                         </div>
                                       </Tooltip>
@@ -1387,12 +1505,12 @@ export default function FormEdit({paramsId}) {
                                 mouseEnterDelay={0.3}
                               >
                                 <div
-                                  className="w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group hover:bg-gray-50"
+                                  className="w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group hover:bg-blue-50"
                                   onClick={() => setQuestionModal(true)}
                                 >
-                                <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '140px'}}>
-                                  <div className="bg-gray-100 rounded-full p-1 group-hover:bg-purple-100 transition-colors">
-                                    <svg className="w-5 h-5 text-gray-600 group-hover:text-purple-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '160px'}}>
+                                  <div className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500 group-hover:bg-purple-100">
+                                    <svg className="h-[16px] w-[16px] text-gray-600 group-hover:text-purple-600 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
                                   </div>
@@ -1443,23 +1561,26 @@ export default function FormEdit({paramsId}) {
                               <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Form Title
                               </label>
-                              <Input
-                                value={landingPageData?.form?.title || ""}
-                                onChange={(e) => {
-                                  const updatedData = {
-                                    ...landingPageData,
-                                    form: { 
-                                      ...landingPageData?.form, 
-                                      title: e.target.value.slice(0, 100) 
-                                    }
-                                  };
-                                  setLandingPageData(updatedData);
-                                  debouncedSave(updatedData);
-                                }}
-                                placeholder="e.g., Let's get started"
-                                maxLength={100}
-                                className="w-full"
-                              />
+                              <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700 w-full">
+                                <CustomInput
+                                  value={landingPageData?.form?.title || ""}
+                                  onChange={(value) => {
+                                    const updatedData = {
+                                      ...landingPageData,
+                                      form: { 
+                                        ...landingPageData?.form, 
+                                        title: value.slice(0, 100) 
+                                      }
+                                    };
+                                    setLandingPageData(updatedData);
+                                    debouncedSave(updatedData);
+                                  }}
+                                  placeholder="e.g., Let's get started"
+                                  maxLength={100}
+                                  className="border-none focus:ring-0 text-sm"
+                                  shape="round"
+                                />
+                              </div>
                               <div className="text-xs text-gray-500 mt-1">
                                 {(landingPageData?.form?.title || "").length}/100
                               </div>
@@ -1468,24 +1589,27 @@ export default function FormEdit({paramsId}) {
                               <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Form Description
                               </label>
-                              <Input.TextArea
-                                value={landingPageData?.form?.description || ""}
-                                onChange={(e) => {
-                                  const updatedData = {
-                                    ...landingPageData,
-                                    form: { 
-                                      ...landingPageData?.form, 
-                                      description: e.target.value.slice(0, 150) 
-                                    }
-                                  };
-                                  setLandingPageData(updatedData);
-                                  debouncedSave(updatedData);
-                                }}
-                                placeholder="e.g., We'll ask you a few questions to learn more about you."
-                                maxLength={150}
-                                rows={3}
-                                className="w-full"
-                              />
+                              <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700 w-full">
+                                <CustomInput
+                                  value={landingPageData?.form?.description || ""}
+                                  onChange={(value) => {
+                                    const updatedData = {
+                                      ...landingPageData,
+                                      form: { 
+                                        ...landingPageData?.form, 
+                                        description: value.slice(0, 150) 
+                                      }
+                                    };
+                                    setLandingPageData(updatedData);
+                                    debouncedSave(updatedData);
+                                  }}
+                                  placeholder="e.g., We'll ask you a few questions to learn more about you."
+                                  maxLength={150}
+                                  textarea={true}
+                                  className="border-none focus:ring-0 text-sm"
+                                  shape="round"
+                                />
+                              </div>
                               <div className="text-xs text-gray-500 mt-1">
                                 {(landingPageData?.form?.description || "").length}/150
                               </div>
@@ -1847,16 +1971,38 @@ export default function FormEdit({paramsId}) {
           }
         }
         
-        /* Desktop hover expansion */
+        /* Responsive hover expansion */
         @media (min-width: 768px) {
           .sidebar-transition:hover {
+            width: 180px !important;
+          }
+        }
+        
+        @media (min-width: 640px) and (max-width: 767px) {
+          .sidebar-transition:hover {
             width: 140px !important;
+          }
+        }
+        
+        @media (max-width: 639px) {
+          .sidebar-transition:hover {
+            width: 120px !important;
           }
         }
         
         /* Prevent horizontal overflow */
         .main-container {
           overflow-x: hidden;
+        }
+        
+        /* Dragging styles matching page editor */
+        .dragging {
+          cursor: grabbing !important;
+        }
+
+        /* Fix for @hello-pangea/dnd clipping issues */
+        [data-rbd-drag-placeholder] {
+          opacity: 0 !important;
         }
       `}</style>
       </div>

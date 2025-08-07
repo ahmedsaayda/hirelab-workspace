@@ -9,6 +9,16 @@ import { selectUser } from "../../redux/auth/selectors";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import ApplyCustomFont from "../Landingpage/ApplyCustomFont";
 import { getTranslation } from "../../utils/translations";
+// Import custom styled components
+import {
+  Button as CustomButton,
+  Heading,
+  Img,
+  Input as CustomInput,
+  Text,
+  Radio as CustomRadio,
+  CheckBox as CustomCheckBox,
+} from "../Dashboard/Vacancies/components/components";
 
 // Removed country detection since we're using regular Input instead of PhoneInput
 
@@ -17,27 +27,107 @@ const { Option } = Select;
 
 // Import the same custom components from apply page
 const MultipleChoice = ({ field, value, onChange }) => (
-  <Radio.Group value={value} onChange={onChange} className="w-full">
-    <div className="space-y-3">
-      {field.options?.map((option, index) => (
-        <Radio key={index} value={option.text} className="flex items-center p-3 border rounded-lg hover:bg-gray-50">
-          <span className="ml-2 text-sm">{option.text}</span>
-        </Radio>
-      ))}
-    </div>
-  </Radio.Group>
+  <div className="w-full space-y-3">
+    {field.options?.map((option, index) => {
+      const letter = String.fromCharCode(65 + index); // A, B, C, D...
+      const isSelected = value === option.text;
+      
+      return (
+        <div 
+          key={index} 
+          className={`
+            border-2 rounded-xl cursor-pointer transition-all duration-200
+            ${isSelected 
+              ? 'border-blue-500' 
+              : 'border-gray-200 hover:border-gray-300'
+            }
+          `}
+          onClick={() => onChange({ target: { value: option.text } })}
+        >
+          <div className="flex items-center p-4">
+            <div className={`
+              w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0
+              ${isSelected 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-gray-100 text-gray-600'
+              }
+            `}>
+              {letter}
+            </div>
+            <Text as="span" className="text-sm text-gray-800 flex-1">
+              {option.text}
+            </Text>
+            <CustomRadio
+              name={field.id}
+              value={option.text}
+              checked={isSelected}
+              onChange={() => onChange({ target: { value: option.text } })}
+              className="ml-3 opacity-0"
+            />
+          </div>
+        </div>
+      );
+    })}
+  </div>
 );
 
 const MultiSelectChoice = ({ field, value, onChange }) => (
-  <Checkbox.Group value={value} onChange={onChange} className="w-full">
-    <div className="space-y-3">
-      {field.options?.map((option, index) => (
-        <Checkbox key={index} value={option.text} className="flex items-center p-3 border rounded-lg hover:bg-gray-50">
-          <span className="ml-2 text-sm">{option.text}</span>
-        </Checkbox>
-      ))}
-    </div>
-  </Checkbox.Group>
+  <div className="w-full space-y-3">
+    {field.options?.map((option, index) => {
+      const letter = String.fromCharCode(65 + index); // A, B, C, D...
+      const isSelected = value?.includes(option.text);
+      
+      return (
+        <div 
+          key={index} 
+          className={`
+            border-2 rounded-xl cursor-pointer transition-all duration-200
+            ${isSelected 
+              ? 'border-blue-500' 
+              : 'border-gray-200 hover:border-gray-300'
+            }
+          `}
+          onClick={() => {
+            const newValue = value || [];
+            if (isSelected) {
+              onChange(newValue.filter(v => v !== option.text));
+            } else {
+              onChange([...newValue, option.text]);
+            }
+          }}
+        >
+          <div className="flex items-center p-4">
+            <div className={`
+              w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0
+              ${isSelected 
+                ? 'bg-blue-500 text-white' 
+                : ' border-2 border-gray-200'
+              }
+            `}>
+              {letter}
+            </div>
+            <Text as="span" className="text-sm text-gray-800 flex-1">
+              {option.text}
+            </Text>
+            <CustomCheckBox
+              name={field.id}
+              value={option.text}
+              checked={isSelected}
+              onChange={(checked) => {
+                const newValue = value || [];
+                if (checked) {
+                  onChange([...newValue, option.text]);
+                } else {
+                  onChange(newValue.filter(v => v !== option.text));
+                }
+              }}
+              className="ml-3 opacity-0"
+            />
+          </div>
+        </div>
+      );
+    })}
+  </div>
 );
 
 const CustomDropdown = ({ field, value, onChange }) => (
@@ -552,13 +642,15 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                     {fieldData?.label || additionalField.label || 'Custom Field'}
                     {fieldData?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <Input
-                    value={formData[`${field.id}_${additionalField.key}`] || ''}
-                    onChange={(e) => handleInputChange(`${field.id}_${additionalField.key}`, e.target.value)}
-                    placeholder={fieldData?.placeholder || additionalField.placeholder || 'Enter value'}
-                    className="rounded-lg"
-                    size="large"
-                  />
+                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                    <CustomInput
+                      value={formData[`${field.id}_${additionalField.key}`] || ''}
+                      onChange={(value) => handleInputChange(`${field.id}_${additionalField.key}`, value)}
+                      placeholder={fieldData?.placeholder || additionalField.placeholder || 'Enter value'}
+                      className="border-none focus:ring-0 text-sm"
+                      shape="round"
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -623,13 +715,15 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                     {field.firstName?.label || getTranslation(landingPageData?.lang, 'firstName') || 'First Name'}
                     {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <Input
-                    value={formData[`${field.id}_firstName`] || ''}
-                    onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
-                    placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang, 'firstName') || "First name"}
-                    className="rounded-lg"
-                    size="large"
-                  />
+                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                    <CustomInput
+                      value={formData[`${field.id}_firstName`] || ''}
+                      onChange={(value) => handleInputChange(`${field.id}_firstName`, value)}
+                      placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang, 'firstName') || "First name"}
+                      className="border-none focus:ring-0 text-sm"
+                      shape="round"
+                    />
+                  </div>
                 </div>
               )}
               {field.lastName?.visible !== false && (
@@ -638,13 +732,15 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                     {field.lastName?.label || getTranslation(landingPageData?.lang, 'lastName') || 'Last Name'}
                     {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <Input
-                    value={formData[`${field.id}_lastName`] || ''}
-                    onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
-                    placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang, 'lastName') || "Last name"}
-                    className="rounded-lg"
-                    size="large"
-                  />
+                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                    <CustomInput
+                      value={formData[`${field.id}_lastName`] || ''}
+                      onChange={(value) => handleInputChange(`${field.id}_lastName`, value)}
+                      placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang, 'lastName') || "Last name"}
+                      className="border-none focus:ring-0 text-sm"
+                      shape="round"
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -656,14 +752,16 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                   {field.email?.label || getTranslation(landingPageData?.lang, 'email') || 'Email'}
                   {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
-                <Input
-                  type="email"
-                  value={formData[`${field.id}_email`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_email`, e.target.value)}
-                  placeholder={field.email?.placeholder || getTranslation(landingPageData?.lang, 'email') || "Email address"}
-                  className="rounded-lg"
-                  size="large"
-                />
+                <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                  <CustomInput
+                    type="email"
+                    value={formData[`${field.id}_email`] || ''}
+                    onChange={(value) => handleInputChange(`${field.id}_email`, value)}
+                    placeholder={field.email?.placeholder || getTranslation(landingPageData?.lang, 'email') || "Email address"}
+                    className="border-none focus:ring-0 text-sm"
+                    shape="round"
+                  />
+                </div>
               </div>
             )}
             
@@ -674,14 +772,16 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                   {field.phone?.label || getTranslation(landingPageData?.lang, 'phone') || 'Phone'}
                   {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
-                <Input
-                  type="tel"
-                  value={formData[`${field.id}_phone`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_phone`, e.target.value)}
-                  placeholder={field.phone?.placeholder || getTranslation(landingPageData?.lang, 'phone') || "Phone number"}
-                  className="rounded-lg"
-                  size="large"
-                />
+                <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                  <CustomInput
+                    type="tel"
+                    value={formData[`${field.id}_phone`] || ''}
+                    onChange={(value) => handleInputChange(`${field.id}_phone`, value)}
+                    placeholder={field.phone?.placeholder || getTranslation(landingPageData?.lang, 'phone') || "Phone number"}
+                    className="border-none focus:ring-0 text-sm"
+                    shape="round"
+                  />
+                </div>
               </div>
             )}
 
@@ -701,13 +801,15 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                     {fieldData?.label || additionalField.label || 'Custom Field'}
                     {fieldData?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <Input
-                    value={formData[`${field.id}_${additionalField.key}`] || ''}
-                    onChange={(e) => handleInputChange(`${field.id}_${additionalField.key}`, e.target.value)}
-                    placeholder={fieldData?.placeholder || additionalField.placeholder || 'Enter value'}
-                    className="rounded-lg"
-                    size="large"
-                  />
+                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                    <CustomInput
+                      value={formData[`${field.id}_${additionalField.key}`] || ''}
+                      onChange={(value) => handleInputChange(`${field.id}_${additionalField.key}`, value)}
+                      placeholder={fieldData?.placeholder || additionalField.placeholder || 'Enter value'}
+                      className="border-none focus:ring-0 text-sm"
+                      shape="round"
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -717,73 +819,88 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
       case 'email':
         const emailPlaceholder2 = field.placeholder || field.customPlaceholder || "Email address";
         return (
-          <Input
-            type="email"
-            value={value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
-            placeholder={emailPlaceholder2}
-            className="rounded-lg"
-            size="large"
-          />
+          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+            <CustomInput
+              type="email"
+              value={value}
+              onChange={(value) => handleInputChange(field.id, value)}
+              placeholder={emailPlaceholder2}
+              className="border-none focus:ring-0 text-sm"
+              shape="round"
+            />
+          </div>
         );
 
       case 'phone':
         const phonePlaceholder2 = field.placeholder || field.customPlaceholder || "Phone number";
         return (
-          <Input
-            type="tel"
-            value={value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
-            placeholder={phonePlaceholder2}
-            className="rounded-lg"
-            size="large"
-          />
+          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+            <CustomInput
+              type="tel"
+              value={value}
+              onChange={(value) => handleInputChange(field.id, value)}
+              placeholder={phonePlaceholder2}
+              className="border-none focus:ring-0 text-sm"
+              shape="round"
+            />
+          </div>
         );
 
       case 'text':
         return (
-          <Input
-            value={value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
-            placeholder={field.placeholder || "Your answer"}
-            className="rounded-lg"
-            size="large"
-          />
+          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+            <CustomInput
+              value={value}
+              onChange={(value) => handleInputChange(field.id, value)}
+              placeholder={field.placeholder || "Your answer"}
+              className="border-none focus:ring-0 text-sm"
+              shape="round"
+            />
+          </div>
         );
 
       case 'longtext':
         return (
-          <TextArea
-            value={value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
-            placeholder={field.placeholder}
-            rows={4}
-            className="rounded-lg"
-          />
+          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+            <CustomInput
+              value={value}
+              onChange={(value) => handleInputChange(field.id, value)}
+              placeholder={field.placeholder}
+              textarea={true}
+              className="border-none focus:ring-0 text-sm"
+              shape="round"
+            />
+          </div>
         );
 
       case 'motivation':
         return (
-          <TextArea
-            value={value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
-            placeholder={field.placeholder || "Write your motivation letter"}
-            className="h-32 rounded-lg"
-          />
+          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+            <CustomInput
+              value={value}
+              onChange={(value) => handleInputChange(field.id, value)}
+              placeholder={field.placeholder || "Write your motivation letter"}
+              textarea={true}
+              className="border-none focus:ring-0 text-sm h-32"
+              shape="round"
+            />
+          </div>
         );
 
       case 'number':
         return (
-          <Input
-            type="number"
-            value={value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
-            placeholder={field.placeholder || "Enter a number"}
-            min={field.min}
-            max={field.max}
-            className="rounded-lg"
-            size="large"
-          />
+          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+            <CustomInput
+              type="number"
+              value={value}
+              onChange={(value) => handleInputChange(field.id, value)}
+              placeholder={field.placeholder || "Enter a number"}
+              min={field.min}
+              max={field.max}
+              className="border-none focus:ring-0 text-sm"
+              shape="round"
+            />
+          </div>
         );
 
       case 'multichoice':
