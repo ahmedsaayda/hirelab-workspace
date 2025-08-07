@@ -1215,7 +1215,9 @@ export default function LandingpageEdit({paramsId}) {
                 ...(landingPageData?.menuItems ?? []),
                 { key: "flexalign" },
                 { key: "search" },
-              ].map((section, idx) => {
+              ]
+              .filter(section => section.visible !== false)  // Hide invisible sections in fullscreen
+              .map((section, idx) => {
                 return (
                   <div
                     key={`section-${idx}`}
@@ -1476,6 +1478,7 @@ export default function LandingpageEdit({paramsId}) {
                   { key: "flexalign" },
                   { key: "search" },
                 ].map((section, idx) => {
+                  const isHidden = section.visible === false;
                   return (
                     <div
                       key={`section-${idx}`}
@@ -1484,8 +1487,14 @@ export default function LandingpageEdit({paramsId}) {
                         e.stopPropagation();
                         setActiveIdx(idx+1);
                       }}
-                      className="cursor-pointer"
+                      className={`cursor-pointer ${isHidden ? 'opacity-20 blur-xl pointer-events-none relative' : ''}`}
+                      style={isHidden ? { 
+                        filter: 'grayscale(50%) blur(5px)',
+                        opacity: 0.5,
+                        transition: 'all 0.3s ease'
+                      } : {}}
                     >
+                    
                       {renderSection({
                         section,
                         fetchData,

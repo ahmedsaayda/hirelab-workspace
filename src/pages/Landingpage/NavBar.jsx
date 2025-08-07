@@ -583,6 +583,7 @@ const handlemediaLink = (platform) => {
 
 
   const menuItemsArray = landingPageData?.menuItems?.map((item) => item.key);
+  const visibleMenuItemsArray = landingPageData?.menuItems?.filter(item => item.visible !== false).map((item) => item.key);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -981,7 +982,7 @@ const handlemediaLink = (platform) => {
 
           <div
             ref={scrollRef}
-            className="flex items-center scrollbar-hide overflow-x-auto space-x-6 px-4"
+            className="flex items-center justify-center scrollbar-hide overflow-x-auto space-x-6 px-4"
             style={{ 
               scrollBehavior: "smooth",
               width: "100%",
@@ -993,52 +994,52 @@ const handlemediaLink = (platform) => {
               {
                 id: "job-specifications",
                 label: getTranslation(landingPageData?.lang, 'summary'),
-                enabled: menuItemsArray?.includes("Job Specifications"),
+                enabled: visibleMenuItemsArray?.includes("Job Specifications"),
               },
               {
                 id: "recruiter-contact",
                 label: getTranslation(landingPageData?.lang, 'contacts'),
-                enabled: menuItemsArray?.includes("Recruiter Contact"),
+                enabled: visibleMenuItemsArray?.includes("Recruiter Contact"),
               },
               {
                 id: "job-description",
                 label: getTranslation(landingPageData?.lang, 'description'),
-                enabled: menuItemsArray?.includes("Job Description"),
+                enabled: visibleMenuItemsArray?.includes("Job Description"),
               },
               {
                 id: "agenda",
                 label: getTranslation(landingPageData?.lang, 'agenda'),
-                enabled: menuItemsArray?.includes("Agenda"),
+                enabled: visibleMenuItemsArray?.includes("Agenda"),
               },
               {
                 id: "about-the-company",
                 label: getTranslation(landingPageData?.lang, 'aboutUs'),
-                enabled: menuItemsArray?.includes("About The Company"),
+                enabled: visibleMenuItemsArray?.includes("About The Company"),
               },
               {
                 id: "company-facts",
                 label: getTranslation(landingPageData?.lang, 'companyFacts'),
-                enabled: menuItemsArray?.includes("Company Facts"),
+                enabled: visibleMenuItemsArray?.includes("Company Facts"),
               },
               {
                 id: "leader-introduction",
                 label: getTranslation(landingPageData?.lang, 'leaderIntro'),
-                enabled: menuItemsArray?.includes("Leader Introduction"),
+                enabled: visibleMenuItemsArray?.includes("Leader Introduction"),
               },
               {
                 id: "testimonials",
                 label: getTranslation(landingPageData?.lang, 'testimonials'),
-                enabled: menuItemsArray?.includes("Employee Testimonials"),
+                enabled: visibleMenuItemsArray?.includes("Employee Testimonials"),
               },
               {
                 id: "candidate-process",
                 label: getTranslation(landingPageData?.lang, 'applicationProcess'),
-                enabled: menuItemsArray?.includes("Candidate Process"),
+                enabled: visibleMenuItemsArray?.includes("Candidate Process"),
               },
               {
                 id: "growth-path",
                 label: getTranslation(landingPageData?.lang, 'growthPath'),
-                enabled: menuItemsArray?.includes("Growth Path"),
+                enabled: visibleMenuItemsArray?.includes("Growth Path"),
               },
             ]
               .filter((tab) => tab.enabled)
