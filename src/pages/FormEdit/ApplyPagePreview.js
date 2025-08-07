@@ -37,10 +37,7 @@ const MultipleChoice = ({ field, value, onChange }) => (
           key={index} 
           className={`
             border-2 rounded-xl cursor-pointer transition-all duration-200
-            ${isSelected 
-              ? 'border-blue-500' 
-              : 'border-gray-200 hover:border-gray-300'
-            }
+           
           `}
           onClick={() => onChange({ target: { value: option.text } })}
         >
@@ -54,9 +51,12 @@ const MultipleChoice = ({ field, value, onChange }) => (
             `}>
               {letter}
             </div>
-            <Text as="span" className="text-sm text-gray-800 flex-1">
+            <p 
+             className={`text-sm  flex-1
+              ${isSelected ? 'text-blue-500' : 'text-gray-800'}
+            `}>
               {option.text}
-            </Text>
+            </p>
             <CustomRadio
               name={field.id}
               value={option.text}
@@ -82,10 +82,7 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
           key={index} 
           className={`
             border-2 rounded-xl cursor-pointer transition-all duration-200
-            ${isSelected 
-              ? 'border-blue-500' 
-              : 'border-gray-200 hover:border-gray-300'
-            }
+          
           `}
           onClick={() => {
             const newValue = value || [];
@@ -106,9 +103,11 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
             `}>
               {letter}
             </div>
-            <Text as="span" className="text-sm text-gray-800 flex-1">
+            <p  className={`text-sm  flex-1
+              ${isSelected ? 'text-blue-500' : 'text-gray-800'}
+            `}>
               {option.text}
-            </Text>
+            </p>
             <CustomCheckBox
               name={field.id}
               value={option.text}

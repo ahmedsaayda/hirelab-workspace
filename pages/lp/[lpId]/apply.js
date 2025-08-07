@@ -35,12 +35,7 @@ const MultipleChoice = ({ field, value, onChange }) => (
         <div 
           key={index} 
           className={`
-            border-2 rounded-xl cursor-pointer transition-all duration-200
-            ${isSelected 
-              ? 'border-blue-500' 
-              : 'border-gray-200 hover:border-gray-300'
-            }
-          `}
+            border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300`}
           onClick={() => onChange({ target: { value: option.text } })}
         >
           <div className="flex items-center p-4">
@@ -53,9 +48,11 @@ const MultipleChoice = ({ field, value, onChange }) => (
             `}>
               {letter}
             </div>
-            <Text as="span" className="text-sm text-gray-800 flex-1">
+            <p  className={`text-sm  flex-1
+              ${isSelected ? 'text-blue-500' : 'text-gray-800'}
+            `}>
               {option.text}
-            </Text>
+            </p>
             <CustomRadio
               name={field.id}
               value={option.text}
@@ -80,11 +77,7 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
         <div 
           key={index} 
           className={`
-            border-2 rounded-xl cursor-pointer transition-all duration-200
-            ${isSelected 
-              ? 'border-blue-500' 
-              : 'border-gray-200 hover:border-gray-300'
-            }
+            border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300
           `}
           onClick={() => {
             const newValue = value || [];
@@ -100,14 +93,16 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
               w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0
               ${isSelected 
                 ? 'bg-blue-500 text-white' 
-                : 'bg-gray-100 text-gray-600'
+                : ' border-2 border-gray-200'
               }
             `}>
               {letter}
             </div>
-            <Text as="span" className="text-sm text-gray-800 flex-1">
+            <p  className={`text-sm  flex-1
+              ${isSelected ? 'text-blue-500' : 'text-gray-800'}
+              `}>
               {option.text}
-            </Text>
+            </p>
             <CustomCheckBox
               name={field.id}
               value={option.text}
