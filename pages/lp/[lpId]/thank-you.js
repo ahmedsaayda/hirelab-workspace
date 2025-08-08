@@ -4,6 +4,7 @@ import { Button } from 'antd';
 import { CheckCircle } from 'lucide-react';
 import CrudService from '../../../src/services/CrudService';
 import PublicService from '../../../src/services/PublicService';
+import MetaPixel from '../../../src/pages/Landingpage/MetaPixel.jsx';
 
 export default function ThankYouPage() {
   const router = useRouter();
@@ -46,6 +47,33 @@ export default function ThankYouPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Load Meta Pixel */}
+      <MetaPixel metaPixelId={landingPageData?.metaPixelId} />
+      {/* Meta Pixel: PageView + CompleteRegistration (redundant safety on thank-you) */}
+      {landingPageData?.metaPixelId && (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (window.fbq) {
+                  fbq('track', 'PageView', {
+                    content_name: ${JSON.stringify(landingPageData?.vacancyTitle || '')},
+                    funnel_id: ${JSON.stringify(lpId || '')},
+                    brand: ${JSON.stringify(landingPageData?.companyName || '')},
+                    job_category: ${JSON.stringify(landingPageData?.department || '')}
+                  });
+                  fbq('track', 'CompleteRegistration', {
+                    content_name: ${JSON.stringify(landingPageData?.vacancyTitle || '')},
+                    funnel_id: ${JSON.stringify(lpId || '')},
+                    brand: ${JSON.stringify(landingPageData?.companyName || '')},
+                    job_category: ${JSON.stringify(landingPageData?.department || '')}
+                  });
+                }
+              } catch (e) { console.warn('Pixel (thank-you) failed', e); }
+            `,
+          }}
+        />
+      )}
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-2xl mx-auto px-4 py-4">

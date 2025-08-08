@@ -179,6 +179,17 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
 
   useEffect(() => {
     const handleApply = () => {
+      try {
+        if (landingPageData?.metaPixelId && window.fbq) {
+          fbq('track', 'Lead', {
+            content_name: landingPageData?.vacancyTitle || '',
+            funnel_id: lpId || '',
+            brand: landingPageData?.companyName || '',
+            job_category: landingPageData?.department || ''
+          });
+          try { sessionStorage.setItem(`metaLeadFired_${lpId}`, '1'); } catch (_) {}
+        }
+      } catch (e) { console.warn('Pixel Lead (APPLY event) failed', e); }
       setShowFormEditor(true);
     };
     const handleApplyButtonClick = (event) => {
@@ -206,6 +217,25 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     <div className="w-full">
       <ApplyCustomFont landingPageData={landingPageData} />
       <MetaPixel metaPixelId={landingPageData?.metaPixelId} />
+      {/* Meta Pixel PageView + Lead (on open form) */}
+      {landingPageData?.metaPixelId && (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (window.fbq) {
+                  fbq('track', 'PageView', {
+                    content_name: ${JSON.stringify(landingPageData?.vacancyTitle || '')},
+                    funnel_id: ${JSON.stringify(lpId || '')},
+                    brand: ${JSON.stringify(landingPageData?.companyName || '')},
+                    job_category: ${JSON.stringify(landingPageData?.department || '')}
+                  });
+                }
+              } catch (e) { console.warn('Pixel PageView failed', e); }
+            `,
+          }}
+        />
+      )}
       
       {/* Debug info - only show in development */}
       {process.env.NODE_ENV === 'development' && (
@@ -218,7 +248,19 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
       <div className="flex flex-col justify-between items-center">
         <NavBar
           landingPageData={landingPageData}
-          onClickApply={() => setShowFormEditor(true)}
+          onClickApply={() => {
+            try {
+              if (landingPageData?.metaPixelId && window.fbq) {
+                fbq('track', 'Lead', {
+                  content_name: landingPageData?.vacancyTitle || '',
+                  funnel_id: lpId || '',
+                  brand: landingPageData?.companyName || '',
+                  job_category: landingPageData?.department || ''
+                });
+              }
+            } catch (e) { console.warn('Pixel Lead failed', e); }
+            setShowFormEditor(true);
+          }}
           fullscreen={fullscreen}
           showBackToEditButton={showBackToEditButton}
           setFullscreen={setFullscreen}

@@ -4,6 +4,7 @@ import { Button, Input, Radio, Checkbox, Select, Progress, message, Form, DatePi
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import dayjs from 'dayjs';
 import PublicService from '../../../src/services/PublicService';
+import MetaPixel from '../../../src/pages/Landingpage/MetaPixel.jsx';
 import { getTranslation } from '../../../src/utils/translations';
 // Removed PhoneInput - using regular Input instead
 // 🎨 BRANDING IMPORTS
@@ -363,6 +364,36 @@ export default function ApplyPage() {
     }
   }, [lpId]);
 
+  // Meta Pixel: fire PageView for apply page and fire Lead on first step render
+  useEffect(() => {
+    try {
+      if (landingPageData?.metaPixelId && typeof window !== 'undefined' && window.fbq) {
+        // PageView on load
+        window.fbq('track', 'PageView', {
+          content_name: landingPageData?.vacancyTitle || '',
+          funnel_id: lpId || '',
+          brand: landingPageData?.companyName || '',
+          job_category: landingPageData?.department || ''
+        });
+
+        // Fire Lead if not already fired this session
+        try {
+          const leadKey = `metaLeadFired_${lpId}`;
+          const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(leadKey) === '1';
+          if (!already) {
+            window.fbq('track', 'Lead', {
+              content_name: landingPageData?.vacancyTitle || '',
+              funnel_id: lpId || '',
+              brand: landingPageData?.companyName || '',
+              job_category: landingPageData?.department || ''
+            });
+            try { sessionStorage.setItem(leadKey, '1'); } catch (_) {}
+          }
+        } catch (e) { /* ignore */ }
+      }
+    } catch (e) { console.warn('Pixel PageView (apply) failed', e); }
+  }, [landingPageData?.metaPixelId]);
+
   const fetchData = async () => {
     try {
       console.log('Fetching apply page data for lpId:', lpId);
@@ -612,6 +643,22 @@ export default function ApplyPage() {
     }
 
     if (currentStep < formFields.length) {
+      // When user moves from intro (0) to first input step (1), mark application started (Lead) if not already
+      try {
+        if (currentStep === 0 && landingPageData?.metaPixelId && window.fbq) {
+          const leadKey = `metaLeadFired_${lpId}`;
+          const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(leadKey) === '1';
+          if (!already) {
+            window.fbq('track', 'Lead', {
+              content_name: landingPageData?.vacancyTitle || '',
+              funnel_id: lpId || '',
+              brand: landingPageData?.companyName || '',
+              job_category: landingPageData?.department || ''
+            });
+            try { sessionStorage.setItem(leadKey, '1'); } catch (_) {}
+          }
+        }
+      } catch (e) { console.warn('Pixel Lead (apply) failed', e); }
       setCurrentStep(prev => prev + 1);
     } else {
       handleSubmit();
@@ -697,7 +744,7 @@ export default function ApplyPage() {
       await PublicService.createVacancySubmission(applicationData);
       
       message.success('Application submitted successfully!');
-      // Redirect to thank you page or success message
+      // Redirect to thank you page; CompleteRegistration is fired on thank-you page load
       router.push(`/lp/${lpId}/thank-you`);
     } catch (error) {
       console.error('Error submitting application:', error);
@@ -706,6 +753,30 @@ export default function ApplyPage() {
       setSubmitting(false);
     }
   };
+
+  // Fire Contact when the first contact step is submitted and valid (immediately upon advancing past it)
+  useEffect(() => {
+    if (!landingPageData?.metaPixelId || !Array.isArray(formFields)) return;
+    if (currentStep <= 0) return;
+    const prevField = formFields[currentStep - 1]; // the step we just completed
+    const isContactGroup = prevField?.type === 'lead-capture-group';
+    const isContactSolo = prevField?.type === 'contact' || prevField?.type === 'email' || prevField?.type === 'phone';
+    if (!isContactGroup && !isContactSolo) return;
+
+    const hasContact = !!(formData?.email || formData?.phone || formData?.firstname || formData?.lastname);
+    if (!hasContact) return;
+
+    try {
+      if (window.fbq) {
+        window.fbq('track', 'Contact', {
+          content_name: landingPageData?.vacancyTitle || '',
+          funnel_id: lpId || '',
+          brand: landingPageData?.companyName || '',
+          job_category: landingPageData?.department || ''
+        });
+      }
+    } catch (e) { console.warn('Pixel Contact (apply) failed', e); }
+  }, [currentStep]);
 
   const renderSingleField = (field) => {
     const value = formData[field.id] || '';
@@ -1260,6 +1331,8 @@ export default function ApplyPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 apply-form-container">{/* UNIQUE APPLY CLASS */}
+      {/* Load Meta Pixel script */}
+      <MetaPixel metaPixelId={landingPageData?.metaPixelId} />
       {/* 🎨 APPLY-ONLY BRAND STYLES - ONLY REAL USER COLORS */}
       {primaryColor && (
         <style jsx key={`brand-${primaryColor}`}>{`
