@@ -7,6 +7,7 @@ import { getThemeData } from "../../utils/destructureTheme.js";
 import { useFocusContext } from "../../contexts/FocusContext.js";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils.js";
+import { getTranslation } from "../../utils/translations.js";
 
 // Common hook for hover functionality
 const useAboutCompanyHover = () => {
@@ -435,7 +436,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     fontFamily: bodyFont?.family,
                   }}
                 >
-                  {showFullDescription ? "Read Less" : "Read More"}
+                  {showFullDescription ? getTranslation(landingPageData?.lang, 'readLess') : getTranslation(landingPageData?.lang, 'readMore')}
                 </Button>
               </div>
             )}

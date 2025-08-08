@@ -87,6 +87,9 @@ export const Template2 = React.memo(({
   landingPageData,
   jobPostingsList,
   jobListings,
+  onClickApply,
+  lpId,
+  isEdit,
 }) => {
   const {
     sectionRef,
@@ -146,28 +149,30 @@ export const Template2 = React.memo(({
           </div>
         </div>
 
-        <div className="flex justify-center self-stretch bg-[#f9fafb]">
-          <div className="container flex justify-center mb-24 mdx:px-5">
-            <div className="px-8 w-full sm:px-5">
-              <div className="flex flex-col gap-8 items-start">
-                <h2
-                  onClick={() => handleItemClick("similarJobsTitle")}
-                  ref={similarJobsTitleRef}
-                  className="text-[24px] font-semibold text-[#0f1728] mdx:text-[22px]"
-                >
-                  {landingPageData?.similarJobsTitle}
-                </h2>
-                <div className="flex gap-8 self-stretch mdx:flex-col">
-                  <Suspense fallback={<div>Loading feed...</div>}>
-                    {jobListings.map((d, index) => (
-                      <UserProfileCard {...d} key={"cardsList" + index} />
-                    ))}
-                  </Suspense>
+        {landingPageData?.showSimilarJobs && (
+          <div className="flex justify-center self-stretch bg-[#f9fafb]">
+            <div className="container flex justify-center mb-24 mdx:px-5">
+              <div className="px-8 w-full sm:px-5">
+                <div className="flex flex-col gap-8 items-start">
+                  <h2
+                    onClick={() => handleItemClick("similarJobsTitle")}
+                    ref={similarJobsTitleRef}
+                    className="text-[24px] font-semibold text-[#0f1728] mdx:text-[22px]"
+                  >
+                    {landingPageData?.similarJobsTitle || "You May Also Like"}
+                  </h2>
+                  <div className="flex gap-8 self-stretch mdx:flex-col">
+                    <Suspense fallback={<div>Loading feed...</div>}>
+                      {jobListings.map((d, index) => (
+                        <UserProfileCard {...d} key={"cardsList" + index} />
+                      ))}
+                    </Suspense>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
         <div className="container flex flex-col items-center px-14 mdx:px-5">
           <div className="flex gap-2">
             <Heading
@@ -238,7 +243,7 @@ export const Template2 = React.memo(({
 });
 // });
 
-const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings }) => {
+const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings, onClickApply, lpId, isEdit }) => {
   const {
     sectionRef,
     titleRef,
@@ -298,37 +303,39 @@ const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings })
         </div>
 
         {/* related content section */}
-        <div className="self-stretch">
-          <div className="flex justify-center bg-[#222222]">
-            <div className="container flex justify-center mb-6 mdx:px-5">
-              <div className="px-8 w-full smx:px-5">
-                <div className="flex flex-col gap-8 items-start">
-                  <h2
-                    onClick={() => handleItemClick("similarJobsTitle")}
-                    ref={similarJobsTitleRef}
-                    size="display_xs_semibold"
-                    as="h2"
-                    className="text-[24px] font-semibold text-[#ffffff] mdx:text-[22px]"
-                  >
-                    {landingPageData?.similarJobsTitle}
-                  </h2>
-                  <div className="flex gap-8 self-stretch mdx:flex-col">
-                    <Suspense fallback={<div>Loading feed...</div>}>
-                      {jobPostingsList?.map((d, index) => (
-                        <UserProfile4
-                          applyButtonText={landingPageData?.ctaFooterTitle}
-                          applyButtonLink={landingPageData?.ctaFooterLink}
-                          {...d}
-                          key={"cardsList" + index}
-                        />
-                      ))}
-                    </Suspense>
+        {landingPageData?.showSimilarJobs && (
+          <div className="self-stretch">
+            <div className="flex justify-center bg-[#222222]">
+              <div className="container flex justify-center mb-6 mdx:px-5">
+                <div className="px-8 w-full smx:px-5">
+                  <div className="flex flex-col gap-8 items-start">
+                    <h2
+                      onClick={() => handleItemClick("similarJobsTitle")}
+                      ref={similarJobsTitleRef}
+                      size="display_xs_semibold"
+                      as="h2"
+                      className="text-[24px] font-semibold text-[#ffffff] mdx:text-[22px]"
+                    >
+                      {landingPageData?.similarJobsTitle || "You May Also Like"}
+                    </h2>
+                    <div className="flex gap-8 self-stretch mdx:flex-col">
+                      <Suspense fallback={<div>Loading feed...</div>}>
+                        {jobPostingsList?.map((d, index) => (
+                          <UserProfile4
+                            applyButtonText={landingPageData?.ctaFooterTitle}
+                            applyButtonLink={landingPageData?.ctaFooterLink}
+                            {...d}
+                            key={"cardsList" + index}
+                          />
+                        ))}
+                      </Suspense>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="container mdx:px-5">
           <footer className="flex flex-col gap-16 smx:gap-8">
@@ -392,7 +399,7 @@ const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings })
   );
 });
 
-const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, similarJobs: propSimilarJobs, similarJobsLoading: propSimilarJobsLoading }) => {
+const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, similarJobs: propSimilarJobs, similarJobsLoading: propSimilarJobsLoading, onClickApply, lpId, isEdit }) => {
 
 
   const {
@@ -406,6 +413,22 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
   const { handleItemClick } = useFocusContext();
   const router = useRouter();
   const currentPath = useMemo(() => router.pathname?.split("/")[1], [router.pathname]);
+
+  // Handle apply button click - similar to NavBar functionality
+  const handleApplyClick = () => {
+    if (isEdit) {
+      // In edit mode, just call the onClickApply function (placeholder)
+      if (onClickApply) {
+        onClickApply();
+      }
+    } else {
+      // Public view - redirect to application form
+      if (lpId) {
+        const formUrl = `/lp/${lpId}/apply`;
+        router.push(formUrl);
+      }
+    }
+  };
 
   // Use props if provided, otherwise fall back to local state (for backward compatibility)
   const [localSimilarJobs, setLocalSimilarJobs] = useState([]);
@@ -801,11 +824,11 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
 
   // Memoize similar jobs title parts
   const similarJobsTitleParts = useMemo(() => {
-    if (!landingPageData?.similarJobsTitle) return { firstWord: "You May", restWords: "Also Like" };
-    const words = landingPageData.similarJobsTitle.split(" ");
+    const title = landingPageData?.similarJobsTitle || "You May Also Like";
+    const words = title.split(" ");
     return {
-      firstWord: words[0] || "You May",
-      restWords: words.slice(1).join(" ") || "Also Like"
+      firstWord: words[0] || "",
+      restWords: words.slice(1).join(" ") || "",
     };
   }, [landingPageData?.similarJobsTitle]);
 
@@ -902,16 +925,17 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
               {landingPageData?.footerDescription ||
                 "Explore our exciting job opportunities and apply today!"}
             </p>
-            <a
-              onClick={() => handleItemClick("ctaFooterTitle")}
+            <button
+              onClick={() => {
+                handleItemClick("ctaFooterTitle");
+                handleApplyClick();
+              }}
               ref={ctaFooterTitleRef}
-              href={`/lp/${landingPageData?._id}`}
-              target="_blank"
               className="inline-block px-8 py-3 font-medium rounded-full transition-colors"
               style={ctaButtonStyle}
             >
-              {landingPageData?.ctaFooterTitle || "Apply Now"}
-            </a>
+              {landingPageData?.ctaApply || "Apply Now"}
+            </button>
           </div>
         </div>
       </div>

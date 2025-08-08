@@ -6,6 +6,7 @@ import { useHover } from "../../contexts/HoverContext.js";
 import { useFocusContext } from "../../contexts/FocusContext.js";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils.js";
+import { getTranslation } from "../../utils/translations.js";
 
 const useJobDescriptionHover = () => {
   const {
@@ -141,7 +142,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {showMore ? "Read Less" : "Read More"}
+                      {showMore ? getTranslation(landingPageData?.lang, 'readLess') : getTranslation(landingPageData?.lang, 'readMore')}
                     </button>
                   )}
                 </Text>
@@ -231,7 +232,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {showMore ? "Read Less" : "Read More"}
+                    {showMore ? getTranslation(landingPageData?.lang, 'readLess') : getTranslation(landingPageData?.lang, 'readMore')}
                   </button>
                 )}
               </Text>
@@ -460,7 +461,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     fontFamily: bodyFont?.family,
                   }}
                 >
-                  {showMore ? "Read Less" : "Read More"}
+                  {showMore ? getTranslation(landingPageData?.lang, 'readLess') : getTranslation(landingPageData?.lang, 'readMore')}
                 </Button>
               )}
             </div>

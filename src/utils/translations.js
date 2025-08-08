@@ -37,7 +37,8 @@ const coreTranslations = {
     pasteJobText: "Paste Job Text", enterJobTitle: "Enter Job Title", department: "Department",
     selectDepartment: "Select a department", language: "Language", selectLanguage: "Select a language",
     pasteJobDescription: "Paste Job Description (Ctrl+V)", 
-    pasteJobTip: "Tip: Copy (Ctrl+C) the entire job posting from a website and paste (Ctrl+V) it here. Our AI will extract all relevant information."
+    pasteJobTip: "Tip: Copy (Ctrl+C) the entire job posting from a website and paste (Ctrl+V) it here. Our AI will extract all relevant information.",
+    readMore: "Read More", readLess: "Read Less"
   },
   Dutch: {
     weAreHiring: "👋 WE ZOEKEN PERSONEEL",
@@ -65,7 +66,8 @@ const coreTranslations = {
     pasteJobText: "Plak Vacaturetekst", enterJobTitle: "Voer Functietitel In", department: "Afdeling",
     selectDepartment: "Selecteer een afdeling", language: "Taal", selectLanguage: "Selecteer een taal",
     pasteJobDescription: "Plak Vacaturebeschrijving (Ctrl+V)",
-    pasteJobTip: "Tip: Kopieer (Ctrl+C) de hele vacature van een website en plak (Ctrl+V) deze hier. Onze AI haalt alle relevante informatie eruit."
+    pasteJobTip: "Tip: Kopieer (Ctrl+C) de hele vacature van een website en plak (Ctrl+V) deze hier. Onze AI haalt alle relevante informatie eruit.",
+    readMore: "Lees Meer", readLess: "Lees Minder"
   },
   German: {
     weAreHiring: "👋 WIR STELLEN EIN",
@@ -93,7 +95,8 @@ const coreTranslations = {
     pasteJobText: "Stellentext Einfügen", enterJobTitle: "Stellentitel Eingeben", department: "Abteilung",
     selectDepartment: "Wählen Sie eine Abteilung", language: "Sprache", selectLanguage: "Wählen Sie eine Sprache",
     pasteJobDescription: "Stellenbeschreibung Einfügen (Strg+V)",
-    pasteJobTip: "Tipp: Kopieren Sie (Strg+C) die gesamte Stellenausschreibung von einer Website und fügen Sie sie (Strg+V) hier ein. Unsere KI extrahiert alle relevanten Informationen."
+    pasteJobTip: "Tipp: Kopieren Sie (Strg+C) die gesamte Stellenausschreibung von einer Website und fügen Sie sie (Strg+V) hier ein. Unsere KI extrahiert alle relevanten Informationen.",
+    readMore: "Mehr Lesen", readLess: "Weniger Lesen"
   },
   French: {
     weAreHiring: "👋 NOUS RECRUTONS",
@@ -121,7 +124,8 @@ const coreTranslations = {
     pasteJobText: "Coller le Texte de l'Emploi", enterJobTitle: "Entrer le Titre du Poste", department: "Département",
     selectDepartment: "Sélectionnez un département", language: "Langue", selectLanguage: "Sélectionnez une langue",
     pasteJobDescription: "Coller la Description de l'Emploi (Ctrl+V)",
-    pasteJobTip: "Astuce : Copiez (Ctrl+C) l'offre d'emploi complète d'un site web et collez-la (Ctrl+V) ici. Notre IA extraira toutes les informations pertinentes."
+    pasteJobTip: "Astuce : Copiez (Ctrl+C) l'offre d'emploi complète d'un site web et collez-la (Ctrl+V) ici. Notre IA extraira toutes les informations pertinentes.",
+    readMore: "Lire Plus", readLess: "Lire Moins"
   },
   Spanish: {
     weAreHiring: "👋 ESTAMOS CONTRATANDO",
@@ -149,7 +153,8 @@ const coreTranslations = {
     pasteJobText: "Pegar Texto del Trabajo", enterJobTitle: "Ingresar Título del Trabajo", department: "Departamento",
     selectDepartment: "Seleccione un departamento", language: "Idioma", selectLanguage: "Seleccione un idioma",
     pasteJobDescription: "Pegar Descripción del Trabajo (Ctrl+V)",
-    pasteJobTip: "Consejo: Copie (Ctrl+C) toda la oferta de trabajo de un sitio web y péguela (Ctrl+V) aquí. Nuestra IA extraerá toda la información relevante."
+    pasteJobTip: "Consejo: Copie (Ctrl+C) toda la oferta de trabajo de un sitio web y péguela (Ctrl+V) aquí. Nuestra IA extraerá toda la información relevante.",
+    readMore: "Leer Más", readLess: "Leer Menos"
   },
   Italian: {
     weAreHiring: "👋 STIAMO ASSUMENDO",
@@ -177,7 +182,8 @@ const coreTranslations = {
     pasteJobText: "Incolla Testo Lavoro", enterJobTitle: "Inserisci Titolo Lavoro", department: "Dipartimento",
     selectDepartment: "Seleziona un dipartimento", language: "Lingua", selectLanguage: "Seleziona una lingua",
     pasteJobDescription: "Incolla Descrizione Lavoro (Ctrl+V)",
-    pasteJobTip: "Suggerimento: Copia (Ctrl+C) l'intera offerta di lavoro da un sito web e incollala (Ctrl+V) qui. La nostra IA estrarrà tutte le informazioni rilevanti."
+    pasteJobTip: "Suggerimento: Copia (Ctrl+C) l'intera offerta di lavoro da un sito web e incollala (Ctrl+V) qui. La nostra IA estrarrà tutte le informazioni rilevanti.",
+    readMore: "Leggi Di Più", readLess: "Leggi Di Meno"
   },
   Portuguese: {
     weAreHiring: "👋 ESTAMOS CONTRATANDO",
@@ -205,7 +211,8 @@ const coreTranslations = {
     pasteJobText: "Colar Texto do Trabalho", enterJobTitle: "Digite o Título do Trabalho", department: "Departamento",
     selectDepartment: "Selecione um departamento", language: "Idioma", selectLanguage: "Selecione um idioma",
     pasteJobDescription: "Colar Descrição do Trabalho (Ctrl+V)",
-    pasteJobTip: "Dica: Copie (Ctrl+C) toda a oferta de trabalho de um site e cole (Ctrl+V) aqui. Nossa IA extrairá todas as informações relevantes."
+    pasteJobTip: "Dica: Copie (Ctrl+C) toda a oferta de trabalho de um site e cole (Ctrl+V) aqui. Nossa IA extrairá todas as informações relevantes.",
+    readMore: "Ler Mais", readLess: "Ler Menos"
   },
   Norwegian: {
     weAreHiring: "👋 VI ANSETTER",
@@ -233,7 +240,7 @@ const coreTranslations = {
     pasteJobText: "Lim inn Jobbtekst", enterJobTitle: "Skriv inn Jobbtittel", department: "Avdeling",
     selectDepartment: "Velg en avdeling", language: "Språk", selectLanguage: "Velg et språk",
     pasteJobDescription: "Lim inn Jobbeskrivelse (Ctrl+V)",
-    pasteJobTip: "Tips: Kopier (Ctrl+C) hele jobbutlysningen fra en nettside og lim den inn (Ctrl+V) her. Vår AI vil trekke ut all relevant informasjon."
+    pasteJobTip: "Tips: Kopier (Ctrl+C) hele jobbutlysningen fra en nettside og lim den inn (Ctrl+V) her. Vår AI vil trekke ut all relevant informasjon.",
   },
   // Strategic core languages for major language families
   Russian: {

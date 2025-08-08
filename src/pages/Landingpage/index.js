@@ -235,7 +235,13 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
             renderSection({ section, landingPageData, fetchData, key: idx })
           )}
 
-        <Footer landingPageData={landingPageData} fetchData={fetchData} />
+        <Footer 
+          landingPageData={landingPageData} 
+          fetchData={fetchData}
+          onClickApply={() => setShowFormEditor(true)}
+          lpId={lpId}
+          isEdit={false}
+        />
 
         <Form
           landingPageData={landingPageData}

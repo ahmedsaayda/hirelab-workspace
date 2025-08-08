@@ -106,6 +106,9 @@ export const renderSection = ({
         landingPageData={landingPageData} 
         similarJobs={similarJobs}
         similarJobsLoading={similarJobsLoading}
+        onClickApply={() => {}}
+        lpId={landingPageData?._id}
+        isEdit={true}
       />;
     case "Employee Testimonials":
       return (

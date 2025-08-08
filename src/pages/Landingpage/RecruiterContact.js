@@ -843,23 +843,25 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 </div>
               ))}
             </div>
-            {/* Carousel Navigation Dots */}
-            <div className="flex gap-2 justify-center mt-8">
-              {recruiters.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  className={`w-2 h-2 rounded-full transition-colors`}
-                  style={{
-                    backgroundColor:
-                      index === activeSlide
-                        ? getColor("primary", 500)
-                        : "#d1d5db",
-                  }}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
+            {/* Carousel Navigation Dots - Only show if more than one recruiter */}
+            {recruiters.length > 1 && (
+              <div className="flex gap-2 justify-center mt-8">
+                {recruiters.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`w-2 h-2 rounded-full transition-colors`}
+                    style={{
+                      backgroundColor:
+                        index === activeSlide
+                          ? getColor("primary", 500)
+                          : "#d1d5db",
+                    }}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

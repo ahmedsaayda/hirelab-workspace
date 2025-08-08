@@ -34,6 +34,7 @@ export default function Header({
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [applyLinkModalVisible, setApplyLinkModalVisible] = useState(false);
+  const [formBuilderPopupVisible, setFormBuilderPopupVisible] = useState(false);
 
   // Check if there are unpublished changes when component mounts or data changes
   useEffect(() => {
@@ -125,6 +126,12 @@ export default function Header({
       return;
     }
     
+    // Check if this is the first time publishing (user has never published before)
+    if (!landingPageData?.published) {
+      setFormBuilderPopupVisible(true);
+      return;
+    }
+    
     setIsPublishing(true);
 
     try {
@@ -144,8 +151,39 @@ export default function Header({
     }
   };
 
+  // Function to handle actual publishing without form check
+  const handleActualPublish = async () => {
+    setIsPublishing(true);
 
+    try {
+      const res = await LandingPageService.publishLandingPage(lpId);
+      console.log("Publish response:", res);
+      message.success("Landing page published successfully!");
+      
+      // Reset the unpublished changes state immediately
+      setHasUnpublishedChanges(false);
+      
+      // Reload the data to get the updated publishedAt timestamp
+      reload();
+    } catch (err) {
+      message.error("Failed to publish: " + (err.message || "Unknown error"));
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
+  // Handle form builder popup actions
+  const handleFormBuilderChoice = (createForm) => {
+    setFormBuilderPopupVisible(false);
+    
+    if (createForm) {
+      // Redirect to form editor
+      router.push(`/form-editor/${lpId}`);
+    } else {
+      // Just publish without form
+      handleActualPublish();
+    }
+  };
 
   const handleTemplateOpen = () => {
     setCtaLink(landingPageData.cta2Link || '');
@@ -598,6 +636,47 @@ export default function Header({
               ) : (
                 'Save URL & Publish'
               )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Form Builder Popup Modal */}
+      <Modal
+        title=""
+        open={formBuilderPopupVisible}
+        onCancel={() => setFormBuilderPopupVisible(false)}
+        footer={null}
+        destroyOnClose
+        width={600}
+        style={{ maxHeight: "80vh", overflowY: "auto", top: 20, marginTop: 0 }}
+      >
+        <div className="py-1">
+          <div className="mb-6">
+            <p className="text-gray-600 mb-4">
+              Your landing page is ready to publish! To complete the candidate experience, we recommend creating an application form.
+            </p>
+            <p className="text-gray-600 mb-2">You can either:</p>
+            <ul className="list-disc pl-5 text-gray-600 space-y-2">
+              <li>Create a custom application form using our form builder</li>
+              <li>Publish now and add the form later</li>
+            </ul>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              onClick={() => handleFormBuilderChoice(false)}
+              className="px-4 py-2 rounded-md border border-gray-300 !bg-transparent !text-gray-700 hover:bg-gray-50"
+            >
+              Publish Without Form
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleFormBuilderChoice(true)}
+              className="px-4 py-2 rounded-md !bg-[#5207CD] !text-white hover:!bg-[#0C7CE6]"
+            >
+              Create Application Form
             </Button>
           </div>
         </div>

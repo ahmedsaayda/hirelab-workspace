@@ -74,7 +74,14 @@ export const renderSection = ({
       break;
     case "flexalign":
       sectionContent = (
-        <Footer key={key} fetchData={fetchData} landingPageData={landingPageData} />
+        <Footer 
+          key={key} 
+          fetchData={fetchData} 
+          landingPageData={landingPageData}
+          onClickApply={() => {}}
+          lpId={landingPageData?._id}
+          isEdit={false}
+        />
       );
       break;
     case "Employee Testimonials":
