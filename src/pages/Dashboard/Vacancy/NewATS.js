@@ -59,6 +59,7 @@ import CandidateProfile from './components/CandidateProfile';
 import AssignmentModal from './components/AssignmentModal';
 import InterviewSchedulingModal from './components/InterviewSchedulingModal';
 import InitialMessageModal from './components/InitialMessageModal';
+import VariableMessageBox from '../Message/VariableMessageBox.js';
 
 // Add table styles for enhanced sorting UI
 const tableStyles = `
@@ -676,6 +677,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   const [initialMessageModal, setInitialMessageModal] = useState(false);
   const [selectedCandidateForChat, setSelectedCandidateForChat] = useState(null);
   const [initialMessageLoading, setInitialMessageLoading] = useState(false);
+  const [emailComposeCandidateId, setEmailComposeCandidateId] = useState(null);
   const [addingColumn, setAddingColumn] = useState(false);
   const [editingColumnId, setEditingColumnId] = useState(null);
   const [newColumnTitle, setNewColumnTitle] = useState('');
@@ -1817,10 +1819,10 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
 
 
 
-  // Email candidate handler
+  // Email candidate handler (open in-app composer)
   const handleEmailCandidate = (candidate) => {
-    if (candidate.email) {
-      window.open(`mailto:${candidate.email}`, '_blank');
+    if (candidate?.email) {
+      setEmailComposeCandidateId(candidate.id);
     } else {
       message.warning('No email address available for this candidate');
     }
@@ -3527,6 +3529,27 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         </div>
       </Modal>
 
+      {/* Email Compose Modal */}
+      <Modal
+        title="Compose Message"
+        open={!!emailComposeCandidateId}
+        onCancel={() => setEmailComposeCandidateId(null)}
+        okButtonProps={{ style: { display: 'none' } }}
+        cancelButtonProps={{ style: { display: 'none' } }}
+        destroyOnClose
+        width={720}
+      >
+        {emailComposeCandidateId && (
+          <VariableMessageBox
+            candidateId={emailComposeCandidateId}
+            onSend={() => {
+              setEmailComposeCandidateId(null);
+              loadATSData({ isBackgroundRefresh: true });
+            }}
+          />
+        )}
+      </Modal>
+
       <CandidateProfile
         candidateId={candidateProfile}
         onClose={() => setCandidateProfile(null)}
@@ -3541,6 +3564,12 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         }}
         stages={pipelineData.columns}
         allCandidateIds={candidates.map(c => c.id)}
+        onEmail={(id) => {
+          try {
+            console.debug('NewATS: onEmail fired from CandidateProfile', { id });
+          } catch (_) {}
+          setEmailComposeCandidateId(id);
+        }}
       />
 
       <AssignmentModal

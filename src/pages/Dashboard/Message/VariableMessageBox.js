@@ -27,65 +27,13 @@ import { partner } from "../../../constants";
 
 export const correctText = (text) =>
   text
-    .replace(
-      /\[Candidate's Firstname\]/g,
-      "@[Candidate's Firstname](candidateFirstname)"
-    )
-    .replace(
-      /\[Candidate's Lastname\]/g,
-      "@[Candidate's Lastname](candidateLastname)"
-    )
-    .replace(/\[Candidate's Email\]/g, "@[Candidate's Email](candidateEmail)")
-    .replace(/\[Candidate's Phone\]/g, "@[Candidate's Phone](candidatePhone)")
-    .replace(/\[Job Title\]/g, "@[Job Title](jobTitle)")
-    .replace(/\[Job Location\]/g, "@[Job Location](jobLocation)")
-    .replace(
-      /\[Job Application Link\]/g,
-      "@[Job Application Link](jobApplicationLink)"
-    )
-    .replace(/\[Interview Date\]/g, "@[Interview Date](interviewDate)")
-    .replace(/\[Interview Time\]/g, "@[Interview Time](interviewTime)")
-    .replace(
-      /\[Interview Ending Date\]/g,
-      "@[Interview Ending Date](interviewDateEnd)"
-    )
-    .replace(
-      /\[Interview Ending Time\]/g,
-      "@[Interview Ending Time](interviewTimeEnd)"
-    )
-    .replace(
-      /\[Interview Meeting Link\]/g,
-      "@[Interview Meeting Link](interviewMeetingLink)"
-    )
-    .replace(
-      /\[Calendly Cancel URL\]/g,
-      "@[Calendly Cancel URL](calendly_cancel_url)"
-    )
-    .replace(
-      /\[Calendly Reschedule URL\]/g,
-      "@[Calendly Reschedule URL](calendly_reschedule_url)"
-    )
-    .replace(/\[Company Name\]/g, "@[Company Name](companyName)")
-    .replace(/\[Company Website\]/g, "@[Company Website](companyWebsite)")
-    .replace(/\[Company Address\]/g, "@[Company Address](companyAddress)")
-    .replace(
-      /\[Application Status\]/g,
-      "@[Application Status](applicationStatus)"
-    )
-    .replace(/\[Rejection Reason\]/g, "@[Rejection Reason](rejectionReason)")
-    .replace(/\[Calendar Link\]/g, "@[Calendar Link](calendarLink)")
-    .replace(/\[Current Date\]/g, "@[Current Date](currentDate)")
-    .replace(/\[Current Time\]/g, "@[Current Time](currentTime)")
-    .replace(/\[User Firstname\]/g, "@[User Firstname](userFirstname)")
-    .replace(/\[User Lastname\]/g, "@[User Lastname](userLastname)")
-    .replace(/\[User Email\]/g, "@[User Email](userEmail)")
-    .replace(/\[User Phone\]/g, "@[User Phone](userPhone)")
-    .replace(/\[CV Submission Link\]/g, "@[CV Submission Link](cvLink)")
-    .replace(/\[Survey Link\]/g, "@[Survey Link](surveyLink)")
-    .replace(
-      /\[Interview Remaining Time\]/g,
-      "@[Interview Remaining Time](interviewTimeRemaining)"
-    );
+    .replace(/\[Candidate's Firstname\]/g, "{{first_name}}")
+    .replace(/\[Candidate's Lastname\]/g, "{{last_name}}")
+    .replace(/\[Job Title\]/g, "{{job_title}}")
+    .replace(/\[Company Name\]/g, "{{company_name}}")
+    .replace(/\[User Firstname\]\s*\[User Lastname\]/g, "{{recruiter_name}}")
+    .replace(/\[User Firstname\]/g, "{{recruiter_name}}")
+    .replace(/\[User Lastname\]/g, "{{recruiter_name}}");
 
 const VariableMessageBox = ({
   candidateId,
@@ -280,6 +228,7 @@ const VariableMessageBox = ({
         placeholder="Type # to browse variables"
         value={subject}
         onChange={(_, value) => setSubject(value)}
+        markup="{{__id__}}"
         // onKeyDown={(e) => console.log("keydown", e.key)}
         classNames={classNames}
         a11ySuggestionsListLabel={"Possible variables"}
@@ -288,42 +237,11 @@ const VariableMessageBox = ({
           trigger="#"
           className={"bg-indigo-100"}
           data={[
-            { id: "candidateFirstname", display: "Candidate's Firstname" },
-            { id: "candidateLastname", display: "Candidate's Lastname" },
-            { id: "candidateEmail", display: "Candidate's Email" },
-            { id: "candidatePhone", display: "Candidate's Phone" },
-            { id: "jobTitle", display: "Job Title" },
-            { id: "jobLocation", display: "Job Location" },
-            { id: "jobApplicationLink", display: "Job Application Link" },
-            { id: "interviewDate", display: "Interview Date" },
-            { id: "interviewTime", display: "Interview Time" },
-            { id: "interviewDateEnd", display: "Interview Ending Date" },
-            { id: "interviewTimeEnd", display: "Interview Ending Time" },
-            { id: "interviewMeetingLink", display: "Interview Meeting Link" },
-            { id: "calendly_cancel_url", display: "Calendly Cancel URL" },
-            {
-              id: "calendly_reschedule_url",
-              display: "Calendly Reschedule URL",
-            },
-            { id: "companyName", display: "Company Name" },
-            { id: "companyWebsite", display: "Company Website" },
-            { id: "companyAddress", display: "Company Address" },
-            { id: "applicationStatus", display: "Application Status" },
-            { id: "rejectionReason", display: "Rejection Reason" },
-            { id: "calendarLink", display: "Calendar Link" },
-            { id: "userCalendarLink", display: "User Calendar Link" },
-            { id: "currentDate", display: "Current Date" },
-            { id: "currentTime", display: "Current Time" },
-            { id: "userFirstname", display: "User Firstname" },
-            { id: "userLastname", display: "User Lastname" },
-            { id: "userEmail", display: "User Email" },
-            { id: "userPhone", display: "User Phone" },
-            { id: "cvLink", display: "CV Submission Link" },
-            { id: "surveyLink", display: "Survey Link" },
-            {
-              id: "interviewTimeRemaining",
-              display: "Interview Remaining Time",
-            },
+            { id: "first_name", display: "Candidate First name" },
+            { id: "last_name", display: "Candidate Last name" },
+            { id: "job_title", display: "Job title" },
+            { id: "company_name", display: "Company name" },
+            { id: "recruiter_name", display: "Recruiter name" },
           ]}
         />
       </MentionsInput>
@@ -465,6 +383,7 @@ const VariableMessageBox = ({
         placeholder="Type # to browse variables"
         value={body}
         onChange={(_, value) => setBody(value)}
+        markup="{{__id__}}"
         // onKeyDown={(e) => console.log("keydown", e.key)}
         classNames={classNamesBody}
         a11ySuggestionsListLabel={"Possible variables"}
@@ -473,42 +392,11 @@ const VariableMessageBox = ({
           trigger="#"
           className={"bg-indigo-100"}
           data={[
-            { id: "candidateFirstname", display: "Candidate's Firstname" },
-            { id: "candidateLastname", display: "Candidate's Lastname" },
-            { id: "candidateEmail", display: "Candidate's Email" },
-            { id: "candidatePhone", display: "Candidate's Phone" },
-            { id: "jobTitle", display: "Job Title" },
-            { id: "jobLocation", display: "Job Location" },
-            { id: "jobApplicationLink", display: "Job Application Link" },
-            { id: "interviewDate", display: "Interview Date" },
-            { id: "interviewTime", display: "Interview Time" },
-            { id: "interviewDateEnd", display: "Interview Ending Date" },
-            { id: "interviewTimeEnd", display: "Interview Ending Time" },
-            { id: "interviewMeetingLink", display: "Interview Meeting Link" },
-            { id: "calendly_cancel_url", display: "Calendly Cancel URL" },
-            {
-              id: "calendly_reschedule_url",
-              display: "Calendly Reschedule URL",
-            },
-            { id: "companyName", display: "Company Name" },
-            { id: "companyWebsite", display: "Company Website" },
-            { id: "companyAddress", display: "Company Address" },
-            { id: "applicationStatus", display: "Application Status" },
-            { id: "rejectionReason", display: "Rejection Reason" },
-            { id: "calendarLink", display: "Calendar Link" },
-            { id: "userCalendarLink", display: "User Calendar Link" },
-            { id: "currentDate", display: "Current Date" },
-            { id: "currentTime", display: "Current Time" },
-            { id: "userFirstname", display: "User Firstname" },
-            { id: "userLastname", display: "User Lastname" },
-            { id: "userEmail", display: "User Email" },
-            { id: "userPhone", display: "User Phone" },
-            { id: "cvLink", display: "CV Submission Link" },
-            { id: "surveyLink", display: "Survey Link" },
-            {
-              id: "interviewTimeRemaining",
-              display: "Interview Remaining Time",
-            },
+            { id: "first_name", display: "Candidate First name" },
+            { id: "last_name", display: "Candidate Last name" },
+            { id: "job_title", display: "Job title" },
+            { id: "company_name", display: "Company name" },
+            { id: "recruiter_name", display: "Recruiter name" },
           ]}
         />
       </MentionsInput>
