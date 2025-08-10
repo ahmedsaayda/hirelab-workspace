@@ -496,6 +496,22 @@ const headerStyles = `
     background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
   }
+
+  /* Mobile layout tweaks */
+  @media (max-width: 640px) {
+    .ats-header .top-row-actions {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 8px !important;
+    }
+    .ats-header .top-row-actions .ant-btn,
+    .ats-header .top-row-actions .view-toggle-container {
+      width: 100% !important;
+    }
+    .ats-bottom-controls {
+      margin-top: 8px !important;
+    }
+  }
 `;
 
 // Inject table styles
@@ -668,6 +684,15 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   // Team states
   const [currentTeam, setCurrentTeam] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
+
+  // Responsive helper for mobile-specific UI tweaks
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const updateIsMobile = () => setIsMobile(window.innerWidth < 640);
+    updateIsMobile();
+    window.addEventListener('resize', updateIsMobile);
+    return () => window.removeEventListener('resize', updateIsMobile);
+  }, []);
 
   // Keyboard shortcuts for bulk actions and rating
   useEffect(() => {
@@ -2200,7 +2225,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         <Droppable droppableId="all-columns" direction="horizontal" type="COLUMN">
           {(provided, snapshot) => (
             <div 
-              className="flex gap-5 overflow-x-auto pb-6"
+              className="flex gap-5 overflow-auto max-h-[calc(100vh-400px)] pb-6"
               {...provided.droppableProps}
               ref={provided.innerRef}
             >
@@ -2900,7 +2925,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className=" bg-gray-50">
       {/* Background refresh indicator */}
       {dataRefreshing && (
         <div className="fixed top-4 right-4 z-50 bg-purple-100 border border-purple-300 rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">
@@ -2913,8 +2938,8 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       <div className="ats-header bg-white border-b border-gray-200 shadow-sm">
         <div className="px-6 py-4">
           {/* Top Row - Title and Actions */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 top-row-actions gap-2">
+            <div className="flex items-center gap-4 w-full">
               {/* Back Button */}
               <Button
                 type="text"
@@ -2940,36 +2965,41 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              {/* View Toggle */}
-              <div className="view-toggle-container flex">
-                <Button
-                  type="text"
-                  onClick={() => setViewMode('pipeline')}
-                  size="small"
-                  icon={<AppstoreOutlined />}
-                  className={`view-toggle-btn ${
-                    viewMode === 'pipeline' 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  } border-0 h-9 px-3`}
-                >
-                  Pipeline
-                </Button>
-                <Button
-                  type="text"
-                  onClick={() => setViewMode('table')}
-                  size="small"
-                  icon={<BarsOutlined />}
-                  className={`view-toggle-btn ${
-                    viewMode === 'table' 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  } border-0 h-9 px-3`}
-                >
-                  Table
-                </Button>
-              </div>
+            {!isMobile && (
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+              {/* View Toggle - mobile uses compact Select, desktop uses 2 buttons */}
+              {false ? (
+                <></>
+              ) : (
+                <div className="view-toggle-container flex w-full sm:w-auto">
+                  <Button
+                    type="text"
+                    onClick={() => setViewMode('pipeline')}
+                    size="small"
+                    icon={<AppstoreOutlined />}
+                    className={`view-toggle-btn ${
+                      viewMode === 'pipeline' 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    } border-0 h-9 px-3 flex-1 sm:flex-none`}
+                  >
+                    Pipeline
+                  </Button>
+                  <Button
+                    type="text"
+                    onClick={() => setViewMode('table')}
+                    size="small"
+                    icon={<BarsOutlined />}
+                    className={`view-toggle-btn ${
+                      viewMode === 'table' 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    } border-0 h-9 px-3 flex-1 sm:flex-none`}
+                  >
+                    Candidate List
+                  </Button>
+                </div>
+              )}
 
               {/* Add Candidate Button */}
               <Button
@@ -2979,7 +3009,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                   setSelectedStageForAdd(null);
                   setAddCandidateModal(true);
                 }}
-                className="!bg-purple-500 hover:!bg-purple-600 !border-purple-500 hover:!border-purple-600 h-9 px-4 font-medium shadow-sm"
+                className="!bg-purple-500 hover:!bg-purple-600 !border-purple-500 hover:!border-purple-600 h-9 px-4 font-medium shadow-sm w-full sm:w-auto"
                 style={{
                   backgroundColor: '#8B5CF6',
                   borderColor: '#8B5CF6',
@@ -2988,11 +3018,44 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 Add Candidate
               </Button>
             </div>
+            )}
           </div>
+
+          {/* When on mobile: show Pipeline/Candidate switch + Add button in its own full-width row */}
+          {isMobile && (
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <Select
+                value={viewMode}
+                onChange={(v) => setViewMode(v)}
+                options={[
+                  { label: 'Pipeline', value: 'pipeline' },
+                  { label: 'Candidate List', value: 'table' },
+                ]}
+                style={{ width: '100%' }}
+              />
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => {
+                  setSelectedStageForAdd(null);
+                  setAddCandidateModal(true);
+                }}
+                className="!bg-purple-500 hover:!bg-purple-600 !border-purple-500 hover:!border-purple-600 h-9 px-4 font-medium shadow-sm w-full"
+                style={{
+                  backgroundColor: '#8B5CF6',
+                  borderColor: '#8B5CF6',
+                }}
+              >
+                Add Candidate
+              </Button>
+            </div>
+          )}
           
-          {/* Bottom Row - Search and Filters */}
-          <div className="flex items-center justify-between gap-4 mt-4">
-            <div className="flex-1 max-w-lg">
+          {/* Bottom Row - Search and Filters (responsive) */}
+          <div className="mt-4 ats-bottom-controls">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 items-stretch">
+              {/* Search */}
+              <div className="sm:col-span-2 order-2 sm:order-1">
               <Search
                 placeholder="Search candidates..."
                 value={searchTerm}
@@ -3005,52 +3068,52 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 className="w-full ats-search-input"
                 size="default"
                 allowClear
-                enterButton="Search"
+                enterButton={isMobile ? undefined : 'Search'}
                 style={{
                   borderRadius: '8px',
                   height: '40px'
                 }}
               />
-       
-            </div>
-            
-            {/* Filter Actions */}
-            <div className="flex items-center gap-2">
-              <Button
-                icon={<FilterOutlined />}
-                onClick={() => setShowFilters(!showFilters)}
-                className={`${
-                  showFilters 
-                    ? 'bg-blue-50 border-blue-300 text-blue-600 shadow-sm' 
-                    : 'border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-900'
-                } transition-all duration-200 h-9 px-3`}
-              >
-                Filters
-                {(filters.stages.length > 0 || filters.ratings.length > 0 || filters.dateRange || !filters.showRejected || filters.assignees.length > 0 || (isMultiJobView && filters.vacancies && filters.vacancies.length > 0)) && (
-                  <span className="ml-2 bg-blue-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                    {filters.stages.length + filters.ratings.length + (filters.dateRange ? 1 : 0) + (!filters.showRejected ? 0 : 1) + filters.assignees.length + (isMultiJobView && filters.vacancies ? filters.vacancies.length : 0)}
-                  </span>
-                )}
-              </Button>
-              
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() => {
-                  setFilters({
-                    stages: [],
-                    ratings: [],
-                    dateRange: null,
-                    showRejected: false,
-                    assignees: [],
-                    ...(isMultiJobView && { vacancies: [] })
-                  });
-                  setSearchTerm('');
-                }}
-                className="border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-900 h-9 px-3"
-                title="Reset all filters and search"
-              >
-                Reset
-              </Button>
+              </div>
+
+              {/* Filter Actions */}
+              <div className="flex sm:justify-end gap-2 order-1 sm:order-2 w-full">
+                <Button
+                  icon={<FilterOutlined />}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`${
+                    showFilters 
+                      ? 'bg-blue-50 border-blue-300 text-blue-600 shadow-sm' 
+                      : 'border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-900'
+                  } transition-all duration-200 h-9 px-3 w-1/2 sm:w-auto`}
+                >
+                  Filters
+                  {(filters.stages.length > 0 || filters.ratings.length > 0 || filters.dateRange || !filters.showRejected || filters.assignees.length > 0 || (isMultiJobView && filters.vacancies && filters.vacancies.length > 0)) && (
+                    <span className="ml-2 bg-blue-500 text-white rounded-full min-w-[20px] h-5 text-xs flex items-center justify-center px-1">
+                      {filters.stages.length + filters.ratings.length + (filters.dateRange ? 1 : 0) + (!filters.showRejected ? 0 : 1) + filters.assignees.length + (isMultiJobView && filters.vacancies ? filters.vacancies.length : 0)}
+                    </span>
+                  )}
+                </Button>
+                
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={() => {
+                    setFilters({
+                      stages: [],
+                      ratings: [],
+                      dateRange: null,
+                      showRejected: false,
+                      assignees: [],
+                      ...(isMultiJobView && { vacancies: [] })
+                    });
+                    setSearchTerm('');
+                  }}
+                  className="border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-900 h-9 px-3 w-1/2 sm:w-auto"
+                  title="Reset all filters and search"
+                >
+                  Reset
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -3202,9 +3265,11 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                       label: 'Unassigned',
                       value: 'unassigned'
                     },
-                    ...teamMembers.map(member => ({
-                      label: `${member.user.firstName} ${member.user.lastName}`,
-                      value: member.user._id
+                    ...teamMembers
+                    .filter(member => member.user)
+                    .map(member => ({
+                      label: `${member.user?.firstName} ${member.user?.lastName}`,
+                      value: member.user?._id
                     }))
                   ]}
                   maxTagCount="responsive"

@@ -14,7 +14,8 @@ import {
   List,
   Card,
   Progress,
-  Upload
+  Upload,
+  Select
 } from 'antd';
 import { 
   UserOutlined, 
@@ -35,6 +36,7 @@ import moment from 'moment';
 import CrudService from '../../../../services/CrudService';
 import UploadService from '../../../../services/UploadService';
 import CandidateChatService from '../../../../services/CandidateChatService';
+import ATSService from '../../../../services/ATSService';
 import { useRouter } from 'next/router';
 
 // Add custom styles for the drawer
@@ -525,7 +527,8 @@ const CandidateProfile = ({
   const loadCandidateNotes = async (candidateId) => {
     try {
       const response = await CrudService.search('CandidateNote', 100, 1, {
-        filters: { vacancySubmission: candidateId }
+        filters: { vacancySubmission: candidateId },
+        populate: 'loggedBy'
       });
       console.log('📝 Notes response:', response);
       
@@ -547,7 +550,8 @@ const CandidateProfile = ({
       await CrudService.create('CandidateNote', {
         vacancySubmission: candidateId,
         note: newNote,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        // loggedBy set on backend using current user/team member
       });
       setNewNote('');
       loadCandidateNotes(candidateId);
@@ -1036,7 +1040,7 @@ const CandidateProfile = ({
 
       {/* Stage Progress Card */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
               <StarOutlined className="text-white text-sm" />
@@ -1048,9 +1052,32 @@ const CandidateProfile = ({
               </Text>
             </div>
           </div>
-          <Text className="text-lg font-bold" style={{ color: getProgressColor() }}>
-            {calculateStageProgress()}%
-          </Text>
+            <div className="flex items-center gap-3">
+              <Select
+                size="small"
+                value={candidate?.stageId || stages.find(s => s.title === candidate?.stage || s.name === candidate?.stage)?.id}
+                style={{ minWidth: 180 }}
+                onChange={async (targetStageId) => {
+                  try {
+                    await ATSService.moveCandidate({
+                      targetStage: targetStageId,
+                      candidateId: candidateId,
+                      destinationCol: [String(candidateId)],
+                    });
+                    message.success('Stage updated');
+                    // Refresh local candidate data and notify parent to refresh board
+                    await loadCandidateData();
+                    if (onUpdate) onUpdate();
+                  } catch (e) {
+                    message.error('Failed to update stage');
+                  }
+                }}
+                options={stages.map(s => ({ label: s.title || s.name, value: s.id }))}
+              />
+              <Text className="text-lg font-bold" style={{ color: getProgressColor() }}>
+                {calculateStageProgress()}%
+              </Text>
+            </div>
         </div>
         
         <div className="space-y-3">
@@ -1220,17 +1247,7 @@ const CandidateProfile = ({
                 >
                   View
                 </Button>
-                <Button 
-                  size="small"
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.href = resumeUrl;
-                    link.download = `${candidate?.fullname || 'candidate'}_resume.pdf`;
-                    link.click();
-                  }}
-                >
-                  Download
-                </Button>
+                {/* Download removed per request */}
               </div>
             </div>
           </div>
@@ -1322,7 +1339,11 @@ const CandidateProfile = ({
             <List.Item className="!border-b-gray-200 !px-0">
               <div className="w-full bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
-                  <Text strong className="text-gray-800">Internal Note</Text>
+                  <Text strong className="text-gray-800">
+                    {note?.loggedBy?.firstName || note?.loggedBy?.lastName
+                      ? `${note.loggedBy.firstName ?? ''} ${note.loggedBy.lastName ?? ''}`.trim()
+                      : 'Internal Note'}
+                  </Text>
                   <Text className="text-xs text-gray-500">
                     {moment(note.createdAt).format('MMM DD, YYYY HH:mm')}
                   </Text>

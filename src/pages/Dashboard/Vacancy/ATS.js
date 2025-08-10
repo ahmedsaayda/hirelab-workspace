@@ -150,6 +150,11 @@ const ATS = ({ VacancyId, vacancyInfo }) => {
   const [viewMode, setViewMode] = useState("table"); //kanban , // New state for view mode
   const [candidates, setCandidates] = useState([]);
   const [page, setPage] = useState(1);
+  const headerRef = useRef(null);
+  const [boardHeight, setBoardHeight] = useState(null);
+  const boardScrollRef = useRef(null);
+  const topScrollRef = useRef(null);
+  const [topScrollWidth, setTopScrollWidth] = useState(0);
   console.log(pages);
 
   const fetchCandidates = useCallback(async () => {
@@ -416,9 +421,72 @@ const ATS = ({ VacancyId, vacancyInfo }) => {
 
   if (reloadingStages) return <Skeleton active />;
   console.log("boardColumns", boardColumns);
+  useEffect(() => {
+    const calcHeight = () => {
+      try {
+        const headerBottom = headerRef.current?.getBoundingClientRect?.().bottom || 0;
+        const viewport = window.innerHeight || document.documentElement.clientHeight || 0;
+        // small padding for breathing room
+        const h = Math.max(200, viewport - headerBottom - 8);
+        setBoardHeight(h);
+        // update top scrollbar width based on content width
+        requestAnimationFrame(() => {
+          if (boardScrollRef.current) {
+            setTopScrollWidth(boardScrollRef.current.scrollWidth);
+          }
+        });
+      } catch (e) {}
+    };
+    calcHeight();
+    window.addEventListener('resize', calcHeight);
+    return () => window.removeEventListener('resize', calcHeight);
+  }, []);
+
+  // Lock page scroll so only the board scrolls
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const nextRoot = document.getElementById('__next');
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevNextOverflow = nextRoot?.style.overflow;
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    if (nextRoot) nextRoot.style.overflow = 'hidden';
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+      if (nextRoot) nextRoot.style.overflow = prevNextOverflow || '';
+    };
+  }, []);
+
+  // Keep the top scrollbar in sync with the board scroller
+  const syncFromTop = (e) => {
+    if (!boardScrollRef.current) return;
+    boardScrollRef.current.scrollLeft = e.target.scrollLeft;
+  };
+  const syncFromBoard = (e) => {
+    if (!topScrollRef.current) return;
+    topScrollRef.current.scrollLeft = e.target.scrollLeft;
+    // also keep phantom width updated if columns change dynamically
+    if (boardScrollRef.current && topScrollWidth !== boardScrollRef.current.scrollWidth) {
+      setTopScrollWidth(boardScrollRef.current.scrollWidth);
+    }
+  };
+
+  // When columns change, refresh top scrollbar width after render
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      if (boardScrollRef.current) {
+        setTopScrollWidth(boardScrollRef.current.scrollWidth);
+      }
+    });
+    return () => cancelAnimationFrame(id);
+  }, [boardColumns]);
+
   return (
-    <div className="w-full ">
-      <div className="flex flex-col justify-start gap-3   h-5/6 min-h-[90vh] w-full">
+    <div className="h-screen w-full flex flex-col overflow-hidden">
+      <div ref={headerRef} className="flex flex-col justify-start gap-3 w-full shrink-0">
         <div className="flex justify-between gap-4 my-2 w-[100%]">
           <input
             type="text"
@@ -519,9 +587,20 @@ const ATS = ({ VacancyId, vacancyInfo }) => {
           </Space>
         </div>
         {contextHolder}
+      </div>
+      <div className="flex-1 min-h-0 w-full" style={boardHeight ? {height: boardHeight} : {}}>
         {viewMode === "kanban" ? (
-          <div className="relative flex flex-grow w-full h-full z-60">
-            <div className=" bottom-0 overflow-x-auto w-[100%]  flex-grow ">
+          <div className="relative w-full h-full z-60">
+            {/* Always-visible top horizontal scroller */}
+            <div
+              ref={topScrollRef}
+              onScroll={syncFromTop}
+              className="w-full overflow-x-auto overflow-y-hidden"
+              style={{ height: 14 }}
+            >
+              <div style={{ width: Math.max(topScrollWidth, 1), height: 1 }} />
+            </div>
+            <div ref={boardScrollRef} onScroll={syncFromBoard} className="h-[calc(100%-14px)] w-full overflow-auto">
               <Board
                 onCardOptionClick={(id, option, data) => {
                   if (option === "email") {
@@ -798,43 +877,45 @@ const ATS = ({ VacancyId, vacancyInfo }) => {
             </div>
           </div>
         ) : (
-          <ATSTable
-            stages={boardColumns.map((stage) => stage.title)}
-            vacancyInfo={{ ...vacancyInfo, stages: boardColumns }}
-            candidates={candidates}
-            reloadStages={fetchCandidates}
-            boardColumns={boardColumns}
-            onCardOptionClick={async (id, type) => {
-              if (type === "details-modal") {
-                setLastScroll(window.scrollY);
-                setDetailsModal(id);
-              }
-              if (type === "email") {
-                setLastScroll(window.scrollY);
-                setMessageCandidate(id);
-              }
+          <div className="h-full w-full overflow-auto">
+            <ATSTable
+              stages={boardColumns.map((stage) => stage.title)}
+              vacancyInfo={{ ...vacancyInfo, stages: boardColumns }}
+              candidates={candidates}
+              reloadStages={fetchCandidates}
+              boardColumns={boardColumns}
+              onCardOptionClick={async (id, type) => {
+                if (type === "details-modal") {
+                  setLastScroll(window.scrollY);
+                  setDetailsModal(id);
+                }
+                if (type === "email") {
+                  setLastScroll(window.scrollY);
+                  setMessageCandidate(id);
+                }
 
-              if (type === "sms") {
-                setLastScroll(window.scrollY);
-                setSMSCandidate(id);
-              }
+                if (type === "sms") {
+                  setLastScroll(window.scrollY);
+                  setSMSCandidate(id);
+                }
 
-              if (type === "phone") {
-                setLastScroll(window.scrollY);
-                setPhoneCandidate(id);
-              }
-              //delete-modal
-              if (type === "delete-modal") {
-              }
+                if (type === "phone") {
+                  setLastScroll(window.scrollY);
+                  setPhoneCandidate(id);
+                }
+                //delete-modal
+                if (type === "delete-modal") {
+                }
 
-              //schedule
+                //schedule
 
-              if (type === "schedule") {
-                setLastScroll(window.scrollY);
-                setScheduleCandidate(id);
-              }
-            }}
-          />
+                if (type === "schedule") {
+                  setLastScroll(window.scrollY);
+                  setScheduleCandidate(id);
+                }
+              }}
+            />
+          </div>
         )}
       </div>
       <Modal
