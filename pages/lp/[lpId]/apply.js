@@ -659,6 +659,47 @@ export default function ApplyPage() {
           }
         }
       } catch (e) { console.warn('Pixel Lead (apply) failed', e); }
+
+      // Fire Contact event when completing a contact step
+      try {
+        if (currentStep > 0 && landingPageData?.metaPixelId && window.fbq) {
+          const currentField = formFields[currentStep - 1]; // the step we just completed
+          const isContactGroup = currentField?.type === 'lead-capture-group';
+          const isContactComposite = currentField?.type === 'contact';
+          console.log(" debug Contact event----currentField", currentField);
+          console.log(" debug Contact event---isContactGroup", isContactGroup);
+          console.log(" debug Contact event---isContactComposite", isContactComposite);
+          console.log(" debug Contact event---formData", formData);
+
+        
+          if (isContactGroup || isContactComposite) {
+            // Check for actual contact data with dynamic field IDs
+            const hasContactInfo = Object.keys(formData).some(key => 
+              (key.includes('firstName') || key.includes('lastName') || 
+               key.includes('email') || key.includes('phone')) && 
+              formData[key]?.trim()
+            );
+            console.log(" debug Contact event---hasContact", hasContactInfo);
+            if (hasContactInfo) {
+              console.log(" debug Contact event---firing contact");
+              const contactKey = `metaContactFired_${lpId}`;
+              console.log(" debug Contact event---contactKey", contactKey);
+              const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(contactKey) === '1';
+              console.log(" debug Contact event---already", already);
+              if (!already) {
+                window.fbq('track', 'Contact', {
+                  content_name: landingPageData?.vacancyTitle || '',
+                  funnel_id: lpId || '',
+                  brand: landingPageData?.companyName || '',
+                  job_category: landingPageData?.department || ''
+                });
+                try { sessionStorage.setItem(contactKey, '1'); } catch (_) {}
+              }
+            }
+          }
+        }
+      } catch (e) { console.warn('Pixel Contact (apply) failed', e); }
+
       setCurrentStep(prev => prev + 1);
     } else {
       handleSubmit();
@@ -754,29 +795,7 @@ export default function ApplyPage() {
     }
   };
 
-  // Fire Contact when the first contact step is submitted and valid (immediately upon advancing past it)
-  useEffect(() => {
-    if (!landingPageData?.metaPixelId || !Array.isArray(formFields)) return;
-    if (currentStep <= 0) return;
-    const prevField = formFields[currentStep - 1]; // the step we just completed
-    const isContactGroup = prevField?.type === 'lead-capture-group';
-    const isContactSolo = prevField?.type === 'contact' || prevField?.type === 'email' || prevField?.type === 'phone';
-    if (!isContactGroup && !isContactSolo) return;
 
-    const hasContact = !!(formData?.email || formData?.phone || formData?.firstname || formData?.lastname);
-    if (!hasContact) return;
-
-    try {
-      if (window.fbq) {
-        window.fbq('track', 'Contact', {
-          content_name: landingPageData?.vacancyTitle || '',
-          funnel_id: lpId || '',
-          brand: landingPageData?.companyName || '',
-          job_category: landingPageData?.department || ''
-        });
-      }
-    } catch (e) { console.warn('Pixel Contact (apply) failed', e); }
-  }, [currentStep]);
 
   const renderSingleField = (field) => {
     const value = formData[field.id] || '';
