@@ -19,6 +19,48 @@ export default function ThankYouPage() {
     }
   }, [lpId]);
 
+  // Fire Meta Pixel events after data loads
+  useEffect(() => {
+    if (!landingPageData?.metaPixelId) return;
+    
+        // Wait for pixel to be ready, then fire events
+    const fireEvents = () => {
+      try {
+        if (window.fbq) {
+          // Check if CompleteRegistration was already fired for this funnel
+          const completeKey = `metaCompleteFired_${lpId}`;
+          const alreadyComplete = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(completeKey) === '1';
+          
+          if (!alreadyComplete) {
+            console.log('Firing CompleteRegistration from thank-you page');
+            window.fbq('track', 'CompleteRegistration', {
+              content_name: landingPageData?.vacancyTitle || '',
+              funnel_id: lpId || '',
+              brand: landingPageData?.companyName || '',
+              job_category: landingPageData?.department || ''
+            });
+            try { 
+              sessionStorage.setItem(completeKey, '1');
+              console.log('CompleteRegistration marked as fired for funnel:', lpId);
+            } catch (_) {}
+          } else {
+            console.log('CompleteRegistration already fired for this funnel');
+          }
+        } else {
+          console.warn('fbq not available on thank-you page');
+        }
+      } catch (e) { 
+        console.warn('Pixel events failed on thank-you', e); 
+      }
+    };
+
+    // Try immediately, then retry after a short delay
+    fireEvents();
+    const timeout = setTimeout(fireEvents, 500);
+    
+    return () => clearTimeout(timeout);
+  }, [landingPageData?.metaPixelId, lpId]);
+
   const fetchData = async () => {
     try {
       // const res = await CrudService.getSingle("LandingPageData", lpId, "thank you page");
@@ -49,31 +91,6 @@ export default function ThankYouPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Load Meta Pixel */}
       <MetaPixel metaPixelId={landingPageData?.metaPixelId} />
-      {/* Meta Pixel: PageView + CompleteRegistration (redundant safety on thank-you) */}
-      {landingPageData?.metaPixelId && (
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (window.fbq) {
-                  fbq('track', 'PageView', {
-                    content_name: ${JSON.stringify(landingPageData?.vacancyTitle || '')},
-                    funnel_id: ${JSON.stringify(lpId || '')},
-                    brand: ${JSON.stringify(landingPageData?.companyName || '')},
-                    job_category: ${JSON.stringify(landingPageData?.department || '')}
-                  });
-                  fbq('track', 'CompleteRegistration', {
-                    content_name: ${JSON.stringify(landingPageData?.vacancyTitle || '')},
-                    funnel_id: ${JSON.stringify(lpId || '')},
-                    brand: ${JSON.stringify(landingPageData?.companyName || '')},
-                    job_category: ${JSON.stringify(landingPageData?.department || '')}
-                  });
-                }
-              } catch (e) { console.warn('Pixel (thank-you) failed', e); }
-            `,
-          }}
-        />
-      )}
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-2xl mx-auto px-4 py-4">

@@ -213,7 +213,7 @@ const Template2 = ({ landingPageData, onClickApply }) => {
                   color="light_blue_A700"
                   size="lg"
                   className="w-full  rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
-                  onClick={() => {}} // Open form editor when "Apply now" is clicked
+                  onClick={() => { onClickApply && onClickApply(); }} // Open form editor when "Apply now" is clicked
                 >
                   {landingPageData?.ctaApply}
                 </Button>
