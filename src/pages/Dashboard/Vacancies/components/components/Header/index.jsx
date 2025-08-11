@@ -39,17 +39,22 @@ export default function Header({
   // Check if there are unpublished changes when component mounts or data changes
   useEffect(() => {
     if (landingPageData) {
-      // Use a more generous margin to account for auto-save timing
-      const marginMs = 3000; // 3 seconds margin
-      const hasChanges = landingPageData.published &&
-        landingPageData.publishedAt &&
-        landingPageData.updatedAt &&
-        new Date(landingPageData.publishedAt).getTime() + marginMs < new Date(landingPageData.updatedAt).getTime();
+      let hasChanges = false;
+      
+      // If the page is published, check for changes
+      if (landingPageData.published && landingPageData.publishedVersion) {
+        hasChanges = checkForUnpublishedChanges(landingPageData);
+      } else if (landingPageData.published && landingPageData.publishedAt && landingPageData.updatedAt) {
+        // Fallback to time-based comparison with a more reliable margin
+        const marginMs = 5000; // 5 seconds margin for auto-save delays
+        hasChanges = new Date(landingPageData.publishedAt).getTime() + marginMs < new Date(landingPageData.updatedAt).getTime();
+      }
       
       console.log("Checking unpublished changes:", {
         published: landingPageData.published,
         publishedAt: landingPageData.publishedAt,
         updatedAt: landingPageData.updatedAt,
+        hasPublishedVersion: !!landingPageData.publishedVersion,
         hasChanges
       });
       
@@ -62,26 +67,66 @@ export default function Header({
   }, [landingPageData]);
 
   // Function to check for differences between current state and published version
-  // We keep this for the detailed change detection in the publish confirmation modal
   const checkForUnpublishedChanges = (data) => {
-    if (!data.publishedVersion) return false;
+    if (!data.publishedVersion) {
+      console.log("No published version found for comparison");
+      return false;
+    }
     
-    // List of key properties to compare
+    // Comprehensive list of properties to compare
     const keysToCompare = [
       'vacancyTitle', 'heroDescription', 'heroImage', 'location',
       'jobSpecificationTitle', 'specifications', 'jobDescription',
-      'recruiters', 'menuItems', 'templateId'
+      'recruiters', 'menuItems', 'templateId', 'cta2Link', 'metaPixelId',
+      'companyLogo', 'companyName', 'benefits', 'requirements',
+      'aboutCompany', 'contactInfo', 'socialLinks', 'customSections'
     ];
     
     // Check for differences in these properties
     for (const key of keysToCompare) {
-      if (JSON.stringify(data[key]) !== JSON.stringify(data.publishedVersion[key])) {
+      const currentValue = data[key];
+      const publishedValue = data.publishedVersion[key];
+      
+      // Handle undefined/null values consistently
+      const currentStr = currentValue !== undefined ? JSON.stringify(currentValue) : 'undefined';
+      const publishedStr = publishedValue !== undefined ? JSON.stringify(publishedValue) : 'undefined';
+      
+      if (currentStr !== publishedStr) {
+        console.log(`Change detected in ${key}:`, {
+          current: currentValue,
+          published: publishedValue
+        });
         return true;
       }
     }
     
+    console.log("No content changes detected");
     return false;
   };
+
+  // Function to manually trigger a change check (can be called from parent components)
+  const recheckUnpublishedChanges = () => {
+    if (landingPageData) {
+      let hasChanges = false;
+      
+      if (landingPageData.published && landingPageData.publishedVersion) {
+        hasChanges = checkForUnpublishedChanges(landingPageData);
+      } else if (landingPageData.published && landingPageData.publishedAt && landingPageData.updatedAt) {
+        const marginMs = 5000;
+        hasChanges = new Date(landingPageData.publishedAt).getTime() + marginMs < new Date(landingPageData.updatedAt).getTime();
+      }
+      
+      console.log("Manual recheck - hasChanges:", hasChanges);
+      setHasUnpublishedChanges(hasChanges);
+      return hasChanges;
+    }
+    return false;
+  };
+
+  // Expose the recheck function to parent components
+  React.useImperativeHandle(props.ref, () => ({
+    recheckUnpublishedChanges
+  }), [landingPageData]);
 
   const handleSave = async () => {
     // setIsSaving(true);
@@ -142,8 +187,10 @@ export default function Header({
       // Reset the unpublished changes state immediately
       setHasUnpublishedChanges(false);
       
-      // Reload the data to get the updated publishedAt timestamp
-      reload();
+      // Wait a moment then reload to ensure we get the latest data
+      setTimeout(() => {
+        reload();
+      }, 500);
     } catch (err) {
       message.error("Failed to publish: " + (err.message || "Unknown error"));
     } finally {
@@ -163,8 +210,10 @@ export default function Header({
       // Reset the unpublished changes state immediately
       setHasUnpublishedChanges(false);
       
-      // Reload the data to get the updated publishedAt timestamp
-      reload();
+      // Wait a moment then reload to ensure we get the latest data
+      setTimeout(() => {
+        reload();
+      }, 500);
     } catch (err) {
       message.error("Failed to publish: " + (err.message || "Unknown error"));
     } finally {
@@ -237,8 +286,10 @@ export default function Header({
       // Reset the unpublished changes state immediately
       setHasUnpublishedChanges(false);
       
-      // Reload the data to get the updated publishedAt timestamp
-      reload();
+      // Wait a moment then reload to ensure we get the latest data
+      setTimeout(() => {
+        reload();
+      }, 500);
       
     } catch (err) {
       message.error("Failed to publish: " + (err.message || "Unknown error"));
