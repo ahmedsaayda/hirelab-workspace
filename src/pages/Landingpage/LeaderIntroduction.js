@@ -364,26 +364,7 @@ const Template1 = ({ data }) => {
               <div ref={refs.fullnameRef} className="mb-4 text-3xl font-script">
                 {data?.leaderIntroductionFullname || "John Smith"}
               </div>
-              <div className="flex items-center">
-                <div className="mr-3 w-1 h-10"></div>
-                <div>
-                  <div
-                    className="text-[32px] smx:text-[24px] font-normal italic"
-                    style={{
-                         color: "#1a3e4c",
-                        fontFamily: `"Allura", cursive`,
-                        fontWeight: 400,
-                        fontStyle: "normal"
-                    }}
-                  >
-                    {data?.leaderIntroductionFullname || "John Smith"}
-                  </div>
-
-                  <div ref={refs.jobTitleRef}>
-                    {data?.leaderIntroductionJobTitle || "CEO of Hirelab"}
-                  </div>
-                </div>
-              </div>
+           
             </div>
           </div>
 
