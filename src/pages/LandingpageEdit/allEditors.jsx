@@ -1183,6 +1183,28 @@ const JobSpecificationEdit = (props) => {
 };
 
 const CompanyFactsEdit = (props) => {
+  const factsCount = props.landingPageData?.companyFacts?.length || 0;
+  
+  // Determine what will be displayed based on facts count
+  const shouldShowMessage = (count) => {
+    // Only show message when count is not 0, 3, or 6
+    return count !== 0 && count !== 3 && count !== 6;
+  };
+
+  const getDisplayMessage = (count) => {
+    if (count === 0) return "No facts added yet";
+    if (count === 3) return "Displaying 3 facts";
+    if (count === 6) return "Displaying 6 facts";
+    if (count < 3) return `${count} fact${count !== 1 ? 's' : ''} added (will show when you reach 3)`;
+    if (count < 6) return `${count} facts added (showing first 3)`;
+    return `${count} facts added (showing first 6)`;
+  };
+
+  const getDisplayColor = (count) => {
+    if (count === 0 || count === 3 || count === 6) return "#10b981"; // green
+    return "#f59e0b"; // amber
+  };
+
   return (
     <>
       <EditorRender
@@ -1203,6 +1225,7 @@ const CompanyFactsEdit = (props) => {
             key: "companyFacts",
             label: "Facts",
             max: 2,
+            maxArrayLength: 6,
             array: [
               {
                 key: "icon",
@@ -1222,6 +1245,46 @@ const CompanyFactsEdit = (props) => {
             ],
           },
         ]}
+        renderMore={shouldShowMessage(factsCount) ? (
+          <div className="mt-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+            <div className="flex items-start gap-2">
+              <div className="mt-0.5">
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 16 16" 
+                  fill="none" 
+                  className="text-blue-500"
+                >
+                  <path 
+                    d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM8 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zM9 8V4H7v4h2z" 
+                    fill="currentColor"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div 
+                  className="text-xs font-medium flex items-center gap-1"
+                  style={{ color: getDisplayColor(factsCount) }}
+                >
+                  <div 
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: getDisplayColor(factsCount) }}
+                  />
+                  {getDisplayMessage(factsCount)}
+                </div>
+                <div className="text-xs text-gray-600 mt-2">
+                  Due to design consistency, company facts are displayed in groups of 3 or 6.
+                </div>
+                {factsCount > 6 && (
+                  <div className="text-xs text-amber-600 mt-1">
+                    Consider removing some facts or keeping only the most important ones.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : null}
       />
     </>
   );
