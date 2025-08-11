@@ -290,11 +290,19 @@ const Template1 = ({ landingPageData, fetchData }) => {
   const currentPath = router.pathname?.split("/")[1];
   const [isNavFixed, setIsNavFixed] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(
-    Array.isArray(landingPageData?.location)
-      ? landingPageData?.location[0]
-      : landingPageData?.location
-  );
+  const [selectedLocation, setSelectedLocation] = useState(() => {
+    if (Array.isArray(landingPageData?.location)) {
+      // Prioritize showing Hybrid over Remote, then other locations
+      if (landingPageData.location.includes("Hybrid")) {
+        return "Hybrid";
+      } else if (landingPageData.location.includes("Remote")) {
+        return "Remote";
+      } else {
+        return landingPageData.location[0];
+      }
+    }
+    return landingPageData?.location;
+  });
   const [currentHash, setCurrentHash] = useState(
     window.location.hash.slice(1) || "job-specifications"
   );
@@ -302,6 +310,26 @@ const Template1 = ({ landingPageData, fetchData }) => {
   const refs = useHeroHover();
   const navRef = useRef(null);
   const navRef2 = useRef(null);
+
+  // Update selectedLocation when landingPageData.location changes
+  useEffect(() => {
+    if (Array.isArray(landingPageData?.location)) {
+      // Prioritize showing Hybrid over Remote, then other locations
+      if (landingPageData.location.includes("Hybrid")) {
+        setSelectedLocation("Hybrid");
+      } else if (landingPageData.location.includes("Remote")) {
+        setSelectedLocation("Remote");
+      } else if (landingPageData.location.length > 0) {
+        setSelectedLocation(landingPageData.location[0]);
+      } else {
+        setSelectedLocation("");
+      }
+    } else if (landingPageData?.location) {
+      setSelectedLocation(landingPageData.location);
+    } else {
+      setSelectedLocation("");
+    }
+  }, [landingPageData?.location]);
   const location = Array.isArray(landingPageData?.location)
     ? landingPageData?.location.join(" ")
     : landingPageData?.location || "";

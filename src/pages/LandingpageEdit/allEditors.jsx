@@ -543,8 +543,14 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
   useEffect(() => {
     if (landingPageData?.location) {
       setSelectedLocations(landingPageData.location);
-      setIsRemote(landingPageData.location?.includes("Remote"));
-      setIsHybrid(landingPageData.location?.includes("Hybrid"));
+      
+      // Check if location array contains Remote or Hybrid
+      const locationArray = Array.isArray(landingPageData.location) 
+        ? landingPageData.location 
+        : [landingPageData.location];
+      
+      setIsRemote(locationArray.includes("Remote"));
+      setIsHybrid(locationArray.includes("Hybrid"));
     }
     setIsSalaryRange(!!landingPageData?.salaryRange);
     setIsHoursRange(!!landingPageData?.hoursRange);
@@ -588,6 +594,10 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
 
     setSelectedLocations(values);
     handleChange("location", values);
+    
+    // Update Remote/Hybrid switches based on location changes
+    setIsRemote(values.includes("Remote"));
+    setIsHybrid(values.includes("Hybrid"));
   };
 
   const dropdownRender = (menu) => (
@@ -648,9 +658,16 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
     setIsRemote(checked);
     if (checked) {
       setIsHybrid(false);
-      handleLocationChange(["Remote"]);
+      // Add Remote to existing locations, but remove Hybrid if present
+      const currentLocations = Array.isArray(landingPageData?.location) ? landingPageData.location : [];
+      const filteredLocations = currentLocations.filter(loc => loc !== "Hybrid");
+      const newLocations = [...filteredLocations, "Remote"];
+      handleLocationChange(newLocations);
     } else {
-      handleLocationChange(["Hybrid"]);
+      // When Remote is unchecked, remove it from locations
+      const currentLocations = Array.isArray(landingPageData?.location) ? landingPageData.location : [];
+      const filteredLocations = currentLocations.filter(loc => loc !== "Remote");
+      handleLocationChange(filteredLocations);
     }
   };
 
@@ -658,7 +675,16 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
     setIsHybrid(checked);
     if (checked) {
       setIsRemote(false);
-      handleLocationChange(["Hybrid"]);
+      // Add Hybrid to existing locations, but remove Remote if present
+      const currentLocations = Array.isArray(landingPageData?.location) ? landingPageData.location : [];
+      const filteredLocations = currentLocations.filter(loc => loc !== "Remote");
+      const newLocations = [...filteredLocations, "Hybrid"];
+      handleLocationChange(newLocations);
+    } else {
+      // When Hybrid is unchecked, remove it from locations
+      const currentLocations = Array.isArray(landingPageData?.location) ? landingPageData.location : [];
+      const filteredLocations = currentLocations.filter(loc => loc !== "Hybrid");
+      handleLocationChange(filteredLocations);
     }
   };
 
