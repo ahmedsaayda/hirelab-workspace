@@ -320,7 +320,8 @@ const CandidateProfile = ({
   onClose, 
   onUpdate, 
   stages = [],
-  allCandidateIds = [] 
+  allCandidateIds = [],
+  onEmail,
 }) => {
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -797,8 +798,12 @@ const CandidateProfile = ({
           icon={<MailOutlined />}
           className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
           onClick={() => {
+            // Debug log for diagnosing modal open issue
+      
             if (candidate?.email) {
-              window.open(`mailto:${candidate.email}`, '_blank');
+              if (onEmail) {
+                onEmail(candidate._id);
+              }
             } else {
               message.warning('No email address available');
             }
