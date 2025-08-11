@@ -64,12 +64,47 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
   });
   const [loading, setLoading] = useState(false);
   const [useAI, setUseAI] = useState(true);
-  const [vacancyDescription, setVacancyDescription] = useState("");
-  const [perksAndBenefits, setPerksAndBenefits] = useState("");
-  const [tags, setTags] = useState([]);
+  const [vacancyDescription, setVacancyDescription] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_scratch_progress');
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      return data?.vacancyDescription || "";
+    }
+    return "";
+  });
+  const [perksAndBenefits, setPerksAndBenefits] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_scratch_progress');
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      return data?.perksAndBenefits || "";
+    }
+    return "";
+  });
+  const [tags, setTags] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_scratch_progress');
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      return data?.tags || [];
+    }
+    return [];
+  });
   const [tagInput, setTagInput] = useState("");
-  const [tone, setTone] = useState("Professional");
-  const [language, setLanguage] = useState("Dutch");
+  const [tone, setTone] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_scratch_progress');
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      return data?.tone || "Professional";
+    }
+    return "Professional";
+  });
+  const [language, setLanguage] = useState(() => {
+    const savedProgress = sessionStorage.getItem('vacancy_scratch_progress');
+    if (savedProgress) {
+      const data = JSON.parse(savedProgress);
+      return data?.language || "Dutch";
+    }
+    return "Dutch";
+  });
   const [generatedContent, setGeneratedContent] = useState(null);
   const [backendLoading, setBackendLoading] = useState(false);
   const [loadingSteps, setLoadingSteps] = useState([]);
@@ -107,11 +142,11 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
       if (data.department) setDepartment(data.department);
       if (data.selectedLanguages) setSelectedLanguages(data.selectedLanguages);
       if (data.step) setStep(data.step);
-      if (data.selectedTemplate) setSelectedTemplate(data.selectedTemplate);
+      if (data.selectedTemplate !== undefined) setSelectedTemplate(data.selectedTemplate);
       // Step 2 data
       if (data.vacancyDescription) setVacancyDescription(data.vacancyDescription);
       if (data.perksAndBenefits) setPerksAndBenefits(data.perksAndBenefits);
-      if (data.tags) setTags(data.tags);
+      if (data.tags && Array.isArray(data.tags)) setTags(data.tags);
       if (data.tone) setTone(data.tone);
       if (data.language) setLanguage(data.language);
     }
@@ -270,6 +305,10 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         applyType: 'form', // 🚀 Always default to custom form
         cta2Link: '#apply' // 🚀 Always default to apply action
       });
+      
+      // Clear session storage on successful creation
+      sessionStorage.removeItem('vacancy_scratch_progress');
+      
       console.log("Vacancy created without AI:", res);
       router.push(`/edit-page/${res.data.result._id}?from=scratch`);
     } catch (error) {
@@ -797,6 +836,10 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
 
 
         const res = await CrudService.create("LandingPageData", vacancyData);
+        
+        // Clear session storage on successful creation
+        sessionStorage.removeItem('vacancy_scratch_progress');
+        
         onRefresh()
         setJobTitleModal(false);
         router.push(`/edit-page/${res.data.result._id}`);
