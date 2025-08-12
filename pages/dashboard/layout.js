@@ -306,11 +306,7 @@ const Layout = ({children}) => {
           isOnboardingCompleted: isOnboardingCompleted,
           icon: BrandKit,
         },
-        {
-          name: "Ads Publishing",
-          href: "/dashboard/ads-publishing",
-          icon: AdsPublishingIcon,
-        },
+       
         {
           name: "Domains",
           href: "/dashboard/custom-domains",
