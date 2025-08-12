@@ -103,6 +103,15 @@ const Template2 = ({ landingPageData, fetchData }) => {
     themeData;
   const { textHeadingColor, textSubHeadingColor } = themeData;
 
+  // Apply the same 3 or 6 facts filtering logic
+  const companyFacts = landingPageData?.companyFacts || [];
+  let facts = companyFacts;
+  if (companyFacts.length >= 6) {
+    facts = companyFacts.slice(0, 6);
+  } else if (companyFacts.length >= 3) {
+    facts = companyFacts.slice(0, 3);
+  }
+
   return (
     <div
       className="container mx-auto w-full"
@@ -134,9 +143,9 @@ const Template2 = ({ landingPageData, fetchData }) => {
               {landingPageData?.companyFactsDescription}
             </Text>
           </div>
-          <div className="grid flex-1 grid-cols-2 gap-8 self-center ml-8 mdx:ml-0 mdx:grid-cols-1 mdx:self-stretch">
+          <div className={`grid flex-1 gap-8 self-center ml-8 mdx:ml-0 mdx:grid-cols-1 mdx:self-stretch ${facts.length === 6 ? 'grid-cols-3' : facts.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <Suspense fallback={<div>Loading feed...</div>}>
-              {landingPageData?.companyFacts?.map?.((d, index) => {
+              {facts?.map?.((d, index) => {
                 return <RenderFact {...d} key={"gridTemplate" + index} />;
               })}
             </Suspense>
@@ -161,6 +170,15 @@ const Template3 = ({ landingPageData, fetchData }) => {
   const { variantTd1, variantTd2, variantTd3, variantTd4, variantTd5 } =
     themeData;
   const { textHeadingColor, textSubHeadingColor } = themeData;
+
+  // Apply the same 3 or 6 facts filtering logic
+  const companyFacts = landingPageData?.companyFacts || [];
+  let facts = companyFacts;
+  if (companyFacts.length >= 6) {
+    facts = companyFacts.slice(0, 6);
+  } else if (companyFacts.length >= 3) {
+    facts = companyFacts.slice(0, 3);
+  }
 
   return (
     <>
@@ -190,11 +208,11 @@ const Template3 = ({ landingPageData, fetchData }) => {
               </Text>
             </div>
             <div
-              className="grid grid-cols-3 gap-8 justify-center mdx:grid-cols-2 smx:grid-cols-1"
+              className={`grid gap-8 justify-center mdx:grid-cols-2 smx:grid-cols-1 ${facts.length === 6 ? 'grid-cols-3' : 'grid-cols-3'}`}
               style={{ color: variantSd4 }}
             >
               <Suspense fallback={<div>Loading feed...</div>}>
-                {landingPageData?.companyFacts?.map?.((d, index) => (
+                {facts?.map?.((d, index) => (
                   <RenderFact {...d} key={"gridTemplate" + index} />
                 ))}
               </Suspense>
@@ -393,7 +411,15 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
   // Use default facts if none are provided
  const rawFacts = companyFacts.length > 0 ? companyFacts : defaultFacts;
-const facts = rawFacts.slice(0, rawFacts.length - (rawFacts.length % 3));
+  
+  // Display 3 or 6 facts based on count to maintain design consistency
+  let facts = rawFacts;
+  if (rawFacts.length >= 6) {
+    facts = rawFacts.slice(0, 6);
+  } else if (rawFacts.length >= 3) {
+    facts = rawFacts.slice(0, 3);
+  }
+  // If less than 3 facts, show all available facts
 
   const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
   const textColor = calculateTextColor(getColor("primary", 500));
@@ -501,7 +527,7 @@ const facts = rawFacts.slice(0, rawFacts.length - (rawFacts.length % 3));
 
         {/* Desktop Grid */}
         {!isMd && (
-          <div className="grid grid-cols-3 gap-6">
+          <div className={`grid gap-6 ${facts.length === 6 ? 'grid-cols-3' : 'grid-cols-3'}`}>
             {facts.map((fact, index) => (
               <div
                 key={index}

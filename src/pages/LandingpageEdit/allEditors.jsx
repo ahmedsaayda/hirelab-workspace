@@ -543,8 +543,14 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
   useEffect(() => {
     if (landingPageData?.location) {
       setSelectedLocations(landingPageData.location);
-      setIsRemote(landingPageData.location?.includes("Remote"));
-      setIsHybrid(landingPageData.location?.includes("Hybrid"));
+      
+      // Check if location array contains Remote or Hybrid
+      const locationArray = Array.isArray(landingPageData.location) 
+        ? landingPageData.location 
+        : [landingPageData.location];
+      
+      setIsRemote(locationArray.includes("Remote"));
+      setIsHybrid(locationArray.includes("Hybrid"));
     }
     setIsSalaryRange(!!landingPageData?.salaryRange);
     setIsHoursRange(!!landingPageData?.hoursRange);
@@ -588,6 +594,10 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
 
     setSelectedLocations(values);
     handleChange("location", values);
+    
+    // Update Remote/Hybrid switches based on location changes
+    setIsRemote(values.includes("Remote"));
+    setIsHybrid(values.includes("Hybrid"));
   };
 
   const dropdownRender = (menu) => (
@@ -648,9 +658,16 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
     setIsRemote(checked);
     if (checked) {
       setIsHybrid(false);
-      handleLocationChange(["Remote"]);
+      // Add Remote to existing locations, but remove Hybrid if present
+      const currentLocations = Array.isArray(landingPageData?.location) ? landingPageData.location : [];
+      const filteredLocations = currentLocations.filter(loc => loc !== "Hybrid");
+      const newLocations = [...filteredLocations, "Remote"];
+      handleLocationChange(newLocations);
     } else {
-      handleLocationChange(["Hybrid"]);
+      // When Remote is unchecked, remove it from locations
+      const currentLocations = Array.isArray(landingPageData?.location) ? landingPageData.location : [];
+      const filteredLocations = currentLocations.filter(loc => loc !== "Remote");
+      handleLocationChange(filteredLocations);
     }
   };
 
@@ -658,7 +675,16 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
     setIsHybrid(checked);
     if (checked) {
       setIsRemote(false);
-      handleLocationChange(["Hybrid"]);
+      // Add Hybrid to existing locations, but remove Remote if present
+      const currentLocations = Array.isArray(landingPageData?.location) ? landingPageData.location : [];
+      const filteredLocations = currentLocations.filter(loc => loc !== "Remote");
+      const newLocations = [...filteredLocations, "Hybrid"];
+      handleLocationChange(newLocations);
+    } else {
+      // When Hybrid is unchecked, remove it from locations
+      const currentLocations = Array.isArray(landingPageData?.location) ? landingPageData.location : [];
+      const filteredLocations = currentLocations.filter(loc => loc !== "Hybrid");
+      handleLocationChange(filteredLocations);
     }
   };
 
@@ -1183,6 +1209,28 @@ const JobSpecificationEdit = (props) => {
 };
 
 const CompanyFactsEdit = (props) => {
+  const factsCount = props.landingPageData?.companyFacts?.length || 0;
+  
+  // Determine what will be displayed based on facts count
+  const shouldShowMessage = (count) => {
+    // Only show message when count is not 0, 3, or 6
+    return count !== 0 && count !== 3 && count !== 6;
+  };
+
+  const getDisplayMessage = (count) => {
+    if (count === 0) return "No facts added yet";
+    if (count === 3) return "Displaying 3 facts";
+    if (count === 6) return "Displaying 6 facts";
+    if (count < 3) return `${count} fact${count !== 1 ? 's' : ''} added (will show when you reach 3)`;
+    if (count < 6) return `${count} facts added (showing first 3)`;
+    return `${count} facts added (showing first 6)`;
+  };
+
+  const getDisplayColor = (count) => {
+    if (count === 0 || count === 3 || count === 6) return "#10b981"; // green
+    return "#f59e0b"; // amber
+  };
+
   return (
     <>
       <EditorRender
@@ -1203,6 +1251,7 @@ const CompanyFactsEdit = (props) => {
             key: "companyFacts",
             label: "Facts",
             max: 2,
+            maxArrayLength: 6,
             array: [
               {
                 key: "icon",
@@ -1222,6 +1271,46 @@ const CompanyFactsEdit = (props) => {
             ],
           },
         ]}
+        renderMore={shouldShowMessage(factsCount) ? (
+          <div className="mt-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+            <div className="flex items-start gap-2">
+              <div className="mt-0.5">
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 16 16" 
+                  fill="none" 
+                  className="text-blue-500"
+                >
+                  <path 
+                    d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM8 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zM9 8V4H7v4h2z" 
+                    fill="currentColor"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div 
+                  className="text-xs font-medium flex items-center gap-1"
+                  style={{ color: getDisplayColor(factsCount) }}
+                >
+                  <div 
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: getDisplayColor(factsCount) }}
+                  />
+                  {getDisplayMessage(factsCount)}
+                </div>
+                <div className="text-xs text-gray-600 mt-2">
+                  Due to design consistency, company facts are displayed in groups of 3 or 6.
+                </div>
+                {factsCount > 6 && (
+                  <div className="text-xs text-amber-600 mt-1">
+                    Consider removing some facts or keeping only the most important ones.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : null}
       />
     </>
   );

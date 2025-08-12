@@ -73,7 +73,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
       const dataToSave = { 
         url,
         department,
-        language,
+        lang: language,
         selectedTemplate
       };
       console.log('PasteUrlModal - Saving progress:', dataToSave);
@@ -218,6 +218,10 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
 
 
       const res = await AiService.createVacancy(vacancyPayload);
+      
+      // Clear session storage on successful creation
+      sessionStorage.removeItem('vacancy_url_progress');
+      
       onRefresh();
       router.push(`/edit-page/${res.data.data.result._id}`);
 

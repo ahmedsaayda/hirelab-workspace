@@ -109,7 +109,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 <h3
                   onClick={() => handleItemClick("textBoxText")}
                   ref={textRef}
-                  className="w-[86%] text-center text-[20px] font-normal leading-[30px] text-[#475466] mdx:w-full"
+                  className="w-[86%] text-center text-[20px] font-normal leading-[16px] text-[#475466] mdx:w-full"
                   style={{fontFamily: bodyFont?.family }}
                >
                   {landingPageData?.textBoxText}
@@ -117,14 +117,14 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 <p
                   onClick={() => handleItemClick("textBoxDescription")}
                   ref={descriptionRef}
-                  className="w-[86%] text-center text-[20px] font-normal leading-[30px] text-[#475466] mdx:w-full"
+                  className="w-[86%] text-center text-[20px] font-normal leading-[16px] text-[#475466] mdx:w-full"
                   style={{fontFamily: bodyFont?.family }}
                 >
                   <div
                     dangerouslySetInnerHTML={{
                       __html: landingPageData?.textBoxDescription?.replace?.(
                         /\n/g,
-                        "<br></br>"
+                        ""
                       ),
                     }}
                   />

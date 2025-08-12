@@ -85,7 +85,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         jobTitle,
         jobDescription,
         department,
-        language,
+        lang: language,
         selectedTemplate
       };
       console.log('JobDescriptionModal - Saving progress:', dataToSave);
@@ -368,6 +368,9 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
           createdAt: new Date()
         }
       });
+
+      // Clear session storage on successful creation
+      sessionStorage.removeItem('vacancy_description_progress');
 
       onRefresh();
       router.push(`/edit-page/${res.data.data.result._id}`);
