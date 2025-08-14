@@ -443,15 +443,42 @@ const headerStyles = `
   .pipeline-column {
     display: flex;
     flex-direction: column;
-    height: fit-content;
+    height: 100%;
+    min-height: 0; /* Allow child to define scroll */
     background: transparent;
+    overflow-y: auto; /* Column owns vertical scroll */
   }
   
   .pipeline-droppable-area {
     border-top: none;
-    margin-top: -1px;
+    margin-top: 0; /* Avoid overlapping the sticky header */
+    padding-top: 60px; /* Reserve space for the sticky header */
     min-height: 400px;
+    flex: 1; /* Take remaining space under header */
+    overflow-x: hidden; /* Prevent horizontal overflow */
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #cbd5e1 #f1f5f9; /* Firefox */
+  }
+  
+  /* Custom scrollbar styling for webkit browsers */
+  .pipeline-droppable-area::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .pipeline-droppable-area::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+  
+  .pipeline-droppable-area::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+  
+  .pipeline-droppable-area::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
   
   .pipeline-droppable-area:hover {
@@ -463,6 +490,83 @@ const headerStyles = `
     content: '';
     display: block;
     height: 100px;
+  }
+  
+  /* Pipeline container styling */
+  .pipeline-container {
+    height: calc(100vh - 120px); /* Reduced top offset */
+    overflow: hidden; /* Prevent page-level scrolling */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Ensure pipeline board area doesn't cause page overflow */
+  .pipeline-board-area {
+    flex: 1; /* Take remaining height */
+    min-height: 0; /* Allow flex shrinking */
+    overflow-x: auto; /* Only horizontal scroll for columns */
+    overflow-y: hidden; /* No vertical scroll at board level */
+    padding-bottom: 0; /* Remove bottom padding */
+  }
+  
+  /* Column styling */
+  .pipeline-column {
+    height: 100%; /* Take full height of parent */
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Allow flex shrinking */
+  }
+  
+  /* Droppable area styling */
+  .pipeline-droppable-area {
+    flex: 1; /* Take remaining height */
+    min-height: 0; /* Allow flex shrinking */
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    padding: 1rem;
+    margin-bottom: 0; /* Remove bottom margin */
+  }
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    .pipeline-container {
+      height: calc(100vh - 100px); /* Even smaller offset for mobile */
+    }
+  }
+  
+  /* Tablet responsive adjustments */
+  @media (max-width: 1024px) and (min-width: 769px) {
+    .pipeline-container {
+      height: calc(100vh - 110px);
+    }
+  }
+  
+  /* Hide scrollbar when not needed */
+  .pipeline-droppable-area::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .pipeline-droppable-area::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    transition: background-color 0.2s;
+  }
+  
+  .pipeline-droppable-area:hover::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+  }
+  
+  .pipeline-droppable-area:hover::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+
+  /* Keep column headers visible while scrolling */
+  .pipeline-stage-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #ffffff;
   }
   
   .ats-header .ant-btn {
@@ -542,6 +646,20 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
 
   // Get current user
   const user = useSelector(selectUser);
+  
+  // Lock page vertical scroll while ATS is mounted so columns handle their own scrolling
+  useEffect(() => {
+    try {
+      const prevHtmlOverflowY = document.documentElement.style.overflowY;
+      const prevBodyOverflowY = document.body.style.overflowY;
+      document.documentElement.style.overflowY = 'hidden';
+      document.body.style.overflowY = 'hidden';
+      return () => {
+        document.documentElement.style.overflowY = prevHtmlOverflowY || '';
+        document.body.style.overflowY = prevBodyOverflowY || '';
+      };
+    } catch (_) {}
+  }, []);
   
   // Debug: Log component props
   console.log('🔍 NewATS Component Props:', {
@@ -2219,7 +2337,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
 
   // Pipeline View Component
   const PipelineView = () => (
-          <div className="flex-1 bg-gray-100 p-6 relative">
+          <div className="flex-1 bg-gray-100 p-6 relative pipeline-container">
 
 
       
@@ -2227,7 +2345,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         <Droppable droppableId="all-columns" direction="horizontal" type="COLUMN">
           {(provided, snapshot) => (
             <div 
-              className="flex gap-5 overflow-auto max-h-[calc(100vh-400px)] pb-6"
+              className="flex gap-5 pipeline-board-area"
               {...provided.droppableProps}
               ref={provided.innerRef}
             >
@@ -2237,6 +2355,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                     <div 
                       key={`column-${column.id || index}`} 
                       className={`flex-shrink-0 w-72 pipeline-column group transition-all duration-200 ${snapshot.isDragging ? 'opacity-50 shadow-lg scale-105 rotate-2' : ''}`}
+                      style={{ height: 'calc(100vh - 180px)' }}
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                     >
@@ -2927,7 +3046,8 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   }
 
   return (
-    <div className=" bg-gray-50">
+    <div 
+    className=" bg-gray-50">
       {/* Background refresh indicator */}
       {dataRefreshing && (
         <div className="fixed top-4 right-4 z-50 bg-purple-100 border border-purple-300 rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">

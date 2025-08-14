@@ -30,7 +30,11 @@ import {
   FileTextOutlined,
   StarOutlined,
   MessageOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  NumberOutlined,
+  GlobalOutlined,
+  DownloadOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
 import CrudService from '../../../../services/CrudService';
@@ -492,10 +496,26 @@ const CandidateProfile = ({
         setLastCommunication(communicationDate);
         
         // Debug resume URL loading
-        const resumeUrlFromResponse = response.data.resumeUrl || formData.resumeUrl || null;
+        let resumeUrlFromResponse = response.data.resumeUrl || formData.resumeUrl || null;
+        
+        // Also check for file uploads in formData with form field structure
+        if (!resumeUrlFromResponse && formData && response.data.form?.fields) {
+          // Look for file type fields in the form structure
+          const fileFields = response.data.form.fields.filter(field => field.type === 'file');
+          for (const fileField of fileFields) {
+            const fileUrl = formData[fileField.id];
+            if (fileUrl && fileUrl.startsWith('http')) {
+              resumeUrlFromResponse = fileUrl;
+              console.log('📄 Found resume in form field:', fileField.label, '→', fileUrl);
+              break;
+            }
+          }
+        }
+        
         console.log('📄 Loading resume URL:', {
           fromResponse: response.data.resumeUrl,
           fromFormData: formData.resumeUrl,
+          fromFileFields: resumeUrlFromResponse !== (response.data.resumeUrl || formData.resumeUrl),
           current: resumeUrl,
           final: resumeUrlFromResponse
         });
@@ -884,18 +904,35 @@ const CandidateProfile = ({
         case 'phone':
         case 'text':
         case 'textarea':
+        case 'longtext':
+        case 'motivation':
+          answer = formData[field.id];
+          break;
+          
+        case 'file':
           answer = formData[field.id];
           break;
           
         case 'boolean':
+        case 'yesno':
           const boolValue = formData[field.id];
           answer = boolValue === 'yes' || boolValue === true ? 'Yes' : 
                    boolValue === 'no' || boolValue === false ? 'No' : 
                    boolValue || 'Not answered';
           break;
           
+        case 'multichoice':
+        case 'dropdown':
+        case 'multiselect':
         case 'select':
         case 'radio':
+          answer = formData[field.id];
+          break;
+          
+        case 'number':
+        case 'date':
+        case 'website':
+        case 'address':
           answer = formData[field.id];
           break;
           
@@ -981,8 +1018,18 @@ const CandidateProfile = ({
                   <PhoneOutlined className="text-indigo-600 text-sm" />
                 ) : item.type === 'contact' ? (
                   <UserOutlined className="text-indigo-600 text-sm" />
-                ) : item.type === 'boolean' ? (
+                ) : item.type === 'file' ? (
+                  <FileTextOutlined className="text-indigo-600 text-sm" />
+                ) : item.type === 'boolean' || item.type === 'yesno' ? (
                   <span className="text-indigo-600 text-xs font-bold">?</span>
+                ) : item.type === 'multichoice' || item.type === 'dropdown' || item.type === 'multiselect' ? (
+                  <CheckCircleOutlined className="text-indigo-600 text-sm" />
+                ) : item.type === 'date' ? (
+                  <CalendarOutlined className="text-indigo-600 text-sm" />
+                ) : item.type === 'number' ? (
+                  <NumberOutlined className="text-indigo-600 text-sm" />
+                ) : item.type === 'website' ? (
+                  <GlobalOutlined className="text-indigo-600 text-sm" />
                 ) : (
                   <EditOutlined className="text-indigo-600 text-sm" />
                 )}
@@ -997,12 +1044,43 @@ const CandidateProfile = ({
                     <span className="text-red-500 text-xs">*</span>
                   )}
                 </div>
-                <Text className="text-gray-900 font-medium break-words">
-                  {item.answer}
-                </Text>
+                {item.type === 'file' && item.answer && item.answer.startsWith('http') ? (
+                  <div className="flex items-center gap-2">
+                    <a 
+                      href={item.answer} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                    >
+                      <DownloadOutlined className="text-sm" />
+                      {(() => {
+                        // Extract filename from URL
+                        const urlParts = item.answer.split('/');
+                        const lastPart = urlParts[urlParts.length - 1];
+                        const decodedPart = decodeURIComponent(lastPart);
+                        // Remove Cloudinary transformations and get clean filename
+                        const cleanName = decodedPart.split('_').pop() || decodedPart;
+                        return cleanName.length > 30 ? cleanName.substring(0, 30) + '...' : cleanName;
+                      })()}
+                    </a>
+                  </div>
+                ) : item.type === 'website' && item.answer && item.answer.startsWith('http') ? (
+                  <a 
+                    href={item.answer} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 font-medium break-words"
+                  >
+                    {item.answer}
+                  </a>
+                ) : (
+                  <Text className="text-gray-900 font-medium break-words">
+                    {item.answer}
+                  </Text>
+                )}
               </div>
               
-              {(item.type === 'email' || item.type === 'phone') && (
+              {(item.type === 'email' || item.type === 'phone' || (item.type === 'file' && item.answer && item.answer.startsWith('http'))) && (
                 <div className="flex gap-1">
                   {item.type === 'email' && (
                     <Button 
@@ -1011,6 +1089,7 @@ const CandidateProfile = ({
                       icon={<MailOutlined />}
                       onClick={() => window.open(`mailto:${item.answer}`, '_blank')}
                       className="hover:bg-indigo-100 hover:text-indigo-600"
+                      title="Send email"
                     />
                   )}
                   {item.type === 'phone' && (
@@ -1020,6 +1099,17 @@ const CandidateProfile = ({
                       icon={<PhoneOutlined />}
                       onClick={() => window.open(`tel:${item.answer}`, '_blank')}
                       className="hover:bg-indigo-100 hover:text-indigo-600"
+                      title="Call phone"
+                    />
+                  )}
+                  {item.type === 'file' && item.answer && item.answer.startsWith('http') && (
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<DownloadOutlined />}
+                      onClick={() => window.open(item.answer, '_blank')}
+                      className="hover:bg-indigo-100 hover:text-indigo-600"
+                      title="Download file"
                     />
                   )}
                 </div>

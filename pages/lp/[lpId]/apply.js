@@ -4,6 +4,7 @@ import { Button, Input, Radio, Checkbox, Select, Progress, message, Form, DatePi
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import dayjs from 'dayjs';
 import PublicService from '../../../src/services/PublicService';
+import UploadService from '../../../src/services/UploadService';
 import MetaPixel from '../../../src/pages/Landingpage/MetaPixel.jsx';
 import { getTranslation } from '../../../src/utils/translations';
 // Removed PhoneInput - using regular Input instead
@@ -210,33 +211,106 @@ const YesNoQuestion = ({ field, value, onChange }) => (
   </div>
 );
 
-const FileUpload = ({ value, onChange, placeholder }) => (
-  <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
-    <div className="space-y-4">
-      <div className="text-blue-500">
-        <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-        </svg>
+const FileUpload = ({ value, onChange, placeholder }) => {
+  const [uploading, setUploading] = useState(false);
+  const [fileName, setFileName] = useState('');
+
+  // Parse existing value to show if it's a URL or filename
+  useEffect(() => {
+    if (value) {
+      if (value.startsWith('http')) {
+        // Extract filename from URL
+        const urlParts = value.split('/');
+        const lastPart = urlParts[urlParts.length - 1];
+        const decodedPart = decodeURIComponent(lastPart);
+        // Remove Cloudinary transformations and get clean filename
+        const cleanName = decodedPart.split('_').pop() || decodedPart;
+        setFileName(cleanName);
+      } else {
+        setFileName(value);
+      }
+    }
+  }, [value]);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type and size
+    const allowedTypes = ['.pdf', '.doc', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+      message.error('Please select a valid file type (PDF, DOC, DOCX, TXT, PNG, JPG, JPEG, GIF, SVG)');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      message.error('File size must be less than 10MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      console.log('📄 Uploading file:', file.name);
+      
+      // Upload file using UploadService
+      const response = await UploadService.upload(file, 10); // 10MB max
+      
+      if (response && response.data && response.data.secure_url) {
+        const uploadedUrl = response.data.secure_url;
+        console.log('✅ File upload successful:', uploadedUrl);
+        
+        setFileName(file.name);
+        onChange(uploadedUrl); // Store the URL instead of filename
+        message.success('File uploaded successfully');
+      } else {
+        console.warn('❌ File upload response missing URL:', response);
+        message.error('File upload failed');
+      }
+    } catch (error) {
+      console.error('❌ File upload error:', error);
+      message.error('Failed to upload file. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+      <div className="space-y-4">
+        <div className="text-blue-500">
+          {uploading ? (
+            <div className="w-12 h-12 mx-auto border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+          ) : (
+            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+          )}
+        </div>
+        <div>
+          {uploading ? (
+            <p className="text-lg font-medium text-blue-600">Uploading...</p>
+          ) : (
+            <>
+              <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
+              <p className="text-sm text-gray-500 mt-1">PDF, DOC, DOCX, TXT, PNG, JPG, JPEG, GIF, SVG (max 10MB)</p>
+            </>
+          )}
+          {fileName && !uploading && <p className="text-sm text-green-600 mt-2">✓ {fileName}</p>}
+          {placeholder && !fileName && !uploading && <p className="text-xs text-gray-400 mt-1">{placeholder}</p>}
+        </div>
+        <input
+          type="file"
+          onChange={handleFileUpload}
+          disabled={uploading}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+          accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.svg"
+        />
       </div>
-      <div>
-        <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
-        <p className="text-sm text-gray-500 mt-1">SVG, PNG, JPG or GIF (max. 800x400px)</p>
-        {value && <p className="text-sm text-green-600 mt-2">✓ {value}</p>}
-      </div>
-      <input
-        type="file"
-        onChange={(e) => {
-          const file = e.target.files[0];
-          if (file) {
-            onChange(file.name);
-          }
-        }}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.svg"
-      />
     </div>
-  </div>
-);
+  );
+};
 
 export default function ApplyPage() {
   const router = useRouter();
@@ -1302,7 +1376,7 @@ export default function ApplyPage() {
         return (
           <FileUpload
             value={value}
-            onChange={(fileName) => handleInputChange(field.id, fileName)}
+            onChange={(fileUrl) => handleInputChange(field.id, fileUrl)}
             placeholder={field.placeholder}
           />
         );
