@@ -2,15 +2,23 @@ import React, { useState } from "react";
 import { Modal, Input, Button, Radio, Select, message, Spin, Divider, Alert } from "antd";
 import { RobotOutlined, LinkOutlined, FileTextOutlined, MessageOutlined } from "@ant-design/icons";
 import AiService from "../../../services/AiService";
+import languages from "./lang.json";
+import { getTranslation } from "../../../utils/translations";
 
 const { TextArea } = Input;
 const { Option } = Select;
+
+// Convert the language object to array of options and remove duplicates (consistent with FromScratchModal)
+const languageOptions = Array.from(new Set(Object.values(languages)))
+  .map((name) => ({ value: name, label: name }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 const AIFormGeneratorModal = ({ 
   visible, 
   onCancel, 
   onFormGenerated, 
-  initialData = null 
+  initialData = null,
+  defaultLanguage
 }) => {
   const [inputType, setInputType] = useState("text");
   const [loading, setLoading] = useState(false);
@@ -21,71 +29,168 @@ const AIFormGeneratorModal = ({
   const [jobDescription, setJobDescription] = useState(initialData?.jobDescription || "");
   const [location, setLocation] = useState(initialData?.location || []);
   const [companyInfo, setCompanyInfo] = useState(initialData?.companyInfo || "");
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState(defaultLanguage || "English");
   const [formComplexity, setFormComplexity] = useState("standard");
+  const [generatedForm, setGeneratedForm] = useState(null);
+  const [languageChanged, setLanguageChanged] = useState(false);
+
+  // Sync language with page language when modal opens or defaultLanguage changes
+  React.useEffect(() => {
+    if (visible) {
+      setLanguage(defaultLanguage || "English");
+      setLanguageChanged(false);
+    }
+  }, [visible, defaultLanguage]);
+
+  // Track language changes to show regeneration notice
+  React.useEffect(() => {
+    if (generatedForm && language !== (generatedForm.metadata?.language || defaultLanguage)) {
+      setLanguageChanged(true);
+    }
+  }, [language, generatedForm, defaultLanguage]);
   
   // Chatbot state
   const [chatbotStep, setChatbotStep] = useState(0);
   const [chatbotResponses, setChatbotResponses] = useState({});
 
-  // Helper function to ensure contact section is always present
+  // Robust helper to ensure contact fields with proper translations
   const ensureContactSection = (formData) => {
     if (!formData?.form?.fields) {
       return formData;
     }
 
     const fields = formData.form.fields;
-    const hasContactSection = fields.some(field => field.type === 'contact');
-
-    if (hasContactSection) {
-      console.log("✅ Contact section already exists in AI-generated form");
-      return formData;
-    }
-
-    // Create contact section if missing
-    const contactSection = {
-      id: `contact_${Date.now()}`,
-      type: 'contact',
-      label: 'Contact Information',
-      placeholder: '',
-      required: true,
-      visible: true,
-      isLeadCapture: true,
-      firstName: { 
-        visible: true, 
-        required: true,
-        label: 'First Name',
-        placeholder: ''
-      },
-      lastName: { 
-        visible: true, 
-        required: true,
-        label: 'Last Name',
-        placeholder: ''
-      },
-      email: { 
-        visible: true, 
-        required: true,
-        label: 'Email',
-        placeholder: ''
-      },
-      phone: { 
-        visible: true, 
-        required: false,
-        label: 'Phone',
-        placeholder: ''
-      }
-    };
-
-    console.log("🔧 Adding missing contact section to AI-generated form");
     
-    return {
-      ...formData,
-      form: {
-        ...formData.form,
-        fields: [contactSection, ...fields]
-      }
-    };
+    // Find existing contact field
+    const contactFieldIndex = fields.findIndex(field => 
+      field.type === 'contact' || 
+      field.type === 'email' || 
+      (field.label && field.label.toLowerCase().includes('contact'))
+    );
+
+    if (contactFieldIndex === -1) {
+      // No contact field exists, create one with proper language support
+      console.log("⚠️ No contact section found in AI-generated form - creating one with translations");
+      
+      const contactField = {
+        id: `contact_${Date.now()}`,
+        type: 'contact',
+        label: getTranslation(language, 'contactInformation') || 'Contact Information',
+        placeholder: '',
+        required: true,
+        visible: true,
+        isLeadCapture: true,
+        firstName: { 
+          visible: true, 
+          required: true,
+          label: getTranslation(language, 'firstName') || 'First Name',
+          placeholder: getTranslation(language, 'firstNamePlaceholder') || 'Enter your first name'
+        },
+        lastName: { 
+          visible: true, 
+          required: true,
+          label: getTranslation(language, 'lastName') || 'Last Name',
+          placeholder: getTranslation(language, 'lastNamePlaceholder') || 'Enter your last name'
+        },
+        email: { 
+          visible: true, 
+          required: true,
+          label: getTranslation(language, 'email') || 'Email',
+          placeholder: getTranslation(language, 'emailPlaceholder') || 'Enter your email address'
+        },
+        phone: { 
+          visible: true, 
+          required: false,
+          label: getTranslation(language, 'phone') || 'Phone',
+          placeholder: getTranslation(language, 'phonePlaceholder') || 'Enter your phone number'
+        }
+      };
+      
+      return {
+        ...formData,
+        form: {
+          ...formData.form,
+          fields: [contactField, ...fields]
+        }
+      };
+    } else if (contactFieldIndex !== 0) {
+      // Contact field exists but not first, move it to first position and update translations
+      console.log("✅ Contact section exists but not first - moving to top and updating translations");
+      
+      const contactField = fields[contactFieldIndex];
+      const otherFields = fields.filter((_, index) => index !== contactFieldIndex);
+      
+      // Update contact field with proper translations
+      const updatedContactField = {
+        ...contactField,
+        label: getTranslation(language, 'contactInformation') || contactField.label || 'Contact Information',
+        firstName: {
+          ...contactField.firstName,
+          label: getTranslation(language, 'firstName') || contactField.firstName?.label || 'First Name',
+          placeholder: getTranslation(language, 'firstNamePlaceholder') || contactField.firstName?.placeholder || 'Enter your first name'
+        },
+        lastName: {
+          ...contactField.lastName,
+          label: getTranslation(language, 'lastName') || contactField.lastName?.label || 'Last Name',
+          placeholder: getTranslation(language, 'lastNamePlaceholder') || contactField.lastName?.placeholder || 'Enter your last name'
+        },
+        email: {
+          ...contactField.email,
+          label: getTranslation(language, 'email') || contactField.email?.label || 'Email',
+          placeholder: getTranslation(language, 'emailPlaceholder') || contactField.email?.placeholder || 'Enter your email address'
+        },
+        phone: {
+          ...contactField.phone,
+          label: getTranslation(language, 'phone') || contactField.phone?.label || 'Phone',
+          placeholder: getTranslation(language, 'phonePlaceholder') || contactField.phone?.placeholder || 'Enter your phone number'
+        }
+      };
+      
+      return {
+        ...formData,
+        form: {
+          ...formData.form,
+          fields: [updatedContactField, ...otherFields]
+        }
+      };
+    } else {
+      // Contact field is already first, just update translations
+      console.log("✅ Contact section exists and is first - updating translations");
+      
+      const contactField = fields[0];
+      const updatedContactField = {
+        ...contactField,
+        label: getTranslation(language, 'contactInformation') || contactField.label || 'Contact Information',
+        firstName: {
+          ...contactField.firstName,
+          label: getTranslation(language, 'firstName') || contactField.firstName?.label || 'First Name',
+          placeholder: getTranslation(language, 'firstNamePlaceholder') || contactField.firstName?.placeholder || 'Enter your first name'
+        },
+        lastName: {
+          ...contactField.lastName,
+          label: getTranslation(language, 'lastName') || contactField.lastName?.label || 'Last Name',
+          placeholder: getTranslation(language, 'lastNamePlaceholder') || contactField.lastName?.placeholder || 'Enter your last name'
+        },
+        email: {
+          ...contactField.email,
+          label: getTranslation(language, 'email') || contactField.email?.label || 'Email',
+          placeholder: getTranslation(language, 'emailPlaceholder') || contactField.email?.placeholder || 'Enter your email address'
+        },
+        phone: {
+          ...contactField.phone,
+          label: getTranslation(language, 'phone') || contactField.phone?.label || 'Phone',
+          placeholder: getTranslation(language, 'phonePlaceholder') || contactField.phone?.placeholder || 'Enter your phone number'
+        }
+      };
+      
+      return {
+        ...formData,
+        form: {
+          ...formData.form,
+          fields: [updatedContactField, ...fields.slice(1)]
+        }
+      };
+    }
   };
 
   const chatbotQuestions = [
@@ -169,24 +274,79 @@ const AIFormGeneratorModal = ({
         inputType,
         inputData,
         language,
-        formComplexity,
-        // 🔥 FIXED: Always include contact information as mandatory
-        requiredSections: [
-          {
-            type: "contact",
-            label: "Contact Information",
-            required: true,
-            isLeadCapture: true,
-            description: "Always include contact fields: first name, last name, email, and phone number"
-          }
-        ],
-        instructions: "IMPORTANT: Always include a contact information section as the first section with fields for first name, last name, email address, and phone number. This is mandatory for all forms."
+        formComplexity
       });
 
       if (response.data.success) {
         // 🔥 ENSURE CONTACT SECTION: Double-check that contact info is included
-        const generatedForm = response.data.data;
-        const ensuredForm = ensureContactSection(generatedForm);
+        const generatedFormData = response.data.data;
+        let ensuredForm = ensureContactSection(generatedFormData);
+        
+        // 🚨 FINAL VALIDATION: Check if contact field is properly structured
+        if (!ensuredForm?.form?.fields?.[0] || ensuredForm.form.fields[0].type !== 'contact') {
+          console.error('⚠️ AI Form Generator: Contact field validation failed, applying comprehensive fallback');
+          
+          // Create a complete fallback form structure
+          const fallbackForm = {
+            form: {
+              title: getTranslation(language, 'applicationForm') || `Application Form - ${inputData.jobTitle || 'Position'}`,
+              description: getTranslation(language, 'applicationFormDescription') || 'Please fill out the form below to apply for this position.',
+              submitText: getTranslation(language, 'submitApplication') || 'Submit Application',
+              fields: [
+                {
+                  id: `contact_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                  type: 'contact',
+                  label: getTranslation(language, 'contactInformation') || 'Contact Information',
+                  placeholder: '',
+                  required: true,
+                  visible: true,
+                  isLeadCapture: true,
+                  firstName: { 
+                    visible: true, 
+                    required: true,
+                    label: getTranslation(language, 'firstName') || 'First Name',
+                    placeholder: getTranslation(language, 'firstNamePlaceholder') || 'Enter your first name'
+                  },
+                  lastName: { 
+                    visible: true, 
+                    required: true,
+                    label: getTranslation(language, 'lastName') || 'Last Name',
+                    placeholder: getTranslation(language, 'lastNamePlaceholder') || 'Enter your last name'
+                  },
+                  email: { 
+                    visible: true, 
+                    required: true,
+                    label: getTranslation(language, 'email') || 'Email',
+                    placeholder: getTranslation(language, 'emailPlaceholder') || 'Enter your email address'
+                  },
+                  phone: { 
+                    visible: true, 
+                    required: false,
+                    label: getTranslation(language, 'phone') || 'Phone',
+                    placeholder: getTranslation(language, 'phonePlaceholder') || 'Enter your phone number'
+                  }
+                },
+                // Add any additional fields from the original response if they exist
+                ...(ensuredForm?.form?.fields || []).filter(field => field.type !== 'contact')
+              ]
+            },
+            metadata: {
+              jobTitle: inputData.jobTitle || 'Position',
+              jobLocation: inputData.location || [],
+              generatedAt: new Date().toISOString(),
+              inputType,
+              language,
+              formComplexity,
+              fallbackApplied: true
+            }
+          };
+          
+          ensuredForm = fallbackForm;
+        }
+        
+        // Store the generated form and mark language as synchronized
+        setGeneratedForm(ensuredForm);
+        setLanguageChanged(false);
         
         message.success("Application form generated successfully!");
         onFormGenerated(ensuredForm);
@@ -230,6 +390,8 @@ const AIFormGeneratorModal = ({
     setCompanyInfo("");
     setChatbotStep(0);
     setChatbotResponses({});
+    setGeneratedForm(null);
+    setLanguageChanged(false);
     onCancel();
   };
 
@@ -501,10 +663,26 @@ const AIFormGeneratorModal = ({
 
         <Divider />
 
-        {/* Contact Information Notice */}
+        {/* Language Change Notice */}
+        {languageChanged && (
+          <Alert
+            message="Language Changed"
+            description="You've changed the language after generating a form. Please regenerate the form to apply the new language settings."
+            type="warning"
+            showIcon
+            className="mb-4"
+            action={
+              <Button size="small" type="primary" onClick={handleGenerateForm} loading={loading}>
+                Regenerate Now
+              </Button>
+            }
+          />
+        )}
+
+        {/* AI Generation Notice */}
         <Alert
-          message="Contact Information Included"
-          description="All generated forms will automatically include a contact information section with first name, last name, email, and phone number fields as the first section."
+          message="AI-Generated Form"
+          description="The AI will generate a complete application form including contact information and job-specific questions in your selected language."
           type="info"
           showIcon
           className="mb-4"
@@ -520,12 +698,12 @@ const AIFormGeneratorModal = ({
               value={language}
               onChange={setLanguage}
               className="w-full"
-            >
-              <Option value="en">English</Option>
-              <Option value="de">German</Option>
-              <Option value="es">Spanish</Option>
-              <Option value="fr">French</Option>
-            </Select>
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label || '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={languageOptions}
+            />
           </div>
 
           <div>

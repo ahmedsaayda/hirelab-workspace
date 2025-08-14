@@ -172,7 +172,8 @@ export default function Header({
     }
     
     // Check if this is the first time publishing (user has never published before)
-    if (!landingPageData?.published) {
+    // BUT skip this modal if we're already in the form editor
+    if (!landingPageData?.published && !isFormEditor) {
       setFormBuilderPopupVisible(true);
       return;
     }

@@ -30,7 +30,9 @@ const MultipleChoice = ({ field, value, onChange }) => (
   <div className="w-full space-y-3">
     {field.options?.map((option, index) => {
       const letter = String.fromCharCode(65 + index); // A, B, C, D...
-      const isSelected = value === option.text;
+      // Handle both string format ["HTML", "CSS"] and object format [{text: "HTML", isNegative: false}]
+      const optionText = typeof option === 'string' ? option : option.text;
+      const isSelected = value === optionText;
       
       return (
         <div 
@@ -39,7 +41,7 @@ const MultipleChoice = ({ field, value, onChange }) => (
             border-2 rounded-xl cursor-pointer transition-all duration-200
            
           `}
-          onClick={() => onChange({ target: { value: option.text } })}
+          onClick={() => onChange({ target: { value: optionText } })}
         >
           <div className="flex items-center p-4">
             <div className={`
@@ -55,13 +57,13 @@ const MultipleChoice = ({ field, value, onChange }) => (
              className={`text-sm  flex-1
               ${isSelected ? 'text-blue-500' : 'text-gray-800'}
             `}>
-              {option.text}
+              {optionText}
             </p>
             <CustomRadio
               name={field.id}
-              value={option.text}
+              value={optionText}
               checked={isSelected}
-              onChange={() => onChange({ target: { value: option.text } })}
+              onChange={() => onChange({ target: { value: optionText } })}
               className="ml-3 opacity-0"
             />
           </div>
@@ -75,7 +77,9 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
   <div className="w-full space-y-3">
     {field.options?.map((option, index) => {
       const letter = String.fromCharCode(65 + index); // A, B, C, D...
-      const isSelected = value?.includes(option.text);
+      // Handle both string format ["HTML", "CSS"] and object format [{text: "HTML", isNegative: false}]
+      const optionText = typeof option === 'string' ? option : option.text;
+      const isSelected = value?.includes(optionText);
       
       return (
         <div 
@@ -87,9 +91,9 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
           onClick={() => {
             const newValue = value || [];
             if (isSelected) {
-              onChange(newValue.filter(v => v !== option.text));
+              onChange(newValue.filter(v => v !== optionText));
             } else {
-              onChange([...newValue, option.text]);
+              onChange([...newValue, optionText]);
             }
           }}
         >
@@ -106,18 +110,18 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
             <p  className={`text-sm  flex-1
               ${isSelected ? 'text-blue-500' : 'text-gray-800'}
             `}>
-              {option.text}
+              {optionText}
             </p>
             <CustomCheckBox
               name={field.id}
-              value={option.text}
+              value={optionText}
               checked={isSelected}
               onChange={(checked) => {
                 const newValue = value || [];
                 if (checked) {
-                  onChange([...newValue, option.text]);
+                  onChange([...newValue, optionText]);
                 } else {
-                  onChange(newValue.filter(v => v !== option.text));
+                  onChange(newValue.filter(v => v !== optionText));
                 }
               }}
               className="ml-3 opacity-0"
@@ -138,11 +142,15 @@ const CustomDropdown = ({ field, value, onChange }) => (
     className="w-full"
     style={{ borderRadius: '8px' }}
   >
-    {field.options?.map((option, index) => (
-      <Option key={index} value={option.text}>
-        {option.text}
-      </Option>
-    ))}
+    {field.options?.map((option, index) => {
+      // Handle both string format ["HTML", "CSS"] and object format [{text: "HTML", isNegative: false}]
+      const optionText = typeof option === 'string' ? option : option.text;
+      return (
+        <Option key={index} value={optionText}>
+          {optionText}
+        </Option>
+      );
+    })}
   </Select>
 );
 
@@ -562,13 +570,13 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
               {field.firstName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-xs text-gray-600">
-                    {field.firstName?.label || getTranslation(landingPageData?.lang, 'firstName') || 'First Name'}
+                    {field.firstName?.label || getTranslation(landingPageData?.lang || 'en', 'firstName') || 'First Name'}
                     {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <Input
                     value={formData[`${field.id}_firstName`] || ''}
                     onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
-                    placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang, 'firstName') || "First name"}
+                    placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'firstName') || "First name"}
                     className="rounded-lg"
                     size="large"
                   />
@@ -577,13 +585,13 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
               {field.lastName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-xs text-gray-600">
-                    {field.lastName?.label || getTranslation(landingPageData?.lang, 'lastName') || 'Last Name'}
+                    {field.lastName?.label || getTranslation(landingPageData?.lang || 'en', 'lastName') || 'Last Name'}
                     {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <Input
                     value={formData[`${field.id}_lastName`] || ''}
                     onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
-                    placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang, 'lastName') || "Last name"}
+                    placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'lastName') || "Last name"}
                     className="rounded-lg"
                     size="large"
                   />
@@ -595,14 +603,14 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
             {field.email?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-xs text-gray-600">
-                  {field.email?.label || getTranslation(landingPageData?.lang, 'email') || 'Email'}
+                  {field.email?.label || getTranslation(landingPageData?.lang || 'en', 'email') || 'Email'}
                   {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
                   type="email"
                   value={formData[`${field.id}_email`] || ''}
                   onChange={(e) => handleInputChange(`${field.id}_email`, e.target.value)}
-                  placeholder={field.email?.placeholder || getTranslation(landingPageData?.lang, 'email') || "Email address"}
+                  placeholder={field.email?.placeholder || getTranslation(landingPageData?.lang || 'en', 'email') || "Email address"}
                   className="rounded-lg"
                   size="large"
                 />
@@ -613,14 +621,14 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
             {field.phone?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-xs text-gray-600">
-                  {field.phone?.label || getTranslation(landingPageData?.lang, 'phone') || 'Phone'}
+                  {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
                   {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
                   type="tel"
                   value={formData[`${field.id}_phone`] || ''}
                   onChange={(e) => handleInputChange(`${field.id}_phone`, e.target.value)}
-                  placeholder={field.phone?.placeholder || getTranslation(landingPageData?.lang, 'phone') || "Phone number"}
+                  placeholder={field.phone?.placeholder || getTranslation(landingPageData?.lang || 'en', 'phone') || "Phone number"}
                   className="rounded-lg"
                   size="large"
                 />
@@ -657,7 +665,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
         );
 
       case 'email':
-        const emailPlaceholder = contactField?.email?.placeholder || field.placeholder || field.customPlaceholder || "Email address";
+        const emailPlaceholder = contactField?.email?.placeholder || field.placeholder || field.customPlaceholder || getTranslation(landingPageData?.lang || 'en', 'emailAddress') || "Email address";
         return (
           <Input
             type="email"
@@ -670,7 +678,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
         );
 
       case 'phone':
-        const phonePlaceholder = contactField?.phone?.placeholder || field.placeholder || field.customPlaceholder || "Phone number";
+        const phonePlaceholder = contactField?.phone?.placeholder || field.placeholder || field.customPlaceholder || getTranslation(landingPageData?.lang || 'en', 'phoneNumber') || "Phone number";
         return (
           <Input
             type="tel"
@@ -711,14 +719,14 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
               {field.firstName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-sm">
-                    {field.firstName?.label || getTranslation(landingPageData?.lang, 'firstName') || 'First Name'}
+                    {field.firstName?.label || getTranslation(landingPageData?.lang || 'en', 'firstName') || 'First Name'}
                     {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_firstName`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_firstName`, value)}
-                      placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang, 'firstName') || "First name"}
+                      placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'firstName') || "First name"}
                       className="border-none focus:ring-0 text-sm"
                       shape="round"
                     />
@@ -728,14 +736,14 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
               {field.lastName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-sm">
-                    {field.lastName?.label || getTranslation(landingPageData?.lang, 'lastName') || 'Last Name'}
+                    {field.lastName?.label || getTranslation(landingPageData?.lang || 'en', 'lastName') || 'Last Name'}
                     {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_lastName`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_lastName`, value)}
-                      placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang, 'lastName') || "Last name"}
+                      placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'lastName') || "Last name"}
                       className="border-none focus:ring-0 text-sm"
                       shape="round"
                     />
@@ -748,7 +756,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
             {field.email?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-sm">
-                  {field.email?.label || getTranslation(landingPageData?.lang, 'email') || 'Email'}
+                  {field.email?.label || getTranslation(landingPageData?.lang || 'en', 'email') || 'Email'}
                   {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
@@ -756,7 +764,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                     type="email"
                     value={formData[`${field.id}_email`] || ''}
                     onChange={(value) => handleInputChange(`${field.id}_email`, value)}
-                    placeholder={field.email?.placeholder || getTranslation(landingPageData?.lang, 'email') || "Email address"}
+                    placeholder={field.email?.placeholder || getTranslation(landingPageData?.lang || 'en', 'email') || "Email address"}
                     className="border-none focus:ring-0 text-sm"
                     shape="round"
                   />
@@ -768,7 +776,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
             {field.phone?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-sm">
-                  {field.phone?.label || getTranslation(landingPageData?.lang, 'phone') || 'Phone'}
+                  {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
                   {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
@@ -776,7 +784,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                     type="tel"
                     value={formData[`${field.id}_phone`] || ''}
                     onChange={(value) => handleInputChange(`${field.id}_phone`, value)}
-                    placeholder={field.phone?.placeholder || getTranslation(landingPageData?.lang, 'phone') || "Phone number"}
+                    placeholder={field.phone?.placeholder || getTranslation(landingPageData?.lang || 'en', 'phone') || "Phone number"}
                     className="border-none focus:ring-0 text-sm"
                     shape="round"
                   />
@@ -816,7 +824,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
         );
 
       case 'email':
-        const emailPlaceholder2 = field.placeholder || field.customPlaceholder || "Email address";
+        const emailPlaceholder2 = field.placeholder || field.customPlaceholder || getTranslation(landingPageData?.lang || 'en', 'emailAddress') || "Email address";
         return (
           <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
@@ -831,7 +839,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
         );
 
       case 'phone':
-        const phonePlaceholder2 = field.placeholder || field.customPlaceholder || "Phone number";
+        const phonePlaceholder2 = field.placeholder || field.customPlaceholder || getTranslation(landingPageData?.lang || 'en', 'phoneNumber') || "Phone number";
         return (
           <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
@@ -1173,7 +1181,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                     border: `1px solid ${primaryColor}`
                   }}
                 >
-                  {getTranslation(landingPageData?.lang, 'startApplication')}
+                  {getTranslation(landingPageData?.lang || 'en', 'startApplication')}
                 </Button>
               </div>
             ) : (
@@ -1206,7 +1214,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                 disabled={currentStep === 0}
               >
                 <ArrowLeft size={14} />
-                                  <span>{getTranslation(landingPageData?.lang, 'previous')}</span>
+                                  <span>{getTranslation(landingPageData?.lang || 'en', 'previous')}</span>
               </Button>
 
               <Button 
@@ -1221,7 +1229,7 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
                   border: `1px solid ${primaryColor}`
                 }}
               >
-                <span>{currentStep === formFields.length ? getTranslation(landingPageData?.lang, 'submit') : getTranslation(landingPageData?.lang, 'next')}</span>
+                <span>{currentStep === formFields.length ? getTranslation(landingPageData?.lang || 'en', 'submit') : getTranslation(landingPageData?.lang || 'en', 'next')}</span>
                 <ArrowRight size={14} />
               </Button>
             </div>

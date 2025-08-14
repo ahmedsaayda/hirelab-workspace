@@ -117,18 +117,19 @@ export default function FormEdit({paramsId}) {
     }
   }, [user]);
 
-  // Set initial sidebar width based on screen size
+  // Set initial sidebar width based on screen size with adequate space
   useEffect(() => {
     const setSidebarWidth = () => {
       const sidebar = document.querySelector('.sidebar-transition');
       if (sidebar) {
         const width = window.innerWidth;
+        
         if (width >= 768) {
-          sidebar.style.width = '100px';
+          sidebar.style.width = '120px'; // Increased to give more space
         } else if (width >= 640) {
-          sidebar.style.width = '100px';
+          sidebar.style.width = '100px'; // Adequate space for medium screens
         } else {
-          sidebar.style.width = '60px';
+          sidebar.style.width = '70px'; // Slightly more space for mobile
         }
       }
     };
@@ -945,24 +946,25 @@ export default function FormEdit({paramsId}) {
           </div>
         </Form.Item>
 
-        {/* <Form.Item label="Placeholder"> */}
-      <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">
-        Placeholder
-      </span>}>
-
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
-            <CustomInput
-              value={currentSection.placeholder}
-              onChange={(value) =>
-                handleUpdateSection(currentSection.id, {
-                  placeholder: value,
-                })
-              }
-              className="border-none focus:ring-0 text-sm"
-              shape="round"
-            />
-          </div>
-        </Form.Item>
+        {/* Only show placeholder for field types that support it */}
+        {["text", "longtext", "motivation", "number", "email", "phone", "address", "website"].includes(currentSection.type) && (
+          <Form.Item label={<span className="font-bold text-[14px] text-[#475647]">
+            Placeholder
+          </span>}>
+            <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+              <CustomInput
+                value={currentSection.placeholder}
+                onChange={(value) =>
+                  handleUpdateSection(currentSection.id, {
+                    placeholder: value,
+                  })
+                }
+                className="border-none focus:ring-0 text-sm"
+                shape="round"
+              />
+            </div>
+          </Form.Item>
+        )}
 
         {currentSection.type === "number" && (
           <div className="flex gap-4">
@@ -1080,17 +1082,6 @@ export default function FormEdit({paramsId}) {
                 
               </select>
             </Form.Item>
-            <Form.Item label="Separator" className="flex-1">
-              <select
-                value={currentSection.dateSeparator || "/"}
-                onChange={e => handleUpdateSection(currentSection.id, { dateSeparator: e.target.value })}
-                className="rounded-lg w-16 border pl-4 py-1"
-              >
-                <option value="/">/</option>
-                <option value="-">-</option>
-                <option value=".">.</option>
-              </select>
-            </Form.Item>
           </div>
         )}
 
@@ -1161,32 +1152,37 @@ export default function FormEdit({paramsId}) {
           <div className="flex-1 flex flex-col smx:pb-5 overflow-hidden main-container">
             <div className="flex gap-2 smx:gap-1 md:gap-4 justify-center items-start p-2 smx:p-1 md:p-3 container-sm h-full">
                               <div className="w-full h-full">
-                  <div className="flex rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 h-full overflow-hidden">
+                  <div className="flex rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 h-full overflow-hidden" style={{ maxWidth: '100%' }}>
                                       {/* Left Sidebar */}
                     <div className="flex flex-col border-r border-solid border-blue_gray-50 pl-2 py-[10px] group sidebar-transition h-full overflow-hidden" 
-                      style={{ transition: 'width 0.3s ease-in-out' }}
+                      style={{ 
+                        transition: 'width 0.3s ease-in-out',
+                        overflowX: 'hidden',
+                        overflowY: 'hidden',
+                        minWidth: '70px'
+                      }}
                       onMouseEnter={e => {
                         const width = window.innerWidth;
                         if (width >= 768) {
-                          e.currentTarget.style.width = '180px'
+                          e.currentTarget.style.width = '200px' // Generous hover width
                         } else if (width >= 640) {
-                          e.currentTarget.style.width = '140px'
+                          e.currentTarget.style.width = '160px' // Adequate hover width
                         } else {
-                          e.currentTarget.style.width = '120px'
+                          e.currentTarget.style.width = '110px' // Mobile hover width
                         }
                       }}
                       onMouseLeave={e => {
                         const width = window.innerWidth;
                         if (width >= 768) {
-                          e.currentTarget.style.width = '100px'
+                          e.currentTarget.style.width = '120px' // Back to resting width
                         } else if (width >= 640) {
-                          e.currentTarget.style.width = '100px'
+                          e.currentTarget.style.width = '100px' // Medium screen width
                         } else {
-                          e.currentTarget.style.width = '60px'
+                          e.currentTarget.style.width = '70px' // Mobile width
                         }
                       }}
                     >
-                                          <div className="flex flex-col items-center gap-[10px] w-full h-full">
+                                          <div className="flex flex-col items-center gap-[10px] w-full h-full" style={{ minHeight: 0, overflow: 'hidden' }}>
                       <Heading
                         size="5xl"
                         as="h3"
@@ -1203,16 +1199,29 @@ export default function FormEdit({paramsId}) {
                               {...provided.droppableProps}
                               ref={provided.innerRef}
                               className="w-full flex flex-col gap-2 flex-1 p-1"
+                              style={{ 
+                                maxHeight: 'calc(100vh - 160px)',
+                                overflowY: 'auto',
+                                overflowX: 'hidden',
+                                width: '100%',
+                                minHeight: 0,
+                                flexShrink: 0
+                              }}
                             >
                               {/* Header (not draggable) */}
                               <div
                                 className="w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group hover:bg-blue-50"
+                                style={{ 
+                                  minWidth: 0,
+                                  flexShrink: 0,
+                                  width: '100%'
+                                }}
                                 onClick={() => {
                                   setSelectedSection({ id: 'flexaligntop', type: 'header' });
                                   setIsEditingForm(true);
                                 }}
                               >
-                                <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '160px'}}>
+                                <div className="flex-1 flex items-center justify-start transition-all" style={{ minWidth: 0, flexShrink: 0 }}>
                                   <div 
                                     className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
                                     style={
@@ -1252,6 +1261,11 @@ export default function FormEdit({paramsId}) {
                                         ? "bg-blue-50" 
                                         : "hover:bg-blue-50"
                                     }`}
+                                    style={{ 
+                                      minWidth: 0,
+                                      flexShrink: 0,
+                                      width: '100%'
+                                    }}
                                     onClick={() => {
                                       // Select the first lead capture field for editing
                                       const firstLeadCaptureField = formSections.find(s => s.isLeadCapture);
@@ -1259,7 +1273,7 @@ export default function FormEdit({paramsId}) {
                                       setIsEditingForm(false);
                                     }}
                                   >
-                                  <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '160px'}}>
+                                  <div className="flex-1 flex items-center justify-start transition-all" style={{ minWidth: 0, flexShrink: 0 }}>
                                     <div 
                                       className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
                                       style={
@@ -1291,7 +1305,7 @@ export default function FormEdit({paramsId}) {
                                       onClick={e => e.stopPropagation()}
                                       title="Lead capture fields cannot be reordered"
                                     >
-                                      <svg className="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                      <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 616 0z" clipRule="evenodd" />
                                       </svg>
                                     </div>
@@ -1343,7 +1357,9 @@ export default function FormEdit({paramsId}) {
                                           style={{
                                             ...provided.draggableProps.style,
                                             opacity: 1,
-                                            width: '160px', // Match sidebar width
+                                            width: '100%',
+                                            minWidth: 0,
+                                            flexShrink: 0,
                                             ...(isDragging
                                               ? {
                                                   padding: "8px",
@@ -1357,7 +1373,7 @@ export default function FormEdit({paramsId}) {
                                                   overflow: "visible",
                                                   border: "1.5px solid #e0e7ef",
                                                 }
-                                              : {}),
+                                              : { width: '100%', minWidth: 0, flexShrink: 0 }),
                                           }}
                                           className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group${isDragging ? " dragging" : ""} ${
                                             isActive 
@@ -1372,9 +1388,9 @@ export default function FormEdit({paramsId}) {
                                           }}
                                         >
                                         {/* Icon area only, no label */}
-                                        <div className="flex-1 flex items-center justify-start group-hover:justify-start transition-all pr-16" >
+                                        <div className="flex-1 flex items-center justify-start group-hover:justify-start transition-all" style={{ minWidth: 0, overflow: 'hidden' }}>
                                           <div 
-                                            className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500 "
+                                            className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
                                             style={
                                               isActive
                                                 ? {
@@ -1412,7 +1428,7 @@ export default function FormEdit({paramsId}) {
                                               title="Lead capture fields cannot be reordered"
                                             >
                                               <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 616 0z" clipRule="evenodd" />
+                                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                                               </svg>
                                             </div>
                                           ) : (
@@ -1506,9 +1522,14 @@ export default function FormEdit({paramsId}) {
                               >
                                 <div
                                   className="w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group hover:bg-blue-50"
+                                  style={{ 
+                                    minWidth: 0,
+                                    flexShrink: 0,
+                                    width: '100%'
+                                  }}
                                   onClick={() => setQuestionModal(true)}
                                 >
-                                <div className="flex-1 flex items-center justify-start transition-all pr-2" style={{width: '160px'}}>
+                                <div className="flex-1 flex items-center justify-start transition-all" style={{ minWidth: 0, flexShrink: 0 }}>
                                   <div className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500 group-hover:bg-purple-100">
                                     <svg className="h-[16px] w-[16px] text-gray-600 group-hover:text-purple-600 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1528,8 +1549,8 @@ export default function FormEdit({paramsId}) {
                   </div>
 
                   {/* Middle Section - Form Builder */}
-                  <div className="flex flex-col gap-3 border-r border-solid border-blue_gray-50 p-4 smx:p-3 md:p-8 justify-between flex-1 md:w-[560px] md:flex-none h-full overflow-hidden form-builder-container">
-                    <div className="flex flex-col gap-[30px] flex-1 overflow-auto">
+                  <div className="flex flex-col gap-3 border-r border-solid border-blue_gray-50 p-4 smx:p-3 md:p-8 justify-between flex-1 md:max-w-[560px] md:flex-none h-full overflow-hidden form-builder-container" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+                    <div className="flex flex-col gap-[30px] flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 150px)' }}>
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           
@@ -1713,7 +1734,7 @@ export default function FormEdit({paramsId}) {
 
                   {/* Preview Section - Hidden on mobile, shown in fullscreen */}
                   <div
-                    className={`${fullscreen ? 'flex' : 'hidden md:flex'} flex-1 flex-col gap-[10px] border-r border-solid border-blue_gray-50 px-[15px] pb-[3px] pt-[15px]`}
+                    className={`${fullscreen ? 'flex' : 'hidden md:flex'} flex-1 flex-col gap-[10px] border-r border-solid border-blue_gray-50 px-[15px] pb-[3px] pt-[15px] overflow-hidden`}
                     style={fullscreen ? {
                       position: 'fixed',
                       top: 0,
@@ -1725,7 +1746,7 @@ export default function FormEdit({paramsId}) {
                       padding: '10px',
                       display: 'flex',
                       flexDirection: 'column',
-                    } : { height: '100%', flexDirection: 'column' }}
+                    } : { height: '100%', flexDirection: 'column', maxHeight: 'calc(100vh - 100px)' }}
                   >
                     <div className="flex gap-4 justify-between items-center mb-2 relative">
                       <Heading
@@ -1788,11 +1809,11 @@ export default function FormEdit({paramsId}) {
                       )}
                     </div>
                     <div
-                      className="flex flex-col items-start justify-center gap-[2px] mdx:pb flex-1"
+                      className="flex flex-col items-start justify-center gap-[2px] mdx:pb flex-1 overflow-auto"
                       style={
                         device === "mobile"
-                          ? { width: 390, background: "white", margin: "0 auto", borderRadius: 12, boxShadow: "0 2px 12px #0001", height: "100%", maxHeight: fullscreen ? 'calc(100vh - 100px)' : '100%' }
-                          : { width: "100%", height: "100%", maxHeight: fullscreen ? 'calc(100vh - 100px)' : '100%' }
+                          ? { width: 390, background: "white", margin: "0 auto", borderRadius: 12, boxShadow: "0 2px 12px #0001", height: "100%", maxHeight: fullscreen ? 'calc(100vh - 120px)' : 'calc(100vh - 200px)' }
+                          : { width: "100%", height: "100%", maxHeight: fullscreen ? 'calc(100vh - 120px)' : 'calc(100vh - 200px)' }
                       }
                     >
                       {formSections.length > 0 ? (
@@ -1919,6 +1940,7 @@ export default function FormEdit({paramsId}) {
         visible={aiFormModalVisible}
         onCancel={() => setAiFormModalVisible(false)}
         onFormGenerated={handleAIFormGenerated}
+        defaultLanguage={landingPageData?.lang || landingPageData?.language || "English"}
         initialData={{
           jobTitle: landingPageData?.vacancyTitle,
           jobDescription: landingPageData?.heroDescription,
@@ -1935,11 +1957,23 @@ export default function FormEdit({paramsId}) {
           outline: none;
         }
         
+        /* Prevent horizontal overflow globally */
+        .main-container {
+          overflow-x: hidden;
+          max-width: 100vw;
+        }
+        
+        /* Ensure main flex container doesn't overflow */
+        .main-container > div {
+          max-width: 100%;
+        }
+        
         /* Mobile responsive fixes */
         @media (max-width: 767px) {
           .sidebar-transition {
             min-width: 60px !important;
             max-width: 60px !important;
+            flex-shrink: 0;
           }
           
           .sidebar-item .flex-1 {
@@ -1955,7 +1989,8 @@ export default function FormEdit({paramsId}) {
           /* Ensure form builder doesn't overflow */
           .form-builder-container {
             min-width: 0;
-            overflow-x: auto;
+            flex: 1;
+            overflow-x: hidden;
           }
           
           /* Mobile fullscreen adjustments */
@@ -1971,28 +2006,61 @@ export default function FormEdit({paramsId}) {
           }
         }
         
-        /* Responsive hover expansion */
+        /* Responsive sidebar widths with adequate space */
         @media (min-width: 768px) {
+          .sidebar-transition {
+            width: 120px;
+            flex-shrink: 0;
+          }
           .sidebar-transition:hover {
-            width: 180px !important;
+            width: 200px !important;
           }
         }
         
         @media (min-width: 640px) and (max-width: 767px) {
+          .sidebar-transition {
+            width: 100px;
+            flex-shrink: 0;
+          }
           .sidebar-transition:hover {
-            width: 140px !important;
+            width: 160px !important;
           }
         }
         
         @media (max-width: 639px) {
+          .sidebar-transition {
+            width: 70px;
+            flex-shrink: 0;
+          }
           .sidebar-transition:hover {
-            width: 120px !important;
+            width: 110px !important;
           }
         }
         
-        /* Prevent horizontal overflow */
-        .main-container {
+        /* Ensure flex items don't overflow */
+        .form-builder-container {
+          min-width: 0;
+          flex: 1;
           overflow-x: hidden;
+        }
+        
+        /* Responsive form builder width constraints */
+        @media (min-width: 768px) {
+          .form-builder-container {
+            max-width: calc(100vw - 120px - 350px - 40px); /* sidebar - preview - padding */
+          }
+        }
+        
+        @media (min-width: 640px) and (max-width: 767px) {
+          .form-builder-container {
+            max-width: calc(100vw - 100px - 300px - 30px); /* sidebar - preview - padding */
+          }
+        }
+        
+        @media (max-width: 639px) {
+          .form-builder-container {
+            max-width: calc(100vw - 70px - 20px); /* sidebar - padding, no preview on mobile */
+          }
         }
         
         /* Dragging styles matching page editor */
@@ -2003,6 +2071,89 @@ export default function FormEdit({paramsId}) {
         /* Fix for @hello-pangea/dnd clipping issues */
         [data-rbd-drag-placeholder] {
           opacity: 0 !important;
+        }
+        
+        /* Prevent unwanted scrolling in sidebar and preview sections */
+        .sidebar-transition {
+          overflow: hidden !important;
+        }
+        
+        /* Ensure proper scrolling behavior */
+        .form-builder-container {
+          overflow: hidden !important;
+        }
+        
+        /* Global layout constraints to prevent horizontal scroll */
+        * {
+          box-sizing: border-box;
+        }
+        
+        body {
+          overflow-x: hidden;
+        }
+        
+        /* Ensure the main layout never exceeds viewport width */
+        .rounded-\\[12px\\] {
+          width: 100%;
+          max-width: calc(100vw - 20px); /* Account for padding */
+          box-sizing: border-box;
+        }
+        
+        /* Sidebar item constraints to prevent shrinking */
+        .sidebar-item {
+          flex-shrink: 0 !important;
+          min-height: auto !important;
+          width: 100% !important;
+        }
+        
+        /* Ensure sidebar content scrolls properly */
+        [data-rbd-droppable-id="sections"] {
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          flex-shrink: 0 !important;
+          min-height: 0 !important;
+        }
+        
+        /* Prevent flex items from shrinking in sidebar */
+        .sidebar-transition .flex.flex-col {
+          min-height: 0;
+          overflow: hidden;
+        }
+        
+        /* Ensure sidebar items container has proper flex behavior */
+        .sidebar-transition > div {
+          flex-shrink: 0 !important;
+          min-height: 0;
+        }
+        
+        /* Mobile height adjustments */
+        @media (max-height: 600px) {
+          [data-rbd-droppable-id="sections"] {
+            max-height: calc(100vh - 120px) !important;
+          }
+          
+          .form-builder-container {
+            max-height: calc(100vh - 80px) !important;
+          }
+          
+          .form-builder-container > div {
+            max-height: calc(100vh - 120px) !important;
+          }
+        }
+        
+        /* Very small height adjustments */
+        @media (max-height: 500px) {
+          [data-rbd-droppable-id="sections"] {
+            max-height: calc(100vh - 100px) !important;
+          }
+          
+          .form-builder-container {
+            max-height: calc(100vh - 60px) !important;
+          }
+          
+          .form-builder-container > div {
+            max-height: calc(100vh - 100px) !important;
+          }
         }
       `}</style>
       </div>

@@ -31,14 +31,16 @@ const MultipleChoice = ({ field, value, onChange }) => (
   <div className="w-full space-y-3">
     {field.options?.map((option, index) => {
       const letter = String.fromCharCode(65 + index); // A, B, C, D...
-      const isSelected = value === option.text;
+      // Handle both string format ["HTML", "CSS"] and object format [{text: "HTML", isNegative: false}]
+      const optionText = typeof option === 'string' ? option : option.text;
+      const isSelected = value === optionText;
       
       return (
         <div 
           key={index} 
           className={`
             border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300`}
-          onClick={() => onChange({ target: { value: option.text } })}
+          onClick={() => onChange({ target: { value: optionText } })}
         >
           <div className="flex items-center p-4">
             <div className={`
@@ -53,13 +55,13 @@ const MultipleChoice = ({ field, value, onChange }) => (
             <p  className={`text-sm  flex-1
               ${isSelected ? 'text-blue-500' : 'text-gray-800'}
             `}>
-              {option.text}
+              {optionText}
             </p>
             <CustomRadio
               name={field.id}
-              value={option.text}
+              value={optionText}
               checked={isSelected}
-              onChange={() => onChange({ target: { value: option.text } })}
+              onChange={() => onChange({ target: { value: optionText } })}
               className="ml-3 opacity-0"
             />
           </div>
@@ -73,7 +75,9 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
   <div className="w-full space-y-3">
     {field.options?.map((option, index) => {
       const letter = String.fromCharCode(65 + index); // A, B, C, D...
-      const isSelected = value?.includes(option.text);
+      // Handle both string format ["HTML", "CSS"] and object format [{text: "HTML", isNegative: false}]
+      const optionText = typeof option === 'string' ? option : option.text;
+      const isSelected = value?.includes(optionText);
       
       return (
         <div 
@@ -84,9 +88,9 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
           onClick={() => {
             const newValue = value || [];
             if (isSelected) {
-              onChange(newValue.filter(v => v !== option.text));
+              onChange(newValue.filter(v => v !== optionText));
             } else {
-              onChange([...newValue, option.text]);
+              onChange([...newValue, optionText]);
             }
           }}
         >
@@ -103,18 +107,18 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
             <p  className={`text-sm  flex-1
               ${isSelected ? 'text-blue-500' : 'text-gray-800'}
               `}>
-              {option.text}
+              {optionText}
             </p>
             <CustomCheckBox
               name={field.id}
-              value={option.text}
+              value={optionText}
               checked={isSelected}
               onChange={(checked) => {
                 const newValue = value || [];
                 if (checked) {
-                  onChange([...newValue, option.text]);
+                  onChange([...newValue, optionText]);
                 } else {
-                  onChange(newValue.filter(v => v !== option.text));
+                  onChange(newValue.filter(v => v !== optionText));
                 }
               }}
               className="ml-3 opacity-0"
@@ -135,11 +139,15 @@ const CustomDropdown = ({ field, value, onChange }) => (
     className="w-full"
     style={{ borderRadius: '8px' }}
   >
-    {field.options?.map((option, index) => (
-      <Option key={index} value={option.text}>
-        {option.text}
-      </Option>
-    ))}
+    {field.options?.map((option, index) => {
+      // Handle both string format ["HTML", "CSS"] and object format [{text: "HTML", isNegative: false}]
+      const optionText = typeof option === 'string' ? option : option.text;
+      return (
+        <Option key={index} value={optionText}>
+          {optionText}
+        </Option>
+      );
+    })}
   </Select>
 );
 
@@ -508,58 +516,81 @@ export default function ApplyPage() {
         const visibleFields = (res.data?.lp?.form?.fields || []).filter(field => field.visible !== false);
         console.log('Visible fieldsss:', visibleFields);
         
-        // Always create Contact Information step as first step
-        const leadCaptureFields = visibleFields.filter(field => field.isLeadCapture);
-        const otherFields = visibleFields.filter(field => !field.isLeadCapture);
+        // Check for AI-generated contact field first
+        const contactField = visibleFields.find(field => field.type === 'contact');
+        const leadCaptureFields = visibleFields.filter(field => field.isLeadCapture && field.type !== 'contact');
+        const otherFields = visibleFields.filter(field => !field.isLeadCapture && field.type !== 'contact');
         
-        // Define contact fields from visible fields
-        const contactFields = visibleFields.filter(field => 
-          field.type === 'contact' || field.type === 'email' || field.type === 'phone'
-        );
-        
-        // CRITICAL: Contact information must come FIRST for lead capture
-        // Use lead capture fields if available, otherwise use basic contact fields  
-        const contactStepFields = leadCaptureFields.length > 0 ? leadCaptureFields : contactFields;
-        
-        if (contactStepFields.length > 0) {
+        if (contactField) {
+          // Use AI-generated contact field directly - no need for wrapper
+          console.log("✅ Found AI-generated contact field:", contactField);
           setFormFields([
-            { 
-              id: 'lead-capture-step', 
-              type: 'lead-capture-group', 
-              label: 'Contact Information', 
-              fields: contactStepFields,
-              required: true 
-            },
+            contactField, // Use the AI-generated contact field directly
+            ...leadCaptureFields,
             ...otherFields
           ]);
         } else {
-          // Fallback: if no contact fields found, still create basic contact step
-          setFormFields([
-            { 
-              id: 'lead-capture-step', 
-              type: 'lead-capture-group', 
-              label: 'Contact Information', 
-              fields: [
-                {
-                  id: 'default_contact',
-                  type: 'contact',
-                  label: 'Full Name',
-                  required: true,
-                  firstName: { required: true, placeholder: 'First name' },
-                  lastName: { required: true, placeholder: 'Last name' }
-                },
-                {
-                  id: 'default_email',
-                  type: 'email',
-                  label: 'Email',
-                  required: true,
-                  placeholder: 'Email address'
-                }
-              ],
-              required: true 
-            },
-            ...visibleFields
-          ]);
+          // Check for separate email/phone fields as fallback
+          const separateContactFields = visibleFields.filter(field => 
+            field.type === 'email' || field.type === 'phone'
+          );
+          const nonContactFields = visibleFields.filter(field => 
+            field.type !== 'email' && field.type !== 'phone'
+          );
+          
+          if (separateContactFields.length > 0) {
+            // Use existing separate contact fields in a group
+            setFormFields([
+              { 
+                id: 'lead-capture-step', 
+                type: 'lead-capture-group', 
+                label: getTranslation(landingPageData?.lang || 'en', 'contactInformation') || 'Contact Information', 
+                fields: separateContactFields,
+                required: true 
+              },
+              ...nonContactFields
+            ]);
+          } else {
+            // Last resort: create default contact field with translations
+            console.log("⚠️ No contact fields found - creating default contact field");
+            const defaultContactField = {
+              id: 'default_contact',
+              type: 'contact',
+              label: getTranslation(landingPageData?.lang || 'en', 'contactInformation') || 'Contact Information',
+              required: true,
+              visible: true,
+              isLeadCapture: true,
+              firstName: { 
+                visible: true,
+                required: true, 
+                label: getTranslation(landingPageData?.lang || 'en', 'firstName') || 'First Name',
+                placeholder: getTranslation(landingPageData?.lang || 'en', 'firstNamePlaceholder') || 'Enter your first name'
+              },
+              lastName: { 
+                visible: true,
+                required: true, 
+                label: getTranslation(landingPageData?.lang || 'en', 'lastName') || 'Last Name',
+                placeholder: getTranslation(landingPageData?.lang || 'en', 'lastNamePlaceholder') || 'Enter your last name'
+              },
+              email: { 
+                visible: true,
+                required: true, 
+                label: getTranslation(landingPageData?.lang || 'en', 'email') || 'Email',
+                placeholder: getTranslation(landingPageData?.lang || 'en', 'emailPlaceholder') || 'Enter your email address'
+              },
+              phone: { 
+                visible: true,
+                required: false, 
+                label: getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone',
+                placeholder: getTranslation(landingPageData?.lang || 'en', 'phonePlaceholder') || 'Enter your phone number'
+              }
+            };
+            
+            setFormFields([
+              defaultContactField,
+              ...visibleFields
+            ]);
+          }
         }
       }
       setLoading(false);
@@ -641,7 +672,7 @@ export default function ApplyPage() {
         if (currentField.phone?.visible !== false && phoneValue?.trim()) {
           // Validate phone format
           const phoneDigits = phoneValue.replace(/\D/g, '');
-          if (phoneDigits.length < 10) {
+          if (phoneDigits.length < 3) {
             message.warning('Please enter a valid phone number');
             return;
           }
@@ -695,7 +726,7 @@ export default function ApplyPage() {
         
         // Basic phone format validation (at least 10 digits)
         const phoneDigits = phone.replace(/\D/g, '');
-        if (phoneDigits.length < 10) {
+        if (phoneDigits.length < 3) {
           message.warning('Please enter a valid phone number');
           return;
         }
@@ -883,13 +914,13 @@ export default function ApplyPage() {
               {field.firstName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-xs text-gray-600">
-                    {field.firstName?.label || getTranslation(landingPageData?.lang, 'firstName') || 'First Name'}
+                    {field.firstName?.label || getTranslation(landingPageData?.lang || 'en', 'firstName') || 'First Name'}
                     {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <Input
                     value={formData[`${field.id}_firstName`] || ''}
                     onChange={(e) => handleInputChange(`${field.id}_firstName`, e.target.value)}
-                    placeholder={field.firstName?.placeholder || "First name"}
+                    placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'firstName') || "First name"}
                     className="rounded-lg"
                     size="large"
                   />
@@ -898,13 +929,13 @@ export default function ApplyPage() {
               {field.lastName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-xs text-gray-600">
-                    { getTranslation(landingPageData?.lang, 'lastName') ||field.lastName?.label || 'Last Name'}
+                    {field.lastName?.label || getTranslation(landingPageData?.lang || 'en', 'lastName') || 'Last Name'}
                     {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <Input
                     value={formData[`${field.id}_lastName`] || ''}
                     onChange={(e) => handleInputChange(`${field.id}_lastName`, e.target.value)}
-                    placeholder={field.lastName?.placeholder || "Last name"}
+                    placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'lastName') || "Last name"}
                     className="rounded-lg"
                     size="large"
                   />
@@ -915,15 +946,15 @@ export default function ApplyPage() {
             {/* Email field */}
             {field.email?.visible !== false && (
               <div>
-                                  <label className="block mb-1 font-semibold text-xs text-gray-600">
-                  {field.email?.label || getTranslation(landingPageData?.lang, 'email') || 'Email'}
+                <label className="block mb-1 font-semibold text-xs text-gray-600">
+                  {field.email?.label || getTranslation(landingPageData?.lang || 'en', 'email') || 'Email'}
                   {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
                   type="email"
                   value={formData[`${field.id}_email`] || ''}
                   onChange={(e) => handleInputChange(`${field.id}_email`, e.target.value)}
-                  placeholder={field.email?.placeholder || "Email address"}
+                  placeholder={field.email?.placeholder || getTranslation(landingPageData?.lang || 'en', 'emailAddress') || "Email address"}
                   className="rounded-lg"
                   size="large"
                 />
@@ -933,15 +964,15 @@ export default function ApplyPage() {
             {/* Phone field */}
             {field.phone?.visible !== false && (
               <div>
-                                  <label className="block mb-1 font-semibold text-xs text-gray-600">
-                  {field.phone?.label || getTranslation(landingPageData?.lang, 'phone') || 'Phone'}
+                <label className="block mb-1 font-semibold text-xs text-gray-600">
+                  {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
                   {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <Input
                   type="tel"
                   value={formData[`${field.id}_phone`] || ''}
                   onChange={(e) => handleInputChange(`${field.id}_phone`, e.target.value)}
-                  placeholder={field.phone?.placeholder || "Phone number"}
+                  placeholder={field.phone?.placeholder || getTranslation(landingPageData?.lang || 'en', 'phoneNumber') || "Phone number"}
                   className="rounded-lg"
                   size="large"
                 />
@@ -978,7 +1009,7 @@ export default function ApplyPage() {
               type="email"
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
-              placeholder={field.customPlaceholder || field.placeholder || "Email address"}
+              placeholder={field.customPlaceholder || field.placeholder || getTranslation(landingPageData?.lang || 'en', 'emailAddress') || "Email address"}
               className="border-none focus:ring-0 text-sm"
               shape="round"
             />
@@ -992,7 +1023,7 @@ export default function ApplyPage() {
               type="tel"
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
-              placeholder={field.customPlaceholder || field.placeholder || "Phone number"}
+              placeholder={field.customPlaceholder || field.placeholder || getTranslation(landingPageData?.lang || 'en', 'phoneNumber') || "Phone number"}
               className="border-none focus:ring-0 text-sm"
               shape="round"
             />
@@ -1028,11 +1059,11 @@ export default function ApplyPage() {
                
                // Use appropriate labels for contact fields
                if (subField.type === 'email') {
-                 displayLabel = contactField?.email?.label || subField.customLabel || subField.label || 'Email';
+                 displayLabel = contactField?.email?.label || subField.customLabel || subField.label || getTranslation(landingPageData?.lang || 'en', 'email') || 'Email';
                } else if (subField.type === 'phone') {
-                 displayLabel = contactField?.phone?.label || subField.customLabel || subField.label || 'Phone Number';
+                 displayLabel = contactField?.phone?.label || subField.customLabel || subField.label || getTranslation(landingPageData?.lang || 'en', 'phoneNumber') || 'Phone Number';
                } else if (subField.type === 'contact') {
-                 displayLabel = subField.customLabel || subField.label || 'Full Name';
+                 displayLabel = subField.customLabel || subField.label || getTranslation(landingPageData?.lang || 'en', 'fullName') || 'Full Name';
                }
                
                return (
@@ -1055,14 +1086,14 @@ export default function ApplyPage() {
               {field.firstName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-sm">
-                    {field.firstName?.label || 'First Name'}
+                    {field.firstName?.label || getTranslation(landingPageData?.lang || 'en', 'firstName') || 'First Name'}
                     {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_firstName`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_firstName`, value)}
-                      placeholder={field.firstName?.placeholder || "First name"}
+                      placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'firstName') || "First name"}
                       className="border-none focus:ring-0 text-sm"
                       shape="round"
                     />
@@ -1072,14 +1103,14 @@ export default function ApplyPage() {
               {field.lastName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-sm">
-                    {field.lastName?.label || 'Last Name'}
+                    {field.lastName?.label || getTranslation(landingPageData?.lang || 'en', 'lastName') || 'Last Name'}
                     {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
                   <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_lastName`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_lastName`, value)}
-                      placeholder={field.lastName?.placeholder || "Last name"}
+                      placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'lastName') || "Last name"}
                       className="border-none focus:ring-0 text-sm"
                       shape="round"
                     />
@@ -1092,7 +1123,7 @@ export default function ApplyPage() {
             {field.email?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-sm">
-                  {field.email?.label || 'Email'}
+                  {field.email?.label || getTranslation(landingPageData?.lang || 'en', 'email') || 'Email'}
                   {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
@@ -1100,7 +1131,7 @@ export default function ApplyPage() {
                     type="email"
                     value={formData[`${field.id}_email`] || ''}
                     onChange={(value) => handleInputChange(`${field.id}_email`, value)}
-                    placeholder={field.email?.placeholder || "Email address"}
+                    placeholder={field.email?.placeholder || getTranslation(landingPageData?.lang || 'en', 'emailAddress') || "Email address"}
                     className="border-none focus:ring-0 text-sm"
                     shape="round"
                   />
@@ -1112,7 +1143,7 @@ export default function ApplyPage() {
             {field.phone?.visible !== false && (
               <div>
                 <label className="block mb-1 font-semibold text-sm">
-                  {field.phone?.label || 'Phone'}
+                  {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
                   {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
                 <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
@@ -1120,7 +1151,7 @@ export default function ApplyPage() {
                     type="tel"
                     value={formData[`${field.id}_phone`] || ''}
                     onChange={(value) => handleInputChange(`${field.id}_phone`, value)}
-                    placeholder={field.phone?.placeholder || "Phone number"}
+                    placeholder={field.phone?.placeholder || getTranslation(landingPageData?.lang || 'en', 'phoneNumber') || "Phone number"}
                     className="border-none focus:ring-0 text-sm"
                     shape="round"
                   />
@@ -1158,7 +1189,7 @@ export default function ApplyPage() {
               type="email"
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
-              placeholder={field.customPlaceholder || field.placeholder || "Email address"}
+              placeholder={field.customPlaceholder || field.placeholder || getTranslation(landingPageData?.lang || 'en', 'emailAddress') || "Email address"}
               className="border-none focus:ring-0 text-sm"
               shape="round"
             />
@@ -1172,7 +1203,7 @@ export default function ApplyPage() {
               type="tel"
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
-              placeholder={field.customPlaceholder || field.placeholder || "Phone number"}
+              placeholder={field.customPlaceholder || field.placeholder || getTranslation(landingPageData?.lang || 'en', 'phoneNumber') || "Phone number"}
               className="border-none focus:ring-0 text-sm"
               shape="round"
             />

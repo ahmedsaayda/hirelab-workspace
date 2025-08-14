@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { Modal, Input, Select, Tag, message as antdMessage, Tooltip } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import languages from "./lang.json";
-import CrudService from "../../../services/CrudService";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../redux/auth/selectors";
 import { useRouter } from "next/router";
@@ -101,9 +100,9 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
     const savedProgress = sessionStorage.getItem('vacancy_scratch_progress');
     if (savedProgress) {
       const data = JSON.parse(savedProgress);
-      return data?.language || "Dutch";
+      return data?.language || "English";
     }
-    return "Dutch";
+    return "English";
   });
   const [generatedContent, setGeneratedContent] = useState(null);
   const [backendLoading, setBackendLoading] = useState(false);
@@ -292,7 +291,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         : {};
 
       // Non-AI path - also default to custom form
-      const res = await CrudService.create("LandingPageData", {
+      const res = await AiService.createVacancy({
         vacancyTitle: formData.jobTitle,
         heroDescription: formData.description,
         department: formData.department,
@@ -310,7 +309,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
       sessionStorage.removeItem('vacancy_scratch_progress');
       
       console.log("Vacancy created without AI:", res);
-      router.push(`/edit-page/${res.data.result._id}?from=scratch`);
+      router.push(`/edit-page/${res.data.data.result._id}?from=scratch`);
     } catch (error) {
       console.log("Error creating vacancy without AI:", error);
       antdMessage.error("Error creating vacancy without AI");
@@ -835,14 +834,14 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
 
 
 
-        const res = await CrudService.create("LandingPageData", vacancyData);
+        const res = await AiService.createVacancy(vacancyData);
         
         // Clear session storage on successful creation
         sessionStorage.removeItem('vacancy_scratch_progress');
         
         onRefresh()
         setJobTitleModal(false);
-        router.push(`/edit-page/${res.data.result._id}`);
+        router.push(`/edit-page/${res.data.data.result._id}`);
       }
     } catch (error) {
       console.error("Error during vacancy creation:", error);
