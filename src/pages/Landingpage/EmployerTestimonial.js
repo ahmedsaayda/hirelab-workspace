@@ -554,8 +554,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
   // Store refs for each card to track their offsetLeft
   const cardRefs = useRef([]);
 
-  // Update handleScroll to use getBoundingClientRect for accurate active dot
-  const handleScroll = React.useCallback(() => {
+  // Immediate scroll handler for real-time dot updates
+  const handleScrollImmediate = React.useCallback(() => {
     if (sliderRef.current && !isDragging && !isProgrammaticScroll) {
       const containerRect = sliderRef.current.getBoundingClientRect();
       const containerCenter = containerRect.left + containerRect.width / 2;
@@ -583,11 +583,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
     }
   }, [isDragging, isProgrammaticScroll, activeSlide]);
 
-  // Debounced scroll handler with faster response
+  // Debounced scroll handler for final position
   const debouncedHandleScroll = React.useCallback(() => {
     clearTimeout(window.scrollTimeout);
-    window.scrollTimeout = setTimeout(handleScroll, 50);
-  }, [handleScroll]);
+    window.scrollTimeout = setTimeout(handleScrollImmediate, 10);
+  }, [handleScrollImmediate]);
 
   // Mouse and touch event handlers for dragging
   const handleMouseDown = (e) => {
@@ -622,8 +622,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
     setIsProgrammaticScroll(false);
     // Use a small delay to ensure the scroll position has settled
     setTimeout(() => {
-      handleScroll();
-    }, 100);
+      handleScrollImmediate();
+    }, 10);
   };
 
   // Check if navigation should be shown
@@ -711,46 +711,48 @@ const Template1 = ({ landingPageData, fetchData }) => {
       id="testimonials"
       style={{color:"black"}}
     >
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-12 text-center">
-          <div ref={refs.titleRef}>
-            <h2
-              className="mb-3 text-3xl font-bold md:text-4xl"
-              style={{ 
-                fontFamily: subheaderFont?.family
+             <div className="mx-auto max-w-7xl px-4">
+         <div className="mb-12 text-center">
+           <div ref={refs.titleRef}>
+             <h2
+               className="mb-3 text-3xl font-bold md:text-4xl"
+               style={{ 
+                 fontFamily: subheaderFont?.family
+                }}
+             >
+               {landingPageData?.testimonialTitle || "Testimonials"}
+             </h2>
+           </div>
+           <div ref={refs.subheaderRef}>
+            <p
+               style={{
+                 fontFamily: subheaderFont?.family
                }}
-            >
-              {landingPageData?.testimonialTitle || "Testimonials"}
-            </h2>
-          </div>
-          <div ref={refs.subheaderRef}>
-           <p
-              style={{
-                fontFamily: subheaderFont?.family
-              }}
-              dangerouslySetInnerHTML={{
-                __html: landingPageData?.testimonialSubheader ||
-                  "You don't have to take our word for it."
-              }}
-            >
-            </p>
-          </div>
-        </div>
+               dangerouslySetInnerHTML={{
+                 __html: landingPageData?.testimonialSubheader ||
+                   "You don't have to take our word for it."
+               }}
+             >
+             </p>
+           </div>
+         </div>
 
-        {/* Testimonial Slider - with padding at beginning to prevent first item from being cropped */}
-        <div
-          ref={sliderRef}
-          className={`flex overflow-x-auto snap-x snap-mandatory pl-[1px] scroll-smooth ${
-            finalTestimonials.length < 3 ? 'justify-center' : 'justify-start'
-          }`}
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-            WebkitOverflowScrolling: "touch",
-            scrollSnapType: "x mandatory",
-          }}
+         {/* Testimonial Slider - with padding at beginning to prevent first item from being cropped */}
+         <div className="-mx-4 relative overflow-hidden">
+         <div
+           ref={sliderRef}
+           className={`flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 px-6 ${
+             finalTestimonials.length < 3 ? 'justify-center' : 'justify-start'
+           }`}
+           style={{
+             scrollbarWidth: "none",
+             msOverflowStyle: "none",
+             WebkitOverflowScrolling: "touch",
+             scrollSnapType: "x mandatory",
+           }}
           onScroll={() => {
             if (!isProgrammaticScroll) {
+              handleScrollImmediate();
               debouncedHandleScroll();
             }
           }}
@@ -762,16 +764,17 @@ const Template1 = ({ landingPageData, fetchData }) => {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleDragEnd}
         >
-          {finalTestimonials.map((testimonial, index) => (
-            <div
-              key={testimonial.id}
-              className="flex-shrink-0 px-2 w-full snap-start md:w-1/2 lg:w-1/3"
-              style={{ scrollSnapAlign: "start" }}
-              ref={el => cardRefs.current[index] = el}
-            >
-              <TestimonialCard testimonial={testimonial} index={index} />
-            </div>
-          ))}
+                     {finalTestimonials.map((testimonial, index) => (
+             <div
+               key={testimonial.id}
+               className="flex-shrink-0 w-[calc(100%-2rem)] snap-start md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1rem)]"
+               style={{ scrollSnapAlign: "start" }}
+               ref={el => cardRefs.current[index] = el}
+             >
+               <TestimonialCard testimonial={testimonial} index={index} />
+             </div>
+           ))}
+        </div>
         </div>
 
         {/* ✅ Navigation Dots — OUTSIDE the scrollable div */}

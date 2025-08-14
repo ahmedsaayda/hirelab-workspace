@@ -443,8 +443,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
     }
   };
 
-  // Scroll handler to update active dot
-  const handleScroll = React.useCallback(() => {
+  // Immediate scroll handler for real-time dot updates
+  const handleScrollImmediate = React.useCallback(() => {
     if (sliderRef.current && !isDragging) {
       const scrollPosition = sliderRef.current.scrollLeft;
       const containerWidth = sliderRef.current.clientWidth;
@@ -455,11 +455,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
     }
   }, [isDragging, activeSlide]);
 
-  // Debounced scroll handler
+  // Debounced scroll handler for final position
   const debouncedHandleScroll = React.useCallback(() => {
     clearTimeout(window.companyFactsScrollTimeout);
-    window.companyFactsScrollTimeout = setTimeout(handleScroll, 100);
-  }, [handleScroll]);
+    window.companyFactsScrollTimeout = setTimeout(handleScrollImmediate, 10);
+  }, [handleScrollImmediate]);
 
   // Mouse/touch drag handlers
   const handleMouseDown = (e) => {
@@ -488,8 +488,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
   const handleDragEnd = () => {
     setIsDragging(false);
     setTimeout(() => {
-      handleScroll();
-    }, 50);
+      handleScrollImmediate();
+    }, 10);
   };
 
   return (
@@ -592,7 +592,10 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 WebkitOverflowScrolling: "touch",
                 scrollSnapType: "x mandatory",
               }}
-              onScroll={debouncedHandleScroll}
+              onScroll={(e) => {
+                handleScrollImmediate();
+                debouncedHandleScroll();
+              }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleDragEnd}

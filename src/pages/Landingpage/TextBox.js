@@ -180,8 +180,8 @@ const Template3 = ({ landingPageData, fetchData }) => {
       <div className="flex justify-center bg-[#ffffff]">
         <div className="container flex justify-center px-6 mdx:px-5">
           <div className="flex justify-center items-start px-14 w-full mdx:flex-col mdx:px-5">
-            <div className="relative w-[58%] mdx:w-full">
-              <div className="flex w-[76%] flex-col items-start gap-6">
+            <div className="relative lg:w-[58%] flex w-full">
+              <div className="flex w-full m-auto lg:w-[76%] flex-col items-start gap-6">
                 <h2
                   onClick={() => handleItemClick("textBoxTitle")}
                   ref={titleRef}

@@ -475,8 +475,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
     }
   };
 
-  // Scroll handler to update active dot
-  const handleScroll = React.useCallback(() => {
+  // Immediate scroll handler for real-time dot updates
+  const handleScrollImmediate = React.useCallback(() => {
     if (sliderRef.current && !isDragging) {
       const scrollPosition = sliderRef.current.scrollLeft;
       const containerWidth = sliderRef.current.clientWidth;
@@ -487,11 +487,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
     }
   }, [isDragging, activeSlide]);
 
-  // Debounced scroll handler
+  // Debounced scroll handler for final position
   const debouncedHandleScroll = React.useCallback(() => {
     clearTimeout(window.recruiterContactScrollTimeout);
-    window.recruiterContactScrollTimeout = setTimeout(handleScroll, 100);
-  }, [handleScroll]);
+    window.recruiterContactScrollTimeout = setTimeout(handleScrollImmediate, 10);
+  }, [handleScrollImmediate]);
 
   // Mouse/touch drag handlers
   const handleMouseDown = (e) => {
@@ -520,8 +520,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
   const handleDragEnd = () => {
     setIsDragging(false);
     setTimeout(() => {
-      handleScroll();
-    }, 50);
+      handleScrollImmediate();
+    }, 10);
   };
 
   useEffect(() => {
@@ -551,7 +551,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
   }, []);
 
   // Function to render a contact card
-  const ContactCard = ({ recruiter, index }) => {
+  const ContactCard = ({ recruiter, index, isMobile }) => {
     const name = recruiter?.recruiterFullname || "Contact Name";
     const role = recruiter?.recruiterRole || "Role";
     const phone = recruiter?.recruiterPhone || "+1 (000) 000-0000";
@@ -609,90 +609,182 @@ const Template1 = ({ landingPageData, fetchData }) => {
         </p>
 
         {/* Contact Information */}
-        <div className="flex gap-8">
-          {phoneEnabled && (
-            <a
-              href={`tel:${phone}`}
-              className="flex flex-col gap-3 items-center transition-colors group"
-              onClick={() =>
-                handleItemClick(`recruiters[${index}].recruiterPhone`)
-              }
-              ref={(el) => {
-                recruitersRefs.current[`recruiters[${index}].recruiterPhone`] =
-                  el;
-              }}
-              onMouseEnter={() => setHoveredPhone(index)}
-              onMouseLeave={() => setHoveredPhone(null)}
-            >
-              <div
-                className="flex justify-center items-center w-10 h-10 rounded-full transition-transform group-hover:scale-105 border"
-                style={{
-                  borderColor: getColor("primary", 300),
-                  backgroundColor:
-                    hoveredPhone === index
-                      ? getColor("primary", 500)
-                      : "transparent",
-                  color:
-                    hoveredPhone === index
-                      ? textColor
-                      : getColor("primary", 500),
-                  transition:
-                    "background-color 0.2s, color 0.2s, border-color 0.2s",
-                  fontFamily: bodyFont?.family,
-                }}
-              >
-                <Phone className="w-4 h-4" />
-              </div>
-              <span
-                style={{
-                  fontFamily: bodyFont?.family,
-                }}
-                className="text-sm"
-              >
-                {phone}
-              </span>
-            </a>
-          )}
+        <div className={`flex ${isMobile ? 'flex-col' : ''} gap-8`}>
+          {/* On mobile, show email first; on desktop, show phone first */}
+          {isMobile ? (
+            <>
+              {emailEnabled && (
+                <a
+                  href={`mailto:${email}`}
+                  className="flex flex-col gap-3 items-center transition-colors group"
+                  onClick={() =>
+                    handleItemClick(`recruiters[${index}].recruiterEmail`)
+                  }
+                  ref={(el) => {
+                    recruitersRefs.current[`recruiters[${index}].recruiterEmail`] =
+                      el;
+                  }}
+                  onMouseEnter={() => setHoveredEmail(index)}
+                  onMouseLeave={() => setHoveredEmail(null)}
+                >
+                  <div
+                    className="flex justify-center items-center w-10 h-10 rounded-full transition-transform group-hover:scale-105 border"
+                    style={{
+                      borderColor: getColor("primary", 300),
+                      backgroundColor:
+                        hoveredEmail === index
+                          ? getColor("primary", 500)
+                          : "transparent",
+                      color:
+                        hoveredEmail === index ? "#fff" : getColor("primary", 500),
+                      transition:
+                        "background-color 0.2s, color 0.2s, border-color 0.2s",
+                    }}
+                  >
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: bodyFont?.family,
+                    }}
+                    className="text-sm"
+                  >
+                    {email}
+                  </span>
+                </a>
+              )}
 
-          {emailEnabled && (
-            <a
-              href={`mailto:${email}`}
-              className="flex flex-col gap-3 items-center transition-colors group"
-              onClick={() =>
-                handleItemClick(`recruiters[${index}].recruiterEmail`)
-              }
-              ref={(el) => {
-                recruitersRefs.current[`recruiters[${index}].recruiterEmail`] =
-                  el;
-              }}
-              onMouseEnter={() => setHoveredEmail(index)}
-              onMouseLeave={() => setHoveredEmail(null)}
-            >
-              <div
-                className="flex justify-center items-center w-10 h-10 rounded-full transition-transform group-hover:scale-105 border"
-                style={{
-                  borderColor: getColor("primary", 300),
-                  backgroundColor:
-                    hoveredEmail === index
-                      ? getColor("primary", 500)
-                      : "transparent",
-                  color:
-                    hoveredEmail === index ? "#fff" : getColor("primary", 500),
-                  transition:
-                    "background-color 0.2s, color 0.2s, border-color 0.2s",
-                }}
-              >
-                <Mail className="w-4 h-4" />
-              </div>
-              <span
-                style={{
-                  fontFamily: bodyFont?.family,
-                }}
-                className="text-sm"
-              >
-                {email}
-              </span>
-            </a>
+              {phoneEnabled && (
+                <a
+                  href={`tel:${phone}`}
+                  className="flex flex-col gap-3 items-center transition-colors group"
+                  onClick={() =>
+                    handleItemClick(`recruiters[${index}].recruiterPhone`)
+                  }
+                  ref={(el) => {
+                    recruitersRefs.current[`recruiters[${index}].recruiterPhone`] =
+                      el;
+                  }}
+                  onMouseEnter={() => setHoveredPhone(index)}
+                  onMouseLeave={() => setHoveredPhone(null)}
+                >
+                  <div
+                    className="flex justify-center items-center w-10 h-10 rounded-full transition-transform group-hover:scale-105 border"
+                    style={{
+                      borderColor: getColor("primary", 300),
+                      backgroundColor:
+                        hoveredPhone === index
+                          ? getColor("primary", 500)
+                          : "transparent",
+                      color:
+                        hoveredPhone === index
+                          ? textColor
+                          : getColor("primary", 500),
+                      transition:
+                        "background-color 0.2s, color 0.2s, border-color 0.2s",
+                      fontFamily: bodyFont?.family,
+                    }}
+                  >
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: bodyFont?.family,
+                    }}
+                    className="text-sm"
+                  >
+                    {phone}
+                  </span>
+                </a>
+              )}
+            </>
+          ) : (
+            <>
+              {phoneEnabled && (
+                <a
+                  href={`tel:${phone}`}
+                  className="flex flex-col gap-3 items-center transition-colors group"
+                  onClick={() =>
+                    handleItemClick(`recruiters[${index}].recruiterPhone`)
+                  }
+                  ref={(el) => {
+                    recruitersRefs.current[`recruiters[${index}].recruiterPhone`] =
+                      el;
+                  }}
+                  onMouseEnter={() => setHoveredPhone(index)}
+                  onMouseLeave={() => setHoveredPhone(null)}
+                >
+                  <div
+                    className="flex justify-center items-center w-10 h-10 rounded-full transition-transform group-hover:scale-105 border"
+                    style={{
+                      borderColor: getColor("primary", 300),
+                      backgroundColor:
+                        hoveredPhone === index
+                          ? getColor("primary", 500)
+                          : "transparent",
+                      color:
+                        hoveredPhone === index
+                          ? textColor
+                          : getColor("primary", 500),
+                      transition:
+                        "background-color 0.2s, color 0.2s, border-color 0.2s",
+                      fontFamily: bodyFont?.family,
+                    }}
+                  >
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: bodyFont?.family,
+                    }}
+                    className="text-sm"
+                  >
+                    {phone}
+                  </span>
+                </a>
+              )}
+
+              {emailEnabled && (
+                <a
+                  href={`mailto:${email}`}
+                  className="flex flex-col gap-3 items-center transition-colors group"
+                  onClick={() =>
+                    handleItemClick(`recruiters[${index}].recruiterEmail`)
+                  }
+                  ref={(el) => {
+                    recruitersRefs.current[`recruiters[${index}].recruiterEmail`] =
+                      el;
+                  }}
+                  onMouseEnter={() => setHoveredEmail(index)}
+                  onMouseLeave={() => setHoveredEmail(null)}
+                >
+                  <div
+                    className="flex justify-center items-center w-10 h-10 rounded-full transition-transform group-hover:scale-105 border"
+                    style={{
+                      borderColor: getColor("primary", 300),
+                      backgroundColor:
+                        hoveredEmail === index
+                          ? getColor("primary", 500)
+                          : "transparent",
+                      color:
+                        hoveredEmail === index ? "#fff" : getColor("primary", 500),
+                      transition:
+                        "background-color 0.2s, color 0.2s, border-color 0.2s",
+                    }}
+                  >
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: bodyFont?.family,
+                    }}
+                    className="text-sm"
+                  >
+                    {email}
+                  </span>
+                </a>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -807,7 +899,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
         {!isMd && (
           <div className="hidden gap-24 justify-center md:flex">
             {recruiters.map((recruiter, index) => (
-              <ContactCard key={index} recruiter={recruiter} index={index} />
+              <ContactCard key={index} recruiter={recruiter} index={index} isMobile={false} />
             ))}
           </div>
         )}
@@ -824,7 +916,10 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 WebkitOverflowScrolling: "touch",
                 scrollSnapType: "x mandatory",
               }}
-              onScroll={debouncedHandleScroll}
+              onScroll={(e) => {
+                handleScrollImmediate();
+                debouncedHandleScroll();
+              }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleDragEnd}
@@ -839,7 +934,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                   className="flex-shrink-0 w-full px-2 snap-start"
                   style={{ scrollSnapAlign: "start" }}
                 >
-                  <ContactCard recruiter={recruiter} index={index} />
+                  <ContactCard recruiter={recruiter} index={index} isMobile={true} />
                 </div>
               ))}
             </div>
