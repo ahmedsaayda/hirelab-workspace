@@ -17,6 +17,26 @@ import { useFocus } from "../../contexts/FocusContext.js";
 import { useHover } from "../../contexts/HoverContext.js";
 import CrudService from "../../services/CrudService.js";
 
+// Helper function to ensure pixel is ready before firing events
+const waitForPixel = (callback, maxRetries = 10, retryDelay = 500) => {
+  let retries = 0;
+  
+  const checkAndFire = () => {
+    if (window.fbq && typeof window.fbq === 'function') {
+      console.log('✅ PIXEL-READY: fbq is available, firing event');
+      callback();
+    } else if (retries < maxRetries) {
+      retries++;
+      console.log(`⏳ PIXEL-WAIT: Attempt ${retries}/${maxRetries}, retrying in ${retryDelay}ms...`);
+      setTimeout(checkAndFire, retryDelay);
+    } else {
+      console.error('❌ PIXEL-TIMEOUT: fbq not available after max retries');
+    }
+  };
+  
+  checkAndFire();
+};
+
 export default function LandingpagePage({ paramsId, overrideParamId = null, fullscreen = false, showBackToEditButton = false, setFullscreen,defaultLandingPageData = null }) {
   const lpId = overrideParamId ?? paramsId;
   const [landingPageData, setLandingPageData] = useState(defaultLandingPageData);
@@ -177,19 +197,57 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     };
   }, [fetchData]);
 
+  // Fire PageView event when landing page loads
+  useEffect(() => {
+    if (!landingPageData?.metaPixelId || !lpId) return;
+
+    const fireLandingPageView = () => {
+      
+      waitForPixel(() => {
+        console.log('🎯 LANDING: Starting to fire PageView event');
+        try {
+          window.fbq('trackCustom', 'Hirelab.PageView', {
+            content_name: landingPageData?.vacancyTitle || '',
+            funnel_id: lpId || '',
+            company: landingPageData?.companyName || '',
+            job_category: landingPageData?.department || ''
+          });
+          console.log('✅ LANDING: Hirelab.PageView event fired successfully');
+        } catch (e) {
+          console.error('❌ LANDING: Hirelab.PageView event failed:', e);
+        }
+      });
+    };
+
+    // Fire PageView event
+    fireLandingPageView();
+  }, [landingPageData?.metaPixelId, lpId]);
+
   useEffect(() => {
     const handleApply = () => {
       try {
-        if (landingPageData?.metaPixelId && window.fbq) {
-          fbq('track', 'Lead', {
-            content_name: landingPageData?.vacancyTitle || '',
-            funnel_id: lpId || '',
-            brand: landingPageData?.companyName || '',
-            job_category: landingPageData?.department || ''
+        if (landingPageData?.metaPixelId) {
+          console.log('🎯 LANDING: Firing Hirelab.FormView event (Apply button clicked)');
+          waitForPixel(() => {
+            try {
+              fbq('trackCustom', 'Hirelab.FormView', {
+                content_name: landingPageData?.vacancyTitle || '',
+                funnel_id: lpId || '',
+                company: landingPageData?.companyName || '',
+                job_category: landingPageData?.department || ''
+              });
+              try { sessionStorage.setItem(`metaLeadFired_${lpId}`, '1'); } catch (_) {}
+              console.log('✅ LANDING: Hirelab.FormView event fired successfully');
+            } catch (e) {
+              console.error('❌ LANDING: Hirelab.FormView event failed:', e);
+            }
           });
-          try { sessionStorage.setItem(`metaLeadFired_${lpId}`, '1'); } catch (_) {}
+        } else {
+          console.warn('⚠️ LANDING: No pixel ID provided');
         }
-      } catch (e) { console.warn('Pixel Lead (APPLY event) failed', e); }
+      } catch (e) { 
+        console.error('❌ LANDING: Hirelab.FormView event failed:', e);
+      }
       setShowFormEditor(true);
     };
     const handleApplyButtonClick = (event) => {
@@ -217,25 +275,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     <div className="w-full">
       <ApplyCustomFont landingPageData={landingPageData} />
       <MetaPixel metaPixelId={landingPageData?.metaPixelId} />
-      {/* Meta Pixel PageView + Lead (on open form) */}
-      {landingPageData?.metaPixelId && (
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (window.fbq) {
-                  fbq('track', 'PageView', {
-                    content_name: ${JSON.stringify(landingPageData?.vacancyTitle || '')},
-                    funnel_id: ${JSON.stringify(lpId || '')},
-                    brand: ${JSON.stringify(landingPageData?.companyName || '')},
-                    job_category: ${JSON.stringify(landingPageData?.department || '')}
-                  });
-                }
-              } catch (e) { console.warn('Pixel PageView failed', e); }
-            `,
-          }}
-        />
-      )}
+
       
       {/* Debug info - only show in development */}
       {process.env.NODE_ENV === 'development' && (
@@ -250,15 +290,27 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
           landingPageData={landingPageData}
           onClickApply={() => {
             try {
-              if (landingPageData?.metaPixelId && window.fbq) {
-                fbq('track', 'Lead', {
-                  content_name: landingPageData?.vacancyTitle || '',
-                  funnel_id: lpId || '',
-                  brand: landingPageData?.companyName || '',
-                  job_category: landingPageData?.department || ''
+              if (landingPageData?.metaPixelId) {
+                console.log('🎯 NAVBAR: Firing Hirelab.FormView event (Navbar Apply clicked)');
+                waitForPixel(() => {
+                  try {
+                    fbq('trackCustom', 'Hirelab.FormView', {
+                      content_name: landingPageData?.vacancyTitle || '',
+                      funnel_id: lpId || '',
+                      company: landingPageData?.companyName || '',
+                      job_category: landingPageData?.department || ''
+                    });
+                    console.log('✅ NAVBAR: Hirelab.FormView event fired successfully');
+                  } catch (e) {
+                    console.error('❌ NAVBAR: Hirelab.FormView event failed:', e);
+                  }
                 });
+              } else {
+                console.warn('⚠️ NAVBAR: No pixel ID provided');
               }
-            } catch (e) { console.warn('Pixel Lead failed', e); }
+            } catch (e) { 
+              console.error('❌ NAVBAR: Hirelab.FormView event failed:', e);
+            }
             setShowFormEditor(true);
           }}
           fullscreen={fullscreen}

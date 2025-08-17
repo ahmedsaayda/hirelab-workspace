@@ -10,6 +10,26 @@ import { getTranslation } from '../../../src/utils/translations';
 // Removed PhoneInput - using regular Input instead
 // 🎨 BRANDING IMPORTS
 import useTemplatePalette from '../../hooks/useTemplatePalette';
+
+// Helper function to ensure pixel is ready before firing events
+const waitForPixel = (callback, maxRetries = 10, retryDelay = 500) => {
+  let retries = 0;
+  
+  const checkAndFire = () => {
+    if (window.fbq && typeof window.fbq === 'function') {
+      console.log('✅ PIXEL-READY: fbq is available, firing event');
+      callback();
+    } else if (retries < maxRetries) {
+      retries++;
+      console.log(`⏳ PIXEL-WAIT: Attempt ${retries}/${maxRetries}, retrying in ${retryDelay}ms...`);
+      setTimeout(checkAndFire, retryDelay);
+    } else {
+      console.error('❌ PIXEL-TIMEOUT: fbq not available after max retries');
+    }
+  };
+  
+  checkAndFire();
+};
 // Import custom styled components
 import {
   Button as CustomButton,
@@ -448,33 +468,32 @@ export default function ApplyPage() {
 
   // Meta Pixel: fire PageView for apply page and fire Lead on first step render
   useEffect(() => {
-    try {
-      if (landingPageData?.metaPixelId && typeof window !== 'undefined' && window.fbq) {
-        // PageView on load
-        window.fbq('track', 'PageView', {
-          content_name: landingPageData?.vacancyTitle || '',
-          funnel_id: lpId || '',
-          brand: landingPageData?.companyName || '',
-          job_category: landingPageData?.department || ''
-        });
+    if (!landingPageData?.metaPixelId || !lpId) return;
 
-        // Fire Lead if not already fired this session
+    const fireApplyPageEvents = () => {
+      console.log('🎯 APPLY: Starting to fire events');
+      
+      // HireLab PageView on load
+      waitForPixel(() => {
         try {
-          const leadKey = `metaLeadFired_${lpId}`;
-          const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(leadKey) === '1';
-          if (!already) {
-            window.fbq('track', 'Lead', {
-              content_name: landingPageData?.vacancyTitle || '',
-              funnel_id: lpId || '',
-              brand: landingPageData?.companyName || '',
-              job_category: landingPageData?.department || ''
-            });
-            try { sessionStorage.setItem(leadKey, '1'); } catch (_) {}
-          }
-        } catch (e) { /* ignore */ }
-      }
-    } catch (e) { console.warn('Pixel PageView (apply) failed', e); }
-  }, [landingPageData?.metaPixelId]);
+          window.fbq('trackCustom', 'Hirelab.FormView', {
+            content_name: landingPageData?.vacancyTitle || '',
+            funnel_id: lpId || '',
+            company: landingPageData?.companyName || '',
+            job_category: landingPageData?.department || ''
+          });
+          console.log('✅ APPLY: Hirelab.FormView event fired successfully');
+        } catch (e) {
+          console.error('❌ APPLY: PageView event failed:', e);
+        }
+      });
+
+      
+    };
+
+    // Fire events
+    fireApplyPageEvents();
+  }, [landingPageData?.metaPixelId, lpId]);
 
   const fetchData = async () => {
     try {
@@ -753,17 +772,36 @@ export default function ApplyPage() {
         if (currentStep === 0 && landingPageData?.metaPixelId && window.fbq) {
           const leadKey = `metaLeadFired_${lpId}`;
           const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(leadKey) === '1';
+          
+          console.log('🔍 APPLY-STEP: Lead event check on step transition', {
+            currentStep,
+            leadKey,
+            already
+          });
+          
           if (!already) {
-            window.fbq('track', 'Lead', {
-              content_name: landingPageData?.vacancyTitle || '',
-              funnel_id: lpId || '',
-              brand: landingPageData?.companyName || '',
-              job_category: landingPageData?.department || ''
+            console.log('🎯 APPLY-STEP: Firing HireLab Lead event (Step 0 -> 1)');
+            waitForPixel(() => {
+              try {
+                window.fbq('track', 'Lead', {
+                  content_name: landingPageData?.vacancyTitle || '',
+                  funnel_id: lpId || '',
+                  brand: landingPageData?.companyName || '',
+                  job_category: landingPageData?.department || ''
+                });
+                try { sessionStorage.setItem(leadKey, '1'); } catch (_) {}
+                console.log('✅ APPLY-STEP: Lead event fired successfully');
+              } catch (e) {
+                console.error('❌ APPLY-STEP: Lead event failed:', e);
+              }
             });
-            try { sessionStorage.setItem(leadKey, '1'); } catch (_) {}
+          } else {
+            console.log('⏭️ APPLY-STEP: Lead event already fired');
           }
         }
-      } catch (e) { console.warn('Pixel Lead (apply) failed', e); }
+      } catch (e) { 
+        console.error('❌ APPLY-STEP: Lead event failed:', e);
+      }
 
       // Fire Contact event when completing a contact step
       try {
@@ -771,12 +809,14 @@ export default function ApplyPage() {
           const currentField = formFields[currentStep - 1]; // the step we just completed
           const isContactGroup = currentField?.type === 'lead-capture-group';
           const isContactComposite = currentField?.type === 'contact';
-          console.log(" debug Contact event----currentField", currentField);
-          console.log(" debug Contact event---isContactGroup", isContactGroup);
-          console.log(" debug Contact event---isContactComposite", isContactComposite);
-          console.log(" debug Contact event---formData", formData);
+          
+          console.log("🔍 CONTACT: Checking contact step completion", {
+            currentStep,
+            currentField: currentField?.type,
+            isContactGroup,
+            isContactComposite
+          });
 
-        
           if (isContactGroup || isContactComposite) {
             // Check for actual contact data with dynamic field IDs
             const hasContactInfo = Object.keys(formData).some(key => 
@@ -784,26 +824,47 @@ export default function ApplyPage() {
                key.includes('email') || key.includes('phone')) && 
               formData[key]?.trim()
             );
-            console.log(" debug Contact event---hasContact", hasContactInfo);
+            
+            console.log("🔍 CONTACT: Contact info check", {
+              hasContactInfo,
+              formDataKeys: Object.keys(formData),
+              formData
+            });
+            
             if (hasContactInfo) {
-              console.log(" debug Contact event---firing contact");
               const contactKey = `metaContactFired_${lpId}`;
-              console.log(" debug Contact event---contactKey", contactKey);
               const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(contactKey) === '1';
-              console.log(" debug Contact event---already", already);
+              
+              console.log("🔍 CONTACT: Contact event status", {
+                contactKey,
+                already
+              });
+              
               if (!already) {
-                window.fbq('track', 'Contact', {
-                  content_name: landingPageData?.vacancyTitle || '',
-                  funnel_id: lpId || '',
-                  brand: landingPageData?.companyName || '',
-                  job_category: landingPageData?.department || ''
+                console.log('🎯 CONTACT: Firing Hirelab.Contact_Information event');
+                waitForPixel(() => {
+                  try {
+                                      window.fbq('trackCustom', 'Hirelab.Contact_Information', {
+                    content_name: landingPageData?.vacancyTitle || '',
+                    funnel_id: lpId || '',
+                    company: landingPageData?.companyName || '',
+                    job_category: landingPageData?.department || ''
+                  });
+                    try { sessionStorage.setItem(contactKey, '1'); } catch (_) {}
+                    console.log('✅ CONTACT: Hirelab.Contact_Information event fired successfully');
+                  } catch (fbqError) {
+                    console.error('❌ CONTACT: Contact Info event failed:', fbqError);
+                  }
                 });
-                try { sessionStorage.setItem(contactKey, '1'); } catch (_) {}
+              } else {
+                console.log('⏭️ CONTACT: Contact Info event already fired');
               }
             }
           }
         }
-      } catch (e) { console.warn('Pixel Contact (apply) failed', e); }
+      } catch (e) { 
+        console.error('❌ CONTACT: Contact event logic failed:', e);
+      }
 
       setCurrentStep(prev => prev + 1);
     } else {
@@ -1612,4 +1673,4 @@ export default function ApplyPage() {
       </div>
     </div>
   );
-} 
+}

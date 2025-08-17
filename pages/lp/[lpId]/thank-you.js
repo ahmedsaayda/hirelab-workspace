@@ -6,11 +6,33 @@ import CrudService from '../../../src/services/CrudService';
 import PublicService from '../../../src/services/PublicService';
 import MetaPixel from '../../../src/pages/Landingpage/MetaPixel.jsx';
 
+// Helper function to ensure pixel is ready before firing events
+const waitForPixel = (callback, maxRetries = 10, retryDelay = 500) => {
+  let retries = 0;
+  
+  const checkAndFire = () => {
+    if (window.fbq && typeof window.fbq === 'function') {
+      console.log('✅ PIXEL-READY: fbq is available, firing event');
+      callback();
+    } else if (retries < maxRetries) {
+      retries++;
+      console.log(`⏳ PIXEL-WAIT: Attempt ${retries}/${maxRetries}, retrying in ${retryDelay}ms...`);
+      setTimeout(checkAndFire, retryDelay);
+    } else {
+      console.error('❌ PIXEL-TIMEOUT: fbq not available after max retries');
+    }
+  };
+  
+  checkAndFire();
+};
+
 export default function ThankYouPage() {
   const router = useRouter();
   const { lpId } = router.query;
   
   const [landingPageData, setLandingPageData] = useState(null);
+  console.log("landingPageData",landingPageData);
+  console.log("landingPageData?.metaPixelId",landingPageData?.metaPixelId);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,44 +43,60 @@ export default function ThankYouPage() {
 
   // Fire Meta Pixel events after data loads
   useEffect(() => {
-    if (!landingPageData?.metaPixelId) return;
+    if (!landingPageData?.metaPixelId || !lpId) return;
     
-        // Wait for pixel to be ready, then fire events
-    const fireEvents = () => {
-      try {
-        if (window.fbq) {
-          // Check if CompleteRegistration was already fired for this funnel
+    console.log("1")
+    // Wait for pixel to be ready, then fire events
+    const fireThankYouEvents = () => {
+      if (typeof window !== 'undefined' && window.fbq) {
+        console.log('🎯 THANK-YOU: Pixel available, firing Application Submitted event');
+        
+        console.log("2")
+        try {
+          // Check if Application Submitted was already fired for this funnel
           const completeKey = `metaCompleteFired_${lpId}`;
           const alreadyComplete = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(completeKey) === '1';
           
+          console.log('🔍 THANK-YOU: Application event status', {
+            completeKey,
+            alreadyComplete
+          });
+          
           if (!alreadyComplete) {
-            console.log('Firing CompleteRegistration from thank-you page');
-            window.fbq('track', 'CompleteRegistration', {
-              content_name: landingPageData?.vacancyTitle || '',
-              funnel_id: lpId || '',
-              brand: landingPageData?.companyName || '',
-              job_category: landingPageData?.department || ''
+            console.log('🎯 THANK-YOU: Firing Hirelab.FormSubmitted event');
+            waitForPixel(() => {
+              try {
+                window.fbq('trackCustom', 'Hirelab.FormSubmitted', {
+                  content_name: landingPageData?.vacancyTitle || '',
+                  funnel_id: lpId || '',
+                  company: landingPageData?.companyName || '',
+                  job_category: landingPageData?.department || ''
+                });
+                try { 
+                  sessionStorage.setItem(completeKey, '1');
+                  console.log('✅ THANK-YOU: Hirelab.FormSubmitted event fired and marked for funnel:', lpId);
+                } catch (_) {}
+              } catch (e) { 
+                console.error('❌ THANK-YOU: Application Submitted event failed:', e); 
+              }
             });
-            try { 
-              sessionStorage.setItem(completeKey, '1');
-              console.log('CompleteRegistration marked as fired for funnel:', lpId);
-            } catch (_) {}
           } else {
-            console.log('CompleteRegistration already fired for this funnel');
+            console.log('⏭️ THANK-YOU: Application Submitted already fired for this funnel');
           }
-        } else {
-          console.warn('fbq not available on thank-you page');
+        } catch (e) { 
+          console.error('❌ THANK-YOU: Application Submitted event failed:', e); 
         }
-      } catch (e) { 
-        console.warn('Pixel events failed on thank-you', e); 
+      } else {
+        console.warn('⚠️ THANK-YOU: fbq not available, retrying in 1 second...');
+        setTimeout(fireThankYouEvents, 1000);
       }
     };
 
-    // Try immediately, then retry after a short delay
-    fireEvents();
-    const timeout = setTimeout(fireEvents, 500);
+    // Try immediately, then retry if needed
+    setTimeout(fireThankYouEvents, 100);
+    const retryTimeout = setTimeout(fireThankYouEvents, 1000);
     
-    return () => clearTimeout(timeout);
+    return () => clearTimeout(retryTimeout);
   }, [landingPageData?.metaPixelId, lpId]);
 
   const fetchData = async () => {
