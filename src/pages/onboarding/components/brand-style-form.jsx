@@ -964,6 +964,7 @@ export default function BrandStyleForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [showCompanyInfoSkeleton, setShowCompanyInfoSkeleton] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const fetchData = useCallback(() => {
     if (lpId) {
@@ -984,6 +985,12 @@ export default function BrandStyleForm() {
       theme: theme,
     }));
   }, [theme]);
+
+  useEffect(() => {
+    if (user && (user?.isUserFirsttime || !user?.onboardingCompleted)) {
+      setShowWelcomeModal(true);
+    }
+  }, [user]);
 
   const handleNext = () => {
     // Validate current step before proceeding
@@ -1022,10 +1029,22 @@ export default function BrandStyleForm() {
     }
   };
 
-   const handleSkip = () => {
-    setShowModal(false);
-    // Navigate to dashboard
-    router.push("/dashboard");
+   const handleSkip = async () => {
+    try {
+      setShowModal(false);
+      await AuthService.updateMe({
+        onboardingCompleted: true,
+        isUserFirsttime: false,
+      });
+      const me = await AuthService.me();
+      if (me?.data?.me) {
+        store.dispatch(login(me.data.me));
+      }
+    } catch (e) {
+      // non-blocking
+    } finally {
+      router.push("/dashboard");
+    }
   };
 const handleContinue = () => {
     setShowModal(false);
@@ -1796,6 +1815,57 @@ const handleLogoUpload = async (url) => {
 
   return (
     <>
+      <Modal
+        title="Welcome to HireLab"
+        visible={showWelcomeModal}
+        centered
+        onCancel={async () => {
+          try {
+            setShowWelcomeModal(false);
+            await AuthService.updateMe({ onboardingCompleted: true, isUserFirsttime: false });
+            const me = await AuthService.me();
+            if (me?.data?.me) {
+              store.dispatch(login(me.data.me));
+            }
+          } catch (e) {
+          } finally {
+            router.push("/dashboard");
+          }
+        }}
+        maskClosable={false}
+        closable={false}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <Button
+              onClick={async () => {
+                try {
+                  setShowWelcomeModal(false);
+                  await AuthService.updateMe({ onboardingCompleted: true, isUserFirsttime: false });
+                  const me = await AuthService.me();
+                  if (me?.data?.me) {
+                    store.dispatch(login(me.data.me));
+                  }
+                } catch (e) {
+                } finally {
+                  router.push("/dashboard");
+                }
+              }}
+              className="bg-white border border-gray-300 text-gray-700 hover:bg-red-300"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              onClick={() => setShowWelcomeModal(false)}
+            >
+              Get started
+            </Button>
+          </div>
+        }
+      >
+        <p>Let's turn those boring job pages into effective recruitment funnels.</p>
+        <p style={{ marginTop: 8 }}>To start, let’s get your brand elements set-up.</p>
+      </Modal>
       {/* CSS to fix salary badge positioning in preview mode */}
       <style jsx global>{`
         /* Hide only the desktop absolute positioned salary container */
