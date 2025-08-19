@@ -284,26 +284,49 @@ const drawerStyles = `
   
   /* Close button */
   .candidate-close-btn {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    transition: all 0.2s ease;
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10 !important;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
   }
   
   .candidate-close-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
-    color: white;
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    color: white !important;
+    width: 28px !important;
+    height: 28px !important;
+  }
+  
+  .candidate-close-btn:focus {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    color: white !important;
+    width: 28px !important;
+    height: 28px !important;
+    box-shadow: none !important;
+  }
+  
+  .candidate-close-btn .anticon {
+    font-size: 12px !important;
+    line-height: 1 !important;
   }
 `;
 
@@ -503,8 +526,17 @@ const CandidateProfile = ({
           // Look for file type fields in the form structure
           const fileFields = response.data.form.fields.filter(field => field.type === 'file');
           for (const fileField of fileFields) {
-            const fileUrl = formData[fileField.id];
-            if (fileUrl && fileUrl.startsWith('http')) {
+            const fileData = formData[fileField.id];
+            let fileUrl = null;
+            
+            // Handle both new object format and legacy URL string
+            if (typeof fileData === 'object' && fileData.url) {
+              fileUrl = fileData.url;
+            } else if (typeof fileData === 'string' && fileData.startsWith('http')) {
+              fileUrl = fileData;
+            }
+            
+            if (fileUrl) {
               resumeUrlFromResponse = fileUrl;
               console.log('📄 Found resume in form field:', fileField.label, '→', fileUrl);
               break;
@@ -885,23 +917,112 @@ const CandidateProfile = ({
     
     formFields.forEach(field => {
       let answer = null;
-      let label = field.label || field.id;
+      let label = field.label;
+      
+      // Provide better default labels instead of showing field IDs
+      if (!label || label === field.id) {
+        // Generate a human-readable label from field type or ID
+        switch (field.type) {
+          case 'contact':
+            label = 'Contact Information';
+            break;
+          case 'email':
+            label = 'Email';
+            break;
+          case 'phone':
+            label = 'Phone';
+            break;
+          case 'text':
+            label = 'Text';
+            break;
+          case 'textarea':
+          case 'longtext':
+            label = 'Text Area';
+            break;
+          case 'motivation':
+            label = 'Motivation';
+            break;
+          case 'number':
+            label = 'Number';
+            break;
+          case 'date':
+            label = 'Date';
+            break;
+          case 'website':
+            label = 'Website';
+            break;
+          case 'multichoice':
+            label = 'Multiple Choice';
+            break;
+          case 'boolean':
+            label = 'Yes/No';
+            break;
+          default:
+            // As a last resort, format the field ID to be more readable
+            label = field.id.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').replace(/^\w/, c => c.toUpperCase());
+        }
+      }
 
       // Handle different field types
       switch (field.type) {
         case 'contact':
-          // Contact fields have firstName and lastName
+          // Handle contact fields by breaking them into individual components
           const firstNameKey = `${field.id}_firstName`;
           const lastNameKey = `${field.id}_lastName`;
+          const emailKey = `${field.id}_email`;
+          const phoneKey = `${field.id}_phone`;
+          
           const firstName = formData[firstNameKey];
           const lastName = formData[lastNameKey];
-          if (firstName || lastName) {
-            answer = `${firstName || ''} ${lastName || ''}`.trim();
+          const email = formData[emailKey];
+          const phone = formData[phoneKey];
+          
+          // Add individual contact components instead of the contact field itself
+          if (firstName) {
+            formAnswers.push({
+              label: field.firstName?.label || 'First Name',
+              answer: firstName,
+              type: 'text',
+              required: field.firstName?.required || false
+            });
           }
+          
+          if (lastName) {
+            formAnswers.push({
+              label: field.lastName?.label || 'Last Name', 
+              answer: lastName,
+              type: 'text',
+              required: field.lastName?.required || false
+            });
+          }
+          
+          if (email) {
+            formAnswers.push({
+              label: field.email?.label || 'Email',
+              answer: email,
+              type: 'email',
+              required: field.email?.required || false
+            });
+          }
+          
+          if (phone) {
+            formAnswers.push({
+              label: field.phone?.label || 'Phone',
+              answer: phone,
+              type: 'phone',
+              required: field.phone?.required || false
+            });
+          }
+          
+          // Skip adding the contact field itself to avoid showing the ID
+          return;
           break;
           
         case 'email':
         case 'phone':
+          answer = formData[field.id];
+          break;
+          
         case 'text':
         case 'textarea':
         case 'longtext':
@@ -910,7 +1031,21 @@ const CandidateProfile = ({
           break;
           
         case 'file':
-          answer = formData[field.id];
+          const fileData = formData[field.id];
+          if (fileData) {
+            // Handle both new object format {url, filename} and legacy URL string
+            if (typeof fileData === 'object' && fileData.filename) {
+              answer = fileData.filename;
+            } else if (typeof fileData === 'string') {
+              // For file fields, try to get the original filename if stored separately
+              const filenameField = `${field.id}_filename`;
+              if (formData[filenameField]) {
+                answer = formData[filenameField];
+              } else {
+                answer = fileData;
+              }
+            }
+          }
           break;
           
         case 'boolean':
@@ -945,7 +1080,8 @@ const CandidateProfile = ({
           label,
           answer: answer.toString(),
           type: field.type,
-          required: field.required
+          required: field.required,
+          fieldId: field.id // Add field ID for accessing additional data
         });
       }
     });
@@ -957,6 +1093,8 @@ const CandidateProfile = ({
       if (field.type === 'contact') {
         coveredKeys.add(`${field.id}_firstName`);
         coveredKeys.add(`${field.id}_lastName`);
+        coveredKeys.add(`${field.id}_email`);
+        coveredKeys.add(`${field.id}_phone`);
       }
     });
 
@@ -998,7 +1136,7 @@ const CandidateProfile = ({
         </div>
 
         {candidate.form?.description && (
-          <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+          <div className="mb-6 p-4  rounded-lg border border-indigo-100">
             <Text className="text-indigo-700 text-sm">
               {candidate.form.description}
             </Text>
@@ -1011,7 +1149,7 @@ const CandidateProfile = ({
               key={index}
               className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all duration-200"
             >
-              <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mt-1">
+              <div className="w-8 h-8 border-indigo-100 border rounded-full flex items-center justify-center mt-1">
                 {item.type === 'email' ? (
                   <MailOutlined className="text-indigo-600 text-sm" />
                 ) : item.type === 'phone' ? (
@@ -1044,23 +1182,45 @@ const CandidateProfile = ({
                     <span className="text-red-500 text-xs">*</span>
                   )}
                 </div>
-                {item.type === 'file' && item.answer && item.answer.startsWith('http') ? (
+                {item.type === 'file' && formData[item.fieldId] ? (
                   <div className="flex items-center gap-2">
                     <a 
-                      href={item.answer} 
+                      href={(() => {
+                        const fileData = formData[item.fieldId];
+                        // Handle both new object format and legacy URL string
+                        return typeof fileData === 'object' ? fileData.url : fileData;
+                      })()} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
                     >
                       <DownloadOutlined className="text-sm" />
                       {(() => {
-                        // Extract filename from URL
-                        const urlParts = item.answer.split('/');
-                        const lastPart = urlParts[urlParts.length - 1];
-                        const decodedPart = decodeURIComponent(lastPart);
-                        // Remove Cloudinary transformations and get clean filename
-                        const cleanName = decodedPart.split('_').pop() || decodedPart;
-                        return cleanName.length > 30 ? cleanName.substring(0, 30) + '...' : cleanName;
+                        const fileData = formData[item.fieldId];
+                        
+                        // Handle new object format
+                        if (typeof fileData === 'object' && fileData.filename) {
+                          return fileData.filename.length > 30 ? fileData.filename.substring(0, 30) + '...' : fileData.filename;
+                        }
+                        
+                        // Try to get original filename from separate field
+                        const storedFilename = formData[`${item.fieldId}_filename`];
+                        if (storedFilename) {
+                          return storedFilename.length > 30 ? storedFilename.substring(0, 30) + '...' : storedFilename;
+                        }
+                        
+                        // Fallback: Extract filename from URL for legacy data
+                        const fileUrl = typeof fileData === 'string' ? fileData : '';
+                        if (fileUrl && fileUrl.startsWith('http')) {
+                          const urlParts = fileUrl.split('/');
+                          const lastPart = urlParts[urlParts.length - 1];
+                          const decodedPart = decodeURIComponent(lastPart);
+                          // Remove Cloudinary transformations and get clean filename
+                          const cleanName = decodedPart.split('_').pop() || decodedPart;
+                          return cleanName.length > 30 ? cleanName.substring(0, 30) + '...' : cleanName;
+                        }
+                        
+                        return item.answer;
                       })()}
                     </a>
                   </div>
@@ -1080,7 +1240,7 @@ const CandidateProfile = ({
                 )}
               </div>
               
-              {(item.type === 'email' || item.type === 'phone' || (item.type === 'file' && item.answer && item.answer.startsWith('http'))) && (
+              {(item.type === 'email' || item.type === 'phone' || (item.type === 'file' && formData[item.fieldId])) && (
                 <div className="flex gap-1">
                   {item.type === 'email' && (
                     <Button 
@@ -1102,12 +1262,16 @@ const CandidateProfile = ({
                       title="Call phone"
                     />
                   )}
-                  {item.type === 'file' && item.answer && item.answer.startsWith('http') && (
+                  {item.type === 'file' && formData[item.fieldId] && (
                     <Button 
                       size="small" 
                       type="text" 
                       icon={<DownloadOutlined />}
-                      onClick={() => window.open(item.answer, '_blank')}
+                      onClick={() => {
+                        const fileData = formData[item.fieldId];
+                        const fileUrl = typeof fileData === 'object' ? fileData.url : fileData;
+                        window.open(fileUrl, '_blank');
+                      }}
                       className="hover:bg-indigo-100 hover:text-indigo-600"
                       title="Download file"
                     />

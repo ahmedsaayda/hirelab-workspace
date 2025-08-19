@@ -246,15 +246,19 @@ const FileUpload = ({ value, onChange, placeholder }) => {
   // Parse existing value to show if it's a URL or filename
   useEffect(() => {
     if (value) {
-      if (value.startsWith('http')) {
-        // Extract filename from URL
+      if (typeof value === 'object' && value.filename) {
+        // New format: object with filename and url
+        setFileName(value.filename);
+      } else if (typeof value === 'string' && value.startsWith('http')) {
+        // Legacy format: URL string - extract filename from URL
         const urlParts = value.split('/');
         const lastPart = urlParts[urlParts.length - 1];
         const decodedPart = decodeURIComponent(lastPart);
         // Remove Cloudinary transformations and get clean filename
         const cleanName = decodedPart.split('_').pop() || decodedPart;
         setFileName(cleanName);
-      } else {
+      } else if (typeof value === 'string') {
+        // Legacy format: just filename
         setFileName(value);
       }
     }
@@ -290,7 +294,11 @@ const FileUpload = ({ value, onChange, placeholder }) => {
         console.log('✅ File upload successful:', uploadedUrl);
         
         setFileName(file.name);
-        onChange(uploadedUrl); // Store the URL instead of filename
+        // Store both URL and filename as an object
+        onChange({
+          url: uploadedUrl,
+          filename: file.name
+        });
         message.success('File uploaded successfully');
       } else {
         console.warn('❌ File upload response missing URL:', response);
@@ -931,6 +939,21 @@ export default function ApplyPage() {
             }
           }
           processedFormData[field.id] = formattedDate;
+        } else if (field.type === 'file') {
+          // Handle file fields - extract URL for backward compatibility
+          const fileData = formData[field.id];
+          if (fileData) {
+            if (typeof fileData === 'object' && fileData.url) {
+              // New format: object with url and filename
+              processedFormData[field.id] = fileData.url;
+              processedFormData[`${field.id}_filename`] = fileData.filename;
+            } else if (typeof fileData === 'string') {
+              // Legacy format: URL string
+              processedFormData[field.id] = fileData;
+            }
+          } else {
+            processedFormData[field.id] = "";
+          }
         } else {
           // Handle other field types
           processedFormData[field.id] = formData[field.id] || "";
