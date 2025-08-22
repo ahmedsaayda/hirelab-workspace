@@ -13,7 +13,8 @@ import {
   CheckCircleOutlined,
   RocketOutlined,
   StarOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import AuthService from "../../services/AuthService";
 import { useSelector } from "react-redux";
@@ -249,6 +250,24 @@ const Billing = () => {
     } catch (error) {
       console.error("Error updating plan:", error);
       message.error(error.response?.data?.message || "Failed to update plan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenBillingPortal = async () => {
+    try {
+      setLoading(true);
+      const response = await AuthService.getBillingPortal();
+      
+      if (response.data?.link) {
+        window.open(response.data.link, '_blank');
+      } else {
+        message.error("Unable to access billing portal. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error opening billing portal:", error);
+      message.error("Failed to open billing portal");
     } finally {
       setLoading(false);
     }
@@ -527,6 +546,35 @@ const Billing = () => {
           })()}
         </div>
       </Card>
+
+      {/* Manage Subscription */}
+      {user?.subscription?.id && (
+        <Card 
+          title={
+            <div className="flex items-center">
+              <FileTextOutlined className="mr-2 text-blue-500" />
+              Manage Subscription
+            </div>
+          } 
+          className="mb-6"
+        >
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div className="mb-4 md:mb-0">
+              <p className="text-gray-600 mb-2">
+                Access billing history, download invoices, and manage payment methods.
+              </p>
+            </div>
+            <Button 
+              type="primary"
+              onClick={handleOpenBillingPortal}
+              loading={loading}
+              className="w-full md:w-auto"
+            >
+              Manage Subscription
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Available Plans */}
       <Card title="Available Plans" className="mb-6" id="plans-section">
