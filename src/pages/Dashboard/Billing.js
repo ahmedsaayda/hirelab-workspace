@@ -258,7 +258,7 @@ const Billing = () => {
   const handleOpenBillingPortal = async () => {
     try {
       setLoading(true);
-      const response = await AuthService.getBillingPortal();
+      const response = await AuthService.getSubscription();
       
       if (response.data?.link) {
         window.open(response.data.link, '_blank');
