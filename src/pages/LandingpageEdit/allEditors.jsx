@@ -459,6 +459,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
         salaryTime: "salaryRange",
         salaryCurrency: "salaryRange",
         salaryRange: "salaryRange",
+        salaryText: "salaryRange",
         // Hours fields
         hoursMin: "hoursRange",
         hoursMax: "hoursRange",
@@ -756,110 +757,145 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                 <div className="flex flex-col col-span-2 gap-2 w-full">
                   <div className="flex gap-5 justify-between items-center">
                     <Text as="p" className="self-end !text-blue_gray-700">
-                      Salary
+                      Show numeric salary
                     </Text>
                     <div className="flex gap-2 self-start">
-                      <Text
-                        as="p"
-                        className="!font-normal !text-blue_gray-700_01"
-                      >
-                        Range
-                      </Text>
                       <Switch
-                        checked={isSalaryRange}
+                        checked={landingPageData?.salaryAvailable !== false}
                         onChange={(checked) => {
-                          setIsSalaryRange(checked);
-                          handleChange("salaryRange", checked);
+                          handleChange("salaryAvailable", checked);
                         }}
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-4">
+                  {landingPageData?.salaryAvailable === false && (
                     <div className="flex gap-2 justify-between items-center">
                       <Input
                         shape="round"
                         {...({} )}
-                        name="salaryMin"
-                        placeholder="Min"
-                        value={landingPageData?.salaryMin || ""}
-                        onInput={(e) => {
-                          const value = e.target.value.replace(/[^0-9.]/g, ""); // Allow only numbers and decimal points
-                          handleChange("salaryMin", value);
-                        }}
+                        name="salaryText"
+                        placeholder="Text to show (e.g., Competitive Salary)"
+                        value={landingPageData?.salaryText || ""}
+                        onInput={(e) => handleChange("salaryText", e.target.value)}
                         className="w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5 text-sm"
-                        onMouseEnter={() => setHoveredField("salaryMin")}
+                        onMouseEnter={() => setHoveredField("salaryText")}
                         onMouseLeave={() => setHoveredField(null)}
-                        ref={setFocusRef("salaryMin")}
+                        ref={setFocusRef("salaryText")}
                         onFocus={() => {
                           setLastScrollToSection(null)
                         }}
-                 
-                      />
-                      <SelectBox
-                        shape="round"
-                        {...({} )}
-                        name="salaryTime"
-                        placeholder="Frequency"
-                        options={dropDownOptions}
-                        value={dropDownOptions.find(
-                          (o) => o.value === landingPageData?.salaryTime
-                        )}
-                        onChange={(e) => handleChange("salaryTime", e.value)}
-                        className="gap-px w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5"
-                        onMouseEnter={() => setHoveredField("salaryTime")}
-                        onMouseLeave={() => setHoveredField(null)}
-                        ref={setFocusRef("salaryTime")}
-                        onFocus={() => {
-                          setLastScrollToSection(null)
-                        }}
-               
                       />
                     </div>
-                    {isSalaryRange && (
-                      <Input
-                        shape="round"
-                        {...({} )}
-                        name="salaryMax"
-                        placeholder="Max"
-                        value={landingPageData?.salaryMax || ""}
-                        onInput={(e) => {
-                          const value = e.target.value.replace(/[^0-9.]/g, ""); // Allow only numbers and decimal points
-                          handleChange("salaryMax", value);
-                        }}
-                        className="border border-solid border-blue_gray-100 sm:pr-5 text-sm"
-                        onMouseEnter={() => setHoveredField("salaryMax")}
-                        onMouseLeave={() => setHoveredField(null)}
-                        ref={setFocusRef("salaryMax")}
-                        onFocus={() => {
-                          setLastScrollToSection(null)
-                        }}
-                      />
-                    )}
+                  )}
+                  {landingPageData?.salaryAvailable !== false && (
+                    <>
+                      <div className="flex gap-5 justify-between items-center">
+                        <Text as="p" className="self-end !text-blue_gray-700">
+                          Salary
+                        </Text>
+                        <div className="flex gap-2 self-start">
+                          <Text
+                            as="p"
+                            className="!font-normal !text-blue_gray-700_01"
+                          >
+                            Range
+                          </Text>
+                          <Switch
+                            checked={isSalaryRange}
+                            onChange={(checked) => {
+                              setIsSalaryRange(checked);
+                              handleChange("salaryRange", checked);
+                            }}
+                          />
+                        </div>
+                      </div>
 
-                    <SelectBox
-                      shape="round"
-                      {...({} )}
-                      name="salaryCurrency"
-                      placeholder="Currency"
-                      options={currencyOptions}
-                      value={currencyOptions.find((o) => {
-                        const curr = Currency[o.value];
-                        return curr?.symbol === landingPageData?.salaryCurrency;
-                      })}
-                      onChange={(e) => {
-                        const selectedCurrency = Currency[e.value];
-                        console.log("selectedCurrency", selectedCurrency);
-                        handleChange("salaryCurrency", selectedCurrency.symbol);
-                      }}
-                      className="w-full !rounded-[10px] border h-[44px] sm:w-full sm:pr-5"
-                      onMouseEnter={() => setHoveredField("salaryCurrency")}
-                      onMouseLeave={() => setHoveredField(null)}
-                      onFocus={() => {
-                        setLastScrollToSection(null)
-                      }}
-                    />
-                  </div>
+                      <div className="space-y-4">
+                        <div className="flex gap-2 justify-between items-center">
+                          <Input
+                            shape="round"
+                            {...({} )}
+                            name="salaryMin"
+                            placeholder="Min"
+                            value={landingPageData?.salaryMin || ""}
+                            onInput={(e) => {
+                              const value = e.target.value.replace(/[^0-9.]/g, ""); // Allow only numbers and decimal points
+                              handleChange("salaryMin", value);
+                            }}
+                            className="w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5 text-sm"
+                            onMouseEnter={() => setHoveredField("salaryMin")}
+                            onMouseLeave={() => setHoveredField(null)}
+                            ref={setFocusRef("salaryMin")}
+                            onFocus={() => {
+                              setLastScrollToSection(null)
+                            }}
+                          />
+                          <SelectBox
+                            shape="round"
+                            {...({} )}
+                            name="salaryTime"
+                            placeholder="Frequency"
+                            options={dropDownOptions}
+                            value={dropDownOptions.find(
+                              (o) => o.value === landingPageData?.salaryTime
+                            )}
+                            onChange={(e) => handleChange("salaryTime", e.value)}
+                            className="gap-px w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5"
+                            onMouseEnter={() => setHoveredField("salaryTime")}
+                            onMouseLeave={() => setHoveredField(null)}
+                            ref={setFocusRef("salaryTime")}
+                            onFocus={() => {
+                              setLastScrollToSection(null)
+                            }}
+                          />
+                        </div>
+                        {isSalaryRange && (
+                          <Input
+                            shape="round"
+                            {...({} )}
+                            name="salaryMax"
+                            placeholder="Max"
+                            value={landingPageData?.salaryMax || ""}
+                            onInput={(e) => {
+                              const value = e.target.value.replace(/[^0-9.]/g, ""); // Allow only numbers and decimal points
+                              handleChange("salaryMax", value);
+                            }}
+                            className="border border-solid border-blue_gray-100 sm:pr-5 text-sm"
+                            onMouseEnter={() => setHoveredField("salaryMax")}
+                            onMouseLeave={() => setHoveredField(null)}
+                            ref={setFocusRef("salaryMax")}
+                            onFocus={() => {
+                              setLastScrollToSection(null)
+                            }}
+                          />
+                        )}
+
+                        <SelectBox
+                          shape="round"
+                          {...({} )}
+                          name="salaryCurrency"
+                          placeholder="Currency"
+                          options={currencyOptions}
+                          value={currencyOptions.find((o) => {
+                            const curr = Currency[o.value];
+                            return curr?.symbol === landingPageData?.salaryCurrency;
+                          })}
+                          onChange={(e) => {
+                            const selectedCurrency = Currency[e.value];
+                            console.log("selectedCurrency", selectedCurrency);
+                            handleChange("salaryCurrency", selectedCurrency.symbol);
+                          }}
+                          className="w-full !rounded-[10px] border h-[44px] sm:w-full sm:pr-5"
+                          onMouseEnter={() => setHoveredField("salaryCurrency")}
+                          onMouseLeave={() => setHoveredField(null)}
+                          onFocus={() => {
+                            setLastScrollToSection(null)
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </Collapse.Panel>
             </Collapse>

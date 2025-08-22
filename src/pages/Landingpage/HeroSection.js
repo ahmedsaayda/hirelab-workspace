@@ -57,6 +57,7 @@ const useHeroHover = () => {
   const salaryTimeRef = useRef();
   const salaryCurrencyRef = useRef();
   const salaryRangeRef = useRef();
+  const salaryTextRef = useRef();
   const hoursMaxRef = useRef();
   const hoursUnitRef = useRef();
   const hoursRangeRef = useRef();
@@ -84,6 +85,7 @@ const useHeroHover = () => {
       salaryTime: salaryTimeRef,
       salaryCurrency: salaryCurrencyRef,
       salaryRange: salaryRangeRef,
+      salaryText: salaryTextRef,
       hoursMax: hoursMaxRef,
       hoursUnit: hoursUnitRef,
       hoursRange: hoursRangeRef,
@@ -141,6 +143,7 @@ const useHeroHover = () => {
     salaryTimeRef,
     salaryCurrencyRef,
     salaryRangeRef,
+    salaryTextRef,
     hoursMaxRef,
     hoursUnitRef,
     hoursRangeRef,
@@ -562,7 +565,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
             {/* Job Title and Job Description */}
             {/* Mobile Badges - Visible only on small screens */}
             <div className="flex flex-wrap gap-2 justify-center mb-6 lg:hidden">
-              {landingPageData?.salaryMin && (
+              {(landingPageData?.salaryAvailable === false || landingPageData?.salaryMin) && (
                 <div
                   className="flex gap-2 items-center p-2 rounded-xl border shadow-lg border-white/10 lg:min-h-[75px]"
                   style={{
@@ -592,25 +595,36 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     </svg>
                   </div>
                   <div className="flex flex-col items-start">
-                    <p className="text-xs font-light "
-                    style={{
-                      color: textColor
-                    }}
-                    >
-                      {landingPageData?.salaryMin &&
-                        intToHumanReadablePrice(
-                          landingPageData?.salaryMin
-                        )}{" "}
-                      {landingPageData?.salaryRange &&
-                        landingPageData?.salaryMax &&
-                        "-"}{" "}
-                      {landingPageData?.salaryRange &&
-                        landingPageData?.salaryMax &&
-                        intToHumanReadablePrice(landingPageData?.salaryMax)}
-                      {landingPageData?.salaryCurrency &&
-                        ` ${landingPageData?.salaryCurrency}`}
-                      /{getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime)?.toLowerCase?.() || getSalaryTimeTranslation(landingPageData?.lang, "Year")?.toLowerCase?.()}
-                    </p>
+                    {landingPageData?.salaryAvailable === false ? (
+                      <p
+                        ref={refs.salaryTextRef}
+                        onClick={() => handleItemClick("salaryText")}
+                        className="text-xs font-light "
+                        style={{ color: textColor }}
+                      >
+                        {landingPageData?.salaryText || getTranslation(landingPageData?.lang, 'competitiveSalary') || 'Competitive Salary'}
+                      </p>
+                    ) : (
+                      <p className="text-xs font-light "
+                        style={{
+                          color: textColor
+                        }}
+                      >
+                        {landingPageData?.salaryMin &&
+                          intToHumanReadablePrice(
+                            landingPageData?.salaryMin
+                          )}{" "}
+                        {landingPageData?.salaryRange &&
+                          landingPageData?.salaryMax &&
+                          "-"}{" "}
+                        {landingPageData?.salaryRange &&
+                          landingPageData?.salaryMax &&
+                          intToHumanReadablePrice(landingPageData?.salaryMax)}
+                        {landingPageData?.salaryCurrency &&
+                          ` ${landingPageData?.salaryCurrency}`}
+                        /{getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime)?.toLowerCase?.() || getSalaryTimeTranslation(landingPageData?.lang, "Year")?.toLowerCase?.()}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -897,43 +911,54 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           />
                         </svg>
                       </div>
-                      <span
-                        ref={refs.salaryRangeRef}
-                        className="font-medium  whitespace-nowrap"
-                        onClick={() => handleItemClick("salaryMin")}
-                        style={{
-                          color:textColor
-                        }}
-                      >
-                        {landingPageData?.salaryRange ? (
-                          <>
-                            <span ref={refs.salaryMinRef}>
-                              {landingPageData?.salaryCurrency ?? "$"}{" "}
-                              {landingPageData?.salaryMin || ""}
-                            </span>
-                            <span> - </span>
-                            <span ref={refs.salaryMaxRef}>
-                              {landingPageData?.salaryCurrency ?? "$"}{" "}
-                              {landingPageData?.salaryMax || ""}
-                            </span>
-                          </>
-                        ) : (
-                          <span ref={refs.salaryMinRef}>
-                            {landingPageData?.salaryCurrency ?? "$"}{" "}
-                            {landingPageData?.salaryMin || ""}
-                          </span>
-                        )}
-                        <span> / </span>
+                      {landingPageData?.salaryAvailable === false ? (
                         <span
-                          ref={refs.salaryTimeRef}
-                          onClick={() => handleItemClick("salaryTime")}
+                          ref={refs.salaryTextRef}
+                          className="font-medium whitespace-nowrap"
+                          onClick={() => handleItemClick("salaryText")}
+                          style={{ color: textColor }}
+                        >
+                          {landingPageData?.salaryText || getTranslation(landingPageData?.lang, 'competitiveSalary') || 'Competitive Salary'}
+                        </span>
+                      ) : (
+                        <span
+                          ref={refs.salaryRangeRef}
+                          className="font-medium  whitespace-nowrap"
+                          onClick={() => handleItemClick("salaryMin")}
                           style={{
                             color:textColor
                           }}
                         >
-                          {getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime)?.toLowerCase?.() || getSalaryTimeTranslation(landingPageData?.lang, "Month")?.toLowerCase?.()}
+                          {landingPageData?.salaryRange ? (
+                            <>
+                              <span ref={refs.salaryMinRef}>
+                                {landingPageData?.salaryCurrency ?? "$"}{" "}
+                                {landingPageData?.salaryMin || ""}
+                              </span>
+                              <span> - </span>
+                              <span ref={refs.salaryMaxRef}>
+                                {landingPageData?.salaryCurrency ?? "$"}{" "}
+                                {landingPageData?.salaryMax || ""}
+                              </span>
+                            </>
+                          ) : (
+                            <span ref={refs.salaryMinRef}>
+                              {landingPageData?.salaryCurrency ?? "$"}{" "}
+                              {landingPageData?.salaryMin || ""}
+                            </span>
+                          )}
+                          <span> / </span>
+                          <span
+                            ref={refs.salaryTimeRef}
+                            onClick={() => handleItemClick("salaryTime")}
+                            style={{
+                              color:textColor
+                            }}
+                          >
+                            {getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime)?.toLowerCase?.() || getSalaryTimeTranslation(landingPageData?.lang, "Month")?.toLowerCase?.()}
+                          </span>
                         </span>
-                      </span>
+                      )}
                     </div>
                     <svg
                       width="151"
