@@ -348,8 +348,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
         )}
 
         <div
-          className="absolute right-16 bottom-14 translate-y-1/2  leading-none opacity-20"
-          style={{ color: getColor("primary", 500),fontSize:"250px" ,fontWeight:"100",letterSpacing:"2px" }}
+          className="absolute right-2 md:right-4 bottom-14 translate-y-1/2  opacity-20 leading-none"
+          style={{ color: getColor("primary", 500),fontSize:"250px" ,fontWeight:"100",letterSpacing:"2px", fontVariantNumeric: "tabular-nums" }}
         >
           {step.number}
         </div>
