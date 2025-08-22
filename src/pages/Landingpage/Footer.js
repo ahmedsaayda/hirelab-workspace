@@ -756,7 +756,9 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
             className="py-3 w-full font-medium text-center rounded-full transition-colors mt-auto"
             style={jobCardStyles.applyButton}
           >
-            Learn More
+            {/* Learn More */}
+            {/* show correct translated cta2 of the job */}
+            {job?.ctaFooterTitle??landingPageData?.ctaFooterTitle??"Learn More"}
           </a>
         </div>
       </div>
@@ -934,14 +936,14 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
               className="inline-block px-8 py-3 font-medium rounded-full transition-colors"
               style={ctaButtonStyle}
             >
-              {landingPageData?.ctaApply || "Apply Now"}
+              {landingPageData?.ctaFooterTitle || "Apply Now"}
             </button>
           </div>
         </div>
       </div>
 
       {/* Similar Jobs Section */}
-      {landingPageData?.showSimilarJobs && (
+      {landingPageData?.showSimilarJobs &&landingPageData?.similarJobs?.length > 0 && (
         <div className="px-4 mx-auto max-w-[1300px] md:px-8">
           <h2
             className="text-2xl md:text-3xl font-bold mb-8 text-center text-[#1a3e4c] w-fit mx-auto"
