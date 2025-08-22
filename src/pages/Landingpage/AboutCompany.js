@@ -413,7 +413,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
             className="mx-auto mb-8 max-w-2xl"
           >
             <h3 style={{ fontFamily: subheaderFont?.family }}>
-              {landingPageData?.aboutTheCompanyText}
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: companyText,
+                }}
+              />
             </h3>
           </div>
           <div className="mb-8">
@@ -422,7 +426,12 @@ const Template1 = ({ landingPageData, fetchData }) => {
               onClick={() => handleItemClick("aboutTheCompanyDescription")}
               style={{ color: "#1a3e4c", fontFamily: bodyFont?.family }}
             >
-              {showFullDescription ? description : truncatedDescription}
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: (showFullDescription ? description : truncatedDescription)
+                    ?.replace?.(/\n/g, "<br>")
+                }}
+              />
             </p>
 
             {shouldTruncate && (

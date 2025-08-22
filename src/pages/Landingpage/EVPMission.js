@@ -327,8 +327,10 @@ const {  subheaderFont, bodyFont } = getFonts(landingPageData);
                 className="mb-8 leading-relaxed"
                 style={{ fontFamily: bodyFont?.family }}
                 dangerouslySetInnerHTML={{
-                  __html: landingPageData?.evpMissionDescription ||
-                    "With the Core App development team we are on our way to become the worlds user friendliest consumer app for job connections with employers. We are just missing one person. You!"
+                  __html:
+                    (landingPageData?.evpMissionDescription ||
+                      "With the Core App development team we are on our way to become the worlds user friendliest consumer app for job connections with employers. We are just missing one person. You!"
+                    )?.replace?.(/\n/g, "<br>")
                 }}
               >
               </p>

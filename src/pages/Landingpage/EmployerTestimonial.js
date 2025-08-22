@@ -729,8 +729,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                  fontFamily: subheaderFont?.family
                }}
                dangerouslySetInnerHTML={{
-                 __html: landingPageData?.testimonialSubheader ||
-                   "You don't have to take our word for it."
+                 __html: (landingPageData?.testimonialSubheader ||
+                   "You don't have to take our word for it.")?.replace?.(/\n/g, "<br>")
                }}
              >
              </p>

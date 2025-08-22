@@ -354,9 +354,12 @@ const Template1 = ({ data }) => {
                 style={{
                   fontFamily: bodyFont?.family,
                 }}
+                dangerouslySetInnerHTML={{
+                  __html:
+                    (data?.leaderIntroductionDescription ||
+                      "With the Core App development team we are on our way to become the worlds user friendliest consumer app for job connections with employers. We are just missing one person. You!")?.replace?.(/\n/g, "<br>")
+                }}
               >
-                {data?.leaderIntroductionDescription ||
-                  "With the Core App development team we are on our way to become the worlds user friendliest consumer app for job connections with employers. We are just missing one person. You!"}
               </p>
             </div>
 

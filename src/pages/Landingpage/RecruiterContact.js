@@ -890,7 +890,9 @@ const Template1 = ({ landingPageData, fetchData }) => {
             className="text-lg"
             style={{ fontFamily: bodyFont?.family }}
             onClick={() => handleItemClick("recruiterContactText")}
-            dangerouslySetInnerHTML={{ __html: landingPageData?.recruiterContactText || "" }}
+            dangerouslySetInnerHTML={{
+              __html: (landingPageData?.recruiterContactText || "")?.replace?.(/\n/g, "<br>")
+            }}
           >
           </p>
         </div>

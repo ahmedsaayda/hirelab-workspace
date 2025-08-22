@@ -340,8 +340,10 @@ const Template1 = ({ landingPageData, fetchData }) => {
               handleItemClick(`candidateProcess[${index}].description`)
             }
             className="relative z-10 mb-4 text-gray-600"
+            dangerouslySetInnerHTML={{
+              __html: step.description?.replace?.(/\n/g, "<br>")
+            }}
           >
-            {step.description}
           </p>
         )}
 
@@ -457,8 +459,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
             onClick={() => handleItemClick("candidateProcessDescription")}
             style={{ fontFamily: subheaderFont?.family }}
             dangerouslySetInnerHTML={{
-              __html: landingPageData?.candidateProcessDescription ||
-                "Take a glimpse of how our application process looks like."
+              __html: (landingPageData?.candidateProcessDescription ||
+                "Take a glimpse of how our application process looks like.")?.replace?.(/\n/g, "<br>")
             }}
           >
           </h3>

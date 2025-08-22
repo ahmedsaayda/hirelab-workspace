@@ -552,7 +552,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                   }}
                   className="text-sm leading-relaxed md:text-base text-white/80"
                   dangerouslySetInnerHTML={{
-                    __html: landingPageData?.heroDescription ||"Provide a compelling description of the job and the company. This will be displayed in the hero section of the landing page."
+                    __html: (landingPageData?.heroDescription ||
+                      "Provide a compelling description of the job and the company. This will be displayed in the hero section of the landing page.")?.replace?.(/\n/g, "<br>")
                   }}
                 >
                 </p>

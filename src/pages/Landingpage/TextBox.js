@@ -124,7 +124,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     dangerouslySetInnerHTML={{
                       __html: landingPageData?.textBoxDescription?.replace?.(
                         /\n/g,
-                        ""
+                        "<br>"
                       ),
                     }}
                   />

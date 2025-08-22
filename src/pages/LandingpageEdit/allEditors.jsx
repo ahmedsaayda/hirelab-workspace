@@ -41,7 +41,7 @@ const AboutCompanyEdit = (props) => {
           {
             key: "aboutTheCompanyDescription",
             label: "Body Text",
-            max: 500,
+            max: 1000,
             textarea: true,
           },
           {

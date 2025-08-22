@@ -608,8 +608,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
             onClick={() => handleItemClick("growthPathDescription")}
             style={{ fontFamily: subheaderFont?.family }}
             dangerouslySetInnerHTML={{
-              __html: landingPageData?.growthPathDescription ||
-                "Take a glimpse of how your career might progress with us."
+              __html: (landingPageData?.growthPathDescription ||
+                "Take a glimpse of how your career might progress with us.")?.replace?.(/\n/g, "<br>")
             }}
           >
           </h3>

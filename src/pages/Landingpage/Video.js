@@ -546,8 +546,9 @@ const Template1 = ({
             ref={textRef}
             style={{ fontFamily: subheaderFont?.family }}
             dangerouslySetInnerHTML={{
-              __html: landingPageData?.videoDescription ||
+              __html: (landingPageData?.videoDescription ||
                 "Mastering the Interview: Essential Tips for Success"
+              )?.replace?.(/\n/g, "<br>")
             }}
           >
           </h3>

@@ -526,8 +526,8 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
             className=""
             style={{ fontFamily: subheaderFont?.family }}
             dangerouslySetInnerHTML={{
-              __html: landingPageData?.agendaDescription ||
-                "Take a glimpse of how your day might look like."
+              __html: (landingPageData?.agendaDescription ||
+                "Take a glimpse of how your day might look like.")?.replace?.(/\n/g, "<br>")
             }}
           >
           </h3> 
@@ -616,8 +616,10 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
                       overflow: 'visible'
                     }}
                     className="text-sm text-gray-600"
+                    dangerouslySetInnerHTML={{
+                      __html: item.description?.replace?.(/\n/g, "<br>")
+                    }}
                   >
-                    {item.description}
                   </p>
                 </div>
 
