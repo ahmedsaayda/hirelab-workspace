@@ -833,8 +833,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 <img
                   src={
                     landingPageData?.heroImage ||
-                    // "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                    "https://res.cloudinary.com/dvq0ouupb/image/upload/v1746205547/cyhnkwxsuac5euqhrypd.jpg"
+                    "/dhwise-images/placeholder.png"
                   }
                   alt="Project Manager candidate"
                   className="object-cover  aspect-[200/140] w-full lg:w-[50vw] xl:w-[75vw] xl:mb-0 max-h-[450px] smx:max-h-[300px] rounded-t-[64px] max-w-[684px] mx-auto"
