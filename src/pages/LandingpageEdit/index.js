@@ -208,6 +208,8 @@ export const renderEditor = ({
     availableJobs,
     jobsLoading,
   };
+  console.log("render Editor the key is",section?.key)
+  console.log("render Editor the section is",section)
   switch (section?.key) {
     case "flexaligntop":
       return <HeroSectionEdit {...props} />;
@@ -412,6 +414,7 @@ export default function LandingpageEdit({paramsId}) {
   const { setScrollToSection, hoveredField, setHoveredField } = useHover();
   const [landingPageData, setLandingPageData] = useState(null);
   const [activeIdx, setActiveIdx] = useState(0);
+  console.log("the activeIdx is",activeIdx)
   const [addMenuItem, setAddMenuItem] = useState(false);
   const [templateMenu, setTemplateMenu] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(890);
@@ -1486,7 +1489,7 @@ export default function LandingpageEdit({paramsId}) {
                 {renderEditor({
                   section: [
                     { key: "flexaligntop" },
-                    ...(landingPageData?.menuItems ?? []),
+                    ...(landingPageData?.menuItems ?? [])?.filter(item => item.active),
                     { key: "flexalign" },
                     { key: "search" },
                   ][activeIdx],
