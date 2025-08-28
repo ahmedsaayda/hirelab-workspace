@@ -2004,9 +2004,26 @@ const handleLogoUpload = async (url) => {
         className="flex flex-col items-center justify-center  w-[700px] "
       >
         <div className="max-w-[600px] text-center">
-        <h3 className="text-xl font-bold mb-4">Welcome to HireLab</h3>
-        <p>Let's turn those boring job pages into effective recruitment funnels.</p>
-        <p style={{ marginTop: 8 }}>To start, let’s get your brand elements set-up.</p>
+          <h3 className="text-xl font-bold mb-4">Welcome to HireLab 👋</h3>
+          <p className="text-gray-600 mb-4">Before you start building recruitment funnels, let's set up your Brand Kit.</p>
+          
+          <div className="text-left space-y-3 my-6">
+            <div className="flex items-start gap-3">
+              <span className="text-blue-500 font-medium">•</span>
+              <p className="text-gray-700"><strong>Upload your logo</strong> – so every page feels like you.</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-blue-500 font-medium">•</span>
+              <p className="text-gray-700"><strong>Pick your colors & fonts</strong> – for a consistent, on-brand look.</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-blue-500 font-medium">•</span>
+              <p className="text-gray-700"><strong>Tell us about your company</strong> – so candidates know what makes you unique.</p>
+            </div>
+          </div>
+          
+          <p className="text-gray-600 mb-4">Once this is done, our Design AI will automatically apply your brand style to every page you publish.</p>
+          <p className="text-gray-800 font-medium">👉 Ready? Let's get started.</p>
         </div>
       </Modal>
       {/* CSS to fix salary badge positioning in preview mode */}
