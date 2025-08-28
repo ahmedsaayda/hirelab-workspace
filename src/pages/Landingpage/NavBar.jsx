@@ -270,14 +270,12 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
       primaryColor: "#2e9eac",
       secondaryColor: "#e1ce11",
       tertiaryColor: "#44b566",
-      heroBackgroundColor: "white",
     },
     // Pass landingPageData colors as customColors to ensure updates
     {
       primaryColor,
       secondaryColor,
       tertiaryColor,
-      heroBackgroundColor: "white",
     }
   );
 
@@ -288,8 +286,9 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   const [isFixed, setIsFixed] = useState(false);
   const [isTemplate3NavFixed, setIsTemplate3NavFixed] = useState(false);
   const [currentHash, setCurrentHash] = useState(
-    window.location.hash.slice(1) || "job-specifications"
+    window.location.hash.slice(1) || "video"
   );
+  const [scrollPosition, setScrollPosition] = useState(0);
   // const [isScrolled, setIsScrolled] = useState(false);
   const[shareIcon, setShareIcon] = useState(<Share2 size={20}/>);
   const [modalVisible, setModalVisible] = useState(false);
@@ -605,30 +604,61 @@ const handlemediaLink = (platform) => {
     });
   }, []);
 
-  // Listen for hash changes
+  // Listen for hash changes - support both parent window and iframe
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1);
-      setCurrentHash(hash || "job-specifications");
+    const handleHashChange = (targetWindow = window) => {
+      const hash = targetWindow.location.hash.slice(1);
+      setCurrentHash(hash || "video"); // Start with first menu item instead of job-specifications
     };
 
     // Set initial hash
     handleHashChange();
 
-    // Add event listener for hash changes
-    window.addEventListener("hashchange", handleHashChange);
+    // Add event listener for hash changes in parent window
+    window.addEventListener("hashchange", () => handleHashChange(window));
+
+    // Also listen for hash changes in iframe if in edit mode
+    if (isEdit || isEditPage) {
+      const checkIframeHash = () => {
+        const iframes = document.querySelectorAll('iframe');
+        if (iframes.length > 0) {
+          const iframe = iframes[iframes.length - 1];
+          const iframeWindow = iframe.contentWindow;
+          if (iframeWindow) {
+            try {
+              handleHashChange(iframeWindow);
+              iframeWindow.addEventListener("hashchange", () => handleHashChange(iframeWindow));
+            } catch (e) {
+              // Handle cross-origin restrictions silently
+            }
+          }
+        }
+      };
+      
+      // Check after a short delay to ensure iframe is loaded
+      const timeoutId = setTimeout(checkIframeHash, 500);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        window.removeEventListener("hashchange", () => handleHashChange(window));
+      };
+    }
 
     return () => {
-      window.removeEventListener("hashchange", handleHashChange);
+      window.removeEventListener("hashchange", () => handleHashChange(window));
     };
-  }, []);
+  }, [isEdit, isEditPage]);
 
 
   
 
   const handleNavigate = (id) => {
+    console.log('id to navigate:', id);
     console.log('Navigating to:', id);
     console.log(`isEdit: ${isEdit}, isEditPage: ${isEditPage}`);
+    
+    // Immediately update current hash for instant UI feedback
+    setCurrentHash(id);
     
     let targetDocument;
     let targetWindow;
@@ -656,14 +686,24 @@ const handlemediaLink = (platform) => {
       console.log('Using current window document');
     }
 
-    const element = targetDocument.getElementById(id);
+    // Try multiple selector strategies to find the element
+    let element = targetDocument.getElementById(id);
+    
+    if (!element) {
+      // Try finding by data attribute or other common patterns
+      element = targetDocument.querySelector(`[data-section="${id}"]`) ||
+                targetDocument.querySelector(`[data-id="${id}"]`) ||
+                targetDocument.querySelector(`.section-${id}`) ||
+                targetDocument.querySelector(`div[id*="${id}"]`);
+    }
+    
     console.log('Found element:', element);
 
     if (element) {
       const navbarHeight = 128;
       const elementRect = element.getBoundingClientRect();
       const currentScrollTop = targetWindow.pageYOffset || targetWindow.scrollY || 0;
-      const offsetPosition = elementRect.top + currentScrollTop - navbarHeight;
+      const offsetPosition = Math.max(0, elementRect.top + currentScrollTop - navbarHeight);
       
       console.log('Element rect top:', elementRect.top);
       console.log('Current scroll top:', currentScrollTop);
@@ -690,6 +730,12 @@ const handlemediaLink = (platform) => {
       // List all elements with IDs for debugging
       const allElementsWithIds = Array.from(targetDocument.querySelectorAll('[id]')).map(el => el.id);
       console.log('Available IDs:', allElementsWithIds);
+      
+      // Also check for data attributes
+      const elementsWithDataId = Array.from(targetDocument.querySelectorAll('[data-section], [data-id]')).map(el => 
+        el.getAttribute('data-section') || el.getAttribute('data-id')
+      );
+      console.log('Available data-section/data-id:', elementsWithDataId);
     }
   };
 
@@ -700,9 +746,115 @@ const handlemediaLink = (platform) => {
     const container = scrollRef.current;
     if (!container) return;
 
-    const scrollAmount = 200;
-    container.scrollLeft += direction === "left" ? -scrollAmount : scrollAmount;
+    const containerWidth = container.clientWidth;
+    const scrollAmount = containerWidth * 0.8; // Scroll 80% of visible width
+    
+    if (direction === "left") {
+      container.scrollLeft -= scrollAmount;
+    } else {
+      container.scrollLeft += scrollAmount;
+    }
+
+    // Update scroll position for gradient overlays
+    setTimeout(() => {
+      setScrollPosition(container.scrollLeft);
+    }, 100);
   };
+
+  // Auto-scroll active item into view
+  const scrollActiveItemIntoView = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const activeButton = container.querySelector(`button[data-tab-id="${currentHash}"]`);
+    if (!activeButton) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const buttonRect = activeButton.getBoundingClientRect();
+    
+    // Check if button is visible
+    const isVisible = buttonRect.left >= containerRect.left && 
+                     buttonRect.right <= containerRect.right;
+    
+    if (!isVisible) {
+      // Calculate scroll position to center the active item
+      const buttonCenter = activeButton.offsetLeft + (activeButton.offsetWidth / 2);
+      const containerCenter = container.clientWidth / 2;
+      const scrollPosition = buttonCenter - containerCenter;
+      
+      container.scrollTo({
+        left: Math.max(0, scrollPosition),
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Auto-scroll when currentHash changes
+  useEffect(() => {
+    scrollActiveItemIntoView();
+  }, [currentHash]);
+
+  // Scroll spy to detect which section is in view
+  useEffect(() => {
+    let targetWindow = window;
+    let targetDocument = window.document;
+
+    // Get the correct window and document (iframe for edit mode)
+    if (isEdit || isEditPage) {
+      const iframes = document.querySelectorAll('iframe');
+      if (iframes.length > 0) {
+        const iframe = iframes[iframes.length - 1];
+        targetWindow = iframe.contentWindow;
+        targetDocument = iframe.contentDocument || iframe.contentWindow.document;
+      }
+    }
+
+    const handleScroll = () => {
+      if (!landingPageData?.menuItems) return;
+
+      const navbarHeight = 128;
+      const currentScrollTop = targetWindow.pageYOffset || targetWindow.scrollY || 0;
+      
+      // Find the section that's currently most visible
+      let currentSection = null;
+      let minDistance = Infinity;
+
+      landingPageData.menuItems
+        .filter(item => item.active && item.visible && item.id)
+        .forEach(item => {
+          const element = targetDocument.getElementById(item.id) ||
+                         targetDocument.querySelector(`[data-section="${item.id}"]`) ||
+                         targetDocument.querySelector(`[data-id="${item.id}"]`);
+          
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            const elementTop = rect.top + currentScrollTop;
+            const distance = Math.abs(elementTop - currentScrollTop - navbarHeight);
+            
+            if (distance < minDistance && rect.top <= navbarHeight + 100) {
+              minDistance = distance;
+              currentSection = item.id;
+            }
+          }
+        });
+
+      if (currentSection && currentSection !== currentHash) {
+        setCurrentHash(currentSection);
+      }
+    };
+
+    if (targetWindow) {
+      targetWindow.addEventListener('scroll', handleScroll, { passive: true });
+      // Initial check
+      setTimeout(handleScroll, 100);
+    }
+
+    return () => {
+      if (targetWindow) {
+        targetWindow.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [isEdit, isEditPage, landingPageData?.menuItems, currentHash]);
 
   const textColor = calculateTextColor(getColor("primary", 500));
   const navigationTextColor = calculateTextColor(getColor("primary", 800));
@@ -964,112 +1116,105 @@ const handlemediaLink = (platform) => {
         style={{
           backgroundColor: "white",
           zIndex: 100,
-          width: "100%",
         }}
       >
+        <style jsx>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
         <div
-          className="relative flex items-center justify-center max-w-7xl mx-auto px-12"
+          className="relative flex items-center max-w-7xl mx-auto h-full px-12"
           style={{
-            height: "100%",
+            position: "relative"
           }}
         >
-          <button
-            onClick={() => scrollTabs("left")}
-            className="absolute left-0 z-10 p-1 rounded-full bg-white shadow-md hover:bg-gray-200"
-          >
-            <ChevronLeft size={25} className={getColor("primary", 500)} />
-          </button>
+        {/* Left gradient overlay - shows when scrolled right */}
+        <div 
+          className="absolute left-16 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
+          style={{
+            background: "linear-gradient(to right, white 60%, transparent)",
+            zIndex: 10,
+            opacity: scrollPosition > 0 ? 1 : 0
+          }}
+        />
+        
+        {/* Right gradient overlay - shows when can scroll more to the right */}
+        <div 
+          className="absolute right-16 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
+          style={{
+            background: "linear-gradient(to left, white 60%, transparent)",
+            zIndex: 10,
+            opacity: scrollRef.current && scrollPosition < (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) ? 1 : 0
+          }}
+        />
 
-          <div
-            ref={scrollRef}
-            className="flex items-center justify-center scrollbar-hide overflow-x-auto space-x-6 px-4"
-            style={{ 
-              scrollBehavior: "smooth",
-              width: "100%",
-              msOverflowStyle: "none",  // Hide scrollbar in IE/Edge
-              scrollbarWidth: "none",    // Hide scrollbar in Firefox
-            }}
-          >
-            {[
-              {
-                id: "job-specifications",
-                label: getTranslation(landingPageData?.lang, 'summary'),
-                enabled: visibleMenuItemsArray?.includes("Job Specifications"),
-              },
-              {
-                id: "recruiter-contact",
-                label: getTranslation(landingPageData?.lang, 'contacts'),
-                enabled: visibleMenuItemsArray?.includes("Recruiter Contact"),
-              },
-              {
-                id: "job-description",
-                label: getTranslation(landingPageData?.lang, 'description'),
-                enabled: visibleMenuItemsArray?.includes("Job Description"),
-              },
-              {
-                id: "agenda",
-                label: getTranslation(landingPageData?.lang, 'agenda'),
-                enabled: visibleMenuItemsArray?.includes("Agenda"),
-              },
-              {
-                id: "about-the-company",
-                label: getTranslation(landingPageData?.lang, 'aboutUs'),
-                enabled: visibleMenuItemsArray?.includes("About The Company"),
-              },
-              {
-                id: "company-facts",
-                label: getTranslation(landingPageData?.lang, 'companyFacts'),
-                enabled: visibleMenuItemsArray?.includes("Company Facts"),
-              },
-              {
-                id: "leader-introduction",
-                label: getTranslation(landingPageData?.lang, 'leaderIntro'),
-                enabled: visibleMenuItemsArray?.includes("Leader Introduction"),
-              },
-              {
-                id: "testimonials",
-                label: getTranslation(landingPageData?.lang, 'testimonials'),
-                enabled: visibleMenuItemsArray?.includes("Employee Testimonials"),
-              },
-              {
-                id: "candidate-process",
-                label: getTranslation(landingPageData?.lang, 'applicationProcess'),
-                enabled: visibleMenuItemsArray?.includes("Candidate Process"),
-              },
-              {
-                id: "growth-path",
-                label: getTranslation(landingPageData?.lang, 'growthPath'),
-                enabled: visibleMenuItemsArray?.includes("Growth Path"),
-              },
-            ]
-              .filter((tab) => tab.enabled)
-              ?.map((tab, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleNavigate(tab.id)}
-                  className="px-2 py-2 md:px-5 md:py-4 text-sm md:text-lg whitespace-nowrap transition-all flex-shrink-0"
-                  style={{
-                    color: textColor === "#000000" ? textColor : getColor("primary", 500),
-                    fontWeight: currentHash === tab.id ? "700" : "400",
-                    fontFamily: bodyFont?.family,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.fontWeight = "700";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.fontWeight = currentHash === tab.id ? "700" : "400";
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-          </div>
-          <button
-            onClick={() => scrollTabs("right")}
-            className="absolute right-0 z-10 p-1 rounded-full bg-white shadow-md hover:bg-gray-100"
-          >
-            <ChevronRight size={25} className={getColor("primary", 500)} />
-          </button>
+        <button
+          onClick={() => scrollTabs("left")}
+          className="absolute left-2 z-20 p-1 rounded-full bg-white shadow-md hover:bg-gray-200 flex-shrink-0"
+          style={{ zIndex: 20 }}
+        >
+          <ChevronLeft size={20} style={{ color: getColor("primary", 500) }} />
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="flex items-center overflow-x-auto scrollbar-hide flex-1"
+          style={{ 
+            scrollBehavior: "smooth",
+            minWidth: 0,  // Allow flex item to shrink below its content size
+            WebkitOverflowScrolling: "touch",  // Smooth scrolling on iOS
+            justifyContent: "flex-start"  // Start from left, don't center
+          }}
+        >
+        {   
+
+
+    landingPageData?.menuItems
+                  ?.filter((tab) => !!tab?.active && !!tab?.visible && !!tab?.id)
+                  ?.map((tab) => {
+                    return {
+                      ...tab,
+                      id: tab.id||tab.key,
+                    }
+                  })
+                  ?.sort((a, b) => (a.sort || 0) - (b.sort || 0))
+                  ?.map((tab, index) => (
+                    <button
+                      key={index}
+                      data-tab-id={tab.id}
+                      onClick={() => handleNavigate(tab.id)}
+                      className="px-3 py-2 md:px-6 md:py-4 text-sm md:text-base whitespace-nowrap transition-all flex-shrink-0 min-w-max"
+                      style={{
+                        color: textColor === "#000000" ? textColor : getColor("primary", 500),
+                        fontWeight: currentHash === tab.id ? "700" : "400",
+                        fontFamily: bodyFont?.family,
+                        marginRight: "8px"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.fontWeight = "700";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.fontWeight = currentHash === tab.id ? "700" : "400";
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+              </div>
+
+
+        <button
+          onClick={() => scrollTabs("right")}
+          className="absolute right-2 z-20 p-1 rounded-full bg-white shadow-md hover:bg-gray-100 flex-shrink-0"
+          style={{ zIndex: 20 }}
+        >
+          <ChevronRight size={20} style={{ color: getColor("primary", 500) }} />
+        </button>
         </div>
       </div>
     </div>

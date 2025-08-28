@@ -151,7 +151,7 @@ export default function Sidebar17({
   };
 
   const handleSectionClick = (key) => {
-    
+    console.log("key!!", key);
     console.log("key", key);
     //hero-section ,
     if (key === "flexaligntop") {
@@ -167,7 +167,7 @@ export default function Sidebar17({
     // Map section keys to scroll section names
 
     const section = sectionMap[key];
-    console.log("section", section)
+    console.log("section!!", section)
     if (section) {
       setScrollToSection(section);
     }

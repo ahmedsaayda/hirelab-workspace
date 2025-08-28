@@ -105,7 +105,6 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
     primaryColor: user?.primaryColor,
     secondaryColor: user?.secondaryColor,
     tertiaryColor: user?.tertiaryColor,
-    heroBackgroundColor: user?.heroBackgroundColor,
     heroTitleColor: user?.heroTitleColor,
     titleFont: user?.titleFont,
     subheaderFont: user?.subheaderFont,

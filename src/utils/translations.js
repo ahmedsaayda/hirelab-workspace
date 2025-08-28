@@ -12,13 +12,14 @@
 // FALLBACK LANGUAGES: 187 languages with intelligent linguistic fallbacks
 const coreTranslations = {
   English: {
-    weAreHiring: "👋 WE'RE HIRING",
+    weAreHiring: "WE'RE HIRING",
     hours: "Hours", hour: "Hour", year: "Year", month: "Month", week: "Week", day: "Day",
     daily: "Daily", weekly: "Weekly", monthly: "Monthly", yearly: "Yearly",
     remote: "Remote",Hybrid:"Hybrid", hybrid: "Hybrid", summary: "Summary", contacts: "Contacts",
     description: "Description", agenda: "Agenda", aboutUs: "About Us", companyFacts: "Company Facts",
-    leaderIntro: "Leader Intro", testimonials: "Testimonials", applicationProcess: "Application Process",
-    growthPath: "Growth Path", applyNow: "Apply Now", share: "Share", locations: "Locations",
+    textBox: "Text Box", video: "Video", images: "Images", evpMission: "EVP / Mission", leaderIntro: "Leader Intro", 
+    testimonials: "Testimonials", growthPath: "Growth Path", applicationProcess: "Application Process",
+    applyNow: "Apply Now", share: "Share", locations: "Locations",
     pagePublished: "Page Published", letsShareWithTheWorld: "Let's Share with the World!",
     copyLink: "Copy Link", shareWithYourLovedOnes: "Share with your loved ones:",
     linkCopiedToClipboard: "Link copied to clipboard!", setApplyButtonUrl: "Set Apply Button URL",
@@ -41,7 +42,7 @@ const coreTranslations = {
     readMore: "Read More", readLess: "Read Less"
   },
   Dutch: {
-    weAreHiring: "👋 WE ZOEKEN PERSONEEL",
+    weAreHiring: " WE ZOEKEN PERSONEEL",
     hours: "Uren", hour: "Uur", year: "Jaar", month: "Maand", week: "Week", day: "Dag",
     daily: "Dagelijks", weekly: "Wekelijks", monthly: "Maandelijks", yearly: "Jaarlijks",
     remote: "Thuiswerken", hybrid: "Hybride", summary: "Samenvatting", contacts: "Contacten",
@@ -70,7 +71,7 @@ const coreTranslations = {
     readMore: "Lees Meer", readLess: "Lees Minder"
   },
   German: {
-    weAreHiring: "👋 WIR STELLEN EIN",
+    weAreHiring: " WIR STELLEN EIN",
     hours: "Stunden", hour: "Stunde", year: "Jahr", month: "Monat", week: "Woche", day: "Tag",
     daily: "Täglich", weekly: "Wöchentlich", monthly: "Monatlich", yearly: "Jährlich",
     remote: "Remote",Hybrid:"Hybrid!!", hybrid: "Hybrid", summary: "Zusammenfassung", contacts: "Kontakte",
@@ -99,7 +100,7 @@ const coreTranslations = {
     readMore: "Mehr Lesen", readLess: "Weniger Lesen"
   },
   French: {
-    weAreHiring: "👋 NOUS RECRUTONS",
+    weAreHiring: " NOUS RECRUTONS",
     hours: "Heures", hour: "Heure", year: "Année", month: "Mois", week: "Semaine", day: "Jour",
     daily: "Quotidiennement", weekly: "Hebdomadaire", monthly: "Mensuel", yearly: "Annuel",
     remote: "Télétravail", hybrid: "Hybride", summary: "Résumé", contacts: "Contacts",
@@ -128,7 +129,7 @@ const coreTranslations = {
     readMore: "Lire Plus", readLess: "Lire Moins"
   },
   Spanish: {
-    weAreHiring: "👋 ESTAMOS CONTRATANDO",
+    weAreHiring: " ESTAMOS CONTRATANDO",
     hours: "Horas", hour: "Hora", year: "Año", month: "Mes", week: "Semana", day: "Día",
     daily: "Diariamente", weekly: "Semanalmente", monthly: "Mensualmente", yearly: "Anualmente",
     remote: "Remoto", hybrid: "Híbrido", summary: "Resumen", contacts: "Contactos",
@@ -157,7 +158,7 @@ const coreTranslations = {
     readMore: "Leer Más", readLess: "Leer Menos"
   },
   Italian: {
-    weAreHiring: "👋 STIAMO ASSUMENDO",
+    weAreHiring: " STIAMO ASSUMENDO",
     hours: "Ore", hour: "Ora", year: "Anno", month: "Mese", week: "Settimana", day: "Giorno",
     daily: "Giornaliero", weekly: "Settimanale", monthly: "Mensile", yearly: "Annuale",
     remote: "Remoto", hybrid: "Ibrido", summary: "Riassunto", contacts: "Contatti",
@@ -186,7 +187,7 @@ const coreTranslations = {
     readMore: "Leggi Di Più", readLess: "Leggi Di Meno"
   },
   Portuguese: {
-    weAreHiring: "👋 ESTAMOS CONTRATANDO",
+    weAreHiring: " ESTAMOS CONTRATANDO",
     hours: "Horas", hour: "Hora", year: "Ano", month: "Mês", week: "Semana", day: "Dia",
     daily: "Diário", weekly: "Semanal", monthly: "Mensal", yearly: "Anual",
     remote: "Remoto", hybrid: "Híbrido", summary: "Resumo", contacts: "Contatos",
@@ -215,7 +216,7 @@ const coreTranslations = {
     readMore: "Ler Mais", readLess: "Ler Menos"
   },
   Norwegian: {
-    weAreHiring: "👋 VI ANSETTER",
+    weAreHiring: " VI ANSETTER",
     hours: "Timer", hour: "Time", year: "År", month: "Måned", week: "Uke", day: "Dag",
     daily: "Daglig", weekly: "Ukentlig", monthly: "Månedlig", yearly: "Årlig",
     remote: "Hjemmekontor", hybrid: "Hybrid", summary: "Sammendrag", contacts: "Kontakter",
@@ -244,7 +245,7 @@ const coreTranslations = {
   },
   // Strategic core languages for major language families
   Russian: {
-    weAreHiring: "👋 МЫ НАНИМАЕМ",
+    weAreHiring: " МЫ НАНИМАЕМ",
     hours: "Часы", hour: "Час", year: "Год", month: "Месяц", week: "Неделя", day: "День",
     daily: "Ежедневно", weekly: "Еженедельно", monthly: "Ежемесячно", yearly: "Ежегодно",
     remote: "Удалённо", hybrid: "Гибридно", summary: "Резюме", contacts: "Контакты",
@@ -272,7 +273,7 @@ const coreTranslations = {
     pasteJobTip: "Совет: Скопируйте (Ctrl+C) все объявление о работе с веб-сайта и вставьте (Ctrl+V) его сюда. Наш ИИ извлечет всю релевантную информацию."
   },
   Chinese: {
-    weAreHiring: "👋 我们正在招聘",
+    weAreHiring: " 我们正在招聘",
     hours: "小时", hour: "小时", year: "年", month: "月", week: "周", day: "天",
     daily: "每日", weekly: "每周", monthly: "每月", yearly: "每年",
     remote: "远程", hybrid: "混合", summary: "摘要", contacts: "联系方式",
@@ -300,7 +301,7 @@ const coreTranslations = {
     pasteJobTip: "提示：从网站复制 (Ctrl+C) 完整的职位发布并粘贴 (Ctrl+V) 到这里。我们的AI将提取所有相关信息。"
   },
   Arabic: {
-    weAreHiring: "👋 نحن نوظف",
+    weAreHiring: " نحن نوظف",
     hours: "ساعات", hour: "ساعة", year: "سنة", month: "شهر", week: "أسبوع", day: "يوم",
     daily: "يوميا", weekly: "أسبوعيا", monthly: "شهريا", yearly: "سنويا",
     remote: "عن بعد", hybrid: "مختلط", summary: "ملخص", contacts: "جهات الاتصال",
@@ -328,7 +329,7 @@ const coreTranslations = {
     pasteJobTip: "نصيحة: انسخ (Ctrl+C) إعلان الوظيفة كاملاً من موقع ويب والصقه (Ctrl+V) هنا. سيستخرج الذكاء الاصطناعي الخاص بنا جميع المعلومات ذات الصلة."
   },
   Hindi: {
-    weAreHiring: "👋 हम भर्ती कर रहे हैं",
+    weAreHiring: " हम भर्ती कर रहे हैं",
     hours: "घंटे", hour: "घंटा", year: "वर्ष", month: "महीना", week: "सप्ताह", day: "दिन",
     daily: "दैनिक", weekly: "साप्ताहिक", monthly: "मासिक", yearly: "वार्षिक",
     remote: "रिमोट", hybrid: "हाइब्रिड", summary: "सारांश", contacts: "संपर्क",
@@ -356,7 +357,7 @@ const coreTranslations = {
     pasteJobTip: "सुझाव: किसी वेबसाइट से पूरी नौकरी की पोस्टिंग कॉपी (Ctrl+C) करें और यहाँ पेस्ट (Ctrl+V) करें। हमारा AI सभी प्रासंगिक जानकारी निकालेगा।"
   },
   Japanese: {
-    weAreHiring: "👋 採用中",
+    weAreHiring: " 採用中",
     hours: "時間", hour: "時間", year: "年", month: "月", week: "週", day: "日",
     daily: "日次", weekly: "週次", monthly: "月次", yearly: "年次",
     remote: "リモート", hybrid: "ハイブリッド", summary: "概要", contacts: "連絡先",
@@ -385,7 +386,7 @@ const coreTranslations = {
   },
   // Additional strategic languages for better coverage
   Turkish: {
-    weAreHiring: "👋 İŞE ALIYORUZ",
+    weAreHiring: " İŞE ALIYORUZ",
     hours: "Saat", hour: "Saat", year: "Yıl", month: "Ay", week: "Hafta", day: "Gün",
     daily: "Günlük", weekly: "Haftalık", monthly: "Aylık", yearly: "Yıllık",
     remote: "Uzaktan", hybrid: "Hibrit", summary: "Özet", contacts: "İletişim",
@@ -413,7 +414,7 @@ const coreTranslations = {
     pasteJobTip: "İpucu: Bir web sitesinden tüm iş ilanını kopyalayın (Ctrl+C) ve buraya yapıştırın (Ctrl+V). AI'mız tüm ilgili bilgileri çıkaracaktır."
   },
   Polish: {
-    weAreHiring: "👋 ZATRUDNIAMY",
+    weAreHiring: " ZATRUDNIAMY",
     hours: "Godziny", hour: "Godzina", year: "Rok", month: "Miesiąc", week: "Tydzień", day: "Dzień",
     daily: "Codziennie", weekly: "Tygodniowo", monthly: "Miesięcznie", yearly: "Rocznie",
     remote: "Zdalnie", hybrid: "Hybrydowo", summary: "Podsumowanie", contacts: "Kontakty",
@@ -441,7 +442,7 @@ const coreTranslations = {
     pasteJobTip: "Wskazówka: Skopiuj (Ctrl+C) całe ogłoszenie o pracę ze strony internetowej i wklej (Ctrl+V) tutaj. Nasza AI wyodrębni wszystkie istotne informacje."
   },
   Swedish: {
-    weAreHiring: "👋 VI ANSTÄLLER",
+    weAreHiring: " VI ANSTÄLLER",
     hours: "Timmar", hour: "Timme", year: "År", month: "Månad", week: "Vecka", day: "Dag",
     daily: "Dagligen", weekly: "Veckovis", monthly: "Månatligen", yearly: "Årligen",
     remote: "Distans", hybrid: "Hybrid", summary: "Sammanfattning", contacts: "Kontakter",
@@ -469,7 +470,7 @@ const coreTranslations = {
     pasteJobTip: "Tips: Kopiera (Ctrl+C) hela jobbannonsens från en webbplats och klistra in (Ctrl+V) den här. Vår AI kommer att extrahera all relevant information."
   },
   Korean: {
-    weAreHiring: "👋 채용 중",
+    weAreHiring: " 채용 중",
     hours: "시간", hour: "시간", year: "년", month: "월", week: "주", day: "일",
     daily: "매일", weekly: "매주", monthly: "매월", yearly: "매년",
     remote: "원격", hybrid: "하이브리드", summary: "요약", contacts: "연락처",
@@ -497,7 +498,7 @@ const coreTranslations = {
     pasteJobTip: "팁: 웹사이트에서 전체 채용 공고를 복사(Ctrl+C)하여 여기에 붙여넣기(Ctrl+V)하세요. AI가 모든 관련 정보를 추출합니다."
   },
   Finnish: {
-    weAreHiring: "👋 REKRYTOIMME",
+    weAreHiring: " REKRYTOIMME",
     hours: "Tunnit", hour: "Tunti", year: "Vuosi", month: "Kuukausi", week: "Viikko", day: "Päivä",
     daily: "Päivittäin", weekly: "Viikoittain", monthly: "Kuukausittain", yearly: "Vuosittain",
     remote: "Etätyö", hybrid: "Hybridi", summary: "Yhteenveto", contacts: "Yhteystiedot",
@@ -525,7 +526,7 @@ const coreTranslations = {
     pasteJobTip: "Vinkki: Kopioi (Ctrl+C) koko työpaikkailmoitus verkkosivustolta ja liitä (Ctrl+V) se tähän. Tekoälymme poimii kaikki asiaankuuluvat tiedot."
   },
   Thai: {
-    weAreHiring: "👋 เรากำลังรับสมัครงาน",
+    weAreHiring: " เรากำลังรับสมัครงาน",
     hours: "ชั่วโมง", hour: "ชั่วโมง", year: "ปี", month: "เดือน", week: "สัปดาห์", day: "วัน",
     daily: "รายวัน", weekly: "รายสัปดาห์", monthly: "รายเดือน", yearly: "รายปี",
     remote: "ทำงานจากระยะไกล", hybrid: "แบบผสม", summary: "สรุป", contacts: "ติดต่อ",
@@ -553,7 +554,7 @@ const coreTranslations = {
     pasteJobTip: "เคล็ดลับ: คัดลอก (Ctrl+C) ประกาศรับสมัครงานทั้งหมดจากเว็บไซต์และวาง (Ctrl+V) ที่นี่ AI ของเราจะดึงข้อมูลที่เกี่ยวข้องทั้งหมด"
   },
   Vietnamese: {
-    weAreHiring: "👋 CHÚNG TÔI ĐANG TUYỂN DỤNG",
+    weAreHiring: " CHÚNG TÔI ĐANG TUYỂN DỤNG",
     hours: "Giờ", hour: "Giờ", year: "Năm", month: "Tháng", week: "Tuần", day: "Ngày",
     daily: "Hàng ngày", weekly: "Hàng tuần", monthly: "Hàng tháng", yearly: "Hàng năm",
     remote: "Từ xa", hybrid: "Lai", summary: "Tóm tắt", contacts: "Liên hệ",
@@ -582,7 +583,7 @@ const coreTranslations = {
   },
   // Additional high-priority languages
   Indonesian: {
-    weAreHiring: "👋 KAMI SEDANG MEREKRUT",
+    weAreHiring: " KAMI SEDANG MEREKRUT",
     hours: "Jam", hour: "Jam", year: "Tahun", month: "Bulan", week: "Minggu", day: "Hari",
     daily: "Harian", weekly: "Mingguan", monthly: "Bulanan", yearly: "Tahunan",
     remote: "Jarak Jauh", hybrid: "Hibrida", summary: "Ringkasan", contacts: "Kontak",
@@ -610,7 +611,7 @@ const coreTranslations = {
     pasteJobTip: "Tips: Salin (Ctrl+C) seluruh posting pekerjaan dari situs web dan tempel (Ctrl+V) di sini. AI kami akan mengekstrak semua informasi yang relevan."
   },
   Bengali: {
-    weAreHiring: "👋 আমরা নিয়োগ দিচ্ছি",
+    weAreHiring: " আমরা নিয়োগ দিচ্ছি",
     hours: "ঘন্টা", hour: "ঘন্টা", year: "বছর", month: "মাস", week: "সপ্তাহ", day: "দিন",
     daily: "দৈনিক", weekly: "সাপ্তাহিক", monthly: "মাসিক", yearly: "বার্ষিক",
     remote: "দূরবর্তী", hybrid: "হাইব্রিড", summary: "সারসংক্ষেপ", contacts: "যোগাযোগ",
@@ -638,7 +639,7 @@ const coreTranslations = {
     pasteJobTip: "টিপ: একটি ওয়েবসাইট থেকে সম্পূর্ণ চাকরির পোস্টিং কপি (Ctrl+C) করুন এবং এখানে পেস্ট (Ctrl+V) করুন। আমাদের AI সমস্ত প্রাসঙ্গিক তথ্য বের করবে।"
   },
   Ukrainian: {
-    weAreHiring: "👋 МИ НАБИРАЄМО",
+    weAreHiring: " МИ НАБИРАЄМО",
     hours: "Години", hour: "Година", year: "Рік", month: "Місяць", week: "Тиждень", day: "День",
     daily: "Щоденно", weekly: "Щотижня", monthly: "Щомісяця", yearly: "Щороку",
     remote: "Віддалено", hybrid: "Гібридно", summary: "Резюме", contacts: "Контакти",
@@ -666,7 +667,7 @@ const coreTranslations = {
     pasteJobTip: "Порада: Скопіюйте (Ctrl+C) всю публікацію про роботу з веб-сайту та вставте (Ctrl+V) її тут. Наш ШІ витягне всю відповідну інформацію."
   },
   Greek: {
-    weAreHiring: "👋 ΠΡΟΣΛΑΜΒΑΝΟΥΜΕ",
+    weAreHiring: " ΠΡΟΣΛΑΜΒΑΝΟΥΜΕ",
     hours: "Ώρες", hour: "Ώρα", year: "Έτος", month: "Μήνας", week: "Εβδομάδα", day: "Ημέρα",
     daily: "Καθημερινά", weekly: "Εβδομαδιαία", monthly: "Μηνιαία", yearly: "Ετήσια",
     remote: "Εξ αποστάσεως", hybrid: "Υβριδικό", summary: "Περίληψη", contacts: "Επαφές",

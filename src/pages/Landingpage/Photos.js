@@ -73,7 +73,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
 
 
   return (
-    <div className="w-full bg-white" ref={sectionRef}>
+    <div className="w-full bg-white" ref={sectionRef} id="image-carousel">
       <div className="flex justify-center bg-[#ffffff] py-24 mdx:py-5">
         <div className="container flex gap-5 justify-between px-8 mdx:flex-col mdx:px-5">
           <motion.div
@@ -182,7 +182,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
 
 
   return (
-    <div className="w-full bg-white" ref={sectionRef}>
+    <div className="w-full bg-white" ref={sectionRef} id="image-carousel">
       <div className="flex justify-center bg-[#ffffff] py-24 mdx:py-5">
         <div className="container flex gap-5 justify-between px-8 mdx:flex-col mdx:px-5">
           <motion.div
@@ -449,6 +449,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
         containerRef.current = el;
       }}
       style={{ color: "black", fontFamily: bodyFont?.family }}
+      id="image-carousel"
     >
       <div className="flex justify-center bg-[#ffffff] py-24 mdx:py-5">
         <div className="container flex gap-5 justify-between px-8 mdx:flex-col mdx:px-5">

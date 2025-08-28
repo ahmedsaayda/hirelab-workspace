@@ -254,19 +254,17 @@ const categories = [
     title: "PEOPLE",
     items: [
       {
-        key: "buttonbase",
+        key: "Employee Testimonials",
         name: "Employee Testimonials",
         icon: <img src="/icons2/users-01.svg" alt=" "></img>,
       },
       {
-        //Leader Introduction
-        key: "leaderIntroduction",
+        key: "Leader Introduction",
         name: "Leader Introduction",
         icon: <img src="/icons2/user-01.svg" alt=" "></img>,
       },
-
       {
-        key: "messagechat",
+        key: "Recruiter Contact",
         name: "Recruiter Contact",
         icon: <img src="/icons2/message-chat-circle.svg" alt=" "></img>,
       },
@@ -276,17 +274,17 @@ const categories = [
     title: "JOB EXPLANATION",
     items: [
       {
-        key: "calendar",
+        key: "Agenda",
         name: "Agenda",
         icon: <img src="/icons2/calendar.svg" alt=" "></img>,
       },
       {
-        key: "editfour",
+        key: "Job Specifications",
         name: "Job Specifications",
         icon: <img src="/icons2/briefcase-01.svg" alt=" "></img>,
       },
       {
-        key: "briefcaseone",
+        key: "Job Description",
         name: "Job Description",
         icon: <img src="/icons2/edit-04.svg" alt=" "></img>,
       },
@@ -296,12 +294,12 @@ const categories = [
     title: "COMPANY",
     items: [
       {
-        key: "briefcaseone",
+        key: "About The Company",
         name: "About The Company",
         icon: <img src="/icons2/intersect-circle.svg" alt=" "></img>,
       },
       {
-        key: "briefcaseone",
+        key: "EVP / Mission",
         name: "EVP / Mission",
         icon: (
           <svg
@@ -324,7 +322,7 @@ const categories = [
         ),
       },
       {
-        key: "messagechat",
+        key: "Company Facts",
         name: "Company Facts",
         icon: <img src="/icons2/zap.svg" alt=" "></img>,
       },
@@ -334,7 +332,7 @@ const categories = [
     title: "PROCESS",
     items: [
       {
-        key: "flexaligntop",
+        key: "Candidate Process",
         name: "Candidate Process",
         icon: <img src="/icons2/list.svg" alt=" "></img>,
       },
@@ -348,9 +346,8 @@ const categories = [
   {
     title: "CONTENT",
     items: [
-      // { key: "userone", name: "Video", icon: <img src="/icons2/video-recorder.svg" alt=" "></img>, },
       {
-        key: "userone",
+        key: "Image Carousel",
         name: "Image Carousel",
         icon: <img src="/icons2/image-01.svg" alt=" "></img>,
       },
@@ -387,7 +384,7 @@ const Category = ({ title, items, onClick, existingItems }) => (
                   ? "bg-gray-100 opacity-60 cursor-not-allowed"
                   : "hover:bg-gray-100 focus:outline-none focus:ring"
               }`}
-            onClick={() => !isAlreadyAdded && onClick(item.name)}
+            onClick={() => !isAlreadyAdded && onClick(item.key)}
             disabled={isAlreadyAdded}
             title={isAlreadyAdded ? "This section is already added" : ""}
           >
@@ -707,37 +704,68 @@ export default function LandingpageEdit({paramsId}) {
           )
       );
 
+      // Update sort values based on new order
+      const updatedMenuItems = (landingPageData?.menuItems ?? []).map(item => {
+        const newIndex = reorderedItems.findIndex(reorderedItem => reorderedItem.key === item.key);
+        if (newIndex !== -1) {
+          // This item is active and has been reordered
+          return { ...item, sort: newIndex + 1 };
+        }
+        // Keep inactive items with their original sort or assign high sort value
+        return item;
+      });
 
       // Update the state
       setLandingPageData((prevData) => ({
         ...prevData,
-        menuItems: reorderedItems,
+        menuItems: updatedMenuItems,
       }));
 
       // Update the backend
       CrudService.update("LandingPageData", lpId, {
-        menuItems: reorderedItems,
+        menuItems: updatedMenuItems,
       },"landing page edit");
     },
-    [lpId]
+    [lpId, landingPageData?.menuItems]
   );
 
 
   const addSection = (key) => {
-    // Check if a section with this key already exists in menuItems
-    const sectionExists = (landingPageData?.menuItems ?? []).some(
-      (item) => item.key === key
-    );
+    // Check if a section with this key already exists and is active
+    const existingMenuItems = landingPageData?.menuItems ?? [];
+    const existingSectionIndex = existingMenuItems.findIndex(item => item.key === key);
 
-    if (sectionExists) {
-      // If section already exists, show an error message
-      message.error(`This section has already been added to the page.`);
-      // Don't close the modal so the user can select a different section
+    if (existingSectionIndex !== -1 && existingMenuItems[existingSectionIndex].active) {
+      // If section already exists and is active, show an error message
+      message.error(`This section is already active on the page.`);
       return;
     }
 
-    // If the section doesn't exist, add it as before
-    const newMenuItems = [...(landingPageData?.menuItems ?? []), { key }];
+    let newMenuItems;
+    if (existingSectionIndex !== -1) {
+      // Section exists but is inactive, activate it
+      newMenuItems = existingMenuItems.map((item, index) => 
+        index === existingSectionIndex 
+          ? { ...item, active: true, visible: true }
+          : item
+      );
+    } else {
+      // Section doesn't exist, add it with proper defaults
+      const getNextSortOrder = () => {
+        const maxSort = Math.max(...existingMenuItems.map(item => item.sort || 0), 0);
+        return maxSort + 1;
+      };
+
+      const newItem = {
+        key,
+        label: key, // Default label, will be overridden by AI translations
+        active: true,
+        visible: true,
+        sort: getNextSortOrder()
+      };
+      newMenuItems = [...existingMenuItems, newItem];
+    }
+
     CrudService.update("LandingPageData", lpId, {
       menuItems: newMenuItems,
     },"landing page edit");
@@ -746,7 +774,7 @@ export default function LandingpageEdit({paramsId}) {
       menuItems: newMenuItems,
     }));
 
-    setActiveIdx(newMenuItems.length + 0);
+    setActiveIdx(newMenuItems.filter(item => item.active).length);
     setAddMenuItem(false);
     const sectionToScroll = sectionMap[key];
     setScrollToSection(sectionToScroll);
@@ -757,10 +785,18 @@ export default function LandingpageEdit({paramsId}) {
 
 
   const removeSection = (i) => {
+    const activeMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
     const dynamicIndex = i - 1;
-
-    const newMenuItems = (landingPageData?.menuItems ?? []).filter(
-      (item, idx) => idx !== dynamicIndex
+    
+    if (dynamicIndex < 0 || dynamicIndex >= activeMenuItems.length) return;
+    
+    const sectionToRemove = activeMenuItems[dynamicIndex];
+    
+    // Mark the section as inactive instead of removing it
+    const newMenuItems = (landingPageData?.menuItems ?? []).map(item => 
+      item.key === sectionToRemove.key 
+        ? { ...item, active: false, visible: false }
+        : item
     );
 
     CrudService.update("LandingPageData", lpId, {
@@ -770,6 +806,9 @@ export default function LandingpageEdit({paramsId}) {
       ...prevData,
       menuItems: newMenuItems,
     }));
+    
+    // Update activeIdx based on remaining active sections
+    const remainingActiveSections = newMenuItems.filter(item => item.active);
     if (activeIdx === i) {
       if (i > 1) {
         setActiveIdx(i - 1);
@@ -783,21 +822,43 @@ export default function LandingpageEdit({paramsId}) {
 
   const handleUp = (i) => {
     if (i <= 1) return;
-    const newMenuItems = [...landingPageData.menuItems];
-    [newMenuItems[i - 2], newMenuItems[i - 1]] = [
-      newMenuItems[i - 1],
-      newMenuItems[i - 2],
-    ];
+    
+    const activeMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
+    if (i - 2 < 0 || i - 1 >= activeMenuItems.length) return;
+    
+    const currentItem = activeMenuItems[i - 1];
+    const itemAbove = activeMenuItems[i - 2];
+    
+    // Swap sort values
+    const newMenuItems = (landingPageData?.menuItems ?? []).map(item => {
+      if (item.key === currentItem.key) {
+        return { ...item, sort: itemAbove.sort };
+      } else if (item.key === itemAbove.key) {
+        return { ...item, sort: currentItem.sort };
+      }
+      return item;
+    });
+    
     updateMenuItems(newMenuItems);
   };
 
   const handleDown = (i) => {
-    if (i === landingPageData?.menuItems?.length) return;
-    const newMenuItems = [...landingPageData.menuItems];
-    [newMenuItems[i], newMenuItems[i - 1]] = [
-      newMenuItems[i - 1],
-      newMenuItems[i],
-    ];
+    const activeMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
+    if (i >= activeMenuItems.length) return;
+    
+    const currentItem = activeMenuItems[i - 1];
+    const itemBelow = activeMenuItems[i];
+    
+    // Swap sort values
+    const newMenuItems = (landingPageData?.menuItems ?? []).map(item => {
+      if (item.key === currentItem.key) {
+        return { ...item, sort: itemBelow.sort };
+      } else if (item.key === itemBelow.key) {
+        return { ...item, sort: currentItem.sort };
+      }
+      return item;
+    });
+    
     updateMenuItems(newMenuItems);
   };
 
@@ -1215,11 +1276,17 @@ export default function LandingpageEdit({paramsId}) {
               </div>
               {[
                 // { key: "flexaligntop" },
-                ...(landingPageData?.menuItems ?? []),
+                ...(landingPageData?.menuItems ?? [])?.sort((a, b) => a?.sort - b?.sort),
                 { key: "flexalign" },
                 { key: "search" },
               ]
-              .filter(section => section.visible !== false)  // Hide invisible sections in fullscreen
+              .filter(section => {
+                // Always show special keys like flexalign and search
+                if (section.key === "flexalign" || section.key === "search") return true;
+                // For menuItems, only show if active and visible
+                return section.active && section.visible !== false;
+              })
+              
               .map((section, idx) => {
                 return (
                   <div
@@ -1281,7 +1348,7 @@ export default function LandingpageEdit({paramsId}) {
             removeSection={removeSection}
             activeIdx={activeIdx}
             onReorder={onReorder}
-            items={landingPageData?.menuItems ?? []}
+            items={(landingPageData?.menuItems ?? []).filter(item => item.active).sort((a, b) => (a.sort || 0) - (b.sort || 0))}
             onClickAdd={(key, idx) => {
               if (key === "search") setAddMenuItem(true);
               else setActiveIdx(idx);
@@ -1477,11 +1544,17 @@ export default function LandingpageEdit({paramsId}) {
                 </div>
                 {[
                   // { key: "flexaligntop" },
-                  ...(landingPageData?.menuItems ?? []),
-                  { key: "flexalign" },
-                  { key: "search" },
+                  ...(landingPageData?.menuItems ?? [])?.sort((a, b) => a.sort - b.sort),
+                  { key: "flexalign" ,id:"footer",visible:true,active:true,sort:1000,},
+                  { key: "search" ,id:"search",visible:true,active:true,sort:1001,},
                 ].map((section, idx) => {
                   const isHidden = section.visible === false;
+                  console.log("section===>", section);
+                  const isActive = section.active;
+                  if(!isActive){
+                    console.log("section", section);
+                    return null;
+                  }
                   return (
                     <div
                       key={`section-${idx}`}
@@ -1553,7 +1626,7 @@ export default function LandingpageEdit({paramsId}) {
               onClick={(key) => {
                 addSection(key);
               }}
-              existingItems={landingPageData?.menuItems ?? []}
+              existingItems={(landingPageData?.menuItems ?? []).filter(item => item.active)}
             />
           ))}
         </div>

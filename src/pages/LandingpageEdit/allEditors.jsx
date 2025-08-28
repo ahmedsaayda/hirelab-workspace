@@ -343,6 +343,8 @@ const FooterEdit = (props) => {
             max: 120,
             textarea: true,
           },
+          { key: "ctaFooterTitle", label: "CTA Button Text", max: 40 },
+          // { key: "ctaFooterLink", label: "CTA Button Link", max: 200 },
           { key: "similarJobsTitle", label: "Similar Jobs Title", max: 40 },
           {key:"similarJobs", label:"Select Jobs", type: "jobSelector"}
         ]}
@@ -705,6 +707,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
         landingPageData={landingPageData}
         setLandingPageData={setLandingPageData}
         items={[
+          { key: "weAreHiring", label: "We Are Hiring Text", max: 30 },
           { key: "vacancyTitle", label: "Job title", max: 60 },
           {
             key: "heroDescription",

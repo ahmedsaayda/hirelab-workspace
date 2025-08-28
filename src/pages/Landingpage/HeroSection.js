@@ -45,6 +45,7 @@ const useHeroHover = () => {
   const { hoveredField, scrollToSection } = useHover();
   const sectionRef = useRef();
   // Main fields
+  const weAreHiringRef = useRef();
   const vacancyTitleRef = useRef();
   const heroDescriptionRef = useRef();
   const locationRef = useRef();
@@ -73,6 +74,7 @@ const useHeroHover = () => {
 
     const refs = {
       // Main fields
+      weAreHiring: weAreHiringRef,
       vacancyTitle: vacancyTitleRef,
       heroDescription: heroDescriptionRef,
       location: locationRef,
@@ -131,6 +133,7 @@ const useHeroHover = () => {
   return {
     sectionRef,
     // Main fields
+    weAreHiringRef,
     vacancyTitleRef,
     heroDescriptionRef,
     locationRef,
@@ -341,7 +344,6 @@ const Template1 = ({ landingPageData, fetchData }) => {
   const primaryColor = landingPageData?.primaryColor || "#2e9eac";
   const secondaryColor = landingPageData?.secondaryColor || "#e1ce11";
   const tertiaryColor = landingPageData?.tertiaryColor || "#44b566";
-  const heroBackgroundColor = landingPageData?.heroBackgroundColor || "#2e9eac";
 
   // Use our template palette hook with the default colors
   const { getColor } = useTemplatePalette(
@@ -349,14 +351,12 @@ const Template1 = ({ landingPageData, fetchData }) => {
       primaryColor: "#2e9eac",
       secondaryColor: "#e1ce11",
       tertiaryColor: "#44b566",
-      heroBackgroundColor: "#2e9eac",
     },
     // Pass landingPageData colors as customColors to ensure updates
     {
       primaryColor,
       secondaryColor,
       tertiaryColor,
-      heroBackgroundColor,
     }
   );
 
@@ -496,12 +496,14 @@ const Template1 = ({ landingPageData, fetchData }) => {
             {/* <SimpleGridBackground /> */}
             <div className="flex flex-col items-center mx-auto max-w-2xl text-center mt-10 md:mt-0">
               <span
+                ref={refs.weAreHiringRef}
+                onClick={() => handleItemClick("weAreHiring")}
                 style={{
                   fontFamily: bodyFont?.family,
                 }}
                 className="mb-4 text-xs md:text-sm"
               >
-                {getTranslation(landingPageData?.lang, 'weAreHiring')}
+               👋{landingPageData?.weAreHiring || getTranslation(landingPageData?.lang, 'weAreHiring')}
               </span>
 
               <h2

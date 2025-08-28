@@ -74,455 +74,616 @@ const cloudname = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
 const preset = process.env.NEXT_PUBLIC_CLOUDINARY_PRESET;
 export const defaultLandingPageData = {
-  department: "",
-  published: true,
-  timeRequirement: "",
-  form: {
-    title: "Application Form",
-    description: "Please fill out the form below to apply.",
-    submitText: "Submit Application",
-    fields: [],
+  "selectedFont": {
+    "family": "Montserrat",
+    "src": "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
   },
-  formIntroductionText:
-    "Welcome! Great to have you with us today. You can start your application here. This won't take more than a minute.",
-  formSubText: "Please click next to fill out your details.",
-  formSuccessMessage: "Application submitted successfully!",
-  formErrorMessage: "Failed to submit application",
-  vacancyStages: [],
-  companyName: "Air Max Dn8",
-  companyUrl: "https://www.comanysite.com/in/",
-  companyInfo: "Inspiring the world's athletes.",
-  companyLogo: " ",
-  primaryColor: "#26B0C6",
-  secondaryColor: "#F7E733",
-  tertiaryColor: "#44b566",
-  yiqThreshold: 128,
-  metaPixelId: "",
-  selectedFont: {
-    family: "Poppins-Bold",
-    src: "https://res.cloudinary.com/dvq0ouupb/raw/upload/v1742388170/fmo1ye9nswzixvzglc6v.ttf",
+  "titleFont": {
+    "family": "Montserrat",
+    "src": "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
   },
-  titleFont: {
-    family: "Poppins-Bold",
-    src: "https://res.cloudinary.com/dvq0ouupb/raw/upload/v1742388170/fmo1ye9nswzixvzglc6v.ttf",
+  "subheaderFont": {
+    "family": "Montserrat",
+    "src": "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
   },
-  subheaderFont: {
-    family: "Poppins-Medium",
-    src: "https://res.cloudinary.com/dvq0ouupb/raw/upload/v1742388170/fmo1ye9nswzixvzglc6v.ttf",
+  "bodyFont": {
+    "family": "Montserrat",
+    "src": "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
   },
-  bodyFont: {
-    family: "Poppins-Regular",
-    src: "https://res.cloudinary.com/dvq0ouupb/raw/upload/v1742388170/fmo1ye9nswzixvzglc6v.ttf",
+  "user_id": {
+    "$oid": "67974c20071caab9b65b2d2c"
   },
-  unpublishedAt: null,
-  publishedAt: null,
-  menuItems: [
+  "department": "Design",
+  "published": true,
+  "publishedAt": {
+    "$date": "2025-08-26T19:12:12.617Z"
+  },
+  "timeRequirement": "",
+  "lang": "English",
+  "form": {
+    "title": "Product Designer Application Form",
+    "description": "We are excited to learn more about you and your journey as a Product Designer. Please fill out the form below to apply for the position at HireLab. Your insights and experiences will help us understand how you can contribute to our innovative team.",
+    "submitText": "Submit Application",
+    "fields": [
+      {
+        "id": "contact_1756154593545_158",
+        "type": "contact",
+        "label": "Contact Information",
+        "placeholder": "",
+        "required": true,
+        "visible": true,
+        "isLeadCapture": true,
+        "firstName": {
+          "visible": true,
+          "required": true,
+          "label": "First Name",
+          "placeholder": "Enter your first name"
+        },
+        "lastName": {
+          "visible": true,
+          "required": true,
+          "label": "Last Name",
+          "placeholder": "Enter your last name"
+        },
+        "email": {
+          "visible": true,
+          "required": true,
+          "label": "Email",
+          "placeholder": "Enter your email address"
+        },
+        "phone": {
+          "visible": true,
+          "required": false,
+          "label": "Phone",
+          "placeholder": "Enter your phone number"
+        }
+      },
+      {
+        "id": "text_1756154593545_159",
+        "type": "text",
+        "label": "Years of Experience",
+        "placeholder": "Enter your years of experience as a Product Designer",
+        "required": true,
+        "visible": true
+      },
+      {
+        "id": "multichoice_1756154593545_160",
+        "type": "multichoice",
+        "label": "Proficiency in Design Tools",
+        "required": true,
+        "visible": true,
+        "options": [
+          "Figma",
+          "Sketch",
+          "Adobe XD",
+          "InVision",
+          "Other"
+        ]
+      },
+      {
+        "id": "boolean_1756154593545_161",
+        "type": "boolean",
+        "label": "Have you conducted user research?",
+        "required": true,
+        "visible": true
+      },
+      {
+        "id": "motivation_1756154593545_162",
+        "type": "motivation",
+        "label": "Motivation / Cover Letter",
+        "placeholder": "Please explain your motivation for applying and how you align with our mission.",
+        "required": true,
+        "visible": true
+      },
+      {
+        "id": "number_1756154593545_163",
+        "type": "number",
+        "label": "Expected Salary",
+        "placeholder": "Enter your expected salary",
+        "required": true,
+        "visible": true,
+        "min": 0
+      },
+      {
+        "id": "dropdown_1756154593545_164",
+        "type": "dropdown",
+        "label": "Availability to Start",
+        "required": true,
+        "visible": true,
+        "options": [
+          "Immediately",
+          "Within 2 weeks",
+          "Within 1 month",
+          "Other"
+        ]
+      }
+    ]
+  },
+  "formIntroductionText": "Welcome! Great to have you with us today. You can start your application here. This won't take more than a minute.",
+  "formSubText": "Please click next to fill out your details.",
+  "formSuccessMessage": "Application submitted successfully!",
+  "formErrorMessage": "Failed to submit application",
+  "vacancyStages": [],
+  "companyName": "HireLab",
+  "companyUrl": "www.hirelab.io",
+  "companyInfo": "HireLab is a cutting-edge recruitment technology company dedicated to transforming the hiring process through innovative solutions. Our platform harnesses advanced algorithms and data analytics to streamline talent acquisition, making it easier for organizations to identify and recruit top-tier candidates. We provide tools that enhance employer branding, improve candidate engagement, and optimize recruitment workflows. By leveraging artificial intelligence and machine learning, HireLab enables companies to make data-driven hiring decisions, reduce time-to-hire, and enhance overall recruitment efficiency. Whether you're a small startup or a large enterprise, HireLab empowers you to build a high-performing workforce with precision and ease. Join us in revolutionizing the future of hiring.",
+  "companyLogo": "https://res.cloudinary.com/dbd8xsdhs/image/upload/v1756153617/vgcw0o8qfhbzdojzcpvp.png",
+  "primaryColor": "#067dd7",
+  "secondaryColor": "#3a06d7",
+  "tertiaryColor": "#a27ce8",
+  "heroTitleColor": "#222222",
+  "brandColors": [],
+  "unpublishedAt": null,
+  "menuItems": [
     {
-      key: "Job Specifications",
+      "key": "Job Specifications",
+      "id": "job-specifications",
+      "label": "Summary",
+      "active": true,
+      "visible": true,
+      "sort": 1
     },
     {
-      key: "Recruiter Contact",
+      "key": "Recruiter Contact",
+      "id": "recruiter-contact",
+      "label": "Contacts",
+      "active": true,
+      "visible": true,
+      "sort": 2
     },
     {
-      key: "Job Description",
+      "key": "Job Description",
+      "id": "job-description",
+      "label": "Description",
+      "active": true,
+      "visible": true,
+      "sort": 3
     },
     {
-      key: "Agenda",
+      "key": "Agenda",
+      "id": "agenda",
+      "label": "Agenda",
+      "active": true,
+      "visible": true,
+      "sort": 4
     },
     {
-      key: "Company Facts",
+      "key": "About The Company",
+      "id": "about-the-company",
+      "label": "About Us",
+      "active": true,
+      "visible": true,
+      "sort": 5
     },
     {
-      key: "About The Company",
+      "key": "Company Facts",
+      "id": "company-facts",
+      "label": "Company Facts",
+      "active": true,
+      "visible": true,
+      "sort": 6
     },
     {
-      key: "Employee Testimonials",
+      "key": "Candidate Process",
+      "id": "candidate-process",
+      "label": "Application Process",
+      "active": true,
+      "visible": true,
+      "sort": 7
     },
     {
-      key: "Leader Introduction",
-    },
-    {
-      key: "Candidate Process",
-    },
-    {
-      key: "Growth Path",
-    },
-    {
-      key: "EVP / Mission",
-    },
-    {
-      key: "Image Carousel",
-    },
-    {
-      key: "Video",
-    },
-    {
-      key: "Text Box",
-    },
+      "key": "Growth Path",
+      "id": "growth-path",
+      "label": "Growth Path",
+      "active": true,
+      "visible": true,
+      "sort": 8
+    }
   ],
-  currentPath: 1,
-  templateId: "1",
-  createdWithText: "Created with HireLab",
-  vacancyTitle: "Senior Director Customer Leadership",
-  heroDescription:
-    "Join Coca-Cola as a Senior Director and lead strategic customer relationships in the foodservice sector.",
-  heroImage: "/images3/img_hero_section.png",
-  salaryRange: true,
-  salaryMin: "169000",
-  salaryMax: "196000",
-  salaryCurrency: "USD",
-  salaryTime: "Year",
-  hoursRange: true,
-  hoursMin: "40",
-  hoursMax: "50",
-  hoursUnit: "Monthly",
-  location: ["Irvine, California", "Southern California", "Denver, CO"],
-  jobSpecificationTitle: "Job Sepcifications ",
-  jobSpecificationDescription: "Key details about the Senior Director position",
-  specifications: [
+  "currentPath": 1,
+  "templateId": "1",
+  "createdWithText": "Created with HireLab",
+  "metaPixelId": "",
+  "vacancyTitle": "Product Designer",
+  "heroDescription": "Join HireLab as a Product Designer and shape the user experience for our innovative SaaS platform.",
+  "heroImage": "https://res.cloudinary.com/dbd8xsdhs/image/upload/v1756154912/um2uwjslnrymvf9n5qdb.jpg",
+  "salaryRange": true,
+  "salaryMin": "40.000",
+  "salaryMax": "60.000",
+  "salaryCurrency": "€",
+  "salaryTime": "",
+  "hoursRange": false,
+  "hoursMin": "40",
+  "hoursMax": "40",
+  "hoursUnit": "Week",
+  "location": [
+    "Remote"
+  ],
+  "jobSpecificationTitle": "Job Specifications",
+  "jobSpecificationDescription": "Key details about the Product Designer position",
+  "specifications": [
     {
-      title: "Benefits",
-      description: "What we offer",
-      bulletPoints: [
+      "title": "Benefits",
+      "description": "What we offer",
+      "bulletPoints": [
         {
-          bullet: "Comprehensive medical benefits",
+          "bullet": "Flexible work hours to maintain work-life balance."
         },
         {
-          bullet: "Performance-based annual incentives",
+          "bullet": "Access to cutting-edge design tools and resources."
         },
         {
-          bullet: "Continuous learning and development opportunities",
+          "bullet": "Opportunities for professional development and training."
         },
+        {
+          "bullet": "A collaborative and innovative work environment."
+        },
+        {
+          "bullet": "Health and wellness programs for all employees."
+        },
+        {
+          "bullet": "Remote work options to support global talent."
+        },
+        {
+          "bullet": "Participation in team-building activities and events."
+        },
+        {
+          "bullet": "Competitive benefits package including health insurance."
+        }
       ],
-      enabled: true,
-      icon: "Archive",
+      "enabled": true
     },
     {
-      title: "Tasks",
-      description: "Your responsibilities",
-      bulletPoints: [
+      "title": "Tasks",
+      "description": "Your responsibilities",
+      "bulletPoints": [
         {
-          bullet: "Lead a team of account professionals across regions",
+          "bullet": "Lead feature discovery and design for the HireLab application."
         },
         {
-          bullet: "Build strategic relationships with key customers",
+          "bullet": "Conduct user research and usability testing for insights."
         },
         {
-          bullet: "Coach and develop sales talent",
+          "bullet": "Collaborate with product managers and developers."
         },
         {
-          bullet: "",
+          "bullet": "Evolve and maintain HireLab’s design system for consistency."
         },
+        {
+          "bullet": "Create user-first solutions based on data analysis."
+        },
+        {
+          "bullet": "Transform complex workflows into intuitive experiences."
+        },
+        {
+          "bullet": "Deliver designs that solve real problems within deadlines."
+        },
+        {
+          "bullet": "Articulate design decisions to guide stakeholders effectively."
+        }
       ],
-      enabled: true,
-      undefined: {
-        title: "Tasks",
-        description: "Your responsibilities",
-        bulletPoints: [
-          {
-            bullet: "Lead a team of account professionals across regions",
-          },
-          {
-            bullet: "Build strategic relationships with key customers",
-          },
-          {
-            bullet: "Coach and develop sales talent",
-          },
-          {
-            bullet: "",
-          },
-        ],
-        enabled: true,
-      },
+      "enabled": true
     },
     {
-      title: "Requirements",
-      description: "What you need",
-      bulletPoints: [
+      "title": "Requirements",
+      "description": "What you need",
+      "bulletPoints": [
         {
-          bullet: "Bachelor's degree (MBA preferred)",
+          "bullet": "At least 5 years of experience as a Product Designer."
         },
         {
-          bullet: "5+ years in consumer goods industry",
+          "bullet": "Proficient in UX/UI design tools like Figma."
         },
         {
-          bullet: "3+ years managing professional sales teams",
+          "bullet": "Strong portfolio showcasing user-focused design solutions."
         },
+        {
+          "bullet": "Ability to articulate design decisions clearly."
+        },
+        {
+          "bullet": "Experience balancing user needs with business objectives."
+        },
+        {
+          "bullet": "Skilled in conducting user research and testing."
+        },
+        {
+          "bullet": "Strong analytical skills to derive insights from data."
+        },
+        {
+          "bullet": "Ability to work collaboratively in a cross-functional team."
+        }
       ],
-      enabled: true,
-    },
+      "enabled": true
+    }
   ],
-  recruiterContactTitle: "adfe azef",
-  recruiterContactText:
-    "Interested in this position? Reach out to our recruitment team.",
-  recruiters: [
+  "recruiterContactTitle": "Contact Us",
+  "recruiterContactText": "Interested in this position? Reach out to our recruitment team.",
+  "recruiters": [
     {
-      recruiterFullname: "Recruitment Team",
-      recruiterRole: "HR Team",
-      recruiterEmail: "careers@coca-cola.com",
-      recruiterPhone: "+1 (800) 241-2653",
-      recruiterPhoneEnabled: true,
-      recruiterEmailEnabled: true,
+      "recruiterFullname": "Sophie Wall",
+      "recruiterRole": "Senior Recruiter",
+      "recruiterEmail": "john.doe@hirelab.com",
+      "recruiterPhone": "+1 (555) 987-6543",
+      "recruiterAvatar": "https://res.cloudinary.com/dbd8xsdhs/image/upload/v1756154641/o9cblaqzfaksi6b03wbp.jpg"
     },
     {
-      fullname: "",
-      role: "",
-      rating: 5,
-      comment: "",
-      avatar: "/dhwise-images/placeholder.png",
-      recruiterFullname: "Jhon ",
-      recruiterRole: "doe",
-      recruiterPhoneEnabled: true,
-      recruiterEmailEnabled: true,
-      recruiterPhone: "5551231234",
-      recruiterEmail: "x@recruiter.com",
-    },
+      "fullname": "",
+      "role": "",
+      "rating": 5,
+      "comment": "",
+      "avatar": "/dhwise-images/placeholder.png",
+      "recruiterFullname": "James Smit",
+      "recruiterRole": "Senior Recruiter",
+      "recruiterAvatar": "https://res.cloudinary.com/dbd8xsdhs/image/upload/v1756155052/u3qkvncmbrnfszaapb9c.jpg"
+    }
   ],
-  jobDescriptionTitle: "About the Job ffeaz",
-  jobDescriptionSubheader: "",
-  jobDescription:
-    'Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin fwords, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.fes',
-  agendaTitle: "A Day in the Life",
-  agendaDescription:
-    "Here's what a typical day looks like for our Senior Directors",
-  companyFactsTitle: "Coca-Cola Factsfeafas fde",
-  companyFactsDescription: "Learn what makes Coca-Cola a great place to work",
-  companyFacts: [
+  "jobDescriptionTitle": "Job Description",
+  "jobDescriptionSubheader": "About the position",
+  "jobDescription": "At HireLab, we’re revolutionizing how businesses support their global teams. As a Product Designer, you’ll play a crucial role in shaping user experiences by collaborating closely with a Product Manager. Your user-centric design approach and data-driven insights will help create intuitive solutions that enhance the efficiency of IT managers worldwide. This is an opportunity to transform complex workflows into seamless experiences that make a significant impact on our customers.",
+  "jobDescriptionImage": "https://res.cloudinary.com/dbd8xsdhs/image/upload/v1756154786/zkfx6ogziczvfhoy1gk8.jpg",
+  "agendaTitle": "A Day in the Life",
+  "agendaDescription": "Here's what a typical day looks like for our Product Designers",
+  "dailyScheduleList": [
     {
-      descriptionText: "Over 130 years of innovation and growth",
-      headingText: "Established",
-      icon: "Clock",
-      _id: {
-        $oid: "67de5d014f6e12e06def70d1",
+      "dateTimeSlot": {
+        "startTime": "09:00",
+        "endTime": "10:00",
+        "_id": {
+          "$oid": "68accaec8d0acff1f7b00e55"
+        }
       },
+      "eventTitle": "Morning Sync with Product Team",
+      "description": "Discuss ongoing projects and align on tasks for the day.",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e54"
+      }
     },
     {
-      descriptionText: "Presence in over 200 countries worldwide",
-      headingText: "Global Reach",
-      icon: "Angry",
-      _id: {
-        $oid: "67de5d014f6e12e06def70d2",
+      "dateTimeSlot": {
+        "startTime": "10:30",
+        "endTime": "12:00",
+        "_id": {
+          "$oid": "68accaec8d0acff1f7b00e58"
+        }
       },
+      "eventTitle": "User Research and Feedback Session",
+      "description": "Conduct usability testing and gather insights from users.",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e57"
+      }
     },
     {
-      descriptionText: "Diverse portfolio of over 500 brands",
-      headingText: "Brand Variety",
-      icon: "AlignVerticalDistributeCenter",
-      _id: {
-        $oid: "67de5d014f6e12e06def70d3",
+      "dateTimeSlot": {
+        "startTime": "13:00",
+        "endTime": "15:00",
+        "_id": {
+          "$oid": "68accaec8d0acff1f7b00e5b"
+        }
       },
+      "eventTitle": "Designing Features and Prototyping",
+      "description": "Work on designs and prototypes for upcoming features.",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e5a"
+      }
     },
+    {
+      "dateTimeSlot": {
+        "startTime": "15:30",
+        "endTime": "17:00",
+        "_id": {
+          "$oid": "68accaec8d0acff1f7b00e5e"
+        }
+      },
+      "eventTitle": "Collaborative Review with Developers",
+      "description": "Present designs to developers and gather feedback.",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e5d"
+      }
+    }
   ],
-  aboutTheCompanyTitle: "About Coca-Cola",
-  aboutTheCompanyText: "Refreshing the world since 1886",
-  aboutTheCompanyDescription:
-    "Coca-Cola is a leading beverage company specializing in refreshing drinks and innovative solutions. Our mission is to refresh the world and make a difference through our diverse portfolio of brands and products. We believe in fostering an inclusive culture that nurt",
-  aboutTheCompanyImages: [
-    "https://res.cloudinary.com/dvq0ouupb/image/upload/v1742677743/hnwxyed70fstbgxi2ic6.png",
-    "https://res.cloudinary.com/dvq0ouupb/image/upload/v1742677744/t66x46og7fdvgr7qfev0.png",
-    "https://res.cloudinary.com/dvq0ouupb/image/upload/v1742677744/vodzywddpb38v85htyx6.png",
-    "https://res.cloudinary.com/dvq0ouupb/image/upload/v1742677744/ludcwnf7xejx3us0mvbq.png",
-    "https://res.cloudinary.com/dvq0ouupb/image/upload/v1742677744/dwthy7o3gcgril2t53th.png",
+  "companyFactsTitle": "HireLab Facts",
+  "companyFactsDescription": "Discover what makes HireLab an exciting place to work",
+  "companyFacts": [
+    {
+      "descriptionText": "Transforming the hiring process with innovative solutions.",
+      "headingText": "Innovative Approach",
+      "icon": "Lightbulb",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e5f"
+      }
+    },
+    {
+      "descriptionText": "Leveraging AI and data analytics for smarter hiring.",
+      "headingText": "Technology-Driven",
+      "icon": "Computer",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e60"
+      }
+    },
+    {
+      "descriptionText": "Supporting global teams with efficient IT management.",
+      "headingText": "Global Reach",
+      "icon": "Globe",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e61"
+      }
+    },
+    {
+      "descriptionText": "Dedicated to continuous improvement and growth.",
+      "headingText": "Commitment to Excellence",
+      "icon": "Star",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e62"
+      }
+    }
   ],
-  footerTitle: "Ready to join our team?",
-  footerDescription:
-    "Apply today and take the next step in your career with Coca-Cola.",
-  ctaFooterTitle: "Apply Now",
-  ctaFooterLink:
-    "https://careers.coca-colacompany.com/job/21709296/senior-director-customer-leadership-foodservice-irvine-ca/",
-  similarJobsTitle: "You may also like",
-  cta1Title: "Share",
-  cta2Title: "Apply now",
-  cta1Link: "#share",
-  cta2Link: "#apply",
-  ctaApply: "Apply now",
-  testimonialTitle: "Testimonials",
-  testimonialSubheader: "Testimonials",
-  leaderIntroductionTitle: "Meet Our CEO",
-  leaderIntroductionDescription:
-    "With the Core App development team we are on our way to become the worlds user friendliest consumer app for job connections with employers. We are just missing one person. You!",
-  leaderIntroductionFullname: "John Doe",
-  leaderIntroductionJobTitle: "John Doe",
-  leaderIntroductionAvatar: "",
-  photoTitle: "Image caroossel section",
-  photoText:
-    "Our company is a forward-thinking technology company specializing in AI-driven automation solutions designed to streamline business operations and elevate customer experiences.",
-  photoImages: [],
-  evpMissionTitle: "EVP / Missionf",
-  evpMissionDescription: "EVP / Missionfeza",
-  evpMissionFullname: "John Doexzeaf",
-  evpMissionCompanyName: "John Doefezafza",
-  evpMissionAvatar:
-    "https://res.cloudinary.com/dvq0ouupb/image/upload/v1738169592/mwkfw1zhiktnb9aandui.jpg",
-  candidateProcessTitle: "Our application process",
-  candidateProcessDescription:
-    "Understanding the Candidate Process: Navigating the Path to Success",
-  growthPathTitle: "Growth path",
-  growthPathDescription: "Take a glimpse of how your career could progress.",
-  videoTitle: "Interview tips",
-  videoDescription: "Mastering the Interview: Essential Tips for Success",
-  myVideo: "",
-  videoAutoPlay: false,
-  textBoxTitle: "Discover our company??",
-  textBoxText: "We are proud and loud we put our employee first.",
-  textBoxDescription:
-    "With the Core App development team we are on our way to become the worlds user friendliest consumer app for job connections with employers. We are just missing one person. You!",
-  textBoxImage:
-    "https://res.cloudinary.com/dvq0ouupb/image/upload/v1743035714/ulkmydjsn7ekdfywnejn.png",
-  testimonials: [
-    {
-      comment:
-        "Working at HireLab has been an incredible experience. The collaborative culture, opportunities for growth, and supportive leadership make every day fulfilling. I feel valued as an employee and am proud to be part of a team that consistently strives for excellence. It's truly a rewarding and inspiring environment.",
-      fullname: "John Doe",
-      role: "CEO",
-      avatar: "",
-      avatarEnabled: true,
-      _id: {
-        $oid: "67de5d014f6e12e06def70d4",
-      },
-    },
-    {
-      comment:
-        "Working at HireLab has been an incredible experience. The collaborative culture, opportunities for growth, and supportive leadership make every day fulfilling. I feel valued as an employee and am proud to be part of a team that consistently strives for excellence. It's truly a rewarding and inspiring environment.",
-      fullname: "John Doe",
-      role: "CEO",
-      avatar: "",
-      avatarEnabled: true,
-      _id: {
-        $oid: "67de5d014f6e12e06def70d5",
-      },
-    },
+  "aboutTheCompanyTitle": "About HireLab",
+  "aboutTheCompanyText": "Revolutionizing the hiring process",
+  "aboutTheCompanyDescription": "HireLab is a cutting-edge recruitment technology company focused on transforming the hiring process through innovative solutions. By harnessing advanced algorithms and data analytics, we streamline talent acquisition and enhance employer branding, making it easier for organizations to attract top-tier candidates. Our platform empowers companies to make data-driven hiring decisions, reduce time-to-hire, and optimize recruitment workflows.",
+  "aboutTheCompanyImages": [
+    "https://res.cloudinary.com/dbd8xsdhs/image/upload/v1756155222/kg1vvp3ocn65opw8ytan.jpg",
+    "https://res.cloudinary.com/dbd8xsdhs/image/upload/v1756155219/y3tk022xkmjlubtoeugh.jpg",
+    "https://res.cloudinary.com/dbd8xsdhs/image/upload/v1756155252/jvrdmvnfrnal2q6t4voo.jpg",
+    "https://res.cloudinary.com/dbd8xsdhs/image/upload/v1756155220/cnudyi0sxl9n5myqtwyj.jpg"
   ],
-  candidateProcess: [
-    {
-      candidateProcessText: "Submit Application",
-      candidateProcessIcon: "Send",
-      _id: {
-        $oid: "67de5d014f6e12e06def70d6",
-      },
-    },
-    {
-      candidateProcessText: "Screening",
-      candidateProcessIcon: "ScreenShare",
-      _id: {
-        $oid: "67de5d014f6e12e06def70d7",
-      },
-    },
-    {
-      candidateProcessText: "Interview",
-      candidateProcessIcon: "Users",
-      _id: {
-        $oid: "67de5d014f6e12e06def70d8",
-      },
-    },
-    {
-      candidateProcessText: "Offer",
-      candidateProcessIcon: "Handshake",
-      _id: {
-        $oid: "67de5d014f6e12e06def70d9",
-      },
-    },
+  "footerTitle": "Ready to join our team?",
+  "footerDescription": "Apply today and take the next step in your career with HireLab.",
+  "ctaFooterTitle": "Apply Now",
+  "ctaFooterLink": "#apply",
+  "similarJobsTitle": "You may also like",
+  "similarJobs": [],
+  "cta1Title": "Share",
+  "cta2Title": "Apply now",
+  "cta1Link": "#share",
+  "cta2Link": "#apply",
+  "applyType": "form",
+  "ctaApply": "Apply now",
+  "testimonialTitle": "Testimonials",
+  "testimonialSubheader": "Testimonials",
+  "leaderIntroductionTitle": "Meet Our CEO",
+  "leaderIntroductionDescription": "[Insert leader introduction message here]\n\nShare a personal message from your company leader that connects with potential candidates and reflects your company culture.\n\nExample:\n\"As CEO, I'm passionate about building a team where everyone can do their best work. We believe in creating opportunities for growth, fostering innovation, and making a positive impact together. Join us and be part of something meaningful.\"",
+  "leaderIntroductionFullname": "[Leader Name]",
+  "leaderIntroductionJobTitle": "[Leader Job Title]",
+  "leaderIntroductionAvatar": "",
+  "photoTitle": "Discover our company",
+  "photoText": "[Insert image carousel description here]\n\nProvide context for your company photos and help candidates visualize working at your organization.\n\nExample:\n\"Take a glimpse into our vibrant workplace culture. From collaborative workspaces to team events, see what makes our company a great place to work.\"",
+  "photoImages": [],
+  "evpMissionTitle": "EVP / Mission",
+  "evpMissionDescription": "[Insert your EVP Mission here]\n\nDescribe your company's core purpose and the promise it makes to current and future employees. This statement should reflect what your company stands for, how it supports its people, and why employees choose to stay and grow with you.\n\nExample:\n\"At [Company Name], our mission is to empower every employee to thrive—personally and professionally—through a culture of innovation, respect, and purpose-driven work. We believe in building careers, not just jobs.\"",
+  "evpMissionFullname": "[Leader Name]",
+  "evpMissionCompanyName": "[Company Name]",
+  "evpMissionAvatar": "",
+  "candidateProcessTitle": "Application Steps",
+  "candidateProcessDescription": "Easy steps from applying to receiving your offer, designed with you in mind.",
+  "growthPathTitle": "Growth path",
+  "growthPathDescription": "Take a glimpse of how your career could progress.",
+  "videoTitle": "[Insert video section title here]",
+  "videoDescription": "[Insert video description here]\n\nUse this section to share a company video, interview tips, or insights about your workplace culture.\n\nExample:\n\"Get an inside look at our company culture and hear from our team about what makes working here special.\"",
+  "myVideo": "",
+  "videoAutoPlay": false,
+  "textBoxTitle": "Discover our company",
+  "textBoxText": "[Insert your company highlight here]\n\nExample: \"We put our employees first and create an environment where everyone can thrive.\"",
+  "textBoxDescription": "[Insert detailed text box content here]\n\nUse this space to highlight a key aspect of your company culture, values, or what makes working at your organization special.\n\nExample:\n\"Our team is built on collaboration, innovation, and mutual respect. We believe that when our employees succeed, our company succeeds. Join us and discover what it means to be part of a truly supportive workplace.\"",
+  "textBoxImage": "/dhwise-images/placeholder.png",
+  "showSimilarJobs": false,
+  "thankYouTitle": "Application Submitted Successfully!",
+  "thankYouMessage": "Thank you for applying to {vacancyTitle} at {companyName}. We've received your application and will review it carefully.",
+  "thankYouNextStepsTitle": "What happens next?",
+  "thankYouNextSteps": [
+    "Our team will review your application within 2-3 business days",
+    "If you're a good fit, we'll reach out to schedule an interview",
+    "You'll receive email updates about your application status"
   ],
-  growthPath: [
+  "thankYouBackButtonText": "Back to Job Posting",
+  "thankYouLearnMoreButtonText": "Learn More",
+  "visits": 3,
+  "totalTimeSpent": 68,
+  "testimonials": [
     {
-      title: "Entry-Level path",
-      description: "",
-      icon: "AlarmClockPlus",
-      _id: {
-        $oid: "67de5d014f6e12e06def70da",
-      },
+      "comment": "[Insert employee testimonial here]\n\nExample: \"Working here has been an incredible experience. The collaborative culture, opportunities for growth, and supportive leadership make every day fulfilling. I feel valued as an employee and proud to be part of a team that consistently strives for excellence.\"",
+      "fullname": "[Employee Name]",
+      "role": "[Employee Role]",
+      "avatar": "",
+      "avatarEnabled": true,
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e63"
+      }
     },
     {
-      title: "Mid-Level path",
-      description: "",
-      icon: "AlarmClockCheck",
-      _id: {
-        $oid: "67de5d014f6e12e06def70db",
-      },
-    },
-    {
-      title: "Senior-Level path",
-      description: "",
-      icon: "Activity",
-      _id: {
-        $oid: "67de5d014f6e12e06def70dc",
-      },
-    },
-    {
-      title: "Executive-Level path",
-      description: "",
-      icon: "ArrowDown",
-      _id: {
-        $oid: "67de5d014f6e12e06def70dd",
-      },
-    },
+      "comment": "[Insert second employee testimonial here]\n\nExample: \"The company truly invests in its people. From professional development opportunities to a genuinely inclusive workplace culture, this is where I've been able to grow both personally and professionally.\"",
+      "fullname": "[Employee Name]",
+      "role": "[Employee Role]",
+      "avatar": "",
+      "avatarEnabled": true,
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e64"
+      }
+    }
   ],
-  createdAt: {
-    $date: "2025-03-22T06:47:29.901Z",
+  "candidateProcess": [
+    {
+      "candidateProcessText": "Submit Application",
+      "candidateProcessIcon": "Send",
+      "_id": {
+        "$oid": "68ae03d148a1688f81cb887e"
+      }
+    },
+    {
+      "candidateProcessText": "Initial Screening",
+      "candidateProcessIcon": "Search",
+      "_id": {
+        "$oid": "68ae03d148a1688f81cb887f"
+      }
+    },
+    {
+      "candidateProcessText": "Interview",
+      "candidateProcessIcon": "Users",
+      "_id": {
+        "$oid": "68ae03d148a1688f81cb8880"
+      }
+    },
+    {
+      "candidateProcessText": "Offer",
+      "candidateProcessIcon": "Handshake",
+      "_id": {
+        "$oid": "68ae03d148a1688f81cb8881"
+      }
+    }
+  ],
+  "growthPath": [
+    {
+      "title": "Product Designer",
+      "description": "",
+      "icon": "BookA",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e69"
+      }
+    },
+    {
+      "title": "Senior Product Designer",
+      "description": "",
+      "icon": "PlaneTakeoff",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e6a"
+      }
+    },
+    {
+      "title": "Product Lead",
+      "description": "",
+      "icon": "Rocket",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e6b"
+      }
+    },
+    {
+      "title": "Head of Product",
+      "description": "",
+      "icon": "BicepsFlexed",
+      "_id": {
+        "$oid": "68accaec8d0acff1f7b00e6c"
+      }
+    }
+  ],
+  "createdAt": {
+    "$date": "2025-08-25T20:43:24.910Z"
   },
-  updatedAt: {
-    $date: "2025-03-27T00:35:26.622Z",
+  "updatedAt": {
+    "$date": "2025-08-26T19:12:18.923Z"
   },
-  __v: 0,
-  dailyScheduleList: [
-    {
-      dateTimeSlot: {
-        startTime: "04:00",
-        endTime: "07:00",
-        _id: {
-          $oid: "67e38d8a54086e5fe61c2662",
-        },
+  "__v": 0,
+  "imageAdjustment": {
+    "jobDescriptionImage": {
+      "objectPosition": {
+        "x": 57.5,
+        "y": 14.5
       },
-      eventTitle: "Morning Check-In & Team Sync",
-      description: "Morning Check-In & Team Sync",
-      _id: {
-        $oid: "67e38aafc000ff73a7fe55db",
-      },
-    },
-    {
-      dateTimeSlot: {
-        startTime: "07:00",
-        endTime: "11:00",
-        _id: {
-          $oid: "67e38d8a54086e5fe61c2665",
-        },
-      },
-      eventTitle: "Review Project Timelines & Milestones",
-      description: "",
-      _id: {
-        $oid: "67e38aafc000ff73a7fe55dd",
-      },
-    },
-    {
-      dateTimeSlot: {
-        startTime: "",
-        endTime: "",
-        _id: {
-          $oid: "67e38d8a54086e5fe61c2668",
-        },
-      },
-      eventTitle: "Lunch Break",
-      description: "Lunch Break",
-      _id: {
-        $oid: "67e38aafc000ff73a7fe55df",
-      },
-    },
-    {
-      dateTimeSlot: {
-        startTime: "",
-        endTime: "",
-        _id: {
-          $oid: "67e38d8a54086e5fe61c266b",
-        },
-      },
-      eventTitle: "Budget Review & Resource Allocation",
-      description: "Budget Review & Resource Allocation",
-      _id: {
-        $oid: "67e38aafc000ff73a7fe55e1",
-      },
-    },
-  ],
-};
+      "objectFit": "cover"
+    }
+  },
+  "lastVisitedAt": {
+    "$date": "2025-08-26T19:12:12.866Z"
+  }
+}
 
 /**
  * Generates a harmonious color scheme based on color theory principles
@@ -883,7 +1044,6 @@ export default function BrandStyleForm() {
   const [primaryColor, setPrimaryColor] = useState("");
   const [secondaryColor, setSecondaryColor] = useState("");
   const [tertiaryColor, setTertiaryColor] = useState("");
-  const [heroBackgroundColor, setHeroBackgroundColor] = useState("");
   const [yiqThreshold, setYiqThreshold] = useState(128);
   const [Scraping, setScraping] = useState(false);
   const [scrapeMessages, setScrapeMessages] = useState([]);
@@ -939,7 +1099,6 @@ export default function BrandStyleForm() {
     primaryColor: "",
     secondaryColor: "",
     tertiaryColor: "",
-    heroBackgroundColor: "",
     selectedFont: "",
     titleFont: "",
     subheaderFont: "",
@@ -966,25 +1125,14 @@ export default function BrandStyleForm() {
   const [showCompanyInfoSkeleton, setShowCompanyInfoSkeleton] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
-  const fetchData = useCallback(() => {
-    if (lpId) {
-      PublicService.getLP(lpId).then((res) => {
-        console.log("res", res);
-        if (res.data?.lp) setLandingPageData(res.data.lp);
-      });
-    }
-  }, [lpId]);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    setLandingPageData((prevData) => ({
-      ...prevData,
-      theme: theme,
-    }));
-  }, [theme]);
+  // useEffect(() => {
+  //   console.log("theme", theme);
+  //   setLandingPageData((prevData) => ({
+  //     ...prevData,
+  //     theme: theme,
+  //   }));
+  // }, [theme]);
 
   useEffect(() => {
     if (user && (user?.isUserFirsttime || !user?.onboardingCompleted)) {
@@ -1065,36 +1213,36 @@ const handleContinue = () => {
   }, [selectedTemplateId]);
 
   // Update landing page data when company name or info changes
-  useEffect(() => {
-    if (companyName && companyName.trim() !== '') {
-      setLandingPageData((prevData) => ({
-        ...prevData,
-        heroDescription: `Join ${companyName} as a Senior Director and lead strategic customer relationships in the foodservice sector.`,
-        companyFactsTitle: `${companyName} Facts`,
-        companyFactsDescription: `Learn what makes ${companyName} a great place to work`,
-        aboutTheCompanyTitle: `About ${companyName}`,
-        aboutTheCompanyText: `Leading innovation since founded`,
-        aboutTheCompanyDescription: companyInfo || `${companyName} is a leading company specializing in innovative solutions. Our mission is to make a difference through our diverse portfolio of products and services. We believe in fostering an inclusive culture that nurtures talent and drives success.`,
-        footerDescription: `Apply today and take the next step in your career with ${companyName}.`,
-        ctaFooterLink: companyUrl ? `https://${companyUrl.replace(/^www\./, '').split('/')[0]}/careers` : prevData.ctaFooterLink,
-        recruiters: prevData.recruiters.map((recruiter, index) => {
-          if (index === 0) {
-            return {
-              ...recruiter,
-              recruiterEmail: companyUrl ? `careers@${companyUrl.replace(/^www\./, '').split('/')[0]}` : recruiter.recruiterEmail,
-            };
-          }
-          return recruiter;
-        }),
-      }));
-    } else if (companyInfo && companyInfo.trim() !== '') {
-      // Update only company info if no company name is set
-      setLandingPageData((prevData) => ({
-        ...prevData,
-        aboutTheCompanyDescription: companyInfo,
-      }));
-    }
-  }, [companyName, companyUrl, companyInfo]);
+  // useEffect(() => {
+  //   if (companyName && companyName.trim() !== '') {
+  //     setLandingPageData((prevData) => ({
+  //       ...prevData,
+  //       // heroDescription: `Join ${companyName} as a Senior Director and lead strategic customer relationships in the foodservice sector.`,
+  //       // companyFactsTitle: `${companyName} Facts`,
+  //       // companyFactsDescription: `Learn what makes ${companyName} a great place to work`,
+  //       // aboutTheCompanyTitle: `About ${companyName}`,
+  //       // aboutTheCompanyText: `Leading innovation since founded`,
+  //       // aboutTheCompanyDescription: companyInfo || `${companyName} is a leading company specializing in innovative solutions. Our mission is to make a difference through our diverse portfolio of products and services. We believe in fostering an inclusive culture that nurtures talent and drives success.`,
+  //       // footerDescription: `Apply today and take the next step in your career with ${companyName}.`,
+  //       // ctaFooterLink: companyUrl ? `https://${companyUrl.replace(/^www\./, '').split('/')[0]}/careers` : prevData.ctaFooterLink,
+  //       // recruiters: prevData.recruiters.map((recruiter, index) => {
+  //       //   if (index === 0) {
+  //       //     return {
+  //       //       ...recruiter,
+  //       //       recruiterEmail: companyUrl ? `careers@${companyUrl.replace(/^www\./, '').split('/')[0]}` : recruiter.recruiterEmail,
+  //       //     };
+  //       //   }
+  //       //   return recruiter;
+  //       // }),
+  //     }));
+  //   } else if (companyInfo && companyInfo.trim() !== '') {
+  //     // Update only company info if no company name is set
+  //     setLandingPageData((prevData) => ({
+  //       ...prevData,
+  //       // aboutTheCompanyDescription: companyInfo,
+  //     }));
+  //   }
+  // }, [companyName, companyUrl, companyInfo]);
 
   const handleApplyThemeToLandingPage = () => {
     // message.info("Branding Theme Applied Successfully!");
@@ -1103,7 +1251,6 @@ const handleContinue = () => {
       primaryColor: primaryColor,
       secondaryColor: secondaryColor,
       tertiaryColor: tertiaryColor,
-      heroBackgroundColor: heroBackgroundColor,
       yiqThreshold: yiqThreshold,
       selectedFont: {
         family: selectedFont,
@@ -1134,9 +1281,7 @@ const handleContinue = () => {
       setPrimaryColor(user.primaryColor || "");
       setSecondaryColor(user.secondaryColor || "");
       setTertiaryColor(user.tertiaryColor || "");
-      setHeroBackgroundColor(
-        user.heroBackgroundColor || user.primaryColor || ""
-      );
+   
       setYiqThreshold(user.yiqThreshold || 128);
 
       // Only set font values if they exist in user data
@@ -1151,7 +1296,6 @@ const handleContinue = () => {
         primaryColor: user.primaryColor || "",
         secondaryColor: user.secondaryColor || "",
         tertiaryColor: user.tertiaryColor || "",
-        heroBackgroundColor: user.heroBackgroundColor || user.primaryColor || "",
         yiqThreshold: user.yiqThreshold || 128,
         companyLogo: user.companyLogo ,
         selectedFont: user?.selectedFont || { family: "", src: "" },
@@ -1166,7 +1310,6 @@ const handleContinue = () => {
             primary: user.primaryColor,
             secondary: user.secondaryColor,
             tertiary: user.tertiaryColor,
-            heroBackground: user.heroBackgroundColor || user.primaryColor,
           })
         );
         // dispatch(setTextColors({ heading: user.primaryColor, subHeading: user.primaryColor }));
@@ -1247,10 +1390,7 @@ const handleContinue = () => {
       message.error("Please select a tertiary color");
       return false;
     }
-    // if (!heroBackgroundColor) {
-    //   message.error("Please select a hero background color");
-    //   return false;
-    // }
+  
     if (!selectedFont && !titleFont) {
       message.error("Please upload or select a font for titles (H1)");
       return false;
@@ -1282,7 +1422,6 @@ const handleContinue = () => {
         primaryColor,
         secondaryColor,
         tertiaryColor,
-        heroBackgroundColor,
         yiqThreshold,
         isUserFirsttime: false,
         selectedFont: {
@@ -1816,9 +1955,8 @@ const handleLogoUpload = async (url) => {
   return (
     <>
       <Modal
-        title="Welcome to HireLab"
-        visible={showWelcomeModal}
-        centered
+        // title="Welcome to HireLab"
+        open={showWelcomeModal}
         onCancel={async () => {
           try {
             setShowWelcomeModal(false);
@@ -1862,9 +2000,14 @@ const handleLogoUpload = async (url) => {
             </Button>
           </div>
         }
+       
+        className="flex flex-col items-center justify-center  w-[700px] "
       >
+        <div className="max-w-[600px] text-center">
+        <h3 className="text-xl font-bold mb-4">Welcome to HireLab</h3>
         <p>Let's turn those boring job pages into effective recruitment funnels.</p>
         <p style={{ marginTop: 8 }}>To start, let’s get your brand elements set-up.</p>
+        </div>
       </Modal>
       {/* CSS to fix salary badge positioning in preview mode */}
       <style jsx global>{`

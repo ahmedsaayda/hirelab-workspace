@@ -559,43 +559,18 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
     }, 50);
   }, [handleScroll]);
 
-  // Extract colors for dependency tracking - memoized to prevent re-renders
-  const primaryColor = useMemo(() => {
-    const color = landingPageData?.primaryColor || "#26B0C6";
-    return color;
-  }, [landingPageData?.primaryColor]);
-  
-  const secondaryColor = useMemo(() => {
-    const color = landingPageData?.secondaryColor || "#F7E733";
-    return color;
-  }, [landingPageData?.secondaryColor]);
-  
-  const tertiaryColor = useMemo(() => {
-    const color = landingPageData?.tertiaryColor || "#44b566";
-    return color;
-  }, [landingPageData?.tertiaryColor]);
-  
-  const heroBackgroundColor = useMemo(() => {
-    const color = landingPageData?.heroBackgroundColor || primaryColor || "#26B0C6";
-    return color;
-  }, [landingPageData?.heroBackgroundColor, primaryColor]);
-
-  // Create a stable color key to prevent unnecessary template palette updates
-  const colorKey = useMemo(() => {
-    const key = `${primaryColor}-${secondaryColor}-${tertiaryColor}-${heroBackgroundColor}`;
-    return key;
-  }, [primaryColor, secondaryColor, tertiaryColor, heroBackgroundColor]);
-
-  // Memoize the custom colors object with stable key to prevent re-renders
+  // Simplified color extraction - only recalculate when colors actually change
   const customColors = useMemo(() => {
-    const colors = {
-      primaryColor,
-      secondaryColor,
-      tertiaryColor,
-      heroBackgroundColor,
+    return {
+      primaryColor: landingPageData?.primaryColor || "#26B0C6",
+      secondaryColor: landingPageData?.secondaryColor || "#F7E733", 
+      tertiaryColor: landingPageData?.tertiaryColor || "#44b566",
     };
-    return colors;
-  }, [colorKey]);
+  }, [
+    landingPageData?.primaryColor, 
+    landingPageData?.secondaryColor, 
+    landingPageData?.tertiaryColor, 
+  ]);
 
   // Use our template palette hook with the default colors
   const { getColor } = useTemplatePalette(
@@ -603,7 +578,6 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
       primaryColor: "#26B0C6",
       secondaryColor: "#F7E733",
       tertiaryColor: "#44b566",
-      heroBackgroundColor: "#26B0C6",
     },
     customColors
   );
@@ -617,23 +591,28 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
 
   // Ensure we have job listings
 
-  // Memoize JobCard styles outside the component
-  const jobCardStyles = useMemo(() => ({
-    container: { color: "black", fontFamily: bodyFont?.family },
-    badge: {
-      color: calculateTextColor(getColor("primary", 50)),
-      background: getColor("primary", 50),
-      padding: "10px 10px",
-      borderRadius: "10px",
-    },
-    applyButton: {
-      backgroundColor: getColor("primary", 500),
-      color: calculateTextColor(getColor("primary", 500)),
-    }
-  }), [bodyFont?.family, getColor]);
+  // Stable JobCard styles - only recalculate when font or colors change
+  const jobCardStyles = useMemo(() => {
+    const primaryColor50 = getColor("primary", 50);
+    const primaryColor500 = getColor("primary", 500);
+    
+    return {
+      container: { color: "black", fontFamily: bodyFont?.family },
+      badge: {
+        color: calculateTextColor(primaryColor50),
+        background: primaryColor50,
+        padding: "10px 10px",
+        borderRadius: "10px",
+      },
+      applyButton: {
+        backgroundColor: primaryColor500,
+        color: calculateTextColor(primaryColor500),
+      }
+    };
+  }, [bodyFont?.family, customColors.primaryColor]); // Only depend on actual color values
 
-  // Job Card component - memoized to prevent unnecessary re-renders
-  const JobCard = useCallback(({ job }) => {
+  // Job Card component - properly memoized to prevent unnecessary re-renders
+  const JobCard = React.memo(({ job }) => {
     if (!job) return null;
     
     const workType = useMemo(() => {
@@ -646,6 +625,7 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
       <div
         style={jobCardStyles.container}
         className="flex overflow-hidden flex-col h-full rounded-xl  max-w-[370px] mx-auto w-full"
+        id="footer"
       >
         {/* Job Image */}
         <div className="relative h-48 bg-gray-100 rounded-xl overflow-hidden">
@@ -685,7 +665,6 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
                 >
                   <path
                     d="M6.5 1.5C6.5 2.05228 5.26878 2.5 3.75 2.5C2.23122 2.5 1 2.05228 1 1.5M6.5 1.5C6.5 0.947715 5.26878 0.5 3.75 0.5C2.23122 0.5 1 0.947715 1 1.5M6.5 1.5V2.25M1 1.5V7.5C1 8.05228 2.23122 8.5 3.75 8.5M3.75 4.5C3.66573 4.5 3.58234 4.49862 3.5 4.49592C2.09837 4.44999 1 4.02164 1 3.5M3.75 6.5C2.23122 6.5 1 6.05228 1 5.5M11 4.75C11 5.30228 9.76878 5.75 8.25 5.75C6.73122 5.75 5.5 5.30228 5.5 4.75M11 4.75C11 4.19772 9.76878 3.75 8.25 3.75C6.73122 3.75 5.5 4.19772 5.5 4.75M11 4.75V8.5C11 9.05228 9.76878 9.5 8.25 9.5C6.73122 9.5 5.5 9.05228 5.5 8.5V4.75M11 6.625C11 7.17728 9.76878 7.625 8.25 7.625C6.73122 7.625 5.5 7.17728 5.5 6.625"
-                    // stroke="#2E9EAC"
                     stroke={getColor("secondary", 500)}
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -756,14 +735,12 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
             className="py-3 w-full font-medium text-center rounded-full transition-colors mt-auto"
             style={jobCardStyles.applyButton}
           >
-            {/* Learn More */}
-            {/* show correct translated cta2 of the job */}
             {job?.ctaFooterTitle??landingPageData?.ctaFooterTitle??"Learn More"}
           </a>
         </div>
       </div>
     );
-  }, [jobCardStyles, getColor, landingPageData?.salaryTime, landingPageData?.cta2Link]);
+  });
 
   // Memoize font and color calculations
   const textColor = useMemo(() => calculateTextColor(getColor("primary", 500)), [getColor]);
@@ -792,25 +769,18 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
     return color;
   }, [getBackgroundColor, getColor, getColorBrightness, landingPageData?.primaryColor]);
 
-  // Stabilize GridPattern props to prevent flickering
+  // Simplified and stable GridPattern props - only depend on actual color changes
   const gridPatternProps = useMemo(() => {
-    // Get stable color values by directly using the color values instead of getColor function
     const primaryColor500 = landingPageData?.primaryColor || "#26B0C6";
     const tertiaryColor300 = landingPageData?.tertiaryColor || "#44b566";
     const tertiaryColor50 = `${tertiaryColor300}20`; // Add transparency
     
-    const props = {
+    return {
       gridColor: tertiaryColor300,
       gridLineColor: tertiaryColor50,
       backgroundColor: primaryColor500,
       gridSize: 50,
-      // Use a stable key based on the actual color values to prevent unnecessary re-renders
-      key: `${primaryColor500}-${tertiaryColor300}`
     };
-    
-
-    
-    return props;
   }, [landingPageData?.primaryColor, landingPageData?.tertiaryColor]);
 
   // Memoize title text calculations
@@ -834,57 +804,35 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
     };
   }, [landingPageData?.similarJobsTitle]);
 
-  // Memoize style objects to prevent re-renders
+  // Stable style objects - only recalculate when actual font/color values change
   const titleStyle = useMemo(() => ({
     fontFamily: subheaderFont?.family,
     color: textColor
-  }), [subheaderFont?.family, textColor]);
+  }), [subheaderFont?.family, customColors.primaryColor]);
 
   const descriptionStyle = useMemo(() => ({
     fontFamily: bodyFont?.family,
     color: textColor
-  }), [bodyFont?.family, textColor]);
+  }), [bodyFont?.family, customColors.primaryColor]);
 
-  const ctaButtonStyle = useMemo(() => ({
-    backgroundColor: getColor("primary", 600),
-    color: textColor,
-    fontFamily: bodyFont?.family,
-  }), [getColor, textColor, bodyFont?.family]);
+  // const ctaButtonStyle = useMemo(() => ({
+  //   backgroundColor: getColor("primary", 600),
+  //   color: textColor,
+  //   fontFamily: bodyFont?.family,
+  // }), [customColors.primaryColor, bodyFont?.family,textColor,landingPageData?.primaryColor]);
+  // console.log("ctaButtonStyle", ctaButtonStyle);
 
-  // Create a stable reference for GridPattern to completely eliminate flickering
-  const gridPatternRef = useRef(null);
-  const [stableGridKey, setStableGridKey] = useState(gridPatternProps.key);
-  
-
-  
-  // Only update the grid when colors actually change (debounced)
-  useEffect(() => {
-    
-    const timeoutId = setTimeout(() => {
-      if (stableGridKey !== gridPatternProps.key) {
-        setStableGridKey(gridPatternProps.key);
-      }
-    }, 100); // Small debounce to prevent rapid updates
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [gridPatternProps.key, stableGridKey]);
-
-  // Create a memoized GridPattern component to prevent re-renders
+  // Create a stable GridPattern component that only re-renders when colors actually change
   const MemoizedGridPattern = useMemo(() => {
- 
-    
     return (
       <GridPattern
-        key={stableGridKey}
         gridColor={gridPatternProps.gridColor}
         gridLineColor={gridPatternProps.gridLineColor}
         backgroundColor={gridPatternProps.backgroundColor}
         gridSize={gridPatternProps.gridSize}
       />
     );
-  }, [stableGridKey, gridPatternProps]);
+  }, [gridPatternProps.gridColor, gridPatternProps.gridLineColor, gridPatternProps.backgroundColor, gridPatternProps.gridSize]);
 
   return (
     <div
@@ -934,7 +882,11 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
               }}
               ref={ctaFooterTitleRef}
               className="inline-block px-8 py-3 font-medium rounded-full transition-colors"
-              style={ctaButtonStyle}
+              style={{
+                backgroundColor: getColor("primary", 600),
+                color: textColor,
+                fontFamily: bodyFont?.family,
+              }}
             >
               {landingPageData?.ctaFooterTitle || "Apply Now"}
             </button>

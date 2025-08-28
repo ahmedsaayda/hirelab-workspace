@@ -333,7 +333,6 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
       "primaryColor": "#f2ff00",
       "secondaryColor": "#636302",
       "tertiaryColor": "#3e359f",
-      "heroBackgroundColor": "#092a26",
       "heroTitleColor": "#222222",
       "selectedFont": {
         "family": "Oxygen",

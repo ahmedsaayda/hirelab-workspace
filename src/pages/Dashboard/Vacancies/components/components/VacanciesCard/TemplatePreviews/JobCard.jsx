@@ -18,7 +18,6 @@ export default function JobCard({ landingPageData }) {
     primaryColor = "#44b566",
     secondaryColor = "#e1ce11",
     tertiaryColor = "#e1ce11",
-    heroBackgroundColor = "#2e9eac",
   } = landingPageData || {};
 
   // Call the palette hook
@@ -27,13 +26,11 @@ export default function JobCard({ landingPageData }) {
       primaryColor: "#2e9eac",
       secondaryColor: "#e1ce11",
       tertiaryColor: "#44b566",
-      heroBackgroundColor: "#2e9eac",
     },
     {
       primaryColor,
       secondaryColor,
       tertiaryColor,
-      heroBackgroundColor,
     }
   );
 

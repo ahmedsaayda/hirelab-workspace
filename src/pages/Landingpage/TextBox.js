@@ -80,7 +80,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
   const {  subheaderFont, bodyFont } = getFonts(landingPageData);
   return (
-    <div className="w-full bg-white py-16 md:py-24" ref={sectionRef}>
+    <div className="w-full bg-white py-16 md:py-24" ref={sectionRef} id="text-box">
       <div className="flex justify-center bg-[#ffffff]">
         <div className="container flex justify-center px-6 mdx:px-5">
           <div className="flex justify-center items-start px-14 w-full mdx:flex-col mdx:px-5">
@@ -174,7 +174,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
   const restWords = textBoxTitleParts.slice(1).join(" ");
   const {  subheaderFont, bodyFont } = getFonts(landingPageData);
   return (
-    <div className="w-full bg-white py-16 md:py-24" ref={sectionRef}
+    <div className="w-full bg-white py-16 md:py-24" ref={sectionRef} id="text-box"
     style={{color:"black",fontFamily: bodyFont?.family}}
     >
       <div className="flex justify-center bg-[#ffffff]">

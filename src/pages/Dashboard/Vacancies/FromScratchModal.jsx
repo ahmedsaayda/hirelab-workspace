@@ -22,6 +22,7 @@ const languageOptions = Array.from(
 })).sort((a, b) => a.label.localeCompare(b.label));
 
 const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
+  console.log("FromScratchModal");
   const user = useSelector(selectUser);
   console.log("user", user);
   const brandingDetails = {
@@ -32,7 +33,6 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
     primaryColor: user?.primaryColor,
     secondaryColor: user?.secondaryColor,
     tertiaryColor: user?.tertiaryColor,
-    heroBackgroundColor: user?.heroBackgroundColor,
     heroTitleColor: user?.heroTitleColor,
     titleFont: user?.titleFont,
     subheaderFont: user?.subheaderFont,
@@ -296,7 +296,105 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         heroDescription: formData.description,
         department: formData.department,
         lang: language,
-        menuItems: [],
+        menuItems:    [
+          {
+            "key": "Job Specifications",
+            "label": "Summary",
+            "active": false,
+            "visible": true,
+            "sort": 1
+          },
+          {
+            "key": "Recruiter Contact",
+            "label": "Contacts",
+            "active": false,
+            "visible": true,
+            "sort": 2
+          },
+          {
+            "key": "Job Description",
+            "label": "Description",
+            "active": false,
+            "visible": true,
+            "sort": 3
+          },
+          {
+            "key": "Agenda",
+            "label": "Agenda",
+            "active": false,
+            "visible": true,
+            "sort": 4
+          },
+          {
+            "key": "Company Facts",
+            "label": "Company Facts",
+            "active": false,
+            "visible": true,
+            "sort": 5
+          },
+          {
+            "key": "About The Company",
+            "label": "About Us",
+            "active": false,
+            "visible": true,
+            "sort": 6
+          },
+          {
+            "key": "Employee Testimonials",
+            "label": "Testimonials",
+            "active": false,
+            "visible": false,
+            "sort": 7
+          },
+          {
+            "key": "Text Box",
+            "label": "Text Box",
+            "active": false,
+            "visible": false,
+            "sort": 8
+          },
+          {
+            "key": "Video",
+            "label": "Video",
+            "active": false,
+            "visible": false,
+            "sort": 9
+          },
+          {
+            "key": "Growth Path",
+            "label": "Growth Path",
+            "active": false,
+            "visible": false,
+            "sort": 10
+          },
+          {
+            "key": "Candidate Process",
+            "label": "Application Process",
+            "active": false,
+            "visible": false,
+            "sort": 11
+          },
+          {
+            "key": "Image Carousel",
+            "label": "Images",
+            "active": false,
+            "visible": false,
+            "sort": 12
+          },
+          {
+            "key": "EVP / Mission",
+            "label": "EVP / Mission",
+            "active": false,
+            "visible": false,
+            "sort": 13
+          },
+          {
+            "key": "Leader Introduction",
+            "label": "Leader Intro",
+            "active": false,
+            "visible": false,
+            "sort": 14
+          }],
         ...brandingDetails,
         ...companyFactsData,
         templateId: selectedTemplate,
@@ -808,7 +906,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
 
         // Get the AI-processed content
         const aiResult = JSON.parse(aiResponse.data.data.content);
-        console.log("aiResult", aiResult);
+        console.log("FromScratchModal aiResult", aiResult);
 
 
 
@@ -832,10 +930,11 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
           cta2Link: '#apply' // 🚀 Always default to apply action
         };
 
+        console.log("FromScratchModal vacancyData", vacancyData);
 
 
         const res = await AiService.createVacancy(vacancyData);
-        
+        console.log("FromScratchModal res", res);
         // Clear session storage on successful creation
         sessionStorage.removeItem('vacancy_scratch_progress');
         

@@ -92,7 +92,6 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
     primaryColor: user?.primaryColor,
     secondaryColor: user?.secondaryColor,
     tertiaryColor: user?.tertiaryColor,
-    heroBackgroundColor: user?.heroBackgroundColor,
     heroTitleColor: user?.heroTitleColor,
     titleFont: user?.titleFont,
     subheaderFont: user?.subheaderFont,
@@ -361,6 +360,12 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
                     placeholder="Select a language"
                     options={languageOptions}
                     disabled={isLoading}
+                    showSearch
+                    filterOption={(input, option) => {
+                      return !!option?.label
+                        ?.toLowerCase()
+                        .includes(input.toLowerCase());
+                    }}
                   />
                 </div>
                 <p className="mt-2 text-xs text-gray-500">

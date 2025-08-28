@@ -69,6 +69,7 @@ const Template3 = ({
   isMuted,
   toggleMute,
 }) => {
+  const { sectionRef } = useVideoHover();
   const themeData = getThemeData(landingPageData?.theme);
 
   const { basePrimary, baseSecondary, baseTertiary } = themeData;
@@ -95,6 +96,8 @@ const Template3 = ({
       <div
         className="flex flex-col items-center justify-center gap-[46px]  py-24 mdx:py-5"
         style={{ backgroundColor: variantPl4 }}
+        ref={sectionRef}
+        id="video"
       >
         <div className="flex flex-col items-center self-stretch">
           <div className="container flex flex-col items-center gap-[22px] px-14 mdx:px-5">
@@ -270,6 +273,7 @@ const Template2 = ({
   isMuted,
   toggleMute,
 }) => {
+  const { sectionRef } = useVideoHover();
   const themeData = getThemeData(landingPageData?.theme);
 
   const { basePrimary, baseSecondary, baseTertiary } = themeData;
@@ -310,6 +314,8 @@ const Template2 = ({
         style={{
           backgroundImage: "url(/images3/img_group_20.png)",
         }}
+        ref={sectionRef}
+        id="video"
       >
         <section className="flex overflow-hidden relative flex-col justify-center items-center px-4 py-12 w-full">
           {/* Background elements */}
@@ -523,7 +529,7 @@ const Template1 = ({
   const {  subheaderFont, bodyFont } = getFonts(landingPageData);
 
   return (
-    <div className="px-4 py-16 w-full bg-white md:px-8" ref={sectionRef}
+    <div className="px-4 py-16 w-full bg-white md:px-8" ref={sectionRef} id="video"
     style={{color:"black",fontFamily: bodyFont?.family}}
     >
       <div className="mx-auto max-w-4xl">
