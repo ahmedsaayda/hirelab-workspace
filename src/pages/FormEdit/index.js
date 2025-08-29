@@ -1172,11 +1172,12 @@ export default function FormEdit({paramsId}) {
                         }
                       }}
                     >
-                                          <div className="flex flex-col items-center gap-[10px] w-full h-full" style={{ minHeight: 0, overflow: 'hidden' }}>
+                                          <div className="flex flex-col items-start gap-[10px] w-full h-full" style={{ minHeight: 0, overflow: 'hidden' }}>
                       <Heading
-                        size="5xl"
-                        as="h3"
-                        className="!text-black-900_01 group-hover:!text-lg text-xs smx:text-[10px] md:text-sm text-center"
+                        size="2xl"
+                        as="h5"
+                        className="!text-black-900_01 text-left pl-2"
+
                       >
                         <span className="hidden md:inline">Questions</span>
                         <span className="md:hidden">Q</span>
