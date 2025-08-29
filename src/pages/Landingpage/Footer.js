@@ -978,6 +978,20 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
             <Text as="p" className="text-[16px] font-normal text-[#98a1b2]">
               &copy; {new Date().getFullYear()} {landingPageData?.companyName || "Hirelab"}. All rights reserved.
             </Text>
+            {/* Show "Created by Hirelab" for free users on both public pages and edit mode */}
+            {landingPageData?.showHirelabBranding && (
+              <Text as="p" className="text-[14px] font-normal text-[#98a1b2] mt-2">
+                Created by{" "}
+                <a 
+                  href={isEdit?"#":"https://hirelab.io/"} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[#5207CD] hover:underline"
+                >
+                  Hirelab
+                </a>
+              </Text>
+            )}
           </div>
             {/* <div className="flex gap-5 justify-between sm:w-full">
               <a href="#">

@@ -470,9 +470,15 @@ export default function LandingpageEdit({paramsId}) {
       if (lpId) {
         CrudService.getSingle("LandingPageData", lpId,"landing page edit").then((res) => {
           if (res.data) {
-            setLandingPageData(res.data);
+            // Add showHirelabBranding flag based on user's subscription status
+            const showHirelabBranding = !user?.subscription?.paid;
+            const landingPageDataWithBranding = {
+              ...res.data,
+              showHirelabBranding
+            };
+            setLandingPageData(landingPageDataWithBranding);
             // Store the initial data for comparison
-            previousDataRef.current = JSON.stringify(res.data);
+            previousDataRef.current = JSON.stringify(landingPageDataWithBranding);
           }
         },"landing page id");
 
@@ -481,7 +487,7 @@ export default function LandingpageEdit({paramsId}) {
       message.error("Failed to load landing page data");
       console.log("error fetching data",err)
     }
-  }, [lpId]);
+  }, [lpId, user?.subscription?.paid]);
 
   // Centralized job fetching functions
   
