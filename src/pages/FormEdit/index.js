@@ -1151,9 +1151,8 @@ export default function FormEdit({paramsId}) {
       
       <div className="h-screen overflow-hidden">
         <div className="w-full bg-gray-50_01 h-full flex flex-col">
-        <div className="flex flex-col pt-6 smx:pt-5 h-full">
+        <div className="flex flex-col h-full">
           <Header
-            className="p-[20px] mdx:w-full mdx:p-5"
             landingPageData={landingPageData}
             isAutoSaving={isSaving}
             lastSaved={lastSaved}
