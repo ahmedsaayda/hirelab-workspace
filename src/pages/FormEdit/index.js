@@ -81,8 +81,10 @@ export default function FormEdit({paramsId}) {
   const [isEditingForm, setIsEditingForm] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [device, setDevice] = useState('desktop');
-  const previewNavigatingRef = useRef(false); // Track if preview is currently navigating
-
+  
+  // 🎯 SINGLE SOURCE OF TRUTH: Current step state
+  const [currentStep, setCurrentStep] = useState(0); // 0 = intro, 1+ = form fields
+  
   const [forceUpdate, setForceUpdate] = useState(0); // Force re-render key
   const [aiFormModalVisible, setAiFormModalVisible] = useState(false);
   
@@ -454,6 +456,50 @@ export default function FormEdit({paramsId}) {
   }, [performDirectSave]);
 
 
+
+  // 🎯 SYNC STEP WITH SELECTION: Update currentStep when selectedSection changes
+  useEffect(() => {
+    if (isEditingForm || !selectedSection) {
+      // Intro step when editing form or no selection
+      setCurrentStep(0);
+    } else {
+      // Find the step for the selected field
+      const fieldIndex = formSections.findIndex(field => field.id === selectedSection.id);
+      if (fieldIndex >= 0) {
+        const step = fieldIndex + 1; // +1 because step 0 is intro
+        setCurrentStep(step);
+        console.log('🎯 Step sync: Selected field leads to step', step);
+      } else {
+        setCurrentStep(0); // Fallback to intro
+        console.log('🎯 Step sync: Field not found, defaulting to intro step');
+      }
+    }
+  }, [selectedSection, isEditingForm, formSections]);
+
+  // 🎯 SYNC SELECTION WITH STEP: Update selectedSection when currentStep changes externally
+  const handleStepChange = (newStep) => {
+    console.log('🎯 Step change requested:', newStep);
+    setCurrentStep(newStep);
+    
+    if (newStep === 0) {
+      // Step 0 = intro, clear selection
+      setSelectedSection(null);
+      setIsEditingForm(true);
+    } else {
+      // Step 1+ = field selection
+      const fieldIndex = newStep - 1;
+      const targetField = formSections[fieldIndex];
+      if (targetField) {
+        setSelectedSection(targetField);
+        setIsEditingForm(false);
+      } else {
+        // Field not found, fallback to intro
+        setCurrentStep(0);
+        setSelectedSection(null);
+        setIsEditingForm(true);
+      }
+    }
+  };
 
   // Clean up timeouts on unmount and handle page unload
   useEffect(() => {
@@ -1208,15 +1254,15 @@ export default function FormEdit({paramsId}) {
                                   width: '100%'
                                 }}
                                 onClick={() => {
-                                  setSelectedSection({ id: 'flexaligntop', type: 'header' });
-                                  setIsEditingForm(true);
+                                  console.log('🖱️ Sidebar click: Header section (intro)');
+                                  handleStepChange(0); // Go to intro step
                                 }}
                               >
                                 <div className="flex-1 flex items-center justify-start transition-all" style={{ minWidth: 0, flexShrink: 0 }}>
                                   <div 
                                     className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
                                     style={
-                                      selectedSection?.id === 'flexaligntop' && isEditingForm
+                                      currentStep === 0
                                         ? {
                                             background: brandColor,
                                             opacity: 0.6,
@@ -1229,7 +1275,7 @@ export default function FormEdit({paramsId}) {
                                       alt="flexaligntop" 
                                       className="h-[16px] w-[16px] transition-all"
                                       style={
-                                        selectedSection?.id === 'flexaligntop' && isEditingForm
+                                        currentStep === 0
                                           ? {
                                               filter: "brightness(0) invert(1)",
                                             }
@@ -1248,7 +1294,7 @@ export default function FormEdit({paramsId}) {
                                 >
                                   <div
                                     className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group ${
-                                      selectedSection?.isLeadCapture && !isEditingForm
+                                      currentStep === 1 && formSections[0]?.isLeadCapture
                                         ? "bg-blue-50" 
                                         : "hover:bg-blue-50"
                                     }`}
@@ -1260,15 +1306,17 @@ export default function FormEdit({paramsId}) {
                                     onClick={() => {
                                       // Select the first lead capture field for editing
                                       const firstLeadCaptureField = formSections.find(s => s.isLeadCapture);
-                                      setSelectedSection(firstLeadCaptureField);
-                                      setIsEditingForm(false);
+                                      const fieldIndex = formSections.findIndex(f => f.id === firstLeadCaptureField?.id);
+                                      if (fieldIndex >= 0) {
+                                        handleStepChange(fieldIndex + 1); // Go to that field's step
+                                      }
                                     }}
                                   >
                                   <div className="flex-1 flex items-center justify-start transition-all" style={{ minWidth: 0, flexShrink: 0 }}>
                                     <div 
                                       className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
                                       style={
-                                        selectedSection?.isLeadCapture && !isEditingForm
+                                        currentStep === 1 && formSections[0]?.isLeadCapture
                                           ? {
                                               background: brandColor,
                                               opacity: 0.6,
@@ -1281,7 +1329,7 @@ export default function FormEdit({paramsId}) {
                                         alt="Lead Capture icon"
                                         className="h-[16px] w-[16px] transition-all"
                                         style={
-                                          selectedSection?.isLeadCapture && !isEditingForm
+                                          currentStep === 1 && formSections[0]?.isLeadCapture
                                             ? {
                                                 filter: "brightness(0) invert(1)",
                                               }
@@ -1313,7 +1361,10 @@ export default function FormEdit({paramsId}) {
                                   index={index} // Simple sequential index for draggable items only
                                 >
                                   {(provided, snapshot) => {
-                                    const isActive = selectedSection?.id === section.id;
+                                    // Calculate if this field is active based on currentStep
+                                    const fieldIndex = formSections.findIndex(f => f.id === section.id);
+                                    const fieldStep = fieldIndex >= 0 ? fieldIndex + 1 : -1;
+                                    const isActive = currentStep === fieldStep;
                                     const isDragging = snapshot.isDragging;
                                     
                                     const tooltips = {
@@ -1372,10 +1423,11 @@ export default function FormEdit({paramsId}) {
                                               : "hover:bg-blue-50"
                                           }`}
                                           onClick={() => {
-                                            console.log('🖱️ Editor click: Selecting section from sidebar:', section?.label || section?.id);
-                                            previewNavigatingRef.current = false; // Editor is driving navigation
-                                            setSelectedSection(section);
-                                            setIsEditingForm(false);
+                                            console.log('🖱️ Sidebar click: Selecting section:', section?.label || section?.id);
+                                            const fieldIndex = formSections.findIndex(f => f.id === section.id);
+                                            if (fieldIndex >= 0) {
+                                              handleStepChange(fieldIndex + 1); // Go to that field's step
+                                            }
                                           }}
                                         >
                                         {/* Icon area only, no label */}
@@ -1826,51 +1878,8 @@ export default function FormEdit({paramsId}) {
                               companyLogo: userBrandData?.companyLogo || user?.companyLogo,
                             }}
                             isPreviewMode={true}
-                            onStepChange={(step, field) => {
-                              console.log('🔄 Preview navigation: step', step, 'field:', field?.label || field?.id);
-                              previewNavigatingRef.current = true; // Preview is driving navigation
-                              
-                              if (step === 0) {
-                                // Step 0 = intro step - clear selection
-                                console.log('📝 Editor sync: Going to intro step, clearing selection');
-                                setSelectedSection(null);
-                                setIsEditingForm(true);
-                              } else if (field) {
-                                // Step > 0 - select the corresponding field
-                                console.log('📝 Editor sync: Selecting field from preview:', field?.label || field?.id);
-                                setSelectedSection(field);
-                                setIsEditingForm(false);
-                              }
-                              
-                              // Reset the flag after a short delay to allow for editor-driven navigation
-                              setTimeout(() => {
-                                previewNavigatingRef.current = false;
-                              }, 100);
-                            }}
-                            initialStep={(() => {
-                              // Don't recalculate if preview is currently navigating (prevents circular updates)
-                              if (previewNavigatingRef.current) {
-                                console.log('🔄 Preview is navigating, not recalculating initialStep');
-                                return undefined; // Let preview maintain its current step
-                              }
-                              
-                              // Simple 1:1 mapping: Step 0 = intro, Step 1 = first field, Step 2 = second field, etc.
-                              if (!selectedSection || isEditingForm) {
-                                console.log('🎯 Editor driving: Going to intro step (0)');
-                                return 0;
-                              }
-                              
-                              // Find the step for the selected field (simple array index + 1)
-                              const fieldIndex = formSections.findIndex(field => field.id === selectedSection.id);
-                              if (fieldIndex >= 0) {
-                                const step = fieldIndex + 1; // +1 because step 0 is intro
-                                console.log('🎯 Editor driving: Going to step', step, 'for field:', selectedSection.label);
-                                return step;
-                              }
-                              
-                              console.log('🎯 Editor driving: Field not found, defaulting to intro step');
-                              return 0;
-                            })()}
+                            currentStep={currentStep} // 🎯 SINGLE SOURCE OF TRUTH
+                            onStepChange={handleStepChange} // 🎯 CONTROLLED COMPONENT
                           />
                         </div>
                       ) : (

@@ -250,14 +250,14 @@ const FileUpload = ({ value, onChange, placeholder }) => (
   </div>
 );
 
-export default function ApplyPagePreview({ landingPageData, initialStep = 0, isPreviewMode = true, onStepChange }) {
+export default function ApplyPagePreview({ landingPageData, currentStep = 0, isPreviewMode = true, onStepChange }) {
   // 🎨 BRAND COLORS FROM DATABASE  
   const user = useSelector(selectUser);
   
   // STATE DECLARATIONS (MOVED UP TO MATCH APPLY.JS)
   const [formData, setFormData] = useState({});
-  const [currentStep, setCurrentStep] = useState(initialStep);
   const [formFields, setFormFields] = useState([]);
+  // Note: currentStep is now controlled by parent component
   // Removed detectedCountry since we're using regular Input instead of PhoneInput
   
   // 🎨 DYNAMIC BRAND COLORS - NO HARDCODING!
@@ -380,24 +380,14 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
       // Each field becomes one step in the preview
       setFormFields(visibleFields);
       
-      // Only reset step if we're at step 0 or form structure changed dramatically
-      // Don't reset if user is already navigating through the form
+      // Reset form data if we're at step 0 or form structure changed dramatically
       if (currentStep === 0 || !formFields.length) {
-        setCurrentStep(initialStep);
         setFormData({});
       }
     }
   }, [landingPageData]);
 
-  // Update current step when initialStep changes (only when not undefined)
-  useEffect(() => {
-    if (initialStep !== undefined) {
-      console.log('🔄 Preview: Editor driving - setting step to:', initialStep);
-      setCurrentStep(initialStep);
-    } else {
-      console.log('🔄 Preview: Preview driving - maintaining current step:', currentStep);
-    }
-  }, [initialStep]);
+  // No longer needed - currentStep is controlled by parent
 
   const handleInputChange = (fieldId, value) => {
     setFormData(prev => ({
@@ -414,33 +404,19 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
       if (currentStep < formFields.length) {
         const newStep = currentStep + 1;
         console.log('🔄 handleNext: Moving from step', currentStep, 'to step', newStep);
-        setCurrentStep(newStep);
         
-        // Notify parent about step change to update editor
+        // Notify parent about step change
         if (onStepChange) {
-          if (newStep === 0) {
-            // Step 0 is intro - clear editor selection
-            console.log('🔄 Preview next: Going to intro step, clearing editor selection');
-            onStepChange(newStep, null);
-          } else {
-            // Step > 0 - select corresponding field (simple array mapping)
-            const fieldIndex = newStep - 1; // Convert step to array index
-            const activeField = formFields[fieldIndex];
-            console.log('🔄 Preview next: Going to step', newStep, 'selecting field:', activeField?.label || activeField?.id);
-            onStepChange(newStep, activeField);
-          }
+          onStepChange(newStep);
         }
       } else {
         // Preview "submission"
         console.log('🔄 handleNext: Submitting form, going back to intro');
         message.success('This is a preview - form would be submitted here');
-        const newStep = 0;
-        setCurrentStep(newStep);
         setFormData({});
-        // Notify parent about step change to clear editor selection
+        
         if (onStepChange) {
-          console.log('🔄 Preview submit: Form submitted, going back to intro step, clearing editor selection');
-          onStepChange(newStep, null);
+          onStepChange(0); // Go back to intro
         }
       }
       return;
@@ -537,21 +513,10 @@ export default function ApplyPagePreview({ landingPageData, initialStep = 0, isP
     if (currentStep > 0) {
       const newStep = currentStep - 1;
       console.log('🔄 handlePrevious: Moving from step', currentStep, 'to step', newStep);
-      setCurrentStep(newStep);
       
-      // Notify parent about step change to update editor
+      // Notify parent about step change
       if (onStepChange) {
-        if (newStep === 0) {
-          // Step 0 is intro - clear editor selection
-          console.log('🔄 Preview prev: Going back to intro step, clearing editor selection');
-          onStepChange(newStep, null);
-        } else {
-          // Step > 0 - select corresponding field (simple array mapping)
-          const fieldIndex = newStep - 1; // Convert step to array index
-          const activeField = formFields[fieldIndex];
-          console.log('🔄 Preview prev: Going back to step', newStep, 'selecting field:', activeField?.label || activeField?.id);
-          onStepChange(newStep, activeField);
-        }
+        onStepChange(newStep);
       }
     } else {
       console.log('🔄 handlePrevious: Already at step 0, cannot go back further');
