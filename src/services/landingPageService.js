@@ -12,8 +12,8 @@ class LandingPageService {
         middleField(this.api);
     }
 
-    publishLandingPage(lpId) {
-        return this.api.post("/publish", {lpId});
+    publishLandingPage(lpId, scope) {
+        return this.api.post("/publish", {lpId, scope});
     }
 }
 

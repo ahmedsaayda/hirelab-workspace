@@ -447,6 +447,7 @@ export default function LandingpageEdit({paramsId}) {
   // Auto-save functionality
   const autoSaveTimeoutRef = useRef(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const savingSafetyTimeoutRef = useRef(null);
   const hasInitiallyLoadedRef = useRef(false);
   const previousDataRef = useRef(null); // Track previous data to detect meaningful changes
   
@@ -622,10 +623,12 @@ export default function LandingpageEdit({paramsId}) {
       clearTimeout(autoSaveTimeoutRef.current);
     }
     
+    // Indicate saving immediately during debounce to show the UI indicator
+    setIsAutoSaving(true);
+    
     // Set a new timeout for 2 seconds
     autoSaveTimeoutRef.current = setTimeout(async () => {
       try {
-        setIsAutoSaving(true);
         const res = await CrudService.update("LandingPageData", lpId, landingPageData,"landing page edit");
         console.log("auto save res",res)
         // Update the reference data to prevent unnecessary saves
@@ -635,14 +638,32 @@ export default function LandingpageEdit({paramsId}) {
         console.error("Auto-save failed:", error);
       } finally {
         setIsAutoSaving(false);
+        if (savingSafetyTimeoutRef.current) {
+          clearTimeout(savingSafetyTimeoutRef.current);
+          savingSafetyTimeoutRef.current = null;
+        }
       }
     }, 2000);
+    
+    // Safety: ensure the visual indicator doesn't get stuck
+    if (savingSafetyTimeoutRef.current) {
+      clearTimeout(savingSafetyTimeoutRef.current);
+    }
+    savingSafetyTimeoutRef.current = setTimeout(() => {
+      setIsAutoSaving(false);
+      savingSafetyTimeoutRef.current = null;
+    }, 6000);
     
     // Cleanup function to clear timeout
     return () => {
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
+      if (savingSafetyTimeoutRef.current) {
+        clearTimeout(savingSafetyTimeoutRef.current);
+        savingSafetyTimeoutRef.current = null;
+      }
+      setIsAutoSaving(false);
     };
   }, [landingPageData, lpId]);
 

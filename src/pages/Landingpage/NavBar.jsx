@@ -296,6 +296,7 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   const [applyLinkModalVisible, setApplyLinkModalVisible] = useState(false);
   const [useAIFormCreation, setUseAIFormCreation] = useState(false);
   const [isGeneratingForm, setIsGeneratingForm] = useState(false);
+  const [areTabsOverflowing, setAreTabsOverflowing] = useState(false);
 
 
   const handleApplyClick = () => {
@@ -742,6 +743,37 @@ const handlemediaLink = (platform) => {
 
   const scrollRef = useRef(null);
 
+  // Measure whether tabs overflow to decide alignment/controls
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const update = () => {
+      const overflowing = container.scrollWidth > container.clientWidth;
+      setAreTabsOverflowing(overflowing);
+      setScrollPosition(container.scrollLeft || 0);
+    };
+
+    // Initial measure (after render)
+    const raf = requestAnimationFrame(update);
+
+    window.addEventListener('resize', update);
+    container.addEventListener('scroll', update, { passive: true });
+
+    let resizeObserver;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(update);
+      resizeObserver.observe(container);
+    }
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', update);
+      container.removeEventListener('scroll', update);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [landingPageData?.menuItems]);
+
   const scrollTabs = (direction) => {
     const container = scrollRef.current;
     if (!container) return;
@@ -749,6 +781,8 @@ const handlemediaLink = (platform) => {
     const containerWidth = container.clientWidth;
     const scrollAmount = containerWidth * 0.8; // Scroll 80% of visible width
     
+    if (!areTabsOverflowing) return;
+
     if (direction === "left") {
       container.scrollLeft -= scrollAmount;
     } else {
@@ -1139,7 +1173,7 @@ const handlemediaLink = (platform) => {
           style={{
             background: "linear-gradient(to right, white 60%, transparent)",
             zIndex: 10,
-            opacity: scrollPosition > 0 ? 1 : 0
+            opacity: areTabsOverflowing && scrollPosition > 0 ? 1 : 0
           }}
         />
         
@@ -1149,14 +1183,14 @@ const handlemediaLink = (platform) => {
           style={{
             background: "linear-gradient(to left, white 60%, transparent)",
             zIndex: 10,
-            opacity: scrollRef.current && scrollPosition < (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) ? 1 : 0
+            opacity: areTabsOverflowing && scrollRef.current && scrollPosition < (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) ? 1 : 0
           }}
         />
 
         <button
           onClick={() => scrollTabs("left")}
           className="absolute left-2 z-20 p-1 rounded-full bg-white shadow-md hover:bg-gray-200 flex-shrink-0"
-          style={{ zIndex: 20 }}
+          style={{ zIndex: 20, display: areTabsOverflowing ? 'block' : 'none' }}
         >
           <ChevronLeft size={20} style={{ color: getColor("primary", 500) }} />
         </button>
@@ -1168,7 +1202,7 @@ const handlemediaLink = (platform) => {
             scrollBehavior: "smooth",
             minWidth: 0,  // Allow flex item to shrink below its content size
             WebkitOverflowScrolling: "touch",  // Smooth scrolling on iOS
-            justifyContent: "flex-start"  // Start from left, don't center
+            justifyContent: areTabsOverflowing ? "flex-start" : "center"  // Center when few, left when overflow
           }}
         >
         {   
@@ -1211,7 +1245,7 @@ const handlemediaLink = (platform) => {
         <button
           onClick={() => scrollTabs("right")}
           className="absolute right-2 z-20 p-1 rounded-full bg-white shadow-md hover:bg-gray-100 flex-shrink-0"
-          style={{ zIndex: 20 }}
+          style={{ zIndex: 20, display: areTabsOverflowing ? 'block' : 'none' }}
         >
           <ChevronRight size={20} style={{ color: getColor("primary", 500) }} />
         </button>

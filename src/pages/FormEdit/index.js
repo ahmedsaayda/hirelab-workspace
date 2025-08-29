@@ -9,6 +9,7 @@ import PublicService from "../../services/PublicService";
 import { changeIndigoShades, generateTailwindPalette } from "../Dashboard";
 import { Button, Heading, Img, Text, Input as CustomInput } from "../Dashboard/Vacancies/components/components";
 import Header from "../Dashboard/Vacancies/components/components/Header";
+import LandingPageService from "../../services/landingPageService";
 import ApplicationformAddQuestions, {
   formItems,
 } from "../Dashboard/Vacancies/modals/ApplicationformAddQuestions";
@@ -1113,33 +1114,22 @@ export default function FormEdit({paramsId}) {
             isFormEditor={true}
             lpId={lpId}
             setPublished={async (e) => {
-              console.log("🚀 Publishing changes...");
-              
+              console.log("🚀 Toggle publish from Form Editor:", e);
               try {
-                // Build complete current state with all form sections
-                const currentCompleteState = {
-                  ...landingPageData,
-                  form: {
-                    ...landingPageData.form,
-                    fields: formSections,
-                  },
-                  published: e,
-                  _id: undefined
-                };
-                
-                console.log("📤 Publishing with auto-saved state:", currentCompleteState);
-                
-                await CrudService.update("LandingPageData", lpId, currentCompleteState);
-                
-                setLandingPageData((d) => ({
-                  ...d,
-                  published: e,
-                }));
-                
                 if (e) {
-                  message.success("✅ Funnel published successfully! All changes are auto-saved.");
+                  const synced = {
+                    ...landingPageData,
+                    form: { ...(landingPageData?.form || {}), fields: formSections },
+                    _id: undefined,
+                  };
+                  setLandingPageData(synced);
+                  await LandingPageService.publishLandingPage(lpId, 'form');
+                  setLandingPageData((d) => ({ ...d, published: true }));
+                  message.success("✅ Form changes published");
                 } else {
-                  message.success("✅ Funnel unpublished successfully!");
+                  await CrudService.update("LandingPageData", lpId, { published: false, unpublishedAt: new Date() });
+                  setLandingPageData((d) => ({ ...d, published: false }));
+                  message.success("✅ Unpublished");
                 }
               } catch (error) {
                 console.error("❌ Failed to update published status:", error);

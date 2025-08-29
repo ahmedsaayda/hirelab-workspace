@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import MegaMenu1 from "../MegaMenu1";
 import { Heading, Img } from "..";
 import { ChartPieIcon, HomeIcon, UsersIcon, UserGroupIcon, ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
-import { EyeOutlined, LinkOutlined } from "@ant-design/icons";
+import { EyeOutlined, LinkOutlined, LoadingOutlined } from "@ant-design/icons";
 
 import CrudService from "../../../../../../services/CrudService";
 import { message } from "antd";
@@ -41,11 +41,11 @@ export default function Header({
     if (landingPageData) {
       let hasChanges = false;
       
-      // If the page is published, check for changes
+      // If the page is published, check for changes using scope-aware comparison
       if (landingPageData.published && landingPageData.publishedVersion) {
-        hasChanges = checkForUnpublishedChanges(landingPageData);
+        hasChanges = checkForUnpublishedChanges(landingPageData, isFormEditor ? 'form' : 'page');
       } else if (landingPageData.published && landingPageData.publishedAt && landingPageData.updatedAt) {
-        // Fallback to time-based comparison with a more reliable margin
+        // Fallback to time-based comparison with a margin
         const marginMs = 5000; // 5 seconds margin for auto-save delays
         hasChanges = new Date(landingPageData.publishedAt).getTime() + marginMs < new Date(landingPageData.updatedAt).getTime();
       }
@@ -67,41 +67,36 @@ export default function Header({
   }, [landingPageData]);
 
   // Function to check for differences between current state and published version
-  const checkForUnpublishedChanges = (data) => {
+  const checkForUnpublishedChanges = (data, scope = 'page') => {
     if (!data.publishedVersion) {
       console.log("No published version found for comparison");
       return false;
     }
-    
-    // Comprehensive list of properties to compare
-    const keysToCompare = [
-      'vacancyTitle', 'heroDescription', 'heroImage', 'location',
-      'jobSpecificationTitle', 'specifications', 'jobDescription',
-      'recruiters', 'menuItems', 'templateId', 'cta2Link', 'metaPixelId',
-      'companyLogo', 'companyName', 'benefits', 'requirements',
-      'aboutCompany', 'contactInfo', 'socialLinks', 'customSections'
-    ];
-    
-    // Check for differences in these properties
-    for (const key of keysToCompare) {
-      const currentValue = data[key];
-      const publishedValue = data.publishedVersion[key];
-      
-      // Handle undefined/null values consistently
-      const currentStr = currentValue !== undefined ? JSON.stringify(currentValue) : 'undefined';
-      const publishedStr = publishedValue !== undefined ? JSON.stringify(publishedValue) : 'undefined';
-      
-      if (currentStr !== publishedStr) {
-        console.log(`Change detected in ${key}:`, {
-          current: currentValue,
-          published: publishedValue
-        });
-        return true;
-      }
+    const sanitize = (obj) => {
+      if (!obj || typeof obj !== 'object') return obj;
+      const { _id, __v, updatedAt, createdAt, publishedAt, unpublishedAt, publishedVersion, ...rest } = obj;
+      return rest;
+    };
+    const safeStringify = (val) => JSON.stringify(val ?? null);
+
+    if (scope === 'form') {
+      const current = sanitize({ form: data.form });
+      const published = sanitize({ form: data.publishedVersion?.form });
+      const diff = safeStringify(current) !== safeStringify(published);
+      if (diff) console.log('Change detected in form scope');
+      return diff;
     }
-    
-    console.log("No content changes detected");
-    return false;
+
+    // page scope: compare everything except form
+    const stripForm = (obj) => {
+      const { form, ...rest } = sanitize(obj || {});
+      return rest;
+    };
+    const currentPage = stripForm(data);
+    const publishedPage = stripForm(data.publishedVersion);
+    const diff = safeStringify(currentPage) !== safeStringify(publishedPage);
+    if (diff) console.log('Change detected in page scope');
+    return diff;
   };
 
   // Function to manually trigger a change check (can be called from parent components)
@@ -110,7 +105,7 @@ export default function Header({
       let hasChanges = false;
       
       if (landingPageData.published && landingPageData.publishedVersion) {
-        hasChanges = checkForUnpublishedChanges(landingPageData);
+        hasChanges = checkForUnpublishedChanges(landingPageData, isFormEditor ? 'form' : 'page');
       } else if (landingPageData.published && landingPageData.publishedAt && landingPageData.updatedAt) {
         const marginMs = 5000;
         hasChanges = new Date(landingPageData.publishedAt).getTime() + marginMs < new Date(landingPageData.updatedAt).getTime();
@@ -181,7 +176,7 @@ export default function Header({
     setIsPublishing(true);
 
     try {
-      const res = await LandingPageService.publishLandingPage(lpId);
+      const res = await LandingPageService.publishLandingPage(lpId, isFormEditor ? 'form' : 'page');
       console.log("Publish response:", res);
       message.success("Landing page published successfully!");
       
@@ -204,7 +199,7 @@ export default function Header({
     setIsPublishing(true);
 
     try {
-      const res = await LandingPageService.publishLandingPage(lpId);
+      const res = await LandingPageService.publishLandingPage(lpId, isFormEditor ? 'form' : 'page');
       console.log("Publish response:", res);
       message.success("Landing page published successfully!");
       
@@ -280,7 +275,7 @@ export default function Header({
       // Now proceed with publishing
       setIsPublishing(true);
       
-      const res = await LandingPageService.publishLandingPage(lpId);
+      const res = await LandingPageService.publishLandingPage(lpId, isFormEditor ? 'form' : 'page');
       console.log("Publish response:", res);
       message.success("Landing page published successfully!");
       
@@ -350,13 +345,6 @@ export default function Header({
               className="!text-blue_gray-700 whitespace-nowrap"
             >
               {landingPageData?.vacancyTitle}
-           
-              {hasUnpublishedChanges && (
-                <span className="ml-2 text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">
-                  Unpublished changes
-                </span>
-              )}
-            
             </Heading>
           </div>
           <Switch
@@ -371,53 +359,40 @@ export default function Header({
             className="h-[20px] w-[20px] ml-3.5 cursor-pointer settings-icon"
             onClick={handleTemplateOpen}
           />
-          {/* Enhanced Auto-save Status */}
-          {(isSaving || isAutoSaving) ? (
-            <div className="ml-2 flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-xs font-medium text-blue-700">Saving...</span>
-            </div>
-          ) : lastSaved ? (
-            <div className="ml-2 flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-lg">
-              <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-xs font-medium text-green-700">Saved at {lastSaved}</span>
-            </div>
-          ) : isFormEditor ? (
-            <div className="ml-2 flex items-center gap-2 px-3 py-1 bg-gray-50 border border-gray-200 rounded-lg">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-xs font-medium text-gray-600 whitespace-nowrap">Auto-save enabled</span>
-            </div>
-          ) : null}
+          {null}
         </div>
         <div className="flex justify-between items-center w-full mdx:flex-col mdx:gap-3">
           {/* Left side - Publish button */}
-          <div className="flex items-center mdx:w-full mdx:justify-center">
+          <div className="flex items-center mdx:w-full mdx:justify-center ml-2">
             <div className={`flex items-center gap-2 rounded-lg border border-solid px-2 py-[10px] shadow-sm ${landingPageData?.published && !hasUnpublishedChanges ? "bg-[#ECFDF3]" : "bg-[#5207CD]"} mdx:w-full mdx:justify-center`}>
               <button
-                onClick={(!landingPageData?.published || hasUnpublishedChanges) && !isPublishing ? handlePublish : handlePublish}
-                className={`flex gap-2 items-center ${!handlePublish || isPublishing ? 'cursor-default' : 'cursor-pointer'} mdx:justify-center`}
-                disabled={isPublishing}
+                onClick={(!landingPageData?.published || hasUnpublishedChanges) && !(isPublishing || isSaving || isAutoSaving) ? handlePublish : handlePublish}
+                className={`flex gap-2  items-center ${(isPublishing || isSaving || isAutoSaving) ? 'cursor-default' : 'cursor-pointer'} mdx:justify-center`}
+                disabled={isPublishing || isSaving || isAutoSaving}
               >
-                {isPublishing ? <Spin color="white" size="small" /> : (landingPageData?.published && !hasUnpublishedChanges ?
+                {(isSaving || isAutoSaving) ? (
+                  <Spin size="small" indicator={<LoadingOutlined style={{ fontSize: 16, color: '#FFFFFF' }} spin />} />
+                ) : isPublishing ? (
+                  <Spin size="small" indicator={<LoadingOutlined style={{ fontSize: 16, color: '#FFFFFF' }} spin />} />
+                ) : (landingPageData?.published && !hasUnpublishedChanges ? (
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="#17B26A" />
                     <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
                     <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
-                  : <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="white" />
                     <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
                     <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="#5207CD" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
-                )}
+                ))}
                 <Heading
                   size="3xl"
                   as="p"
                   className={landingPageData?.published && !hasUnpublishedChanges ? "!text-[#039855]" : "!text-[#FFFFFF]"}
                 >
-                  {landingPageData?.published ? (hasUnpublishedChanges ? "Publish Changes" : "Published") : "Publish"}
+                  {(isSaving || isAutoSaving) ? "Saving..." : landingPageData?.published ? (hasUnpublishedChanges ? "Publish Changes" : "Published") : "Publish"}
                 </Heading>
               </button>
             </div>
