@@ -1045,7 +1045,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
 
   console.log("formFields[currentStep - 1] ",formFields[currentStep - 1])
   return (
-    <div className="min-h-screen bg-gray-50 preview-form-container">{/* UNIQUE PREVIEW CLASS */}
+    <div className=" bg-gray-50 preview-form-container">{/* UNIQUE PREVIEW CLASS */}
       {/* 🎨 APPLY CUSTOM FONTS */}
       <ApplyCustomFont landingPageData={{
         ...landingPageData,
