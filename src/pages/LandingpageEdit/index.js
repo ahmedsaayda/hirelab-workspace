@@ -79,7 +79,7 @@ export const renderSection = ({
   fetchData,
   landingPageData = defaultLandingPageData,
   setLandingPageData,
-  key= Math.random(),
+  key=section?.key || "section", // Use stable key instead of Math.random()
   similarJobs,
   similarJobsLoading,
 }) => {
