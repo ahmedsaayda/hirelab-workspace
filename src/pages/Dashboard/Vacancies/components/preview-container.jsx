@@ -66,6 +66,10 @@ export const IFrame = ({
         const navbarHeight = 128; // Navbar height
         iframeRoot.style.setProperty('--navbar-height', `${navbarHeight}px`);
         iframeRoot.style.setProperty('scroll-padding-top', `${navbarHeight}px`);
+        
+        // Minimal fix for CSS rendering issues in scaled iframe
+        iframeRoot.style.setProperty('image-rendering', 'crisp-edges');
+        iframeRoot.style.setProperty('text-rendering', 'optimizeLegibility');
       }
         const handleLinkClick = (e) => {
         const target = e.target ;
@@ -222,6 +226,222 @@ export function PreviewContainer({
       }
       body {
         padding-top: var(--navbar-height, 128px);
+      }
+      
+      /* Comprehensive fix for JSX styled components in iframe */
+      
+      /* JobDescription corner effects */
+      .corner {
+        width: 30px;
+        height: 40px;
+        position: relative;
+        overflow: hidden;
+        border: 0;
+      }
+      
+      .corner::after {
+        content: "";
+        position: absolute;
+        border: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+      }
+      
+      /* JobDescription specific corner gradients - exact match from component */
+      .top-left::after {
+        background-image: radial-gradient(circle at 0 0, transparent 20px, white 20px);
+      }
+      
+      .top-right::after {
+        background-image: radial-gradient(circle at 100% 0, transparent 30px, white 30px);
+      }
+      
+      .bottom-left::after {
+        background-image: radial-gradient(circle at 0 100%, transparent 30px, white 30px);
+      }
+      
+      .bottom-right::after {
+        background-image: radial-gradient(circle at 100% 100%, transparent 20px, white 20px);
+      }
+      
+      /* TextBox, EVPMission, LeaderIntroduction arc effects */
+      .arc {
+        width: 40px;
+        height: 40px;
+        position: relative;
+        overflow: hidden;
+        border: 0;
+      }
+      
+      .arc::after {
+        content: "";
+        position: absolute;
+        border: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+      }
+      
+      /* Leader/EVP/TextBox specific arc gradients - exact match from components */
+      .leader-top-left::after {
+        background-image: radial-gradient(circle at 0 0, transparent 30px, white 20px);
+      }
+      
+      .leader-top-right::after {
+        background-image: radial-gradient(circle at 100% 0, transparent 20px, white 20px);
+      }
+      
+      .leader-bottom-left::after {
+        background-image: radial-gradient(circle at 0 100%, transparent 20px, white 20px);
+      }
+      
+      .leader-bottom-right::after {
+        background-image: radial-gradient(circle at 100% 100%, transparent 30px, white 20px);
+      }
+      
+      /* TextBox clip path effects */
+      .clip-path {
+        clip-path: polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%);
+      }
+      
+      .clip-path-desktop {
+        clip-path: polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%);
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+      
+      .clip-path-mobile {
+        clip-path: circle(70% at 50% 50%);
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+      
+      /* Fix for white bars and overlays */
+      .rightBar {
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        backface-visibility: hidden;
+      }
+      
+      /* JobDescription specific white bar fixes - minimal approach */
+      .rightBar {
+        border: none;
+        outline: none;
+        box-shadow: none;
+        transform: translateZ(1px);
+        -webkit-transform: translateZ(1px);
+      }
+      
+      /* Fix for JobDescription bottom white bar - minimal approach */
+      [class*="absolute"][class*="z-10"][class*="bg-white"][class*="rounded-tr-2xl"] {
+        border: none;
+        outline: none;
+        box-shadow: none;
+        transform: translateZ(1px);
+        -webkit-transform: translateZ(1px);
+      }
+      
+      /* Ensure proper rendering of absolute positioned elements */
+      [class*="absolute"][class*="bottom-"] {
+        transform: translateZ(1px);
+        -webkit-transform: translateZ(1px);
+      }
+      
+      /* Fix for specific corner positioning issues */
+      .arc {
+        transform: translateZ(2px);
+        -webkit-transform: translateZ(2px);
+        will-change: transform;
+      }
+      
+      /* Improve rendering quality for scaled content */
+      [class*="rounded-"] {
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        backface-visibility: hidden;
+        border: none;
+        outline: none;
+      }
+      
+      /* Specific fix for JobDescription rounded corners */
+      .rounded-bl-2xl, .rounded-tr-2xl, .rounded-br-none {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      
+      /* Fix gradient rendering in scaled context */
+      [style*="background-image"][style*="gradient"],
+      [style*="radial-gradient"] {
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: background-image;
+      }
+      
+      /* Additional fixes for border and corner rendering in scaled iframe - target specific elements only */
+      .corner, .arc, .rightBar, [class*="clip-path"] {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000;
+        perspective: 1000;
+      }
+      
+      /* Ensure proper rendering of complex shapes - more targeted */
+      .rightBar[class*="bg-white"] {
+        transform: translateZ(1px);
+        -webkit-transform: translateZ(1px);
+        will-change: transform;
+      }
+      
+      /* Minimal fixes for JobDescription white bars */
+      .rightBar {
+        background-color: white !important;
+      }
+      
+      /* Specific fix for shadow-md class that might cause border appearance */
+      .shadow-md {
+        box-shadow: none !important;
+      }
+      
+      /* Ensure image containers don't overflow in JobDescription */
+      .overflow-hidden.relative.shadow-md {
+        overflow: hidden !important;
+      }
+      
+      /* Make sure the image stays within bounds */
+      .overflow-hidden img {
+        max-width: 100%;
+        max-height: 100%;
+        border: none !important;
+        outline: none !important;
+      }
+      
+      /* Fix white bars positioning and coverage for iframe scaling */
+      .rightBar {
+        position: absolute !important;
+        background-color: white !important;
+        z-index: 20 !important;
+        /* Extend coverage for iframe scaling */
+        top: -12px !important;
+        right: -5px !important;
+        width: 90px !important;
+        bottom: 108px !important;
+      }
+      
+      [class*="absolute"][class*="z-10"][class*="bg-white"][class*="rounded-tr-2xl"] {
+        position: absolute !important;
+        background-color: white !important;
+        z-index: 20 !important;
+        /* Extend coverage for iframe scaling */
+        left: -3px !important;
+        bottom: -4px !important;
+        height: 100px !important;
+        right: 108px !important;
       }
     `;
   }, []);
@@ -429,7 +649,7 @@ export function PreviewContainer({
   }, [pageComponent, device]);
 
   return (
-    <div className="flex flex-col h-full relative w-full">
+    <div className="flex relative flex-col w-full h-full">
       {/* Preview header with device switcher */}
      {fullscreen && <div className="fixed top-0 left-0 right-0 flex gap-2 justify-center items-center pt-2 px-0 flex-shrink-0 bg-white border-b z-[9999]">
         <Heading
@@ -486,7 +706,7 @@ export function PreviewContainer({
           </button>
      
       </div>}
-     {!fullscreen && <div className="flex relative gap-2 justify-center items-center pt-2 px-6 flex-shrink-0 bg-white border-b  ">
+     {!fullscreen && <div className="flex relative flex-shrink-0 gap-2 justify-center items-center px-6 pt-2 bg-white border-b">
         <Heading
           size="4xl"
           as="h3"
@@ -551,7 +771,7 @@ export function PreviewContainer({
     
 
       {/* Preview content */}
-      <div ref={containerRef} className="flex flex-1 flex-col items-center justify-start min-h-0 relative w-full " 
+      <div ref={containerRef} className="flex relative flex-col flex-1 justify-start items-center w-full min-h-0" 
         style={{
           overflow: "hidden",
           padding: 0,
@@ -573,7 +793,7 @@ export function PreviewContainer({
             margin: 0,
             padding: 0,
           }}
-          className="mb-auto "
+          className="mb-auto"
         >
           {fullscreen && device === "desktop" ? (
             <div 

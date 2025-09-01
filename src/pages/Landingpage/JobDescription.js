@@ -330,7 +330,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
               </span>
             </h2>
             <h3
-              className="mb-8 "
+              className="mb-8"
               ref={jobDescriptionSubheaderRef}
               onClick={() => handleItemClick("jobDescriptionSubheader")}
               style={{ fontFamily: subheaderFont?.family }}
@@ -342,7 +342,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
   return (
     <div
       id="job-description"
-      className="overflow-hidden relative px-4  w-full bg-white md:px-8  "
+      className="overflow-hidden relative px-4 w-full bg-white md:px-8"
       ref={jobDescriptionSectionRef}
       style={{
         color: "black",
@@ -350,7 +350,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
     >
       {/* Decorative Element--top right box , hidden on mobile */}
       <svg
-        className="hidden md:block absolute top-2 right-0"
+        className="hidden absolute right-0 top-2 md:block"
         width="171"
         height="199"
         viewBox="0 0 171 199"
@@ -365,7 +365,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
         />
       </svg>
 
-      <div className="mx-auto max-w-6xl md:my-48 mt-28 mb-24">
+      <div className="mx-auto mt-28 mb-24 max-w-6xl md:my-48">
         <div className="grid gap-8 items-start md:grid-cols-2 md:gap-16">
           <div className="lg:hidden">
           {layoutAdjustment()}
@@ -375,7 +375,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
           {/* Image Section */}
 
           <div
-            className="relative rounded-3xl overflow-hidden "
+            className="overflow-hidden relative rounded-3xl"
             style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
           >   
             <div className="overflow-hidden relative shadow-md">
@@ -386,7 +386,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       "/dhwise-images/placeholder.png"
                   }
                   alt="Team meeting"
-                  className="w-full h-full  z-1"
+                  className="w-full h-full z-1"
                  style={{
                           objectPosition: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectPosition
                             ? `${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.x}% ${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.y}%`
@@ -399,7 +399,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 {/* <div className={`absolute inset-0 pointer-events-none z-10 bg-gradient-to-t from-[${secondaryColor}] from-30% to-transparent to-50%`}></div> */}
 
                 <div
-                  className="absolute inset-0 pointer-events-none z-10 bg-gradient-to-t"
+                  className="absolute inset-0 z-10 bg-gradient-to-t pointer-events-none"
                   style={{
                     backgroundImage: `linear-gradient(to top, ${getColor(
                       "primary",
@@ -439,7 +439,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
             </div>
             <div className="space-y-6">
               <p
-                className="leading-relaxed "
+                className="leading-relaxed"
                 ref={jobDescriptionRef}
                 onClick={() => handleItemClick("jobDescription")}
                 style={{ fontFamily: bodyFont?.family }}
@@ -469,21 +469,24 @@ const Template1 = ({ landingPageData, fetchData }) => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style jsx global>{`
 
           .corner {
             width: 30px;
             height: 40px;
-
             position: relative;
             overflow: hidden;
-            border-0
+            border: 0 !important;
+            outline: none !important;
+            box-shadow: none !important;
           }
 
           .corner::after {
             content: "";
             position: absolute;
-            border:0;
+            border: 0 !important;
+            outline: none !important;
+            box-shadow: none !important;
             top: 0;
             left: 0;
             right: 0;
@@ -508,6 +511,24 @@ const Template1 = ({ landingPageData, fetchData }) => {
           /* Bottom-right red curve */
           .bottom-right::after {
             background-image: radial-gradient(circle at 100% 100%, transparent 20px, white 20px);
+          }
+
+          /* Ensure white bars work properly in public page */
+          .rightBar {
+            background-color: white !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            z-index: 10 !important;
+          }
+
+          /* Bottom white bar styling */
+          div[class*="absolute"][class*="bg-white"][class*="rounded-tr-2xl"] {
+            background-color: white !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            z-index: 10 !important;
           }
 
       `}</style>
