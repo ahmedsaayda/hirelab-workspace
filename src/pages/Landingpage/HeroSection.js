@@ -9,6 +9,7 @@ import React, {
 import { currencies } from "../../data/currencies.js";
 import { Button, Heading, Img, Text } from "../../dhwise-components/index.jsx";
 import { useHover } from "../../contexts/HoverContext.js";
+import { scrollToElement } from "./scrollUtils.js";
 import { Share2, ArrowRight, X } from "lucide-react";
 import { getThemeData } from "../../utils/destructureTheme.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
@@ -123,10 +124,7 @@ const useHeroHover = () => {
       scrollToSection === "hero-section" &&
       sectionRef.current
     ) {
-      sectionRef?.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
     }
   }, [scrollToSection]);
 

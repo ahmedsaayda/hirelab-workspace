@@ -8,6 +8,7 @@ import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import { useFocusContext } from "../../contexts/FocusContext.js";
 import { useHover } from "../../contexts/HoverContext.js";
 import { getFonts } from "./getFonts.js";
+import { scrollToElement } from "./scrollUtils.js";
 
 const useVideoHover = () => {
   const { hoveredField, scrollToSection,setLastScrollToSection,lastScrollToSection } = useHover();
@@ -36,10 +37,7 @@ const useVideoHover = () => {
 
   useEffect(() => {
     if (scrollToSection === "video" && sectionRef?.current&&lastScrollToSection !== "video") {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("video")
     }
   }, [scrollToSection]);

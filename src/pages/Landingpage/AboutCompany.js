@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { Heading, Img, Text, Button } from "./components/index.jsx";
 import { useHover } from "../../contexts/HoverContext.js";
+import { scrollToElement } from "./scrollUtils.js";
 import { useSelector } from "react-redux";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import { getThemeData } from "../../utils/destructureTheme.js";
@@ -53,10 +54,7 @@ const useAboutCompanyHover = () => {
       sectionRef.current &&
       lastScrollToSection !== "about-company"
     ) {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("about-company");
     }
   }, [scrollToSection]);

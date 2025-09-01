@@ -5,6 +5,7 @@ import { useHover } from "../../contexts/HoverContext";
 import { useFocusContext } from "../../contexts/FocusContext";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
+import { scrollToElement } from "./scrollUtils.js";
 
 const useTextBoxHover = () => {
   const { hoveredField, scrollToSection,setLastScrollToSection,lastScrollToSection } = useHover();
@@ -40,7 +41,7 @@ const useTextBoxHover = () => {
   useEffect(() => {
     if (scrollToSection === "text-box" &&
        sectionRef.current && lastScrollToSection !== "text-box") {
-      sectionRef.current.scrollIntoView({ behavior: "smooth" });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("text-box")
     }
   }, [scrollToSection]);

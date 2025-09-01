@@ -2,6 +2,7 @@ import React, { Suspense, useEffect, useLayoutEffect, useRef, useState, useMemo,
 import { Heading, Text } from "./components/index.jsx";
 import BenefitsOverview from "./components/BenefitsOverview/index.jsx";
 import BenefitsOverview1 from "./components/BenefitsOverview1/index.jsx";
+import { scrollToElement } from "./scrollUtils.js";
 import { getThemeData } from "../../utils/destructureTheme.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import { Check, Zap, FileEdit, Network } from "lucide-react";
@@ -58,10 +59,7 @@ const useJobSpecificationHover = () => {
 
   useEffect(() => {
     if (scrollToSection === "job-specifications" && sectionRef.current&&lastScrollToSection !== "job-specifications") {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("job-specifications")
     }
   }, [scrollToSection]);

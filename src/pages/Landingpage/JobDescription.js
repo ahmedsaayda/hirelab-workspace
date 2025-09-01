@@ -7,6 +7,7 @@ import { useFocusContext } from "../../contexts/FocusContext.js";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils.js";
 import { getTranslation } from "../../utils/translations.js";
+import { scrollToElement } from "./scrollUtils.js";
 
 const useJobDescriptionHover = () => {
   const {
@@ -51,10 +52,7 @@ const useJobDescriptionHover = () => {
       lastScrollToSection !== "job-description"
     ) {
       console.log("jobDescriptionRef.current", jobDescriptionRef.current);
-      jobDescriptionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(jobDescriptionRef.current);
       setLastScrollToSection("job-description");
     }
   }, [scrollToSection]);

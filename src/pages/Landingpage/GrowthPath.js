@@ -2,6 +2,7 @@ import { Steps } from "antd";
 import React, { useEffect, useRef, useState, useLayoutEffect, useMemo } from "react";
 import { Heading, Img, Text } from "./components/index.jsx";
 import { IconRenderer } from "../LandingpageEdit/IconsSelector.js";
+import { scrollToElement } from "./scrollUtils.js";
 // hirelab-frontend\src\pages\LandingpageEdit\IconsSelector.js
 import { getThemeData } from "../../utils/destructureTheme.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
@@ -183,10 +184,7 @@ const useGrowthPathHover = () => {
       sectionRef.current &&
       lastScrollToSection !== "growth-path"
     ) {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("growth-path");
     }
   }, [scrollToSection]);

@@ -3,6 +3,7 @@ import { Heading, Img, Text } from "./components";
 import { useHover } from "../../contexts/HoverContext";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
+import { scrollToElement } from "./scrollUtils.js";
 // import { Heading, Img, Text } from "./ui";
 
 const decorativeElement = (position) => (
@@ -57,10 +58,7 @@ const useLeaderHover = () => {
       sectionRef.current &&
       lastScrollToSection !== "leader-introduction"
     ) {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("leader-introduction");
     }
   }, [scrollToSection]);

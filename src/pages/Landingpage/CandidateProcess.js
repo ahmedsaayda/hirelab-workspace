@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { Heading, Text, CustomCarousel } from "./components/index.jsx";
 import ApplicationSubmission from "./components/ApplicationSubmission/index.jsx";
+import { scrollToElement } from "./scrollUtils.js";
 import { getThemeData } from "../../utils/destructureTheme.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import { Mail, FileText, Users, Tag } from "lucide-react";
@@ -201,10 +202,7 @@ const useCandidateProcessHover = () => {
 
   useEffect(() => {
     if (scrollToSection === "candidate-process" && sectionRef.current&&lastScrollToSection !== "candidate-process") {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("candidate-process")
     }
   }, [scrollToSection]);

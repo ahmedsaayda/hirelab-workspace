@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { Heading, Img, Text } from "./components/index.jsx";
 import RenderFact from "./components/RenderFact/index.jsx";
+import { scrollToElement } from "./scrollUtils.js";
 import { getThemeData } from "../../utils/destructureTheme.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import {
@@ -71,10 +72,7 @@ const useCompanyFactsHover = () => {
 
   useEffect(() => {
     if (scrollToSection === "company-facts" && sectionRef.current&&lastScrollToSection !== "company-facts") {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("company-facts")
     }
   }, [scrollToSection]);

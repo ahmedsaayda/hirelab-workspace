@@ -8,6 +8,7 @@ import React, {
   useMemo,
 } from "react";
 import { Button, Heading, Img, Text } from "./components/index.jsx";
+import { scrollToElement } from "./scrollUtils.js";
 import UserProfile4 from "./components/UserProfile4/index.jsx";
 import UserProfileCard from "./components/UserProfileCard/index.jsx";
 import { DollarSign, Clock, Briefcase } from "lucide-react";
@@ -67,7 +68,7 @@ const useFooterHover = () => {
       sectionRef.current &&
       lastScrollToSection !== "footer"
     ) {
-      sectionRef.current.scrollIntoView({ behavior: "smooth" });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("footer");
     }
   }, [scrollToSection]);

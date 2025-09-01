@@ -4,6 +4,7 @@ import placholder from "../../assets/img/placeholder.png";
 import { useHover } from "../../contexts/HoverContext";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
+import { scrollToElement } from "./scrollUtils.js";
 
 // Common hook for hover functionality
 const useTestimonialHover = () => {
@@ -54,10 +55,7 @@ const useTestimonialHover = () => {
 
   useEffect(() => {
     if (scrollToSection === "employer-testimonial" && sectionRef.current&&lastScrollToSection !== "employer-testimonial" ) {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("employer-testimonial")
     }
   }, [scrollToSection]);

@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { Heading, Text } from "./components/index.jsx";
 import ScheduleOverview1 from "./components/ScheduleOverview1/index.jsx";
+import { scrollToElement } from "./scrollUtils.js";
 import ScheduleOverview from "./components/ScheduleOverview/index.jsx";
 import Calendar from "react-calendar";
 
@@ -306,10 +307,7 @@ const useAgendaHover = () => {
       sectionRef.current &&
       lastScrollToSection !== "agenda"
     ) {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("agenda");
     }
   }, [scrollToSection]);

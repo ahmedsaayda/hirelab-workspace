@@ -3,6 +3,7 @@ import { Heading, Img, Text } from "./components";
 import { useHover } from "../../contexts/HoverContext";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
+import { scrollToElement } from "./scrollUtils.js";
 const useEvpHover = () => {
   const { hoveredField, scrollToSection ,setLastScrollToSection,lastScrollToSection} = useHover();
   const sectionRef = useRef();
@@ -39,11 +40,7 @@ const useEvpHover = () => {
 
   useEffect(() => {
     if (scrollToSection === "evp-mission" && sectionRef.current&&lastScrollToSection !== "evp-mission") {
-
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("evp-mission")
     }
   }, [scrollToSection]);

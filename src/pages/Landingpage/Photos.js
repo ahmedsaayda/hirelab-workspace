@@ -5,6 +5,7 @@ import { useHover } from "../../contexts/HoverContext";
 import { useFocusContext } from "../../contexts/FocusContext";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
+import { scrollToElement } from "./scrollUtils.js";
 
 const usePhotosHover = () => {
   const { hoveredField, scrollToSection } = useHover();
@@ -37,10 +38,7 @@ const usePhotosHover = () => {
   // scroll to section
   useEffect(() => {
     if (scrollToSection === "image-carousel" && sectionRef.current) {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
     }
   }, [scrollToSection]);
 

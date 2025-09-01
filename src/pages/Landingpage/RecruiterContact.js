@@ -6,6 +6,7 @@ import React, {
   useEffect,
 } from "react";
 import { Heading, Img, Text } from "./components/index.jsx";
+import { scrollToElement } from "./scrollUtils.js";
 import { useFocusContext } from "../../contexts/FocusContext.js";
 import { useHover } from "../../contexts/HoverContext.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
@@ -249,10 +250,7 @@ const useRecruiterContactHover = () => {
       sectionRef.current &&
       lastScrollToSection !== "recruiter-contact"
     ) {
-      sectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      scrollToElement(sectionRef.current);
       setLastScrollToSection("recruiter-contact");
     }
   }, [scrollToSection]);
