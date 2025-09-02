@@ -636,9 +636,13 @@ export default function LandingpageEdit({paramsId}) {
     autoSaveTimeoutRef.current = setTimeout(async () => {
       try {
         const res = await CrudService.update("LandingPageData", lpId, landingPageData,"landing page edit");
-        console.log("auto save res",res)
-        // Update the reference data to prevent unnecessary saves
-        previousDataRef.current = JSON.stringify(landingPageData);
+        // Refresh local state from server to keep diffing accurate
+        if (res?.data) {
+          setLandingPageData(res.data);
+          previousDataRef.current = JSON.stringify(res.data);
+        } else {
+          previousDataRef.current = JSON.stringify(landingPageData);
+        }
         
       } catch (error) {
         console.error("Auto-save failed:", error);
@@ -1234,6 +1238,8 @@ export default function LandingpageEdit({paramsId}) {
       const res = await CrudService.update("LandingPageData", lpId, landingPageData,"landing page edit");
       if (res.data) {
         setLandingPageData(res.data);
+        // Broadcasting no-changes state so header pill can clear
+        eventEmitter.emit("changeState", false);
         message.destroy();
         message.success("Published successfully");
       }

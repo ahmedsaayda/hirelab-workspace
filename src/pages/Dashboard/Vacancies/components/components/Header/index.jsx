@@ -74,7 +74,8 @@ export default function Header({
     }
     const sanitize = (obj) => {
       if (!obj || typeof obj !== 'object') return obj;
-      const { _id, __v, updatedAt, createdAt, publishedAt, unpublishedAt, publishedVersion, ...rest } = obj;
+      // Strip server-managed and UI-only fields that shouldn't affect publish diffing
+      const { _id, __v, updatedAt, createdAt, publishedAt, unpublishedAt, publishedVersion, showHirelabBranding, debugData, ...rest } = obj;
       return rest;
     };
     const safeStringify = (val) => JSON.stringify(val ?? null);
@@ -82,7 +83,14 @@ export default function Header({
     if (scope === 'form') {
       const current = sanitize({ form: data.form });
       const published = sanitize({ form: data.publishedVersion?.form });
-      const diff = safeStringify(current) !== safeStringify(published);
+      // Align current to only the keys that exist in the published snapshot to avoid false positives
+      const alignedCurrent = { form: {} };
+      if (published.form && typeof published.form === 'object') {
+        Object.keys(published.form).forEach((key) => {
+          alignedCurrent.form[key] = current.form ? current.form[key] : undefined;
+        });
+      }
+      const diff = safeStringify(alignedCurrent) !== safeStringify(published);
       if (diff) console.log('Change detected in form scope');
       return diff;
     }
@@ -94,7 +102,12 @@ export default function Header({
     };
     const currentPage = stripForm(data);
     const publishedPage = stripForm(data.publishedVersion);
-    const diff = safeStringify(currentPage) !== safeStringify(publishedPage);
+    // Align currentPage to only published keys to ignore UI-only additions
+    const alignedCurrentPage = {};
+    Object.keys(publishedPage || {}).forEach((key) => {
+      alignedCurrentPage[key] = currentPage ? currentPage[key] : undefined;
+    });
+    const diff = safeStringify(alignedCurrentPage) !== safeStringify(publishedPage);
     if (diff) console.log('Change detected in page scope');
     return diff;
   };
@@ -362,7 +375,7 @@ export default function Header({
           {null}
         </div>
         <div className="flex justify-between items-center w-full mdx:flex-col mdx:gap-3">
-          {/* Left side - Publish button */}
+          {/* Left side - Publish button + status */}
           <div className="flex items-center mdx:w-full mdx:justify-center ml-2">
             <div className={`flex items-center gap-2 rounded-lg border border-solid px-2 py-[10px] shadow-sm ${landingPageData?.published && !hasUnpublishedChanges ? "bg-[#ECFDF3]" : "bg-[#5207CD]"} mdx:w-full mdx:justify-center`}>
               <button
@@ -396,6 +409,14 @@ export default function Header({
                 </Heading>
               </button>
             </div>
+            {landingPageData?.published && hasUnpublishedChanges && (
+              <div className="ml-2 flex items-center gap-2 rounded-full bg-amber-50 text-amber-700 px-3 py-1 border border-amber-200 shadow-sm" title="There are unpublished changes. Click Publish to update the live page.">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-xs font-medium">Unpublished changes</span>
+              </div>
+            )}
             {landingPageData?.published && (
               <button
                 onClick={handleCopyLink}

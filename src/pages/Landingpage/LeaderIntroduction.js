@@ -423,32 +423,23 @@ const Template1 = ({ data }) => {
               </div>
             </div>
 
-            {/* Right Bar Decoration */}
-            <div className="rightBar z-10 absolute top-[-1px] left-[-1px] bottom-[110px] w-[85px] bg-white rounded-b-2xl ">
-              <div
-                className={`z-40 absolute h-[70px] w-[70px] bottom-[0px] mb-7 left-[-80px] rounded-xl   smx:left-[10px] smx:bottom-[10px] smx:h-[55px] smx:w-[55px]`}
-                style={{ background: `${getColor("tertiary", 300)}` }}
-              />
-
-              <div className="absolute bottom-[-30px] left-[-10px] ">
-                <div className="arc leader-bottom-right"></div>
+            {/* Right Bar Decoration (match JobDescription cut-out) */}
+            <div className="rightBar z-10 absolute top-[-10px] right-[-3px] bottom-[110px] w-[87px] bg-white rounded-bl-2xl">
+              <div className="absolute bottom-[-30px] right-[3px]">
+                <div className="corner bottom-left"></div>
               </div>
-              <div className="absolute right-[-30px] top-[-9px]">
-                <div className="arc leader-bottom-right"></div>
+              <div className="absolute left-[-30px] top-0">
+                <div className="corner bottom-left"></div>
               </div>
             </div>
 
-            {/* Bottom Bar Decoration */}
-            <div className="absolute z-10 left-[110px] bottom-[-1px] right-[-1px] h-[85px] bg-white rounded-tl-2xl">
-              <div
-                className={`z-90 absolute h-[100px] w-[100px] bottom-[-60px] left-[90px] rounded-xl  smx:h-[70px] smx:w-[70px] smx:bottom-[-40px] smx:left-[50px] `}
-                style={{ background: `${getColor("tertiary", 300)}` }}
-              />
-              <div className="absolute left-[-30px] bottom-[-10px] ">
-                <div className="arc leader-top-left"></div>
+            {/* Bottom Bar Decoration (match JobDescription cut-out) */}
+            <div className="absolute z-10 left-[-1px] bottom-[-2px] right-[110px] h-[97px] bg-white rounded-tr-2xl rounded-br-none">
+              <div className="absolute right-[-30px] bottom-[-10px]">
+                <div className="corner top-right"></div>
               </div>
-              <div className="absolute top-[-30px] right-[-10px]">
-                <div className="arc leader-top-left"></div>
+              <div className="absolute top-[-30px] left-0">
+                <div className="corner top-right"></div>
               </div>
             </div>
 
@@ -461,54 +452,42 @@ const Template1 = ({ data }) => {
                 font-style: normal;
               }
 
-              .arc {
-                width: 40px;
+              .corner {
+                width: 30px;
                 height: 40px;
                 position: relative;
                 overflow: hidden;
-                border: 0;
+                border: 0 !important;
+                outline: none !important;
+                box-shadow: none !important;
               }
 
-              .arc::after {
+              .corner::after {
                 content: "";
                 position: absolute;
-                border: 0;
+                border: 0 !important;
+                outline: none !important;
+                box-shadow: none !important;
                 top: 0;
                 left: 0;
                 right: 0;
                 bottom: 0;
               }
 
-              .leader-top-left::after {
-                background-image: radial-gradient(
-                  circle at 0 0,
-                  transparent 30px,
-                  white 20px
-                );
+              .top-right::after {
+                background-image: radial-gradient(circle at 100% 0, transparent 30px, white 30px);
               }
 
-              .leader-top-right::after {
-                background-image: radial-gradient(
-                  circle at 100% 0,
-                  transparent 20px,
-                  white 20px
-                );
+              .bottom-left::after {
+                background-image: radial-gradient(circle at 0 100%, transparent 30px, white 30px);
               }
 
-              .leader-bottom-left::after {
-                background-image: radial-gradient(
-                  circle at 0 100%,
-                  transparent 20px,
-                  white 20px
-                );
-              }
-
-              .leader-bottom-right::after {
-                background-image: radial-gradient(
-                  circle at 100% 100%,
-                  transparent 30px,
-                  white 20px
-                );
+              .rightBar {
+                background-color: white !important;
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+                z-index: 10 !important;
               }
             `}</style>
           </div>
