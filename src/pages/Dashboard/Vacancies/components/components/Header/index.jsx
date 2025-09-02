@@ -396,6 +396,15 @@ export default function Header({
                 </Heading>
               </button>
             </div>
+            {landingPageData?.published && (
+              <button
+                onClick={handleCopyLink}
+                className="ml-2 flex items-center justify-center rounded-lg border border-solid px-2 py-[10px] shadow-sm bg-[#0080FF] hover:bg-[#0C7CE6]"
+                title="Copy public link"
+              >
+                <LinkOutlined style={{ fontSize: '16px', color: 'white' }} />
+              </button>
+            )}
           </div>
 
           {/* Right side - Navigation and Copy Link buttons */}
@@ -431,43 +440,16 @@ export default function Header({
                   ),
                   className: `rounded-lg ${isNavItemActive("formBuilder") ? "ring-2 ring-[#5207CD] ring-opacity-50 shadow-lg animate-pulse-subtle" : ""}`,
                   disabled: false,
-                },
-                {
-                  id: "ats",
-                  label: "ATS",
-                  link: (id) => `/dashboard/ats?id=${id}`,
-                  bgColor: isNavItemActive("ats") ? "bg-[#059669]" : "bg-[#10B981]",
-                  textColor: "!text-[white]",
-                  icon: (
-                    <ClipboardDocumentListIcon style={{ 
-                      width: '16px', 
-                      height: '16px', 
-                      color: 'white',
-                      strokeWidth: 2 
-                    }} />
-                  ),
-                  className: `rounded-lg ${isNavItemActive("ats") ? "ring-2 ring-[#059669] ring-opacity-50 shadow-lg animate-pulse-subtle" : ""}`,
-                  disabled: false,
-                },
-                ...(landingPageData?.published ? [{
-                  id: "copyLink",
-                  label: "Copy Link",
-                  action: handleCopyLink,
-                  bgColor: "bg-[#0080FF]",
-                  textColor: "!text-[white]",
-                  icon: <LinkOutlined style={{ fontSize: '16px', color: 'white' }} />,
-                  className: "rounded-lg",
-                  disabled: false,
-                }] : [])
+                }
               ].map((item) => (
                 <li key={item.id}>
                   <div
-                    className={`flex items-center gap-2 border border-solid px-2 py-[10px] shadow-sm ${item.bgColor} ${item.className || "rounded-lg"} smx:px-1 smx:py-2 transition-all duration-200`}
+                    className={`flex items-center gap-2 border border-solid  shadow-sm ${item.bgColor} ${item.className || "rounded-lg"} smx:px-1 smx:py-2 transition-all duration-200`}
                   >
                     {item.link ? (
                       <Link
                         href={item.link(lpId || landingPageData?._id)}
-                        className="flex gap-2 justify-center items-center cursor-pointer smx:gap-1"
+                        className="flex gap-2 justify-center items-center cursor-pointer smx:gap-1 px-2 py-[10px]"
                       >
                         {item.icon}
                         <Heading
@@ -481,7 +463,7 @@ export default function Header({
                     ) : (
                       <button
                         onClick={item.action}
-                        className={`flex gap-2 items-center cursor-pointer smx:gap-1`}
+                        className={`flex gap-2 items-center cursor-pointer smx:gap-1 px-2 py-[10px]`}
                         disabled={item.disabled}
                         title={item.tooltip}
                       >

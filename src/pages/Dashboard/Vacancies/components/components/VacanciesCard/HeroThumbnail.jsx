@@ -83,6 +83,8 @@ export default function HeroThumbnail({ landingPageData }) {
   const [scale, setScale] = useState(0.22);
   const containerRef = useRef(null);
   const debounceTimeoutRef = useRef(null);
+  // No cropping by default; keep 0 to avoid cutting content
+  const CROP_TOP = 0;
 
   // Calculate optimal scale based on container size
   useEffect(() => {
@@ -93,10 +95,11 @@ export default function HeroThumbnail({ landingPageData }) {
         
         // Calculate scale to fit the container while maintaining aspect ratio
         const scaleX = containerWidth / 1440; // Desktop width
-        const scaleY = containerHeight / 600; // Approximate hero height
+        // Base hero height
+        const scaleY = containerHeight / 800;
         
-        // Use the smaller scale to ensure it fits, with a minimum scale for visibility
-        const calculatedScale = Math.max(0.08, Math.min(scaleX, scaleY));
+        // Fill the container width (cover), allowing vertical crop via overflow hidden
+        const calculatedScale = Math.max(0.08, scaleX);
         setScale(calculatedScale);
       }
     };
@@ -272,12 +275,12 @@ export default function HeroThumbnail({ landingPageData }) {
       <div
         style={{
           width: '1440px', // Desktop width
-          height: '800px', // Hero section height
+          height: '800px', // Match hero height
           transform: `scale(${scale})`, // Dynamic scale based on container size
           transformOrigin: 'top center',
           pointerEvents: 'none',
           position: 'absolute',
-          top: 0,
+          top: -CROP_TOP,
           left: '50%',
           marginLeft: '-720px', // Half of 1440px to center it
         }}
@@ -289,16 +292,7 @@ export default function HeroThumbnail({ landingPageData }) {
           height={800}
         >
           <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-            <NavBar 
-              landingPageData={landingPageData} 
-              onClickApply={() => {}}
-              showBackToEditButton={false}
-              fullscreen={false}
-              setFullscreen={() => {}}
-              lpId={null}
-              isEdit={false}
-              setLandingPageData={() => {}}
-            />
+            {/* Removed NavBar from thumbnail to avoid top white bar */}
             <HeroSection 
               landingPageData={landingPageData} 
               fetchData={() => {}} 

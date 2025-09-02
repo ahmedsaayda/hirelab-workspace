@@ -18,6 +18,7 @@ module.exports = {
         mdr: { min: "1050px" },
         mdx: { max: "1050px" },
         smx: { max: "550px" },
+        gmx: { max: "850px" },
         smr: { min: "550px" },
         lgr: { min: "1600px" },
         lgx: { max: "1445px" },

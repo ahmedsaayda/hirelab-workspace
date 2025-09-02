@@ -529,7 +529,7 @@ const Overview = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 w-full">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 w-full gmx:flex gmx:gap-2 gmx:w-full gmx:max-w-screen gmx:overflow-x-auto">
           {totalSummary.map((step, i) => {
             // Determine if this card should show "coming soon"
             const isComingSoon = step.name === "Awareness"; // Only Awareness is coming soon now
@@ -555,7 +555,7 @@ const Overview = () => {
             return (
               <div
                 key={i}
-                className={`bg-white dark:bg-black cursor-default px-[12px] py-[20px] rounded-lg w-auto shadow-lg ${
+                className={`bg-white gmx:flex-1 gmx:min-w-[180px] dark:bg-black cursor-default px-[12px] py-[20px] rounded-lg w-auto shadow-lg ${
                   isComingSoon ? "opacity-60" : ""
                 }`}
               >

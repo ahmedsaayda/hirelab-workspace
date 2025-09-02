@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 import CrudService from "../../../../../../services/CrudService.js";
 import { Heading, Img, Text } from "../index.jsx";
 import HeroSection from "../../../../../Landingpage/HeroSection.js";
-import { MapPin, Clock, Coins, Component, Pencil, Eye } from "lucide-react";
+import { MapPin, Clock, Coins, Component, Pencil, Eye, Copy } from "lucide-react";
 import Template1Preview from "./TemplatePreviews/Template1Preview.jsx";
 import HeroThumbnail from "./HeroThumbnail.jsx";
 
@@ -41,6 +41,14 @@ export default function VacanciesCard({
 }) {
   const router = useRouter();;
   const [isSwitchLoading, setIsSwitchLoading] = useState(false);
+  const handleCopyLink = () => {
+    const id = record?._id || props?._id;
+    const generatedLink = `${process.env.NEXT_PUBLIC_LIVE_URL}/lp/${id}`;
+    navigator.clipboard
+      .writeText(generatedLink)
+      .then(() => message.success("Link copied to clipboard!"))
+      .catch(() => message.error("Failed to copy link"));
+  };
   return (
     <div
       {...props}
@@ -48,7 +56,7 @@ export default function VacanciesCard({
     >
       <div className="flex flex-col h-full">
         {/* Preview Section - Compact */}
-        <div className="relative h-32 bg-slate-100 overflow-hidden">
+        <div className="relative h-36 bg-slate-100 overflow-hidden">
           <HeroThumbnail landingPageData={props} />
           {/* Status Toggle - Overlay */}
           <div className="absolute top-2 right-2">
@@ -82,54 +90,51 @@ export default function VacanciesCard({
         
         {/* Content Section - Compact */}
         <div className="flex-1 p-3">
-          {/* Title */}
-          <h3 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-2 leading-tight">
+          {/* Title (single line with ellipsis) */}
+          <h3
+            className="font-semibold text-gray-900 text-sm mb-2 leading-tight truncate"
+            title={heading}
+          >
             {heading}
           </h3>
-          
-          {/* Location - Inline */}
-          {props?.location?.length > 0 && (
-            <div className="flex items-center gap-1 mb-2 text-xs text-gray-600">
-              <MapPin size={12} className="flex-shrink-0" />
-              <span className="truncate">
-                {Array.isArray(props?.location)
-                  ? props?.location.join(", ")
-                  : props?.location}
-              </span>
-            </div>
-          )}
 
-          {/* Department - Compact */}
-          {props.department && (
-            <div className="mb-2">
-              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 rounded">
+          {/* Tags: Location + Department */}
+          <div className="flex items-center gap-2 mb-2">
+            {props?.location?.length > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded bg-purple-100 text-purple-700">
+                <MapPin size={12} className="flex-shrink-0" />
+                <span className="truncate max-w-[120px]">
+                  {Array.isArray(props?.location)
+                    ? props?.location.join(", ")
+                    : props?.location}
+                </span>
+              </span>
+            )}
+
+            {props.department && (
+              <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded bg-rose-100 text-rose-700">
                 {props.department}
               </span>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Analytics - Colorful Tags */}
-          <div className="flex flex-wrap gap-2 items-start">
-            {/* Visits Tag */}
-            <div className="flex items-center gap-1 bg-blue-50 rounded-full px-2 py-1">
-              <Eye size={12} className="text-blue-600" />
-              <span className="text-blue-600 text-xs font-medium">{visits} visits</span>
+          {/* Analytics: compact two-row layout */}
+          <div className="mt-1 space-y-1 text-xs text-gray-600">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1">
+                <Clock size={12} /> {daysLive} days
+              </span>
+              <span className="flex items-center gap-1">
+                <Component size={12} /> {applicants} applicants
+              </span>
             </div>
-
-            {/* Average Time Spent Tag */}
-            <div className="flex items-center gap-1 bg-green-50 rounded-full px-2 py-1">
-              <Clock size={12} className="text-green-600" />
-              <span className="text-green-600 text-xs font-medium">{avgTimeSpent}s avg</span>
-            </div>
-
-            {/* Applicants Tag */}
-            <div className="flex items-center gap-1 bg-purple-50 rounded-full px-2 py-1">
-              <span className="text-purple-600 text-xs font-medium">{applicants} applicants</span>
-            </div>
-
-            {/* Days Live Tag */}
-            <div className="flex items-center gap-1 bg-orange-50 rounded-full px-2 py-1">
-              <span className="text-orange-600 text-xs font-medium">{daysLive} days live</span>
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1">
+                <Eye size={12} /> {visits} visits
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock size={12} /> {avgTimeSpent}s Avg
+              </span>
             </div>
           </div>
         </div>
@@ -175,6 +180,14 @@ export default function VacanciesCard({
               />
             </button>
           </Dropdown>
+
+          <button
+            onClick={handleCopyLink}
+            className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 transition-colors border-l border-gray-200"
+            title="Copy public link"
+          >
+            <Copy className="h-4 w-4 text-gray-600" />
+          </button>
 
           <Link
             href={`/lp/${record._id}`}
