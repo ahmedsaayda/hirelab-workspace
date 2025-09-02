@@ -325,6 +325,8 @@ export default function Header({
         return currentPath.includes('/edit-page/');
       case 'formBuilder':
         return currentPath.includes('/form-editor/');
+      case 'launch':
+        return currentPath.includes('/launch/');
       case 'ats':
         return currentPath.includes('/dashboard/ats');
       default:
@@ -359,6 +361,15 @@ export default function Header({
             >
               {landingPageData?.vacancyTitle}
             </Heading>
+            
+            {landingPageData?.published && hasUnpublishedChanges && (
+              <div className="ml-3 flex items-center gap-2 rounded-full bg-amber-50 text-amber-700 px-3 py-1 border border-amber-200 shadow-sm" title="There are unpublished changes. Click Publish to update the live page.">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-xs font-medium whitespace-nowrap">Unpublished changes</span>
+              </div>
+            )}
           </div>
           <Switch
             className="ml-3.5"
@@ -409,23 +420,7 @@ export default function Header({
                 </Heading>
               </button>
             </div>
-            {landingPageData?.published && hasUnpublishedChanges && (
-              <div className="ml-2 flex items-center gap-2 rounded-full bg-amber-50 text-amber-700 px-3 py-1 border border-amber-200 shadow-sm" title="There are unpublished changes. Click Publish to update the live page.">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="text-xs font-medium">Unpublished changes</span>
-              </div>
-            )}
-            {landingPageData?.published && (
-              <button
-                onClick={handleCopyLink}
-                className="ml-2 flex items-center justify-center rounded-lg border border-solid px-2 py-[10px] shadow-sm bg-[#0080FF] hover:bg-[#0C7CE6]"
-                title="Copy public link"
-              >
-                <LinkOutlined style={{ fontSize: '16px', color: 'white' }} />
-              </button>
-            )}
+
           </div>
 
           {/* Right side - Navigation and Copy Link buttons */}
@@ -436,47 +431,62 @@ export default function Header({
                   id: "pageBuilder",
                   label: "Page",
                   link: (id) => `/edit-page/${id}`,
-                  bgColor: isNavItemActive("pageBuilder") ? "bg-[#5207CD]" : "bg-[#7C3AED]",
-                  textColor: "!text-[white]",
+                  bgColor: isNavItemActive("pageBuilder") ? "bg-[#5207CD]" : "bg-[#F3F0FF]",
+                  textColor: isNavItemActive("pageBuilder") ? "!text-[#FFFFFF]" : "!text-[#5207CD]",
                   icon: (
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M2 2h12a1 1 0 011 1v10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="white" strokeWidth="1.5" fill="none"/>
-                      <path d="M1 5h14M5 2v12" stroke="white" strokeWidth="1.5"/>
+                      <circle cx="8" cy="8" r="7.5" fill={isNavItemActive("pageBuilder") ? "white" : "#5207CD"} stroke={isNavItemActive("pageBuilder") ? "white" : "#5207CD"}/>
+                      <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke={isNavItemActive("pageBuilder") ? "#5207CD" : "white"} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ),
-                  className: `rounded-lg ${isNavItemActive("pageBuilder") ? "ring-2 ring-[#5207CD] ring-opacity-50 shadow-lg animate-pulse-subtle" : ""}`,
+                  className: "rounded-lg",
                   disabled: false,
                 },
                 {
-                  id: "formBuilder",
+                  id: "formBuilder", 
                   label: "Form",
                   link: (id) => `/form-editor/${id}`,
-                  bgColor: isNavItemActive("formBuilder") ? "bg-[#5207CD]" : "bg-[#7C3AED]",
-                  textColor: "!text-[white]",
+                  bgColor: isNavItemActive("formBuilder") ? "bg-[#5207CD]" : "bg-[#F3F0FF]",
+                  textColor: isNavItemActive("formBuilder") ? "!text-[#FFFFFF]" : "!text-[#5207CD]",
                   icon: (
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M2 2h12a1 1 0 011 1v10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="white" strokeWidth="1.5" fill="none"/>
-                      <path d="M4 6h8M4 9h6M4 12h4" stroke="white" strokeWidth="1.5"/>
+                      <circle cx="8" cy="8" r="7.5" fill={isNavItemActive("formBuilder") ? "white" : "#5207CD"} stroke={isNavItemActive("formBuilder") ? "white" : "#5207CD"}/>
+                      <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke={isNavItemActive("formBuilder") ? "#5207CD" : "white"} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ),
-                  className: `rounded-lg ${isNavItemActive("formBuilder") ? "ring-2 ring-[#5207CD] ring-opacity-50 shadow-lg animate-pulse-subtle" : ""}`,
+                  className: "rounded-lg",
+                  disabled: false,
+                },
+                {
+                  id: "launch",
+                  label: "Launch", 
+                  link: (id) => `/launch/${id}`,
+                  bgColor: isNavItemActive("launch") ? "bg-[#5207CD]" : "bg-[#F3F0FF]",
+                  textColor: isNavItemActive("launch") ? "!text-[#FFFFFF]" : "!text-[#5207CD]",
+                  icon: (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="8" cy="8" r="7.5" fill={isNavItemActive("launch") ? "white" : "#5207CD"} stroke={isNavItemActive("launch") ? "white" : "#5207CD"}/>
+                      <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke={isNavItemActive("launch") ? "#5207CD" : "white"} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                  className: "rounded-lg",
                   disabled: false,
                 }
               ].map((item) => (
                 <li key={item.id}>
                   <div
-                    className={`flex items-center gap-2 border border-solid  shadow-sm ${item.bgColor} ${item.className || "rounded-lg"} smx:px-1 smx:py-2 transition-all duration-200`}
+                    className={`flex items-center gap-2 border border-solid shadow-sm ${item.bgColor} ${item.className || "rounded-lg"} px-2 py-[10px] transition-all duration-200`}
                   >
                     {item.link ? (
                       <Link
                         href={item.link(lpId || landingPageData?._id)}
-                        className="flex gap-2 justify-center items-center cursor-pointer smx:gap-1 px-2 py-[10px]"
+                        className="flex gap-2 justify-center items-center cursor-pointer w-full"
                       >
                         {item.icon}
                         <Heading
                           size="3xl"
                           as="p"
-                          className={`${item.textColor} smx:text-xs`}
+                          className={item.textColor}
                         >
                           {item.label}
                         </Heading>
@@ -484,7 +494,7 @@ export default function Header({
                     ) : (
                       <button
                         onClick={item.action}
-                        className={`flex gap-2 items-center cursor-pointer smx:gap-1 px-2 py-[10px]`}
+                        className="flex gap-2 items-center cursor-pointer w-full"
                         disabled={item.disabled}
                         title={item.tooltip}
                       >
@@ -492,7 +502,7 @@ export default function Header({
                         <Heading
                           size="3xl"
                           as="p"
-                          className={`${item.textColor} smx:text-xs`}
+                          className={item.textColor}
                         >
                           {item.label}
                         </Heading>
