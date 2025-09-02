@@ -1169,21 +1169,21 @@ const handlemediaLink = (platform) => {
         >
         {/* Left gradient overlay - shows when scrolled right */}
         <div 
-          className="absolute left-16 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
+          className="absolute left-2 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
           style={{
             background: "linear-gradient(to right, white 60%, transparent)",
             zIndex: 10,
-            opacity: areTabsOverflowing && scrollPosition > 0 ? 1 : 0
+            opacity: areTabsOverflowing && scrollPosition > 0 ? 1 : 0,
           }}
         />
         
         {/* Right gradient overlay - shows when can scroll more to the right */}
         <div 
-          className="absolute right-16 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
+          className="absolute right-2 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
           style={{
             background: "linear-gradient(to left, white 60%, transparent)",
             zIndex: 10,
-            opacity: areTabsOverflowing && scrollRef.current && scrollPosition < (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) ? 1 : 0
+            opacity: areTabsOverflowing && scrollRef.current && scrollPosition < (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) ? 1 : 0,
           }}
         />
 
