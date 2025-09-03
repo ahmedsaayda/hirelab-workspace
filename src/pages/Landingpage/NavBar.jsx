@@ -227,7 +227,7 @@ const Template2 = ({ landingPageData, onClickApply }) => {
 };
 
 
-const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData }) => {
+const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview=false }) => {
   console.log("lpId",lpId);
   // Get device from global variable set by PreviewContainer
   const [device, setDevice] = useState((window ).__previewDevice || "desktop");
@@ -916,7 +916,7 @@ const handlemediaLink = (platform) => {
         zIndex: 999,
         transition: "background-color 0.6s ease",
         position: "fixed",
-        top:fullscreen?44: 0,
+        top:isMovilePreview?0: fullscreen?44: 0,
         left: 0,
         right: 0,
         width: "100%",
@@ -1255,7 +1255,7 @@ const handlemediaLink = (platform) => {
   );
 };
 
-const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData }) => {
+const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview=false }) => {
   if (landingPageData?.templateId?.toLowerCase() === "3")
     return (
       <Template3
@@ -1281,6 +1281,7 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
         lpId={lpId}
         isEdit={isEdit}
         setLandingPageData={setLandingPageData}
+        isMovilePreview={isMovilePreview}
       />
     );
   return (

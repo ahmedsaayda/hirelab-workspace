@@ -566,7 +566,7 @@ export function PreviewContainer({
         }, 100); // Small delay to ensure iframe is loaded
       }
     }
-  }, [fonts]);
+  }, [fonts,fullscreen,device]);
 
   // Updated scale calculation to fill available space
   const calculateScale = () => {

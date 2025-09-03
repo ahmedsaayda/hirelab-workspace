@@ -1261,32 +1261,13 @@ export default function LandingpageEdit({paramsId}) {
   if (!landingPageData) return <Skeleton active />;
 
 
-  if (fullscreen&&false) {
-    return (
-      <div className="relative w-full bg-white  flex h-screen"
-      style={{
-        border:"3px solid red"
-      }}
-      >
-        <div className="px-5 py-3 w-full">
-          <PreviewContainer
-            pageComponent={<LandingpagePage overrideParamId={lpId} fullscreen={fullscreen} showBackToEditButton={true} setFullscreen={setFullscreen} />}
-            fullscreen={fullscreen}
-            setFullscreen={setFullscreen}
-            landingPageData={landingPageData}
-            onFullscreen={() => setFullscreen(false)}
-            />
-          </div>
-        </div>
-    )
 
-  }
 
   //if full screen like the editor , render it in a full page
   if (fullscreen) {
 
     return (
-      <div className="relative">
+      <div className="relative flex items-center justify-center min-h-[calc(100vh-50px)] pt-14">
         <PreviewContainer
           pageComponent={
             <>
@@ -1296,6 +1277,9 @@ export default function LandingpageEdit({paramsId}) {
                 fullscreen={fullscreen}
                 setFullscreen={setFullscreen}
                 showBackToEditButton={true}
+                lpId={lpId}
+                isEdit={true}
+                isMovilePreview={true}
               />
               <div
                 key="hero-section"
