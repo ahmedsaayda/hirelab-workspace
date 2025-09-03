@@ -413,8 +413,8 @@ export default function LandingpageEdit({paramsId}) {
   const user = useSelector(selectUser);
   const { setScrollToSection, hoveredField, setHoveredField } = useHover();
   const [landingPageData, setLandingPageData] = useState(null);
-  const [activeIdx, setActiveIdx] = useState(0);
-  console.log("the activeIdx is",activeIdx)
+  const [activeKey, setActiveKey] = useState("flexaligntop");
+  console.log("the activeKey is",activeKey)
   const [addMenuItem, setAddMenuItem] = useState(false);
   const [templateMenu, setTemplateMenu] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(890);
@@ -455,11 +455,12 @@ export default function LandingpageEdit({paramsId}) {
   
   const combinedSections = [
     { key: "flexaligntop" },
-    ...(landingPageData?.menuItems ?? []),
+    ...(landingPageData?.menuItems ?? []).filter(item => item.active).sort((a, b) => (a.sort || 0) - (b.sort || 0)),
     { key: "flexalign" },
     { key: "search" },
   ];
-  const activeSection = combinedSections[activeIdx];
+  const activeSection = combinedSections.find(section => section.key === activeKey) || combinedSections[0];
+  const activeIdx = combinedSections.findIndex(section => section.key === activeKey);
   
   const fetchData = useCallback(() => {
     console.log("will fetch data for id",lpId)
@@ -715,7 +716,7 @@ export default function LandingpageEdit({paramsId}) {
       content.style.width = `${viewportWidth}px`;
       // container.style.height = `${content.scrollHeight * scale}px`;
     }
-  }, [viewportWidth, activeIdx]);
+  }, [viewportWidth, activeKey]);
 
   useEffect(() => {
     const meta = document.querySelector('meta[name="viewport"]');
@@ -808,7 +809,7 @@ export default function LandingpageEdit({paramsId}) {
       menuItems: newMenuItems,
     }));
 
-    setActiveIdx(newMenuItems.filter(item => item.active).length);
+    setActiveKey(key);
     setAddMenuItem(false);
     const sectionToScroll = sectionMap[key];
     setScrollToSection(sectionToScroll);
@@ -819,12 +820,12 @@ export default function LandingpageEdit({paramsId}) {
 
 
   const removeSection = (i) => {
-    const activeMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
+    const currentActiveMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
     const dynamicIndex = i - 1;
     
-    if (dynamicIndex < 0 || dynamicIndex >= activeMenuItems.length) return;
+    if (dynamicIndex < 0 || dynamicIndex >= currentActiveMenuItems.length) return;
     
-    const sectionToRemove = activeMenuItems[dynamicIndex];
+    const sectionToRemove = currentActiveMenuItems[dynamicIndex];
     
     // Mark the section as inactive instead of removing it
     const newMenuItems = (landingPageData?.menuItems ?? []).map(item => 
@@ -841,27 +842,28 @@ export default function LandingpageEdit({paramsId}) {
       menuItems: newMenuItems,
     }));
     
-    // Update activeIdx based on remaining active sections
-    const remainingActiveSections = newMenuItems.filter(item => item.active);
-    if (activeIdx === i) {
+    // Update activeKey based on remaining active sections
+    const removedSection = currentActiveMenuItems[i - 1];
+    
+    if (activeKey === removedSection?.key) {
+      // If we're removing the currently active section, switch to hero section
       if (i > 1) {
-        setActiveIdx(i - 1);
+        const previousSection = currentActiveMenuItems[i - 2];
+        setActiveKey(previousSection?.key || "flexaligntop");
       } else {
-        setActiveIdx(0);
+        setActiveKey("flexaligntop");
       }
-    } else if (activeIdx > i) {
-      setActiveIdx(activeIdx - 1);
     }
   };
 
   const handleUp = (i) => {
     if (i <= 1) return;
     
-    const activeMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
-    if (i - 2 < 0 || i - 1 >= activeMenuItems.length) return;
+    const currentActiveItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
+    if (i - 2 < 0 || i - 1 >= currentActiveItems.length) return;
     
-    const currentItem = activeMenuItems[i - 1];
-    const itemAbove = activeMenuItems[i - 2];
+    const currentItem = currentActiveItems[i - 1];
+    const itemAbove = currentActiveItems[i - 2];
     
     // Swap sort values
     const newMenuItems = (landingPageData?.menuItems ?? []).map(item => {
@@ -877,11 +879,11 @@ export default function LandingpageEdit({paramsId}) {
   };
 
   const handleDown = (i) => {
-    const activeMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
-    if (i >= activeMenuItems.length) return;
+    const currentActiveItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
+    if (i >= currentActiveItems.length) return;
     
-    const currentItem = activeMenuItems[i - 1];
-    const itemBelow = activeMenuItems[i];
+    const currentItem = currentActiveItems[i - 1];
+    const itemBelow = currentActiveItems[i];
     
     // Swap sort values
     const newMenuItems = (landingPageData?.menuItems ?? []).map(item => {
@@ -1190,7 +1192,7 @@ export default function LandingpageEdit({paramsId}) {
   // even writing console log it gives error Rerender how can i fix it 
   useEffect(() => {
     sendRedux()
-  }, [activeIdx, activeSection])
+  }, [activeKey, activeSection])
   
 
   // const mediaLimit = mediaLimits[sectionTitle] || { images: Infinity, videos: Infinity }
@@ -1283,11 +1285,11 @@ export default function LandingpageEdit({paramsId}) {
               />
               <div
                 key="hero-section"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setActiveIdx(0);
-                }}
+                                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setActiveKey("flexaligntop");
+                  }}
               >
                 <HeroSection
                   landingPageData={landingPageData}
@@ -1311,11 +1313,11 @@ export default function LandingpageEdit({paramsId}) {
                 return (
                   <div
                     key={`section-${idx}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setActiveIdx(idx+1);
-                    }}
+                                          onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setActiveKey(section.key);
+                      }}
                     className="cursor-pointer"
                   >
                     {renderSection({
@@ -1366,14 +1368,15 @@ export default function LandingpageEdit({paramsId}) {
             handleUp={handleUp}
             handleDown={handleDown}
             removeSection={removeSection}
+            activeKey={activeKey}
             activeIdx={activeIdx}
             onReorder={onReorder}
             items={(landingPageData?.menuItems ?? []).filter(item => item.active).sort((a, b) => (a.sort || 0) - (b.sort || 0))}
             onClickAdd={(key, idx) => {
               if (key === "search") setAddMenuItem(true);
-              else setActiveIdx(idx);
+              else setActiveKey(key);
             }}
-            setActiveIdx={setActiveIdx}
+            setActiveKey={setActiveKey}
             onSectionVisibilityUpdate={handleSectionVisibilityUpdate}
           />
           <div className="lg:min-w-[450px] flex flex-grow flex-col border-r border-solid border-blue_gray-50  p-0 smx:self-stretch max-h-full">
@@ -1381,14 +1384,14 @@ export default function LandingpageEdit({paramsId}) {
               <div className="h-px bg-blue_gray-50" />
               <div className="flex gap-5 justify-between items-center mx-3">
                 <Heading size="3xl" as="h1" className="!text-black-900_01">
-                  {combinedSections[activeIdx]?.key
+                  {activeSection?.key
                     ?.replace?.("flexaligntop", "Hero")
                     ?.replace?.("form-editor", "Form Editor")
                     ?.replace?.("flexalign", "Footer")
                     ?.replace?.("About Company", "About The Company")}
                 </Heading>
 
-                {activeIdx !== -1 && (
+                {activeSection && (
                   <div className="flex flex-row items-center">
                   {/* Auto-save indicator */}
                     {isAutoSaving && (
@@ -1416,7 +1419,7 @@ export default function LandingpageEdit({paramsId}) {
                         ...(landingPageData?.menuItems ?? []),
                         { key: "flexalign" },
                         { key: "search" },
-                      ][activeIdx]?.key
+                      ].find(s => s.key === activeKey)?.key
                         ?.replace?.("flexaligntop", "Hero")
                         ?.replace?.("form-editor", "Form Editor")
                         ?.replace?.("flexalign", "Footer")
@@ -1504,12 +1507,7 @@ export default function LandingpageEdit({paramsId}) {
               {/* <div className="h-px bg-blue_gray-50" /> */}
               <div className="flex flex-col gap-6 h-full">
                 {renderEditor({
-                  section: [
-                    { key: "flexaligntop" },
-                    ...(landingPageData?.menuItems ?? [])?.filter(item => item.active),
-                    { key: "flexalign" },
-                    { key: "search" },
-                  ][activeIdx],
+                  section: activeSection,
                   fetchData,
                   landingPageData,
                   setLandingPageData,
@@ -1554,7 +1552,7 @@ export default function LandingpageEdit({paramsId}) {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setActiveIdx(0);
+                    setActiveKey("flexaligntop");
                   }}
                 >
                   <HeroSection
@@ -1581,7 +1579,7 @@ export default function LandingpageEdit({paramsId}) {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setActiveIdx(idx+1);
+                        setActiveKey(section.key);
                       }}
                       className={`cursor-pointer ${isHidden ? 'opacity-20 blur-xl pointer-events-none relative' : ''}`}
                       style={isHidden ? { 
