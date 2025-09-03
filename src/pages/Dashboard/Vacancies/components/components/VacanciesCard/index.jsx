@@ -99,11 +99,16 @@ export default function VacanciesCard({
           </h3>
 
           {/* Tags: Location + Department */}
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 w-full">
             {props?.location?.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded bg-purple-100 text-purple-700">
+              <span 
+                className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded bg-purple-100 text-purple-700 min-w-0 ${
+                  props.department ? 'flex-1' : 'max-w-full'
+                }`}
+                title={Array.isArray(props?.location) ? props?.location.join(", ") : props?.location}
+              >
                 <MapPin size={12} className="flex-shrink-0" />
-                <span className="truncate max-w-[120px]">
+                <span className="truncate">
                   {Array.isArray(props?.location)
                     ? props?.location.join(", ")
                     : props?.location}
@@ -112,8 +117,15 @@ export default function VacanciesCard({
             )}
 
             {props.department && (
-              <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded bg-rose-100 text-rose-700">
-                {props.department}
+              <span 
+                className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded bg-rose-100 text-rose-700 min-w-0 ${
+                  props?.location?.length > 0 ? 'flex-1' : 'max-w-full'
+                }`}
+                title={props.department}
+              >
+                <span className="truncate">
+                  {props.department}
+                </span>
               </span>
             )}
           </div>
