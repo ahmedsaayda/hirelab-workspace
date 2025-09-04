@@ -277,8 +277,8 @@ const Billing = () => {
   const usageData = usage || {
     funnels: {
       current: user?.landingPages?.length || user?.landingPageNum || 0,
-      limit: currentPlan?.maxFunnels || currentTier?.maxFunnels || 1,
-      unlimited: (currentPlan?.maxFunnels || currentTier?.maxFunnels) === null
+      limit: user?.planFeatures?.maxFunnels || currentPlan?.maxFunnels || currentTier?.maxFunnels || 1,
+      unlimited: (user?.planFeatures?.maxFunnels || currentPlan?.maxFunnels || currentTier?.maxFunnels) === null
     },
     candidates: {
       current: user?.totalCandidates || 0,

@@ -593,7 +593,7 @@ const Vacancies = () => {
     // Safety check: Verify user hasn't reached limit before starting AI generation
     // Use actual landingPages count for accurate current usage
     const currentFunnelCount = landingPages?.length ?? 0;
-    const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
     const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
     
     if (hasReachedLimit) {
@@ -880,7 +880,7 @@ Respond with json that adheres to the following jsonschema:
   const handleCreateNewVacancy = () => {
     // Use actual landingPages count for accurate current usage
     const currentFunnelCount = landingPages?.length ?? 0;
-    const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
     const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
     const tierName = user?.tier?.name ?? tier?.name ?? 'Unknown';
     
@@ -931,7 +931,7 @@ Respond with json that adheres to the following jsonschema:
           {(() => {
             // Use actual landingPages count for accurate current usage
             const currentFunnelCount = landingPages?.length ?? 0;
-            const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+            const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
             const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
             const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 
@@ -992,7 +992,7 @@ Respond with json that adheres to the following jsonschema:
           {(() => {
             // Use actual landingPages count for accurate current usage
             const currentFunnelCount = landingPages?.length ?? 0;
-            const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+            const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
             const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
             const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 
@@ -1208,7 +1208,7 @@ Respond with json that adheres to the following jsonschema:
         {(() => {
           // Use actual landingPages count for accurate current usage
           const currentFunnelCount = landingPages?.length ?? 0;
-          const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+          const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
           const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
           const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 

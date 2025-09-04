@@ -25,6 +25,7 @@ import {
   UnlockOutlined,
   MailOutlined,
   MoreOutlined,
+  CrownOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -59,6 +60,9 @@ const UserManagement = () => {
   const [visiblePopconfirm, setVisiblePopconfirm] = useState(null);
   const [isTransferModalVisible, setIsTransferModalVisible] = useState(false);
   const [selectedUserForTransfer, setSelectedUserForTransfer] = useState(null);
+  const [isGrantFunnelsModalVisible, setIsGrantFunnelsModalVisible] = useState(false);
+  const [selectedUserForFunnels, setSelectedUserForFunnels] = useState(null);
+  const [grantFunnelsForm] = Form.useForm();
 
   // Fetch all users
   const fetchUsers = async () => {
@@ -281,6 +285,40 @@ const UserManagement = () => {
     }
   };
 
+  // Handle granting additional funnels
+  const handleGrantFunnels = async (values) => {
+    setLoading(true);
+    try {
+      const token = Cookies.get("accessToken");
+
+      const response = await axios.post(
+        `${BASE_URL}/admin/grant-funnels`,
+        {
+          userId: selectedUserForFunnels._id,
+          additionalFunnels: parseInt(values.additionalFunnels),
+          reason: values.reason
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      message.success(response.data.message);
+      setIsGrantFunnelsModalVisible(false);
+      grantFunnelsForm.resetFields();
+      fetchUsers(); // Refresh the user list
+      
+    } catch (error) {
+      console.error("Error granting funnels:", error);
+      message.error(error.response?.data?.message || "Failed to grant funnels");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle form submission based on whether editing or creating
   const handleFormSubmit = (values) => {
     if (editingUser) {
@@ -431,6 +469,31 @@ const UserManagement = () => {
       ),
     },
     {
+      title: "Plan Info",
+      key: "planInfo",
+      render: (_, record) => {
+        const tier = record.subscription?.tier || 'start';
+        const additionalFunnels = record.subscription?.additionalFunnels || 0;
+        
+        return (
+          <div>
+            <div>
+              <Tag color={tier === 'start' ? 'default' : tier === 'create' ? 'blue' : 'purple'}>
+                {tier.toUpperCase()}
+              </Tag>
+            </div>
+            {additionalFunnels > 0 && (
+              <div className="mt-1">
+                <Tag color="gold" icon={<CrownOutlined />} className="text-xs">
+                  +{additionalFunnels} funnels
+                </Tag>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       title: "Last Active",
       dataIndex: "lastActive",
       key: "lastActive",
@@ -511,6 +574,18 @@ const UserManagement = () => {
             }}
           >
             Transfer Pages
+          </Button>
+          <Button
+            type=""
+            icon={<CrownOutlined />}
+            className="!bg-yellow-100 !text-yellow-600 font-semibold !border-yellow-300 shadow-sm !hover:bg-yellow-300 hover-fix"
+            onClick={() => {
+              setSelectedUserForFunnels(record);
+              grantFunnelsForm.resetFields();
+              setIsGrantFunnelsModalVisible(true);
+            }}
+          >
+            Grant Funnels
           </Button>
           <Popconfirm
             title="Are you sure?"
@@ -802,6 +877,124 @@ const UserManagement = () => {
           }}
         />
       )}
+
+      {/* Grant Funnels Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <CrownOutlined className="text-yellow-500" />
+            <span>Grant Additional Funnels</span>
+          </div>
+        }
+        open={isGrantFunnelsModalVisible}
+        onCancel={() => {
+          setIsGrantFunnelsModalVisible(false);
+          grantFunnelsForm.resetFields();
+        }}
+        footer={null}
+        width={500}
+      >
+        {selectedUserForFunnels && (
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <h4 className="font-semibold text-gray-800 mb-2">User Information</h4>
+            <div className="text-sm text-gray-600">
+              <div><strong>Name:</strong> {selectedUserForFunnels.firstName} {selectedUserForFunnels.lastName}</div>
+              <div><strong>Email:</strong> {selectedUserForFunnels.email}</div>
+              <div><strong>Current Plan:</strong> {selectedUserForFunnels.subscription?.tier || 'start'}</div>
+              <div><strong>Base Plan Funnels:</strong> {(() => {
+                const tier = selectedUserForFunnels.subscription?.tier || 'start';
+                const baseLimits = { start: 1, create: 5, scale: 15 };
+                return baseLimits[tier] || 1;
+              })()}</div>
+              <div><strong>Additional Funnels:</strong> {selectedUserForFunnels.subscription?.additionalFunnels || 0}</div>
+              <div><strong>Total Funnel Limit:</strong> {(() => {
+                const tier = selectedUserForFunnels.subscription?.tier || 'start';
+                const baseLimits = { start: 1, create: 5, scale: 15 };
+                const base = baseLimits[tier] || 1;
+                const additional = selectedUserForFunnels.subscription?.additionalFunnels || 0;
+                return base + additional;
+              })()}</div>
+            </div>
+          </div>
+        )}
+
+        <Form
+          form={grantFunnelsForm}
+          layout="vertical"
+          onFinish={handleGrantFunnels}
+          className="pt-4"
+        >
+          <Form.Item
+            name="additionalFunnels"
+            label="Number of Additional Funnels to Grant"
+            rules={[
+              { required: true, message: "Please enter the number of funnels!" },
+              { 
+                validator: (_, value) => {
+                  const num = parseInt(value);
+                  if (isNaN(num) || num < 1 || num > 100) {
+                    return Promise.reject(new Error("Please enter a number between 1 and 100!"));
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ]}
+          >
+            <Input 
+              type="number" 
+              placeholder="e.g., 5"
+              className="!border-gray-300 !rounded-lg"
+              min={1}
+              max={100}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="reason"
+            label="Reason for Granting Funnels"
+            rules={[
+              { required: true, message: "Please provide a reason!" }
+            ]}
+          >
+            <Input.TextArea
+              placeholder="e.g., Customer upgrade request, special promotion, beta tester..."
+              rows={3}
+              className="!border-gray-300 !rounded-lg"
+            />
+          </Form.Item>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <div className="flex items-start gap-2">
+              <div className="text-yellow-600 mt-0.5">⚠️</div>
+              <div className="text-sm text-yellow-800">
+                <strong>Important:</strong> This action will permanently increase the user's funnel limit. 
+                The additional funnels will be added to their current plan's base limit and will persist 
+                even if they change plans.
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 mt-4">
+            <Button 
+              onClick={() => {
+                setIsGrantFunnelsModalVisible(false);
+                grantFunnelsForm.resetFields();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type=""
+              className="bg-yellow-500 hover-fix !text-white !border-yellow-500"
+              htmlType="submit"
+              loading={loading}
+              icon={<CrownOutlined />}
+            >
+              Grant Funnels
+            </Button>
+          </div>
+        </Form>
+      </Modal>
 
       <style jsx>{`
         .custom-table .ant-table-thead > tr > th {

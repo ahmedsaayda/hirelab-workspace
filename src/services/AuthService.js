@@ -1,4 +1,5 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 import { getBackendUrl } from "./getBackendUrl";
 import { middleField } from "./middlefield";
 
@@ -140,6 +141,8 @@ class AuthService {
   getPlansWithPricing() {
     return this.api.get("/plans");
   }
+
+
 
 }
 
