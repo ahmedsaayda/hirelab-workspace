@@ -337,21 +337,7 @@ export function PreviewContainer({
         outline: none;
       }
       
-      /* Specific fix for JobDescription rounded corners */
-      .rounded-bl-2xl, .rounded-tr-2xl, .rounded-br-none {
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-      }
-      
-      /* Fix gradient rendering in scaled context */
-      [style*="background-image"][style*="gradient"],
-      [style*="radial-gradient"] {
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
-        will-change: background-image;
-      }
-      
+     
 
       
       
