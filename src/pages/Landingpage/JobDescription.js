@@ -448,7 +448,6 @@ const Template1 = ({ landingPageData, fetchData }) => {
           {/* Left Bar Decoration */}
             <div className="leftBar z-10 absolute top-[-1px] right-[-1px] bottom-[110px] w-[85px] bg-white rounded-b-2xl ">
               
-              <div className={  `z-40 absolute h-[60px] w-[60px] bottom-[0px] mb-7 right-[-80px] rounded-xl smx:hidden `} style={{background: `${getColor("tertiary", 200)}`}} />
 
               
               <div className="absolute bottom-[-30px] right-[-10px] ">
@@ -461,7 +460,6 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
             {/* Bottom Bar Decoration */}
             <div className="absolute z-10 right-[110px] bottom-[-1px] left-[-1px] h-[85px] bg-white rounded-tr-2xl">
-              <div className={  `z-90 absolute h-[80px] w-[80px] bottom-[-60px] right-[90px] rounded-xl smx:hidden `} style={{background: `${getColor("tertiary", 200)}`}}/>
               <div className="absolute right-[-30px] bottom-[-10px] ">
                 <div className="arc leader-top-right"></div>
               </div>
