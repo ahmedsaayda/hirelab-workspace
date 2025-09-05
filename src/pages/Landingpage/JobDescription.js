@@ -372,7 +372,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
           {/* Image Section */}
 
-          <div
+        {false&&  <div
             className="overflow-hidden relative rounded-3xl"
             style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
           >   
@@ -408,25 +408,103 @@ const Template1 = ({ landingPageData, fetchData }) => {
               </div>
             </div>
 
-            {/* Right white bar with extended overlap */}
-            <div className="rightBar z-10 absolute top-[-10px] right-[-3px] bottom-[110px] w-[87px] bg-white rounded-bl-2xl">
-              <div className="absolute bottom-[-30px] right-[3px]">
-                <div className="corner bottom-left"></div>
+
+          </div>}
+
+          <div className=" relative order-first md:order-first rounded-2xl " style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}>
+            <div className="overflow-hidden relative shadow-md">
+              <div className="relative aspect-[5/5] md:aspect-[4/4] w-full h-full">
+              
+              {/* Main Image */}
+              <div className="overflow-hidden absolute inset-0 rounded-3xl">
+                  <Img
+                                      src={
+                                        landingPageData?.jobDescriptionImage ||
+                                          "/dhwise-images/placeholder.png"
+                                      }
+                                      alt="Team meeting"
+                    className="object-cover w-full h-full"
+                    style={{
+                      objectPosition: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectPosition
+                        ? `${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.x}% ${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.y}%`
+                        : "50% 50%",
+                      objectFit:
+                        landingPageData?.imageAdjustment?.jobDescriptionImage?.objectFit || "cover",
+                      transition: "object-position 0.3s ease-in-out",
+                    }}
+                  />
+
+                <div
+                  className="absolute inset-0 pointer-events-none z-10 bg-gradient-to-t"
+                  style={{
+                    backgroundImage: `linear-gradient(to top, ${getColor("primary", 50)} 1%, transparent 50%)`,
+                  }}
+                ></div>
               </div>
-              <div className="absolute left-[-30px] top-0">
-                <div className="corner bottom-left"></div>
+
+
+            </div>
+          </div>
+          {/* Left Bar Decoration */}
+            <div className="leftBar z-10 absolute top-[-1px] right-[-1px] bottom-[110px] w-[85px] bg-white rounded-b-2xl ">
+              
+              <div className={  `z-40 absolute h-[60px] w-[60px] bottom-[0px] mb-7 right-[-80px] rounded-xl smx:hidden `} style={{background: `${getColor("tertiary", 200)}`}} />
+
+              
+              <div className="absolute bottom-[-30px] right-[-10px] ">
+                <div className="arc leader-bottom-left"></div>
+              </div>
+              <div className="absolute left-[-30px] top-[-9px]">
+                <div className="arc leader-bottom-left"></div>
               </div>
             </div>
 
-            {/* Bottom white bar with extended overlap */}
-            <div className="absolute z-10 left-[-1px] bottom-[-2px] right-[110px] h-[97px] bg-white rounded-tr-2xl rounded-br-none">
-              <div className="absolute right-[-30px] bottom-[-10px]">
-                <div className="corner top-right"></div>
+            {/* Bottom Bar Decoration */}
+            <div className="absolute z-10 right-[110px] bottom-[-1px] left-[-1px] h-[85px] bg-white rounded-tr-2xl">
+              <div className={  `z-90 absolute h-[80px] w-[80px] bottom-[-60px] right-[90px] rounded-xl smx:hidden `} style={{background: `${getColor("tertiary", 200)}`}}/>
+              <div className="absolute right-[-30px] bottom-[-10px] ">
+                <div className="arc leader-top-right"></div>
               </div>
-              <div className="absolute top-[-30px] left-0">
-                <div className="corner top-right"></div>
+              <div className="absolute top-[-30px] left-[-10px]">
+                <div className="arc leader-top-right"></div>
               </div>
             </div>
+
+            <style jsx>{`
+               .arc {
+                width: 40px;
+                height: 40px;
+                position: relative;
+                overflow: hidden;
+                 border: 0;
+                }
+
+                .arc::after {
+                 content: "";
+                 position: absolute;
+                 border: 0;
+                top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    .leader-top-left::after {
+      background-image: radial-gradient(circle at 0 0, transparent 30px, white 20px);
+    }
+
+    .leader-top-right::after {
+      background-image: radial-gradient(circle at 100% 0, transparent 30px, white 20px);
+    }
+
+    .leader-bottom-left::after {
+      background-image: radial-gradient(circle at 0 100%, transparent 30px, white 20px);
+    }
+
+    .leader-bottom-right::after {
+      background-image: radial-gradient(circle at 100% 100%, transparent 30px, white 20px);
+    }
+  `}</style>
           </div>
 
           {/* Content Section */}
@@ -466,70 +544,6 @@ const Template1 = ({ landingPageData, fetchData }) => {
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-
-          .corner {
-            width: 30px;
-            height: 40px;
-            position: relative;
-            overflow: hidden;
-            border: 0 !important;
-            outline: none !important;
-            box-shadow: none !important;
-          }
-
-          .corner::after {
-            content: "";
-            position: absolute;
-            border: 0 !important;
-            outline: none !important;
-            box-shadow: none !important;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-          }
-
-          /* Top-left red curve */
-          .top-left::after {
-            background-image: radial-gradient(circle at 0 0, transparent 20px, white 20px);
-          }
-
-          /* Top-right red curve */
-          .top-right::after {
-            background-image: radial-gradient(circle at 100% 0, transparent 30px, white 30px);
-          }
-
-          /* Bottom-left red curve */
-          .bottom-left::after {
-            background-image: radial-gradient(circle at 0 100%, transparent 30px, white 30px);
-          }
-
-          /* Bottom-right red curve */
-          .bottom-right::after {
-            background-image: radial-gradient(circle at 100% 100%, transparent 20px, white 20px);
-          }
-
-          /* Ensure white bars work properly in public page */
-          .rightBar {
-            background-color: white !important;
-            border: none !important;
-            outline: none !important;
-            box-shadow: none !important;
-            z-index: 10 !important;
-          }
-
-          /* Bottom white bar styling */
-          div[class*="absolute"][class*="bg-white"][class*="rounded-tr-2xl"] {
-            background-color: white !important;
-            border: none !important;
-            outline: none !important;
-            box-shadow: none !important;
-            z-index: 10 !important;
-          }
-
-      `}</style>
     </div>
   );
 };

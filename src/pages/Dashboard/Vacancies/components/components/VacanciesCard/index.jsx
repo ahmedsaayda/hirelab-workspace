@@ -13,6 +13,7 @@ import HeroSection from "../../../../../Landingpage/HeroSection.js";
 import { MapPin, Clock, Coins, Component, Pencil, Eye, Copy } from "lucide-react";
 import Template1Preview from "./TemplatePreviews/Template1Preview.jsx";
 import HeroThumbnail from "./HeroThumbnail.jsx";
+import { formatAvgTime } from "../../../../../../utils/timeFormat";
 
 export const oauthUri = `https://www.facebook.com/v19.0/dialog/oauth?response_type=token&display=popup&client_id=${process.env.NEXT_PUBLIC_META_APP_KEY
   }&redirect_uri=${encodeURIComponent(
@@ -145,7 +146,7 @@ export default function VacanciesCard({
                 <Eye size={12} /> {visits} visits
               </span>
               <span className="flex items-center gap-1">
-                <Clock size={12} /> {avgTimeSpent}s Avg
+                <Clock size={12} /> {typeof avgTimeSpent === 'string' ? avgTimeSpent : formatAvgTime(avgTimeSpent)} Avg
               </span>
             </div>
           </div>

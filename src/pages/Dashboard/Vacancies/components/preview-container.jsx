@@ -230,26 +230,9 @@ export function PreviewContainer({
       
       /* Comprehensive fix for JSX styled components in iframe */
       
-      /* JobDescription corner effects */
-      .corner {
-        width: 30px;
-        height: 40px;
-        position: relative;
-        overflow: hidden;
-        border: 0;
-      }
+
       
-      .corner::after {
-        content: "";
-        position: absolute;
-        border: 0;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
-      }
+    
       
       /* JobDescription specific corner gradients - exact match from component */
       .top-left::after {
@@ -328,23 +311,9 @@ export function PreviewContainer({
         backface-visibility: hidden;
       }
       
-      /* JobDescription specific white bar fixes - minimal approach */
-      .rightBar {
-        border: none;
-        outline: none;
-        box-shadow: none;
-        transform: translateZ(1px);
-        -webkit-transform: translateZ(1px);
-      }
+    
       
-      /* Fix for JobDescription bottom white bar - minimal approach */
-      [class*="absolute"][class*="z-10"][class*="bg-white"][class*="rounded-tr-2xl"] {
-        border: none;
-        outline: none;
-        box-shadow: none;
-        transform: translateZ(1px);
-        -webkit-transform: translateZ(1px);
-      }
+    
       
       /* Ensure proper rendering of absolute positioned elements */
       [class*="absolute"][class*="bottom-"] {
@@ -383,66 +352,16 @@ export function PreviewContainer({
         will-change: background-image;
       }
       
-      /* Additional fixes for border and corner rendering in scaled iframe - target specific elements only */
-      .corner, .arc, .rightBar, [class*="clip-path"] {
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        -webkit-perspective: 1000;
-        perspective: 1000;
-      }
+
       
-      /* Ensure proper rendering of complex shapes - more targeted */
-      .rightBar[class*="bg-white"] {
-        transform: translateZ(1px);
-        -webkit-transform: translateZ(1px);
-        will-change: transform;
-      }
       
-      /* Minimal fixes for JobDescription white bars */
-      .rightBar {
-        background-color: white !important;
-      }
+  
       
-      /* Specific fix for shadow-md class that might cause border appearance */
-      .shadow-md {
-        box-shadow: none !important;
-      }
+  
       
-      /* Ensure image containers don't overflow in JobDescription */
-      .overflow-hidden.relative.shadow-md {
-        overflow: hidden !important;
-      }
+    
       
-      /* Make sure the image stays within bounds */
-      .overflow-hidden img {
-        max-width: 100%;
-        max-height: 100%;
-        border: none !important;
-        outline: none !important;
-      }
-      
-      /* Fix white bars positioning and coverage for iframe scaling */
-      .rightBar {
-        position: absolute !important;
-        background-color: white !important;
-        z-index: 20 !important;
-        /* Extend coverage for iframe scaling */
-        top: -12px !important;
-        right: -5px !important;
-        width: 90px !important;
-        bottom: 108px !important;
-      }
-      
-      [class*="absolute"][class*="z-10"][class*="bg-white"][class*="rounded-tr-2xl"] {
-        position: absolute !important;
-        background-color: white !important;
-        z-index: 20 !important;
-        /* Extend coverage for iframe scaling */
-        left: -3px !important;
-        bottom: -4px !important;
-        height: 100px !important;
-        right: 108px !important;
-      }
+    
     `;
   }, []);
 

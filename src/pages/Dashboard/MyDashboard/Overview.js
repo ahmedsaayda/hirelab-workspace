@@ -20,6 +20,7 @@ import { motion } from "framer-motion";
 // hirelab-frontend\src\pages\Dashboard\MyDashboard\Overview.js
 import SkeletonLoader from "../Vacancies/components/Skeleton/VacancyCard";
 import { useRouter } from "next/router";
+import { formatAvgTime } from "../../../utils/timeFormat";
 const steps = [
   {
     name: "Brand Assets",
@@ -203,6 +204,8 @@ const Overview = () => {
     avgTimeSpent: '0min',
     newApplicants: 0
   });
+
+  console.log('analyticsData ', analyticsData);
   
   // Filter states
   const [filterVacancy, setFilterVacancy] = useState('all');
@@ -278,7 +281,7 @@ const Overview = () => {
       
       const processedPages = landingPagesWithCounts.data.map((i) => {
         const visits = i.visits || 0;
-        const avgTimeSpent = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
+        const avgTimeSpentSeconds = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
         const daysLive = Math.ceil((new Date() - new Date(i.createdAt)) / (1000 * 60 * 60 * 24));
         
         return {
@@ -288,7 +291,7 @@ const Overview = () => {
           deadlinetwo: "Deadline:",
           mar42024: moment(i.createdAt).format("MMM Do YYYY"),
           visits: visits,
-          avgTimeSpent: avgTimeSpent,
+          avgTimeSpent: formatAvgTime(avgTimeSpentSeconds),
           applicants: i.numberApplicants || 0, // Real count if available, otherwise 0
           daysLive: daysLive,
           key: i._id,
@@ -367,7 +370,7 @@ const Overview = () => {
       setAnalyticsData({
         totalVisits,
         totalTimeSpent,
-        avgTimeSpent: `${avgTimeInSeconds}s`,
+        avgTimeSpent: formatAvgTime(avgTimeInSeconds),
         newApplicants
       });
 
