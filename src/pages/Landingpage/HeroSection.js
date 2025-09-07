@@ -501,7 +501,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 }}
                 className="mb-4 text-xs md:text-sm"
               >
-               👋{landingPageData?.weAreHiring || getTranslation(landingPageData?.lang, 'weAreHiring')}
+               👋 {" "}{" "}{landingPageData?.weAreHiring || getTranslation(landingPageData?.lang, 'weAreHiring')}
               </span>
 
               <h2
