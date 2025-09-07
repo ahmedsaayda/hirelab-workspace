@@ -275,11 +275,48 @@ export default function FormEdit({ paramsId }) {
                       },
                     }
                   : {}),
+                // 🔥 CRITICAL: Normalize options for multichoice/dropdown/multiselect fields
+                // Handle 3 different formats: string arrays, object arrays, and missing options
+                ...((field.type === "multichoice" || field.type === "dropdown" || field.type === "multiselect")
+                  ? {
+                      options: (() => {
+                        if (!field.options || field.options.length === 0) {
+                          // No options - create default
+                          return [{ text: "Option 1", isNegative: false }];
+                        }
+                        
+                        // Check if first option is a string (format 1 & 2) or object (format 3)
+                        if (typeof field.options[0] === 'string') {
+                          // Convert string array to object array
+                          return field.options.map(optionText => ({
+                            text: optionText,
+                            isNegative: false
+                          }));
+                        } else if (typeof field.options[0] === 'object') {
+                          // Already object array - ensure proper structure
+                          return field.options.map(opt => ({
+                            text: opt.text || opt.label || opt.value || "Option",
+                            isNegative: opt.isNegative || false
+                          }));
+                        }
+                        
+                        // Fallback
+                        return [{ text: "Option 1", isNegative: false }];
+                      })()
+                    }
+                  : {}),
               };
 
               console.log(
                 `   After: visible=${processedField.visible}, required=${processedField.required}`
               );
+              
+              // 🔍 DEBUG: Log normalized options for choice-based fields
+              if (processedField.type === "multichoice" || processedField.type === "dropdown" || processedField.type === "multiselect") {
+                console.log(`   📋 NORMALIZED Options for ${processedField.type}:`, processedField.options);
+                console.log(`   📋 ORIGINAL Options from DB:`, field.options);
+              }
+              
               return processedField;
             });
 
@@ -774,7 +811,7 @@ export default function FormEdit({ paramsId }) {
       required: leadCaptureTypes.includes(type) ? true : false,
       visible: true, // default visible
       isLeadCapture: leadCaptureTypes.includes(type), // Mark lead capture fields as non-removable
-      ...(type === "multichoice"
+      ...(type === "multichoice" || type === "dropdown" || type === "multiselect"
         ? { options: [{ text: "Option 1", isNegative: false }] }
         : {}),
       ...(type === "number" ? { min: 0, max: 100 } : {}),
@@ -1027,6 +1064,12 @@ export default function FormEdit({ paramsId }) {
     );
 
     if (!currentSection) return null;
+
+    // 🔍 DEBUG: Log current section options to verify they exist
+    if (currentSection.type === "multichoice" || currentSection.type === "dropdown" || currentSection.type === "multiselect") {
+      console.log("🔍 EDITOR DEBUG - Current section options:", currentSection.options);
+      console.log("🔍 EDITOR DEBUG - Current section full:", currentSection);
+    }
 
     // Handle contact fields with clean vertical layout
     if (currentSection.type === "contact") {
@@ -1388,9 +1431,10 @@ export default function FormEdit({ paramsId }) {
                   className="flex relative items-center mb-2 w-full"
                 >
                   <div className="overflow-hidden mt-2 w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                    <CustomInput
-                      value={option.text}
-                      onChange={(value) => {
+                    <Input
+                      value={option.text || ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
                         const newOptions = [...currentSection.options];
                         newOptions[index] = { ...option, text: value };
                         handleUpdateSection(currentSection.id, {
@@ -1399,7 +1443,7 @@ export default function FormEdit({ paramsId }) {
                       }}
                       className="text-sm border-none focus:ring-0"
                       placeholder="Enter Option"
-                      shape="round"
+                      style={{ border: 'none', boxShadow: 'none' }}
                     />
                   </div>
                   <Button
