@@ -22,6 +22,7 @@ export const IFrame = ({
   const iframeHead = contentRef?.contentWindow?.document?.head;
 
   const router = useRouter();;
+  
   useEffect(() => {
     if (iframeHead) {
       const styleElement =
@@ -91,7 +92,31 @@ export const IFrame = ({
         iframeDocument?.removeEventListener("click", handleLinkClick, true);
       };
     }
-  }, [contentRef,baseColors, variants, gradients,styles]);
+  }, [contentRef,baseColors, variants, gradients]);
+
+  // Simple one-time styled-jsx injection after iframe content loads
+  useEffect(() => {
+    if (mountNode && iframeHead) {
+      const timer = setTimeout(() => {
+        // Extract any styled-jsx styles from the main document
+        const styledJsxStyles = Array.from(document.querySelectorAll('style[data-styled-jsx]'))
+          .map(style => style.textContent)
+          .join('\n');
+        
+        if (styledJsxStyles) {
+          const existingStyled = iframeHead.querySelector('style[data-styled-jsx-injected]');
+          if (!existingStyled) {
+            const styledElement = document.createElement('style');
+            styledElement.setAttribute('data-styled-jsx-injected', 'true');
+            styledElement.textContent = styledJsxStyles;
+            iframeHead.appendChild(styledElement);
+          }
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [mountNode, iframeHead]);
 
   return (
     <iframe
@@ -219,7 +244,9 @@ export function PreviewContainer({
         return "";
       }
     });
+    
     return stylesArray.join("\n") + `
+      
       html {
         scroll-behavior: smooth;
         scroll-padding-top: var(--navbar-height, 128px);
@@ -234,7 +261,10 @@ export function PreviewContainer({
       
     
       
-  
+      /* JobDescription specific corner gradients - exact match from component */
+      .top-left::after {
+        background-image: radial-gradient(circle at 0 0, transparent 20px, white 20px);
+      }
       
       .top-right::after {
         background-image: radial-gradient(circle at 100% 0, transparent 30px, white 30px);
@@ -246,6 +276,19 @@ export function PreviewContainer({
       
       .bottom-right::after {
         background-image: radial-gradient(circle at 100% 100%, transparent 20px, white 20px);
+      }
+
+      /* JobDescription specific arc styles - exact match from styled-jsx */
+      .description-top-right::after {
+        background-image: radial-gradient(circle at 100% 0, transparent 30px, white 20px);
+      }
+
+      .description-bottom-left::after {
+        background-image: radial-gradient(circle at 0 100%, transparent 30px, white 20px);
+      }
+
+      .description-bottom-right::after {
+        background-image: radial-gradient(circle at 100% 100%, transparent 30px, white 20px);
       }
       
       /* TextBox, EVPMission, LeaderIntroduction arc effects */
@@ -284,6 +327,37 @@ export function PreviewContainer({
       
       .leader-bottom-right::after {
         background-image: radial-gradient(circle at 100% 100%, transparent 30px, white 20px);
+      }
+
+      /* LeaderIntroduction specific corner styles - exact match from styled-jsx */
+      .corner {
+        width: 30px;
+        height: 40px;
+        position: relative;
+        overflow: hidden;
+        border: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+
+      .corner::after {
+        content: "";
+        position: absolute;
+        border: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+
+      .rightBar {
+        background-color: white !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        z-index: 10 !important;
       }
       
       /* TextBox clip path effects */

@@ -451,20 +451,20 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
               
               <div className="absolute bottom-[-30px] right-[-10px] ">
-                <div className="arc leader-bottom-left"></div>
+                <div className="arc description-bottom-left"></div>
               </div>
               <div className="absolute left-[-30px] top-[-9px]">
-                <div className="arc leader-bottom-left"></div>
+                <div className="arc description-bottom-left"></div>
               </div>
             </div>
 
             {/* Bottom Bar Decoration */}
             <div className="absolute z-10 right-[110px] bottom-[-1px] left-[-1px] h-[85px] bg-white rounded-tr-2xl">
               <div className="absolute right-[-30px] bottom-[-10px] ">
-                <div className="arc leader-top-right"></div>
+                <div className="arc description-top-right"></div>
               </div>
               <div className="absolute top-[-30px] left-[-10px]">
-                <div className="arc leader-top-right"></div>
+                <div className="arc description-top-right"></div>
               </div>
             </div>
 
@@ -487,19 +487,19 @@ const Template1 = ({ landingPageData, fetchData }) => {
       bottom: 0;
     }
 
-    .leader-top-left::after {
+    /* .description-top-left::after {
       background-image: radial-gradient(circle at 0 0, transparent 30px, white 20px);
-    }
+    } */
 
-    .leader-top-right::after {
+    .description-top-right::after {
       background-image: radial-gradient(circle at 100% 0, transparent 30px, white 20px);
     }
 
-    .leader-bottom-left::after {
+    .description-bottom-left::after {
       background-image: radial-gradient(circle at 0 100%, transparent 30px, white 20px);
     }
 
-    .leader-bottom-right::after {
+    .description-bottom-right::after {
       background-image: radial-gradient(circle at 100% 100%, transparent 30px, white 20px);
     }
   `}</style>
