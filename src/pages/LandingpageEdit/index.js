@@ -1224,7 +1224,7 @@ export default function LandingpageEdit({paramsId}) {
   if (fullscreen) {
 
     return (
-      <div className="relative flex items-center justify-center min-h-[calc(100vh-50px)] pt-14">
+      <div className="relative flex items-center justify-center min-h-[calc(100vh-50px)] ">
         <PreviewContainer
           pageComponent={
             <>
