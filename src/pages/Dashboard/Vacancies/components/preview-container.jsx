@@ -234,10 +234,7 @@ export function PreviewContainer({
       
     
       
-      /* JobDescription specific corner gradients - exact match from component */
-      .top-left::after {
-        background-image: radial-gradient(circle at 0 0, transparent 20px, white 20px);
-      }
+  
       
       .top-right::after {
         background-image: radial-gradient(circle at 100% 0, transparent 30px, white 30px);
