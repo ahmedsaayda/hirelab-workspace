@@ -32,11 +32,6 @@ import RecruiterContact from "../Landingpage/RecruiterContact.js";
 import Video from "../Landingpage/Video.js";
 import FormEditor from "./FormEditor.js";
 import { defaultLandingPageData } from "../onboarding/components/brand-style-form.jsx";
-// import PreviewContainer from "../../../src/components/preview-container.jsx";
-// Placeholder for PreviewContainer
-// const PreviewContainer = ({ children, className }) => (
-//   <div className={className}>{children}</div>
-// );
 import CompanyFacts from "../Landingpage/CompanyFacts.js";
 import AboutCompany from "../Landingpage/AboutCompany.js";
 import TextBox from "../Landingpage/TextBox.js";
@@ -65,14 +60,13 @@ import LandingpagePage from "../Landingpage/index.js";
 import AIEditModal from "../Dashboard/Vacancies/AIEditModal.jsx";
 import { useHover } from "../../contexts/HoverContext.js";
 import NavBar from "../Landingpage/NavBar.jsx";
-// hirelab-frontend\src\pages\LandingpageEdit\index.js
-// hirelab-frontend\src\components\mediaLibrary\ImageModal\ImageSelectionModal.jsx
 import ImageSelectionModal from "../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
 import { useDispatch } from "react-redux";
 import { setActiveSection, setMediaLimits } from "../../redux/landingPage/mediaUploadReducer.js";
 import VacancyCreationDebugModal from "./VacancyCreationDebugModal.jsx";
 import eventEmitter from "../../utils/eventEmitter.js";
 import { PreviewContainer } from "../Dashboard/Vacancies/components/preview-container.jsx";
+import LandingPageService from "../../services/landingPageService.js";
 
 export const renderSection = ({
   section,
@@ -403,7 +397,7 @@ const Category = ({ title, items, onClick, existingItems }) => (
     </div>
   </div>
 );
-//
+
 export default function LandingpageEdit({paramsId}) {
   const dispatch = useDispatch();
   let lpId = paramsId;
@@ -436,7 +430,6 @@ export default function LandingpageEdit({paramsId}) {
   const [isAIModalVisible, setIsAIModalVisible] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  // const [imageReorderData, setImageReorderData] = useState(null)
 
   // image 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -444,14 +437,10 @@ export default function LandingpageEdit({paramsId}) {
   const openModal = () => setIsImageOpen(true);
   const closeModal = () => setIsImageOpen(false);
 
-  // Auto-save functionality
+  // 🔥 NEW: Auto-save and change detection system
   const autoSaveTimeoutRef = useRef(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
-  const savingSafetyTimeoutRef = useRef(null);
-  const hasInitiallyLoadedRef = useRef(false);
-  const previousDataRef = useRef(null); // Track previous data to detect meaningful changes
-  
-  const [isChanged, setIsChanged] = useState(false);
+  const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   
   const combinedSections = [
     { key: "flexaligntop" },
@@ -478,8 +467,9 @@ export default function LandingpageEdit({paramsId}) {
               showHirelabBranding
             };
             setLandingPageData(landingPageDataWithBranding);
-            // Store the initial data for comparison
-            previousDataRef.current = JSON.stringify(landingPageDataWithBranding);
+            
+            // 🔥 Check for unpublished changes after loading data
+            checkForUnpublishedChanges(landingPageDataWithBranding);
           }
         },"landing page id");
 
@@ -489,6 +479,116 @@ export default function LandingpageEdit({paramsId}) {
       console.log("error fetching data",err)
     }
   }, [lpId, user?.subscription?.paid]);
+
+  // 🔥 NEW: Function to check for unpublished changes (PAGE SCOPE ONLY)
+  const checkForUnpublishedChanges = useCallback((currentData = landingPageData) => {
+    if (!currentData?.published || !currentData?.publishedVersion) {
+      setHasUnpublishedChanges(false);
+      return false;
+    }
+
+    try {
+      // Compare current page data (excluding form) with published page data
+      const sanitize = (obj) => {
+        if (!obj || typeof obj !== 'object') return obj;
+        const { _id, __v, updatedAt, createdAt, publishedAt, unpublishedAt, publishedVersion, showHirelabBranding, debugData, ...rest } = obj;
+        return rest;
+      };
+
+      // PAGE SCOPE: Compare everything except form
+      const stripForm = (obj) => {
+        const { form, ...rest } = sanitize(obj || {});
+        return rest;
+      };
+
+      const currentPageData = stripForm(currentData);
+      const publishedPageData = stripForm(currentData.publishedVersion);
+
+      // Quick comparison using JSON.stringify
+      const hasChanges = JSON.stringify(currentPageData) !== JSON.stringify(publishedPageData);
+      
+      console.log("🔍 PAGE Change Detection:", {
+        hasChanges,
+        currentDataKeys: Object.keys(currentPageData).length,
+        publishedDataKeys: Object.keys(publishedPageData).length,
+        published: currentData.published
+      });
+
+      setHasUnpublishedChanges(hasChanges);
+      return hasChanges;
+    } catch (error) {
+      console.warn('Error in change detection:', error);
+      setHasUnpublishedChanges(false);
+      return false;
+    }
+  }, [landingPageData]);
+
+  // 🔥 NEW: Auto-save function that DOESN'T touch publishedVersion
+  const performAutoSave = useCallback(async (dataToSave) => {
+    if (!lpId || !dataToSave) return false;
+
+    setIsAutoSaving(true);
+    try {
+      // Clean data for saving (remove system fields)
+      const { _id, showHirelabBranding, debugData, ...cleanData } = dataToSave;
+      
+      console.log("💾 Auto-saving page changes (not touching publishedVersion)");
+      
+      const response = await CrudService.update("LandingPageData", lpId, cleanData, "landing page edit");
+      
+      if (response?.data) {
+        // Update local state with fresh data from server
+        setLandingPageData(response.data);
+        
+        // Re-check for unpublished changes
+        setTimeout(() => {
+          checkForUnpublishedChanges(response.data);
+        }, 100);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("❌ Auto-save failed:", error);
+      message.error("Failed to save changes");
+      return false;
+    } finally {
+      setIsAutoSaving(false);
+    }
+  }, [lpId, checkForUnpublishedChanges]);
+
+  // 🔥 NEW: Debounced auto-save
+  const debouncedAutoSave = useCallback((dataToSave) => {
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      performAutoSave(dataToSave);
+    }, 1500); // 1.5 second debounce
+  }, [performAutoSave]);
+
+  // 🔥 NEW: Enhanced setLandingPageData that triggers auto-save and change detection
+  const updateLandingPageData = useCallback((newData) => {
+    if (typeof newData === 'function') {
+      setLandingPageData(prevData => {
+        const updatedData = newData(prevData);
+        
+        // Trigger auto-save (change detection will happen AFTER save completes)
+        debouncedAutoSave(updatedData);
+        
+        return updatedData;
+      });
+    } else {
+      setLandingPageData(newData);
+      
+      // Trigger auto-save (change detection will happen AFTER save completes)
+      if (newData && lpId) {
+        debouncedAutoSave(newData);
+      }
+    }
+  }, [debouncedAutoSave, lpId]);
 
   // Centralized job fetching functions
   
@@ -593,91 +693,6 @@ export default function LandingpageEdit({paramsId}) {
     return () => clearTimeout(timeoutId);
   }, [fetchSimilarJobs]);
 
-  // Auto-save effect
-  useEffect(() => {
-    // Don't auto-save if landingPageData is null or if we're still loading initial data
-    if (!landingPageData || !lpId) return;
-    
-    // Skip auto-save on initial load
-    if (!hasInitiallyLoadedRef.current) {
-      hasInitiallyLoadedRef.current = true;
-      previousDataRef.current = JSON.stringify(landingPageData);
-      return;
-    }
-
-    // Check if data has actually changed (excluding timestamps)
-    const currentDataForComparison = { ...landingPageData };
-    delete currentDataForComparison.updatedAt;
-    delete currentDataForComparison.publishedAt;
-    delete currentDataForComparison.createdAt;
-    const currentDataString = JSON.stringify(currentDataForComparison);
-    
-    if (previousDataRef.current) {
-      const prevDataForComparison = JSON.parse(previousDataRef.current);
-      delete prevDataForComparison.updatedAt;
-      delete prevDataForComparison.publishedAt;
-      delete prevDataForComparison.createdAt;
-      const prevDataString = JSON.stringify(prevDataForComparison);
-      
-      if (currentDataString === prevDataString) {
-        return;
-      }
-    }
-
-    
-    // Clear any existing timeout
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-    
-    // Indicate saving immediately during debounce to show the UI indicator
-    setIsAutoSaving(true);
-    
-    // Set a new timeout for 2 seconds
-    autoSaveTimeoutRef.current = setTimeout(async () => {
-      try {
-        const res = await CrudService.update("LandingPageData", lpId, landingPageData,"landing page edit");
-        // Refresh local state from server to keep diffing accurate
-        if (res?.data) {
-          setLandingPageData(res.data);
-          previousDataRef.current = JSON.stringify(res.data);
-        } else {
-          previousDataRef.current = JSON.stringify(landingPageData);
-        }
-        
-      } catch (error) {
-        console.error("Auto-save failed:", error);
-      } finally {
-        setIsAutoSaving(false);
-        if (savingSafetyTimeoutRef.current) {
-          clearTimeout(savingSafetyTimeoutRef.current);
-          savingSafetyTimeoutRef.current = null;
-        }
-      }
-    }, 2000);
-    
-    // Safety: ensure the visual indicator doesn't get stuck
-    if (savingSafetyTimeoutRef.current) {
-      clearTimeout(savingSafetyTimeoutRef.current);
-    }
-    savingSafetyTimeoutRef.current = setTimeout(() => {
-      setIsAutoSaving(false);
-      savingSafetyTimeoutRef.current = null;
-    }, 6000);
-    
-    // Cleanup function to clear timeout
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-      if (savingSafetyTimeoutRef.current) {
-        clearTimeout(savingSafetyTimeoutRef.current);
-        savingSafetyTimeoutRef.current = null;
-      }
-      setIsAutoSaving(false);
-    };
-  }, [landingPageData, lpId]);
-
   // Cleanup timeout on component unmount
   useEffect(() => {
     return () => {
@@ -751,17 +766,12 @@ export default function LandingpageEdit({paramsId}) {
       });
 
       // Update the state
-      setLandingPageData((prevData) => ({
+      updateLandingPageData((prevData) => ({
         ...prevData,
         menuItems: updatedMenuItems,
       }));
-
-      // Update the backend
-      CrudService.update("LandingPageData", lpId, {
-        menuItems: updatedMenuItems,
-      },"landing page edit");
     },
-    [lpId, landingPageData?.menuItems]
+    [lpId, landingPageData?.menuItems, updateLandingPageData]
   );
 
 
@@ -801,10 +811,7 @@ export default function LandingpageEdit({paramsId}) {
       newMenuItems = [...existingMenuItems, newItem];
     }
 
-    CrudService.update("LandingPageData", lpId, {
-      menuItems: newMenuItems,
-    },"landing page edit");
-    setLandingPageData((d) => ({
+    updateLandingPageData((d) => ({
       ...d,
       menuItems: newMenuItems,
     }));
@@ -814,10 +821,6 @@ export default function LandingpageEdit({paramsId}) {
     const sectionToScroll = sectionMap[key];
     setScrollToSection(sectionToScroll);
   };
-
-
-
-
 
   const removeSection = (i) => {
     const currentActiveMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
@@ -834,10 +837,7 @@ export default function LandingpageEdit({paramsId}) {
         : item
     );
 
-    CrudService.update("LandingPageData", lpId, {
-      menuItems: newMenuItems,
-    },"landing page edit");
-    setLandingPageData((prevData) => ({
+    updateLandingPageData((prevData) => ({
       ...prevData,
       menuItems: newMenuItems,
     }));
@@ -899,8 +899,7 @@ export default function LandingpageEdit({paramsId}) {
   };
 
   const updateMenuItems = (newMenuItems) => {
-    CrudService.update("LandingPageData", lpId, { menuItems: newMenuItems },"landing page edit");
-    setLandingPageData((d) => ({ ...d, menuItems: newMenuItems }));
+    updateLandingPageData((d) => ({ ...d, menuItems: newMenuItems }));
   };
 
   const handleSectionVisibilityUpdate = (sectionKey, visible) => {
@@ -920,12 +919,12 @@ export default function LandingpageEdit({paramsId}) {
       if (data[0].type === "section-template") {
         const { type, ...templateDataWithoutType } = data[0].templateData;
 
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           ...templateDataWithoutType,
         }));
       } else {
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           heroImage: data[0]?.thumbnail,
         }));
@@ -934,12 +933,12 @@ export default function LandingpageEdit({paramsId}) {
       if (data[0].type === "section-template") {
         const { type, ...templateDataWithoutType } = data[0].templateData;
 
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           ...templateDataWithoutType,
         }));
       } else {
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           // ceoAvatar: data[0]?.thumbnail,
           leaderIntroductionAvatar: data[0]?.thumbnail,
@@ -947,7 +946,7 @@ export default function LandingpageEdit({paramsId}) {
       }
     } else if (activeSection.key === "Video") {
       const {sectionName,type,  ...VideoTemplateData} = data[0]?.templateData
-      setLandingPageData((prev) => ({
+      updateLandingPageData((prev) => ({
         ...prev,
         ...VideoTemplateData
       }));
@@ -955,12 +954,12 @@ export default function LandingpageEdit({paramsId}) {
       if(data[0].type === "section-template"){
         const { sectionName,type, ...templateDataWithoutType } = data[0].templateData;
 
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           ...templateDataWithoutType,
         }));
       }else{
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           evpMissionAvatar: data[0]?.thumbnail,
         }));        
@@ -968,7 +967,7 @@ export default function LandingpageEdit({paramsId}) {
 
     } else if (activeSection.key === "Image Carousel") {
       
-      setLandingPageData((prev) => ({
+      updateLandingPageData((prev) => ({
         ...prev,
         photoImages: [
           ...(prev.photoImages || []),
@@ -977,7 +976,7 @@ export default function LandingpageEdit({paramsId}) {
       }));
     } 
     else if (activeSection.key === "Employee Testimonials") {
-      setLandingPageData((prev) => ({
+      updateLandingPageData((prev) => ({
         ...prev,
         testimonials: data,
       }));
@@ -987,7 +986,7 @@ export default function LandingpageEdit({paramsId}) {
         const { type, sectionName, ...templateDataWithoutType } =
           data[0].templateData;
 
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           ...templateDataWithoutType,
         }));
@@ -998,7 +997,7 @@ export default function LandingpageEdit({paramsId}) {
         const { type, sectionName, ...templateDataWithoutType } =
           data[0].templateData;
 
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           ...templateDataWithoutType,
         }));
@@ -1009,32 +1008,32 @@ export default function LandingpageEdit({paramsId}) {
         const { type, sectionName, ...templateDataWithoutType } =
           data[0].templateData;
 
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           ...templateDataWithoutType,
         }));
       }
     } else if (activeSection.key === "Job Description"){
       const {sectionName,type,  ...templateData} = data[0]?.templateData
-      setLandingPageData((prev) => ({
+      updateLandingPageData((prev) => ({
         ...prev,
         ...templateData
       }));
     } else if (activeSection.key === "About The Company"){
       const {sectionName,type,  ...templateData} = data[0]?.templateData
-      setLandingPageData((prev) => ({
+      updateLandingPageData((prev) => ({
         ...prev,
         ...templateData
       }));
     }else if (activeSection.key === "Job Specifications"){
       const {sectionName,type,  ...templateData} = data[0]?.templateData
-      setLandingPageData((prev) => ({
+      updateLandingPageData((prev) => ({
         ...prev,
         ...templateData
       }));
     }else if (activeSection.key === "Agenda"){
       const {sectionName,type,  ...templateData} = data[0]?.templateData
-      setLandingPageData((prev) => ({
+      updateLandingPageData((prev) => ({
         ...prev,
         ...templateData
       }));
@@ -1042,12 +1041,12 @@ export default function LandingpageEdit({paramsId}) {
       if(data[0].type === "section-template"){
         const { sectionName,type, ...templateDataWithoutType } = data[0].templateData;
 
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           ...templateDataWithoutType,
         }));
       }else{
-        setLandingPageData((prev) => ({
+        updateLandingPageData((prev) => ({
           ...prev,
           textBoxImage: data[0]?.thumbnail,
         }));        
@@ -1059,14 +1058,11 @@ export default function LandingpageEdit({paramsId}) {
 
 
   const handleAIGenerate = (result) => {
-    setLandingPageData((prev) => ({
+    updateLandingPageData((prev) => ({
       ...prev,
       [selectedSection?.key]: result,
     }));
   };
-
-
-
 
   const mediaLimits = {
     // Existing sections
@@ -1195,75 +1191,34 @@ export default function LandingpageEdit({paramsId}) {
   }, [activeKey, activeSection])
   
 
-  // const mediaLimit = mediaLimits[sectionTitle] || { images: Infinity, videos: Infinity }
-
-  
-  useEffect(() => {
-    const listener = (changed) => {
-      setIsChanged(changed);
-    };
-    eventEmitter.on("changeState", listener);
-    return () => {
-      eventEmitter.off("changeState", listener);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!landingPageData || !isChanged) return;
-
-    if (isAutoSaving) {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-      autoSaveTimeoutRef.current = setTimeout(() => {
-        CrudService.update("LandingPageData", lpId, {
-          ...landingPageData,
-          _id: undefined,
-        },"landing page edit").then(() => {
-          message.success("Auto-saved");
-          setIsChanged(false);
-        });
-      }, 3000);
-    }
-
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, [landingPageData, isChanged, isAutoSaving, lpId]);
-
+  // 🔥 NEW: Proper publish handler for PAGE scope
   const handlePublish = async () => {
-    message.loading("Publishing...", 0);
-    setIsAutoSaving(false);
+    if (!landingPageData) return;
+
+    message.loading("Publishing page changes...", 0);
+    setIsAutoSaving(false); // Stop auto-saving during publish
+    
     try {
-      const res = await CrudService.update("LandingPageData", lpId, landingPageData,"landing page edit");
-      if (res.data) {
-        setLandingPageData(res.data);
-        // Broadcasting no-changes state so header pill can clear
-        eventEmitter.emit("changeState", false);
-        message.destroy();
-        message.success("Published successfully");
-      }
+      // Use the proper scope-based publish endpoint
+      const res = await LandingPageService.publishLandingPage(lpId, "page");
+      
+      console.log("✅ PAGE publish response:", res);
+      message.destroy();
+      message.success("Page published successfully!");
+      
+      // Refresh data to get latest publishedVersion
+      setTimeout(() => {
+        fetchData();
+      }, 500);
+      
     } catch (err) {
       message.destroy();
-      message.error("Publishing failed");
-    } finally {
-        setTimeout(() => {
-            setIsAutoSaving(true);
-        }, 5000);
+      message.error("Failed to publish: " + (err.message || "Unknown error"));
+      console.error("❌ Publish failed:", err);
     }
-  };
-
-  const handleUnpublish = async () => {
-    message.loading("Unpublishing...", 0);
-    // ... existing code ...
   };
 
   if (!landingPageData) return <Skeleton active />;
-
-
-
 
   //if full screen like the editor , render it in a full page
   if (fullscreen) {
@@ -1324,7 +1279,7 @@ export default function LandingpageEdit({paramsId}) {
                       section,
                       fetchData,
                       landingPageData,
-                      setLandingPageData,
+                      setLandingPageData: updateLandingPageData,
                       similarJobs,
                       similarJobsLoading,
                     })}
@@ -1352,9 +1307,10 @@ export default function LandingpageEdit({paramsId}) {
       <Header
         landingPageData={landingPageData}
         setPublished={handlePublish}
-        setLandingPageData={setLandingPageData}
+        setLandingPageData={updateLandingPageData}
         reload={fetchData}
         isAutoSaving={isAutoSaving}
+        hasUnpublishedChanges={hasUnpublishedChanges}
         lpId={lpId}
       />
       <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3">
@@ -1510,7 +1466,7 @@ export default function LandingpageEdit({paramsId}) {
                   section: activeSection,
                   fetchData,
                   landingPageData,
-                  setLandingPageData,
+                  setLandingPageData: updateLandingPageData,
                   availableJobs,
                   jobsLoading,
                 })}
@@ -1545,7 +1501,7 @@ export default function LandingpageEdit({paramsId}) {
                   showBackToEditButton={false}
                   lpId={lpId}
                   isEdit={true}
-                  setLandingPageData={setLandingPageData}
+                  setLandingPageData={updateLandingPageData}
                 />
                             <div
                   key="hero-section"
@@ -1593,7 +1549,7 @@ export default function LandingpageEdit({paramsId}) {
                         section,
                         fetchData,
                         landingPageData,
-                        setLandingPageData,
+                        setLandingPageData: updateLandingPageData,
                         similarJobs,
                         similarJobsLoading,
                       })}
@@ -1668,10 +1624,7 @@ export default function LandingpageEdit({paramsId}) {
                   : ""
               }`}
               onClick={() => {
-                setLandingPageData((d) => ({ ...d, templateId: `${i + 1}` }));
-                CrudService.update("LandingPageData", lpId, {
-                  templateId: `${i + 1}`,
-                },"landing page edit");
+                updateLandingPageData((d) => ({ ...d, templateId: `${i + 1}` }));
                 setTemplateMenu(false);
               }}
             >

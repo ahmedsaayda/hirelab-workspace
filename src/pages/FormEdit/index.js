@@ -105,6 +105,40 @@ export default function FormEdit({ paramsId }) {
   const [isEditingForm, setIsEditingForm] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [device, setDevice] = useState("desktop");
+  
+  // 🔥 NEW: Form-specific change detection state
+  const [hasUnpublishedFormChanges, setHasUnpublishedFormChanges] = useState(false);
+
+  // 🔥 NEW: Function to check for unpublished FORM changes only
+  const checkForUnpublishedFormChanges = useCallback((currentData = landingPageData) => {
+    if (!currentData?.published || !currentData?.publishedVersion) {
+      setHasUnpublishedFormChanges(false);
+      return false;
+    }
+
+    try {
+      // FORM SCOPE: Compare only form data
+      const currentFormData = currentData.form || {};
+      const publishedFormData = currentData.publishedVersion.form || {};
+
+      // Quick comparison using JSON.stringify
+      const hasChanges = JSON.stringify(currentFormData) !== JSON.stringify(publishedFormData);
+      
+      console.log("🔍 FORM Change Detection:", {
+        hasChanges,
+        currentFormFields: currentFormData.fields?.length || 0,
+        publishedFormFields: publishedFormData.fields?.length || 0,
+        published: currentData.published
+      });
+
+      setHasUnpublishedFormChanges(hasChanges);
+      return hasChanges;
+    } catch (error) {
+      console.warn('Error in form change detection:', error);
+      setHasUnpublishedFormChanges(false);
+      return false;
+    }
+  }, [landingPageData]);
 
   // 🎯 SINGLE SOURCE OF TRUTH: Current step state
   const [currentStep, setCurrentStep] = useState(0); // 0 = intro, 1+ = form fields
@@ -396,6 +430,11 @@ export default function FormEdit({ paramsId }) {
             setLandingPageData(res.data);
             setFormSections(fields);
 
+            // 🔥 Check for unpublished form changes after loading data
+            setTimeout(() => {
+              checkForUnpublishedFormChanges(res.data);
+            }, 100);
+
             // Force UI re-render to ensure switches reflect new state
             setForceUpdate((prev) => prev + 1);
 
@@ -550,6 +589,12 @@ export default function FormEdit({ paramsId }) {
         // 🔥 FIX: Update landingPageData with the response to get the latest updatedAt timestamp
         if (response?.data) {
           setLandingPageData(response.data);
+          
+          // 🔥 Check for unpublished form changes after saving
+          setTimeout(() => {
+            checkForUnpublishedFormChanges(response.data);
+          }, 100);
+          
           console.log(
             "📅 Updated landingPageData with latest timestamp:",
             response.data.updatedAt
@@ -570,7 +615,7 @@ export default function FormEdit({ paramsId }) {
     [lpId]
   );
 
-  // Debounced autosave function - reduced delay for better UX
+  // Debounced autosave function - 2 second delay for optimal UX
   const debouncedSave = useCallback(
     (dataToSave) => {
       console.log("🕒 Debounced save triggered");
@@ -580,10 +625,10 @@ export default function FormEdit({ paramsId }) {
         clearTimeout(saveTimeoutRef.current);
       }
 
-      // Set new timeout for save - reduced to 500ms for more responsive feel
+      // Set new timeout for save - increased for better UX
       saveTimeoutRef.current = setTimeout(() => {
         performDirectSave(dataToSave);
-      }, 500); // 500ms delay for snappier autosave
+      }, 2000); // 2 second delay for better user experience
     },
     [performDirectSave]
   );
@@ -1566,6 +1611,7 @@ export default function FormEdit({ paramsId }) {
               lastSaved={lastSaved}
               isFormEditor={true}
               lpId={lpId}
+              hasUnpublishedChanges={hasUnpublishedFormChanges}
               setPublished={async (e) => {
                 console.log("🚀 Toggle publish from Form Editor:", e);
                 try {
@@ -1580,8 +1626,12 @@ export default function FormEdit({ paramsId }) {
                     };
                     setLandingPageData(synced);
                     await LandingPageService.publishLandingPage(lpId, "form");
-                    setLandingPageData((d) => ({ ...d, published: true }));
                     message.success("✅ Form changes published");
+                    
+                    // Refresh data to get latest publishedVersion
+                    setTimeout(() => {
+                      fetchData();
+                    }, 500);
                   } else {
                     await CrudService.update("LandingPageData", lpId, {
                       published: false,
@@ -1669,7 +1719,7 @@ export default function FormEdit({ paramsId }) {
                               >
                                 {/* Header (not draggable) */}
                                 <div
-                                  className="flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group hover:bg-blue-50"
+                                  className="flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group hover:bg-[#eff8ff]"
                                   style={{
                                     minWidth: 0,
                                     flexShrink: 0,
@@ -1724,8 +1774,8 @@ export default function FormEdit({ paramsId }) {
                                       className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group ${
                                         currentStep === 1 &&
                                         formSections[0]?.isLeadCapture
-                                          ? "bg-blue-50"
-                                          : "hover:bg-blue-50"
+                                          ? "bg-[#eff8ff]"
+                                          : "hover:bg-[#eff8ff]"
                                       }`}
                                       style={{
                                         minWidth: 0,
@@ -1871,14 +1921,12 @@ export default function FormEdit({ paramsId }) {
                                               ref={provided.innerRef}
                                               {...provided.draggableProps}
                                               style={{
-                                                ...provided.draggableProps
-                                                  .style,
+                                                ...provided.draggableProps.style,
                                                 opacity: 1,
-                                                width: "100%",
-                                                minWidth: 0,
-                                                flexShrink: 0,
                                                 ...(isDragging
                                                   ? {
+                                                      width: "auto",
+                                                      maxWidth: "calc(100% - 16px)",
                                                       padding: "8px",
                                                       background: "#f5faff",
                                                       borderRadius: "8px",
@@ -1902,8 +1950,8 @@ export default function FormEdit({ paramsId }) {
                                                 isDragging ? "dragging" : ""
                                               } ${
                                                 isActive
-                                                  ? "bg-blue-50"
-                                                  : "hover:bg-blue-50"
+                                                  ? "bg-[#eff8ff]"
+                                                  : "hover:bg-[#eff8ff]"
                                               }`}
                                               onClick={() => {
                                                 console.log(
@@ -2157,7 +2205,7 @@ export default function FormEdit({ paramsId }) {
                                   mouseEnterDelay={0.3}
                                 >
                                   <div
-                                    className="flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group hover:bg-blue-50"
+                                    className="flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group hover:bg-[#eff8ff]"
                                     style={{
                                       minWidth: 0,
                                       flexShrink: 0,
@@ -2169,9 +2217,9 @@ export default function FormEdit({ paramsId }) {
                                       className="flex flex-1 justify-start items-center transition-all"
                                       style={{ minWidth: 0, flexShrink: 0 }}
                                     >
-                                      <div className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500 group-hover:bg-purple-100">
+                                      <div className="p-2 rounded-full border border-gray-300 bg-white">
                                         <svg
-                                          className="h-[16px] w-[16px] text-gray-600 group-hover:text-purple-600 transition-all"
+                                          className="h-[16px] w-[16px] text-gray-700"
                                           fill="none"
                                           stroke="currentColor"
                                           viewBox="0 0 24 24"
@@ -2180,7 +2228,7 @@ export default function FormEdit({ paramsId }) {
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                             strokeWidth={2}
-                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                            d="M12 6v12M6 12h12"
                                           />
                                         </svg>
                                       </div>
