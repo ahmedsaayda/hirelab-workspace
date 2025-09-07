@@ -14,6 +14,7 @@ import { MapPin, Clock, Coins, Component, Pencil, Eye, Copy } from "lucide-react
 import Template1Preview from "./TemplatePreviews/Template1Preview.jsx";
 import HeroThumbnail from "./HeroThumbnail.jsx";
 import { formatAvgTime } from "../../../../../../utils/timeFormat";
+import { LinkOutlined } from "@ant-design/icons";
 
 export const oauthUri = `https://www.facebook.com/v19.0/dialog/oauth?response_type=token&display=popup&client_id=${process.env.NEXT_PUBLIC_META_APP_KEY
   }&redirect_uri=${encodeURIComponent(
@@ -199,7 +200,7 @@ export default function VacanciesCard({
             className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 transition-colors border-l border-gray-200"
             title="Copy public link"
           >
-            <Copy className="h-4 w-4 text-gray-600" />
+            <LinkOutlined className="h-4 w-4 text-gray-600" />
           </button>
 
           <Link
