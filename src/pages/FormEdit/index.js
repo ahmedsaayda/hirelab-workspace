@@ -2367,7 +2367,7 @@ export default function FormEdit({ paramsId }) {
                                       debouncedSave(updatedData);
                                     }}
                                     placeholder="e.g., We'll ask you a few questions to learn more about you."
-                                    maxLength={150}
+                                    maxLength={500}
                                     textarea={true}
                                     className="text-sm border-none focus:ring-0"
                                     shape="round"
@@ -2378,7 +2378,7 @@ export default function FormEdit({ paramsId }) {
                                     (landingPageData?.form?.description || "")
                                       .length
                                   }
-                                  /150
+                                  /500
                                 </div>
                               </div>
                             </div>
