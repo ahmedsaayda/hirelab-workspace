@@ -227,6 +227,7 @@ const Overview = () => {
         availableVacancies 
       } = response.data;
 
+      setShowAllActive(false);
       // Set all the state with the data from backend
       setAnalyticsData(analyticsData);
       setAvailableVacancies(availableVacancies);
@@ -257,8 +258,6 @@ const Overview = () => {
       setLoadingVacancy(false);
     }
   
-
-
 
   }
 
