@@ -15,6 +15,7 @@ import Template1Preview from "./TemplatePreviews/Template1Preview.jsx";
 import HeroThumbnail from "./HeroThumbnail.jsx";
 import { formatAvgTime } from "../../../../../../utils/timeFormat";
 import { LinkOutlined } from "@ant-design/icons";
+import LandingPageService from "../../../../../../services/landingPageService.js";
 
 export const oauthUri = `https://www.facebook.com/v19.0/dialog/oauth?response_type=token&display=popup&client_id=${process.env.NEXT_PUBLIC_META_APP_KEY
   }&redirect_uri=${encodeURIComponent(
@@ -69,19 +70,16 @@ export default function VacanciesCard({
               onChange={async (e) => {
                 setIsSwitchLoading(true);
                 try {
-                  await CrudService.update(
-                    "LandingPageData",
-                    props._id,
-                    {
-                      published: e,
-                      publishedAt: e ? new Date() : null,
-                      uppublishedAt: e ? null : new Date(),
-                    }
-                  );
+                  if(e){
+                  await LandingPageService.publishLandingPage(props._id, "page");
+                  }else{
+                    await LandingPageService.unPublishLandingPage(props._id, "page");
+                  }
                   await fetchData();
                   if (e) message.success("Funnel is live!");
                 } catch (error) {
-                  message.error("Failed to update status");
+                  console.log(error);
+                  message.error("Failed to update status"+error);
                 } finally {
                   setIsSwitchLoading(false);
                 }

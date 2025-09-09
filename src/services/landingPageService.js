@@ -15,6 +15,9 @@ class LandingPageService {
     publishLandingPage(lpId, scope) {
         return this.api.post("/publish", {lpId, scope});
     }
+    unPublishLandingPage(lpId, scope) {
+        return this.api.post("/unPublish", {lpId, scope});
+    }
 }
 
 export default new LandingPageService(`${getBackendUrl()}/landingPage`);

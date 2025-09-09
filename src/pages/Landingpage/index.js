@@ -346,12 +346,10 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     if (lpId && !defaultLandingPageData) {
       PublicService.getLP(lpId).then((res) => {
         if (res.data?.lp) setLandingPageData(res.data.lp);
-      });
-      // PublicService.getLPBrand(lpId).then((res) => {
-      //   if (res.data?.color) {
-      //     // changeIndigoShades(generateTailwindPalette(res.data?.color));
-      //   }
-      // });
+      })
+      .catch((err) => {
+        console.log("error fetching data",err)
+      })
     }
   }, [lpId]);
 
