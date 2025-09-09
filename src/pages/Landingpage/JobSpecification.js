@@ -374,12 +374,12 @@ const Template1 = React.memo(({ landingPageData, fetchData }) => {
             onClick={() => handleItemClick("jobSpecificationTitle")}
             style={{fontFamily: subheaderFont?.family }}
           >
-            {landingPageData?.jobSpecificationTitle?.split(" ")[0] || "Job"}{" "}
+            {landingPageData?.jobSpecificationTitle?.split(" ")[0] || ""}{" "}
             <span style={{fontFamily: subheaderFont?.family }}>
               {landingPageData?.jobSpecificationTitle
                 ?.split(" ")
                 .slice(1)
-                .join(" ") || "Specifications"}
+                .join(" ") || ""}
             </span>
           </h2>
           <h3
@@ -389,7 +389,7 @@ const Template1 = React.memo(({ landingPageData, fetchData }) => {
             onClick={() => handleItemClick("jobSpecificationDescription")}
             dangerouslySetInnerHTML={{
               __html: landingPageData?.jobSpecificationDescription ||
-                "We are seeking a talented and creative professional to join our dynamic team."
+                ""
             }}
           />
         </div>
