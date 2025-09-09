@@ -15,6 +15,8 @@ export const IFrame = ({
   baseColors,
   variants,
   gradients,
+  fullscreen,
+  device,
   ...props
 }) => {
   const [contentRef, setContentRef] = useState(null);
@@ -125,7 +127,8 @@ export const IFrame = ({
       style={{
         margin: "auto",
         scrollbarWidth: "none",
-        paddingTop: "0px",
+        // paddingTop: "0px",
+        paddingTop: fullscreen ? (device === "mobile" ? 40 : 0) : 0,
         
       }}
     >
@@ -629,7 +632,7 @@ export function PreviewContainer({
       {/* Preview header with device switcher */}
      {fullscreen && <div
     
-     className="fixed top-0 left-0 right-0 flex gap-2 justify-center items-center pt-2 px-0 flex-shrink-0 bg-white border-b z-[9999]">
+     className="fixed top-0 left-0 right-0 flex gap-2 justify-center items-center pt-2 px-0 flex-shrink-0 bg-white border-b z-[9999] ">
         <Heading
           size="4xl"
           as="h3"
@@ -811,6 +814,8 @@ export function PreviewContainer({
               width={device === "desktop" ? 1440 : 475}
               height={device === "desktop" ? 900 : 800}
               className="border-0 scrollbar-hide containerrr"
+              fullscreen={fullscreen}
+              device={device}
             >
               {pageComponent}
             </IFrame>

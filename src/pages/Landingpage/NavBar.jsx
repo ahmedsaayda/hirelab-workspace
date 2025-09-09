@@ -917,7 +917,7 @@ const handlemediaLink = (platform) => {
         zIndex: 999,
         transition: "background-color 0.6s ease",
         position: "fixed",
-        top: fullscreen ? (device === "mobile" ? 44 : 40) : 0,
+        top: fullscreen ? (device === "mobile" ? 0 : 40) : 0,
         left: 0,
         right: 0,
         width: "100%",
