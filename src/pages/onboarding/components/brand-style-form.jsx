@@ -1941,11 +1941,11 @@ const handleLogoUpload = async (url) => {
   // Handle fullscreen mode
   if (fullscreen) {
     return (
-      <div className="relative h-screen w-screen bg-white">
+      <div className="relative h-screen  bg-white">
         {/* Floating Back Button */}
       
         
-        <div className="w-full h-full">
+        <div className="w-full h-full ">
           <Preview logo={companyLogo} landingPageData={landingPageData} fullscreen={fullscreen} setFullscreen={setFullscreen} />
         </div>
       </div>
@@ -2798,7 +2798,12 @@ const Preview = ({ logo, landingPageData, fullscreen, setFullscreen }) => {
         pageComponent={
           <div className=" w-full h-full">
             <NavBar landingPageData={landingPageData} showBackToEditButton={false} onClickApply={() => {}} fullscreen={fullscreen} setFullscreen={setFullscreen} isEdit={true} />
+              <div style={{
+                paddingTop:fullscreen ? 10 : 0,
+              }}>
+
                      <HeroSection landingPageData={landingPageData} />
+              </div>
             {(landingPageData?.menuItems ?? [])?.map((section, index) => {
               return (
                 <div key={index}>

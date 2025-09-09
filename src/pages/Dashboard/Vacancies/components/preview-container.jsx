@@ -627,7 +627,9 @@ export function PreviewContainer({
   return (
     <div className="flex relative flex-col w-full h-full">
       {/* Preview header with device switcher */}
-     {fullscreen && <div className="fixed top-0 left-0 right-0 flex gap-2 justify-center items-center pt-2 px-0 flex-shrink-0 bg-white border-b z-[9999]">
+     {fullscreen && <div
+    
+     className="fixed top-0 left-0 right-0 flex gap-2 justify-center items-center pt-2 px-0 flex-shrink-0 bg-white border-b z-[9999]">
         <Heading
           size="4xl"
           as="h3"
@@ -754,10 +756,7 @@ export function PreviewContainer({
           margin: 0,
         }}>
 
-        {fullscreen && device === "desktop" && <div style={{
-          height: 52,
-          width: "100%",
-        }}/>}
+  
         
         <div
           style={{

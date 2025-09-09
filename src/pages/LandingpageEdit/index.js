@@ -1245,6 +1245,9 @@ export default function LandingpageEdit({paramsId}) {
                     e.stopPropagation();
                     setActiveKey("flexaligntop");
                   }}
+                  style={{
+                    paddingTop:10
+                  }}
               >
                 <HeroSection
                   landingPageData={landingPageData}
