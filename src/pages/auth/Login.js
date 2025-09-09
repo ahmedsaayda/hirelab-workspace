@@ -89,9 +89,9 @@ const Login = () => {
   // router.push("/dashboard");
   window.location.href = "/dashboard";
  } catch (error) {
-  
- }finally{
   setIsLoading(false);
+ }finally{
+  
  }
   };
 
