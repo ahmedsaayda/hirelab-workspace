@@ -705,14 +705,38 @@ export default function ApplyPage() {
           }
         }
       } else if (currentField.type === 'address') {
-        // Validate at least one address field is filled
-        const line1 = formData[`${currentField.id}_line1`];
-        const city = formData[`${currentField.id}_city`];
-        const country = formData[`${currentField.id}_country`];
-        
-        if (!line1?.trim() && !city?.trim() && !country?.trim()) {
-          message.warning('Please fill in at least address line 1, city, or country');
-          return;
+        // Validate address subfields based on visibility/required settings
+        const parts = [
+          { key: 'line1', cfg: currentField.line1 },
+          { key: 'line2', cfg: currentField.line2 },
+          { key: 'city', cfg: currentField.city },
+          { key: 'state', cfg: currentField.state },
+          { key: 'zip', cfg: currentField.zip },
+          { key: 'country', cfg: currentField.country },
+        ];
+
+        // Check required visible parts
+        const requiredVisibleParts = parts.filter(p => p.cfg?.visible !== false && p.cfg?.required);
+        for (const p of requiredVisibleParts) {
+          const val = formData[`${currentField.id}_${p.key}`];
+          if (!val || (typeof val === 'string' && !val.trim())) {
+            const label = p.cfg?.label || p.key;
+            message.warning(`${label} is required`);
+            return;
+          }
+        }
+
+        // If no specific part is required but the whole field is required, ensure at least one visible part is filled
+        if (requiredVisibleParts.length === 0 && currentField.required) {
+          const visibleParts = parts.filter(p => p.cfg?.visible !== false);
+          const anyFilled = visibleParts.some(p => {
+            const val = formData[`${currentField.id}_${p.key}`];
+            return val && (typeof val !== 'string' || val.trim());
+          });
+          if (!anyFilled) {
+            message.warning('Please fill at least one address detail');
+            return;
+          }
         }
       } else if (currentField.type === 'date') {
         // Enhanced date field validation
@@ -1402,52 +1426,82 @@ export default function ApplyPage() {
 
       case 'address':
         return (
-          <div className="space-y-2">
-            <Input
-              value={formData[`${field.id}_line1`] || ''}
-              onChange={(e) => handleInputChange(`${field.id}_line1`, e.target.value)}
-              placeholder="Address Line 1"
-              className="rounded-lg"
-              size="large"
-            />
-            <Input
-              value={formData[`${field.id}_line2`] || ''}
-              onChange={(e) => handleInputChange(`${field.id}_line2`, e.target.value)}
-              placeholder="Address Line 2"
-              className="rounded-lg"
-              size="large"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                value={formData[`${field.id}_city`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_city`, e.target.value)}
-                placeholder="City"
-                className="rounded-lg"
-                size="large"
-              />
-              <Input
-                value={formData[`${field.id}_state`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_state`, e.target.value)}
-                placeholder="State/Province"
-                className="rounded-lg"
-                size="large"
-              />
+          <div className="space-y-4">
+            {field.line1?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-sm">{field.line1?.label || 'Address Line 1'}</label>
+                <Input
+                  value={formData[`${field.id}_line1`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_line1`, e.target.value)}
+                  placeholder={(typeof field.line1 === 'string' ? field.line1 : (field.line1?.placeholder || 'Address Line 1'))}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+            {field.line2?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-sm">{field.line2?.label || 'Address Line 2'}</label>
+                <Input
+                  value={formData[`${field.id}_line2`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_line2`, e.target.value)}
+                  placeholder={(typeof field.line2 === 'string' ? field.line2 : (field.line2?.placeholder || 'Address Line 2'))}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              {field.city?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.city?.label || 'City'}</label>
+                  <Input
+                    value={formData[`${field.id}_city`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_city`, e.target.value)}
+                    placeholder={(typeof field.city === 'string' ? field.city : (field.city?.placeholder || 'City'))}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+              {field.state?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.state?.label || 'State/Province'}</label>
+                  <Input
+                    value={formData[`${field.id}_state`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_state`, e.target.value)}
+                    placeholder={(typeof field.state === 'string' ? field.state : (field.state?.placeholder || 'State/Province'))}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                value={formData[`${field.id}_zip`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_zip`, e.target.value)}
-                placeholder="ZIP/Postal Code"
-                className="rounded-lg"
-                size="large"
-              />
-              <Input
-                value={formData[`${field.id}_country`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_country`, e.target.value)}
-                placeholder="Country"
-                className="rounded-lg"
-                size="large"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              {field.zip?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.zip?.label || 'ZIP/Postal Code'}</label>
+                  <Input
+                    value={formData[`${field.id}_zip`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_zip`, e.target.value)}
+                    placeholder={(typeof field.zip === 'string' ? field.zip : (field.zip?.placeholder || 'ZIP/Postal Code'))}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+              {field.country?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.country?.label || 'Country'}</label>
+                  <Input
+                    value={formData[`${field.id}_country`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_country`, e.target.value)}
+                    placeholder={(typeof field.country === 'string' ? field.country : (field.country?.placeholder || 'Country'))}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
             </div>
           </div>
         );

@@ -246,6 +246,173 @@ export default function FormEdit({ paramsId }) {
                 // Handle undefined values but preserve explicit false values
                 visible: field.visible !== undefined ? field.visible : true,
                 required: field.required !== undefined ? field.required : false,
+                // Normalize address subfields
+                ...(field.type === "address"
+                  ? {
+                      line1:
+                        typeof field.line1 === "object"
+                          ? {
+                              visible:
+                                field.line1.visible !== undefined
+                                  ? field.line1.visible
+                                  : true,
+                              required:
+                                field.line1.required !== undefined
+                                  ? field.line1.required
+                                  : false,
+                              label: field.line1.label || "Address Line 1",
+                              placeholder: field.line1.placeholder || "",
+                            }
+                          : typeof field.line1 === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "Address Line 1",
+                              placeholder: field.line1,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "Address Line 1",
+                              placeholder: "",
+                            },
+                      line2:
+                        typeof field.line2 === "object"
+                          ? {
+                              visible:
+                                field.line2.visible !== undefined
+                                  ? field.line2.visible
+                                  : true,
+                              required:
+                                field.line2.required !== undefined
+                                  ? field.line2.required
+                                  : false,
+                              label: field.line2.label || "Address Line 2",
+                              placeholder: field.line2.placeholder || "",
+                            }
+                          : typeof field.line2 === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "Address Line 2",
+                              placeholder: field.line2,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "Address Line 2",
+                              placeholder: "",
+                            },
+                      city:
+                        typeof field.city === "object"
+                          ? {
+                              visible:
+                                field.city.visible !== undefined
+                                  ? field.city.visible
+                                  : true,
+                              required:
+                                field.city.required !== undefined
+                                  ? field.city.required
+                                  : false,
+                              label: field.city.label || "City",
+                              placeholder: field.city.placeholder || "",
+                            }
+                          : typeof field.city === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "City",
+                              placeholder: field.city,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "City",
+                              placeholder: "",
+                            },
+                      state:
+                        typeof field.state === "object"
+                          ? {
+                              visible:
+                                field.state.visible !== undefined
+                                  ? field.state.visible
+                                  : true,
+                              required:
+                                field.state.required !== undefined
+                                  ? field.state.required
+                                  : false,
+                              label: field.state.label || "State/Province",
+                              placeholder: field.state.placeholder || "",
+                            }
+                          : typeof field.state === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "State/Province",
+                              placeholder: field.state,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "State/Province",
+                              placeholder: "",
+                            },
+                      zip:
+                        typeof field.zip === "object"
+                          ? {
+                              visible:
+                                field.zip.visible !== undefined
+                                  ? field.zip.visible
+                                  : true,
+                              required:
+                                field.zip.required !== undefined
+                                  ? field.zip.required
+                                  : false,
+                              label: field.zip.label || "ZIP/Postal Code",
+                              placeholder: field.zip.placeholder || "",
+                            }
+                          : typeof field.zip === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "ZIP/Postal Code",
+                              placeholder: field.zip,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "ZIP/Postal Code",
+                              placeholder: "",
+                            },
+                      country:
+                        typeof field.country === "object"
+                          ? {
+                              visible:
+                                field.country.visible !== undefined
+                                  ? field.country.visible
+                                  : true,
+                              required:
+                                field.country.required !== undefined
+                                  ? field.country.required
+                                  : false,
+                              label: field.country.label || "Country",
+                              placeholder: field.country.placeholder || "",
+                            }
+                          : typeof field.country === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "Country",
+                              placeholder: field.country,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "Country",
+                              placeholder: "",
+                            },
+                    }
+                  : {}),
                 // Special handling for contact fields
                 ...(field.type === "contact" &&
                 field.firstName &&
@@ -821,6 +988,46 @@ export default function FormEdit({ paramsId }) {
             lastName: { visible: true, required: true },
           }
         : {}),
+      ...(type === "address"
+        ? {
+            line1: {
+              visible: true,
+              required: false,
+              label: "Address Line 1",
+              placeholder: "",
+            },
+            line2: {
+              visible: true,
+              required: false,
+              label: "Address Line 2",
+              placeholder: "",
+            },
+            city: {
+              visible: true,
+              required: false,
+              label: "City",
+              placeholder: "",
+            },
+            state: {
+              visible: true,
+              required: false,
+              label: "State/Province",
+              placeholder: "",
+            },
+            zip: {
+              visible: true,
+              required: false,
+              label: "ZIP/Postal Code",
+              placeholder: "",
+            },
+            country: {
+              visible: true,
+              required: false,
+              label: "Country",
+              placeholder: "",
+            },
+          }
+        : {}),
     };
 
     // For lead capture fields, insert at the beginning (after other lead capture fields)
@@ -1095,26 +1302,7 @@ export default function FormEdit({ paramsId }) {
               </div>
             </Form.Item>
 
-            <Form.Item
-              label={
-                <span className="font-bold text-[14px] text-[#475647]">
-                  Placeholder
-                </span>
-              }
-            >
-              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                <CustomInput
-                  value={currentSection.placeholder}
-                  onChange={(value) =>
-                    handleUpdateSection(currentSection.id, {
-                      placeholder: value,
-                    })
-                  }
-                  className="text-sm border-none focus:ring-0"
-                  shape="round"
-                />
-              </div>
-            </Form.Item>
+          
 
             {/* Core contact fields with borders and separation */}
             {[
@@ -1315,6 +1503,136 @@ export default function FormEdit({ paramsId }) {
       );
     }
 
+    // Address field editor with per-subfield controls
+    if (currentSection.type === "address") {
+      const addressFields = [
+        { key: "line1", label: "Address Line 1" },
+        { key: "line2", label: "Address Line 2" },
+        { key: "city", label: "City" },
+        { key: "state", label: "State/Province" },
+        { key: "zip", label: "ZIP/Postal Code" },
+        { key: "country", label: "Country" },
+      ];
+
+      const getSub = (key) => currentSection[key] || {};
+
+      return (
+        <Form layout="vertical" className="space-y-4">
+          <Form.Item
+            label={
+              <span className="font-bold text-[14px] text-[#475647]">
+                {currentSection.label}
+              </span>
+            }
+          >
+            <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+              <CustomInput
+                value={currentSection.label}
+                onChange={(value) =>
+                  handleUpdateSection(currentSection.id, { label: value })
+                }
+                className="text-sm border-none focus:ring-0"
+                shape="round"
+              />
+            </div>
+          </Form.Item>
+
+          {addressFields.map(({ key, label }) => {
+            const sub = getSub(key);
+            const isVisible = sub?.visible !== false;
+            const isRequired = !!sub?.required;
+            return (
+              <div
+                key={key}
+                className="p-4 space-y-3 rounded-lg border border-gray-200 bg-gray-50/30"
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-2 items-center">
+                    <span className="font-bold text-[14px] text-[#475647]">
+                      {sub?.label || label}
+                    </span>
+                    {isRequired && (
+                      <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[10px]">
+                        Required
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-3 items-center">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500">Visible</span>
+                      <Switch
+                        size="small"
+                        checked={isVisible}
+                        onChange={(checked) => {
+                          const next = {
+                            ...sub,
+                            visible: checked,
+                            required: checked ? sub?.required || false : false,
+                          };
+                          handleUpdateSection(currentSection.id, {
+                            [key]: next,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500">Required</span>
+                      <Switch
+                        size="small"
+                        checked={isRequired}
+                        disabled={!isVisible}
+                        onChange={(checked) => {
+                          const next = {
+                            ...sub,
+                            required: checked,
+                            visible: isVisible,
+                          };
+                          handleUpdateSection(currentSection.id, {
+                            [key]: next,
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[12px] text-gray-600 mb-1">
+                      Label
+                    </label>
+                    <Input
+                      value={sub?.label || label}
+                      onChange={(e) => {
+                        const next = { ...sub, label: e.target.value };
+                        handleUpdateSection(currentSection.id, { [key]: next });
+                      }}
+                      className="rounded-lg"
+                      placeholder={label}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[12px] text-gray-600 mb-1">
+                      Placeholder
+                    </label>
+                    <Input
+                      value={sub?.placeholder || ""}
+                      onChange={(e) => {
+                        const next = { ...sub, placeholder: e.target.value };
+                        handleUpdateSection(currentSection.id, { [key]: next });
+                      }}
+                      className="rounded-lg"
+                      placeholder={`${label}`}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </Form>
+      );
+    }
+
     // Default field editor for all other field types
     return (
       <Form layout="vertical" className="space-y-4">
@@ -1352,7 +1670,6 @@ export default function FormEdit({ paramsId }) {
           "number",
           "email",
           "phone",
-          "address",
           "website",
         ].includes(currentSection.type) && (
           <Form.Item

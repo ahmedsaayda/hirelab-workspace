@@ -915,69 +915,81 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
       case 'address':
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block mb-1 font-semibold text-sm">Address Line 1</label>
-              <Input
-                value={formData[`${field.id}_line1`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_line1`, e.target.value)}
-                placeholder="Street address"
-                className="rounded-lg"
-                size="large"
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-semibold text-sm">Address Line 2 (Optional)</label>
-              <Input
-                value={formData[`${field.id}_line2`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_line2`, e.target.value)}
-                placeholder="Apartment, suite, etc."
-                className="rounded-lg"
-                size="large"
-              />
+            {field.line1?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-sm">{field.line1?.label || 'Address Line 1'}</label>
+                <Input
+                  value={formData[`${field.id}_line1`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_line1`, e.target.value)}
+                  placeholder={field.line1?.placeholder || 'Address Line 1'}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+            {field.line2?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-sm">{field.line2?.label || 'Address Line 2'}</label>
+                <Input
+                  value={formData[`${field.id}_line2`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_line2`, e.target.value)}
+                  placeholder={field.line2?.placeholder || 'Address Line 2'}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              {field.city?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.city?.label || 'City'}</label>
+                  <Input
+                    value={formData[`${field.id}_city`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_city`, e.target.value)}
+                    placeholder={field.city?.placeholder || 'City'}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+              {field.state?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.state?.label || 'State/Province'}</label>
+                  <Input
+                    value={formData[`${field.id}_state`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_state`, e.target.value)}
+                    placeholder={field.state?.placeholder || 'State/Province'}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-1 font-semibold text-sm">City</label>
-                <Input
-                  value={formData[`${field.id}_city`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_city`, e.target.value)}
-                  placeholder="City"
-                  className="rounded-lg"
-                  size="large"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 font-semibold text-sm">State/Province</label>
-                <Input
-                  value={formData[`${field.id}_state`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_state`, e.target.value)}
-                  placeholder="State"
-                  className="rounded-lg"
-                  size="large"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-1 font-semibold text-sm">ZIP/Postal Code</label>
-                <Input
-                  value={formData[`${field.id}_zip`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_zip`, e.target.value)}
-                  placeholder="ZIP code"
-                  className="rounded-lg"
-                  size="large"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 font-semibold text-sm">Country</label>
-                <Input
-                  value={formData[`${field.id}_country`] || ''}
-                  onChange={(e) => handleInputChange(`${field.id}_country`, e.target.value)}
-                  placeholder="Country"
-                  className="rounded-lg"
-                  size="large"
-                />
-              </div>
+              {field.zip?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.zip?.label || 'ZIP/Postal Code'}</label>
+                  <Input
+                    value={formData[`${field.id}_zip`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_zip`, e.target.value)}
+                    placeholder={field.zip?.placeholder || 'ZIP/Postal Code'}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+              {field.country?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.country?.label || 'Country'}</label>
+                  <Input
+                    value={formData[`${field.id}_country`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_country`, e.target.value)}
+                    placeholder={field.country?.placeholder || 'Country'}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
             </div>
           </div>
         );
