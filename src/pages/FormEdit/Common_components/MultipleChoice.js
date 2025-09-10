@@ -151,6 +151,8 @@ export const CustomDropdown = ({ field, value, onChange, placeholder = "Select a
 };
 
 export const YesNoQuestion = ({ field, value, onChange }) => {
+  const yesText = field?.yesLabel || 'Yes';
+  const noText = field?.noLabel || 'No';
   return (
     <div className="w-full">
       <p className="mb-3 text-base text-gray-800">{field.label}</p>
@@ -161,7 +163,7 @@ export const YesNoQuestion = ({ field, value, onChange }) => {
           }`}
           onClick={() => onChange(true)}
         >
-          <span className="bg-white text-black font-bold px-2 py-1 rounded">Y</span> Yes
+          <span className="bg-white text-black font-bold px-2 py-1 rounded">Y</span> {yesText}
         </button>
         <button
           className={`flex items-center gap-2 px-4 py-2 rounded-md border transition ${
@@ -169,7 +171,7 @@ export const YesNoQuestion = ({ field, value, onChange }) => {
           }`}
           onClick={() => onChange(false)}
         >
-          <span className="bg-white text-black font-bold px-2 py-1 rounded">N</span> No
+          <span className="bg-white text-black font-bold px-2 py-1 rounded">N</span> {noText}
         </button>
       </div>
     </div>

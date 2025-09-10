@@ -219,8 +219,9 @@ export default function Sidebar17({
           paddingBlock: "4px !important",
           paddingInline: "0px !important",
           background: "transparent !important",
+          paddingLeft:"4px !important",
         }}
-        className={`${props.className} flex-shrink-0 min-w-[90px] flex flex-col justify-center items-left gap-[30px] top-0 border-blue_gray-50 border-r border-solid bg-transparent !sticky overflow-auto hover:!w-[140px]`}
+        className={`${props.className}  flex-shrink-0 min-w-[90px] flex flex-col justify-center items-left gap-[30px] top-0 border-blue_gray-50 border-r border-solid bg-transparent !sticky overflow-auto hover:!w-[140px]`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{

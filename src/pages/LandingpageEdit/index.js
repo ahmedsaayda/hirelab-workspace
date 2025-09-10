@@ -1316,9 +1316,9 @@ export default function LandingpageEdit({paramsId}) {
         hasUnpublishedChanges={hasUnpublishedChanges}
         lpId={lpId}
       />
-      <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3">
+      <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3 pl-0">
         <div
-          className={` py-4 flex flex-shrink-0  lg:min-w-[550px] flex-grow ${
+          className={` py-4 flex flex-shrink-0  lg:min-w-[590px] flex-grow ${
             fullscreen ? "w-0 overflow-hidden" : "w-full lg:w-[35%]"
           } transition-all duration-300 justify-center  `}
           style={{ scrollbarWidth: "none" ,}}

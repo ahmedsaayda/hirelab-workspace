@@ -52,10 +52,14 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
 
   // Inactivity timer tracking (2 minutes = 120 seconds)
   const INACTIVITY_THRESHOLD = 120 * 1000; // 2 minutes in milliseconds
+  const ACTIVITY_BURST_WINDOW = 2000; // Only count time within 2s of last interaction
   const lastActivityRef = useRef(Date.now());
   const activeTimeRef = useRef(0); // Track only active time
   const sessionStartRef = useRef(Date.now());
   const isActiveRef = useRef(true);
+  const lastSentActiveSecondsRef = useRef(0); // Track how much we've sent already
+  const sessionEndedRef = useRef(false); // Session ends after 2 min of inactivity
+  const sessionEndedAtRef = useRef(null);
 
   // Debug tool state
   const [debugLogs, setDebugLogs] = useState([]);
@@ -112,13 +116,15 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     if (!isDebugEnabled) return; // Only log when debug is enabled
     
     const timestamp = new Date().toLocaleTimeString();
+    const now = Date.now();
+    const isInteracting = (now - lastActivityRef.current) <= ACTIVITY_BURST_WINDOW;
     const newLog = { 
       id: Date.now(), 
       timestamp, 
       message, 
       type,
       activeTime: Math.round(activeTimeRef.current / 1000),
-      isActive: isActiveRef.current
+      isActive: isInteracting && !sessionEndedRef.current
     };
     
     debugLogsRef.current = [newLog, ...debugLogsRef.current.slice(0, 49)]; // Keep last 50 logs
@@ -132,31 +138,27 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   // Activity detection function
   const recordActivity = useCallback(() => {
     const now = Date.now();
-    const timeSinceLastActivity = now - lastActivityRef.current;
-    
-    // If user was inactive for more than threshold, we had a gap
-    if (timeSinceLastActivity > INACTIVITY_THRESHOLD && isActiveRef.current) {
-      const inactiveSeconds = Math.round(timeSinceLastActivity / 1000);
-      addDebugLog(`User was inactive for ${inactiveSeconds}s - pausing timer`, 'warning');
-      isActiveRef.current = false;
-      
-      // Calculate active time before the inactivity
-      const sessionTime = lastActivityRef.current - sessionStartRef.current;
-      if (sessionTime > 0) {
-        activeTimeRef.current += sessionTime;
-        const sessionSeconds = Math.round(sessionTime / 1000);
-        const totalSeconds = Math.round(activeTimeRef.current / 1000);
-        addDebugLog(`Added ${sessionSeconds}s to active time (total: ${totalSeconds}s)`, 'timer');
-      }
+    const gapSinceLastEvent = now - lastActivityRef.current;
+
+    // If session ended, ignore further activity until reload
+    if (sessionEndedRef.current) {
+      return;
     }
-    
-    // If user was inactive and now becomes active, restart session
-    if (!isActiveRef.current) {
-      addDebugLog(`User is active again - restarting timer`, 'activity');
-      isActiveRef.current = true;
-      sessionStartRef.current = now;
+
+    // If gap exceeds inactivity threshold, end the session (do not count the gap)
+    if (gapSinceLastEvent > INACTIVITY_THRESHOLD && !sessionEndedRef.current) {
+      sessionEndedRef.current = true;
+      sessionEndedAtRef.current = now;
+      addDebugLog(`⏹️ Session ended after ${Math.round(gapSinceLastEvent / 1000)}s inactivity`, 'warning');
     }
-    
+
+    // Count only tight bursts of interaction (exclude idle gaps)
+    if (gapSinceLastEvent > 0 && gapSinceLastEvent <= ACTIVITY_BURST_WINDOW) {
+      activeTimeRef.current += gapSinceLastEvent;
+    }
+
+    // Mark interaction and update last activity time
+    isActiveRef.current = true;
     lastActivityRef.current = now;
   }, [addDebugLog]);
 
@@ -188,52 +190,46 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     }
   }, [lpId, addDebugLog]);
 
-  // Calculate and send active time updates every 5 seconds
+  // Check for session end and flush accumulated active time every 5 seconds
   useEffect(() => {
     if (!lpId) return;
 
     const interval = setInterval(() => {
       const now = Date.now();
-      
-      // Check for inactivity first
       const timeSinceLastActivity = now - lastActivityRef.current;
-      if (timeSinceLastActivity > INACTIVITY_THRESHOLD && isActiveRef.current) {
-        // User became inactive - calculate final session time
-        const sessionTime = lastActivityRef.current - sessionStartRef.current;
-        if (sessionTime > 0) {
-          activeTimeRef.current += sessionTime;
-          const sessionSeconds = Math.round(sessionTime / 1000);
-          const totalSeconds = Math.round(activeTimeRef.current / 1000);
-          addDebugLog(`⏸️ Timer paused: adding final ${sessionSeconds}s (total: ${totalSeconds}s)`, 'warning');
+
+      // End session after 2+ minutes of inactivity (regardless of visibility)
+      if (!sessionEndedRef.current && timeSinceLastActivity > INACTIVITY_THRESHOLD) {
+        sessionEndedRef.current = true;
+        sessionEndedAtRef.current = lastActivityRef.current + INACTIVITY_THRESHOLD;
+        addDebugLog(`⏹️ Session ended after ${Math.round(timeSinceLastActivity / 1000)}s inactivity`, 'warning');
+
+        // Final flush of accumulated active time
+        const accumulatedSeconds = Math.floor(activeTimeRef.current / 1000);
+        const alreadySent = lastSentActiveSecondsRef.current || 0;
+        const toSendSeconds = accumulatedSeconds - alreadySent;
+        if (toSendSeconds > 0) {
+          addDebugLog(`📤 Final flush: ${toSendSeconds}s`, 'timer');
+          sendTimeUpdate(toSendSeconds);
+          lastSentActiveSecondsRef.current = accumulatedSeconds;
+          lastTimeUpdateRef.current = now;
         }
-        isActiveRef.current = false;
+        return; // Stop further processing after session ends
       }
-      
-      // Calculate active time to send
-      let activeTimeToSend = 0;
-      
-      if (isActiveRef.current) {
-        // User is active - add current session time
-        const currentSessionTime = now - sessionStartRef.current;
-        const totalActiveTime = activeTimeRef.current + currentSessionTime;
-        const timeSinceLastUpdate = Math.floor((now - lastTimeUpdateRef.current) / 1000);
-        
-        // Only send if we have at least 5 seconds of active time
-        if (timeSinceLastUpdate >= 5) {
-          activeTimeToSend = Math.floor(totalActiveTime / 1000) - Math.floor(activeTimeRef.current / 1000);
-          
-          if (activeTimeToSend > 0) {
-            // Update our tracked active time
-            activeTimeRef.current = totalActiveTime;
-            sessionStartRef.current = now; // Reset session start
-          }
-        }
+
+      // If session already ended, don't send anything more
+      if (sessionEndedRef.current) return;
+
+      // Send newly accumulated active seconds while session is live
+      const accumulatedSeconds = Math.floor(activeTimeRef.current / 1000);
+      const alreadySent = lastSentActiveSecondsRef.current || 0;
+      const toSendSeconds = accumulatedSeconds - alreadySent;
+      if (toSendSeconds > 0) {
+        sendTimeUpdate(toSendSeconds);
+        lastSentActiveSecondsRef.current = accumulatedSeconds;
+        lastTimeUpdateRef.current = now;
       }
-      
-      if (activeTimeToSend > 0) {
-        sendTimeUpdate(activeTimeToSend);
-      }
-    }, 5000); // Check every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [lpId, sendTimeUpdate, addDebugLog]);
@@ -246,39 +242,57 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
       const now = Date.now();
       lastTimeUpdateRef.current = now;
       lastActivityRef.current = now;
-      sessionStartRef.current = now;
       activeTimeRef.current = 0;
-      isActiveRef.current = true;
+      lastSentActiveSecondsRef.current = 0;
+      isActiveRef.current = false;
+      sessionEndedRef.current = false;
+      sessionEndedAtRef.current = null;
       
-      addDebugLog('🚀 Analytics tracking initialized (2min inactivity threshold)', 'activity');
+      addDebugLog('🚀 Analytics tracking initialized (no idle time counted; 2min ends session)', 'activity');
     }
   }, [landingPageData, trackVisit, addDebugLog]);
 
-  // Send final active time update when page becomes hidden (tab switch, etc)
+  // Handle visibility changes and window focus/blur for cross-platform activity tracking
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && isActiveRef.current) {
-        const now = Date.now();
-        
-        // Calculate final session time and send only active time
-        const currentSessionTime = now - sessionStartRef.current;
-        const totalActiveTime = activeTimeRef.current + currentSessionTime;
-        const activeTimeToSend = Math.floor(totalActiveTime / 1000) - Math.floor(activeTimeRef.current / 1000);
-        
-        if (activeTimeToSend >= 1) {
-          console.log(`👋 VISIBILITY: Sending final active time: ${activeTimeToSend}s`);
-          sendTimeUpdate(activeTimeToSend);
-          activeTimeRef.current = totalActiveTime;
+      const now = Date.now();
+      if (document.visibilityState === 'hidden') {
+        // Just flush current accumulated time, don't end session yet
+        const accumulatedSeconds = Math.floor(activeTimeRef.current / 1000);
+        const alreadySent = lastSentActiveSecondsRef.current || 0;
+        const toSendSeconds = accumulatedSeconds - alreadySent;
+        if (toSendSeconds >= 1) {
+          console.log(`👋 VISIBILITY: Flushing ${toSendSeconds}s before hiding`);
+          sendTimeUpdate(toSendSeconds);
+          lastSentActiveSecondsRef.current = accumulatedSeconds;
         }
       }
     };
 
+    const handleWindowFocus = () => {
+      if (!sessionEndedRef.current) {
+        const now = Date.now();
+        recordActivity(); // This will handle session ending logic if needed
+        addDebugLog('🔄 Window focused - checking session status', 'activity');
+      }
+    };
+
+    const handleWindowBlur = () => {
+      if (!sessionEndedRef.current) {
+        addDebugLog('⏸️ Window blurred - activity paused', 'activity');
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+    window.addEventListener('blur', handleWindowBlur);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('blur', handleWindowBlur);
     };
-  }, [sendTimeUpdate]);
+  }, [sendTimeUpdate, addDebugLog, recordActivity]);
 
   // Activity listeners - detect user interaction to track activity
   useEffect(() => {
@@ -286,8 +300,8 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
 
     // List of events that indicate user activity
     const activityEvents = [
-      'mousedown', 'mousemove', 'keypress', 'scroll', 
-      'touchstart', 'touchmove', 'click', 'focus'
+      'mousedown', 'mousemove', 'keypress',
+      'touchstart', 'touchmove', 'click'
     ];
 
     // Throttle activity recording to avoid excessive calls
@@ -471,14 +485,14 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
           <div className="p-3 text-xs space-y-1">
             <div className="flex justify-between">
               <span>Status:</span>
-              <span className={`font-bold ${isActiveRef.current ? 'text-green-400' : 'text-red-400'}`}>
-                {isActiveRef.current ? '🟢 Active' : '🔴 Inactive'}
+              <span className={`font-bold ${(Date.now() - lastActivityRef.current) <= ACTIVITY_BURST_WINDOW && !sessionEndedRef.current ? 'text-green-400' : 'text-red-400'}`}>
+                {(Date.now() - lastActivityRef.current) <= ACTIVITY_BURST_WINDOW && !sessionEndedRef.current ? '🟢 Active' : '🔴 Inactive'}
               </span>
             </div>
             <div className="flex justify-between">
               <span>Active Time:</span>
               <span className="font-mono text-yellow-300">
-                {Math.floor((activeTimeRef.current + (isActiveRef.current ? Date.now() - sessionStartRef.current : 0)) / 1000)}s
+                {Math.floor(activeTimeRef.current / 1000)}s
               </span>
             </div>
             <div className="flex justify-between">
@@ -488,7 +502,9 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
             <div className="flex justify-between">
               <span>Last Activity:</span>
               <span className="font-mono text-blue-300">
-                {Math.floor((Date.now() - lastActivityRef.current) / 1000)}s ago
+                {sessionEndedRef.current
+                  ? `${Math.floor((Date.now() - (sessionEndedAtRef.current || lastActivityRef.current)) / 1000)}s since end`
+                  : `${Math.floor((Date.now() - lastActivityRef.current) / 1000)}s ago`}
               </span>
             </div>
           </div>

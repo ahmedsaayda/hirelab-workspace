@@ -1730,6 +1730,40 @@ export default function FormEdit({ paramsId }) {
           </div>
         )}
 
+        {/* Boolean/Yes-No Label Editors */}
+        {(currentSection.type === "boolean" || currentSection.type === "yesno") && (
+          <>
+            <Form.Item
+              label={<span className="font-bold text-[14px] text-[#475647]">Yes Label</span>}
+            >
+              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                <CustomInput
+                  value={currentSection.yesLabel || "Yes"}
+                  onChange={(value) =>
+                    handleUpdateSection(currentSection.id, { yesLabel: value })
+                  }
+                  className="text-sm border-none focus:ring-0"
+                  shape="round"
+                />
+              </div>
+            </Form.Item>
+            <Form.Item
+              label={<span className="font-bold text-[14px] text-[#475647]">No Label</span>}
+            >
+              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                <CustomInput
+                  value={currentSection.noLabel || "No"}
+                  onChange={(value) =>
+                    handleUpdateSection(currentSection.id, { noLabel: value })
+                  }
+                  className="text-sm border-none focus:ring-0"
+                  shape="round"
+                />
+              </div>
+            </Form.Item>
+          </>
+        )}
+
         {/* Multichoice, Dropdown, Multiselect Option Editors */}
         {(currentSection.type === "multichoice" ||
           currentSection.type === "dropdown" ||
@@ -2696,6 +2730,101 @@ export default function FormEdit({ paramsId }) {
                                       .length
                                   }
                                   /500
+                                </div>
+                              </div>
+                              {/* Form Buttons Texts */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Start Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.startApplicationText || "Start Application"}
+                                      onChange={(value) => {
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            startApplicationText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Submit Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.submitText || "Submit"}
+                                      onChange={(value) => {
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            submitText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Previous Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.previousText || "Previous"}
+                                      onChange={(value) => {
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            previousText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Next Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.nextText || "Next"}
+                                      onChange={(value) => {
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            nextText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             </div>

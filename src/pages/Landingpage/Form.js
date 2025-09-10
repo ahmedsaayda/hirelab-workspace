@@ -394,12 +394,31 @@ const Content = ({ landingPageData, onSubmit, setShowFormEditor }) => {
         );
       case "boolean":
         return (
-          <YesNoQuestion
-            field={field}
-            value={form.getFieldValue(field.id)}
-            onChange={e => form.setFieldsValue({ [field.id]: e })}
-          />
-  );
+          <div className="w-full">
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => form.setFieldsValue({ [field.id]: 'yes' })}
+                className={`
+                  relative flex items-center justify-center px-6 py-3 rounded-lg border transition-all duration-200 text-sm
+                  ${form.getFieldValue(field.id) === 'yes' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-25 hover:text-green-600'}
+                `}
+              >
+                <span>{field.yesLabel || 'Yes'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => form.setFieldsValue({ [field.id]: 'no' })}
+                className={`
+                  relative flex items-center justify-center px-6 py-3 rounded-lg border transition-all duration-200 text-sm
+                  ${form.getFieldValue(field.id) === 'no' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 bg-white text-gray-600 hover:border-red-300 hover:bg-red-25 hover:text-red-600'}
+                `}
+              >
+                <span>{field.noLabel || 'No'}</span>
+              </button>
+            </div>
+          </div>
+        );
       case "date":
         // Use format and separator from field config
         const dateFormat = field.dateFormat || "MMDDYYYY";
