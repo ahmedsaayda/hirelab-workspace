@@ -42,8 +42,16 @@ const CustomDomains = () => {
     if (!newDomain?.trim()) return;
     setLoading(true);
     try {
-      const res = await DomainsService.add(newDomain.trim());
+      const domain = newDomain.trim();
+      const res = await DomainsService.add(domain);
       if (res?.data?.dns_instructions) setDnsInstr(res.data.dns_instructions);
+      // Immediately fetch full DNS set so user sees all records without extra click
+      try {
+        const cfg = await DomainsService.dnsConfig(domain);
+        const list = cfg?.data?.records || [];
+        setDnsList(list);
+        if (list?.length) setDnsInstr({ type: list[0].recordType, name: list[0].name, value: list[0].value });
+      } catch (_) {}
       setNewDomain('');
       await load();
     } catch (_) {}
