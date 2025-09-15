@@ -1,5 +1,5 @@
 import { Modal, Switch, Input, Spin } from "antd";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import MegaMenu1 from "../MegaMenu1";
@@ -11,6 +11,7 @@ import CrudService from "../../../../../../services/CrudService";
 import { message } from "antd";
 import LandingPageService from "../../../../../../services/landingPageService";
 import { Button } from "../../../../../Landing/Button";
+
 export default function Header({
   landingPageData,
   setPublished,
@@ -20,11 +21,11 @@ export default function Header({
   lastSaved,
   lpId,
   isFormEditor = false,
+  hasUnpublishedChanges = false, // 🔥 NEW: Passed from parent
   ...props
 }) {
   const router = useRouter();
   const [templateMenu, setTemplateMenu] = useState(false);
-  const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
   const [previewMode, setPreviewMode] = useState("desktop");
@@ -36,136 +37,23 @@ export default function Header({
   const [applyLinkModalVisible, setApplyLinkModalVisible] = useState(false);
   const [formBuilderPopupVisible, setFormBuilderPopupVisible] = useState(false);
 
-  // Check if there are unpublished changes when component mounts or data changes
+  // Initialize CTA link from landingPageData
   useEffect(() => {
     if (landingPageData) {
-      let hasChanges = false;
-      
-      // If the page is published, check for changes using scope-aware comparison
-      if (landingPageData.published && landingPageData.publishedVersion) {
-        hasChanges = checkForUnpublishedChanges(landingPageData, isFormEditor ? 'form' : 'page');
-      } else if (landingPageData.published && landingPageData.publishedAt && landingPageData.updatedAt) {
-        // Fallback to time-based comparison with a margin
-        const marginMs = 5000; // 5 seconds margin for auto-save delays
-        hasChanges = new Date(landingPageData.publishedAt).getTime() + marginMs < new Date(landingPageData.updatedAt).getTime();
-      }
-      
-      console.log("Checking unpublished changes:", {
-        published: landingPageData.published,
-        publishedAt: landingPageData.publishedAt,
-        updatedAt: landingPageData.updatedAt,
-        hasPublishedVersion: !!landingPageData.publishedVersion,
-        hasChanges
-      });
-      
-      setHasUnpublishedChanges(hasChanges);
-      
-      // Initialize CTA link from landingPageData
       setCtaLink(landingPageData.cta2Link || '#apply');
       setInitialCtaLink(landingPageData.cta2Link || '#apply');
     }
   }, [landingPageData]);
 
-  // Function to check for differences between current state and published version
-  const checkForUnpublishedChanges = (data, scope = 'page') => {
-    if (!data.publishedVersion) {
-      console.log("No published version found for comparison");
-      return false;
-    }
-    const sanitize = (obj) => {
-      if (!obj || typeof obj !== 'object') return obj;
-      // Strip server-managed and UI-only fields that shouldn't affect publish diffing
-      const { _id, __v, updatedAt, createdAt, publishedAt, unpublishedAt, publishedVersion, showHirelabBranding, debugData, ...rest } = obj;
-      return rest;
-    };
-    const safeStringify = (val) => JSON.stringify(val ?? null);
-
-    if (scope === 'form') {
-      const current = sanitize({ form: data.form });
-      const published = sanitize({ form: data.publishedVersion?.form });
-      // Align current to only the keys that exist in the published snapshot to avoid false positives
-      const alignedCurrent = { form: {} };
-      if (published.form && typeof published.form === 'object') {
-        Object.keys(published.form).forEach((key) => {
-          alignedCurrent.form[key] = current.form ? current.form[key] : undefined;
-        });
-      }
-      const diff = safeStringify(alignedCurrent) !== safeStringify(published);
-      if (diff) console.log('Change detected in form scope');
-      return diff;
-    }
-
-    // page scope: compare everything except form
-    const stripForm = (obj) => {
-      const { form, ...rest } = sanitize(obj || {});
-      return rest;
-    };
-    const currentPage = stripForm(data);
-    const publishedPage = stripForm(data.publishedVersion);
-    // Align currentPage to only published keys to ignore UI-only additions
-    const alignedCurrentPage = {};
-    Object.keys(publishedPage || {}).forEach((key) => {
-      alignedCurrentPage[key] = currentPage ? currentPage[key] : undefined;
-    });
-    const diff = safeStringify(alignedCurrentPage) !== safeStringify(publishedPage);
-    if (diff) console.log('Change detected in page scope');
-    return diff;
-  };
-
-  // Function to manually trigger a change check (can be called from parent components)
-  const recheckUnpublishedChanges = () => {
-    if (landingPageData) {
-      let hasChanges = false;
-      
-      if (landingPageData.published && landingPageData.publishedVersion) {
-        hasChanges = checkForUnpublishedChanges(landingPageData, isFormEditor ? 'form' : 'page');
-      } else if (landingPageData.published && landingPageData.publishedAt && landingPageData.updatedAt) {
-        const marginMs = 5000;
-        hasChanges = new Date(landingPageData.publishedAt).getTime() + marginMs < new Date(landingPageData.updatedAt).getTime();
-      }
-      
-      console.log("Manual recheck - hasChanges:", hasChanges);
-      setHasUnpublishedChanges(hasChanges);
-      return hasChanges;
-    }
-    return false;
-  };
-
-  // Expose the recheck function to parent components
-  React.useImperativeHandle(props.ref, () => ({
-    recheckUnpublishedChanges
-  }), [landingPageData]);
-
   const handleSave = async () => {
-    // setIsSaving(true);
-    // eventEmitter.emit("triggerSave"); // Trigger save from EditorRender
-    // message.success("Saving changes...");
-    // // The actual save operation happens in the editor components
-    // // This will automatically trigger the changeState event with false
-
-    // // After saving, the updatedAt timestamp will be newer than publishedAt
-    // // Wait for save to complete, then check if there are unpublished changes
-    // setTimeout(() => {
-    //   if (landingPageData.published && landingPageData.publishedAt) {
-    //     // If published, and save occurred, there will be unpublished changes
-    //     setHasUnpublishedChanges(true);
-    //     setIsChanged(false);
-    //     reload();
-    //   }
-    // }, 2000);
-
     console.log("landingPageData", landingPageData?.companyLogo);
     console.log("landingPageData", landingPageData?.vacancyTitle);
 
     try {
       await CrudService.update("LandingPageData", lpId, {
-        // published: true,
-        // // publishedAt: new Date(),
-        // // updatedAt: new Date(),
         ...landingPageData,
       });
       message.success("Landing page saved successfully!");
-      // reload();
     } catch (error) {
       console.log("error", error);
       message.error("Failed to save: " + (error.message || "Unknown error"));
@@ -191,10 +79,7 @@ export default function Header({
     try {
       const res = await LandingPageService.publishLandingPage(lpId, isFormEditor ? 'form' : 'page');
       console.log("Publish response:", res);
-      message.success("Landing page published successfully!");
-      
-      // Reset the unpublished changes state immediately
-      setHasUnpublishedChanges(false);
+      message.success(`${isFormEditor ? 'Form' : 'Page'} published successfully!`);
       
       // Wait a moment then reload to ensure we get the latest data
       setTimeout(() => {
@@ -214,10 +99,7 @@ export default function Header({
     try {
       const res = await LandingPageService.publishLandingPage(lpId, isFormEditor ? 'form' : 'page');
       console.log("Publish response:", res);
-      message.success("Landing page published successfully!");
-      
-      // Reset the unpublished changes state immediately
-      setHasUnpublishedChanges(false);
+      message.success(`${isFormEditor ? 'Form' : 'Page'} published successfully!`);
       
       // Wait a moment then reload to ensure we get the latest data
       setTimeout(() => {
@@ -290,10 +172,7 @@ export default function Header({
       
       const res = await LandingPageService.publishLandingPage(lpId, isFormEditor ? 'form' : 'page');
       console.log("Publish response:", res);
-      message.success("Landing page published successfully!");
-      
-      // Reset the unpublished changes state immediately
-      setHasUnpublishedChanges(false);
+      message.success(`${isFormEditor ? 'Form' : 'Page'} published successfully!`);
       
       // Wait a moment then reload to ensure we get the latest data
       setTimeout(() => {
@@ -325,6 +204,8 @@ export default function Header({
         return currentPath.includes('/edit-page/');
       case 'formBuilder':
         return currentPath.includes('/form-editor/');
+      case 'launch':
+        return currentPath.includes('/launch/');
       case 'ats':
         return currentPath.includes('/dashboard/ats');
       default:
@@ -359,6 +240,16 @@ export default function Header({
             >
               {landingPageData?.vacancyTitle}
             </Heading>
+            
+            {/* 🔥 SIMPLIFIED: Show unpublished changes indicator when passed from parent */}
+            {landingPageData?.published && hasUnpublishedChanges && (
+              <div className="ml-3 flex items-center gap-2 rounded-full bg-amber-50 text-amber-700 px-3 py-1 border border-amber-200 shadow-sm" title="There are unpublished changes. Click Publish to update the live page.">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-xs font-medium whitespace-nowrap">Unpublished changes</span>
+              </div>
+            )}
           </div>
           <Switch
             className="ml-3.5"
@@ -377,9 +268,11 @@ export default function Header({
         <div className="flex justify-between items-center w-full mdx:flex-col mdx:gap-3">
           {/* Left side - Publish button + status */}
           <div className="flex items-center mdx:w-full mdx:justify-center ml-2">
-            <div className={`flex items-center gap-2 rounded-lg border border-solid px-2 py-[10px] shadow-sm ${landingPageData?.published && !hasUnpublishedChanges ? "bg-[#ECFDF3]" : "bg-[#5207CD]"} mdx:w-full mdx:justify-center`}>
+            <div className={`flex items-center gap-2 rounded-lg border border-solid px-2 py-[10px] shadow-sm ${
+              landingPageData?.published && !hasUnpublishedChanges ? "bg-[#ECFDF3]" : "bg-[#5207CD]"
+            } mdx:w-full mdx:justify-center`}>
               <button
-                onClick={(!landingPageData?.published || hasUnpublishedChanges) && !(isPublishing || isSaving || isAutoSaving) ? handlePublish : handlePublish}
+                onClick={!(isPublishing || isSaving || isAutoSaving) ? handlePublish : undefined}
                 className={`flex gap-2  items-center ${(isPublishing || isSaving || isAutoSaving) ? 'cursor-default' : 'cursor-pointer'} mdx:justify-center`}
                 disabled={isPublishing || isSaving || isAutoSaving}
               >
@@ -405,18 +298,14 @@ export default function Header({
                   as="p"
                   className={landingPageData?.published && !hasUnpublishedChanges ? "!text-[#039855]" : "!text-[#FFFFFF]"}
                 >
-                  {(isSaving || isAutoSaving) ? "Saving..." : landingPageData?.published ? (hasUnpublishedChanges ? "Publish Changes" : "Published") : "Publish"}
+                  {(isSaving || isAutoSaving) ? "Saving..." : 
+                   isPublishing ? "Publishing..." :
+                   landingPageData?.published ? 
+                     (hasUnpublishedChanges ? "Publish Changes" : "Published") : 
+                     "Publish"}
                 </Heading>
               </button>
             </div>
-            {landingPageData?.published && hasUnpublishedChanges && (
-              <div className="ml-2 flex items-center gap-2 rounded-full bg-amber-50 text-amber-700 px-3 py-1 border border-amber-200 shadow-sm" title="There are unpublished changes. Click Publish to update the live page.">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="text-xs font-medium">Unpublished changes</span>
-              </div>
-            )}
             {landingPageData?.published && (
               <button
                 onClick={handleCopyLink}
@@ -436,47 +325,62 @@ export default function Header({
                   id: "pageBuilder",
                   label: "Page",
                   link: (id) => `/edit-page/${id}`,
-                  bgColor: isNavItemActive("pageBuilder") ? "bg-[#5207CD]" : "bg-[#7C3AED]",
-                  textColor: "!text-[white]",
+                  bgColor: isNavItemActive("pageBuilder") ? "bg-[#5207CD]" : "bg-[#F3F0FF]",
+                  textColor: isNavItemActive("pageBuilder") ? "!text-[#FFFFFF]" : "!text-[#5207CD]",
                   icon: (
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M2 2h12a1 1 0 011 1v10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="white" strokeWidth="1.5" fill="none"/>
-                      <path d="M1 5h14M5 2v12" stroke="white" strokeWidth="1.5"/>
+                      <circle cx="8" cy="8" r="7.5" fill={isNavItemActive("pageBuilder") ? "white" : "#5207CD"} stroke={isNavItemActive("pageBuilder") ? "white" : "#5207CD"}/>
+                      <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke={isNavItemActive("pageBuilder") ? "#5207CD" : "white"} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ),
-                  className: `rounded-lg ${isNavItemActive("pageBuilder") ? "ring-2 ring-[#5207CD] ring-opacity-50 shadow-lg animate-pulse-subtle" : ""}`,
+                  className: "rounded-lg",
                   disabled: false,
                 },
                 {
-                  id: "formBuilder",
+                  id: "formBuilder", 
                   label: "Form",
                   link: (id) => `/form-editor/${id}`,
-                  bgColor: isNavItemActive("formBuilder") ? "bg-[#5207CD]" : "bg-[#7C3AED]",
-                  textColor: "!text-[white]",
+                  bgColor: isNavItemActive("formBuilder") ? "bg-[#5207CD]" : "bg-[#F3F0FF]",
+                  textColor: isNavItemActive("formBuilder") ? "!text-[#FFFFFF]" : "!text-[#5207CD]",
                   icon: (
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M2 2h12a1 1 0 011 1v10a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="white" strokeWidth="1.5" fill="none"/>
-                      <path d="M4 6h8M4 9h6M4 12h4" stroke="white" strokeWidth="1.5"/>
+                      <circle cx="8" cy="8" r="7.5" fill={isNavItemActive("formBuilder") ? "white" : "#5207CD"} stroke={isNavItemActive("formBuilder") ? "white" : "#5207CD"}/>
+                      <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke={isNavItemActive("formBuilder") ? "#5207CD" : "white"} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ),
-                  className: `rounded-lg ${isNavItemActive("formBuilder") ? "ring-2 ring-[#5207CD] ring-opacity-50 shadow-lg animate-pulse-subtle" : ""}`,
+                  className: "rounded-lg",
+                  disabled: false,
+                },
+                {
+                  id: "launch",
+                  label: "Launch", 
+                  link: (id) => `/launch/${id}`,
+                  bgColor: isNavItemActive("launch") ? "bg-[#5207CD]" : "bg-[#F3F0FF]",
+                  textColor: isNavItemActive("launch") ? "!text-[#FFFFFF]" : "!text-[#5207CD]",
+                  icon: (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="8" cy="8" r="7.5" fill={isNavItemActive("launch") ? "white" : "#5207CD"} stroke={isNavItemActive("launch") ? "white" : "#5207CD"}/>
+                      <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke={isNavItemActive("launch") ? "#5207CD" : "white"} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                  className: "rounded-lg",
                   disabled: false,
                 }
               ].map((item) => (
                 <li key={item.id}>
                   <div
-                    className={`flex items-center gap-2 border border-solid  shadow-sm ${item.bgColor} ${item.className || "rounded-lg"} smx:px-1 smx:py-2 transition-all duration-200`}
+                    className={`flex items-center gap-2 border border-solid shadow-sm ${item.bgColor} ${item.className || "rounded-lg"} px-2 py-[10px] transition-all duration-200`}
                   >
                     {item.link ? (
                       <Link
                         href={item.link(lpId || landingPageData?._id)}
-                        className="flex gap-2 justify-center items-center cursor-pointer smx:gap-1 px-2 py-[10px]"
+                        className="flex gap-2 justify-center items-center cursor-pointer w-full"
                       >
                         {item.icon}
                         <Heading
                           size="3xl"
                           as="p"
-                          className={`${item.textColor} smx:text-xs`}
+                          className={item.textColor}
                         >
                           {item.label}
                         </Heading>
@@ -484,7 +388,7 @@ export default function Header({
                     ) : (
                       <button
                         onClick={item.action}
-                        className={`flex gap-2 items-center cursor-pointer smx:gap-1 px-2 py-[10px]`}
+                        className="flex gap-2 items-center cursor-pointer w-full"
                         disabled={item.disabled}
                         title={item.tooltip}
                       >
@@ -492,7 +396,7 @@ export default function Header({
                         <Heading
                           size="3xl"
                           as="p"
-                          className={`${item.textColor} smx:text-xs`}
+                          className={item.textColor}
                         >
                           {item.label}
                         </Heading>

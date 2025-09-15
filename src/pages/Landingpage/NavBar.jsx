@@ -227,11 +227,12 @@ const Template2 = ({ landingPageData, onClickApply }) => {
 };
 
 
-const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData }) => {
+const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview=false }) => {
   console.log("lpId",lpId);
   // Get device from global variable set by PreviewContainer
   const [device, setDevice] = useState((window ).__previewDevice || "desktop");
   
+  console.log("device is",device);
   // Listen for device changes
   useEffect(() => {
     const checkDevice = () => {
@@ -916,7 +917,7 @@ const handlemediaLink = (platform) => {
         zIndex: 999,
         transition: "background-color 0.6s ease",
         position: "fixed",
-        top:fullscreen?44: 0,
+        top: fullscreen ? (device === "mobile" ? 0 : 40) : 0,
         left: 0,
         right: 0,
         width: "100%",
@@ -931,24 +932,12 @@ const handlemediaLink = (platform) => {
             <img src={logo} alt="Logo" className="mr-10 w-auto h-8" />
           </div>
           <div className="flex gap-3 justify-end w-full flex-wrap">
-            {isEditPage && lpId && !isScrolled && showBackToEditButton && fullscreen && device === "desktop" && (
-              <button
-                onClick={() => {
-                  setFullscreen(false);
-                  router.push(`/edit-page/${lpId}`);
-                }}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 flex gap-2 items-center justify-center transition-all duration-200"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to edit
-              </button>
-            )}
+           
             <button
               style={{
                 color: getColor("primary", 800),
                 borderColor: getColor("primary", 800),
+                border:"1px solid",
                 height: "45px",
                 display: "flex",
                 alignItems: "center",
@@ -1169,21 +1158,21 @@ const handlemediaLink = (platform) => {
         >
         {/* Left gradient overlay - shows when scrolled right */}
         <div 
-          className="absolute left-16 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
+          className="absolute left-2 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
           style={{
             background: "linear-gradient(to right, white 60%, transparent)",
             zIndex: 10,
-            opacity: areTabsOverflowing && scrollPosition > 0 ? 1 : 0
+            opacity: areTabsOverflowing && scrollPosition > 0 ? 1 : 0,
           }}
         />
         
         {/* Right gradient overlay - shows when can scroll more to the right */}
         <div 
-          className="absolute right-16 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
+          className="absolute right-2 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
           style={{
             background: "linear-gradient(to left, white 60%, transparent)",
             zIndex: 10,
-            opacity: areTabsOverflowing && scrollRef.current && scrollPosition < (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) ? 1 : 0
+            opacity: areTabsOverflowing && scrollRef.current && scrollPosition < (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) ? 1 : 0,
           }}
         />
 
@@ -1255,7 +1244,7 @@ const handlemediaLink = (platform) => {
   );
 };
 
-const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData }) => {
+const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview=false }) => {
   if (landingPageData?.templateId?.toLowerCase() === "3")
     return (
       <Template3
@@ -1281,6 +1270,7 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
         lpId={lpId}
         isEdit={isEdit}
         setLandingPageData={setLandingPageData}
+        isMovilePreview={isMovilePreview}
       />
     );
   return (

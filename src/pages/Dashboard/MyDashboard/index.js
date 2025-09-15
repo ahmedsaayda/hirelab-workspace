@@ -271,7 +271,7 @@ const MyDashboard = () => {
     // Note: In dashboard we don't have landingPages array, 
     // so we'll use available user data but this should be synchronized
     const currentFunnelCount = user?.landingPageNum ?? 0;
-    const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
     const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
     const tierName = user?.tier?.name ?? tier?.name ?? 'Unknown';
     
@@ -306,7 +306,7 @@ const MyDashboard = () => {
                 {(() => {
                   // Note: Dashboard uses user.landingPageNum for consistency with handleCreateNewVacancy
                   const currentFunnelCount = user?.landingPageNum ?? 0;
-                  const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+                  const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
                   const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
                   const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 

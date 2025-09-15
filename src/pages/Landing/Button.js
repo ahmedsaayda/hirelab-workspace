@@ -13,7 +13,7 @@ const variantStyles = {
   solid: {
     slate:
       "bg-slate-900 text-white hover:bg-slate-700 hover:text-slate-100 active:bg-slate-800 active:text-slate-300 focus-visible:outline-slate-900",
-    blue: "bg-indigo-600 text-white hover:text-slate-100 hover:bg-indigo-500 active:bg-indigo-800 active:text-blue-100 focus-visible:outline-blue-600",
+    blue: "bg-indigo-600 text-white hover:text-blue-500 hover:bg-indigo-500 active:bg-indigo-800 active:text-blue-100 focus-visible:outline-blue-600",
     white:
       "bg-white dark:bg-gray-900 text-slate-900 hover:bg-indigo-50 active:bg-indigo-200 active:text-slate-600 focus-visible:outline-white",
   },

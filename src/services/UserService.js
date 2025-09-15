@@ -41,6 +41,10 @@ class UserService {
   extendTokenTime() {
     return this.api.post(`/extendTokenTime`);
   }
+
+  getDashboardAnalytics(filterVacancy = 'all', filterTimeFrame = 'all') {
+    return this.api.get(`/dashboardAnalytics?filterVacancy=${filterVacancy}&filterTimeFrame=${filterTimeFrame}`);
+  }
 }
 
 export default new UserService(`${getBackendUrl()}/user`);

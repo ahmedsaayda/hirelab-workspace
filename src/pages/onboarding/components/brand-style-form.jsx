@@ -1941,11 +1941,11 @@ const handleLogoUpload = async (url) => {
   // Handle fullscreen mode
   if (fullscreen) {
     return (
-      <div className="relative h-screen w-screen bg-white">
+      <div className="relative h-screen  bg-white">
         {/* Floating Back Button */}
       
         
-        <div className="w-full h-full">
+        <div className="w-full h-full ">
           <Preview logo={companyLogo} landingPageData={landingPageData} fullscreen={fullscreen} setFullscreen={setFullscreen} />
         </div>
       </div>
@@ -2139,7 +2139,7 @@ const handleLogoUpload = async (url) => {
 
           <div className="flex flex-col lg:flex-row gap-6 py-4 lg:py-6 xl:py-8 h-full">
               {/* Left Column - Form Steps */}
-              <div className="space-y-6 w-full lg:w-[30%] xl:w-[28%]">
+              <div className="space-y-6 w-full lg:w-[35%] xl:w-[35%]">
                 {/* Step 1 Content (Company Info) */}
                 {currentStep === 3 && (
                   <div className="space-y-4">
@@ -2722,8 +2722,8 @@ const handleLogoUpload = async (url) => {
 
        
               {currentStep >= 1 && currentStep <= 3 && (
-                  <div className="w-full lg:w-[70%] xl:w-[72%] flex justify-center">
-                    <div className="w-full max-w-[1600px] h-[550px] sm:h-[650px] md:h-[750px] lg:h-[calc(100vh-140px)] xl:h-[calc(100vh-100px)] min-h-[550px] max-h-[1100px] overflow-visible text-sm text-center text-gray-400 border border-blue-600 rounded-lg onboarding-preview-container">
+                  <div className="w-full lg:w-[65%] xl:w-[65%] flex justify-center">
+                    <div className="w-full max-w-[1600px] h-[550px] sm:h-[650px] md:h-[750px] lg:h-[calc(100vh-150px)]  min-h-[550px] max-h-[1100px] overflow-visible text-sm text-center text-gray-400 border border-blue-600 rounded-lg onboarding-preview-container">
                       <Preview logo={companyLogo} landingPageData={landingPageData} fullscreen={fullscreen} setFullscreen={setFullscreen} />
                     </div>
                   </div>
@@ -2798,7 +2798,12 @@ const Preview = ({ logo, landingPageData, fullscreen, setFullscreen }) => {
         pageComponent={
           <div className=" w-full h-full">
             <NavBar landingPageData={landingPageData} showBackToEditButton={false} onClickApply={() => {}} fullscreen={fullscreen} setFullscreen={setFullscreen} isEdit={true} />
+              <div style={{
+                paddingTop:fullscreen ? 10 : 0,
+              }}>
+
                      <HeroSection landingPageData={landingPageData} />
+              </div>
             {(landingPageData?.menuItems ?? [])?.map((section, index) => {
               return (
                 <div key={index}>

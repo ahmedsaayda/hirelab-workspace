@@ -26,6 +26,7 @@ import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
 
 import { CircleX, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { formatAvgTime } from "../../../utils/timeFormat";
 import {
   getPartner,
   selectDarkMode,
@@ -336,7 +337,7 @@ const Vacancies = () => {
               setLandingPages(
                 landingPagesWithCounts.data.map((i) => {
                   const visits = i.visits || 0;
-                  const avgTimeSpent = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
+                  const avgTimeSpentSeconds = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
                   const daysLive = Math.ceil((new Date() - new Date(i.createdAt)) / (1000 * 60 * 60 * 24));
                   
                   return {
@@ -347,7 +348,7 @@ const Vacancies = () => {
                     mar42024: moment(i.createdAt).format("MMM Do YYYY"),
                     // Real analytics data
                     visits: visits,
-                    avgTimeSpent: avgTimeSpent,
+                    avgTimeSpent: formatAvgTime(avgTimeSpentSeconds),
                     applicants: i.numberApplicants || 0, // Real count if available, otherwise 0
                     // Calculate days live
                     daysLive: daysLive,
@@ -593,7 +594,7 @@ const Vacancies = () => {
     // Safety check: Verify user hasn't reached limit before starting AI generation
     // Use actual landingPages count for accurate current usage
     const currentFunnelCount = landingPages?.length ?? 0;
-    const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
     const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
     
     if (hasReachedLimit) {
@@ -880,7 +881,7 @@ Respond with json that adheres to the following jsonschema:
   const handleCreateNewVacancy = () => {
     // Use actual landingPages count for accurate current usage
     const currentFunnelCount = landingPages?.length ?? 0;
-    const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
     const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
     const tierName = user?.tier?.name ?? tier?.name ?? 'Unknown';
     
@@ -931,7 +932,7 @@ Respond with json that adheres to the following jsonschema:
           {(() => {
             // Use actual landingPages count for accurate current usage
             const currentFunnelCount = landingPages?.length ?? 0;
-            const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+            const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
             const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
             const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 
@@ -992,7 +993,7 @@ Respond with json that adheres to the following jsonschema:
           {(() => {
             // Use actual landingPages count for accurate current usage
             const currentFunnelCount = landingPages?.length ?? 0;
-            const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+            const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
             const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
             const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 
@@ -1208,7 +1209,7 @@ Respond with json that adheres to the following jsonschema:
         {(() => {
           // Use actual landingPages count for accurate current usage
           const currentFunnelCount = landingPages?.length ?? 0;
-          const maxFunnels = user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+          const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
           const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
           const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 

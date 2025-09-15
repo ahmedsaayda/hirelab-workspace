@@ -171,73 +171,77 @@ const CustomDropdown = ({ field, value, onChange }) => (
   </Select>
 );
 
-const YesNoQuestion = ({ field, value, onChange }) => (
-  <div className="w-full">
-    <div className="grid grid-cols-2 gap-4">
-      <button
-        type="button"
-        onClick={() => onChange('yes')}
-        className={`
-          relative flex items-center justify-center px-6 py-4 rounded-xl border-2 transition-all duration-200 font-medium text-sm
-          ${
-            value === 'yes'
-              ? 'border-green-500 bg-green-50 text-green-700 shadow-md'
-              : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-25 hover:text-green-600'
-          }
-        `}
-      >
-        <div className="flex items-center space-x-2">
-          <div className={`
-            w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
+const YesNoQuestion = ({ field, value, onChange }) => {
+  const yesLabel = field?.yesLabel || 'Yes';
+  const noLabel = field?.noLabel || 'No';
+  return (
+    <div className="w-full">
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          type="button"
+          onClick={() => onChange('yes')}
+          className={`
+            relative flex items-center justify-center px-6 py-4 rounded-xl border-2 transition-all duration-200 font-medium text-sm
             ${
               value === 'yes'
-                ? 'border-green-500 bg-green-500'
-                : 'border-gray-300'
+                ? 'border-green-500 bg-green-50 text-green-700 shadow-md'
+                : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-25 hover:text-green-600'
             }
-          `}>
-            {value === 'yes' && (
-              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            )}
+          `}
+        >
+          <div className="flex items-center space-x-2">
+            <div className={`
+              w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
+              ${
+                value === 'yes'
+                  ? 'border-green-500 bg-green-500'
+                  : 'border-gray-300'
+              }
+            `}>
+              {value === 'yes' && (
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <span>{yesLabel}</span>
           </div>
-          <span>Yes</span>
-        </div>
-      </button>
-      
-      <button
-        type="button"
-        onClick={() => onChange('no')}
-        className={`
-          relative flex items-center justify-center px-6 py-4 rounded-xl border-2 transition-all duration-200 font-medium text-sm
-          ${
-            value === 'no'
-              ? 'border-red-500 bg-red-50 text-red-700 shadow-md'
-              : 'border-gray-200 bg-white text-gray-600 hover:border-red-300 hover:bg-red-25 hover:text-red-600'
-          }
-        `}
-      >
-        <div className="flex items-center space-x-2">
-          <div className={`
-            w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
+        </button>
+        
+        <button
+          type="button"
+          onClick={() => onChange('no')}
+          className={`
+            relative flex items-center justify-center px-6 py-4 rounded-xl border-2 transition-all duration-200 font-medium text-sm
             ${
               value === 'no'
-                ? 'border-red-500 bg-red-500'
-                : 'border-gray-300'
+                ? 'border-red-500 bg-red-50 text-red-700 shadow-md'
+                : 'border-gray-200 bg-white text-gray-600 hover:border-red-300 hover:bg-red-25 hover:text-red-600'
             }
-          `}>
-            {value === 'no' && (
-              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            )}
+          `}
+        >
+          <div className="flex items-center space-x-2">
+            <div className={`
+              w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
+              ${
+                value === 'no'
+                  ? 'border-red-500 bg-red-500'
+                  : 'border-gray-300'
+              }
+            `}>
+              {value === 'no' && (
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <span>{noLabel}</span>
           </div>
-          <span>No</span>
-        </div>
-      </button>
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const FileUpload = ({ value, onChange, placeholder }) => {
   const [uploading, setUploading] = useState(false);
@@ -705,14 +709,38 @@ export default function ApplyPage() {
           }
         }
       } else if (currentField.type === 'address') {
-        // Validate at least one address field is filled
-        const line1 = formData[`${currentField.id}_line1`];
-        const city = formData[`${currentField.id}_city`];
-        const country = formData[`${currentField.id}_country`];
-        
-        if (!line1?.trim() && !city?.trim() && !country?.trim()) {
-          message.warning('Please fill in at least address line 1, city, or country');
-          return;
+        // Validate address subfields based on visibility/required settings
+        const parts = [
+          { key: 'line1', cfg: currentField.line1 },
+          { key: 'line2', cfg: currentField.line2 },
+          { key: 'city', cfg: currentField.city },
+          { key: 'state', cfg: currentField.state },
+          { key: 'zip', cfg: currentField.zip },
+          { key: 'country', cfg: currentField.country },
+        ];
+
+        // Check required visible parts
+        const requiredVisibleParts = parts.filter(p => p.cfg?.visible !== false && p.cfg?.required);
+        for (const p of requiredVisibleParts) {
+          const val = formData[`${currentField.id}_${p.key}`];
+          if (!val || (typeof val === 'string' && !val.trim())) {
+            const label = p.cfg?.label || p.key;
+            message.warning(`${label} is required`);
+            return;
+          }
+        }
+
+        // If no specific part is required but the whole field is required, ensure at least one visible part is filled
+        if (requiredVisibleParts.length === 0 && currentField.required) {
+          const visibleParts = parts.filter(p => p.cfg?.visible !== false);
+          const anyFilled = visibleParts.some(p => {
+            const val = formData[`${currentField.id}_${p.key}`];
+            return val && (typeof val !== 'string' || val.trim());
+          });
+          if (!anyFilled) {
+            message.warning('Please fill at least one address detail');
+            return;
+          }
         }
       } else if (currentField.type === 'date') {
         // Enhanced date field validation
@@ -1402,52 +1430,82 @@ export default function ApplyPage() {
 
       case 'address':
         return (
-          <div className="space-y-2">
-            <Input
-              value={formData[`${field.id}_line1`] || ''}
-              onChange={(e) => handleInputChange(`${field.id}_line1`, e.target.value)}
-              placeholder="Address Line 1"
-              className="rounded-lg"
-              size="large"
-            />
-            <Input
-              value={formData[`${field.id}_line2`] || ''}
-              onChange={(e) => handleInputChange(`${field.id}_line2`, e.target.value)}
-              placeholder="Address Line 2"
-              className="rounded-lg"
-              size="large"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                value={formData[`${field.id}_city`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_city`, e.target.value)}
-                placeholder="City"
-                className="rounded-lg"
-                size="large"
-              />
-              <Input
-                value={formData[`${field.id}_state`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_state`, e.target.value)}
-                placeholder="State/Province"
-                className="rounded-lg"
-                size="large"
-              />
+          <div className="space-y-4">
+            {field.line1?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-sm">{field.line1?.label || 'Address Line 1'}</label>
+                <Input
+                  value={formData[`${field.id}_line1`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_line1`, e.target.value)}
+                  placeholder={(typeof field.line1 === 'string' ? field.line1 : (field.line1?.placeholder || 'Address Line 1'))}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+            {field.line2?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-sm">{field.line2?.label || 'Address Line 2'}</label>
+                <Input
+                  value={formData[`${field.id}_line2`] || ''}
+                  onChange={(e) => handleInputChange(`${field.id}_line2`, e.target.value)}
+                  placeholder={(typeof field.line2 === 'string' ? field.line2 : (field.line2?.placeholder || 'Address Line 2'))}
+                  className="rounded-lg"
+                  size="large"
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              {field.city?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.city?.label || 'City'}</label>
+                  <Input
+                    value={formData[`${field.id}_city`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_city`, e.target.value)}
+                    placeholder={(typeof field.city === 'string' ? field.city : (field.city?.placeholder || 'City'))}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+              {field.state?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.state?.label || 'State/Province'}</label>
+                  <Input
+                    value={formData[`${field.id}_state`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_state`, e.target.value)}
+                    placeholder={(typeof field.state === 'string' ? field.state : (field.state?.placeholder || 'State/Province'))}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                value={formData[`${field.id}_zip`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_zip`, e.target.value)}
-                placeholder="ZIP/Postal Code"
-                className="rounded-lg"
-                size="large"
-              />
-              <Input
-                value={formData[`${field.id}_country`] || ''}
-                onChange={(e) => handleInputChange(`${field.id}_country`, e.target.value)}
-                placeholder="Country"
-                className="rounded-lg"
-                size="large"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              {field.zip?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.zip?.label || 'ZIP/Postal Code'}</label>
+                  <Input
+                    value={formData[`${field.id}_zip`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_zip`, e.target.value)}
+                    placeholder={(typeof field.zip === 'string' ? field.zip : (field.zip?.placeholder || 'ZIP/Postal Code'))}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
+              {field.country?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">{field.country?.label || 'Country'}</label>
+                  <Input
+                    value={formData[`${field.id}_country`] || ''}
+                    onChange={(e) => handleInputChange(`${field.id}_country`, e.target.value)}
+                    placeholder={(typeof field.country === 'string' ? field.country : (field.country?.placeholder || 'Country'))}
+                    className="rounded-lg"
+                    size="large"
+                  />
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1639,7 +1697,7 @@ export default function ApplyPage() {
                   border: `1px solid ${primaryColor}`
                 }}
               >
-                {getTranslation(landingPageData?.lang, 'startApplication')}
+                {landingPageData.form?.startApplicationText || getTranslation(landingPageData?.lang, 'startApplication')}
               </Button>
             </div>
           ) : (
@@ -1671,7 +1729,7 @@ export default function ApplyPage() {
                 disabled={currentStep === 0}
               >
                 <ArrowLeft size={16} />
-                <span>{getTranslation(landingPageData?.lang, 'previous')}</span>
+                <span>{landingPageData.form?.previousText || getTranslation(landingPageData?.lang, 'previous')}</span>
               </Button>
 
               <Button 
@@ -1687,7 +1745,7 @@ export default function ApplyPage() {
                   border: `1px solid ${primaryColor}`
                 }}
               >
-                <span>{currentStep === formFields.length ? getTranslation(landingPageData?.lang, 'submit') : getTranslation(landingPageData?.lang, 'next')}</span>
+                <span>{currentStep === formFields.length ? (landingPageData.form?.submitText || getTranslation(landingPageData?.lang, 'submit')) : (landingPageData.form?.nextText || getTranslation(landingPageData?.lang, 'next'))}</span>
                 <ArrowRight size={16} />
               </Button>
             </div>

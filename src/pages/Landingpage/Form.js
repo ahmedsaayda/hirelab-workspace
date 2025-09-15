@@ -210,48 +210,165 @@ const Content = ({ landingPageData, onSubmit, setShowFormEditor }) => {
         );
       case "address":
         return (
-          <Input.Group className="space-y-2">
-            <Form.Item name={[field.id, "line1"]} noStyle>
-              <Input
-                placeholder={field.line1 || "Address Line 1"}
-                className="rounded-lg"
-              />
-            </Form.Item>
-            <Form.Item name={[field.id, "line2"]} noStyle>
-              <Input
-                placeholder={field.line2 || "Address Line 2"}
-                className="rounded-lg"
-              />
-            </Form.Item>
+          <div className="space-y-2">
+            {field.line1?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-sm">
+                  {field.line1?.label || "Address Line 1"}
+                  {field.line1?.required && (
+                    <span className="ml-1 text-red-500">*</span>
+                  )}
+                </label>
+                <Form.Item
+                  name={[field.id, "line1"]}
+                  noStyle
+                  rules={[
+                    {
+                      required: !!field.line1?.required,
+                      message: `${field.line1?.label || "Address Line 1"} is required`,
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder={field.line1?.placeholder || "Address Line 1"}
+                    className="rounded-lg"
+                  />
+                </Form.Item>
+              </div>
+            )}
+
+            {field.line2?.visible !== false && (
+              <div>
+                <label className="block mb-1 font-semibold text-sm">
+                  {field.line2?.label || "Address Line 2"}
+                  {field.line2?.required && (
+                    <span className="ml-1 text-red-500">*</span>
+                  )}
+                </label>
+                <Form.Item
+                  name={[field.id, "line2"]}
+                  noStyle
+                  rules={[
+                    {
+                      required: !!field.line2?.required,
+                      message: `${field.line2?.label || "Address Line 2"} is required`,
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder={field.line2?.placeholder || "Address Line 2"}
+                    className="rounded-lg"
+                  />
+                </Form.Item>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-2">
-              <Form.Item name={[field.id, "city"]} noStyle>
-                <Input
-                  placeholder={field.city || "City"}
-                  className="rounded-lg"
-                />
-              </Form.Item>
-              <Form.Item name={[field.id, "state"]} noStyle>
-                <Input
-                  placeholder={field.state || "State/Province"}
-                  className="rounded-lg"
-                />
-              </Form.Item>
+              {field.city?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">
+                    {field.city?.label || "City"}
+                    {field.city?.required && (
+                      <span className="ml-1 text-red-500">*</span>
+                    )}
+                  </label>
+                  <Form.Item
+                    name={[field.id, "city"]}
+                    noStyle
+                    rules={[
+                      {
+                        required: !!field.city?.required,
+                        message: `${field.city?.label || "City"} is required`,
+                      },
+                    ]}
+                  >
+                    <Input
+                      placeholder={field.city?.placeholder || "City"}
+                      className="rounded-lg"
+                    />
+                  </Form.Item>
+                </div>
+              )}
+              {field.state?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">
+                    {field.state?.label || "State/Province"}
+                    {field.state?.required && (
+                      <span className="ml-1 text-red-500">*</span>
+                    )}
+                  </label>
+                  <Form.Item
+                    name={[field.id, "state"]}
+                    noStyle
+                    rules={[
+                      {
+                        required: !!field.state?.required,
+                        message: `${field.state?.label || "State/Province"} is required`,
+                      },
+                    ]}
+                  >
+                    <Input
+                      placeholder={field.state?.placeholder || "State/Province"}
+                      className="rounded-lg"
+                    />
+                  </Form.Item>
+                </div>
+              )}
             </div>
+
             <div className="grid grid-cols-2 gap-2">
-              <Form.Item name={[field.id, "zip"]} noStyle>
-                <Input
-                  placeholder={field.zip || "ZIP/Postal Code"}
-                  className="rounded-lg"
-                />
-              </Form.Item>
-              <Form.Item name={[field.id, "country"]} noStyle>
-                <Input
-                  placeholder={field.country || "Country"}
-                  className="rounded-lg"
-                />
-              </Form.Item>
+              {field.zip?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">
+                    {field.zip?.label || "ZIP/Postal Code"}
+                    {field.zip?.required && (
+                      <span className="ml-1 text-red-500">*</span>
+                    )}
+                  </label>
+                  <Form.Item
+                    name={[field.id, "zip"]}
+                    noStyle
+                    rules={[
+                      {
+                        required: !!field.zip?.required,
+                        message: `${field.zip?.label || "ZIP/Postal Code"} is required`,
+                      },
+                    ]}
+                  >
+                    <Input
+                      placeholder={field.zip?.placeholder || "ZIP/Postal Code"}
+                      className="rounded-lg"
+                    />
+                  </Form.Item>
+                </div>
+              )}
+              {field.country?.visible !== false && (
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">
+                    {field.country?.label || "Country"}
+                    {field.country?.required && (
+                      <span className="ml-1 text-red-500">*</span>
+                    )}
+                  </label>
+                  <Form.Item
+                    name={[field.id, "country"]}
+                    noStyle
+                    rules={[
+                      {
+                        required: !!field.country?.required,
+                        message: `${field.country?.label || "Country"} is required`,
+                      },
+                    ]}
+                  >
+                    <Input
+                      placeholder={field.country?.placeholder || "Country"}
+                      className="rounded-lg"
+                    />
+                  </Form.Item>
+                </div>
+              )}
             </div>
-          </Input.Group>
+          </div>
         );
       case "file":
         return (
@@ -277,12 +394,31 @@ const Content = ({ landingPageData, onSubmit, setShowFormEditor }) => {
         );
       case "boolean":
         return (
-          <YesNoQuestion
-            field={field}
-            value={form.getFieldValue(field.id)}
-            onChange={e => form.setFieldsValue({ [field.id]: e })}
-          />
-  );
+          <div className="w-full">
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => form.setFieldsValue({ [field.id]: 'yes' })}
+                className={`
+                  relative flex items-center justify-center px-6 py-3 rounded-lg border transition-all duration-200 text-sm
+                  ${form.getFieldValue(field.id) === 'yes' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-25 hover:text-green-600'}
+                `}
+              >
+                <span>{field.yesLabel || 'Yes'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => form.setFieldsValue({ [field.id]: 'no' })}
+                className={`
+                  relative flex items-center justify-center px-6 py-3 rounded-lg border transition-all duration-200 text-sm
+                  ${form.getFieldValue(field.id) === 'no' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 bg-white text-gray-600 hover:border-red-300 hover:bg-red-25 hover:text-red-600'}
+                `}
+              >
+                <span>{field.noLabel || 'No'}</span>
+              </button>
+            </div>
+          </div>
+        );
       case "date":
         // Use format and separator from field config
         const dateFormat = field.dateFormat || "MMDDYYYY";

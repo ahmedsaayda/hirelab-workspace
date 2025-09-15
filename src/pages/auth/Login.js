@@ -14,76 +14,85 @@ import { TextField } from "../Landing/Fields";
 import { Logo } from "../Landing/Logo";
 import { SlimLayout } from "../Landing/SlimLayout";
 import TeamService from "../../../src/services/TeamService";
+import { Spin } from "antd";
 
 const Login = () => {
   const router = useRouter();
-  const loading = false&&useSelector(selectLoading);
-  console.log("loading",loading)
+  // const loading = useSelector(selectLoading);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const result = await AuthService.login({
-      email: e.target[0].value,
-      password: e.target[1].value,
-    });
-    if (!result?.data?.accessToken) return;
+ try {
+  setIsLoading(true);
+  e.preventDefault();
+  const result = await AuthService.login({
+    email: e.target[0].value,
+    password: e.target[1].value,
+  });
+  if (!result?.data?.accessToken) return;
 
-    Cookies.set("accessToken", result?.data?.accessToken);
-    Cookies.set("refreshToken", result?.data?.refreshToken);
+  Cookies.set("accessToken", result?.data?.accessToken);
+  Cookies.set("refreshToken", result?.data?.refreshToken);
 
-    const me = await AuthService.me();
-    if (!me?.data) return message.error("Could not load user data");
+  const me = await AuthService.me();
+  if (!me?.data) return message.error("Could not load user data");
 
-    store.dispatch(login(me.data.me));
+  store.dispatch(login(me.data.me));
 
-    // Check for return URL from query params (team invitation)
-    const returnUrl = router.query.returnUrl;
-    
-    // If returnUrl contains a team join link, extract the invite link
-    if (returnUrl && returnUrl.includes('/team/join/')) {
-      const urlParts = returnUrl.split('/team/join/');
-      if (urlParts.length === 2) {
-        const inviteLink = urlParts[1];
-        localStorage.setItem("pendingTeamInvite", inviteLink);
-        Cookies.set("pendingTeamInvite", inviteLink, { expires: 1 });
-        console.log("Login: Set team invite cookie", inviteLink);
-      }
+  // Check for return URL from query params (team invitation)
+  const returnUrl = router.query.returnUrl;
+  
+  // If returnUrl contains a team join link, extract the invite link
+  if (returnUrl && returnUrl.includes('/team/join/')) {
+    const urlParts = returnUrl.split('/team/join/');
+    if (urlParts.length === 2) {
+      const inviteLink = urlParts[1];
+      localStorage.setItem("pendingTeamInvite", inviteLink);
+      Cookies.set("pendingTeamInvite", inviteLink, { expires: 1 });
+      console.log("Login: Set team invite cookie", inviteLink);
     }
+  }
 
-    // Check for pending invitation (email invite) - check both localStorage and cookies
-    let pendingInvitation = localStorage.getItem("pendingInvitation") || Cookies.get("pendingInvitation");
-    if (pendingInvitation) {
-      try {
-        await TeamService.acceptInvitation(pendingInvitation);
-        localStorage.removeItem("pendingInvitation");
-        Cookies.remove("pendingInvitation");
-        console.log("Login: Successfully accepted email invitation", pendingInvitation);
-      } catch (error) {
-        console.error("Error accepting invitation:", error);
-        localStorage.removeItem("pendingInvitation");
-        Cookies.remove("pendingInvitation");
-      }
+  // Check for pending invitation (email invite) - check both localStorage and cookies
+  let pendingInvitation = localStorage.getItem("pendingInvitation") || Cookies.get("pendingInvitation");
+  if (pendingInvitation) {
+    try {
+      await TeamService.acceptInvitation(pendingInvitation);
+      localStorage.removeItem("pendingInvitation");
+      Cookies.remove("pendingInvitation");
+      console.log("Login: Successfully accepted email invitation", pendingInvitation);
+    } catch (error) {
+      console.error("Error accepting invitation:", error);
+      localStorage.removeItem("pendingInvitation");
+      Cookies.remove("pendingInvitation");
     }
+  }
 
-    // Check for pending team invite link (shareable link)
-    const pendingTeamInvite = localStorage.getItem("pendingTeamInvite");
-    if (pendingTeamInvite) {
-      try {
-        const response = await TeamService.joinTeamByLink(pendingTeamInvite);
-        if (response.success) {
-          TeamService.setCurrentTeam(response.team);
-          localStorage.removeItem("pendingTeamInvite");
-          Cookies.remove("pendingTeamInvite");
-        }
-      } catch (error) {
-        console.error("Error joining team:", error);
+  // Check for pending team invite link (shareable link)
+  const pendingTeamInvite = localStorage.getItem("pendingTeamInvite");
+  if (pendingTeamInvite) {
+    try {
+      const response = await TeamService.joinTeamByLink(pendingTeamInvite);
+      if (response.success) {
+        TeamService.setCurrentTeam(response.team);
         localStorage.removeItem("pendingTeamInvite");
         Cookies.remove("pendingTeamInvite");
       }
+    } catch (error) {
+      console.error("Error joining team:", error);
+      localStorage.removeItem("pendingTeamInvite");
+      Cookies.remove("pendingTeamInvite");
     }
+  }
 
-    // Redirect to dashboard (team will be set if user joined via invite)
-    router.push("/dashboard");
+  // Redirect to dashboard (team will be set if user joined via invite)
+  // router.push("/dashboard");
+  window.location.href = "/dashboard";
+ } catch (error) {
+  setIsLoading(false);
+ }finally{
+  
+ }
   };
 
   return (
@@ -133,9 +142,9 @@ const Login = () => {
               variant="solid"
               color="blue"
               className="w-full hover:bg-white hover:text-blue-A200 hover:border border-blue-700_01"
-              loading={loading}
+              loading={isLoading}
             >
-              <span>Sign in</span>
+             {isLoading ? <span className="opacity-0">Loading...</span> : <span>Sign in</span>}
             </Button>
           </div>
           <div className="text-sm text-center">

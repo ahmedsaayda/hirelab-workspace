@@ -15,6 +15,8 @@ export const IFrame = ({
   baseColors,
   variants,
   gradients,
+  fullscreen,
+  device,
   ...props
 }) => {
   const [contentRef, setContentRef] = useState(null);
@@ -22,6 +24,7 @@ export const IFrame = ({
   const iframeHead = contentRef?.contentWindow?.document?.head;
 
   const router = useRouter();;
+  
   useEffect(() => {
     if (iframeHead) {
       const styleElement =
@@ -91,7 +94,31 @@ export const IFrame = ({
         iframeDocument?.removeEventListener("click", handleLinkClick, true);
       };
     }
-  }, [contentRef,baseColors, variants, gradients,styles]);
+  }, [contentRef,baseColors, variants, gradients]);
+
+  // Simple one-time styled-jsx injection after iframe content loads
+  useEffect(() => {
+    if (mountNode && iframeHead) {
+      const timer = setTimeout(() => {
+        // Extract any styled-jsx styles from the main document
+        const styledJsxStyles = Array.from(document.querySelectorAll('style[data-styled-jsx]'))
+          .map(style => style.textContent)
+          .join('\n');
+        
+        if (styledJsxStyles) {
+          const existingStyled = iframeHead.querySelector('style[data-styled-jsx-injected]');
+          if (!existingStyled) {
+            const styledElement = document.createElement('style');
+            styledElement.setAttribute('data-styled-jsx-injected', 'true');
+            styledElement.textContent = styledJsxStyles;
+            iframeHead.appendChild(styledElement);
+          }
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [mountNode, iframeHead]);
 
   return (
     <iframe
@@ -100,7 +127,8 @@ export const IFrame = ({
       style={{
         margin: "auto",
         scrollbarWidth: "none",
-        paddingTop: "0px",
+        // paddingTop: "0px",
+        paddingTop: fullscreen ? (device === "mobile" ? 40 : 0) : 0,
         
       }}
     >
@@ -219,7 +247,9 @@ export function PreviewContainer({
         return "";
       }
     });
+    
     return stylesArray.join("\n") + `
+      
       html {
         scroll-behavior: smooth;
         scroll-padding-top: var(--navbar-height, 128px);
@@ -230,26 +260,9 @@ export function PreviewContainer({
       
       /* Comprehensive fix for JSX styled components in iframe */
       
-      /* JobDescription corner effects */
-      .corner {
-        width: 30px;
-        height: 40px;
-        position: relative;
-        overflow: hidden;
-        border: 0;
-      }
+
       
-      .corner::after {
-        content: "";
-        position: absolute;
-        border: 0;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
-      }
+    
       
       /* JobDescription specific corner gradients - exact match from component */
       .top-left::after {
@@ -266,6 +279,19 @@ export function PreviewContainer({
       
       .bottom-right::after {
         background-image: radial-gradient(circle at 100% 100%, transparent 20px, white 20px);
+      }
+
+      /* JobDescription specific arc styles - exact match from styled-jsx */
+      .description-top-right::after {
+        background-image: radial-gradient(circle at 100% 0, transparent 30px, white 20px);
+      }
+
+      .description-bottom-left::after {
+        background-image: radial-gradient(circle at 0 100%, transparent 30px, white 20px);
+      }
+
+      .description-bottom-right::after {
+        background-image: radial-gradient(circle at 100% 100%, transparent 30px, white 20px);
       }
       
       /* TextBox, EVPMission, LeaderIntroduction arc effects */
@@ -305,6 +331,37 @@ export function PreviewContainer({
       .leader-bottom-right::after {
         background-image: radial-gradient(circle at 100% 100%, transparent 30px, white 20px);
       }
+
+      /* LeaderIntroduction specific corner styles - exact match from styled-jsx */
+      .corner {
+        width: 30px;
+        height: 40px;
+        position: relative;
+        overflow: hidden;
+        border: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+
+      .corner::after {
+        content: "";
+        position: absolute;
+        border: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+
+      .rightBar {
+        background-color: white !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        z-index: 10 !important;
+      }
       
       /* TextBox clip path effects */
       .clip-path {
@@ -328,23 +385,9 @@ export function PreviewContainer({
         backface-visibility: hidden;
       }
       
-      /* JobDescription specific white bar fixes - minimal approach */
-      .rightBar {
-        border: none;
-        outline: none;
-        box-shadow: none;
-        transform: translateZ(1px);
-        -webkit-transform: translateZ(1px);
-      }
+    
       
-      /* Fix for JobDescription bottom white bar - minimal approach */
-      [class*="absolute"][class*="z-10"][class*="bg-white"][class*="rounded-tr-2xl"] {
-        border: none;
-        outline: none;
-        box-shadow: none;
-        transform: translateZ(1px);
-        -webkit-transform: translateZ(1px);
-      }
+    
       
       /* Ensure proper rendering of absolute positioned elements */
       [class*="absolute"][class*="bottom-"] {
@@ -368,81 +411,17 @@ export function PreviewContainer({
         outline: none;
       }
       
-      /* Specific fix for JobDescription rounded corners */
-      .rounded-bl-2xl, .rounded-tr-2xl, .rounded-br-none {
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-      }
+     
+
       
-      /* Fix gradient rendering in scaled context */
-      [style*="background-image"][style*="gradient"],
-      [style*="radial-gradient"] {
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
-        will-change: background-image;
-      }
       
-      /* Additional fixes for border and corner rendering in scaled iframe - target specific elements only */
-      .corner, .arc, .rightBar, [class*="clip-path"] {
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        -webkit-perspective: 1000;
-        perspective: 1000;
-      }
+  
       
-      /* Ensure proper rendering of complex shapes - more targeted */
-      .rightBar[class*="bg-white"] {
-        transform: translateZ(1px);
-        -webkit-transform: translateZ(1px);
-        will-change: transform;
-      }
+  
       
-      /* Minimal fixes for JobDescription white bars */
-      .rightBar {
-        background-color: white !important;
-      }
+    
       
-      /* Specific fix for shadow-md class that might cause border appearance */
-      .shadow-md {
-        box-shadow: none !important;
-      }
-      
-      /* Ensure image containers don't overflow in JobDescription */
-      .overflow-hidden.relative.shadow-md {
-        overflow: hidden !important;
-      }
-      
-      /* Make sure the image stays within bounds */
-      .overflow-hidden img {
-        max-width: 100%;
-        max-height: 100%;
-        border: none !important;
-        outline: none !important;
-      }
-      
-      /* Fix white bars positioning and coverage for iframe scaling */
-      .rightBar {
-        position: absolute !important;
-        background-color: white !important;
-        z-index: 20 !important;
-        /* Extend coverage for iframe scaling */
-        top: -12px !important;
-        right: -5px !important;
-        width: 90px !important;
-        bottom: 108px !important;
-      }
-      
-      [class*="absolute"][class*="z-10"][class*="bg-white"][class*="rounded-tr-2xl"] {
-        position: absolute !important;
-        background-color: white !important;
-        z-index: 20 !important;
-        /* Extend coverage for iframe scaling */
-        left: -3px !important;
-        bottom: -4px !important;
-        height: 100px !important;
-        right: 108px !important;
-      }
+    
     `;
   }, []);
 
@@ -566,7 +545,7 @@ export function PreviewContainer({
         }, 100); // Small delay to ensure iframe is loaded
       }
     }
-  }, [fonts]);
+  }, [fonts,fullscreen,device]);
 
   // Updated scale calculation to fill available space
   const calculateScale = () => {
@@ -651,7 +630,9 @@ export function PreviewContainer({
   return (
     <div className="flex relative flex-col w-full h-full">
       {/* Preview header with device switcher */}
-     {fullscreen && <div className="fixed top-0 left-0 right-0 flex gap-2 justify-center items-center pt-2 px-0 flex-shrink-0 bg-white border-b z-[9999]">
+     {fullscreen && <div
+    
+     className="fixed top-0 left-0 right-0 flex gap-2 justify-center items-center pt-2 px-0 flex-shrink-0 bg-white border-b z-[9999] ">
         <Heading
           size="4xl"
           as="h3"
@@ -778,10 +759,7 @@ export function PreviewContainer({
           margin: 0,
         }}>
 
-        {fullscreen && device === "desktop" && <div style={{
-          height: 52,
-          width: "100%",
-        }}/>}
+  
         
         <div
           style={{
@@ -836,6 +814,8 @@ export function PreviewContainer({
               width={device === "desktop" ? 1440 : 475}
               height={device === "desktop" ? 900 : 800}
               className="border-0 scrollbar-hide containerrr"
+              fullscreen={fullscreen}
+              device={device}
             >
               {pageComponent}
             </IFrame>

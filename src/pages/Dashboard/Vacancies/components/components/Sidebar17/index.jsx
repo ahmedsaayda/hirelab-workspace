@@ -113,6 +113,7 @@ export default function Sidebar17({
   removeSection,
   handleUp,
   handleDown,
+  activeKey,
   activeIdx = -1,
   onReorder,
   onSectionVisibilityUpdate,
@@ -153,6 +154,12 @@ export default function Sidebar17({
   const handleSectionClick = (key) => {
     console.log("key!!", key);
     console.log("key", key);
+    
+    // Call the parent's setActiveKey function
+    if (props.setActiveKey) {
+      props.setActiveKey(key);
+    }
+    
     //hero-section ,
     if (key === "flexaligntop") {
       setScrollToSection("hero-section");
@@ -212,8 +219,9 @@ export default function Sidebar17({
           paddingBlock: "4px !important",
           paddingInline: "0px !important",
           background: "transparent !important",
+          paddingLeft:"4px !important",
         }}
-        className={`${props.className} flex-shrink-0 min-w-[90px] flex flex-col justify-center items-left gap-[30px] top-0 border-blue_gray-50 border-r border-solid bg-transparent !sticky overflow-auto hover:!w-[140px]`}
+        className={`${props.className}  flex-shrink-0 min-w-[90px] flex flex-col justify-center items-left gap-[30px] top-0 border-blue_gray-50 border-r border-solid bg-transparent !sticky overflow-auto hover:!w-[140px]`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
@@ -283,7 +291,7 @@ export default function Sidebar17({
                       >
                         <MenuItem
                           className={`${
-                            idx === activeIdx ? "active" : ""
+                            item.key === activeKey ? "active" : ""
                           } relative`}
                           onClick={() => {
                             if (props.onClickAdd)
@@ -311,7 +319,7 @@ export default function Sidebar17({
                               <div
                                 className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
                                 style={
-                                  activeIdx === idx
+                                  item.key === activeKey
                                     ? {
                                         background: brandColor,
                                         opacity: 0.6,
@@ -324,7 +332,7 @@ export default function Sidebar17({
                                   alt={item.key}
                                   className="h-[16px] w-[16px] transition-all"
                                   style={
-                                    activeIdx === idx
+                                    item.key === activeKey
                                       ? {
                                           filter: "brightness(0) invert(1)",
                                         }

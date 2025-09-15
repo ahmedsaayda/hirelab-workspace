@@ -546,7 +546,7 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
                   boxShadow: "4px 68px 68px 24px rgba(103, 171, 179, 0.05)",
                   borderRadius: "24px",
                   padding: "20px 32px 28px 32px",
-                  height: "188px",
+                  minHeight: "188px",
                   maxWidth: "636px",
                 }}
               >

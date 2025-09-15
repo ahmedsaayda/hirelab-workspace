@@ -13,6 +13,9 @@ import HeroSection from "../../../../../Landingpage/HeroSection.js";
 import { MapPin, Clock, Coins, Component, Pencil, Eye, Copy } from "lucide-react";
 import Template1Preview from "./TemplatePreviews/Template1Preview.jsx";
 import HeroThumbnail from "./HeroThumbnail.jsx";
+import { formatAvgTime } from "../../../../../../utils/timeFormat";
+import { LinkOutlined } from "@ant-design/icons";
+import LandingPageService from "../../../../../../services/landingPageService.js";
 
 export const oauthUri = `https://www.facebook.com/v19.0/dialog/oauth?response_type=token&display=popup&client_id=${process.env.NEXT_PUBLIC_META_APP_KEY
   }&redirect_uri=${encodeURIComponent(
@@ -67,19 +70,16 @@ export default function VacanciesCard({
               onChange={async (e) => {
                 setIsSwitchLoading(true);
                 try {
-                  await CrudService.update(
-                    "LandingPageData",
-                    props._id,
-                    {
-                      published: e,
-                      publishedAt: e ? new Date() : null,
-                      uppublishedAt: e ? null : new Date(),
-                    }
-                  );
+                  if(e){
+                  await LandingPageService.publishLandingPage(props._id, "page");
+                  }else{
+                    await LandingPageService.unPublishLandingPage(props._id, "page");
+                  }
                   await fetchData();
                   if (e) message.success("Funnel is live!");
                 } catch (error) {
-                  message.error("Failed to update status");
+                  console.log(error);
+                  message.error("Failed to update status"+error);
                 } finally {
                   setIsSwitchLoading(false);
                 }
@@ -99,11 +99,16 @@ export default function VacanciesCard({
           </h3>
 
           {/* Tags: Location + Department */}
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 w-full">
             {props?.location?.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded bg-purple-100 text-purple-700">
+              <span 
+                className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded bg-purple-100 text-purple-700 min-w-0 ${
+                  props.department ? 'flex-1' : 'max-w-full'
+                }`}
+                title={Array.isArray(props?.location) ? props?.location.join(", ") : props?.location}
+              >
                 <MapPin size={12} className="flex-shrink-0" />
-                <span className="truncate max-w-[120px]">
+                <span className="truncate">
                   {Array.isArray(props?.location)
                     ? props?.location.join(", ")
                     : props?.location}
@@ -112,8 +117,15 @@ export default function VacanciesCard({
             )}
 
             {props.department && (
-              <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded bg-rose-100 text-rose-700">
-                {props.department}
+              <span 
+                className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded bg-rose-100 text-rose-700 min-w-0 ${
+                  props?.location?.length > 0 ? 'flex-1' : 'max-w-full'
+                }`}
+                title={props.department}
+              >
+                <span className="truncate">
+                  {props.department}
+                </span>
               </span>
             )}
           </div>
@@ -133,7 +145,7 @@ export default function VacanciesCard({
                 <Eye size={12} /> {visits} visits
               </span>
               <span className="flex items-center gap-1">
-                <Clock size={12} /> {avgTimeSpent}s Avg
+                <Clock size={12} /> {typeof avgTimeSpent === 'string' ? avgTimeSpent : formatAvgTime(avgTimeSpent)} Avg
               </span>
             </div>
           </div>
@@ -186,7 +198,7 @@ export default function VacanciesCard({
             className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 transition-colors border-l border-gray-200"
             title="Copy public link"
           >
-            <Copy className="h-4 w-4 text-gray-600" />
+            <LinkOutlined className="h-4 w-4 text-gray-600" />
           </button>
 
           <Link

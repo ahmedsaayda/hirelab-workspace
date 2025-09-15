@@ -177,6 +177,9 @@ const useResponsiveFontSize = (
       const isMobile = screenWidth < 768;
       const textLength = text.length;
       
+      // Check if text is a single word (no spaces)
+      const isSingleWord = !text.trim().includes(' ');
+      
       // Much more aggressive sizing - start way smaller
       let currentSize;
       
@@ -210,28 +213,65 @@ const useResponsiveFontSize = (
         }
       }
       
+      // For single words, dynamically adjust size to fit container width
+      if (isSingleWord) {
+        const containerWidth = container.offsetWidth - 20; // Account for padding
+        let testSize = currentSize;
+        
+        // Create temporary element to measure text width
+        const tempElement = document.createElement('span');
+        tempElement.style.position = 'absolute';
+        tempElement.style.visibility = 'hidden';
+        tempElement.style.whiteSpace = 'nowrap';
+        tempElement.style.fontFamily = container.style.fontFamily || 'inherit';
+        tempElement.textContent = text;
+        document.body.appendChild(tempElement);
+        
+        // Decrease font size until text fits in one line
+        while (testSize > 12) { // Minimum font size
+          tempElement.style.fontSize = `${testSize}px`;
+          const textWidth = tempElement.offsetWidth;
+          
+          if (textWidth <= containerWidth) {
+            break;
+          }
+          testSize -= 1;
+        }
+        
+        document.body.removeChild(tempElement);
+        currentSize = testSize;
+      }
+      
       // Apply the size directly - no complex calculations with cross-browser support
       container.style.fontSize = `${currentSize}px`;
       container.style.lineHeight = '1.1';
       
-      // Cross-browser word breaking prevention
-      container.style.wordBreak = 'normal'; // Fallback for older browsers
-      
-      // Check if CSS.supports is available and if keep-all is supported
-      try {
-        if (typeof CSS !== 'undefined' && CSS.supports && CSS.supports('word-break', 'keep-all')) {
-          container.style.wordBreak = 'keep-all';
-        }
-      } catch (e) {
-        // Fallback for browsers without CSS.supports
+      // Different word breaking behavior for single words vs multiple words
+      if (isSingleWord) {
+        // For single words: prevent breaking at all costs
+        container.style.wordBreak = 'keep-all';
+        container.style.overflowWrap = 'normal';
+        container.style.wordWrap = 'normal';
+        container.style.whiteSpace = 'nowrap';
+      } else {
+        // For multiple words: allow normal wrapping
         container.style.wordBreak = 'normal';
+        
+        // Check if CSS.supports is available and if keep-all is supported
+        try {
+          if (typeof CSS !== 'undefined' && CSS.supports && CSS.supports('word-break', 'keep-all')) {
+            container.style.wordBreak = 'keep-all';
+          }
+        } catch (e) {
+          // Fallback for browsers without CSS.supports
+          container.style.wordBreak = 'normal';
+        }
+        
+        // Cross-browser text wrapping
+        container.style.overflowWrap = 'break-word';
+        container.style.wordWrap = 'break-word'; // IE fallback
+        container.style.whiteSpace = 'normal';
       }
-      
-      // Cross-browser text wrapping
-      container.style.overflowWrap = 'break-word';
-      container.style.wordWrap = 'break-word'; // IE fallback
-      
-      container.style.whiteSpace = 'normal';
       
       // Cross-browser hyphenation control
       container.style.hyphens = 'none';
@@ -501,7 +541,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 }}
                 className="mb-4 text-xs md:text-sm"
               >
-               👋{landingPageData?.weAreHiring || getTranslation(landingPageData?.lang, 'weAreHiring')}
+               👋 {" "}{" "}{landingPageData?.weAreHiring || getTranslation(landingPageData?.lang, 'weAreHiring')}
               </span>
 
               <h2
@@ -522,20 +562,10 @@ const Template1 = ({ landingPageData, fetchData }) => {
                   textAlign: "center",
                   width: "100%",
                   padding: "0 10px",
-                  // Cross-browser word breaking
-                  wordBreak: "normal",
-                  overflowWrap: "break-word",
-                  wordWrap: "break-word", // IE fallback
-                  // Cross-browser hyphenation
-                  hyphens: "none",
-                  WebkitHyphens: "none",
-                  MozHyphens: "none",
-                  msHyphens: "none",
-                  whiteSpace: "normal",
                   display: "block",
-                  // Additional cross-browser fixes
                   boxSizing: "border-box",
                   maxWidth: "100%",
+                  // Note: Word breaking and wrapping styles are handled dynamically in useResponsiveFontSize
                 }}
                 lang="en"
               >

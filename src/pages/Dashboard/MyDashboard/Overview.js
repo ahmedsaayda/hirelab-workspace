@@ -11,7 +11,7 @@ import { ConfigProvider, theme } from "antd";
 import { useSelector } from "react-redux";
 import { selectDarkMode, selectUser } from "../../../redux/auth/selectors";
 import VacanciesCard from "../Vacancies/components/components/VacanciesCard";
-import ATSService from "../../../services/ATSService";
+import UserService from "../../../services/UserService";
 import CrudService from "../../../services/CrudService";
 import { Heading } from "../Vacancies/components/components";
 import { debounce } from "lodash";
@@ -20,6 +20,7 @@ import { motion } from "framer-motion";
 // hirelab-frontend\src\pages\Dashboard\MyDashboard\Overview.js
 import SkeletonLoader from "../Vacancies/components/Skeleton/VacancyCard";
 import { useRouter } from "next/router";
+import { formatAvgTime } from "../../../utils/timeFormat";
 const steps = [
   {
     name: "Brand Assets",
@@ -195,7 +196,7 @@ const Overview = () => {
   const [showAllUnpublished, setShowAllUnpublished] = useState(false);
   const [renameModal, setRenameModal] = useState(false);
   const [selectedVacancy, setSelectedVacancy] = useState(null);
-  const [loadingVacancy, setLoadingVacancy] = useState(true);
+  const [loadingVacancy, setLoadingVacancy] = useState(false);
   const [newVacancyTitle, setNewVacancyTitle] = useState("");
   const [analyticsData, setAnalyticsData] = useState({
     totalVisits: 0,
@@ -203,6 +204,8 @@ const Overview = () => {
     avgTimeSpent: '0min',
     newApplicants: 0
   });
+
+  console.log('analyticsData ', analyticsData);
   
   // Filter states
   const [filterVacancy, setFilterVacancy] = useState('all');
@@ -212,198 +215,55 @@ const Overview = () => {
   const router = useRouter();;
 
   const getData = async () => {
-    if( !user._id) return
     try {
       setLoadingVacancy(true);
       
-      // Calculate time filter for analytics
-      const getTimeFilter = () => {
-        const now = new Date();
-        switch (filterTimeFrame) {
-          case '7days':
-            return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          case '30days':
-            return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          default:
-            return null;
-        }
-      };
+      // Fetch all dashboard data from the backend with server-side filtering
+      const response = await UserService.getDashboardAnalytics(filterVacancy, filterTimeFrame);
+      const { 
+        analyticsData, 
+        activeVacancies, 
+        unpublishedVacancies, 
+        availableVacancies 
+      } = response.data;
 
-      const timeFilter = getTimeFilter();
+      setShowAllActive(false);
+      // Set all the state with the data from backend
+      setAnalyticsData(analyticsData);
+      setAvailableVacancies(availableVacancies);
       
-      // Fetch landing pages
-      const result = await CrudService.search(
-        "LandingPageData",
-        9999,
-        1,
-        {
-          text: '',
-          filters: {
-            user_id: user._id,
-          },
-          sort: {}
-        }
-      );
+      // Combine active and unpublished vacancies for the main list
+      const allVacancies = [...activeVacancies, ...unpublishedVacancies];
+      setLandingPages(allVacancies);
 
-      // Filter vacancies based on selected filters for analytics calculation
-      let filteredVacancies = result.data.items;
-      
-      // Filter by specific vacancy if selected
-      if (filterVacancy !== 'all') {
-        filteredVacancies = filteredVacancies.filter(item => item._id === filterVacancy);
-        console.log('🎯 Filtered to specific vacancy:', filterVacancy, 'found:', filteredVacancies.length);
-      }
-
-      // Apply time filtering to visits/engagement data (not vacancy creation time)
-      // For visits/engagement, we need to filter the individual visit data, not the vacancy creation date
-      // Since we don't have visit-level timestamps, we'll keep all vacancies but note the limitation
-      console.log('📊 Vacancies for analytics calculation:', filteredVacancies.length);
-
-      // Set available vacancies for dropdown
-      setAvailableVacancies(result.data.items.map(item => ({
-        value: item._id,
-        label: item.vacancyTitle || 'Untitled Vacancy'
-      })));
-
-      // Try to get applicant counts, but don't let it break the main functionality
-      let landingPagesWithCounts;
-      try {
-        landingPagesWithCounts = await ATSService.countApplicants(result.data.items);
-        console.log('✅ Successfully fetched applicant counts');
-      } catch (countError) {
-        console.warn('⚠️ Failed to fetch applicant counts, using fallback:', countError.message);
-        // Fallback: use original data with 0 applicants
-        landingPagesWithCounts = { data: result.data.items };
-      }
-      
-      const processedPages = landingPagesWithCounts.data.map((i) => {
-        const visits = i.visits || 0;
-        const avgTimeSpent = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
-        const daysLive = Math.ceil((new Date() - new Date(i.createdAt)) / (1000 * 60 * 60 * 24));
-        
-        return {
-          ...i,
-          position: "Position",
-          heading: i.vacancyTitle,
-          deadlinetwo: "Deadline:",
-          mar42024: moment(i.createdAt).format("MMM Do YYYY"),
-          visits: visits,
-          avgTimeSpent: avgTimeSpent,
-          applicants: i.numberApplicants || 0, // Real count if available, otherwise 0
-          daysLive: daysLive,
-          key: i._id,
-        };
-      });
-
-      setLandingPages(processedPages);
-
-      // Fetch candidate data from VacancySubmission for hiring pipeline
-      console.log('🔍 Fetching candidates with filters:', { filterVacancy, filterTimeFrame, timeFilter });
-      
-      let candidatesFilters = {};
-      
-      // Always filter by user's vacancies (more reliable than user_id)
-      const vacancyIds = result.data.items.map(item => item._id);
-      console.log('👥 User vacancy IDs:', vacancyIds);
-      
-      if (filterVacancy !== 'all') {
-        // Filter by specific vacancy
-        candidatesFilters.LandingPageDataId = filterVacancy;
-      } else if (vacancyIds.length > 0) {
-        // Filter by all user's vacancies
-        candidatesFilters.LandingPageDataId = { $in: vacancyIds };
-      }
-
-      console.log('📝 Candidate filters (before time):', candidatesFilters);
-
-      const candidatesResult = await CrudService.search(
-        "VacancySubmission",
-        9999,
-        1,
-        {
-          filters: candidatesFilters,
-          sort: { createdAt: -1 }
-        }
-      );
-
-      let candidates = candidatesResult.data.items || [];
-      console.log('👥 Total candidates found:', candidates.length);
-
-      // Apply time filter after fetching (client-side filtering for better debugging)
-      if (timeFilter) {
-        const originalCount = candidates.length;
-        candidates = candidates.filter(candidate => {
-          const candidateDate = new Date(candidate.createdAt);
-          const isAfterFilter = candidateDate >= timeFilter;
-          console.log('⏰ Candidate time check:', {
-            candidateDate: candidateDate.toISOString(),
-            timeFilter: timeFilter.toISOString(),
-            isAfterFilter
-          });
-          return isAfterFilter;
-        });
-        console.log(`⏰ Time filter applied: ${originalCount} → ${candidates.length} candidates`);
-      }
-      
-      // Calculate analytics data based on filtered data
-      const totalVisits = filteredVacancies.reduce((sum, item) => sum + (item.visits || 0), 0);
-      const totalTimeSpent = filteredVacancies.reduce((sum, item) => sum + (item.totalTimeSpent || 0), 0);
-      const avgTimeInSeconds = totalVisits > 0 ? Math.round(totalTimeSpent / totalVisits) : 0;
-      
-      // Real candidate count from ATS
-      const newApplicants = candidates.length;
-
-      console.log('Analytics Debug:', {
-        filteredVacancies: filteredVacancies.length,
-        totalVacancies: result.data.items.length,
-        candidates: candidates.length,
-        totalVisits,
-        totalTimeSpent,
-        avgTimeInSeconds,
-        timeFilter: filterTimeFrame,
-        vacancyFilter: filterVacancy
-      });
-
-      setAnalyticsData({
-        totalVisits,
-        totalTimeSpent,
-        avgTimeSpent: `${avgTimeInSeconds}s`,
-        newApplicants
+      console.log('✅ Dashboard data loaded successfully:', {
+        totalVacancies: allVacancies.length,
+        activeCount: activeVacancies.length,
+        unpublishedCount: unpublishedVacancies.length,
+        analyticsData
       });
 
     } catch (error) {
-      console.log("Error getting vacancies", error);
-      setLoadingVacancy(false);
-    }finally{
+      console.log("Error getting dashboard data", error);
+      // Set fallback data in case of error
+      setAnalyticsData({
+        totalVisits: 0,
+        totalTimeSpent: 0,
+        avgTimeSpent: '0s',
+        newApplicants: 0
+      });
+      setLandingPages([]);
+      setAvailableVacancies([]);
+    } finally {
       setLoadingVacancy(false);
     }
-    // await CrudService.getAll("LandingPageData").then((result) => {
-
-    //   console.log("objectttttttttttt", result.data);
-
-    //   setLandingPages(
-    //     result.data.map((i) => ({
-    //       ...i,
-    //       position: "Position",
-    //       heading: i.vacancyTitle,
-    //       deadlinetwo: "Deadline:",
-    //       mar42024: moment(i.createdAt).format("MMM Do YYYY"),
-    //       viewstwo: "Views:",
-    //       zipcode: "6728",
-    //       text: "293",
-    //       applicants: "applicants",
-    //       key: i._id,
-    //     }))
-    //   );
-    // });
-
-
+  
 
   }
 
   useEffect(() => {
     getData()
-  }, [showAllActive, showAllUnpublished, user?._id, filterVacancy, filterTimeFrame])
+  }, [showAllActive, showAllUnpublished, filterVacancy, filterTimeFrame])
 
   const activeVacancies = landingPages.filter((d) => d.published);
   const unpublishedVacancies = landingPages.filter((d) => !d.published);

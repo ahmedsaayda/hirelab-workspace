@@ -105,6 +105,40 @@ export default function FormEdit({ paramsId }) {
   const [isEditingForm, setIsEditingForm] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [device, setDevice] = useState("desktop");
+  
+  // 🔥 NEW: Form-specific change detection state
+  const [hasUnpublishedFormChanges, setHasUnpublishedFormChanges] = useState(false);
+
+  // 🔥 NEW: Function to check for unpublished FORM changes only
+  const checkForUnpublishedFormChanges = useCallback((currentData = landingPageData) => {
+    if (!currentData?.published || !currentData?.publishedVersion) {
+      setHasUnpublishedFormChanges(false);
+      return false;
+    }
+
+    try {
+      // FORM SCOPE: Compare only form data
+      const currentFormData = currentData.form || {};
+      const publishedFormData = currentData.publishedVersion.form || {};
+
+      // Quick comparison using JSON.stringify
+      const hasChanges = JSON.stringify(currentFormData) !== JSON.stringify(publishedFormData);
+      
+      console.log("🔍 FORM Change Detection:", {
+        hasChanges,
+        currentFormFields: currentFormData.fields?.length || 0,
+        publishedFormFields: publishedFormData.fields?.length || 0,
+        published: currentData.published
+      });
+
+      setHasUnpublishedFormChanges(hasChanges);
+      return hasChanges;
+    } catch (error) {
+      console.warn('Error in form change detection:', error);
+      setHasUnpublishedFormChanges(false);
+      return false;
+    }
+  }, [landingPageData]);
 
   // 🎯 SINGLE SOURCE OF TRUTH: Current step state
   const [currentStep, setCurrentStep] = useState(0); // 0 = intro, 1+ = form fields
@@ -212,6 +246,173 @@ export default function FormEdit({ paramsId }) {
                 // Handle undefined values but preserve explicit false values
                 visible: field.visible !== undefined ? field.visible : true,
                 required: field.required !== undefined ? field.required : false,
+                // Normalize address subfields
+                ...(field.type === "address"
+                  ? {
+                      line1:
+                        typeof field.line1 === "object"
+                          ? {
+                              visible:
+                                field.line1.visible !== undefined
+                                  ? field.line1.visible
+                                  : true,
+                              required:
+                                field.line1.required !== undefined
+                                  ? field.line1.required
+                                  : false,
+                              label: field.line1.label || "Address Line 1",
+                              placeholder: field.line1.placeholder || "",
+                            }
+                          : typeof field.line1 === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "Address Line 1",
+                              placeholder: field.line1,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "Address Line 1",
+                              placeholder: "",
+                            },
+                      line2:
+                        typeof field.line2 === "object"
+                          ? {
+                              visible:
+                                field.line2.visible !== undefined
+                                  ? field.line2.visible
+                                  : true,
+                              required:
+                                field.line2.required !== undefined
+                                  ? field.line2.required
+                                  : false,
+                              label: field.line2.label || "Address Line 2",
+                              placeholder: field.line2.placeholder || "",
+                            }
+                          : typeof field.line2 === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "Address Line 2",
+                              placeholder: field.line2,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "Address Line 2",
+                              placeholder: "",
+                            },
+                      city:
+                        typeof field.city === "object"
+                          ? {
+                              visible:
+                                field.city.visible !== undefined
+                                  ? field.city.visible
+                                  : true,
+                              required:
+                                field.city.required !== undefined
+                                  ? field.city.required
+                                  : false,
+                              label: field.city.label || "City",
+                              placeholder: field.city.placeholder || "",
+                            }
+                          : typeof field.city === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "City",
+                              placeholder: field.city,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "City",
+                              placeholder: "",
+                            },
+                      state:
+                        typeof field.state === "object"
+                          ? {
+                              visible:
+                                field.state.visible !== undefined
+                                  ? field.state.visible
+                                  : true,
+                              required:
+                                field.state.required !== undefined
+                                  ? field.state.required
+                                  : false,
+                              label: field.state.label || "State/Province",
+                              placeholder: field.state.placeholder || "",
+                            }
+                          : typeof field.state === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "State/Province",
+                              placeholder: field.state,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "State/Province",
+                              placeholder: "",
+                            },
+                      zip:
+                        typeof field.zip === "object"
+                          ? {
+                              visible:
+                                field.zip.visible !== undefined
+                                  ? field.zip.visible
+                                  : true,
+                              required:
+                                field.zip.required !== undefined
+                                  ? field.zip.required
+                                  : false,
+                              label: field.zip.label || "ZIP/Postal Code",
+                              placeholder: field.zip.placeholder || "",
+                            }
+                          : typeof field.zip === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "ZIP/Postal Code",
+                              placeholder: field.zip,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "ZIP/Postal Code",
+                              placeholder: "",
+                            },
+                      country:
+                        typeof field.country === "object"
+                          ? {
+                              visible:
+                                field.country.visible !== undefined
+                                  ? field.country.visible
+                                  : true,
+                              required:
+                                field.country.required !== undefined
+                                  ? field.country.required
+                                  : false,
+                              label: field.country.label || "Country",
+                              placeholder: field.country.placeholder || "",
+                            }
+                          : typeof field.country === "string"
+                          ? {
+                              visible: true,
+                              required: false,
+                              label: "Country",
+                              placeholder: field.country,
+                            }
+                          : {
+                              visible: true,
+                              required: false,
+                              label: "Country",
+                              placeholder: "",
+                            },
+                    }
+                  : {}),
                 // Special handling for contact fields
                 ...(field.type === "contact" &&
                 field.firstName &&
@@ -241,11 +442,48 @@ export default function FormEdit({ paramsId }) {
                       },
                     }
                   : {}),
+                // 🔥 CRITICAL: Normalize options for multichoice/dropdown/multiselect fields
+                // Handle 3 different formats: string arrays, object arrays, and missing options
+                ...((field.type === "multichoice" || field.type === "dropdown" || field.type === "multiselect")
+                  ? {
+                      options: (() => {
+                        if (!field.options || field.options.length === 0) {
+                          // No options - create default
+                          return [{ text: "Option 1", isNegative: false }];
+                        }
+                        
+                        // Check if first option is a string (format 1 & 2) or object (format 3)
+                        if (typeof field.options[0] === 'string') {
+                          // Convert string array to object array
+                          return field.options.map(optionText => ({
+                            text: optionText,
+                            isNegative: false
+                          }));
+                        } else if (typeof field.options[0] === 'object') {
+                          // Already object array - ensure proper structure
+                          return field.options.map(opt => ({
+                            text: opt.text || opt.label || opt.value || "Option",
+                            isNegative: opt.isNegative || false
+                          }));
+                        }
+                        
+                        // Fallback
+                        return [{ text: "Option 1", isNegative: false }];
+                      })()
+                    }
+                  : {}),
               };
 
               console.log(
                 `   After: visible=${processedField.visible}, required=${processedField.required}`
               );
+              
+              // 🔍 DEBUG: Log normalized options for choice-based fields
+              if (processedField.type === "multichoice" || processedField.type === "dropdown" || processedField.type === "multiselect") {
+                console.log(`   📋 NORMALIZED Options for ${processedField.type}:`, processedField.options);
+                console.log(`   📋 ORIGINAL Options from DB:`, field.options);
+              }
+              
               return processedField;
             });
 
@@ -395,6 +633,11 @@ export default function FormEdit({ paramsId }) {
             // Set both states in correct order
             setLandingPageData(res.data);
             setFormSections(fields);
+
+            // 🔥 Check for unpublished form changes after loading data
+            setTimeout(() => {
+              checkForUnpublishedFormChanges(res.data);
+            }, 100);
 
             // Force UI re-render to ensure switches reflect new state
             setForceUpdate((prev) => prev + 1);
@@ -550,6 +793,12 @@ export default function FormEdit({ paramsId }) {
         // 🔥 FIX: Update landingPageData with the response to get the latest updatedAt timestamp
         if (response?.data) {
           setLandingPageData(response.data);
+          
+          // 🔥 Check for unpublished form changes after saving
+          setTimeout(() => {
+            checkForUnpublishedFormChanges(response.data);
+          }, 100);
+          
           console.log(
             "📅 Updated landingPageData with latest timestamp:",
             response.data.updatedAt
@@ -570,7 +819,7 @@ export default function FormEdit({ paramsId }) {
     [lpId]
   );
 
-  // Debounced autosave function - reduced delay for better UX
+  // Debounced autosave function - 2 second delay for optimal UX
   const debouncedSave = useCallback(
     (dataToSave) => {
       console.log("🕒 Debounced save triggered");
@@ -580,10 +829,10 @@ export default function FormEdit({ paramsId }) {
         clearTimeout(saveTimeoutRef.current);
       }
 
-      // Set new timeout for save - reduced to 500ms for more responsive feel
+      // Set new timeout for save - increased for better UX
       saveTimeoutRef.current = setTimeout(() => {
         performDirectSave(dataToSave);
-      }, 500); // 500ms delay for snappier autosave
+      }, 2000); // 2 second delay for better user experience
     },
     [performDirectSave]
   );
@@ -729,7 +978,7 @@ export default function FormEdit({ paramsId }) {
       required: leadCaptureTypes.includes(type) ? true : false,
       visible: true, // default visible
       isLeadCapture: leadCaptureTypes.includes(type), // Mark lead capture fields as non-removable
-      ...(type === "multichoice"
+      ...(type === "multichoice" || type === "dropdown" || type === "multiselect"
         ? { options: [{ text: "Option 1", isNegative: false }] }
         : {}),
       ...(type === "number" ? { min: 0, max: 100 } : {}),
@@ -737,6 +986,46 @@ export default function FormEdit({ paramsId }) {
         ? {
             firstName: { visible: true, required: true },
             lastName: { visible: true, required: true },
+          }
+        : {}),
+      ...(type === "address"
+        ? {
+            line1: {
+              visible: true,
+              required: false,
+              label: "Address Line 1",
+              placeholder: "",
+            },
+            line2: {
+              visible: true,
+              required: false,
+              label: "Address Line 2",
+              placeholder: "",
+            },
+            city: {
+              visible: true,
+              required: false,
+              label: "City",
+              placeholder: "",
+            },
+            state: {
+              visible: true,
+              required: false,
+              label: "State/Province",
+              placeholder: "",
+            },
+            zip: {
+              visible: true,
+              required: false,
+              label: "ZIP/Postal Code",
+              placeholder: "",
+            },
+            country: {
+              visible: true,
+              required: false,
+              label: "Country",
+              placeholder: "",
+            },
           }
         : {}),
     };
@@ -983,6 +1272,12 @@ export default function FormEdit({ paramsId }) {
 
     if (!currentSection) return null;
 
+    // 🔍 DEBUG: Log current section options to verify they exist
+    if (currentSection.type === "multichoice" || currentSection.type === "dropdown" || currentSection.type === "multiselect") {
+      console.log("🔍 EDITOR DEBUG - Current section options:", currentSection.options);
+      console.log("🔍 EDITOR DEBUG - Current section full:", currentSection);
+    }
+
     // Handle contact fields with clean vertical layout
     if (currentSection.type === "contact") {
       return (
@@ -1007,26 +1302,7 @@ export default function FormEdit({ paramsId }) {
               </div>
             </Form.Item>
 
-            <Form.Item
-              label={
-                <span className="font-bold text-[14px] text-[#475647]">
-                  Placeholder
-                </span>
-              }
-            >
-              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                <CustomInput
-                  value={currentSection.placeholder}
-                  onChange={(value) =>
-                    handleUpdateSection(currentSection.id, {
-                      placeholder: value,
-                    })
-                  }
-                  className="text-sm border-none focus:ring-0"
-                  shape="round"
-                />
-              </div>
-            </Form.Item>
+          
 
             {/* Core contact fields with borders and separation */}
             {[
@@ -1227,6 +1503,136 @@ export default function FormEdit({ paramsId }) {
       );
     }
 
+    // Address field editor with per-subfield controls
+    if (currentSection.type === "address") {
+      const addressFields = [
+        { key: "line1", label: "Address Line 1" },
+        { key: "line2", label: "Address Line 2" },
+        { key: "city", label: "City" },
+        { key: "state", label: "State/Province" },
+        { key: "zip", label: "ZIP/Postal Code" },
+        { key: "country", label: "Country" },
+      ];
+
+      const getSub = (key) => currentSection[key] || {};
+
+      return (
+        <Form layout="vertical" className="space-y-4">
+          <Form.Item
+            label={
+              <span className="font-bold text-[14px] text-[#475647]">
+                {currentSection.label}
+              </span>
+            }
+          >
+            <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+              <CustomInput
+                value={currentSection.label}
+                onChange={(value) =>
+                  handleUpdateSection(currentSection.id, { label: value })
+                }
+                className="text-sm border-none focus:ring-0"
+                shape="round"
+              />
+            </div>
+          </Form.Item>
+
+          {addressFields.map(({ key, label }) => {
+            const sub = getSub(key);
+            const isVisible = sub?.visible !== false;
+            const isRequired = !!sub?.required;
+            return (
+              <div
+                key={key}
+                className="p-4 space-y-3 rounded-lg border border-gray-200 bg-gray-50/30"
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-2 items-center">
+                    <span className="font-bold text-[14px] text-[#475647]">
+                      {sub?.label || label}
+                    </span>
+                    {isRequired && (
+                      <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[10px]">
+                        Required
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-3 items-center">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500">Visible</span>
+                      <Switch
+                        size="small"
+                        checked={isVisible}
+                        onChange={(checked) => {
+                          const next = {
+                            ...sub,
+                            visible: checked,
+                            required: checked ? sub?.required || false : false,
+                          };
+                          handleUpdateSection(currentSection.id, {
+                            [key]: next,
+                          });
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500">Required</span>
+                      <Switch
+                        size="small"
+                        checked={isRequired}
+                        disabled={!isVisible}
+                        onChange={(checked) => {
+                          const next = {
+                            ...sub,
+                            required: checked,
+                            visible: isVisible,
+                          };
+                          handleUpdateSection(currentSection.id, {
+                            [key]: next,
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[12px] text-gray-600 mb-1">
+                      Label
+                    </label>
+                    <Input
+                      value={sub?.label || label}
+                      onChange={(e) => {
+                        const next = { ...sub, label: e.target.value };
+                        handleUpdateSection(currentSection.id, { [key]: next });
+                      }}
+                      className="rounded-lg"
+                      placeholder={label}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[12px] text-gray-600 mb-1">
+                      Placeholder
+                    </label>
+                    <Input
+                      value={sub?.placeholder || ""}
+                      onChange={(e) => {
+                        const next = { ...sub, placeholder: e.target.value };
+                        handleUpdateSection(currentSection.id, { [key]: next });
+                      }}
+                      className="rounded-lg"
+                      placeholder={`${label}`}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </Form>
+      );
+    }
+
     // Default field editor for all other field types
     return (
       <Form layout="vertical" className="space-y-4">
@@ -1264,7 +1670,6 @@ export default function FormEdit({ paramsId }) {
           "number",
           "email",
           "phone",
-          "address",
           "website",
         ].includes(currentSection.type) && (
           <Form.Item
@@ -1325,6 +1730,40 @@ export default function FormEdit({ paramsId }) {
           </div>
         )}
 
+        {/* Boolean/Yes-No Label Editors */}
+        {(currentSection.type === "boolean" || currentSection.type === "yesno") && (
+          <>
+            <Form.Item
+              label={<span className="font-bold text-[14px] text-[#475647]">Yes Label</span>}
+            >
+              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                <CustomInput
+                  value={currentSection.yesLabel || "Yes"}
+                  onChange={(value) =>
+                    handleUpdateSection(currentSection.id, { yesLabel: value })
+                  }
+                  className="text-sm border-none focus:ring-0"
+                  shape="round"
+                />
+              </div>
+            </Form.Item>
+            <Form.Item
+              label={<span className="font-bold text-[14px] text-[#475647]">No Label</span>}
+            >
+              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                <CustomInput
+                  value={currentSection.noLabel || "No"}
+                  onChange={(value) =>
+                    handleUpdateSection(currentSection.id, { noLabel: value })
+                  }
+                  className="text-sm border-none focus:ring-0"
+                  shape="round"
+                />
+              </div>
+            </Form.Item>
+          </>
+        )}
+
         {/* Multichoice, Dropdown, Multiselect Option Editors */}
         {(currentSection.type === "multichoice" ||
           currentSection.type === "dropdown" ||
@@ -1343,9 +1782,10 @@ export default function FormEdit({ paramsId }) {
                   className="flex relative items-center mb-2 w-full"
                 >
                   <div className="overflow-hidden mt-2 w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                    <CustomInput
-                      value={option.text}
-                      onChange={(value) => {
+                    <Input
+                      value={option.text || ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
                         const newOptions = [...currentSection.options];
                         newOptions[index] = { ...option, text: value };
                         handleUpdateSection(currentSection.id, {
@@ -1354,7 +1794,7 @@ export default function FormEdit({ paramsId }) {
                       }}
                       className="text-sm border-none focus:ring-0"
                       placeholder="Enter Option"
-                      shape="round"
+                      style={{ border: 'none', boxShadow: 'none' }}
                     />
                   </div>
                   <Button
@@ -1566,6 +2006,7 @@ export default function FormEdit({ paramsId }) {
               lastSaved={lastSaved}
               isFormEditor={true}
               lpId={lpId}
+              hasUnpublishedChanges={hasUnpublishedFormChanges}
               setPublished={async (e) => {
                 console.log("🚀 Toggle publish from Form Editor:", e);
                 try {
@@ -1580,8 +2021,12 @@ export default function FormEdit({ paramsId }) {
                     };
                     setLandingPageData(synced);
                     await LandingPageService.publishLandingPage(lpId, "form");
-                    setLandingPageData((d) => ({ ...d, published: true }));
                     message.success("✅ Form changes published");
+                    
+                    // Refresh data to get latest publishedVersion
+                    setTimeout(() => {
+                      fetchData();
+                    }, 500);
                   } else {
                     await CrudService.update("LandingPageData", lpId, {
                       published: false,
@@ -1669,7 +2114,7 @@ export default function FormEdit({ paramsId }) {
                               >
                                 {/* Header (not draggable) */}
                                 <div
-                                  className="flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group hover:bg-blue-50"
+                                  className="flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group hover:bg-[#eff8ff]"
                                   style={{
                                     minWidth: 0,
                                     flexShrink: 0,
@@ -1724,8 +2169,8 @@ export default function FormEdit({ paramsId }) {
                                       className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group ${
                                         currentStep === 1 &&
                                         formSections[0]?.isLeadCapture
-                                          ? "bg-blue-50"
-                                          : "hover:bg-blue-50"
+                                          ? "bg-[#eff8ff]"
+                                          : "hover:bg-[#eff8ff]"
                                       }`}
                                       style={{
                                         minWidth: 0,
@@ -1871,14 +2316,12 @@ export default function FormEdit({ paramsId }) {
                                               ref={provided.innerRef}
                                               {...provided.draggableProps}
                                               style={{
-                                                ...provided.draggableProps
-                                                  .style,
+                                                ...provided.draggableProps.style,
                                                 opacity: 1,
-                                                width: "100%",
-                                                minWidth: 0,
-                                                flexShrink: 0,
                                                 ...(isDragging
                                                   ? {
+                                                      width: "auto",
+                                                      maxWidth: "calc(100% - 16px)",
                                                       padding: "8px",
                                                       background: "#f5faff",
                                                       borderRadius: "8px",
@@ -1902,8 +2345,8 @@ export default function FormEdit({ paramsId }) {
                                                 isDragging ? "dragging" : ""
                                               } ${
                                                 isActive
-                                                  ? "bg-blue-50"
-                                                  : "hover:bg-blue-50"
+                                                  ? "bg-[#eff8ff]"
+                                                  : "hover:bg-[#eff8ff]"
                                               }`}
                                               onClick={() => {
                                                 console.log(
@@ -2157,7 +2600,7 @@ export default function FormEdit({ paramsId }) {
                                   mouseEnterDelay={0.3}
                                 >
                                   <div
-                                    className="flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group hover:bg-blue-50"
+                                    className="flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group hover:bg-[#eff8ff]"
                                     style={{
                                       minWidth: 0,
                                       flexShrink: 0,
@@ -2169,9 +2612,9 @@ export default function FormEdit({ paramsId }) {
                                       className="flex flex-1 justify-start items-center transition-all"
                                       style={{ minWidth: 0, flexShrink: 0 }}
                                     >
-                                      <div className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500 group-hover:bg-purple-100">
+                                      <div className="p-2 rounded-full border border-gray-300 bg-white">
                                         <svg
-                                          className="h-[16px] w-[16px] text-gray-600 group-hover:text-purple-600 transition-all"
+                                          className="h-[16px] w-[16px] text-gray-700"
                                           fill="none"
                                           stroke="currentColor"
                                           viewBox="0 0 24 24"
@@ -2180,7 +2623,7 @@ export default function FormEdit({ paramsId }) {
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                             strokeWidth={2}
-                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                            d="M12 6v12M6 12h12"
                                           />
                                         </svg>
                                       </div>
@@ -2275,7 +2718,7 @@ export default function FormEdit({ paramsId }) {
                                       debouncedSave(updatedData);
                                     }}
                                     placeholder="e.g., We'll ask you a few questions to learn more about you."
-                                    maxLength={150}
+                                    maxLength={500}
                                     textarea={true}
                                     className="text-sm border-none focus:ring-0"
                                     shape="round"
@@ -2286,7 +2729,102 @@ export default function FormEdit({ paramsId }) {
                                     (landingPageData?.form?.description || "")
                                       .length
                                   }
-                                  /150
+                                  /500
+                                </div>
+                              </div>
+                              {/* Form Buttons Texts */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Start Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.startApplicationText || "Start Application"}
+                                      onChange={(value) => {
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            startApplicationText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Submit Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.submitText || "Submit"}
+                                      onChange={(value) => {
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            submitText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Previous Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.previousText || "Previous"}
+                                      onChange={(value) => {
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            previousText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Next Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.nextText || "Next"}
+                                      onChange={(value) => {
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            nextText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             </div>
