@@ -47,6 +47,7 @@ export default function Page({ landingPageData, lpId, error }) {
     : `Join ${landingPageData?.companyName || 'our team'} and take your career to the next level. Apply now for this exciting opportunity.`;
 
   const canonicalUrl = `${process.env.NEXT_PUBLIC_LIVE_URL || 'https://hirelab.com'}/lp/${lpId}`;
+  const heroImageUrl = landingPageData?.heroImage || landingPageData?.heroPicture || landingPageData?.companyLogo || null;
   
   return (
     <>
@@ -56,6 +57,15 @@ export default function Page({ landingPageData, lpId, error }) {
         <meta name="description" content={seoDescription} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="canonical" href={canonicalUrl} />
+
+        {/* Performance: Preconnect/DNS-prefetch for common CDNs */}
+        <link rel="dns-prefetch" href="//res.cloudinary.com" />
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        {heroImageUrl && (
+          <link rel="preload" as="image" href={heroImageUrl} />
+        )}
         
         {/* Open Graph Meta Tags */}
         <meta property="og:title" content={seoTitle} />
@@ -171,6 +181,11 @@ export async function getServerSideProps(context) {
         notFound: true,
       };
     }
+
+    // Cache SSR response at the edge for brief period to improve TTFB
+    try {
+      context.res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    } catch (_) {}
 
     return {
       props: {
