@@ -272,12 +272,19 @@ const FileUpload = ({ value, onChange, placeholder }) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type and size
-    const allowedTypes = ['.pdf', '.doc', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
+    // Validate file type and size - expanded to support all file types
+    const allowedTypes = [
+      '.pdf', '.doc', '.docx', '.txt', '.rtf',
+      '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp',
+      '.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv',
+      '.mp3', '.wav', '.ogg', '.aac', '.flac', '.wma',
+      '.zip', '.rar', '.7z', '.tar', '.gz',
+      '.xls', '.xlsx', '.csv', '.ppt', '.pptx'
+    ];
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     
     if (!allowedTypes.includes(fileExtension)) {
-      message.error('Please select a valid file type (PDF, DOC, DOCX, TXT, PNG, JPG, JPEG, GIF, SVG)');
+      message.error('Please select a valid file type (PDF, DOC, DOCX, TXT, Images, Videos, Audio, Archives, etc.)');
       return;
     }
 
@@ -298,10 +305,13 @@ const FileUpload = ({ value, onChange, placeholder }) => {
         console.log('✅ File upload successful:', uploadedUrl);
         
         setFileName(file.name);
-        // Store both URL and filename as an object
+        // Store both URL and filename as an object with additional metadata
         onChange({
           url: uploadedUrl,
-          filename: file.name
+          filename: file.name,
+          size: file.size,
+          type: file.type || 'application/octet-stream',
+          uploadedAt: new Date().toISOString()
         });
         message.success('File uploaded successfully');
       } else {
@@ -334,7 +344,7 @@ const FileUpload = ({ value, onChange, placeholder }) => {
           ) : (
             <>
               <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
-              <p className="text-sm text-gray-500 mt-1">PDF, DOC, DOCX, TXT, PNG, JPG, JPEG, GIF, SVG (max 10MB)</p>
+              <p className="text-sm text-gray-500 mt-1">PDF, Documents, Images, Videos, Audio files (max 10MB)</p>
             </>
           )}
           {fileName && !uploading && <p className="text-sm text-green-600 mt-2">✓ {fileName}</p>}
@@ -345,7 +355,7 @@ const FileUpload = ({ value, onChange, placeholder }) => {
           onChange={handleFileUpload}
           disabled={uploading}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-          accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.svg"
+          accept=".pdf,.doc,.docx,.txt,.rtf,.png,.jpg,.jpeg,.gif,.svg,.webp,.bmp,.mp4,.webm,.ogg,.avi,.mov,.wmv,.flv,.mp3,.wav,.aac,.flac,.wma,.zip,.rar,.7z,.tar,.gz,.xls,.xlsx,.csv,.ppt,.pptx"
         />
       </div>
     </div>
@@ -968,16 +978,18 @@ export default function ApplyPage() {
           }
           processedFormData[field.id] = formattedDate;
         } else if (field.type === 'file') {
-          // Handle file fields - extract URL for backward compatibility
+          // Handle file fields - store complete object for better handling
           const fileData = formData[field.id];
           if (fileData) {
             if (typeof fileData === 'object' && fileData.url) {
-              // New format: object with url and filename
-              processedFormData[field.id] = fileData.url;
-              processedFormData[`${field.id}_filename`] = fileData.filename;
-            } else if (typeof fileData === 'string') {
-              // Legacy format: URL string
+              // New format: store the complete object
               processedFormData[field.id] = fileData;
+            } else if (typeof fileData === 'string') {
+              // Legacy format: URL string - convert to object format
+              processedFormData[field.id] = {
+                url: fileData,
+                filename: fileData.split('/').pop().split('_').pop() || 'download'
+              };
             }
           } else {
             processedFormData[field.id] = "";
