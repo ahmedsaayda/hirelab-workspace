@@ -184,6 +184,15 @@ async function fetchUserData(accessToken) {
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
+  const host = request.headers.get('host')?.replace('www.', '');
+
+  // If request is coming from a connected custom domain, allow public pages without auth
+  // Public routes for custom domain: root '/', '/pages', '/pages/[slug]', '/sitemap.xml'
+  const isCustomHost = host && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('hirelab');
+  const customPublic = pathname === '/' || pathname.startsWith('/pages') || pathname === '/sitemap.xml' || pathname.startsWith('/lp/');
+  if (isCustomHost && customPublic) {
+    return NextResponse.next();
+  }
   
   // Skip middleware for public paths
   if (isPublicPath(pathname)) {
