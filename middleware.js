@@ -184,13 +184,27 @@ async function fetchUserData(accessToken) {
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
-  const host = request.headers.get('host')?.replace('www.', '');
+  const host = process.env.NEXT_PUBLIC_DEV_CUSTOM_HOST ? process.env.NEXT_PUBLIC_DEV_CUSTOM_HOST : request.headers.get('host')?.replace('www.', '');
 
-  // If request is coming from a connected custom domain, allow public pages without auth
-  // Public routes for custom domain: root '/', '/pages', '/pages/[slug]', '/sitemap.xml'
-  const isCustomHost = host && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('hirelab');
-  const customPublic = pathname === '/' || pathname.startsWith('/pages') || pathname === '/sitemap.xml' || pathname.startsWith('/lp/');
-  if (isCustomHost && customPublic) {
+  // Custom-domain mode: bypass auth entirely and rewrite root to the public careers page
+  const isCustomHost = process.env.NEXT_PUBLIC_DEV_CUSTOM_HOST ? true : host && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('hirelab');
+  console.log('[CDM] middleware enter', { host, pathname, isCustomHost });
+  if (isCustomHost) {
+    // Allow internal assets and API calls untouched
+    if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname === '/favicon.ico') {
+      console.log('[CDM] pass-through asset/api', { pathname });
+      return NextResponse.next();
+    }
+    // Rewrite root to our public careers page using the owner userId resolved by backend
+    if (pathname === '/') {
+      // In dev we avoid relying on a backend call here; resolve on the page itself
+      const url = request.nextUrl.clone();
+      url.pathname = `/custom-domain/main`;
+      console.log('[CDM] rewrite root →', url.pathname);
+      return NextResponse.rewrite(url);
+    }
+    // For any other path (including /lp/[id] and static pages), bypass auth
+    console.log('[CDM] allow custom-domain path', { pathname });
     return NextResponse.next();
   }
   

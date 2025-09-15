@@ -6,7 +6,8 @@ import {
   RocketLaunchIcon,
   CogIcon,
   ChartBarIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
 import DomainsService from '../../services/DomainsService';
 
@@ -59,17 +60,35 @@ const CustomDomains = () => {
   const onRefreshDNS = async (row) => {
     setLoading(true);
     try {
+      // 1) Ask backend to re-check verification and update DB status
+      try { await DomainsService.check(row.domain); } catch (_) {}
+      // 2) Fetch the latest DNS instructions to display
       const res = await DomainsService.dnsConfig(row.domain);
       const list = res?.data?.records || [];
       setDnsList(list);
       if (list?.length) setDnsInstr({ type: list[0].recordType, name: list[0].name, value: list[0].value });
+      // 3) Reload list to reflect potential status change
       await load();
     } catch (_) {}
     setLoading(false);
   };
 
   const columns = [
-    { title: 'Domain', dataIndex: 'domain', key: 'domain' },
+    { 
+      title: 'Domain', 
+      dataIndex: 'domain', 
+      key: 'domain', 
+      render: (text, r) => (
+        <Space size={6}>
+          <span>{text}</span>
+          {r.status === 'active' && (
+            <a href={`https://${r.domain}`} target="_blank" rel="noreferrer" title="Open">
+              <ArrowTopRightOnSquareIcon className="w-4 h-4 text-gray-500 hover:text-gray-800" />
+            </a>
+          )}
+        </Space>
+      )
+    },
     { title: 'Status', dataIndex: 'status', key: 'status', render: (v) => <Tag color={v==='active'?'green':'gold'}>{v}</Tag> },
     { title: 'Actions', key: 'dns', render: (_, r) => (
       <Space>

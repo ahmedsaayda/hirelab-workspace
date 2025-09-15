@@ -89,16 +89,25 @@ export const middleField = (api) => {
       }
 
       const currentData = config?.data ?? {};
+
+      // Resolve domain to send with requests. In local dev, allow an override so
+      // custom-domain logic can function when running on localhost.
+      let resolvedDomain;
+      try {
+        const hostname = window.location.hostname?.replace?.('www.', '') || '';
+        const params = new URLSearchParams(window.location.search);
+        const queryOverride = params.get('cdh');
+        const storedOverride = (() => { try { return localStorage.getItem('devCustomDomainHost') || null; } catch (_) { return null; } })();
+        const envOverride = process.env.NEXT_PUBLIC_DEV_CUSTOM_HOST;
+        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+        resolvedDomain = (isLocal ? (queryOverride || envOverride || storedOverride) : hostname) || window.location.host;
+      } catch (_) {
+        resolvedDomain = window.location.host;
+      }
       return {
         ...config,
-        data: {
-          ...currentData,
-          domain: window.location.host,
-        },
-        params: {
-          ...config.params,
-          domain: window.location.host,
-        },
+        data: { ...currentData, domain: resolvedDomain },
+        params: { ...config.params, domain: resolvedDomain },
         headers: {
           access_token,
           refresh_token,
