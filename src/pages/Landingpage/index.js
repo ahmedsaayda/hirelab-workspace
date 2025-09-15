@@ -37,7 +37,7 @@ const waitForPixel = (callback, maxRetries = 10, retryDelay = 500) => {
   checkAndFire();
 };
 
-export default function LandingpagePage({ paramsId, overrideParamId = null, fullscreen = false, showBackToEditButton = false, setFullscreen,defaultLandingPageData = null }) {
+export default function LandingpagePage({ paramsId, overrideParamId = null, fullscreen = false, showBackToEditButton = false, setFullscreen, defaultLandingPageData = null }) {
   const lpId = overrideParamId ?? paramsId;
   const [landingPageData, setLandingPageData] = useState(defaultLandingPageData);
   console.log(landingPageData);
@@ -357,7 +357,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   }, []);
 
   const fetchData = useCallback(() => {
-    if (lpId && !defaultLandingPageData) {
+    if (lpId && !defaultLandingPageData && !landingPageData) {
       PublicService.getLP(lpId).then((res) => {
         if (res.data?.lp) setLandingPageData(res.data.lp);
       })
@@ -365,7 +365,14 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
         console.log("error fetching data",err)
       })
     }
-  }, [lpId]);
+  }, [lpId, defaultLandingPageData, landingPageData]);
+
+  // Set landing page data from props if available
+  useEffect(() => {
+    if (defaultLandingPageData) {
+      setLandingPageData(defaultLandingPageData);
+    }
+  }, [defaultLandingPageData]);
 
   useEffect(() => {
     fetchData();
