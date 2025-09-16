@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
+import axios from 'axios';
 import { Button, Input, Radio, Checkbox, Select, Progress, message, Form, DatePicker } from 'antd';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import dayjs from 'dayjs';
@@ -272,12 +274,19 @@ const FileUpload = ({ value, onChange, placeholder }) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type and size
-    const allowedTypes = ['.pdf', '.doc', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
+    // Validate file type and size - expanded to support all file types
+    const allowedTypes = [
+      '.pdf', '.doc', '.docx', '.txt', '.rtf',
+      '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp',
+      '.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv',
+      '.mp3', '.wav', '.ogg', '.aac', '.flac', '.wma',
+      '.zip', '.rar', '.7z', '.tar', '.gz',
+      '.xls', '.xlsx', '.csv', '.ppt', '.pptx'
+    ];
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     
     if (!allowedTypes.includes(fileExtension)) {
-      message.error('Please select a valid file type (PDF, DOC, DOCX, TXT, PNG, JPG, JPEG, GIF, SVG)');
+      message.error('Please select a valid file type (PDF, DOC, DOCX, TXT, Images, Videos, Audio, Archives, etc.)');
       return;
     }
 
@@ -298,10 +307,13 @@ const FileUpload = ({ value, onChange, placeholder }) => {
         console.log('✅ File upload successful:', uploadedUrl);
         
         setFileName(file.name);
-        // Store both URL and filename as an object
+        // Store both URL and filename as an object with additional metadata
         onChange({
           url: uploadedUrl,
-          filename: file.name
+          filename: file.name,
+          size: file.size,
+          type: file.type || 'application/octet-stream',
+          uploadedAt: new Date().toISOString()
         });
         message.success('File uploaded successfully');
       } else {
@@ -334,7 +346,7 @@ const FileUpload = ({ value, onChange, placeholder }) => {
           ) : (
             <>
               <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
-              <p className="text-sm text-gray-500 mt-1">PDF, DOC, DOCX, TXT, PNG, JPG, JPEG, GIF, SVG (max 10MB)</p>
+              <p className="text-sm text-gray-500 mt-1">PDF, Documents, Images, Videos, Audio files (max 10MB)</p>
             </>
           )}
           {fileName && !uploading && <p className="text-sm text-green-600 mt-2">✓ {fileName}</p>}
@@ -345,18 +357,18 @@ const FileUpload = ({ value, onChange, placeholder }) => {
           onChange={handleFileUpload}
           disabled={uploading}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-          accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.svg"
+          accept=".pdf,.doc,.docx,.txt,.rtf,.png,.jpg,.jpeg,.gif,.svg,.webp,.bmp,.mp4,.webm,.ogg,.avi,.mov,.wmv,.flv,.mp3,.wav,.aac,.flac,.wma,.zip,.rar,.7z,.tar,.gz,.xls,.xlsx,.csv,.ppt,.pptx"
         />
       </div>
     </div>
   );
 };
 
-export default function ApplyPage() {
+export default function ApplyPage({ defaultLandingPageData = null }) {
   const router = useRouter();
   const { lpId } = router.query;
   
-  const [landingPageData, setLandingPageData] = useState(null);
+  const [landingPageData, setLandingPageData] = useState(defaultLandingPageData);
   const [formData, setFormData] = useState({});
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -473,10 +485,27 @@ export default function ApplyPage() {
   // Removed country detection since we're using regular Input instead of PhoneInput
 
   useEffect(() => {
-    if (lpId) {
+    if (lpId && !defaultLandingPageData) {
       fetchData();
+    } else if (defaultLandingPageData) {
+      setLoading(false);
     }
-  }, [lpId]);
+  }, [lpId, defaultLandingPageData]);
+
+  // If SSR provided data, hydrate form fields immediately
+  useEffect(() => {
+    if (defaultLandingPageData && (!Array.isArray(formFields) || formFields.length === 0)) {
+      const visibleFields = (defaultLandingPageData?.form?.fields || []).filter((field) => field.visible !== false);
+      if (visibleFields.length > 0) {
+        setFormFields(visibleFields);
+      } else {
+        // Fallback: if SSR data has no fields, fetch client-side
+        if (lpId) {
+          fetchData();
+        }
+      }
+    }
+  }, [defaultLandingPageData]);
 
   // Meta Pixel: fire PageView for apply page and fire Lead on first step render
   useEffect(() => {
@@ -544,7 +573,7 @@ export default function ApplyPage() {
         setLandingPageData(landingPage);
         // Filter visible fields (treat undefined as visible for backwards compatibility)
         console.log("all fieldsss", res.data?.lp?.form?.fields);
-        const visibleFields = (res.data?.lp?.form?.fields || []).filter(field => field.visible !== false);
+        const visibleFields = ((landingPage?.form?.fields) || (res.data?.lp?.form?.fields) || []).filter(field => field.visible !== false);
         console.log('Visible fieldsss:', visibleFields);
         
         // Check for AI-generated contact field first
@@ -639,6 +668,11 @@ export default function ApplyPage() {
   };
 
   const handleNext = () => {
+    // Guard: if fields are not yet loaded, don't proceed or submit
+    if (!Array.isArray(formFields) || formFields.length === 0) {
+      message.warning('Loading form... Please wait a moment.');
+      return;
+    }
     // Validate current step
     const currentField = formFields[currentStep - 1]; // -1 because step 0 is intro
     if (currentStep > 0 && currentField?.required) {
@@ -968,16 +1002,18 @@ export default function ApplyPage() {
           }
           processedFormData[field.id] = formattedDate;
         } else if (field.type === 'file') {
-          // Handle file fields - extract URL for backward compatibility
+          // Handle file fields - store complete object for better handling
           const fileData = formData[field.id];
           if (fileData) {
             if (typeof fileData === 'object' && fileData.url) {
-              // New format: object with url and filename
-              processedFormData[field.id] = fileData.url;
-              processedFormData[`${field.id}_filename`] = fileData.filename;
-            } else if (typeof fileData === 'string') {
-              // Legacy format: URL string
+              // New format: store the complete object
               processedFormData[field.id] = fileData;
+            } else if (typeof fileData === 'string') {
+              // Legacy format: URL string - convert to object format
+              processedFormData[field.id] = {
+                url: fileData,
+                filename: fileData.split('/').pop().split('_').pop() || 'download'
+              };
             }
           } else {
             processedFormData[field.id] = "";
@@ -1595,8 +1631,51 @@ export default function ApplyPage() {
   const totalSteps = formFields.length + 1; // +1 for intro step
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
+  const seoTitle = landingPageData?.vacancyTitle 
+    ? `Apply for ${landingPageData.vacancyTitle} - ${landingPageData?.companyName || 'Hirelab'}`
+    : 'Job Application - Hirelab';
+  const seoDescription = landingPageData?.heroDescription 
+    ? (landingPageData.heroDescription.substring(0, 160) + (landingPageData.heroDescription.length > 160 ? '...' : ''))
+    : `Apply for this opportunity at ${landingPageData?.companyName || 'our company'}. Start your application now.`;
+  const canonicalUrl = `${process.env.NEXT_PUBLIC_LIVE_URL || 'https://hirelab.com'}/lp/${lpId}/apply`;
+
   return (
     <div className="min-h-screen bg-gray-50 apply-form-container">{/* UNIQUE APPLY CLASS */}
+      <Head>
+        {/* Essential Meta Tags */}
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph Meta Tags */}
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:site_name" content="Hirelab" />
+        {landingPageData?.companyLogo && (
+          <meta property="og:image" content={landingPageData.companyLogo} />
+        )}
+
+        {/* Twitter Card Meta Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        {landingPageData?.companyLogo && (
+          <meta name="twitter:image" content={landingPageData.companyLogo} />
+        )}
+
+        {/* Additional SEO Tags */}
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="author" content={landingPageData?.companyName || 'Hirelab'} />
+        {landingPageData?.department && (
+          <meta name="keywords" content={`${landingPageData.vacancyTitle}, ${landingPageData.companyName}, ${landingPageData.department}, job, career, hiring`} />
+        )}
+
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       {/* Load Meta Pixel script */}
       <MetaPixel metaPixelId={landingPageData?.metaPixelId} />
       {/* 🎨 APPLY-ONLY BRAND STYLES - ONLY REAL USER COLORS */}
@@ -1754,4 +1833,36 @@ export default function ApplyPage() {
       </div>
     </div>
   );
+}
+
+// Server-side data fetching (minimal)
+export async function getServerSideProps(context) {
+  const { lpId } = context.query;
+  if (!lpId) return { notFound: true };
+
+  try {
+    const backendUrl = process.env.NODE_ENV !== "production"
+      ? "http://localhost:5155/api"
+      : process.env.NEXT_PUBLIC_BACKEND_URL;
+
+    const response = await axios.get(`${backendUrl}/public/getLP?id=${lpId}`, {
+      timeout: 10000,
+      headers: { 'User-Agent': 'HirelabBot/1.0' }
+    });
+
+    const landingPageData = response.data?.lp;
+    if (!landingPageData?.published || landingPageData.applyType !== 'form') {
+      return { notFound: true };
+    }
+
+    return {
+      props: {
+        defaultLandingPageData: landingPageData,
+        lpId,
+      }
+    };
+
+  } catch (error) {
+    return { notFound: true };
+  }
 }

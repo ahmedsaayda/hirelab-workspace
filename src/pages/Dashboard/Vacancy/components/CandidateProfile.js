@@ -41,6 +41,8 @@ import CrudService from '../../../../services/CrudService';
 import UploadService from '../../../../services/UploadService';
 import CandidateChatService from '../../../../services/CandidateChatService';
 import ATSService from '../../../../services/ATSService';
+import FileViewer from '../../../../components/FileViewer';
+import { extractFileName, extractFileUrl, downloadFile } from '../../../../utils/fileViewerHelper';
 import { useRouter } from 'next/router';
 
 // Add custom styles for the drawer
@@ -361,6 +363,8 @@ const CandidateProfile = ({
   const [uploadingResume, setUploadingResume] = useState(false);
   const [lastCommunication, setLastCommunication] = useState(null);
   const [updatingCommunication, setUpdatingCommunication] = useState(false);
+  const [fileViewerVisible, setFileViewerVisible] = useState(false);
+  const [viewingFile, setViewingFile] = useState({ url: '', fileName: '', title: '' });
   
   const router = useRouter();
 
@@ -759,6 +763,12 @@ const CandidateProfile = ({
     } finally {
       setUploadingResume(false);
     }
+  };
+
+  // Handle opening file in viewer
+  const handleViewFile = (fileUrl, fileName = '', title = 'File') => {
+    setViewingFile({ url: fileUrl, fileName, title });
+    setFileViewerVisible(true);
   };
 
   const updateLastCommunication = async (date) => {
@@ -1184,45 +1194,25 @@ const CandidateProfile = ({
                 </div>
                 {item.type === 'file' && formData[item.fieldId] ? (
                   <div className="flex items-center gap-2">
-                    <a 
-                      href={(() => {
+                    <button 
+                      onClick={() => {
                         const fileData = formData[item.fieldId];
-                        // Handle both new object format and legacy URL string
-                        return typeof fileData === 'object' ? fileData.url : fileData;
-                      })()} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                        const fileUrl = extractFileUrl(fileData) || extractFileUrl(formData[item.fieldId]);
+                        const fileName = extractFileName(fileData) || extractFileName(formData[`${item.fieldId}_filename`]);
+                        
+                        handleViewFile(fileUrl, fileName, item.label || 'File');
+                      }}
+                      className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0"
                     >
-                      <DownloadOutlined className="text-sm" />
+                      <FileTextOutlined className="text-sm" />
                       {(() => {
                         const fileData = formData[item.fieldId];
+                        const fileName = extractFileName(fileData) || extractFileName(formData[`${item.fieldId}_filename`]) || 'View File';
                         
-                        // Handle new object format
-                        if (typeof fileData === 'object' && fileData.filename) {
-                          return fileData.filename.length > 30 ? fileData.filename.substring(0, 30) + '...' : fileData.filename;
-                        }
-                        
-                        // Try to get original filename from separate field
-                        const storedFilename = formData[`${item.fieldId}_filename`];
-                        if (storedFilename) {
-                          return storedFilename.length > 30 ? storedFilename.substring(0, 30) + '...' : storedFilename;
-                        }
-                        
-                        // Fallback: Extract filename from URL for legacy data
-                        const fileUrl = typeof fileData === 'string' ? fileData : '';
-                        if (fileUrl && fileUrl.startsWith('http')) {
-                          const urlParts = fileUrl.split('/');
-                          const lastPart = urlParts[urlParts.length - 1];
-                          const decodedPart = decodeURIComponent(lastPart);
-                          // Remove Cloudinary transformations and get clean filename
-                          const cleanName = decodedPart.split('_').pop() || decodedPart;
-                          return cleanName.length > 30 ? cleanName.substring(0, 30) + '...' : cleanName;
-                        }
-                        
-                        return item.answer;
+                        // Truncate long filenames
+                        return fileName.length > 30 ? fileName.substring(0, 30) + '...' : fileName;
                       })()}
-                    </a>
+                    </button>
                   </div>
                 ) : item.type === 'website' && item.answer && item.answer.startsWith('http') ? (
                   <a 
@@ -1240,7 +1230,7 @@ const CandidateProfile = ({
                 )}
               </div>
               
-              {(item.type === 'email' || item.type === 'phone' || (item.type === 'file' && formData[item.fieldId])) && (
+              {(item.type === 'email' || item.type === 'phone') && (
                 <div className="flex gap-1">
                   {item.type === 'email' && (
                     <Button 
@@ -1260,20 +1250,6 @@ const CandidateProfile = ({
                       onClick={() => window.open(`tel:${item.answer}`, '_blank')}
                       className="hover:bg-indigo-100 hover:text-indigo-600"
                       title="Call phone"
-                    />
-                  )}
-                  {item.type === 'file' && formData[item.fieldId] && (
-                    <Button 
-                      size="small" 
-                      type="text" 
-                      icon={<DownloadOutlined />}
-                      onClick={() => {
-                        const fileData = formData[item.fieldId];
-                        const fileUrl = typeof fileData === 'object' ? fileData.url : fileData;
-                        window.open(fileUrl, '_blank');
-                      }}
-                      className="hover:bg-indigo-100 hover:text-indigo-600"
-                      title="Download file"
                     />
                   )}
                 </div>
@@ -1378,7 +1354,7 @@ const CandidateProfile = ({
           <div className="flex items-center gap-3 p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
             <MailOutlined className="text-blue-500 text-sm" />
             <div className="flex-1 min-w-0">
-              <div className='min-w-[100px] inline flex flex-1'><Text className="text-xs text-gray-500 ">Email</Text></div>
+              <div className='min-w-[100px] flex flex-1'><Text className="text-xs text-gray-500 ">Email</Text></div>
               <Text className="text-sm font-medium text-gray-900 truncate">{candidate?.email || 'Not provided'}</Text>
             </div>
             {candidate?.email && (
@@ -1396,7 +1372,7 @@ const CandidateProfile = ({
             <div className="flex items-center gap-3 p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
               <PhoneOutlined className="text-green-500 text-sm" />
               <div className="flex-1">
-                <div className='min-w-[100px] inline flex flex-1'><Text className="text-xs text-gray-500 ">Phone</Text></div>
+                <div className='min-w-[100px] flex flex-1'><Text className="text-xs text-gray-500 ">Phone</Text></div>
                 <Text className="text-sm font-medium text-gray-900">{candidate.phone}</Text>
               </div>
               <Button 
@@ -1413,7 +1389,7 @@ const CandidateProfile = ({
           <div className="flex items-center gap-3 p-2 bg-orange-50 rounded hover:bg-orange-100 transition-colors border border-orange-200">
             <ClockCircleOutlined className="text-orange-500 text-sm" />
             <div className="flex-1">
-              <div className='min-w-[100px] inline flex flex-1'>
+              <div className='min-w-[100px] flex flex-1'>
                 <Text className="text-xs text-orange-600 font-medium">Last Communication</Text>
               </div>
               <div className="flex items-center gap-2">
@@ -1502,11 +1478,46 @@ const CandidateProfile = ({
                 <Button 
                   type="primary" 
                   size="small"
-                  onClick={() => window.open(resumeUrl, '_blank')}
+                  onClick={() => {
+                    // Extract filename from URL if possible
+                    let fileName = 'resume';
+                    if (resumeUrl && resumeUrl.startsWith('http')) {
+                      const urlParts = resumeUrl.split('/');
+                      const lastPart = urlParts[urlParts.length - 1];
+                      const decodedPart = decodeURIComponent(lastPart);
+                      fileName = decodedPart.split('_').pop() || 'resume';
+                    }
+                    handleViewFile(resumeUrl, fileName, 'Resume');
+                  }}
                 >
                   View
                 </Button>
-                {/* Download removed per request */}
+                <Button 
+                  size="small"
+                  icon={<DownloadOutlined />}
+                  onClick={async () => {
+                    try {
+                      message.loading('Starting download...', 1);
+                      // Extract filename from URL if possible
+                      let fileName = 'resume';
+                      if (resumeUrl && resumeUrl.startsWith('http')) {
+                        const urlParts = resumeUrl.split('/');
+                        const lastPart = urlParts[urlParts.length - 1];
+                        const decodedPart = decodeURIComponent(lastPart);
+                        fileName = decodedPart.split('_').pop() || 'resume';
+                      }
+                      
+                      await downloadFile(resumeUrl, fileName);
+                      message.success('Download started');
+                    } catch (error) {
+                      console.error('Download error:', error);
+                      message.error('Failed to download file');
+                    }
+                  }}
+                  title="Download"
+                >
+                  Download
+                </Button>
               </div>
             </div>
           </div>
@@ -1757,6 +1768,15 @@ const CandidateProfile = ({
 
       {/* Navigation Footer */}
       {renderNavigation()}
+      
+      {/* File Viewer Modal */}
+      <FileViewer
+        visible={fileViewerVisible}
+        onClose={() => setFileViewerVisible(false)}
+        fileUrl={viewingFile.url}
+        fileName={viewingFile.fileName}
+        title={viewingFile.title}
+      />
     </Drawer>
   );
 };
