@@ -1019,10 +1019,10 @@ const handlemediaLink = (platform) => {
                     <img src="https://www.facebook.com/favicon.ico" style={{ width: 20, height: 20 }} />
                   </AntButton>
                   <AntButton shape="circle"  onClick={()=>handlemediaLink('tiktok')}>
-                    <img src="https://www.tiktok.com/favicon.ico" style={{ width: 20, height: 20 }} />
+                    <img src="/icons/tiktok.png" style={{ width: 30, height: 30 }} />
                   </AntButton>
                   <AntButton shape="circle"  onClick={()=>handlemediaLink('twitter')}>
-                    <img src="https://abs.twimg.com/favicons/twitter.3.ico" style={{ width: 20, height: 20 }} />
+                    <img src="/icons/x.png" style={{ width: 18, height: 18 }} />
                   </AntButton>
                   <AntButton shape="circle" onClick={() => handlemediaLink('email')}>
                     <img src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" style={{ width: 24, height: 24 }} />
@@ -1191,7 +1191,8 @@ const handlemediaLink = (platform) => {
             scrollBehavior: "smooth",
             minWidth: 0,  // Allow flex item to shrink below its content size
             WebkitOverflowScrolling: "touch",  // Smooth scrolling on iOS
-            justifyContent: areTabsOverflowing ? "flex-start" : "center"  // Center when few, left when overflow
+            justifyContent: "center",  // Always center navigation items
+            gap: "0.5rem"  // Add consistent spacing between items
           }}
         >
         {   
@@ -1211,7 +1212,7 @@ const handlemediaLink = (platform) => {
                       key={index}
                       data-tab-id={tab.id}
                       onClick={() => handleNavigate(tab.id)}
-                      className="px-3 py-2 md:px-6 md:py-4 text-sm md:text-base whitespace-nowrap transition-all flex-shrink-0 min-w-max"
+                      className="px-3 py-2 md:px-6 md:py-4 text-sm md:text-base whitespace-nowrap transition-all flex-shrink-0"
                       style={{
                         color: textColor === "#000000" ? textColor : getColor("primary", 500),
                         fontWeight: currentHash === tab.id ? "700" : "400",
