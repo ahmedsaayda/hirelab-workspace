@@ -14,6 +14,7 @@ import {
   Tag,
   Tooltip,
   Spin,
+  Switch,
 } from "antd";
 import {
   EditOutlined,
@@ -26,6 +27,7 @@ import {
   MailOutlined,
   MoreOutlined,
   CrownOutlined,
+  ApartmentOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -469,6 +471,19 @@ const UserManagement = () => {
       ),
     },
     {
+      title: "Workspaces",
+      dataIndex: "allowWorkspaces",
+      key: "allowWorkspaces",
+      render: (allowed) => (
+        <Tag 
+          color={allowed ? "green" : "default"} 
+          icon={allowed ? <ApartmentOutlined /> : null}
+        >
+          {allowed ? "ENABLED" : "DISABLED"}
+        </Tag>
+      ),
+    },
+    {
       title: "Plan Info",
       key: "planInfo",
       render: (_, record) => {
@@ -551,6 +566,7 @@ const UserManagement = () => {
                 lastName: record.lastName || "",
                 role: record.role,
                 accessLevel: record.accessLevel,
+                allowWorkspaces: record.allowWorkspaces || false,
               });
               setIsModalVisible(true);
             }}
@@ -826,6 +842,20 @@ const UserManagement = () => {
               </Select>
             </Form.Item>
           </div>
+
+          <Form.Item
+            name="allowWorkspaces"
+            label={
+              <div className="flex items-center gap-2">
+                <ApartmentOutlined />
+                <span>Allow Workspaces</span>
+              </div>
+            }
+            valuePropName="checked"
+            extra="Enable this user to create and manage multiple brand workspaces"
+          >
+            <Switch />
+          </Form.Item>
 
           {!editingUser && (
             <Form.Item

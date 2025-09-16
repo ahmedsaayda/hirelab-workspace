@@ -5,6 +5,7 @@ import { Alert, Badge, Skeleton, message } from "antd";
 import Color from "color";
 import Cookies from "js-cookie";
 import moment from "moment";
+import { refreshUserData } from "../../src/utils/userRefresh";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
@@ -106,6 +107,40 @@ const Layout = ({children}) => {
   const location = useRouter();
   const router = useRouter();
   const user = useSelector(selectUser);
+
+  // Helper function to return from workspace
+  const handleReturnFromWorkspace = async () => {
+    try {
+      const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const token = Cookies.get("accessToken");
+      const response = await fetch(`${BASE_URL}/workspaces/return`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Update cookies with new tokens
+        Cookies.set("accessToken", data.accessToken);
+        Cookies.set("refreshToken", data.refreshToken);
+        
+        // Refresh user data in Redux store to clear workspace session
+        await refreshUserData();
+        
+        // Navigate to workspaces page
+        router.push('/dashboard/workspaces');
+      } else {
+        console.error('Failed to return from workspace');
+        message.error('Failed to return to main account');
+      }
+    } catch (error) {
+      console.error('Error returning from workspace:', error);
+      message.error('Error returning to main account');
+    }
+  };
   const darkMode = useSelector(selectDarkMode);
 
   const Theme = useCallback(
@@ -312,6 +347,11 @@ const Layout = ({children}) => {
           href: "/dashboard/custom-domains",
           icon: CustomDomainsIcon,
         },
+        ...(user?.allowWorkspaces ? [{
+          name: "Workspaces",
+          href: "/dashboard/workspaces",
+          icon: Blocks,
+        }] : []),
 
         // {
         //   name: "Analytics",
@@ -389,7 +429,7 @@ const Layout = ({children}) => {
       name: "Plan & Billing",
       href: "/dashboard/billing",
       logo: CreditCard,
-      // hide: user?.role !== "recruiter",
+      hide: user?.isWorkspaceSession, // Hide for workspace users
     },
     {
       name: "Integrations",
@@ -409,7 +449,7 @@ const Layout = ({children}) => {
       name: "Upgrade",
       href: "/dashboard/billing",
       logo: ArrowUpCircle,
-      // hide: user?.role !== "recruiter",
+      hide: user?.isWorkspaceSession, // Hide for workspace users
     },
     {
       name: "SaaS Configuration",
@@ -447,7 +487,14 @@ const Layout = ({children}) => {
     //   onClick: (e) => {
     //     e.preventDefault();
     //   },
-    // },
+    //     },
+    // Add workspace return option for users in workspace sessions
+    ...(user?.isWorkspaceSession ? [{
+      name: "Return to Main Account",
+      href: "/dashboard",
+      onClick: handleReturnFromWorkspace,
+      logo: ArrowUpCircle,
+    }] : []),
     {
       name: "Sign out",
       href: "/dashboard",
@@ -507,6 +554,30 @@ const Layout = ({children}) => {
               onClose={() => {
                 localStorage.closedTrialInfo = "true";
               }}
+            />
+          )}
+          
+          {user?.isWorkspaceSession && (
+            <Alert
+              type="warning"
+              message={
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Blocks className="w-4 h-4" />
+                    <span>
+                      <strong>Workspace Mode:</strong> You are currently working in "{user.workspaceName || 'Workspace'}" workspace.
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleReturnFromWorkspace}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm font-medium"
+                  >
+                    Return to Main Account
+                  </button>
+                </div>
+              }
+              banner
+              showIcon={false}
             />
           )}
          
