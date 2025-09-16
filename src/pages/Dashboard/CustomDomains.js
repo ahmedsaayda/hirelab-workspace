@@ -340,7 +340,7 @@ const CustomDomains = () => {
                     </div>
 
                     
-                    {!hasActiveDomain && dnsList?.length > 0 && (
+                    {!hasActiveDomain && domains?.length > 0 && dnsList?.length > 0 && (
                       <Card 
                         size="small" 
                         className="bg-blue-50 border-blue-200" 
