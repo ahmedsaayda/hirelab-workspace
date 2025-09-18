@@ -178,11 +178,11 @@ const Login = () => {
                 <Checkbox className="col-span-full" required />
                 <label>
                   I accept the{" "}
-                  <a href="https://hirelab.io/privacy-policy" target="_blank" className="text-blue-600 hover:underline">
+                  <a href="https://hirelab.io/privacy-policy-hirelab-platform" target="_blank" className="text-blue-600 hover:underline">
                     privacy policy
                   </a>{" "}
                   and{" "}
-                  <a href="https://hirelab.io/terms-of-use" target="_blank" className="text-blue-600 hover:underline">
+                  <a href="https://hirelab.io/terms-of-use-software" target="_blank" className="text-blue-600 hover:underline">
                     terms of service
                   </a>
                 </label>

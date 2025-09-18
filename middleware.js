@@ -4,6 +4,9 @@ import { NextResponse } from 'next/server';
 const userValidationCache = new Map();
 const CACHE_DURATION = 30000; // 30 seconds
 
+// Cache pretty-url mappings per host
+const prettyUrlCache = new Map(); // host -> { ts, userId, map: {slug:id}, reverse: {id:slug} }
+
 // Cleanup expired cache entries (only in non-serverless environments)
 if (typeof process !== 'undefined' && !process.env.VERCEL) {
   setInterval(() => {
@@ -190,6 +193,42 @@ export async function middleware(request) {
   const isCustomHost = process.env.NEXT_PUBLIC_DEV_CUSTOM_HOST ? true : host && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('hirelab');
   console.log('[CDM] middleware enter', { host, pathname, isCustomHost });
   if (isCustomHost) {
+    // Helper to fetch pretty URL map for this host (cached)
+    const getPrettyMap = async () => {
+      const now = Date.now();
+      const cached = prettyUrlCache.get(host);
+      if (cached && now - cached.ts < CACHE_DURATION) return cached;
+      try {
+        const backendUrl = process.env.NODE_ENV !== 'production' ? 'http://localhost:5155/api' : process.env.NEXT_PUBLIC_BACKEND_URL;
+        if (!backendUrl) return null;
+        // 1) Resolve user by hostname
+        const r1 = await fetch(`${backendUrl}/domains/by-hostname?hostname=${encodeURIComponent(host)}`, { method: 'GET' });
+        if (!r1.ok) throw new Error('host not found');
+        const info = await r1.json();
+        const userId = info?.user_id;
+        if (!userId) return null;
+        // 2) Fetch settings (public) for that user
+        const r2 = await fetch(`${backendUrl}/domains/global-settings/${encodeURIComponent(userId)}`, { method: 'GET' });
+        if (!r2.ok) throw new Error('settings not found');
+        const settings = await r2.json();
+        const list = Array.isArray(settings?.prettyUrls) ? settings.prettyUrls : [];
+        const map = {};
+        const reverse = {};
+        for (const it of list) {
+          if (it?.active !== false && it?.slug && it?.landingPageId) {
+            const slug = String(it.slug).trim().replace(/^\//, '').toLowerCase();
+            map[slug] = String(it.landingPageId);
+            reverse[String(it.landingPageId)] = slug;
+          }
+        }
+        const packed = { ts: now, userId, map, reverse };
+        prettyUrlCache.set(host, packed);
+        return packed;
+      } catch (_) {
+        return null;
+      }
+    };
+
     // Allow internal assets and API calls untouched
     if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname === '/favicon.ico') {
       console.log('[CDM] pass-through asset/api', { pathname });
@@ -203,7 +242,42 @@ export async function middleware(request) {
       console.log('[CDM] rewrite root →', url.pathname);
       return NextResponse.rewrite(url);
     }
-    // For any other path (including /lp/[id] and static pages), bypass auth
+    // Pretty URL handling for custom domains only
+    try {
+      const pack = await getPrettyMap();
+      const url = request.nextUrl.clone();
+      const segments = pathname.split('?')[0].split('#')[0].split('/').filter(Boolean);
+
+      // Redirect standard /lp/:id routes to pretty slug if available
+      if (segments[0] === 'lp' && segments[1]) {
+        const id = segments[1];
+        const suffix = segments.slice(2).join('/'); // '', 'apply', 'thank-you', etc
+        const slug = pack?.reverse?.[id];
+        if (slug) {
+          url.pathname = `/${slug}${suffix ? '/' + suffix : ''}`;
+          console.log('[CDM] redirect standard → pretty', { from: pathname, to: url.pathname });
+          return NextResponse.redirect(url, 308);
+        }
+        return NextResponse.next();
+      }
+
+      // Rewrite pretty slug to internal /lp/:id
+      const reserved = new Set(['custom-domain', 'sitemap.xml', 'robots.txt']);
+      if (segments.length >= 1 && !reserved.has(segments[0])) {
+        const slug = segments[0];
+        const id = pack?.map?.[slug];
+        if (id) {
+          const suffix = segments.slice(1).join('/');
+          url.pathname = `/lp/${id}${suffix ? '/' + suffix : ''}`;
+          console.log('[CDM] rewrite pretty → standard', { from: pathname, to: url.pathname });
+          return NextResponse.rewrite(url);
+        }
+      }
+    } catch (e) {
+      console.log('[CDM] pretty url handling error', e?.message);
+    }
+
+    // For any other path (including static pages), bypass auth
     console.log('[CDM] allow custom-domain path', { pathname });
     return NextResponse.next();
   }

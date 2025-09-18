@@ -129,11 +129,11 @@ const JoinTeamMember = () => {
                 <Checkbox className="col-span-full" required />
                 <label>
                   I accept the{" "}
-                  <a href="https://hirelab.io/privacy-policy" target="_blank">
+                  <a href="https://hirelab.io/privacy-policy-hirelab-platform" target="_blank">
                     privacy policy
                   </a>{" "}
                   and{" "}
-                  <a href="https://hirelab.io/terms-of-use" target="_blank">
+                  <a href="https://hirelab.io/terms-of-use-software" target="_blank">
                     terms of service
                   </a>
                 </label>

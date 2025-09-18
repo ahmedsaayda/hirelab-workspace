@@ -73,6 +73,8 @@ import MyMediaLibrary from "./Vacancies/components/mediaLibrary/index.jsx";
 import Vacancies from "./Vacancies/index.jsx";
 import UserManagement from "./Admin/UserManagement/index.js";
 import RoleManagement from "./Admin/RoleManagement/index.js";
+import WorkspaceManagement from "./Workspaces/index.js";
+import WorkspaceReturnButton from "../../components/WorkspaceReturnButton.js";
 import { partner } from "../../constants.js";
 export const THEME_OPTIONS = [
   { value: 1, label: "Default" },
@@ -578,6 +580,7 @@ const Dashboard = () => {
           <Footer />
           {/* <SupportWidget /> */}
           <PhoneWidget />
+          <WorkspaceReturnButton user={me} />
         </Theme>
       </div>
     </div>
