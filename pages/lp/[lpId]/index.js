@@ -17,11 +17,11 @@ export default function Page({ landingPageData, lpId, error }) {
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              {error === 'NOT_FOUND' ? 'Landing Page Not Found' : 'Something went wrong'}
+              {error === 'NOT_FOUND' ? 'Page Not Found' : 'Something went wrong'}
             </h1>
             <p className="text-gray-600 mb-4">
               {error === 'NOT_FOUND' 
-                ? 'The landing page you are looking for does not exist or has been removed.'
+                ? 'The page you are looking for does not exist or has been removed.'
                 : 'We encountered an error loading this page.'
               }
             </p>
@@ -152,7 +152,7 @@ export async function getServerSideProps(context) {
       ? "http://localhost:5155/api"
       : process.env.NEXT_PUBLIC_BACKEND_URL;
 
-    // Fetch landing page data from backend
+    // Fetch page data from backend
     const response = await axios.get(`${backendUrl}/public/getLP?id=${lpId}`, {
       timeout: 10000, // 10 second timeout
       headers: {
@@ -160,7 +160,7 @@ export async function getServerSideProps(context) {
       }
     });
 
-    // Check if landing page exists and is published
+    // Check if page exists and is published
     if (!response.data?.lp) {
       return {
         props: {
@@ -175,7 +175,7 @@ export async function getServerSideProps(context) {
 
     console.log("landingPageData",landingPageData);
     
-    // Check if landing page is published (optional check - uncomment if needed)
+    // Check if page is published (optional check - uncomment if needed)
     if (!landingPageData.published) {
       return {
         notFound: true,
@@ -196,7 +196,7 @@ export async function getServerSideProps(context) {
     };
 
   } catch (error) {
-    console.error('Error fetching landing page data:', error.message);
+    console.error('Error fetching page data:', error.message);
     
     // If it's a 404 from the API, return not found
     if (error.response?.status === 404) {
