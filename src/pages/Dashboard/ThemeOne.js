@@ -907,7 +907,8 @@ export default function Example({
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
                                       {team.role === 'owner' ? 'Owner' : 
                                        team.role === 'admin' ? 'Admin' : 
-                                       team.role === 'editor' ? 'Editor' : 'Viewer'}
+                                       team.role === 'editor' ? 'Editor' : 
+                                       team.role === 'atsOnly' ? 'ATS Only' : 'Viewer'}
                                     </div>
                                   </div>
                                   {currentTeam?._id === team._id && (

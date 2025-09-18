@@ -56,6 +56,7 @@ import PhoneWidget from "../../src/pages/Dashboard/PhoneWidget.js";
 import ThemeOne from "../../src/pages/Dashboard/ThemeOne.js";
 import ThemeTwo from "../../src/pages/Dashboard/ThemeTwo.js";
 import AuthService from "../../src/services/AuthService.js";
+import TeamService from "../../src/services/TeamService.js";
 
 
 export const THEME_OPTIONS = [
@@ -104,6 +105,7 @@ const Layout = ({children}) => {
   const [numberTickets, setNumberTickets] = useState(null);
   const [needsToSelectCalendlyType, setNeedsToSelectCalendlyType] =
     useState(false);
+  const [currentTeamRole, setCurrentTeamRole] = useState(null);
   const location = useRouter();
   const router = useRouter();
   const user = useSelector(selectUser);
@@ -164,6 +166,21 @@ const Layout = ({children}) => {
     });
     
   }, [user]);
+
+  // Load current team role from localStorage
+  useEffect(() => {
+    const currentTeam = TeamService.getCurrentTeam();
+    if (currentTeam && currentTeam.role) {
+      setCurrentTeamRole(currentTeam.role);
+      
+      // Redirect atsOnly users to ATS page if they're not already there
+      if (currentTeam.role === 'atsOnly' && 
+          !location.pathname.includes('/ats') && 
+          location.pathname !== '/dashboard/settings') {
+        router.push('/dashboard/ats');
+      }
+    }
+  }, [user, location.pathname]);
 
   const trialDate = useMemo(() => {
     if (!partner) return null;
@@ -307,7 +324,15 @@ const Layout = ({children}) => {
   const navigation = [
     {
       name: "Menu",
-      subitems: [
+      subitems: currentTeamRole === 'atsOnly' ? [
+        // For ATS Only users, show only the ATS tab
+        {
+          name: "ATS",
+          href: "/dashboard/ats",
+          icon: FolderIcon,
+        }
+      ] : [
+        // For all other users, show the full menu
         {
           name: "Dashboard",
           href: "/dashboard",

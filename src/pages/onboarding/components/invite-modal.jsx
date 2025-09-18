@@ -11,6 +11,7 @@ const accessOptions = [
   { value: "viewer", label: "View", description: "Can view team resources" },
   { value: "editor", label: "Edit", description: "Can edit team resources" },
   { value: "admin", label: "Admin", description: "Can manage team and members" },
+  { value: "atsOnly", label: "ATS Only", description: "Can only access ATS system" },
 ];
 
 const permissionOptions = {
@@ -39,6 +40,7 @@ export function InviteModal({ open, onClose, teamId, teamName, currentUserRole =
     landingPages: "read",
     mediaLibrary: "read",
     teamManagement: "none",
+    ats: "none",
   });
   const [members, setMembers] = useState([]);
   const [inviteLink, setInviteLink] = useState("");
@@ -174,11 +176,39 @@ export function InviteModal({ open, onClose, teamId, teamName, currentUserRole =
       {accessOptions.map((option) => (
         <Menu.Item 
           key={option.value}
-          onClick={() => handleUpdateMemberPermissions(member._id, option.value, {
-            landingPages: option.value === 'viewer' ? 'read' : 'write',
-            mediaLibrary: option.value === 'viewer' ? 'read' : 'write',
-            teamManagement: option.value === 'admin' ? 'admin' : 'none',
-          })}
+          onClick={() => {
+            let permissions = {};
+            if (option.value === 'viewer') {
+              permissions = {
+                landingPages: 'read',
+                mediaLibrary: 'read',
+                teamManagement: 'none',
+                ats: 'none',
+              };
+            } else if (option.value === 'editor') {
+              permissions = {
+                landingPages: 'write',
+                mediaLibrary: 'write',
+                teamManagement: 'none',
+                ats: 'read',
+              };
+            } else if (option.value === 'admin') {
+              permissions = {
+                landingPages: 'admin',
+                mediaLibrary: 'admin',
+                teamManagement: 'admin',
+                ats: 'admin',
+              };
+            } else if (option.value === 'atsOnly') {
+              permissions = {
+                landingPages: 'none',
+                mediaLibrary: 'none',
+                teamManagement: 'none',
+                ats: 'admin',
+              };
+            }
+            handleUpdateMemberPermissions(member._id, option.value, permissions);
+          }}
         >
           {option.label}
         </Menu.Item>
@@ -232,18 +262,28 @@ export function InviteModal({ open, onClose, teamId, teamName, currentUserRole =
                       landingPages: 'read',
                       mediaLibrary: 'read',
                       teamManagement: 'none',
+                      ats: 'none',
                     });
                   } else if (value === 'editor') {
                     setSelectedPermissions({
                       landingPages: 'write',
                       mediaLibrary: 'write',
                       teamManagement: 'none',
+                      ats: 'read',
                     });
                   } else if (value === 'admin') {
                     setSelectedPermissions({
                       landingPages: 'admin',
                       mediaLibrary: 'admin',
                       teamManagement: 'admin',
+                      ats: 'admin',
+                    });
+                  } else if (value === 'atsOnly') {
+                    setSelectedPermissions({
+                      landingPages: 'none',
+                      mediaLibrary: 'none',
+                      teamManagement: 'none',
+                      ats: 'admin',
                     });
                   }
                 }}
