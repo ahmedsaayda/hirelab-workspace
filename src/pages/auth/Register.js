@@ -16,6 +16,7 @@ import { Logo } from "../Landing/Logo";
 import { SlimLayout } from "../Landing/SlimLayout";
 import { partner } from "../../constants";
 import TeamService from "../../services/TeamService";
+import TrackingService from "../../services/TrackingService";
 
 const Login = () => {
 
@@ -51,6 +52,22 @@ const Login = () => {
       if (!me?.data) return message.error("Could not load user data");
 
       store.dispatch(login(me.data.me));
+
+      // 🎯 TRACK SUCCESSFUL REGISTRATION CONVERSION
+      try {
+        await TrackingService.trackSignUpConversion({
+          email: email,
+          firstName: firstName,
+          lastName: lastName,
+          registration_method: 'email',
+          user_id: me.data.me._id || me.data.me.id,
+        });
+        
+        console.log('✅ Registration conversion tracking completed');
+      } catch (trackingError) {
+        console.error('⚠️ Registration tracking failed (non-critical):', trackingError);
+        // Continue with registration flow even if tracking fails
+      }
 
       // Check for return URL from query params (team invitation)
       const returnUrl = router.query.returnUrl;
