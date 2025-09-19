@@ -20,6 +20,7 @@ import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils.js";
 import cn from "classnames";
 import { getTranslation, getTimeUnitTranslation, getSalaryTimeTranslation } from "../../utils/translations";
+import Image from "next/image.js";
 // hirelab-frontend\src\pages\Landingpage\HeroSection.js
 // hirelab-frontend\src\utils\destructureTheme.js
 //
@@ -874,7 +875,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
               {/* Image Container */}
               <div className="relative mx-auto max-w-3xl shadow-xl ">
                <div className="relative">
-                <img
+                <Image
                   src={
                     landingPageData?.heroImage ||
                     "/dhwise-images/placeholder.png"
@@ -901,6 +902,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           ?.objectFit || "cover",
                       transition: "object-position 0.3s ease-in-out",
                   }}    
+                  width={500}
+                  height={500}
+                  sizes="(max-width: 768px) 100vw, 33vw"	
+                  loading="eager"
+                  fetchPriority="high"
                 />
 
                 </div>
