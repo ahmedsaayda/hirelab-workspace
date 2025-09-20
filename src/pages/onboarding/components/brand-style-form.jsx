@@ -1246,7 +1246,7 @@ const handleContinue = () => {
 
   const handleApplyThemeToLandingPage = () => {
     // message.info("Branding Theme Applied Successfully!");
-    CrudService.update("LandingPageData", user._id, {
+    const brandingData = {
       updateAll: true,
       primaryColor: primaryColor,
       secondaryColor: secondaryColor,
@@ -1268,7 +1268,32 @@ const handleContinue = () => {
         family: bodyFont,
         src: fonts.find((font) => font.family === bodyFont)?.src,
       },
-    });
+      companyLogo: companyLogo,
+      // Also update published versions so changes reflect on live pages
+      "publishedVersion.primaryColor": primaryColor,
+      "publishedVersion.secondaryColor": secondaryColor,
+      "publishedVersion.tertiaryColor": tertiaryColor,
+      "publishedVersion.yiqThreshold": yiqThreshold,
+      "publishedVersion.selectedFont": {
+        family: selectedFont,
+        src: fonts.find((font) => font.family === selectedFont)?.src,
+      },
+      "publishedVersion.titleFont": {
+        family: titleFont,
+        src: fonts.find((font) => font.family === titleFont)?.src,
+      },
+      "publishedVersion.subheaderFont": {
+        family: subheaderFont,
+        src: fonts.find((font) => font.family === subheaderFont)?.src,
+      },
+      "publishedVersion.bodyFont": {
+        family: bodyFont,
+        src: fonts.find((font) => font.family === bodyFont)?.src,
+      },
+      "publishedVersion.companyLogo": companyLogo,
+    };
+
+    CrudService.update("LandingPageData", user._id, brandingData);
   };
 
   useEffect(() => {
