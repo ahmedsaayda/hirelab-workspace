@@ -22,6 +22,46 @@ import { useFocusContext } from "../../contexts/FocusContext";
 import AuthService from "../../services/AuthService";
 import { CloseOutlined } from "@ant-design/icons";
 
+// Add custom styles for location select
+const locationSelectStyles = `
+  .custom-location-select {
+    border: 1px solid #D0D5DD !important;
+    border-radius: 8px !important;
+  }
+  .custom-location-select .ant-select-selector {
+    border: none !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .custom-location-select .ant-select-selector:hover {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .custom-location-select.ant-select-focused .ant-select-selector,
+  .custom-location-select:focus .ant-select-selector,
+  .custom-location-select.ant-select-open .ant-select-selector {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+  .custom-location-select .ant-select-selection-search-input {
+    box-shadow: none !important;
+    outline: none !important;
+  }
+  .custom-location-select .ant-select-selection-search-input:focus {
+    box-shadow: none !important;
+    outline: none !important;
+  }
+`;
+
+// Inject styles
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = locationSelectStyles;
+  document.head.appendChild(styleElement);
+}
+
 const AboutCompanyEdit = (props) => {
   return (
     <>
@@ -758,7 +798,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                 key="salaryRange"
               >
                 <div className="flex flex-col col-span-2 gap-2 w-full">
-                  <div className="flex gap-5 justify-between items-center">
+                <div className="flex gap-5 items-center">
                     <Text as="p" className="self-end !text-blue_gray-700">
                       Show numeric salary
                     </Text>
@@ -776,12 +816,14 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                     <div className="flex gap-2 justify-between items-center">
                       <Input
                         shape="round"
+                        size="lg"
                         {...({} )}
                         name="salaryText"
                         placeholder="Text to show (e.g., Competitive Salary)"
                         value={landingPageData?.salaryText || ""}
                         onInput={(e) => handleChange("salaryText", e.target.value)}
-                        className="w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5 text-sm"
+                        className="w-full text-sm"
+                        style={{ border: 0, boxShadow: "none" }}
                         onMouseEnter={() => setHoveredField("salaryText")}
                         onMouseLeave={() => setHoveredField(null)}
                         ref={setFocusRef("salaryText")}
@@ -818,6 +860,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                         <div className="flex gap-2 justify-between items-center">
                           <Input
                             shape="round"
+                            size="lg"
                             {...({} )}
                             name="salaryMin"
                             placeholder="Min"
@@ -826,7 +869,8 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                               const value = e.target.value.replace(/[^0-9.]/g, ""); // Allow only numbers and decimal points
                               handleChange("salaryMin", value);
                             }}
-                            className="w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5 text-sm"
+                        className="w-full text-sm"
+                            style={{ border: 0, boxShadow: "none" }}
                             onMouseEnter={() => setHoveredField("salaryMin")}
                             onMouseLeave={() => setHoveredField(null)}
                             ref={setFocusRef("salaryMin")}
@@ -834,28 +878,31 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                               setLastScrollToSection(null)
                             }}
                           />
-                          <SelectBox
-                            shape="round"
-                            {...({} )}
-                            name="salaryTime"
-                            placeholder="Frequency"
-                            options={dropDownOptions}
-                            value={dropDownOptions.find(
-                              (o) => o.value === landingPageData?.salaryTime
-                            )}
-                            onChange={(e) => handleChange("salaryTime", e.value)}
-                            className="gap-px w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5"
-                            onMouseEnter={() => setHoveredField("salaryTime")}
-                            onMouseLeave={() => setHoveredField(null)}
-                            ref={setFocusRef("salaryTime")}
-                            onFocus={() => {
-                              setLastScrollToSection(null)
-                            }}
-                          />
+                          <div className="w-full h-[44px] border border-[#D0D5DD] rounded-lg flex items-center px-3">
+                            <SelectBox
+                              shape="round"
+                              {...({} )}
+                              name="salaryTime"
+                              placeholder="Frequency"
+                              options={dropDownOptions}
+                              value={dropDownOptions.find(
+                                (o) => o.value === landingPageData?.salaryTime
+                              )}
+                              onChange={(e) => handleChange("salaryTime", e.value)}
+                              className="w-full"
+                              onMouseEnter={() => setHoveredField("salaryTime")}
+                              onMouseLeave={() => setHoveredField(null)}
+                              ref={setFocusRef("salaryTime")}
+                              onFocus={() => {
+                                setLastScrollToSection(null)
+                              }}
+                            />
+                          </div>
                         </div>
                         {isSalaryRange && (
                           <Input
                             shape="round"
+                            size="lg"
                             {...({} )}
                             name="salaryMax"
                             placeholder="Max"
@@ -864,7 +911,8 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                               const value = e.target.value.replace(/[^0-9.]/g, ""); // Allow only numbers and decimal points
                               handleChange("salaryMax", value);
                             }}
-                            className="border border-solid border-blue_gray-100 sm:pr-5 text-sm"
+                            className="w-full text-sm"
+                            style={{ border: 0, boxShadow: "none" }}
                             onMouseEnter={() => setHoveredField("salaryMax")}
                             onMouseLeave={() => setHoveredField(null)}
                             ref={setFocusRef("salaryMax")}
@@ -874,28 +922,30 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                           />
                         )}
 
-                        <SelectBox
-                          shape="round"
-                          {...({} )}
-                          name="salaryCurrency"
-                          placeholder="Currency"
-                          options={currencyOptions}
-                          value={currencyOptions.find((o) => {
-                            const curr = Currency[o.value];
-                            return curr?.symbol === landingPageData?.salaryCurrency;
-                          })}
-                          onChange={(e) => {
-                            const selectedCurrency = Currency[e.value];
-                            console.log("selectedCurrency", selectedCurrency);
-                            handleChange("salaryCurrency", selectedCurrency.symbol);
-                          }}
-                          className="w-full !rounded-[10px] border h-[44px] sm:w-full sm:pr-5"
-                          onMouseEnter={() => setHoveredField("salaryCurrency")}
-                          onMouseLeave={() => setHoveredField(null)}
-                          onFocus={() => {
-                            setLastScrollToSection(null)
-                          }}
-                        />
+                        <div className="w-full h-[44px] border border-[#D0D5DD] rounded-lg flex items-center px-3">
+                          <SelectBox
+                            shape="round"
+                            {...({} )}
+                            name="salaryCurrency"
+                            placeholder="Currency"
+                            options={currencyOptions}
+                            value={currencyOptions.find((o) => {
+                              const curr = Currency[o.value];
+                              return curr?.symbol === landingPageData?.salaryCurrency;
+                            })}
+                            onChange={(e) => {
+                              const selectedCurrency = Currency[e.value];
+                              console.log("selectedCurrency", selectedCurrency);
+                              handleChange("salaryCurrency", selectedCurrency.symbol);
+                            }}
+                            className="w-full !rounded-[10px]"
+                            onMouseEnter={() => setHoveredField("salaryCurrency")}
+                            onMouseLeave={() => setHoveredField(null)}
+                            onFocus={() => {
+                              setLastScrollToSection(null)
+                            }}
+                          />
+                        </div>
                       </div>
                     </>
                   )}
@@ -964,9 +1014,10 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                     </div>
                   </div>
                   <div className="space-y-4 w-full">
-                    <div className="flex gap-2 justify-between items-center w-full">
+                    <div className="flex gap-2 items-center w-full">
                       <Input
                         shape="round"
+                        size="lg"
                         {...({} )}
                         name="hoursMin"
                         placeholder="Min"
@@ -975,7 +1026,8 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                           const value = e.target.value.replace(/[^0-9.]/g, "");
                           handleChange("hoursMin", value);
                         }}
-                        className="!w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5 text-sm"
+                        className="!w-full text-sm"
+                        style={{ border: 0, boxShadow: "none" }}
                         onMouseEnter={() => setHoveredField("hoursMin")}
                         onMouseLeave={() => setHoveredField(null)}
                         ref={setFocusRef("hoursMin")}
@@ -983,28 +1035,31 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                           setLastScrollToSection(null)
                         }}
                       />
-                      <SelectBox
-                        shape="round"
-                        {...({} )}
-                        name="hoursUnit"
-                        placeholder="Unit"
-                        options={hoursUnitOptions}
-                        value={hoursUnitOptions.find(
-                          (o) => o.value === landingPageData?.hoursUnit
-                        )}
-                        onChange={(e) => handleChange("hoursUnit", e.value)}
-                        className="w-full border border-solid border-blue_gray-100 sm:w-full sm:pr-5 text-sm"
-                        onMouseEnter={() => setHoveredField("hoursUnit")}
-                        onMouseLeave={() => setHoveredField(null)}
-                        ref={setFocusRef("hoursUnit")}
-                        onFocus={() => {
-                          setLastScrollToSection(null)
-                        }}
-                      />
+                      <div className="w-full h-[44px] border border-[#D0D5DD] rounded-lg flex items-center px-3">
+                        <SelectBox
+                          shape="round"
+                          {...({} )}
+                          name="hoursUnit"
+                          placeholder="Unit"
+                          options={hoursUnitOptions}
+                          value={hoursUnitOptions.find(
+                            (o) => o.value === landingPageData?.hoursUnit
+                          )}
+                          onChange={(e) => handleChange("hoursUnit", e.value)}
+                          className="w-full"
+                          onMouseEnter={() => setHoveredField("hoursUnit")}
+                          onMouseLeave={() => setHoveredField(null)}
+                          ref={setFocusRef("hoursUnit")}
+                          onFocus={() => {
+                            setLastScrollToSection(null)
+                          }}
+                        />
+                      </div>
                     </div>
                     {isHoursRange && (
                       <Input
                         shape="round"
+                        size="lg"
                         {...({} )}
                         name="hoursMax"
                         placeholder="Max"
@@ -1013,7 +1068,8 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                           const value = e.target.value.replace(/[^0-9.]/g, "");
                           handleChange("hoursMax", value);
                         }}
-                        className="border border-solid border-blue_gray-100 sm:pr-5"
+                        className="w-full"
+                        style={{ border: 0, boxShadow: "none" }}
                         onMouseEnter={() => setHoveredField("hoursMax")}
                         onMouseLeave={() => setHoveredField(null)}
                         ref={setFocusRef("hoursMax")}
@@ -1097,7 +1153,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                       value={selectedLocations || []}
                       onChange={handleLocationChange}
                       onSearch={setSearchText}
-                      className="w-full border ring-0 outline-none focus:outline-none sm:w-full sm:pr-5"
+                      className="w-full custom-location-select"
                       dropdownRender={dropdownRender}
                       onMouseEnter={() => setHoveredField("location")}
                       optionRender={optionRender}

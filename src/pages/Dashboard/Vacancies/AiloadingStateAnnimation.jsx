@@ -71,8 +71,16 @@ const AiLoadingStateAnimation = ({
 
   // Animate progress bar
   useEffect(() => {
-    // Calculate target progress based on current step
-    const targetProgress = ((currentStep + 1) / loadingSteps.length) * 100;
+    // Calculate target progress based on current step with an ease-out curve
+    const totalSteps = loadingSteps.length;
+    const stepRatio = (currentStep + 1) / totalSteps;
+    const isFinalStep = currentStep >= totalSteps - 1;
+
+    // Ease-out exponential so the bar approaches near-completion earlier
+    const easedPercent = (1 - Math.pow(2, -10 * stepRatio)) * 100;
+
+    // Cap at 99% until the final step hits 100%
+    const targetProgress = isFinalStep ? 100 : Math.min(99, Math.round(easedPercent));
 
     // Animate progress from current to target
     let animProgress = progress;
@@ -86,7 +94,7 @@ const AiLoadingStateAnimation = ({
     }, 50);
 
     return () => window.clearInterval(animInterval);
-  }, [currentStep, loadingSteps.length, progress]);
+  }, [currentStep, loadingSteps.length]);
 
   return (
     <div className="flex flex-col justify-center items-center px-8 py-10 mx-auto max-w-xl text-center">

@@ -377,7 +377,7 @@ const CandidateProfile = ({
 
     try {
       // Start a new chat with the candidate
-      const response = await CandidateChatService.startChat(candidate.id);
+      const response = await CandidateChatService.startChat(candidateId);
       
       if (response.data.chatId) {
         message.success('Chat started! Redirecting to chat interface...');
@@ -1537,7 +1537,7 @@ const CandidateProfile = ({
                 return true;
               }}
             >
-              <Button loading={uploadingResume}>
+              <Button  type="default" loading={uploadingResume}>
                 Replace Resume
               </Button>
             </Upload>
@@ -1562,7 +1562,7 @@ const CandidateProfile = ({
                 return true;
               }}
             >
-              <Button type="primary" loading={uploadingResume}>
+              <Button type="default" loading={uploadingResume} className="text-white bg-[#5207CD] !hover:text-blue-500  px-8">
                 Upload Resume
               </Button>
             </Upload>

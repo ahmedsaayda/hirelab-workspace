@@ -691,7 +691,7 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
 
   const parseResolution = (resStr) => {
     if (!resStr) return 0;
-    const [w, h] = resStr.split("X").map((x) => parseInt(x.trim(), 10));
+    const [w, h] = resStr.split(/[xX]/).map((x) => parseInt(x.trim(), 10));
     return w * h || 0;
   };
 

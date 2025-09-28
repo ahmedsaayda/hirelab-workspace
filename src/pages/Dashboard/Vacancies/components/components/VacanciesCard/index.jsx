@@ -137,12 +137,12 @@ export default function VacanciesCard({
                 <Clock size={12} /> {daysLive} days
               </span>
               <span className="flex items-center gap-1">
-                <Component size={12} /> {applicants} applicants
+                <Component size={12} /> {applicants || 0} applicants
               </span>
             </div>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
-                <Eye size={12} /> {visits} visits
+                <Eye size={12} /> {visits || 0} visits
               </span>
               <span className="flex items-center gap-1">
                 <Clock size={12} /> {typeof avgTimeSpent === 'string' ? avgTimeSpent : formatAvgTime(avgTimeSpent)} Avg

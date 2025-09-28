@@ -114,7 +114,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
   const isButtonDisabled =
     step === 0
       ? !jobTitle || !department || !language || !jobDescription || jobDescription.length < 1 || isLoading
-      : selectedTemplate === -1;
+      : selectedTemplate === -1||selectedTemplate !== 1;
 
   const renderButton = () => {
     if (step === 0) {
@@ -411,7 +411,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
 
   return (
     <div>
-      <Modal title="" open={true} onCancel={handleClose} footer={null} style={{
+      <Modal maskClosable={false} title="" open={true} onCancel={handleClose} footer={null} style={{
         maxHeight: "80vh",
         overflowY: "auto",
         top: 20,

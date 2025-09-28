@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   Alert,
@@ -61,8 +61,20 @@ const VariableMessageBox = ({
   const socket = useRef(null);
   const socketPing = useRef(null);
   const [candidateData, setCandidateData] = useState(null);
+  console.log("123,candidateData",candidateData)
   const [templateLibrary, setTemplateLibrary] = useState(null);
   const darkMode = useSelector(selectDarkMode);
+
+  const recipientEmail = useMemo(() => {
+    const formData = candidateData?.formData || {};
+    if (!formData || typeof formData !== "object") return undefined;
+    if (formData.email) return formData.email;
+    const entries = Object.entries(formData);
+    const suffixMatch = entries.find(([key, value]) => /(?:^|_)email$/i.test(key) && value);
+    if (suffixMatch) return suffixMatch[1];
+    const includesMatch = entries.find(([key, value]) => key.toLowerCase().includes("email") && value);
+    return includesMatch ? includesMatch[1] : undefined;
+  }, [candidateData]);
 
   const handleReset = () => {
     onSend(subject, body);
@@ -213,9 +225,11 @@ const VariableMessageBox = ({
             <div>
               {candidateData?.formData?.firstname}{" "}
               {candidateData?.formData?.lastname}{" "}
-              <a
-                href={`mailto:${candidateData?.formData?.email}`}
-              >{`<${candidateData?.formData?.email}>`}</a>
+              {recipientEmail ? (
+                <a href={`mailto:${recipientEmail}`}>{`<${recipientEmail}>`}</a>
+              ) : (
+                <span className="text-gray-400">(no email)</span>
+              )}
             </div>
           )}
         </>

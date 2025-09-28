@@ -2063,7 +2063,7 @@ const handleLogoUpload = async (url) => {
           display: flex !important;
         }
       `}</style>
-      <div className="flex flex-col h-screen min-h-[600px] overflow-hidden bg-white px-4 sm:px-6 md:px-16 w-full py-4 sm:py-6">
+      <div className="flex flex-col lg:h-screen min-h-[600px] overflow-hidden bg-white px-4 sm:px-6 md:px-16 w-full py-4 sm:py-6">
       <div>
         <Img
             src="/images/img_arrow_right_blue_gray_400.svg"
@@ -2355,20 +2355,20 @@ const handleLogoUpload = async (url) => {
                         Text Style
                       </Typography.Text>
 
-                      <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3  lg:grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
                         {/* Title Font Card */}
                         <div
-                          className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
+                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
                             selectedFontStyle === "h1"
-                              ? "border-2 border-blue-600"
+                              ? "border-blue-600"
                               : "border-gray-200 hover:border-blue-300"
                           }`}
                           onClick={() => setSelectedFontStyle("h1")}
                         >
-                          <div className="flex items-center">
+                          <div className="flex items-start gap-2">
                             <Radio
                               checked={selectedFontStyle === "h1"}
-                              className="mr-2"
+                              className="mr-2 mt-0.5"
                             />
                             <div>
                               <Typography.Text strong className="text-gray-700">
@@ -2383,17 +2383,17 @@ const handleLogoUpload = async (url) => {
 
                         {/* Subheader Font Card */}
                         <div
-                          className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
+                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
                             selectedFontStyle === "h2"
-                              ? "border-2 border-blue-600"
+                              ? "border-blue-600"
                               : "border-gray-200 hover:border-blue-300"
                           }`}
                           onClick={() => setSelectedFontStyle("h2")}
                         >
-                          <div className="flex items-center">
+                          <div className="flex items-start gap-2">
                             <Radio
                               checked={selectedFontStyle === "h2"}
-                              className="mr-2"
+                              className="mt-0.5"
                             />
                             <div>
                               <Typography.Text strong className="text-gray-700">
@@ -2408,17 +2408,17 @@ const handleLogoUpload = async (url) => {
 
                         {/* Body Font Card */}
                         <div
-                          className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
+                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
                             selectedFontStyle === "h3"
-                              ? "border-2 border-blue-600"
+                              ? "border-blue-600"
                               : "border-gray-200 hover:border-blue-300"
                           }`}
                           onClick={() => setSelectedFontStyle("h3")}
                         >
-                          <div className="flex items-center">
+                          <div className="flex items-start gap-2">
                             <Radio
                               checked={selectedFontStyle === "h3"}
-                              className="mr-2"
+                              className="mt-0.5"
                             />
                             <div>
                               <Typography.Text strong className="text-gray-700">

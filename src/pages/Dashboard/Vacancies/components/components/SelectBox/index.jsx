@@ -11,7 +11,7 @@ const variants = {
   },
 };
 const sizes = {
-  xs: "h-[44px] pl-3.5 pr-[35px] text-base",
+  xs: "h-[44px] text-base",
 };
 
 const SelectBox = React.forwardRef(
@@ -43,7 +43,25 @@ const SelectBox = React.forwardRef(
           isMulti={isMulti}
           components={{
             IndicatorSeparator: () => null,
-            ...(indicator && { DropdownIndicator: () => indicator }),
+            DropdownIndicator: indicator ? () => indicator : ({ innerProps }) => (
+              <div {...innerProps} style={{ padding: '0 8px', display: 'flex', alignItems: 'center' }}>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 4.5L6 7.5L9 4.5"
+                    stroke="#6B7280"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            ),
           }}
           styles={{
             container: (provided) => ({
@@ -57,6 +75,7 @@ const SelectBox = React.forwardRef(
               boxShadow: "0 !important",
               minHeight: "auto",
               width: "100%",
+              padding: "0",
               "&:hover": {
                 border: "0 !important",
               },
@@ -76,7 +95,7 @@ const SelectBox = React.forwardRef(
             }),
             valueContainer: (provided) => ({
               ...provided,
-              padding: 0,
+              padding: "0 12px",
             }),
             placeholder: (provided) => ({
               ...provided,

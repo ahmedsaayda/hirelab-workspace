@@ -50,15 +50,15 @@ const Content = ({ landingPageData, onSubmit, setShowFormEditor }) => {
       const formData = mapFormDataToSubmission(values);
 
       const submission = {
-        LandingPageDataId: landingPageData._id,
+        LandingPageDataId: landingPageData?._id,
         formData,
-        funnelUUID: localStorage?.getItem(`funnelUUID_${landingPageData._id}`),
+        funnelUUID: localStorage?.getItem(`funnelUUID_${landingPageData?._id}`),
       };
 
       const response = await onSubmit(submission);
       if (response?.data) {
         form.resetFields();
-        localStorage.setItem(`vacancyApplied_${landingPageData._id}`, "true");
+        localStorage.setItem(`vacancyApplied_${landingPageData?._id}`, "true");
         message.success(
           landingPageData?.formSuccessMessage ??
             "Application submitted successfully!"

@@ -1212,7 +1212,7 @@ const handlemediaLink = (platform) => {
                       key={index}
                       data-tab-id={tab.id}
                       onClick={() => handleNavigate(tab.id)}
-                      className="px-3 py-2 md:px-6 md:py-4 text-sm md:text-base whitespace-nowrap transition-all flex-shrink-0"
+                      className="px-3 py-2 md:px-6 md:py-4 text-sm md:text-base whitespace-nowrap transition-all flex-shrink-0 relative"
                       style={{
                         color: textColor === "#000000" ? textColor : getColor("primary", 500),
                         fontWeight: currentHash === tab.id ? "700" : "400",
@@ -1220,10 +1220,16 @@ const handlemediaLink = (platform) => {
                         marginRight: "8px"
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.fontWeight = "700";
+                        // Use text-shadow to create bold effect without layout shift
+                        e.currentTarget.style.textShadow = "0.5px 0 0 currentColor";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.fontWeight = currentHash === tab.id ? "700" : "400";
+                        // Remove text-shadow, but keep actual bold for active items
+                        if (currentHash === tab.id) {
+                          e.currentTarget.style.textShadow = "none";
+                        } else {
+                          e.currentTarget.style.textShadow = "none";
+                        }
                       }}
                     >
                       {tab.label}

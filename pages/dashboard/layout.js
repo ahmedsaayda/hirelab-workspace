@@ -349,11 +349,7 @@ const Layout = ({children}) => {
         //   icon: ToolrIcon,
         // },
 
-        {
-          name: "Media Library",
-          href: "/dashboard/media-library",
-          icon: ImageIcon,
-        },
+      
         {
           name: "ATS",
           href: "/dashboard/ats",
@@ -383,6 +379,11 @@ const Layout = ({children}) => {
         //   href: "/dashboard/analytics",
         //   icon: LinerIcon,
         // },
+        {
+          name: "Media Library",
+          href: "/dashboard/media-library",
+          icon: ImageIcon,
+        },
       ],
     },
     

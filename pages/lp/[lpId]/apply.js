@@ -983,24 +983,39 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
         } else if (field.type === 'phone') {
           processedFormData[`phone`] = formData[field.id] || "";
         } else if (field.type === 'date') {
-          // Combine date fields into a formatted date string
-          const month = formData[`${field.id}_month`] || "";
-          const day = formData[`${field.id}_day`] || "";
-          const year = formData[`${field.id}_year`] || "";
-          const dateFormat = field.dateFormat || "MMDDYYYY";
-          const dateSeparator = field.dateSeparator || "/";
+          // Handle single DatePicker value (stored as 'YYYY-MM-DD' format)
+          const dateValue = formData[field.id] || "";
           
-          let formattedDate = "";
-          if (month && day && year) {
-            if (dateFormat === 'MMDDYYYY') {
-              formattedDate = [month, day, year].join(dateSeparator);
-            } else if (dateFormat === 'DDMMYYYY') {
-              formattedDate = [day, month, year].join(dateSeparator);
-            } else if (dateFormat === 'YYYYMMDD') {
-              formattedDate = [year, month, day].join(dateSeparator);
+          if (dateValue) {
+            // Convert from 'YYYY-MM-DD' to the desired format
+            const dateFormat = field.dateFormat || "MMDDYYYY";
+            const dateSeparator = field.dateSeparator || "/";
+            
+            try {
+              const date = dayjs(dateValue);
+              if (date.isValid()) {
+                let formattedDate = "";
+                if (dateFormat === 'MMDDYYYY') {
+                  formattedDate = date.format(`MM${dateSeparator}DD${dateSeparator}YYYY`);
+                } else if (dateFormat === 'DDMMYYYY') {
+                  formattedDate = date.format(`DD${dateSeparator}MM${dateSeparator}YYYY`);
+                } else if (dateFormat === 'YYYYMMDD') {
+                  formattedDate = date.format(`YYYY${dateSeparator}MM${dateSeparator}DD`);
+                } else {
+                  // Default to ISO format if format is not recognized
+                  formattedDate = date.format('YYYY-MM-DD');
+                }
+                processedFormData[field.id] = formattedDate;
+              } else {
+                processedFormData[field.id] = "";
+              }
+            } catch (error) {
+              console.error('Error formatting date:', error);
+              processedFormData[field.id] = dateValue; // Fallback to original value
             }
+          } else {
+            processedFormData[field.id] = "";
           }
-          processedFormData[field.id] = formattedDate;
         } else if (field.type === 'file') {
           // Handle file fields - store complete object for better handling
           const fileData = formData[field.id];

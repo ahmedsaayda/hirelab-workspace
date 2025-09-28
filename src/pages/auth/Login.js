@@ -14,7 +14,6 @@ import { TextField } from "../Landing/Fields";
 import { Logo } from "../Landing/Logo";
 import { SlimLayout } from "../Landing/SlimLayout";
 import TeamService from "../../../src/services/TeamService";
-import { Spin } from "antd";
 
 const Login = () => {
   const router = useRouter();
@@ -141,10 +140,10 @@ const Login = () => {
               type="primary"
               variant="solid"
               color="blue"
-              className="w-full hover:bg-white hover:text-blue-A200 hover:border border-blue-700_01"
-              loading={isLoading}
+              className="w-full"
+              disabled={isLoading}
             >
-             {isLoading ? <span className="opacity-0">Loading...</span> : <span>Sign in</span>}
+             {isLoading ? <svg width="20" height="20" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#60A5FA" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 120"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"></animateTransform></circle></svg>: <span>Sign in</span>}
             </Button>
           </div>
           <div className="text-sm text-center">

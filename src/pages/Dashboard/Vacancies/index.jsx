@@ -1205,6 +1205,7 @@ Respond with json that adheres to the following jsonschema:
         wrapClassName={`${darkMode ? "dark" : ""}`}
         destroyOnClose
         closable={false}
+        maskClosable={false}
       >
         {(() => {
           // Use actual landingPages count for accurate current usage

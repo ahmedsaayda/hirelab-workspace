@@ -690,7 +690,7 @@ export default function Example({
                 <div className="flex items-center flex-1 gap-3 h-full">
                   <LogoIcon height={32} className="hidden lg:block" />
                 </div>
-                <div className="relative flex justify-center flex-1 hidden lg:block h-full">
+                <div className="relative justify-center flex-1 hidden lg:flex h-full">
                   <div className="top-search-wrapper flex items-center h-full relative">
                     <label htmlFor="search-field" className="sr-only">
                       Search
@@ -832,7 +832,7 @@ export default function Example({
                     </div>
                   </button>
                   <Menu as="div" className="relative h-full flex items-center">
-                    <Menu.Button className="-m-1.5 flex items-center p-1.5 h-full">
+                    <Menu.Button className="-m-1.5 flex items-center p-1.5 h-full focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
                       <span className="sr-only">Open user menu</span>
                       {!user?.avatar && (
                         <UsersIcon className="w-8 h-8 rounded-full bg-gray-50" />
@@ -871,11 +871,11 @@ export default function Example({
                               alt="User Avatar"
                             />
                           )}
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900 dark:text-white">
+                          <div className="flex flex-col min-w-0">
+                            <span className="block font-semibold text-gray-900 dark:text-white truncate">
                               {user?.firstName + " " + user?.lastName}
                             </span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                            <span className="block text-sm text-gray-500 dark:text-gray-400 truncate" title={user?.email}>
                               {user?.email}
                             </span>
                             <span className="text-[10px] px-1 rounded-lg border w-fit bg-white-A700_33">Free</span>

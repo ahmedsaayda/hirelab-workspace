@@ -210,10 +210,10 @@ const Login = () => {
               type="primary"
               variant="solid"
               color="blue"
-              className="w-full hover:bg-white hover:text-blue-A200 hover:border border-blue-700_01"
-              loading={loading}
+              className="w-full"
+              disabled={loading}
               >
-                <span>Sign up</span>
+                {!loading ? <span>Sign up</span> :<svg width="20" height="20" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#60A5FA" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 120"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"></animateTransform></circle></svg> }
               </Button>
             </div>
           </form>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Avatar, Rate, Dropdown, Button } from 'antd';
+import { Avatar, Rate, Dropdown, Button, Tooltip } from 'antd';
 import { 
   UserOutlined, 
   MoreOutlined,
@@ -272,17 +272,33 @@ const CandidateCard = ({
       {/* Contact Info */}
  
 
-      {/* Assignment Info */}
+      {/* Assignment Info - Trello Style */}
       {candidate.assignedTo && (
-        <div className="mb-1 p-2 bg-green-50 rounded border border-green-100">
-          <div className="flex items-center gap-2">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-1">
             <UserOutlined className="text-green-600 text-xs" />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium text-green-800">
-                Assigned to: {candidate.assignedTo.firstName} {candidate.assignedTo.lastName}
-              </div>
-            
-            </div>
+            <span className="text-xs font-medium text-green-800">Assigned to:</span>
+          </div>
+          <div className="flex items-center">
+            <Tooltip 
+              title={`${candidate.assignedTo.firstName} ${candidate.assignedTo.lastName}`}
+              placement="top"
+            >
+              <Avatar 
+                src={candidate.assignedTo.avatar} 
+                size={24}
+                className="border-2 border-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                style={{ 
+                  backgroundColor: candidate.assignedTo.avatar ? 'transparent' : '#6366f1',
+                  fontSize: '10px',
+                  fontWeight: 600
+                }}
+              >
+                {!candidate.assignedTo.avatar && 
+                  `${candidate.assignedTo.firstName?.[0] || ''}${candidate.assignedTo.lastName?.[0] || ''}`
+                }
+              </Avatar>
+            </Tooltip>
           </div>
         </div>
       )}

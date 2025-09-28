@@ -966,7 +966,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
 
   return (
     <>
-      <Modal title="" open={true} onCancel={handleClose} footer={null} width={600} style={{
+      <Modal maskClosable={false} title="" open={true} onCancel={handleClose} footer={null} width={600} style={{
         maxHeight: "80vh",
         overflowY: "auto",
         top: 20,
@@ -993,12 +993,12 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
                 </button>
                 <button
                   onClick={handleNext}
-                  className={`py-2 px-4 text-white ${
+                  className={`py-2 px-4 text-white disabled:cursor-not-allowed disabled:opacity-50 ${
                     selectedTemplate === -1
                       ? "bg-blue-300 cursor-not-allowed"
                       : "bg-blue-500 hover:bg-blue-600"
                   } rounded-md`}
-                  disabled={selectedTemplate === -1}
+                  disabled={selectedTemplate === -1||selectedTemplate !== 1}
                 >
                   Next
                 </button>

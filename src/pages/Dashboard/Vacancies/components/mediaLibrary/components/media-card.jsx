@@ -165,7 +165,7 @@ export function MediaCard({
   return (
     <div className="overflow-hidden transition-shadow bg-[#f8f8f8] rounded-lg shadow-sm shadow-gray-400 hover:shadow-md hover:shadow-gray-700 flex flex-col ">
       <div
-        className="relative aspect-video cursor-pointer"
+        className="relative h-[200px] cursor-pointer"
         onClick={() => onSelect?.(_id)} // 🔹 Entire area is clickable
       >
         {type === "video" || templateData?.type === "videoSection" ? (
@@ -175,12 +175,14 @@ export function MediaCard({
             <div className="absolute px-2 py-1 text-xs text-white rounded bottom-2 left-2 bg-light_blue-A700 bg-opacity-15">
               {size}
             </div>
-            <img
-              src={thumbnail}
-              alt={title}
-              className="object-cover w-full aspect-square rounded-lg"
-            />
-            <div className="absolute px-2 py-1 text-xs text-white rounded top-2 left-2 bg-light_blue-A700 bg-opacity-15">
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white">
+              <img
+                src={thumbnail}
+                alt={title}
+                className="w-full h-full object-contain object-top"
+              />
+            </div>
+            <div className="absolute px-2 py-1 text-xs text-white rounded top-2 left-2 bg-light_blue-A700 bg-opacity-15 z-10">
               {resolution}
             </div>
           </>

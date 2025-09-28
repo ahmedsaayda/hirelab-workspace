@@ -300,14 +300,6 @@ const Dashboard = () => {
         //   href: "/dashboard/tools",
         //   icon: ToolrIcon,
         // },
-
-        {
-          name: "Media Library",
-          // component: <MediaLibrary />,
-          component: <MyMediaLibrary />,
-          href: "/dashboard/media-library",
-          icon: ImageIcon,
-        },
         {
           name: "ATS",
           component: <Vacancy />,
@@ -321,6 +313,13 @@ const Dashboard = () => {
           href: "/onboarding",
           isOnboardingCompleted: isOnboardingCompleted,
           icon: BrandKit,
+        },
+        {
+          name: "Media Library",
+          // component: <MediaLibrary />,
+          component: <MyMediaLibrary />,
+          href: "/dashboard/media-library",
+          icon: ImageIcon,
         },
         // {
         //   name: "Analytics",

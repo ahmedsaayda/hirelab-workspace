@@ -25,7 +25,7 @@ export default function CreateANewVacancyInput({
       <Button
         size="4xl"
         shape="circle"
-        className="w-[40px] !rounded-[20px] bg-[#EFF8FF] group-hover:bg-blue-500 transition-colors duration-200 ease-in-out"
+        className="!w-[40px] !h-[40px] !p-2 aspect-square !rounded-[20px] bg-[#EFF8FF] group-hover:bg-blue-500 transition-colors duration-200 ease-in-out"
       >
         <Img 
           src={imageIcon ?? "/images/img_plus.svg"} 
@@ -43,7 +43,7 @@ export default function CreateANewVacancyInput({
           {subtext && (
             <>
               <br />
-              <span className="text-[#87CEEB] text-sm">{subtext}</span>
+              <span className="text-[#4A90E2] text-sm">{subtext}</span>
             </>
           )}
         </Text>

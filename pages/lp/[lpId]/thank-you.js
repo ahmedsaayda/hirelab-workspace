@@ -198,7 +198,7 @@ export default function ThankYouPage() {
             
             {landingPageData?.companyUrl && (
               <Button 
-                type="primary"
+                type="default"
                 size="large"
                 onClick={() => {
                   const url = landingPageData.companyUrl.startsWith('https://') || landingPageData.companyUrl.startsWith('http://') 
@@ -206,7 +206,7 @@ export default function ThankYouPage() {
                     : `https://${landingPageData.companyUrl}`;
                   window.open(url, '_blank');
                 }}
-                className="bg-[#5207CD] hover:bg-[#0C7CE6] px-8"
+                className="text-white bg-[#5207CD] !hover:text-blue-500  px-8"
               >
                 {landingPageData?.thankYouLearnMoreButtonText || "Learn More"}
               </Button>

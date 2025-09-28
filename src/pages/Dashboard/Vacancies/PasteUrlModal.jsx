@@ -99,6 +99,8 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
   };
 
   const isButtonDisabled = () => {
+    //if selected template is not 1 return true to disable the button
+    if (selectedTemplate !== 1) return true;
     if (step === 0) return !url || !department || !language || isLoading;
     if (step === 1) return selectedTemplate === -1 || isLoading;
     return false;
@@ -299,7 +301,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
 
   return (
     <div>
-      <Modal title="" open={true} onCancel={handleClose} footer={null} style={{
+      <Modal maskClosable={false} title="" open={true} onCancel={handleClose} footer={null} style={{
         maxHeight: "80vh",
         overflowY: "auto",
         top: 20,

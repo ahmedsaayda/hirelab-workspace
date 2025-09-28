@@ -89,7 +89,19 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   // Track visit to landing page
   const trackVisit = useCallback(async () => {
     if (!lpId || hasTrackedVisitRef.current) return;
-    
+
+    // Ensure we only track one visit per browser per landing page (persisted)
+    const visitKey = `lp_visit_tracked_${lpId}`;
+    try {
+      const alreadyTracked = typeof window !== 'undefined' && window.localStorage?.getItem(visitKey) === '1';
+      if (alreadyTracked) {
+        // Skip tracking if we've already tracked this lpId in this browser
+        return;
+      }
+    } catch (_) {
+      // If localStorage is unavailable, continue with best effort (session-only via ref)
+    }
+
     try {
       hasTrackedVisitRef.current = true;
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/analytics/track-visit/${lpId}`, {
@@ -98,10 +110,12 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log("Visit tracked for landing page:", lpId, data);
+        // Persist that we've tracked this visit for this lpId
+        try { window.localStorage?.setItem(visitKey, '1'); } catch (_) {}
       } else {
         throw new Error('Failed to track visit');
       }

@@ -18,7 +18,8 @@ import {
   Select,
   Divider,
   Collapse,
-  Space
+  Space,
+  Tooltip
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -2673,6 +2674,55 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         sortDirections: ['ascend', 'descend'],
       },
       {
+        title: 'Assigned To',
+        key: 'assignedTo',
+        render: (_, record) => {
+          if (record.assignedTo) {
+            const fullName = `${record.assignedTo.firstName} ${record.assignedTo.lastName}`;
+            const initials = `${record.assignedTo.firstName?.[0] || ''}${record.assignedTo.lastName?.[0] || ''}`.toUpperCase();
+            
+            return (
+              <div className="flex items-center justify-start">
+                <Tooltip 
+                  title={fullName}
+                  placement="top"
+                >
+                  <Avatar 
+                    src={record.assignedTo.avatar} 
+                    size={28}
+                    className="cursor-pointer border-2 border-white shadow-sm hover:shadow-md transition-shadow duration-200"
+                    style={{ 
+                      backgroundColor: record.assignedTo.avatar ? 'transparent' : '#6366f1',
+                      fontSize: '11px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {!record.assignedTo.avatar && initials}
+                  </Avatar>
+                </Tooltip>
+              </div>
+            );
+          }
+          return (
+            <Tooltip title="Not assigned to anyone">
+              <div className="flex items-center justify-start">
+                <div className="w-7 h-7 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors duration-200">
+                  <UserOutlined className="text-gray-400 text-xs" />
+                </div>
+              </div>
+            </Tooltip>
+          );
+        },
+        width: 80,
+        responsive: ['md'],
+        sorter: (a, b) => {
+          const assigneeA = a.assignedTo ? `${a.assignedTo.firstName} ${a.assignedTo.lastName}` : '';
+          const assigneeB = b.assignedTo ? `${b.assignedTo.firstName} ${b.assignedTo.lastName}` : '';
+          return assigneeA.localeCompare(assigneeB);
+        },
+        sortDirections: ['ascend', 'descend'],
+      },
+      {
         title: 'Position',
         dataIndex: 'position',
         key: 'position',
@@ -2768,6 +2818,15 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
               setSelectedStageForAdd(null);
               setAddCandidateModal({ editId: record.id });
             },
+                },
+                {
+                  key: 'assign',
+                  label: record.assignedTo ? 'Reassign' : 'Assign Team Member',
+                  icon: <UserOutlined />,
+                  onClick: () => handleAssignCandidate(record),
+                },
+                {
+                  type: 'divider',
                 },
                 {
                   key: 'email',
@@ -3490,9 +3549,9 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 
                 <Button
                   size="small"
-                  type={!filters.showRejected ? 'primary' : 'default'}
+                  type={ 'default'}
                   onClick={() => setFilters(prev => ({ ...prev, showRejected: !prev.showRejected }))}
-                  className="text-xs"
+                  className="text-xs text-white bg-[#5207CD] !hover:text-blue-500"
                 >
                   {filters.showRejected ? 'Hide' : 'Show'} rejected
                 </Button>
