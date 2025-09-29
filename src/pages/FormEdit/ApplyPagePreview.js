@@ -682,7 +682,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
         console.log("🔍 PREVIEW CONTACT FIELD:", field);
         console.log("🔍 PREVIEW ADDITIONAL FIELDS:", field.additionalFields);
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 ">
             {/* First Name and Last Name in a row */}
             <div className="grid grid-cols-2 gap-4">
               {field.firstName?.visible !== false && (
@@ -696,8 +696,9 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                       value={formData[`${field.id}_firstName`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_firstName`, value)}
                       placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'firstName') || "First name"}
-                      className="border-none focus:ring-0 text-sm"
+                      className="border-none focus:ring-0 text-sm placeholder:text-xs"
                       shape="round"
+                      style={{ width: '100%' }}
                     />
                   </div>
                 </div>
@@ -715,6 +716,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                       placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'lastName') || "Last name"}
                       className="border-none focus:ring-0 text-sm"
                       shape="round"
+                      style={{ width: '100%' }}
                     />
                   </div>
                 </div>

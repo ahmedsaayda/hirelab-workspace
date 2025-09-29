@@ -1259,6 +1259,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                       placeholder={field.firstName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'firstName') || "First name"}
                       className="border-none focus:ring-0 text-sm"
                       shape="round"
+                      style={{ width: '100%' }}
                     />
                   </div>
                 </div>
@@ -1276,6 +1277,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                       placeholder={field.lastName?.placeholder || getTranslation(landingPageData?.lang || 'en', 'lastName') || "Last name"}
                       className="border-none focus:ring-0 text-sm"
                       shape="round"
+                      style={{ width: '100%' }}
                     />
                   </div>
                 </div>
