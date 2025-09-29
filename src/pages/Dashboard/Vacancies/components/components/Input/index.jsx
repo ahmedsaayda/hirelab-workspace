@@ -75,7 +75,7 @@ const Input = React.forwardRef(
               name={name}
               onChange={handleChange}
               placeholder={placeholder}
-              className="flex-1 h-full bg-transparent border-none rounded-lg outline-none focus:ring-0 text-sm"
+              className="flex-1 h-full bg-transparent border-none rounded-lg outline-none focus:ring-0 text-sm placeholder:text-xs"
               {...restProps}
             />
           )}

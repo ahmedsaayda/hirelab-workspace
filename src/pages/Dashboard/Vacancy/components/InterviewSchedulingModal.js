@@ -264,7 +264,7 @@ Looking forward to speaking with you!`
           <Button key="cancel" onClick={() => setMessageConfigModal(false)}>
             Cancel
           </Button>,
-          <Button key="save" type="primary" onClick={handleSaveMessageTemplate}>
+          <Button key="save" type="primary" onClick={handleSaveMessageTemplate} className="hover:!text-white">
             Save Template
           </Button>
         ]}

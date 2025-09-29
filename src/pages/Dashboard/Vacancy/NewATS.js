@@ -1,5 +1,65 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+
+// Global CSS fix for ALL primary buttons to match brand-style-form.jsx hover behavior
+// Using the app's theme color #5207cd that I found in the existing styles
+if (typeof document !== 'undefined' && !document.querySelector('#global-primary-button-fix')) {
+  const originalButtonColor = '#5207cd'; // The app's theme color used throughout
+  
+  const globalButtonStyles = `
+    .ant-btn-primary:hover,
+    .ant-btn-primary:focus {
+      background-color: #fff !important;
+      border-color: ${originalButtonColor} !important;
+      color: ${originalButtonColor} !important;
+    }
+    
+    .ant-btn-primary:active {
+      background-color: #f0f0f0 !important;
+      border-color: ${originalButtonColor} !important;
+      color: ${originalButtonColor} !important;
+    }
+    
+    /* Ensure the hover styles work even with custom classes */
+    .ant-btn.ant-btn-primary:hover,
+    .ant-btn.ant-btn-primary:focus {
+      background-color: #fff !important;
+      border-color: ${originalButtonColor} !important;
+      color: ${originalButtonColor} !important;
+    }
+    
+    .ant-btn.ant-btn-primary:active {
+      background-color: #f0f0f0 !important;
+      border-color: ${originalButtonColor} !important;
+      color: ${originalButtonColor} !important;
+    }
+    
+    /* Ensure drawers appear on the right side correctly */
+    .ant-drawer-right {
+      right: 0 !important;
+      left: auto !important;
+    }
+    
+    .ant-drawer-right .ant-drawer-content-wrapper {
+      right: 0 !important;
+      left: auto !important;
+    }
+    
+    /* Responsive drawer width */
+    @media (max-width: 768px) {
+      .candidate-profile-drawer .ant-drawer-content-wrapper,
+      .ant-drawer .ant-drawer-content-wrapper {
+        width: 100vw !important;
+        max-width: 100vw !important;
+      }
+    }
+  `;
+  
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'global-primary-button-fix';
+  styleSheet.textContent = globalButtonStyles;
+  document.head.appendChild(styleSheet);
+}
 import { 
   Button, 
   Input, 
@@ -41,7 +101,8 @@ import {
   CloseOutlined,
   LeftOutlined,
   MessageOutlined,
-  CheckOutlined
+  CheckOutlined,
+  QuestionCircleOutlined
 } from '@ant-design/icons';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useRouter } from 'next/router';
@@ -60,6 +121,11 @@ import CandidateProfile from './components/CandidateProfile';
 import AssignmentModal from './components/AssignmentModal';
 import InterviewSchedulingModal from './components/InterviewSchedulingModal';
 import InitialMessageModal from './components/InitialMessageModal';
+import StageReviewModal from './components/StageReviewModal';
+import StatusChangeModal from './components/StatusChangeModal';
+import InterviewTemplatesModal from './components/InterviewTemplatesModal';
+import InterviewFormModal from './components/InterviewFormModal';
+import ReviewBreakdownModal from './components/ReviewBreakdownModal';
 import VariableMessageBox from '../Message/VariableMessageBox.js';
 
 // Add table styles for enhanced sorting UI
@@ -737,12 +803,69 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
             }))
           }));
           
-          // Update in backend
-          await CrudService.update('VacancySubmission', candidateId, { 
-            stars: newRating 
-          });
+          // Find the candidate to get their current stage
+          const candidate = candidates.find(c => c.id === candidateId);
+          const stageName = candidate?.stage || candidate?.stageName || 'General';
           
-          const ratingText = newRating === 0 ? 'Rating cleared' : `Rating updated to ${newRating} star${newRating !== 1 ? 's' : ''}`;
+          // Create or update stage review with the rating
+          const reviewData = {
+            candidateId: candidateId,
+            stageName: stageName,
+            rating: newRating,
+            comment: `Rating updated to ${newRating} star${newRating !== 1 ? 's' : ''}`,
+            reviewedBy: user._id
+          };
+
+          try {
+            // Check if review already exists for this user and stage
+            const existingReviews = await CrudService.search('StageReview', 100, 1, {
+              filters: {
+                candidateId: candidateId,
+                stageName: stageName,
+                reviewedBy: user._id
+              }
+            });
+
+            if (existingReviews.data?.items?.length > 0) {
+              // Update existing review
+              await CrudService.update('StageReview', existingReviews.data.items[0]._id, reviewData);
+            } else {
+              // Create new review
+              await CrudService.create('StageReview', reviewData);
+            }
+          } catch (reviewError) {
+            console.log('Stage review operation failed, using general rating:', reviewError);
+            // Fallback to general rating update if stage review fails
+            await CrudService.update('VacancySubmission', candidateId, { 
+              stars: newRating 
+            });
+          }
+
+          // Calculate aggregated rating from all stage reviews
+          const aggregatedRating = await calculateAggregatedRating(candidateId);
+          
+          // Update the UI with the aggregated rating instead of just the new rating
+          setCandidates(prevCandidates => 
+            prevCandidates.map(candidate => 
+              candidate.id === candidateId 
+                ? { ...candidate, stars: aggregatedRating }
+                : candidate
+            )
+          );
+          
+          setPipelineData(prevPipelineData => ({
+            ...prevPipelineData,
+            columns: prevPipelineData.columns.map(column => ({
+              ...column,
+              cards: column.cards.map(candidate => 
+                candidate.id === candidateId 
+                  ? { ...candidate, stars: aggregatedRating }
+                  : candidate
+              )
+            }))
+          }));
+          
+          const ratingText = newRating === 0 ? 'Rating cleared' : `Rating updated to ${newRating} star${newRating !== 1 ? 's' : ''} (Avg: ${aggregatedRating})`;
           message.success(ratingText);
           
           // Add to recently updated for animation
@@ -790,6 +913,18 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   const [candidateProfile, setCandidateProfile] = useState(null);
   const [assignmentModal, setAssignmentModal] = useState(false);
   const [selectedCandidateForAssignment, setSelectedCandidateForAssignment] = useState(null);
+  const [reviewModal, setReviewModal] = useState(false);
+  const [selectedCandidateForReview, setSelectedCandidateForReview] = useState(null);
+  const [reviewStage, setReviewStage] = useState(null);
+  const [statusChangeModal, setStatusChangeModal] = useState(false);
+  const [selectedCandidateForStatus, setSelectedCandidateForStatus] = useState(null);
+  const [interviewTemplatesModal, setInterviewTemplatesModal] = useState(false);
+  const [selectedStageForTemplates, setSelectedStageForTemplates] = useState(null);
+  const [interviewFormModal, setInterviewFormModal] = useState(false);
+  const [selectedCandidateForInterview, setSelectedCandidateForInterview] = useState(null);
+  const [interviewStage, setInterviewStage] = useState(null);
+  const [reviewBreakdownModal, setReviewBreakdownModal] = useState(false);
+  const [selectedCandidateForBreakdown, setSelectedCandidateForBreakdown] = useState(null);
   const [interviewSchedulingModal, setInterviewSchedulingModal] = useState(false);
   const [selectedCandidateForScheduling, setSelectedCandidateForScheduling] = useState(null);
   const [schedulingLoading, setSchedulingLoading] = useState(false);
@@ -991,6 +1126,12 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
           allCandidates = candidatesResponse1.data?.items || candidatesResponse1.data?.data || [];
           console.log('👥 Extracted candidates array:', allCandidates);
           console.log('👥 Loaded candidates (method 1):', allCandidates.length);
+          
+          // Debug: Check if statusPhase is being loaded
+          if (allCandidates.length > 0) {
+            console.log('🔍 Sample candidate fields:', Object.keys(allCandidates[0]));
+            console.log('🔍 Sample candidate statusPhase:', allCandidates[0].statusPhase);
+          }
         } catch (error) {
           console.error('❌ Error with method 1:', error);
           console.error('❌ Error details:', error.response?.data || error.message);
@@ -1344,7 +1485,11 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
               // Assignment data
               assignedTo: candidate.assignedTo,
               assignedAt: candidate.assignedAt,
-              assignedBy: candidate.assignedBy
+              assignedBy: candidate.assignedBy,
+              // Status phase data
+              statusPhase: candidate.statusPhase || 'new',
+              statusPhaseUpdatedAt: candidate.statusPhaseUpdatedAt,
+              statusPhaseUpdatedBy: candidate.statusPhaseUpdatedBy
             };
             
             // ABSOLUTELY DO NOT add vacancyInfo in single-job view to prevent purple "Applied to" text
@@ -1962,6 +2107,124 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     setAssignmentModal(true);
   };
 
+  // Review handlers
+  const handleReviewCandidate = (candidate) => {
+    setSelectedCandidateForReview(candidate);
+    
+    // Get the stage name from the pipeline data
+    let stageName = 'Unknown Stage';
+    
+    // First try to find the stage from pipeline columns
+    if (pipelineData?.columns) {
+      const currentColumn = pipelineData.columns.find(column => 
+        column.cards.some(card => card.id === candidate.id)
+      );
+      if (currentColumn) {
+        stageName = currentColumn.title || currentColumn.name || 'Unknown Stage';
+      }
+    }
+    
+    // Fallback to candidate properties
+    if (stageName === 'Unknown Stage') {
+      stageName = candidate.stage || candidate.stageName || 'Unknown Stage';
+    }
+    
+    console.log('🔍 Review candidate stage detection:', {
+      candidateId: candidate.id,
+      detectedStage: stageName,
+      candidateStage: candidate.stage,
+      candidateStageName: candidate.stageName
+    });
+    
+    setReviewStage(stageName);
+    setReviewModal(true);
+  };
+
+  const handleReviewUpdate = (candidateId, stageName) => {
+    // Refresh candidate data to show updated review indicators
+    console.log('Review updated for candidate:', candidateId, 'in stage:', stageName);
+    // You might want to refresh the candidate list or update specific indicators
+  };
+
+  // Status change handlers
+  const handleStatusChange = (candidate) => {
+    setSelectedCandidateForStatus(candidate);
+    setStatusChangeModal(true);
+  };
+
+  const handleStatusUpdate = (candidateId, statusData) => {
+    // Update candidate in both pipeline and table data
+    setCandidates(prevCandidates =>
+      prevCandidates.map(candidate =>
+        candidate.id === candidateId
+          ? { ...candidate, ...statusData }
+          : candidate
+      )
+    );
+
+    // Update pipeline data
+    setPipelineData(prevPipelineData => ({
+      ...prevPipelineData,
+      columns: prevPipelineData.columns.map(column => ({
+        ...column,
+        cards: column.cards.map(candidate =>
+          candidate.id === candidateId
+            ? { ...candidate, ...statusData }
+            : candidate
+        )
+      }))
+    }));
+  };
+
+  // Interview handlers
+  const handleConductInterview = (candidate) => {
+    // Get the stage name from the pipeline data
+    let stageName = 'Unknown Stage';
+    
+    if (pipelineData?.columns) {
+      const currentColumn = pipelineData.columns.find(column => 
+        column.cards.some(card => card.id === candidate.id)
+      );
+      if (currentColumn) {
+        stageName = currentColumn.title || currentColumn.name || 'Unknown Stage';
+      }
+    }
+    
+    setSelectedCandidateForInterview(candidate);
+    setInterviewStage(stageName);
+    setInterviewFormModal(true);
+  };
+
+  const handleInterviewComplete = (candidateId, stageName) => {
+    console.log('Interview completed for candidate:', candidateId, 'in stage:', stageName);
+    // Optionally refresh data or show notification
+    message.success('Interview completed successfully');
+  };
+
+  // Review breakdown handler
+  const handleShowReviewBreakdown = (candidate) => {
+    setSelectedCandidateForBreakdown(candidate);
+    setReviewBreakdownModal(true);
+  };
+
+  // Calculate aggregated rating from stage reviews
+  const calculateAggregatedRating = async (candidateId) => {
+    try {
+      const response = await CrudService.search('StageReview', 100, 1, {
+        filters: { candidateId: candidateId }
+      });
+      const reviews = response.data?.items || [];
+      
+      if (reviews.length === 0) return 0;
+      
+      const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+      return Math.round((totalRating / reviews.length) * 10) / 10; // Round to 1 decimal
+    } catch (error) {
+      console.error('Error calculating aggregated rating:', error);
+      return 0;
+    }
+  };
+
   // Chat handler
   const handleStartChatWithCandidate = (candidate) => {
     if (!candidate?.email) {
@@ -2460,6 +2723,17 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                       <Button 
                         type="text" 
                         size="small" 
+                        icon={<QuestionCircleOutlined />}
+                        onClick={() => {
+                          setInterviewTemplatesModal(true);
+                          setSelectedStageForTemplates(column.title);
+                        }}
+                        className="text-gray-400 hover:text-gray-600"
+                        title={`Manage interview templates for ${column.title}`}
+                      />
+                      <Button 
+                        type="text" 
+                        size="small" 
                         icon={<PlusOutlined />}
                         onClick={() => {
                           setSelectedStageForAdd(column.id);
@@ -2518,7 +2792,11 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                               onChat={() => handleStartChatWithCandidate(candidate)}
                               onRatingUpdate={handleRatingUpdate}
                               onAssign={() => handleAssignCandidate(candidate)}
+                              onReview={() => handleReviewCandidate(candidate)}
+                              onStatusChange={() => handleStatusChange(candidate)}
+                              onConductInterview={() => handleConductInterview(candidate)}
                               onScheduleInterview={() => handleScheduleInterview(candidate)}
+                              onShowReviewBreakdown={() => handleShowReviewBreakdown(candidate)}
                               showVacancyInfo={false}
                             />
                           </div>
@@ -2824,6 +3102,24 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                   label: record.assignedTo ? 'Reassign' : 'Assign Team Member',
                   icon: <UserOutlined />,
                   onClick: () => handleAssignCandidate(record),
+                },
+                {
+                  key: 'review',
+                  label: 'Review Stage',
+                  icon: <MessageOutlined />,
+                  onClick: () => handleReviewCandidate(record),
+                },
+                {
+                  key: 'status',
+                  label: 'Change Status',
+                  icon: <ClockCircleOutlined />,
+                  onClick: () => handleStatusChange(record),
+                },
+                {
+                  key: 'interview',
+                  label: 'Conduct Interview',
+                  icon: <UserOutlined />,
+                  onClick: () => handleConductInterview(record),
                 },
                 {
                   type: 'divider',
@@ -3181,6 +3477,18 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                   </Button>
                 </div>
               )}
+
+              {/* Interview Templates Button */}
+              <Button
+                icon={<QuestionCircleOutlined />}
+                onClick={() => {
+                  setInterviewTemplatesModal(true);
+                  setSelectedStageForTemplates(null); // Show all templates
+                }}
+                className="h-9 px-4 font-medium shadow-sm mr-2 w-full sm:w-auto"
+              >
+                Interview Templates
+              </Button>
 
               {/* Add Candidate Button */}
               <Button
@@ -3749,6 +4057,13 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
           } catch (_) {}
           setEmailComposeCandidateId(id);
         }}
+        onStatusChange={(candidate) => handleStatusChange(candidate)}
+        onShowReviewBreakdown={() => {
+          const candidate = candidates.find(c => c.id === candidateProfile);
+          if (candidate) {
+            handleShowReviewBreakdown(candidate);
+          }
+        }}
       />
 
       <AssignmentModal
@@ -3760,6 +4075,60 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         candidate={selectedCandidateForAssignment}
         onAssignmentUpdate={handleAssignmentUpdate}
         currentTeam={currentTeam}
+      />
+
+      <StageReviewModal
+        visible={reviewModal}
+        onCancel={() => {
+          setReviewModal(false);
+          setSelectedCandidateForReview(null);
+          setReviewStage(null);
+        }}
+        candidate={selectedCandidateForReview}
+        currentStage={reviewStage}
+        onReviewUpdate={handleReviewUpdate}
+      />
+
+      <StatusChangeModal
+        visible={statusChangeModal}
+        onCancel={() => {
+          setStatusChangeModal(false);
+          setSelectedCandidateForStatus(null);
+        }}
+        candidate={selectedCandidateForStatus}
+        onStatusUpdate={handleStatusUpdate}
+      />
+
+      <InterviewTemplatesModal
+        visible={interviewTemplatesModal}
+        onCancel={() => {
+          setInterviewTemplatesModal(false);
+          setSelectedStageForTemplates(null);
+        }}
+        stages={pipelineData.columns || []}
+        vacancyId={VacancyId}
+        selectedStage={selectedStageForTemplates}
+      />
+
+      <InterviewFormModal
+        visible={interviewFormModal}
+        onCancel={() => {
+          setInterviewFormModal(false);
+          setSelectedCandidateForInterview(null);
+          setInterviewStage(null);
+        }}
+        candidate={selectedCandidateForInterview}
+        currentStage={interviewStage}
+        onInterviewComplete={handleInterviewComplete}
+      />
+
+      <ReviewBreakdownModal
+        visible={reviewBreakdownModal}
+        onCancel={() => {
+          setReviewBreakdownModal(false);
+          setSelectedCandidateForBreakdown(null);
+        }}
+        candidate={selectedCandidateForBreakdown}
       />
 
       <InterviewSchedulingModal

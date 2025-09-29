@@ -15,7 +15,9 @@ import {
   Card,
   Progress,
   Upload,
-  Select
+  Select,
+  Tooltip,
+  Modal
 } from 'antd';
 import { 
   UserOutlined, 
@@ -34,7 +36,8 @@ import {
   CheckCircleOutlined,
   NumberOutlined,
   GlobalOutlined,
-  DownloadOutlined
+  DownloadOutlined,
+  QuestionCircleOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
 import CrudService from '../../../../services/CrudService';
@@ -44,6 +47,7 @@ import ATSService from '../../../../services/ATSService';
 import FileViewer from '../../../../components/FileViewer';
 import { extractFileName, extractFileUrl, downloadFile } from '../../../../utils/fileViewerHelper';
 import { useRouter } from 'next/router';
+import InterviewFormModal from './InterviewFormModal';
 
 // Add custom styles for the drawer
 const drawerStyles = `
@@ -342,6 +346,45 @@ if (typeof document !== 'undefined' && !document.querySelector('#candidate-profi
 
 const { TabPane } = Tabs;
 const { Text, Title, Paragraph } = Typography;
+
+// Helper functions for status phases
+const getStatusPhaseLabel = (phase) => {
+  const labels = {
+    'new': 'New',
+    'reviewing': 'Under Review',
+    'waiting_for_availability': 'Waiting for Availability',
+    'availability_received': 'Availability Received',
+    'meeting_scheduled': 'Meeting Scheduled',
+    'interview_completed': 'Interview Completed',
+    'reference_check': 'Reference Check',
+    'final_decision': 'Final Decision',
+    'offer_sent': 'Offer Sent',
+    'offer_accepted': 'Offer Accepted',
+    'offer_declined': 'Offer Declined',
+    'hired': 'Hired',
+    'rejected': 'Rejected'
+  };
+  return labels[phase] || phase;
+};
+
+const getStatusPhaseColor = (phase) => {
+  const colors = {
+    'new': 'bg-gray-100 text-gray-700',
+    'reviewing': 'bg-blue-100 text-blue-700',
+    'waiting_for_availability': 'bg-yellow-100 text-yellow-700',
+    'availability_received': 'bg-orange-100 text-orange-700',
+    'meeting_scheduled': 'bg-purple-100 text-purple-700',
+    'interview_completed': 'bg-indigo-100 text-indigo-700',
+    'reference_check': 'bg-cyan-100 text-cyan-700',
+    'final_decision': 'bg-pink-100 text-pink-700',
+    'offer_sent': 'bg-emerald-100 text-emerald-700',
+    'offer_accepted': 'bg-green-100 text-green-700',
+    'offer_declined': 'bg-red-100 text-red-700',
+    'hired': 'bg-green-100 text-green-700',
+    'rejected': 'bg-red-100 text-red-700'
+  };
+  return colors[phase] || 'bg-gray-100 text-gray-700';
+};
 const { TextArea } = Input;
 
 const CandidateProfile = ({ 
@@ -351,6 +394,8 @@ const CandidateProfile = ({
   stages = [],
   allCandidateIds = [],
   onEmail,
+  onStatusChange,
+  onShowReviewBreakdown,
 }) => {
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -365,8 +410,34 @@ const CandidateProfile = ({
   const [updatingCommunication, setUpdatingCommunication] = useState(false);
   const [fileViewerVisible, setFileViewerVisible] = useState(false);
   const [viewingFile, setViewingFile] = useState({ url: '', fileName: '', title: '' });
+  const [interviewFormVisible, setInterviewFormVisible] = useState(false);
+  const [interviewHistory, setInterviewHistory] = useState([]);
+  const [loadingInterviews, setLoadingInterviews] = useState(false);
   
   const router = useRouter();
+
+  // Load interview history for candidate
+  const loadInterviewHistory = async () => {
+    if (!candidateId) return;
+    
+    setLoadingInterviews(true);
+    try {
+      const response = await CrudService.search('InterviewResponse', 100, 1, {
+        filters: {
+          candidateId: candidateId
+        },
+        populate: 'templateId interviewedBy',
+        deep: ['templateId.questions', 'templateId.skills'],
+        sort: { interviewDate: -1 }
+      });
+      setInterviewHistory(response.data?.items || []);
+    } catch (error) {
+      console.error('Error loading interview history:', error);
+      message.error('Failed to load interview history');
+    } finally {
+      setLoadingInterviews(false);
+    }
+  };
 
   // Handle starting chat with candidate
   const handleStartChat = async () => {
@@ -396,6 +467,7 @@ const CandidateProfile = ({
     if (candidateId) {
       loadCandidateData();
       loadAllCandidates();
+      loadInterviewHistory();
     }
   }, [candidateId]);
 
@@ -842,14 +914,43 @@ const CandidateProfile = ({
             <Text className="text-white/90 text-sm">
               {candidate?.position || 'des'}
             </Text>
-            <div className="flex items-center gap-2">
-              <Rate 
-                value={candidate?.stars || 0}
-                onChange={updateRating}
-                size="small"
-                className="text-yellow-400"
-              />
-            </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Tooltip title="Aggregated rating from stage reviews. Click the question mark to see breakdown by stage.">
+                    <Rate 
+                      value={candidate?.stars || 0}
+                      size="small"
+                      className="text-yellow-400"
+                      disabled={true}
+                      style={{ pointerEvents: 'none' }}
+                    />
+                  </Tooltip>
+                  {onShowReviewBreakdown && (
+                    <Tooltip title="View rating breakdown by stage">
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<QuestionCircleOutlined />}
+                        onClick={() => onShowReviewBreakdown()}
+                        className="text-white/60 hover:text-white/80 p-0 h-auto w-auto"
+                        style={{ fontSize: '12px' }}
+                      />
+                    </Tooltip>
+                  )}
+                </div>
+                {/* Status Display */}
+                {candidate?.statusPhase && candidate.statusPhase !== 'new' && (
+                  <div className="flex items-center gap-2">
+                    <div className={`
+                      px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1
+                      ${getStatusPhaseColor(candidate.statusPhase)}
+                    `}>
+                      <div className="w-2 h-2 rounded-full bg-current opacity-60"></div>
+                      {getStatusPhaseLabel(candidate.statusPhase)}
+                    </div>
+                  </div>
+                )}
+              </div>
           </div>
         </div>
       </div>
@@ -858,7 +959,7 @@ const CandidateProfile = ({
       <div className="candidate-actions flex items-center gap-2 mt-4">
         <Button 
           icon={<MailOutlined />}
-          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
+          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40 hover:text-white"
           onClick={() => {
             // Debug log for diagnosing modal open issue
       
@@ -885,7 +986,7 @@ const CandidateProfile = ({
             }
           }}
           size="small"
-          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
+          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40 hover:text-white"
         >
           Call
         </Button>
@@ -894,9 +995,27 @@ const CandidateProfile = ({
           icon={<MessageOutlined />}
           onClick={handleStartChat}
           size="small"
-          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
+          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40 hover:text-white"
         >
           Start Chat
+        </Button>
+        
+        <Button 
+          icon={<ClockCircleOutlined />}
+          onClick={() => onStatusChange && onStatusChange(candidate)}
+          size="small"
+          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40 hover:text-white"
+        >
+          Status
+        </Button>
+        
+        <Button 
+          icon={<QuestionCircleOutlined />}
+          onClick={() => setInterviewFormVisible(true)}
+          size="small"
+          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40 hover:text-white"
+        >
+          Interview
         </Button>
 
       </div>
@@ -1489,6 +1608,7 @@ const CandidateProfile = ({
                     }
                     handleViewFile(resumeUrl, fileName, 'Resume');
                   }}
+                  className="hover:!text-white"
                 >
                   View
                 </Button>
@@ -1572,6 +1692,233 @@ const CandidateProfile = ({
     </div>
   );
 
+  const renderInterviewHistoryTab = () => (
+    <div className="p-4 space-y-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <Typography.Title level={5} className="mb-1">Interview History</Typography.Title>
+          <Typography.Text type="secondary">
+            {interviewHistory.length} interview{interviewHistory.length !== 1 ? 's' : ''} conducted
+          </Typography.Text>
+        </div>
+        <Button 
+          type="primary" 
+          icon={<QuestionCircleOutlined />}
+          onClick={() => setInterviewFormVisible(true)}
+          className="hover:!text-white"
+        >
+          New Interview
+        </Button>
+      </div>
+
+      {loadingInterviews ? (
+        <div className="text-center py-8">
+          <Typography.Text type="secondary">Loading interviews...</Typography.Text>
+        </div>
+      ) : interviewHistory.length === 0 ? (
+        <div className="text-center py-12">
+          <QuestionCircleOutlined className="text-6xl text-gray-300 mb-4" />
+          <Typography.Title level={4} type="secondary">No Interviews Yet</Typography.Title>
+          <Typography.Text type="secondary" className="block mb-4">
+            Start conducting interviews to track candidate progress
+          </Typography.Text>
+          <Button 
+            type="primary" 
+            icon={<QuestionCircleOutlined />}
+            onClick={() => setInterviewFormVisible(true)}
+            className="hover:!text-white"
+          >
+            Conduct First Interview
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {interviewHistory.map((interview) => (
+            <Card key={interview._id} className="hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Typography.Text strong className="text-base">
+                      {interview.templateId?.name || 'Interview'}
+                    </Typography.Text>
+                    <Tooltip title={`Interview status: ${interview.status === 'completed' ? 'This interview has been completed' : 'This interview is still in draft mode'}`}>
+                      <Tag color={interview.status === 'completed' ? 'green' : 'orange'}>
+                        {interview.status === 'completed' ? 'Completed' : 'Draft'}
+                      </Tag>
+                    </Tooltip>
+                    <Tooltip title={`Interview stage: ${interview.stageName}`}>
+                      <Tag color="blue">{interview.stageName}</Tag>
+                    </Tooltip>
+                  </div>
+                  <Typography.Text type="secondary" className="text-sm block">
+                    Conducted by {interview.interviewedBy?.name || 
+                      (interview.interviewedBy?.firstName && interview.interviewedBy?.lastName 
+                        ? `${interview.interviewedBy.firstName} ${interview.interviewedBy.lastName}`.trim()
+                        : interview.interviewedBy?.email?.split('@')[0] || 'Unknown')
+                    } • {moment(interview.interviewDate).format('MMM DD, YYYY HH:mm')}
+                  </Typography.Text>
+                </div>
+                {interview.overallRating && (
+                  <div className="flex items-center gap-1">
+                    <Rate disabled value={interview.overallRating} className="text-sm" />
+                    <Typography.Text type="secondary" className="text-sm">
+                      ({interview.overallRating}/5)
+                    </Typography.Text>
+                  </div>
+                )}
+              </div>
+
+              {/* Interview Summary */}
+              <div className="grid grid-cols-3 gap-4 mb-3 text-sm">
+                <div className="text-center p-2 bg-gray-50 rounded">
+                  <div className="font-semibold text-blue-600">{interview.responses?.length || 0}</div>
+                  <div className="text-gray-600">Questions</div>
+                </div>
+                <div className="text-center p-2 bg-gray-50 rounded">
+                  <div className="font-semibold text-green-600">{interview.skillScores?.length || 0}</div>
+                  <div className="text-gray-600">Skills</div>
+                </div>
+                <div className="text-center p-2 bg-gray-50 rounded">
+                  <div className="font-semibold text-purple-600">
+                    {interview.skillScores?.length > 0 
+                      ? Math.round(interview.skillScores.reduce((sum, skill) => sum + skill.score, 0) / interview.skillScores.length * 10) / 10
+                      : 'N/A'
+                    }
+                  </div>
+                  <div className="text-gray-600">Avg Score</div>
+                </div>
+              </div>
+
+              {/* Overall Notes */}
+              {interview.overallNotes && (
+                <div className="mt-3 p-3 border border-blue-50 text-blue-500 rounded">
+                  <Typography.Text strong className="text-sm text-blue-800">Overall Notes:</Typography.Text>
+                  <Typography.Paragraph className="mb-0 mt-1 text-sm text-blue-300">
+                    {interview.overallNotes}
+                  </Typography.Paragraph>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
+                <Button 
+                  size="small" 
+                  type="text"
+                  onClick={() => {
+                    // Show interview details in a modal
+                    Modal.info({
+                      title: `Interview Details - ${interview.templateId?.name || 'Interview'}`,
+                      content: (
+                        <div className="space-y-4">
+                          <div>
+                            <strong>Status:</strong> {interview.status === 'completed' ? 'Completed' : 'Draft'}
+                          </div>
+                          <div>
+                            <strong>Stage:</strong> {interview.stageName}
+                          </div>
+                          <div>
+                            <strong>Conducted by:</strong> {interview.interviewedBy?.name || 
+                              (interview.interviewedBy?.firstName && interview.interviewedBy?.lastName 
+                                ? `${interview.interviewedBy.firstName} ${interview.interviewedBy.lastName}`.trim()
+                                : interview.interviewedBy?.email?.split('@')[0] || 'Unknown')
+                            }
+                          </div>
+                          <div>
+                            <strong>Date:</strong> {moment(interview.interviewDate).format('MMM DD, YYYY HH:mm')}
+                          </div>
+                          {interview.overallRating && (
+                            <div>
+                              <strong>Overall Rating:</strong> {interview.overallRating}/5
+                            </div>
+                          )}
+                          {interview.overallNotes && (
+                            <div>
+                              <strong>Overall Notes:</strong>
+                              <div className="mt-1 p-2 border-gray-50 rounded text-sm">
+                                {interview.overallNotes}
+                              </div>
+                            </div>
+                          )}
+                          {interview.responses?.length > 0 && (
+                            <div>
+                              <strong>Question Responses:</strong>
+                              <div className="mt-2 space-y-2">
+                                {interview.responses.map((response, idx) => {
+                                  // Find the actual question from template
+                                  const question = interview.templateId?.questions?.find(q => q.id === response.questionId);
+                                  const questionText = question?.question || response.questionId;
+                                  
+                                  return (
+                                    <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
+                                      <div className="font-medium">Q{idx + 1}: {questionText}</div>
+                                      <div className="text-gray-600 mt-1">{response.answer}</div>
+                                      {response.notes && (
+                                        <div className="text-xs text-gray-500 mt-1 italic">Notes: {response.notes}</div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {interview.skillScores?.length > 0 && (
+                            <div>
+                              <strong>Skill Scores:</strong>
+                              <div className="mt-2 space-y-2">
+                                {interview.skillScores.map((skill, idx) => {
+                                  // Find the actual skill from template
+                                  const skillTemplate = interview.templateId?.skills?.find(s => s.id === skill.skillId);
+                                  const skillName = skillTemplate?.name || skill.skillId;
+                                  const maxScore = skillTemplate?.maxScore || 10;
+                                  
+                                  return (
+                                    <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">{skillName}</span>
+                                        <span className="text-blue-600 font-bold">{skill.score}/{maxScore}</span>
+                                      </div>
+                                      {skillTemplate?.description && (
+                                        <div className="text-xs text-gray-500 mt-1">{skillTemplate.description}</div>
+                                      )}
+                                      {skill.notes && (
+                                        <div className="text-xs text-gray-500 mt-1 italic">Notes: {skill.notes}</div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ),
+                      width: 700,
+                      okText: 'Close',
+                    });
+                  }}
+                >
+                  View Details
+                </Button>
+                {interview.status === 'draft' && (
+                  <Button 
+                    size="small" 
+                    type="primary"
+                    onClick={() => {
+                      // TODO: Open interview form with existing data
+                      setInterviewFormVisible(true);
+                    }}
+                    className="hover:!text-white"
+                  >
+                    Continue
+                  </Button>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   const renderNotesTab = () => (
     <div className="space-y-6 p-4">
       {/* Add Note */}
@@ -1593,6 +1940,7 @@ const CandidateProfile = ({
               onClick={addNote}
               disabled={!newNote.trim()}
               size="small"
+              className="hover:!text-white"
             >
               Add Note
             </Button>
@@ -1697,7 +2045,7 @@ const CandidateProfile = ({
       placement="right"
       onClose={onClose}
       open={!!candidateId}
-      width={680}
+      width={750}
       className="candidate-profile-drawer"
       bodyStyle={{ 
         padding: 0, 
@@ -1708,9 +2056,6 @@ const CandidateProfile = ({
       maskClosable={true}
       destroyOnClose={false}
       getContainer={() => document.body}
-      style={{ 
-        overflow: 'hidden'
-      }}
     >
       {/* Custom Header */}
       {renderHeader()}
@@ -1750,6 +2095,23 @@ const CandidateProfile = ({
             ),
           },
           {
+            key: 'interviews',
+            label: (
+              <div className="flex items-center gap-2">
+                <QuestionCircleOutlined />
+                <span>Interviews</span>
+                {interviewHistory.length > 0 && (
+                  <Tag size="small" color="blue">{interviewHistory.length}</Tag>
+                )}
+              </div>
+            ),
+            children: (
+              <div className="interviews-tab-content">
+                {renderInterviewHistoryTab()}
+              </div>
+            ),
+          },
+          {
             key: 'notes',
             label: (
               <div className="flex items-center gap-2">
@@ -1776,6 +2138,20 @@ const CandidateProfile = ({
         fileUrl={viewingFile.url}
         fileName={viewingFile.fileName}
         title={viewingFile.title}
+      />
+      
+      {/* Interview Form Modal */}
+      <InterviewFormModal
+        visible={interviewFormVisible}
+        onCancel={() => setInterviewFormVisible(false)}
+        candidate={candidate}
+        currentStage={candidate?.stageName || candidate?.stage || stages.find(s => s.id === candidate?.stageId)?.title || stages.find(s => s.id === candidate?.stageId)?.name}
+        onInterviewComplete={(candidateId, stage) => {
+          // Refresh candidate data and interview history after interview completion
+          loadCandidateData();
+          loadInterviewHistory();
+          setInterviewFormVisible(false);
+        }}
       />
     </Drawer>
   );

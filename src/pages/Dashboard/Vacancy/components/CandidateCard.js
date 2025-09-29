@@ -9,7 +9,8 @@ import {
   DeleteOutlined,
   ClockCircleOutlined,
   MessageOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  QuestionCircleOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
 
@@ -68,6 +69,45 @@ if (typeof document !== 'undefined' && !document.querySelector('#candidate-card-
   document.head.appendChild(styleSheet);
 }
 
+// Helper functions for status phases
+const getStatusPhaseLabel = (phase) => {
+  const labels = {
+    'new': 'New',
+    'reviewing': 'Under Review',
+    'waiting_for_availability': 'Waiting for Availability',
+    'availability_received': 'Availability Received',
+    'meeting_scheduled': 'Meeting Scheduled',
+    'interview_completed': 'Interview Completed',
+    'reference_check': 'Reference Check',
+    'final_decision': 'Final Decision',
+    'offer_sent': 'Offer Sent',
+    'offer_accepted': 'Offer Accepted',
+    'offer_declined': 'Offer Declined',
+    'hired': 'Hired',
+    'rejected': 'Rejected'
+  };
+  return labels[phase] || phase;
+};
+
+const getStatusPhaseColor = (phase) => {
+  const colors = {
+    'new': 'bg-gray-100 text-gray-700',
+    'reviewing': 'bg-blue-100 text-blue-700',
+    'waiting_for_availability': 'bg-yellow-100 text-yellow-700',
+    'availability_received': 'bg-orange-100 text-orange-700',
+    'meeting_scheduled': 'bg-purple-100 text-purple-700',
+    'interview_completed': 'bg-indigo-100 text-indigo-700',
+    'reference_check': 'bg-cyan-100 text-cyan-700',
+    'final_decision': 'bg-pink-100 text-pink-700',
+    'offer_sent': 'bg-emerald-100 text-emerald-700',
+    'offer_accepted': 'bg-green-100 text-green-700',
+    'offer_declined': 'bg-red-100 text-red-700',
+    'hired': 'bg-green-100 text-green-700',
+    'rejected': 'bg-red-100 text-red-700'
+  };
+  return colors[phase] || 'bg-gray-100 text-gray-700';
+};
+
 const CandidateCard = ({ 
   candidate, 
   isDragging = false, 
@@ -79,7 +119,11 @@ const CandidateCard = ({
   onDelete,
   onRatingUpdate,
   onAssign,
+  onReview,
+  onStatusChange,
+  onConductInterview,
   onScheduleInterview,
+  onShowReviewBreakdown,
   showVacancyInfo = false 
 }) => {
   const [isUpdatingRating, setIsUpdatingRating] = useState(false);
@@ -173,6 +217,33 @@ const CandidateCard = ({
           onClick: (e) => {
             e?.domEvent?.stopPropagation();
             onAssign && onAssign();
+          },
+        },
+        {
+          key: 'review',
+          label: 'Review Stage',
+          icon: <MessageOutlined />,
+          onClick: (e) => {
+            e?.domEvent?.stopPropagation();
+            onReview && onReview();
+          },
+        },
+        {
+          key: 'status',
+          label: 'Change Status',
+          icon: <ClockCircleOutlined />,
+          onClick: (e) => {
+            e?.domEvent?.stopPropagation();
+            onStatusChange && onStatusChange();
+          },
+        },
+        {
+          key: 'interview',
+          label: 'Conduct Interview',
+          icon: <UserOutlined />,
+          onClick: (e) => {
+            e?.domEvent?.stopPropagation();
+            onConductInterview && onConductInterview();
           },
         },
         {
@@ -272,6 +343,19 @@ const CandidateCard = ({
       {/* Contact Info */}
  
 
+      {/* Status Phase Info */}
+      {candidate.statusPhase && candidate.statusPhase !== 'new' && (
+        <div className="mb-2">
+          <div className={`
+            px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1
+            ${getStatusPhaseColor(candidate.statusPhase)}
+          `}>
+            <div className="w-2 h-2 rounded-full bg-current opacity-60"></div>
+            {getStatusPhaseLabel(candidate.statusPhase)}
+          </div>
+        </div>
+      )}
+
       {/* Assignment Info - Trello Style */}
       {candidate.assignedTo && (
         <div className="mb-2 flex items-center justify-between">
@@ -323,20 +407,36 @@ const CandidateCard = ({
           }`}
           onClick={(e) => e.stopPropagation()}
         >
-          <Rate 
-            value={candidate.stars || 0} 
-            onChange={handleRatingChange}
-            style={{ 
-              fontSize: '14px',
-              opacity: isUpdatingRating ? 0.6 : 1,
-              pointerEvents: isUpdatingRating ? 'none' : 'auto'
-            }}
-            className="candidate-card-rating cursor-pointer"
-            allowClear
-            allowHalf={false}
-            disabled={isUpdatingRating}
-            title={isUpdatingRating ? 'Updating rating...' : 'Click to rate this candidate'}
-          />
+          <Tooltip title="Aggregated rating from stage reviews. Click the question mark to see breakdown by stage.">
+            <div className="flex items-center gap-1">
+              <Rate 
+                value={candidate.stars || 0} 
+                style={{ 
+                  fontSize: '14px',
+                  opacity: 0.8,
+                  pointerEvents: 'none'
+                }}
+                className="candidate-card-rating"
+                disabled={true}
+                allowHalf={false}
+              />
+            </div>
+          </Tooltip>
+          {onShowReviewBreakdown && (
+            <Tooltip title="View rating breakdown by stage">
+              <Button
+                type="text"
+                size="small"
+                icon={<QuestionCircleOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowReviewBreakdown();
+                }}
+                className="text-gray-400 hover:text-gray-600 p-0 h-3 w-3 flex items-center justify-center ml-1"
+                style={{ fontSize: '10px' }}
+              />
+            </Tooltip>
+          )}
           {isUpdatingRating && (
             <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           )}
