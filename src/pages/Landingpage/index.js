@@ -315,7 +315,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     // List of events that indicate user activity
     const activityEvents = [
       'mousedown', 'mousemove', 'keypress',
-      'touchstart', 'touchmove', 'click'
+      'touchstart', 'touchmove', 'click', 'scroll'
     ];
 
     // Throttle activity recording to avoid excessive calls
