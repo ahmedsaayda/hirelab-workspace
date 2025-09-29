@@ -1,5 +1,5 @@
 // hirelab-frontend\src\components\mediaLibrary\ImageModal\ImageSelectionModal.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { message, Progress, Tabs } from "antd";
 import Modal from "../Modal/Modal.jsx";
 import SidebarOption from "./SidebarOption.jsx";
@@ -36,7 +36,7 @@ const ImageSelectionModal = ({
 }) => {
   const user = useSelector(selectUser);
   const [activeOption, setActiveOption] = useState("upload");
-  const [files, setFiles] = useState(() => (existingFiles || []).map((url) => ({ url })));
+  const [files, setFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [addingFromStockImage, setAddingFromStockImage] = useState(false);
   const [recentMedia, setRecentMedia] = useState([]);
@@ -75,7 +75,7 @@ const ImageSelectionModal = ({
   console.log("filteredMedia:", filteredMedia);
 
   const handleFilesSelected = async (newFiles) => {
-    if (!multiple && maxFiles === 1) {
+    if (!multiple) {
       // For single file mode, just replace the existing file
       const newEntries = newFiles.map((file) => ({
         url: URL.createObjectURL(file),
@@ -84,7 +84,7 @@ const ImageSelectionModal = ({
       }));
       setFiles([newEntries[0]]);
       setIsUploading(true);
-    } else if (maxFiles && files.length + newFiles.length > maxFiles&& !isLogo) {
+    } else if (maxFiles && files.length + newFiles.length > maxFiles && !isLogo) {
       message.error(`You can only select up to ${maxFiles} ${maxFiles === 1 ? 'file' : 'files'}. Please remove some ${maxFiles === 1 ? 'file' : 'files'} first.`);
       return;
     }
@@ -240,10 +240,36 @@ const ImageSelectionModal = ({
     fetchRecent();
   }, [isOpen, user?._id, accept]);
 
+  // Reset files state every time the modal opens to ensure fresh state
+  useEffect(() => {
+    if (isOpen) {
+      const newFiles = (existingFiles || []).map((url) => ({ url }));
+      console.log("Modal opened - resetting files state:");
+      console.log("  existingFiles:", existingFiles);
+      console.log("  newFiles:", newFiles);
+      setFiles(newFiles);
+    } else {
+      // Clear files when modal closes to ensure fresh state next time
+      console.log("Modal closed - clearing files state");
+      setFiles([]);
+    }
+  }, [isOpen]);
+
+  // Also sync when existingFiles changes while modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const newFiles = (existingFiles || []).map((url) => ({ url }));
+      console.log("existingFiles changed while modal is open:");
+      console.log("  existingFiles:", existingFiles);
+      console.log("  updating to newFiles:", newFiles);
+      setFiles(newFiles);
+    }
+  }, [existingFiles, isOpen]);
+
   // Add recent upload to files
   const handleSelectRecent = (media) => {
     if (files.some(f => f.url === media.thumbnail)) return;
-    if (maxFiles && files.length >= maxFiles&& !isLogo) {
+    if (maxFiles && files.length >= maxFiles && !isLogo) {
       message.error(`You can only select up to ${maxFiles} ${maxFiles === 1 ? 'file' : 'files'}. Please remove some ${maxFiles === 1 ? 'file' : 'files'} first.`);
       return;
     }
@@ -420,7 +446,7 @@ const ImageSelectionModal = ({
                 <div
                 
                   className="lg:w-[35%] w-full ">
-                    <div className=" relative flex flex-col border-2 border-dashed border-gray-300 bg-gray-50 h-full p-2 lg:p-4 rounded-lg overflow-y-scroll">
+                    <div className=" relative flex flex-col border-2  border-gray-300 bg-gray-50 h-full p-2 lg:p-4 pb-24 rounded-lg overflow-y-scroll">
                     <div className="h-full"
                       
                       >
@@ -431,7 +457,7 @@ const ImageSelectionModal = ({
                         />
                         <div className="w-full mt-4 flex flex-col ">
                           <h4 className="text-sm font-medium mb-2">Selected Files</h4>
-                          <div className="flex-1 overflow-y-auto min-h-0">
+                          <div className="flex-1 overflow-y-auto min-h-0 pb-16">
                             {files.map(renderPreview)}
                           </div>
                         </div>
@@ -439,11 +465,11 @@ const ImageSelectionModal = ({
                       </div>
                     </div>
                       {!autosave && (
-                        <div className="mt-4 ml-4 mb-1 w-fit sticky bottom-1 bg-gray-50  z-10">
+                        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 py-3 flex justify-end z-10">
                           <button
                             onClick={handleDone}
                             disabled={isUploading||files.length===0}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
+                            className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
                           >
                             {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : "Video"}`}
                           </button>

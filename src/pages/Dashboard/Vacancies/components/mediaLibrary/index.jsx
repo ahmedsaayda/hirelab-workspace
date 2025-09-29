@@ -40,6 +40,7 @@ import EditMediaModalNew from "./ImageModal/EditMediaModal.jsx";
 import { AddMediaModal } from "./components/modals/add-media-modal.jsx";
 import { SelectTemplateModal } from "./components/modals/select-template-modal.jsx";
 import { FilterModal } from "./components/modals/filter-modal.jsx";
+import { BulkEditModal } from "./components/modals/bulk-edit-modal.jsx";
 import TabPane from "antd/es/tabs/TabPane";
 import CrudService from "../../../../../services/CrudService.js";
 import { MdEMobiledata } from "react-icons/md";
@@ -49,7 +50,7 @@ import { ArrowUpDown } from 'lucide-react';
 import debounce from "lodash/debounce";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { GripVertical, MoveDown, MoveUp } from "lucide-react";
+import { GripVertical, MoveDown, MoveUp, Trash2 } from "lucide-react";
 
 
 import { selectUser } from "../../../../../redux/auth/selectors.js";
@@ -207,6 +208,7 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
   const [isReorderImage, setIsReorderImage] = useState(false);
   const [orderedTestimonials, setOrderedTestimonials] = useState([]);
   const [searchValue, setSearchValue] = useState("");
+  const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
 
   const [mediaData, setMediaData] = useState([]);
   // const [filters, setFilters] = useState({ tags: [], sectionName: [] });
@@ -509,6 +511,51 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
         message.error("Failed to delete media item. Please try again.");
       }
     }
+  };
+
+  const handleBulkDelete = async () => {
+    Modal.confirm({
+      title: 'Delete Media',
+      content: `Are you sure you want to delete ${selectedItems.length} media item${selectedItems.length !== 1 ? 's' : ''}? This action cannot be undone.`,
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          console.log('🗑️ Bulk deleting media items:', selectedItems);
+          
+          // Delete all selected items in parallel
+          const deletePromises = selectedItems.map(itemId => 
+            CrudService.delete('MediaLibrary', itemId)
+          );
+          
+          await Promise.all(deletePromises);
+          
+          // Update local state
+          setMediaData((prevData) => prevData.filter((media) => !selectedItems.includes(media._id)));
+          
+          message.success(`Successfully deleted ${selectedItems.length} media item${selectedItems.length !== 1 ? 's' : ''}`);
+          
+          // Clear selection
+          setSelectedItems([]);
+          
+          // Refresh the data
+          fetchMediaData({
+            user,
+            searchValue,
+            filters,
+            sorters,
+            activeSorter,
+            currentPage,
+            itemsPerPage,
+          });
+          
+        } catch (error) {
+          console.error('❌ Error bulk deleting media items:', error);
+          message.error('Failed to delete some media items. Please try again.');
+        }
+      }
+    });
   };
 
 
@@ -1040,6 +1087,25 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
                       {selectedItems.length} items selected
                     </span>
                   </div>
+                  
+                  {/* Bulk actions */}
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => setIsBulkEditModalOpen(true)}
+                      className="flex items-center gap-1"
+                    >
+                      <EditOutlined size={16} />
+                      Bulk Edit
+                    </Button>
+                    <Button 
+                      danger
+                      onClick={handleBulkDelete}
+                      className="flex items-center gap-1"
+                    >
+                      <Trash2 size={16} />
+                      Delete Selected
+                    </Button>
+                  </div>
                 </div>
               )}
               {/* {selectedItems && selectedItems.length  > 0 && ( */}
@@ -1216,6 +1282,26 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
           open={isCreateTemplateModalOpen}
           onCancel={() => setIsCreateTemplateModalOpen(false)}
           onSave={handleSaveTemplate}  // Now saving happens in parent
+        />
+
+        <BulkEditModal
+          open={isBulkEditModalOpen}
+          onCancel={() => setIsBulkEditModalOpen(false)}
+          selectedItems={selectedItems}
+          mediaData={mediaData}
+          onSave={() => {
+            // Refresh the data after bulk edit
+            fetchMediaData({
+              user,
+              searchValue,
+              filters,
+              sorters,
+              activeSorter,
+              currentPage,
+              itemsPerPage,
+            });
+            setSelectedItems([]);
+          }}
         />
 
 

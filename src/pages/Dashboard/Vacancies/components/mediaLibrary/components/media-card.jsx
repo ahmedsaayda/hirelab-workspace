@@ -164,10 +164,7 @@ export function MediaCard({
 
   return (
     <div className="overflow-hidden transition-shadow bg-[#f8f8f8] rounded-lg shadow-sm shadow-gray-400 hover:shadow-md hover:shadow-gray-700 flex flex-col ">
-      <div
-        className="relative h-[200px] cursor-pointer"
-        onClick={() => onSelect?.(_id)} // 🔹 Entire area is clickable
-      >
+      <div className="relative h-[200px]">
         {type === "video" || templateData?.type === "videoSection" ? (
           <VideoCard videoUrl={thumbnail} />
         ) : (
@@ -188,13 +185,17 @@ export function MediaCard({
           </>
         )}
 
-        {/* ✅ This remains visually highlighted when selected */}
+        {/* ✅ Only this checkbox is clickable for selection */}
         <Button
           icon={<CheckCircleOutlined />}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.(_id);
+          }}
           className={`absolute top-2 right-2 rounded-full border ${selected
               ? "text-white bg-blue-500 border-blue-500 shadow"
               : "text-gray-400 bg-white/80 border-transparent"
-            } transition-all duration-200 ease-in-out pointer-events-none`}
+            } transition-all duration-200 ease-in-out cursor-pointer hover:bg-blue-400 hover:text-white`}
         />
       </div>
 

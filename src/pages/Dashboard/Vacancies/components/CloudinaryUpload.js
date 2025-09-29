@@ -53,6 +53,7 @@ const CloudinaryUpload = ({ onChange, listenToParentHeight, multiple = false, Me
         showUploadList={false}
         className="inline-block w-full"
         accept="image/*,video/*"
+        maxCount={multiple ? 1000 : 1}
       >
         <div className={
           `relative py-2 w-full text-center rounded-lg   transition-colors duration-200

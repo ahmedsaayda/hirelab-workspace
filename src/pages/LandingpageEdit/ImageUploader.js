@@ -71,7 +71,14 @@ const ImageUploader = ({
     : 1;
   const limitReached = uploadsLeft === 0;
 
-  const openModal = () => setIsImageOpen(true);
+  const openModal = () => {
+    console.log("Opening ImageUploader modal:");
+    console.log("  multiple:", multiple);
+    console.log("  multipleFiles:", multipleFiles);
+    console.log("  previewUrl:", previewUrl);
+    console.log("  existingFiles will be:", multiple ? multipleFiles : previewUrl ? [previewUrl] : []);
+    setIsImageOpen(true);
+  };
   const closeModal = () => setIsImageOpen(false);
 
   const handleImageSelected = async (uploadedUrls) => {
@@ -186,11 +193,11 @@ const ImageUploader = ({
     console.log("Modal open state:", isImageOpen);
   }, [isImageOpen]);
 
-  const fetchFileSize = async (url) => {
+  const fetchFileSize = async (url="") => {
     try {
       const response = await fetch(url, { method: "HEAD" });
       const size = response.headers.get("content-length");
-      const fileName = url.split("/").pop();
+      const fileName = url?.split("/").pop();
 
       setFileMetadata((prev) => ({
         ...prev,
