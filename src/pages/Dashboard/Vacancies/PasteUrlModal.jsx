@@ -54,16 +54,8 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
     }
     return "English";
   });
-  const [selectedTemplate, setSelectedTemplate] = useState(() => {
-    const savedProgress = sessionStorage.getItem('vacancy_url_progress');
-    console.log('PasteUrlModal - Loading saved template:', savedProgress);
-    if (savedProgress) {
-      const data = JSON.parse(savedProgress);
-      console.log('PasteUrlModal - Parsed template data:', data);
-      return data?.selectedTemplate ?? -1;
-    }
-    return -1;
-  });
+
+  const [selectedTemplate, setSelectedTemplate] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [backendLoading, setBackendLoading] = useState(false);
   const [urlError, setUrlError] = useState(null);
@@ -98,6 +90,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
     bodyFont: user?.bodyFont,
   };
 
+  console.log("selectedTemplate===", selectedTemplate);
   const isButtonDisabled = () => {
     //if selected template is not 1 return true to disable the button
     if (selectedTemplate !== 1) return true;
