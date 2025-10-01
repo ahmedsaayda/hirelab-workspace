@@ -13,6 +13,83 @@ import { getTranslation } from '../../../src/utils/translations';
 // 🎨 BRANDING IMPORTS
 import useTemplatePalette from '../../hooks/useTemplatePalette';
 
+// ----------------------
+// Conditional Logic Utils
+// ----------------------
+const evaluateCondition = (cond, formData) => {
+  if (!cond) return true;
+  const { fieldId, operator, value } = cond;
+  const answer = formData?.[fieldId];
+  switch (operator) {
+    case 'equals':
+      if (Array.isArray(answer)) return answer.includes(value);
+      return String(answer ?? '').trim() === String(value ?? '').trim();
+    case 'not_equals':
+      if (Array.isArray(answer)) return !answer.includes(value);
+      return String(answer ?? '').trim() !== String(value ?? '').trim();
+    case 'contains':
+      if (Array.isArray(answer)) return answer.includes(value);
+      return String(answer ?? '').toLowerCase().includes(String(value ?? '').toLowerCase());
+    case 'not_contains':
+      if (Array.isArray(answer)) return !answer.includes(value);
+      return !String(answer ?? '').toLowerCase().includes(String(value ?? '').toLowerCase());
+    case 'is_filled':
+      return Array.isArray(answer) ? answer.length > 0 : !!String(answer ?? '').trim();
+    case 'is_empty':
+      return Array.isArray(answer) ? answer.length === 0 : !String(answer ?? '').trim();
+    case 'gt':
+      return Number(answer) > Number(value);
+    case 'lt':
+      return Number(answer) < Number(value);
+    default:
+      return true;
+  }
+};
+
+const isFieldVisibleByLogic = (field, formData) => {
+  // Respect explicit visibility flag first
+  if (field?.visible === false) return false;
+  const visibleWhen = field?.logic?.visibleWhen;
+  if (!visibleWhen || !Array.isArray(visibleWhen.conditions) || visibleWhen.conditions.length === 0) {
+    return true;
+  }
+  const all = visibleWhen.all !== false; // default AND
+  const results = visibleWhen.conditions.map((c) => evaluateCondition(c, formData));
+  return all ? results.every(Boolean) : results.some(Boolean);
+};
+
+const getVisibleFieldsForFlow = (fields, formData) => {
+  return (fields || []).filter((f) => isFieldVisibleByLogic(f, formData));
+};
+
+const getAnswerValue = (field, formData) => {
+  if (!field) return undefined;
+  if (field.type === 'contact') return undefined; // composite
+  if (field.type === 'address') return undefined; // composite
+  return formData?.[field.id];
+};
+
+const resolveJumpTarget = (field, formData) => {
+  const jump = field?.logic?.jump;
+  if (!jump) return null;
+  const answer = getAnswerValue(field, formData);
+  // Support yes/no normalization
+  const normalizedAnswer = Array.isArray(answer) ? answer : String(answer ?? '').trim();
+  if (Array.isArray(jump.on)) {
+    for (const rule of jump.on) {
+      const ruleValue = rule?.value;
+      const match = Array.isArray(normalizedAnswer)
+        ? normalizedAnswer.includes(ruleValue)
+        : String(normalizedAnswer).toLowerCase() === String(ruleValue ?? '').toLowerCase();
+      if (match) return rule?.goTo || null; // 'end' | fieldId | null
+    }
+  }
+  // Only allow default next/end on non-free-text types
+  const ALLOWED_JUMP_TYPES = new Set(['yesno', 'boolean', 'multichoice', 'dropdown', 'multiselect']);
+  if (!ALLOWED_JUMP_TYPES.has(field?.type)) return null;
+  return jump.default || null; // 'next' | 'end' | null
+};
+
 // Helper function to ensure pixel is ready before firing events
 const waitForPixel = (callback, maxRetries = 10, retryDelay = 500) => {
   let retries = 0;
@@ -673,8 +750,20 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       message.warning('Loading form... Please wait a moment.');
       return;
     }
+    // Compute visible flow at the moment of click
+    const flowFields = getVisibleFieldsForFlow(formFields, formData);
+    if (flowFields.length === 0) {
+      // No questions to ask -> submit immediately
+      handleSubmit();
+      return;
+    }
+    // If on intro, go to first visible field (index 0 in flowFields => step 1)
+    if (currentStep === 0) {
+      setCurrentStep(1);
+      return;
+    }
     // Validate current step
-    const currentField = formFields[currentStep - 1]; // -1 because step 0 is intro
+    const currentField = flowFields[currentStep - 1]; // -1 because step 0 is intro
     if (currentStep > 0 && currentField?.required) {
       // Special validation for lead capture group
       if (currentField.type === 'lead-capture-group') {
@@ -836,7 +925,14 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       }
     }
 
-    if (currentStep < formFields.length) {
+    // Determine jump logic
+    const jumpTarget = resolveJumpTarget(currentField, formData);
+    if (jumpTarget === 'end') {
+      handleSubmit();
+      return;
+    }
+
+    if (currentStep < flowFields.length) {
       // When user moves from intro (0) to first input step (1), mark application started (Lead) if not already
       try {
         if (currentStep === 0 && landingPageData?.metaPixelId && window.fbq) {
@@ -876,7 +972,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       // Fire Contact event when completing a contact step
       try {
         if (currentStep > 0 && landingPageData?.metaPixelId && window.fbq) {
-          const currentField = formFields[currentStep - 1]; // the step we just completed
+          const currentField = flowFields[currentStep - 1]; // the step we just completed
           const isContactGroup = currentField?.type === 'lead-capture-group';
           const isContactComposite = currentField?.type === 'contact';
           
@@ -936,6 +1032,14 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
         console.error('❌ CONTACT: Contact event logic failed:', e);
       }
 
+      // Compute next step considering jump target
+      if (jumpTarget && jumpTarget !== 'next') {
+        const targetIndex = flowFields.findIndex(f => f.id === jumpTarget);
+        if (targetIndex >= 0) {
+          setCurrentStep(targetIndex + 1); // +1 for intro offset
+          return;
+        }
+      }
       setCurrentStep(prev => prev + 1);
     } else {
       handleSubmit();
@@ -1645,8 +1749,9 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
     );
   }
 
-  const totalSteps = formFields.length + 1; // +1 for intro step
-  const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
+  const flowFields = getVisibleFieldsForFlow(formFields, formData);
+  const totalSteps = flowFields.length + 1; // +1 for intro step
+  const progressPercentage = ((currentStep + 1) / Math.max(totalSteps, 1)) * 100;
 
   const seoTitle = landingPageData?.vacancyTitle 
     ? `Apply for ${landingPageData.vacancyTitle} - ${landingPageData?.companyName || 'Hirelab'}`
@@ -1799,17 +1904,17 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           ) : (
             // Question Step
             <div>
-              {formFields[currentStep - 1] && (
+              {flowFields[currentStep - 1] && (
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    {formFields[currentStep - 1].label}
-                    {formFields[currentStep - 1].required && (
+                    {flowFields[currentStep - 1].label}
+                    {flowFields[currentStep - 1].required && (
                       <span className="text-red-500 ml-1">*</span>
                     )}
                   </h2>
                   
                   <div className="mb-8">
-                    {renderField(formFields[currentStep - 1])}
+                    {renderField(flowFields[currentStep - 1])}
                   </div>
                 </div>
               )}
@@ -1841,7 +1946,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                   border: `1px solid ${primaryColor}`
                 }}
               >
-                <span>{currentStep === formFields.length ? (landingPageData.form?.submitText || getTranslation(landingPageData?.lang, 'submit')) : (landingPageData.form?.nextText || getTranslation(landingPageData?.lang, 'next'))}</span>
+                <span>{currentStep === flowFields.length ? (landingPageData.form?.submitText || getTranslation(landingPageData?.lang, 'submit')) : (landingPageData.form?.nextText || getTranslation(landingPageData?.lang, 'next'))}</span>
                 <ArrowRight size={16} />
               </Button>
             </div>

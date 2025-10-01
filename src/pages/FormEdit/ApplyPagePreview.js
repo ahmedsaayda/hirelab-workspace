@@ -25,6 +25,80 @@ import {
 const { TextArea } = Input;
 const { Option } = Select;
 
+// ----------------------
+// Conditional Logic Utils (mirrors apply.js)
+// ----------------------
+const evaluateCondition = (cond, formData) => {
+  if (!cond) return true;
+  const { fieldId, operator, value } = cond;
+  const answer = formData?.[fieldId];
+  switch (operator) {
+    case 'equals':
+      if (Array.isArray(answer)) return answer.includes(value);
+      return String(answer ?? '').trim() === String(value ?? '').trim();
+    case 'not_equals':
+      if (Array.isArray(answer)) return !answer.includes(value);
+      return String(answer ?? '').trim() !== String(value ?? '').trim();
+    case 'contains':
+      if (Array.isArray(answer)) return answer.includes(value);
+      return String(answer ?? '').toLowerCase().includes(String(value ?? '').toLowerCase());
+    case 'not_contains':
+      if (Array.isArray(answer)) return !answer.includes(value);
+      return !String(answer ?? '').toLowerCase().includes(String(value ?? '').toLowerCase());
+    case 'is_filled':
+      return Array.isArray(answer) ? answer.length > 0 : !!String(answer ?? '').trim();
+    case 'is_empty':
+      return Array.isArray(answer) ? answer.length === 0 : !String(answer ?? '').trim();
+    case 'gt':
+      return Number(answer) > Number(value);
+    case 'lt':
+      return Number(answer) < Number(value);
+    default:
+      return true;
+  }
+};
+
+const isFieldVisibleByLogic = (field, formData) => {
+  if (field?.visible === false) return false;
+  const visibleWhen = field?.logic?.visibleWhen;
+  if (!visibleWhen || !Array.isArray(visibleWhen.conditions) || visibleWhen.conditions.length === 0) {
+    return true;
+  }
+  const all = visibleWhen.all !== false;
+  const results = visibleWhen.conditions.map((c) => evaluateCondition(c, formData));
+  return all ? results.every(Boolean) : results.some(Boolean);
+};
+
+const getVisibleFieldsForFlow = (fields, formData) => {
+  return (fields || []).filter((f) => isFieldVisibleByLogic(f, formData));
+};
+
+const getAnswerValue = (field, formData) => {
+  if (!field) return undefined;
+  if (field.type === 'contact') return undefined;
+  if (field.type === 'address') return undefined;
+  return formData?.[field.id];
+};
+
+const resolveJumpTarget = (field, formData) => {
+  const jump = field?.logic?.jump;
+  if (!jump) return null;
+  const answer = getAnswerValue(field, formData);
+  const normalizedAnswer = Array.isArray(answer) ? answer : String(answer ?? '').trim();
+  if (Array.isArray(jump.on)) {
+    for (const rule of jump.on) {
+      const ruleValue = rule?.value;
+      const match = Array.isArray(normalizedAnswer)
+        ? normalizedAnswer.includes(ruleValue)
+        : String(normalizedAnswer).toLowerCase() === String(ruleValue ?? '').toLowerCase();
+      if (match) return rule?.goTo || null; // 'end' | fieldId | null
+    }
+  }
+  const ALLOWED_JUMP_TYPES = new Set(['yesno', 'boolean', 'multichoice', 'dropdown', 'multiselect']);
+  if (!ALLOWED_JUMP_TYPES.has(field?.type)) return null;
+  return jump.default || null; // 'next' | 'end' | null
+};
+
 // Import the same custom components from apply page
 const MultipleChoice = ({ field, value, onChange }) => (
   <div className="w-full space-y-3">
@@ -375,14 +449,16 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
 
   // Removed country detection since we're using regular Input instead of PhoneInput
 
+  const [previewLogicEnabled, setPreviewLogicEnabled] = useState(false);
+
+  const hasAnyLogic = (landingPageData?.form?.fields || []).some((f) => (f.logic && ((f.logic.visibleWhen && Array.isArray(f.logic.visibleWhen.conditions) && f.logic.visibleWhen.conditions.length) || (f.logic.jump && ((f.logic.jump.on && f.logic.jump.on.length) || f.logic.jump.default)))));
+
   useEffect(() => {
     if (landingPageData) {
       // Filter visible fields (treat undefined as visible for backwards compatibility)
-      const visibleFields = (landingPageData?.form?.fields || []).filter(field => field.visible !== false);
-      
-      // Simple 1:1 mapping - use form fields as they are
-      // Each field becomes one step in the preview
-      setFormFields(visibleFields);
+      const rawFields = (landingPageData?.form?.fields || []);
+      // Always keep full list for stable indexing with sidebar and editor
+      setFormFields(rawFields);
       
       // Reset form data if we're at step 0 or form structure changed dramatically
       if (currentStep === 0 || !formFields.length) {
@@ -404,24 +480,50 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
     console.log('🔄 handleNext: currentStep =', currentStep, 'formFields.length =', formFields.length);
     
     // Skip validation in preview mode for form building
+    const flowFields = previewLogicEnabled ? getVisibleFieldsForFlow(formFields, formData) : formFields;
     if (isPreviewMode) {
-      if (currentStep < formFields.length) {
-        const newStep = currentStep + 1;
-        console.log('🔄 handleNext: Moving from step', currentStep, 'to step', newStep);
-        
-        // Notify parent about step change
-        if (onStepChange) {
-          onStepChange(newStep);
+      if (flowFields.length === 0) {
+        message.success('Preview: would submit (no questions visible)');
+        setFormData({});
+        if (onStepChange) onStepChange(0);
+        return;
+      }
+      if (currentStep === 0) {
+        if (onStepChange) onStepChange(1);
+        return;
+      }
+      const currentIndex = currentStep - 1;
+      const currentField = formFields[currentIndex];
+      const jumpTarget = previewLogicEnabled ? resolveJumpTarget(currentField, formData) : null;
+      if (jumpTarget === 'end') {
+        message.success('Preview: would submit here (jump to end)');
+        setFormData({});
+        if (onStepChange) onStepChange(0);
+        return;
+      }
+      const findFieldIndexById = (id) => formFields.findIndex(f => f.id === id);
+      const findNextIndex = (startIdx) => {
+        for (let i = startIdx + 1; i < formFields.length; i++) {
+          if (!previewLogicEnabled || isFieldVisibleByLogic(formFields[i], formData)) return i;
         }
+        return -1;
+      };
+
+      if (jumpTarget && jumpTarget !== 'next') {
+        const targetIndexInFull = findFieldIndexById(jumpTarget);
+        if (targetIndexInFull > currentIndex) {
+          if (onStepChange) onStepChange(targetIndexInFull + 1);
+          return;
+        }
+      }
+
+      const nextIdx = previewLogicEnabled ? findNextIndex(currentIndex) : currentIndex + 1;
+      if (nextIdx !== -1 && nextIdx < formFields.length) {
+        if (onStepChange) onStepChange(nextIdx + 1);
       } else {
-        // Preview "submission"
-        console.log('🔄 handleNext: Submitting form, going back to intro');
         message.success('This is a preview - form would be submitted here');
         setFormData({});
-        
-        if (onStepChange) {
-          onStepChange(0); // Go back to intro
-        }
+        if (onStepChange) onStepChange(0);
       }
       return;
     }
@@ -1058,7 +1160,8 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
     );
   }
 
-  const totalSteps = formFields.length + 1; // +1 for intro step
+  const flowFields = previewLogicEnabled ? getVisibleFieldsForFlow(formFields, formData) : formFields;
+  const totalSteps = formFields.length + 1; // keep sidebar/editor alignment
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
   console.log("formFields[currentStep - 1] ",formFields[currentStep - 1])
@@ -1124,6 +1227,18 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                 </p>
               </div>
             </div>
+            {hasAnyLogic && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Apply logic</span>
+                <input
+                  type="checkbox"
+                  checked={previewLogicEnabled}
+                  onChange={(e) => setPreviewLogicEnabled(e.target.checked)}
+                  className="h-4 w-4"
+                  title="Toggle conditional logic in preview"
+                />
+              </div>
+            )}
           </div>
           
           {/* Progress Bar */}
@@ -1170,17 +1285,17 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
             ) : (
               // Question Step
               <div className="flex-1 flex flex-col">
-                {formFields[currentStep - 1] && (
+                {flowFields[currentStep - 1] && (
                   <div className="flex-1 flex flex-col">
                     <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                      {formFields[currentStep - 1].label}
-                      {formFields[currentStep - 1].required && (
+                      {flowFields[currentStep - 1].label}
+                      {flowFields[currentStep - 1].required && (
                         <span className="text-red-500 ml-1">*</span>
                       )}
                     </h2>
                     
                     <div className="flex-1 mb-6">
-                      {renderField(formFields[currentStep - 1])}
+                      {renderField(flowFields[currentStep - 1])}
                     </div>
                   </div>
                 )}
@@ -1212,7 +1327,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                   border: `1px solid ${primaryColor}`
                 }}
               >
-                <span>{currentStep === formFields.length ? (landingPageData.form?.submitText || getTranslation(landingPageData?.lang || 'en', 'submit')) : (landingPageData.form?.nextText || getTranslation(landingPageData?.lang || 'en', 'next'))}</span>
+                <span>{currentStep === flowFields.length ? (landingPageData.form?.submitText || getTranslation(landingPageData?.lang || 'en', 'submit')) : (landingPageData.form?.nextText || getTranslation(landingPageData?.lang || 'en', 'next'))}</span>
                 <ArrowRight size={14} />
               </Button>
             </div>

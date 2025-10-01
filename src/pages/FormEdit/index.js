@@ -11,6 +11,9 @@ import {
   message,
   Spin,
   Tooltip,
+  Select,
+  DatePicker,
+  TimePicker,
 } from "antd";
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
@@ -51,6 +54,7 @@ import { brandColor } from "../../data/constants";
 import { getTranslation } from "../../utils/translations";
 
 const { TextArea } = Input;
+const { Option } = Select;
 
 export default function FormEdit({ paramsId }) {
   const router = useRouter();
@@ -1278,6 +1282,352 @@ export default function FormEdit({ paramsId }) {
       console.log("🔍 EDITOR DEBUG - Current section full:", currentSection);
     }
 
+    // Helper: Logic Editors (visibility + jump)
+    const renderLogicEditors = (section) => {
+      // Exclude contact (composite) from conditions and jumps; also exclude any field before current for jump targets
+      const currentIndex = formSections.findIndex((f) => f.id === section.id);
+      const allFields = formSections
+        .filter((f) => f.id !== section.id)
+        .filter((f) => f.type !== 'contact');
+      const nextFields = formSections
+        .filter((f, idx) => idx > currentIndex)
+        .filter((f) => f.type !== 'contact');
+      const getFieldLabel = (fid) => allFields.find((f) => f.id === fid)?.label || fid || '';
+      const ensureLogic = () => {
+        const nextLogic = {
+          visibleWhen: { all: true, conditions: [] },
+          jump: { default: 'next', on: [] },
+          ...(section.logic || {}),
+        };
+        if (!nextLogic.visibleWhen) nextLogic.visibleWhen = { all: true, conditions: [] };
+        if (!Array.isArray(nextLogic.visibleWhen.conditions)) nextLogic.visibleWhen.conditions = [];
+        if (!nextLogic.jump) nextLogic.jump = { default: 'next', on: [] };
+        if (!Array.isArray(nextLogic.jump.on)) nextLogic.jump.on = [];
+        return nextLogic;
+      };
+
+      const supportedOperators = [
+        { v: 'equals', t: 'equals' },
+        { v: 'not_equals', t: 'not equals' },
+        { v: 'contains', t: 'contains' },
+        { v: 'not_contains', t: 'not contains' },
+        { v: 'is_filled', t: 'is filled' },
+        { v: 'is_empty', t: 'is empty' },
+        { v: 'gt', t: '>' },
+        { v: 'lt', t: '<' },
+      ];
+
+      // For value dropdowns based on field type
+      const getValueOptionsForField = (fid) => {
+        const target = allFields.find((f) => f.id === fid);
+        if (!target) return null;
+        if (target.type === 'yesno' || target.type === 'boolean') {
+          return ['yes', 'no'];
+        }
+        if (target.type === 'multichoice' || target.type === 'dropdown' || target.type === 'multiselect') {
+          return (target.options || []).map((o) => (typeof o === 'string' ? o : o.text));
+        }
+        return null; // use free input/editor below
+      };
+
+      const getValueEditor = (cond, onChangeValue) => {
+        const target = allFields.find((f) => f.id === cond.fieldId);
+        if (!target) return (
+          <Input
+            className="w-full"
+            value={cond.value ?? ''}
+            onChange={(e) => onChangeValue(e.target.value)}
+            placeholder="Value"
+          />
+        );
+        if (target.type === 'number') {
+          return (
+            <Input
+              className="w-full"
+              type="number"
+              value={cond.value ?? ''}
+              onChange={(e) => onChangeValue(e.target.value)}
+              placeholder="Number"
+            />
+          );
+        }
+        if (target.type === 'date') {
+          return (
+            <DatePicker
+              className="w-full"
+              value={cond.value ? dayjs(cond.value) : null}
+              onChange={(d) => onChangeValue(d ? d.format('YYYY-MM-DD') : '')}
+            />
+          );
+        }
+        if (target.type === 'time') {
+          return (
+            <TimePicker
+              className="w-full"
+              value={cond.value ? dayjs(cond.value, 'HH:mm') : null}
+              format="HH:mm"
+              onChange={(t) => onChangeValue(t ? t.format('HH:mm') : '')}
+            />
+          );
+        }
+        return (
+          <Input
+            className="w-full"
+            value={cond.value ?? ''}
+            onChange={(e) => onChangeValue(e.target.value)}
+            placeholder="Value"
+          />
+        );
+      };
+
+      const logic = ensureLogic();
+
+      // Only allow jump logic on supported field types
+      const ALLOWED_JUMP_TYPES = new Set(['yesno', 'boolean', 'multichoice', 'dropdown', 'multiselect']);
+
+      return (
+        <>
+          <div className="h-px bg-blue_gray-50" />
+          <Heading size="4xl" as="h6" className="!text-gray-900">Conditional Logic</Heading>
+
+          {/* Visibility Rules */}
+          {currentIndex > 0 && (
+          <div className="p-3 rounded-lg border border-gray-200 bg-gray-50/30 mt-2 logic-editor">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-bold text-[14px] text-[#475647]">Show this question when</span>
+              <div className="flex items-center gap-2 text-xs">
+                <span>Match</span>
+                <Select
+                  size="small"
+                  value={logic.visibleWhen.all ? 'all' : 'any'}
+                  onChange={(val) => {
+                    const updated = {
+                      ...logic,
+                      visibleWhen: { ...logic.visibleWhen, all: val === 'all' },
+                    };
+                    handleUpdateSection(section.id, { logic: updated });
+                  }}
+                  style={{ minWidth: 90 }}
+                >
+                  <Option value="all">all</Option>
+                  <Option value="any">any</Option>
+                </Select>
+                <span>conditions</span>
+              </div>
+            </div>
+
+            {(logic.visibleWhen.conditions || []).map((c, idx) => {
+              const valueOptions = getValueOptionsForField(c.fieldId);
+              return (
+                <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center mb-2">
+                  <div className="col-span-4">
+                    <Select
+                      size="middle"
+                      className="w-full"
+                      value={c.fieldId || undefined}
+                      placeholder="Select question…"
+                      onChange={(val) => {
+                        const nextConds = [...logic.visibleWhen.conditions];
+                        nextConds[idx] = { ...c, fieldId: val, value: undefined };
+                        const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                        handleUpdateSection(section.id, { logic: updated });
+                      }}
+                      showSearch
+                      optionFilterProp="children"
+                    >
+                      {allFields.map((f) => (
+                        <Option key={f.id} value={f.id}>{f.label || f.id}</Option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div className="col-span-3">
+                    <Select
+                      className="w-full"
+                      value={c.operator || 'equals'}
+                      onChange={(val) => {
+                        const nextConds = [...logic.visibleWhen.conditions];
+                        nextConds[idx] = { ...c, operator: val };
+                        const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                        handleUpdateSection(section.id, { logic: updated });
+                      }}
+                      size="middle"
+                    >
+                      {supportedOperators.map((op) => (
+                        <Option key={op.v} value={op.v}>{op.t}</Option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div className="col-span-4">
+                    {valueOptions ? (
+                      <Select
+                        className="w-full"
+                        value={c.value ?? undefined}
+                        placeholder="Select value…"
+                        onChange={(val) => {
+                          const nextConds = [...logic.visibleWhen.conditions];
+                          nextConds[idx] = { ...c, value: val };
+                          const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                          handleUpdateSection(section.id, { logic: updated });
+                        }}
+                        showSearch
+                        optionFilterProp="children"
+                      >
+                        {valueOptions.map((v) => (
+                          <Option key={v} value={v}>{v}</Option>
+                        ))}
+                      </Select>
+                    ) : (
+                      getValueEditor(c, (val) => {
+                        const nextConds = [...logic.visibleWhen.conditions];
+                        nextConds[idx] = { ...c, value: val };
+                        const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                        handleUpdateSection(section.id, { logic: updated });
+                      })
+                    )}
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    <button
+                      type="button"
+                      className="p-1 rounded hover:bg-gray-100"
+                      title="Remove rule"
+                      onClick={() => {
+                        const nextConds = (logic.visibleWhen.conditions || []).filter((_, i) => i !== idx);
+                        const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                        handleUpdateSection(section.id, { logic: updated });
+                      }}
+                    >
+                      <img src="/images2/img_trash_01_red_700.svg" alt="remove" className="h-[16px] w-[16px]" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            <button
+              type="button"
+              className="mt-1 px-3 py-1 text-xs border rounded"
+              onClick={() => {
+                const nextConds = [...(logic.visibleWhen.conditions || []), { fieldId: '', operator: 'equals', value: '' }];
+                const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                handleUpdateSection(section.id, { logic: updated });
+              }}
+            >
+              + Add condition
+            </button>
+          </div>
+          )}
+
+          {/* Jump Rules (only for allowed types) */}
+          {ALLOWED_JUMP_TYPES.has(section.type) && (
+            <div className="p-3 rounded-lg border border-gray-200 bg-gray-50/30 mt-3 logic-editor">
+              <div className="font-bold text-[14px] text-[#475647] mb-2">After this question</div>
+              {/* Removed default action select per request - order + visibility control submission */}
+
+              {/* Per-answer rules for choice/yes-no fields */}
+              <>
+                <div className="font-medium text-[13px] mb-1">Add jump for specific answers</div>
+                {(logic.jump?.on || []).map((r, idx) => {
+                  const answerOptions = section.type === 'yesno' || section.type === 'boolean'
+                    ? ['yes', 'no']
+                    : (section.options || []).map((o) => (typeof o === 'string' ? o : o.text));
+                  const isFieldGoTo = r.goTo && r.goTo !== 'next' && r.goTo !== 'end';
+                  return (
+                    <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center mb-2">
+                      <div className="col-span-4 flex items-center gap-2">
+                        <span className="text-xs text-gray-600 whitespace-nowrap">If answer is</span>
+                        <Select
+                          className="flex-1"
+                          value={r.value ?? undefined}
+                          placeholder="Select answer…"
+                          onChange={(val) => {
+                            const next = [...(logic.jump?.on || [])];
+                            next[idx] = { ...r, value: val };
+                            const updated = { ...logic, jump: { ...logic.jump, on: next } };
+                            handleUpdateSection(section.id, { logic: updated });
+                          }}
+                          size="middle"
+                          showSearch
+                          optionFilterProp="children"
+                        >
+                          {answerOptions.map((opt) => (
+                            <Option key={opt} value={opt}>{opt}</Option>
+                          ))}
+                        </Select>
+                      </div>
+                      <div className="col-span-4 flex items-center gap-2">
+                        <span className="text-xs text-gray-600 whitespace-nowrap">then</span>
+                        <Select
+                          className="flex-1"
+                          value={isFieldGoTo ? 'field' : (r.goTo || 'next')}
+                          onChange={(val) => {
+                            const next = [...(logic.jump?.on || [])];
+                            const firstNextId = nextFields[0]?.id || 'next';
+                            next[idx] = { ...r, goTo: val === 'field' ? firstNextId : val };
+                            const updated = { ...logic, jump: { ...logic.jump, on: next } };
+                            handleUpdateSection(section.id, { logic: updated });
+                          }}
+                          size="middle"
+                        >
+                          <Option value="next">Go to next</Option>
+                          <Option value="field">Go to question…</Option>
+                        </Select>
+                      </div>
+                      <div className="col-span-3">
+                        {isFieldGoTo && (
+                          <Select
+                            className="w-full"
+                            value={r.goTo}
+                            onChange={(val) => {
+                              const next = [...(logic.jump?.on || [])];
+                              next[idx] = { ...r, goTo: val };
+                              const updated = { ...logic, jump: { ...logic.jump, on: next } };
+                              handleUpdateSection(section.id, { logic: updated });
+                            }}
+                            size="middle"
+                            showSearch
+                            optionFilterProp="children"
+                          >
+                            {nextFields
+                              .map((f) => (
+                                <Option key={f.id} value={f.id}>{getFieldLabel(f.id)}</Option>
+                              ))}
+                          </Select>
+                        )}
+                      </div>
+                      <div className="col-span-1 flex justify-end">
+                        <button
+                          type="button"
+                          className="p-1 rounded hover:bg-gray-100"
+                          title="Remove rule"
+                          onClick={() => {
+                            const next = (logic.jump?.on || []).filter((_, i) => i !== idx);
+                            const updated = { ...logic, jump: { ...logic.jump, on: next } };
+                            handleUpdateSection(section.id, { logic: updated });
+                          }}
+                        >
+                          <img src="/images2/img_trash_01_red_700.svg" alt="remove" className="h-[16px] w-[16px]" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                <button
+                  type="button"
+                  className="mt-1 px-3 py-1 text-xs border rounded"
+                  onClick={() => {
+                    const next = [...(logic.jump?.on || []), { value: '', goTo: 'next' }];
+                    const updated = { ...logic, jump: { ...logic.jump, on: next } };
+                    handleUpdateSection(section.id, { logic: updated });
+                  }}
+                >
+                  + Add answer rule
+                </button>
+                </>
+            </div>
+          )}
+        </>
+      );
+    };
+
     // Handle contact fields with clean vertical layout
     if (currentSection.type === "contact") {
       return (
@@ -1498,6 +1848,7 @@ export default function FormEdit({ paramsId }) {
             >
               <PlusOutlined /> Add Custom Field
             </Button>
+            {/* Conditional logic is disabled for Contact Information */}
           </Form>
         </>
       );
@@ -1629,6 +1980,8 @@ export default function FormEdit({ paramsId }) {
               </div>
             );
           })}
+
+          {renderLogicEditors(currentSection)}
         </Form>
       );
     }
@@ -1858,6 +2211,8 @@ export default function FormEdit({ paramsId }) {
             </Form.Item>
           </div>
         )}
+
+        {renderLogicEditors(currentSection)}
       </Form>
     );
   };
