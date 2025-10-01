@@ -604,11 +604,11 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
     }
 
     if (currentStep < formFields.length) {
-      setCurrentStep(prev => prev + 1);
+      if (onStepChange) onStepChange(currentStep + 1);
     } else {
       // Preview "submission"
       message.success('This is a preview - form would be submitted here');
-      setCurrentStep(0);
+      if (onStepChange) onStepChange(0);
       setFormData({});
     }
   };
