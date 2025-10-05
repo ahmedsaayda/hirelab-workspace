@@ -43,6 +43,8 @@ import {
   TextrIcon,
 } from "./Vacancies/components/Icons.js";
 
+import NotificationDropdown from "../../components/NotificationDropdown.jsx";
+
 import { 
   User, 
   CreditCard, 
@@ -421,7 +423,7 @@ export default function Example({
                                 >
                                   {category.name}
                                 </h1>
-                                {category.subitems.map((item) => (
+                                {(category.subitems || []).map((item) => (
                                   item.grayout ? (
                                     <div
                                       key={item.name}
@@ -487,13 +489,13 @@ export default function Example({
                             ))}
                           </ul>
                         </li>
-                        {subMenus.map((subMenu, i) => (
+                        {(subMenus || []).map((subMenu, i) => (
                           <li key={i}>
                             <div className="text-xs font-semibold leading-6 text-indigo-200">
                               {subMenu.title}
                             </div>
                             <ul role="list" className="mt-2 -mx-2 space-y-1">
-                              {subMenu.items.map((team) => (
+                              {(subMenu.items || []).map((team) => (
                                 <li key={team.name}>
                                   <Link
                                     href={team.href}
@@ -570,7 +572,7 @@ export default function Example({
                         >
                           {category.name}
                         </h1>
-                        {category.subitems.map((item) => (
+                        {category?.subitems?.map?.((item) => (
                           item.grayout ? (
                             <div
                               key={item.name}
@@ -808,16 +810,17 @@ export default function Example({
                         />
                       )}
                       <div
-                        onClick={() => {
-                          setSelectedTopRightOption("notifications");
-                        }}
                         className={`top-right-inner-circle ${
                           selectedTopRightOption === "notifications"
                             ? "active"
                             : ""
-                        } cursor-pointer flex items-center h-full`}
+                        } flex items-center h-full`}
                       >
-                        <BellrIcon />
+                        <NotificationDropdown 
+                          onToggle={(isOpen) => {
+                            setSelectedTopRightOption(isOpen ? "notifications" : "");
+                          }}
+                        />
                       </div>
                       <div
                         onClick={() => {

@@ -44,6 +44,7 @@ import UploadService from "../../services/UploadService";
 import { partner } from "../../constants";
 import { login } from "../../redux/auth/actions";
 import { store } from "../../redux/store";
+import NotificationService from "../../services/NotificationService";
 
 function getColorFun(r, g, b) {
   return (
@@ -181,6 +182,18 @@ export default function Example() {
       setMe(data.data.me);
       setOnboardingStatus(data.data.onboardingStatus);
     });
+  }, []);
+
+  // Notification settings state
+  const [notifSettings, setNotifSettings] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await NotificationService.getSettings();
+        if (res?.success) setNotifSettings(res.data);
+      } catch (_) {}
+    })();
   }, []);
 
   useEffect(() => {
@@ -952,6 +965,86 @@ export default function Example() {
                           </div>
                         </div>
                       ))}
+                  </div>
+                </fieldset>
+                <fieldset className="pt-6 border-t border-gray-200">
+                  <legend className="text-sm font-semibold leading-6 text-gray-900 dark:text-gray-400 ">In‑app notification rules</legend>
+                  {!notifSettings ? (
+                    <div className="text-sm text-gray-500 mt-4">Loading…</div>
+                  ) : (
+                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    
+
+                      <div className="p-3 rounded border">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">Traffic spike</span>
+                          <input type="checkbox" checked={!!notifSettings.trafficSpike?.enabled} onChange={(e)=>setNotifSettings(s=>({...s,trafficSpike:{...s.trafficSpike,enabled:e.target.checked}}))} />
+                        </div>
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <div className="text-xs text-gray-500">Threshold %</div>
+                            <input type="number" className="mt-1 w-full rounded border p-1 bg-white dark:bg-gray-900" value={notifSettings.trafficSpike?.threshold ?? 50} onChange={(e)=>setNotifSettings(s=>({...s,trafficSpike:{...s.trafficSpike,threshold:Number(e.target.value)}}))} />
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500">Timeframe</div>
+                            <select className="mt-1 w-full rounded border p-1 bg-white dark:bg-gray-900" value={notifSettings.trafficSpike?.timeframe || '24h'} onChange={(e)=>setNotifSettings(s=>({...s,trafficSpike:{...s.trafficSpike,timeframe:e.target.value}}))}>
+                              <option value="24h">24h</option>
+                              <option value="week">Week</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded border">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">Draft funnel reminder</span>
+                          <input type="checkbox" checked={!!notifSettings.draftFunnelReminder?.enabled} onChange={(e)=>setNotifSettings(s=>({...s,draftFunnelReminder:{...s.draftFunnelReminder,enabled:e.target.checked}}))} />
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">Days after created</div>
+                        <input type="number" className="mt-1 w-full rounded border p-1 text-sm bg-white dark:bg-gray-900" value={notifSettings.draftFunnelReminder?.daysThreshold ?? 2} onChange={(e)=>setNotifSettings(s=>({...s,draftFunnelReminder:{...s.draftFunnelReminder,daysThreshold:Number(e.target.value)}}))} />
+                      </div>
+
+                      <div className="p-3 rounded border">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">No applicants warning</span>
+                          <input type="checkbox" checked={!!notifSettings.noApplicantsWarning?.enabled} onChange={(e)=>setNotifSettings(s=>({...s,noApplicantsWarning:{...s.noApplicantsWarning,enabled:e.target.checked}}))} />
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">Days threshold</div>
+                        <input type="number" className="mt-1 w-full rounded border p-1 text-sm bg-white dark:bg-gray-900" value={notifSettings.noApplicantsWarning?.daysThreshold ?? 7} onChange={(e)=>setNotifSettings(s=>({...s,noApplicantsWarning:{...s.noApplicantsWarning,daysThreshold:Number(e.target.value)}}))} />
+                      </div>
+
+                      <div className="p-3 rounded border">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">Low conversion warning</span>
+                          <input type="checkbox" checked={!!notifSettings.lowConversionWarning?.enabled} onChange={(e)=>setNotifSettings(s=>({...s,lowConversionWarning:{...s.lowConversionWarning,enabled:e.target.checked}}))} />
+                        </div>
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <div className="text-xs text-gray-500">Min views</div>
+                            <input type="number" className="mt-1 w-full rounded border p-1 bg-white dark:bg-gray-900" value={notifSettings.lowConversionWarning?.minViews ?? 100} onChange={(e)=>setNotifSettings(s=>({...s,lowConversionWarning:{...s.lowConversionWarning,minViews:Number(e.target.value)}}))} />
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500">Max conversion %</div>
+                            <input type="number" className="mt-1 w-full rounded border p-1 bg-white dark:bg-gray-900" value={notifSettings.lowConversionWarning?.conversionThreshold ?? 2} onChange={(e)=>setNotifSettings(s=>({...s,lowConversionWarning:{...s.lowConversionWarning,conversionThreshold:Number(e.target.value)}}))} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-end gap-x-6 pt-6">
+                    <button
+                      onClick={async ()=>{
+                        try {
+                          if (notifSettings) await NotificationService.updateSettings(notifSettings);
+                          message.success('Notification settings saved');
+                        } catch (e) {
+                          message.error('Failed to save notification settings');
+                        }
+                      }}
+                      className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm dark:shadow-gray-400/50  hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    >
+                      Save notification settings
+                    </button>
                   </div>
                 </fieldset>
                 {/* <fieldset>
