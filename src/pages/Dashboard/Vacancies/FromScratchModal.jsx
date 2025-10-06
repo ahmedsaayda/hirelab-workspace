@@ -298,6 +298,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         lang: language,
         menuItems:    [
           {
+            "id": "job-specifications",
             "key": "Job Specifications",
             "label": "Summary",
             "active": false,
@@ -305,6 +306,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 1
           },
           {
+            "id": "recruiter-contact",
             "key": "Recruiter Contact",
             "label": "Contacts",
             "active": false,
@@ -312,6 +314,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 2
           },
           {
+            "id": "job-description",
             "key": "Job Description",
             "label": "Description",
             "active": false,
@@ -319,6 +322,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 3
           },
           {
+            "id": "agenda",
             "key": "Agenda",
             "label": "Agenda",
             "active": false,
@@ -326,6 +330,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 4
           },
           {
+            "id": "company-facts",
             "key": "Company Facts",
             "label": "Company Facts",
             "active": false,
@@ -333,6 +338,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 5
           },
           {
+            "id": "about-the-company",
             "key": "About The Company",
             "label": "About Us",
             "active": false,
@@ -340,6 +346,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 6
           },
           {
+            "id": "employee-testimonials",
             "key": "Employee Testimonials",
             "label": "Testimonials",
             "active": false,
@@ -347,6 +354,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 7
           },
           {
+            "id": "text-box",
             "key": "Text Box",
             "label": "Text Box",
             "active": false,
@@ -354,6 +362,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 8
           },
           {
+            "id": "video",
             "key": "Video",
             "label": "Video",
             "active": false,
@@ -361,6 +370,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 9
           },
           {
+            "id": "growth-path",
             "key": "Growth Path",
             "label": "Growth Path",
             "active": false,
@@ -368,6 +378,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 10
           },
           {
+            "id": "candidate-process",
             "key": "Candidate Process",
             "label": "Application Process",
             "active": false,
@@ -375,6 +386,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 11
           },
           {
+            "id": "image-carousel",
             "key": "Image Carousel",
             "label": "Images",
             "active": false,
@@ -382,6 +394,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 12
           },
           {
+            "id": "evp-mission",
             "key": "EVP / Mission",
             "label": "EVP / Mission",
             "active": false,
@@ -389,6 +402,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             "sort": 13
           },
           {
+            "id": "leader-introduction",
             "key": "Leader Introduction",
             "label": "Leader Intro",
             "active": false,

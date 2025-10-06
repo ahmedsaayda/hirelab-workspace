@@ -706,7 +706,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
     <div
       ref={refs.sectionRef}
       className="px-4 py-16 w-full bg-white md:px-8"
-      id="testimonials"
+      id="employee-testimonials"
       style={{color:"black"}}
     >
              <div className="mx-auto max-w-7xl px-4">
