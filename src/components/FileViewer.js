@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Spin, message } from 'antd';
 import { downloadFile } from '../utils/fileViewerHelper';
-import '../styles/fileViewer.css';
 import { 
   DownloadOutlined, 
   CloseOutlined, 

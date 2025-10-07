@@ -10,7 +10,6 @@ import ChatFileUpload from '../../src/components/ChatFileUpload';
 import ChatAttachments from '../../src/components/ChatAttachments';
 import InterviewSchedulingMessage from '../../src/components/InterviewSchedulingMessage';
 import UploadService from '../../src/services/UploadService';
-import '../../src/styles/chat-fix.css';
 
 const { TextArea } = Input;
 
