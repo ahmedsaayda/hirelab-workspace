@@ -102,7 +102,8 @@ import {
   LeftOutlined,
   MessageOutlined,
   CheckOutlined,
-  QuestionCircleOutlined
+  QuestionCircleOutlined,
+  ClockCircleOutlined
 } from '@ant-design/icons';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useRouter } from 'next/router';
