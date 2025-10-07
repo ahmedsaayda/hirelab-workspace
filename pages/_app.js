@@ -11,8 +11,8 @@ import 'react-international-phone/style.css';
 import "react-calendar/dist/Calendar.css";
 import "../src/pages/Landingpage/Agenda.calendar.css";
 import "react-phone-input-2/lib/style.css";
-// import "../src/styles/fileViewer.css";
-// import "../src/styles/chat-fix.css";
+import "../src/styles/fileViewer.css";
+import "../src/styles/chat-fix.css";
 
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";

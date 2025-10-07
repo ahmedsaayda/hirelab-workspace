@@ -12,7 +12,6 @@ import ChatAttachments from "../../../components/ChatAttachments";
 import InterviewSchedulingMessage from "../../../components/InterviewSchedulingMessage";
 import InterviewSchedulingModal from "../Vacancy/components/InterviewSchedulingModal";
 import UploadService from "../../../services/UploadService";
-import "../../../styles/chat-fix.css";
 
 const { TextArea } = Input;
 const PAGE_LIMIT = 20;
