@@ -313,6 +313,7 @@ const EditorRender = React.memo(({
         return msg;
       }
     }
+
     window.addEventListener("beforeunload", listener);
     window.addEventListener("onbeforeunload", listener);
 

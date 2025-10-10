@@ -15,7 +15,7 @@ import {
   DatePicker,
   TimePicker,
 } from "antd";
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
 import CrudService from "../../services/CrudService";
 import PublicService from "../../services/PublicService";
@@ -59,6 +59,15 @@ const { Option } = Select;
 export default function FormEdit({ paramsId }) {
   const router = useRouter();
   const lpId = paramsId;
+  
+  // 🔥 NEW: Navigation guard for unsaved form changes
+  const [isExitModalVisible, setIsExitModalVisible] = useState(false);
+  const [hasImmediateUnsavedChanges, setHasImmediateUnsavedChanges] = useState(false);
+  const pendingNavigationRef = useRef(null);
+  const navigationOverrideRef = useRef(false);
+  const hasUnpublishedChangesRef = useRef(false);
+  const sessionHasChangesRef = useRef(false);
+  const ackKey = useMemo(() => (lpId ? `lp-guard-ack:${lpId}:form` : null), [lpId]);
 
   // 🎨 BRANDING SETUP
   const user = useSelector(selectUser);
@@ -112,22 +121,189 @@ export default function FormEdit({ paramsId }) {
   
   // 🔥 NEW: Form-specific change detection state
   const [hasUnpublishedFormChanges, setHasUnpublishedFormChanges] = useState(false);
+  
+  // 🔥 NEW: Navigation guard logic for form changes (use unpublished changes)
+  useEffect(() => {
+    hasUnpublishedChangesRef.current = hasUnpublishedFormChanges;
+  }, [hasUnpublishedFormChanges]);
+  
+  const handleExitCancel = useCallback(() => {
+    pendingNavigationRef.current = null;
+    setIsExitModalVisible(false);
+  }, []);
+
+  const handleExitConfirm = useCallback(() => {
+    const nextNav = pendingNavigationRef.current;
+    pendingNavigationRef.current = null;
+    setIsExitModalVisible(false);
+
+    if (!nextNav) {
+      return;
+    }
+
+    navigationOverrideRef.current = true;
+    if (ackKey) sessionStorage.setItem(ackKey, 'ack');
+    sessionHasChangesRef.current = false;
+
+    // Execute navigation after a short delay to ensure modal closes first
+    setTimeout(() => {
+      try {
+        if (typeof nextNav.exec === "function") {
+          nextNav.exec();
+        }
+      } finally {
+        // Reset override after navigation completes or fails
+        setTimeout(() => {
+          navigationOverrideRef.current = false;
+        }, 100);
+      }
+    }, 10);
+  }, []);
+
+  // Intercept client-side route changes
+  useEffect(() => {
+    const handleRouteChangeStart = (url, opts = {}) => {
+      if (navigationOverrideRef.current) return;
+
+      const acknowledged = ackKey ? sessionStorage.getItem(ackKey) === 'ack' : false;
+      if (acknowledged && !sessionHasChangesRef.current) {
+        return;
+      }
+
+      if (!hasUnpublishedChangesRef.current) {
+        return;
+      }
+
+      // Prevent guard when navigating to the same path
+      if (url === router.asPath) {
+        return;
+      }
+
+      pendingNavigationRef.current = {
+        exec: () => router.push(url, undefined, opts),
+      };
+
+      setIsExitModalVisible(true);
+
+      const error = new Error("Route change aborted due to unpublished changes.");
+      error.cancelled = true;
+      router.events.emit("routeChangeError", error, url, opts);
+      throw error;
+    };
+
+    const handleRouteChangeComplete = () => {
+      navigationOverrideRef.current = false;
+    };
+
+    const handleRouteChangeError = () => {
+      navigationOverrideRef.current = false;
+    };
+
+    router.events.on("routeChangeStart", handleRouteChangeStart);
+    router.events.on("routeChangeComplete", handleRouteChangeComplete);
+    router.events.on("routeChangeError", handleRouteChangeError);
+
+    return () => {
+      router.events.off("routeChangeStart", handleRouteChangeStart);
+      router.events.off("routeChangeComplete", handleRouteChangeComplete);
+      router.events.off("routeChangeError", handleRouteChangeError);
+    };
+  }, [router]);
+
+  // Intercept browser back/forward navigation
+  useEffect(() => {
+    router.beforePopState(() => {
+      if (navigationOverrideRef.current || !hasUnpublishedChangesRef.current) {
+        return true;
+      }
+
+      pendingNavigationRef.current = { exec: () => router.back() };
+      setIsExitModalVisible(true);
+      return false;
+    });
+
+    return () => {
+      router.beforePopState(() => true);
+    };
+  }, [router]);
+
+  // Clear modal when no unsaved changes
+  useEffect(() => {
+    if (!hasImmediateUnsavedChanges) {
+      setIsExitModalVisible(false);
+      pendingNavigationRef.current = null;
+    }
+  }, [hasImmediateUnsavedChanges]);
+
+  // Handle browser refresh/close with native dialog and intercept refresh shortcuts
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnpublishedChangesRef.current) {
+        e.preventDefault();
+        const message = "You're leaving this page but there are unpublished form changes, are you sure you want to exit?";
+        e.returnValue = message;
+        return message;
+      }
+    };
+
+    const handleKeydown = (e) => {
+      const isRefresh = (e.key === 'F5') || (e.key.toLowerCase() === 'r' && (e.ctrlKey || e.metaKey));
+      if (isRefresh && hasUnpublishedChangesRef.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        pendingNavigationRef.current = { exec: () => window.location.reload() };
+        setIsExitModalVisible(true);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("keydown", handleKeydown, { capture: true });
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("keydown", handleKeydown, { capture: true });
+    };
+  }, []);
 
   // 🔥 NEW: Function to check for unpublished FORM changes only
   const checkForUnpublishedFormChanges = useCallback((currentData = landingPageData) => {
-    if (!currentData?.published || !currentData?.publishedVersion) {
+    if (!currentData) {
       setHasUnpublishedFormChanges(false);
       return false;
     }
 
-    try {
-      // FORM SCOPE: Compare only form data
-      const currentFormData = currentData.form || {};
-      const publishedFormData = currentData.publishedVersion.form || {};
+    const sanitizeForm = (form = {}) => {
+      if (!form || typeof form !== "object") return {};
+      const {
+        _id,
+        createdAt,
+        updatedAt,
+        publishedAt,
+        unpublishedAt,
+        ...rest
+      } = form;
+      return rest;
+    };
 
-      // Quick comparison using JSON.stringify
+    const currentFormData = sanitizeForm(currentData.form);
+    const publishedFormData = sanitizeForm(currentData?.publishedVersion?.form);
+
+    const hasFormContent = Boolean(
+      (Array.isArray(currentData?.form?.fields) && currentData.form.fields.length > 0) ||
+      currentData?.form?.title ||
+      currentData?.form?.description ||
+      currentData?.form?.submitText
+    );
+
+    // If we've never published before, treat any existing form content as unpublished changes
+    if (!currentData?.publishedVersion) {
+      const hasChanges = hasFormContent || currentData?.published === false;
+      setHasUnpublishedFormChanges(hasChanges);
+      return hasChanges;
+    }
+
+    try {
       const hasChanges = JSON.stringify(currentFormData) !== JSON.stringify(publishedFormData);
-      
+
       console.log("🔍 FORM Change Detection:", {
         hasChanges,
         currentFormFields: currentFormData.fields?.length || 0,
@@ -706,6 +882,10 @@ export default function FormEdit({ paramsId }) {
 
   const updateFormData = (fields, shouldForceUpdate = false) => {
     console.log("📋 updateFormData with fields:", fields);
+    
+    // Mark as having immediate unsaved changes
+    setHasImmediateUnsavedChanges(true);
+    sessionHasChangesRef.current = true;
 
     // Update formSections state immediately and synchronously
     setFormSections(fields);
@@ -796,12 +976,20 @@ export default function FormEdit({ paramsId }) {
 
         // 🔥 FIX: Update landingPageData with the response to get the latest updatedAt timestamp
         if (response?.data) {
-          setLandingPageData(response.data);
-          
-          // 🔥 Check for unpublished form changes after saving
-          setTimeout(() => {
-            checkForUnpublishedFormChanges(response.data);
-          }, 100);
+          setLandingPageData(prev => {
+            const nextData = response.data;
+            const hasNewChanges = checkForUnpublishedFormChanges(nextData);
+
+            if (!hasNewChanges) {
+              setHasImmediateUnsavedChanges(false);
+              const acknowledged = ackKey ? sessionStorage.getItem(ackKey) === 'ack' : false;
+              if (acknowledged) {
+                sessionHasChangesRef.current = false;
+              }
+            }
+
+            return nextData;
+          });
           
           console.log(
             "📅 Updated landingPageData with latest timestamp:",
@@ -921,6 +1109,9 @@ export default function FormEdit({ paramsId }) {
 
   const handleAddSection = (type) => {
     console.log("type", type);
+    
+    // Mark as having immediate unsaved changes
+    setHasImmediateUnsavedChanges(true);
 
     // Generate unique ID for each field instead of using type
     const generateUniqueId = () => {
@@ -1051,6 +1242,9 @@ export default function FormEdit({ paramsId }) {
   };
 
   const handleRemoveSection = (sectionId) => {
+    // Mark as having immediate unsaved changes
+    setHasImmediateUnsavedChanges(true);
+    
     // 🔒 LEAD CAPTURE PROTECTION: Prevent removal of lead capture fields
     const sectionToRemove = formSections.find(
       (section) => section.id === sectionId
@@ -1081,6 +1275,10 @@ export default function FormEdit({ paramsId }) {
       "Updates:",
       updates
     );
+
+    // Mark as having immediate unsaved changes
+    setHasImmediateUnsavedChanges(true);
+    sessionHasChangesRef.current = true;
 
     // Find the current section for debugging
     const currentSection = formSections.find((s) => s.id === sectionId);
@@ -1225,6 +1423,10 @@ export default function FormEdit({ paramsId }) {
   };
 
   const handleFieldUpdate = (updatedField) => {
+    // Mark as having immediate unsaved changes
+    setHasImmediateUnsavedChanges(true);
+    sessionHasChangesRef.current = true;
+    
     const updatedSections = formSections.map((section) =>
       section.id === updatedField.id ? updatedField : section
     );
@@ -2400,6 +2602,15 @@ export default function FormEdit({ paramsId }) {
               }}
               setLandingPageData={setLandingPageData}
               reload={fetchData}
+        onNavigateAttempt={(href) => {
+          const acknowledged = ackKey ? sessionStorage.getItem(ackKey) === 'ack' : false;
+          if (!hasUnpublishedChangesRef.current || (acknowledged && !sessionHasChangesRef.current)) {
+            router.push(href);
+            return;
+          }
+          pendingNavigationRef.current = { exec: () => router.push(href) };
+          setIsExitModalVisible(true);
+        }}
             />
             <div className="flex overflow-hidden flex-col flex-1 smx:pb-5 main-container">
               <div className="flex gap-2 justify-center items-start p-2 h-full smx:gap-1 md:gap-4 smx:p-1 md:p-3 container-sm">
@@ -3031,6 +3242,8 @@ export default function FormEdit({ paramsId }) {
                                   <CustomInput
                                     value={landingPageData?.form?.title || ""}
                                     onChange={(value) => {
+                                      setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
                                       const updatedData = {
                                         ...landingPageData,
                                         form: {
@@ -3039,6 +3252,7 @@ export default function FormEdit({ paramsId }) {
                                         },
                                       };
                                       setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
                                       debouncedSave(updatedData);
                                     }}
                                     placeholder="e.g., Let's get started"
@@ -3062,6 +3276,8 @@ export default function FormEdit({ paramsId }) {
                                       landingPageData?.form?.description || ""
                                     }
                                     onChange={(value) => {
+                                      setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
                                       const updatedData = {
                                         ...landingPageData,
                                         form: {
@@ -3070,6 +3286,7 @@ export default function FormEdit({ paramsId }) {
                                         },
                                       };
                                       setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
                                       debouncedSave(updatedData);
                                     }}
                                     placeholder="e.g., We'll ask you a few questions to learn more about you."
@@ -3097,6 +3314,8 @@ export default function FormEdit({ paramsId }) {
                                     <CustomInput
                                       value={landingPageData?.form?.startApplicationText || "Start Application"}
                                       onChange={(value) => {
+                                        setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
                                         const updatedData = {
                                           ...landingPageData,
                                           form: {
@@ -3105,6 +3324,7 @@ export default function FormEdit({ paramsId }) {
                                           },
                                         };
                                         setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
                                         debouncedSave(updatedData);
                                       }}
                                       className="text-sm border-none focus:ring-0"
@@ -3120,6 +3340,8 @@ export default function FormEdit({ paramsId }) {
                                     <CustomInput
                                       value={landingPageData?.form?.submitText || "Submit"}
                                       onChange={(value) => {
+                                        setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
                                         const updatedData = {
                                           ...landingPageData,
                                           form: {
@@ -3128,6 +3350,7 @@ export default function FormEdit({ paramsId }) {
                                           },
                                         };
                                         setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
                                         debouncedSave(updatedData);
                                       }}
                                       className="text-sm border-none focus:ring-0"
@@ -3143,6 +3366,8 @@ export default function FormEdit({ paramsId }) {
                                     <CustomInput
                                       value={landingPageData?.form?.previousText || "Previous"}
                                       onChange={(value) => {
+                                        setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
                                         const updatedData = {
                                           ...landingPageData,
                                           form: {
@@ -3151,6 +3376,7 @@ export default function FormEdit({ paramsId }) {
                                           },
                                         };
                                         setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
                                         debouncedSave(updatedData);
                                       }}
                                       className="text-sm border-none focus:ring-0"
@@ -3166,6 +3392,8 @@ export default function FormEdit({ paramsId }) {
                                     <CustomInput
                                       value={landingPageData?.form?.nextText || "Next"}
                                       onChange={(value) => {
+                                        setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
                                         const updatedData = {
                                           ...landingPageData,
                                           form: {
@@ -3174,6 +3402,7 @@ export default function FormEdit({ paramsId }) {
                                           },
                                         };
                                         setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
                                         debouncedSave(updatedData);
                                       }}
                                       className="text-sm border-none focus:ring-0"
@@ -3819,6 +4048,53 @@ export default function FormEdit({ paramsId }) {
           }
         `}</style>
       </div>
+      
+      {/* Exit Confirmation Modal */}
+      <Modal
+        open={isExitModalVisible}
+        onCancel={handleExitCancel}
+        footer={null}
+        maskClosable={false}
+        width={420}
+      >
+        <div className="flex flex-col gap-5">
+          <Heading size="3xl" as="h3" className="!text-black-900_01">
+            You're leaving this page but there are unpublished form changes, are you sure you want to exit?
+          </Heading>
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              onClick={handleExitCancel}
+            >
+              No, go back
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              onClick={async () => {
+                const nextNav = pendingNavigationRef.current;
+                if (!nextNav) return;
+                try {
+                  await LandingPageService.publishLandingPage(lpId, 'form');
+                } catch (e) {
+                  await performDirectSave(landingPageData);
+                }
+                handleExitConfirm();
+              }}
+            >
+              Publish & exit
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 rounded-md bg-[#5207CD] text-white hover:bg-[#0C7CE6]"
+              onClick={handleExitConfirm}
+            >
+              Yes, exit
+            </button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

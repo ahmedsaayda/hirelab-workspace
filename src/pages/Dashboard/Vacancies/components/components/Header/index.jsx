@@ -22,6 +22,7 @@ export default function Header({
   lpId,
   isFormEditor = false,
   hasUnpublishedChanges = false, // 🔥 NEW: Passed from parent
+  onNavigateAttempt,
   ...props
 }) {
   const router = useRouter();
@@ -79,11 +80,17 @@ export default function Header({
     try {
       const res = await LandingPageService.publishLandingPage(lpId, isFormEditor ? 'form' : 'page');
       console.log("Publish response:", res);
-      message.success(`${isFormEditor ? 'Form' : 'Page'} published successfully!`);
       
       // Wait a moment then reload to ensure we get the latest data
       setTimeout(() => {
         reload();
+        // Force clear any stale unpublished changes indicator after reload completes
+        setTimeout(() => {
+          if (res?.data?.published) {
+            // Trigger a re-render to ensure published status is reflected
+            window.dispatchEvent(new CustomEvent('published-status-updated'));
+          }
+        }, 300);
       }, 500);
     } catch (err) {
       message.error("Failed to publish: " + (err.message || "Unknown error"));
@@ -99,11 +106,17 @@ export default function Header({
     try {
       const res = await LandingPageService.publishLandingPage(lpId, isFormEditor ? 'form' : 'page');
       console.log("Publish response:", res);
-      message.success(`${isFormEditor ? 'Form' : 'Page'} published successfully!`);
       
       // Wait a moment then reload to ensure we get the latest data
       setTimeout(() => {
         reload();
+        // Force clear any stale unpublished changes indicator after reload completes
+        setTimeout(() => {
+          if (res?.data?.published) {
+            // Trigger a re-render to ensure published status is reflected
+            window.dispatchEvent(new CustomEvent('published-status-updated'));
+          }
+        }, 300);
       }, 500);
     } catch (err) {
       message.error("Failed to publish: " + (err.message || "Unknown error"));
@@ -172,11 +185,17 @@ export default function Header({
       
       const res = await LandingPageService.publishLandingPage(lpId, isFormEditor ? 'form' : 'page');
       console.log("Publish response:", res);
-      message.success(`${isFormEditor ? 'Form' : 'Page'} published successfully!`);
       
       // Wait a moment then reload to ensure we get the latest data
       setTimeout(() => {
         reload();
+        // Force clear any stale unpublished changes indicator after reload completes
+        setTimeout(() => {
+          if (res?.data?.published) {
+            // Trigger a re-render to ensure published status is reflected
+            window.dispatchEvent(new CustomEvent('published-status-updated'));
+          }
+        }, 300);
       }, 500);
       
     } catch (err) {
@@ -220,7 +239,12 @@ export default function Header({
     >
       <div className="flex gap-5 justify-between items-center w-full mdx:flex-col">
         <div className="flex items-center justify-left mdx:w-full">
-          <Link href={isFormEditor ? `/edit-page/${lpId}` : "/dashboard/vacancies"}>
+          <Link href={isFormEditor ? `/edit-page/${lpId}` : "/dashboard/vacancies"} onClick={(e) => {
+            if (typeof onNavigateAttempt === 'function') {
+              e.preventDefault();
+              onNavigateAttempt(isFormEditor ? `/edit-page/${lpId}` : "/dashboard/vacancies");
+            }
+          }}>
             <Img
               src="/images/img_arrow_right_blue_gray_400.svg"
               alt="arrowright"
@@ -320,7 +344,7 @@ export default function Header({
           {/* Right side - Navigation and Copy Link buttons */}
           <div className="flex items-center gap-3 mdx:w-full mdx:justify-center">
             <ul className="flex items-center gap-2 mdx:flex-wrap mdx:justify-center">
-              {[
+                  {[
                 {
                   id: "pageBuilder",
                   label: "Page",
@@ -375,6 +399,12 @@ export default function Header({
                       <Link
                         href={item.link(lpId || landingPageData?._id)}
                         className="flex gap-2 justify-center items-center cursor-pointer w-full"
+                        onClick={(e) => {
+                          if (typeof onNavigateAttempt === 'function') {
+                            e.preventDefault();
+                            onNavigateAttempt(item.link(lpId || landingPageData?._id));
+                          }
+                        }}
                       >
                         {item.icon}
                         <Heading
@@ -468,10 +498,6 @@ export default function Header({
                 </div>
                 <div
                   className="absolute inset-0 flex items-center justify-center cursor-pointer"
-                  onClick={() => {
-                    setPreviewTemplate(i + 1);
-                    setPreviewModalVisible(true);
-                  }}
                 >
                   <div className="p-2 rounded-full bg-white bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300">
                     <EyeOutlined className="text-transparent group-hover:text-white text-3xl transition-all duration-300" />

@@ -430,6 +430,12 @@ export default function LandingpageEdit({paramsId}) {
   const [isAIModalVisible, setIsAIModalVisible] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isExitModalVisible, setIsExitModalVisible] = useState(false);
+  const pendingNavigationRef = useRef(null);
+  const navigationOverrideRef = useRef(false);
+  const hasUnpublishedChangesRef = useRef(false);
+  const sessionHasChangesRef = useRef(false);
+  const ackKey = useMemo(() => (lpId ? `lp-guard-ack:${lpId}:page` : null), [lpId]);
 
   // image 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -441,6 +447,8 @@ export default function LandingpageEdit({paramsId}) {
   const autoSaveTimeoutRef = useRef(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
+  const [hasImmediateUnsavedChanges, setHasImmediateUnsavedChanges] = useState(false);
+  
   
   const combinedSections = [
     { key: "flexaligntop" },
@@ -479,6 +487,148 @@ export default function LandingpageEdit({paramsId}) {
       console.log("error fetching data",err)
     }
   }, [lpId, user?.subscription?.paid]);
+
+  useEffect(() => {
+    // Guard on unpublished changes (post-autosave)
+    hasUnpublishedChangesRef.current = hasUnpublishedChanges;
+  }, [hasUnpublishedChanges]);
+
+  const handleExitCancel = useCallback(() => {
+    pendingNavigationRef.current = null;
+    setIsExitModalVisible(false);
+  }, []);
+
+  const handleExitConfirm = useCallback(() => {
+    const nextNav = pendingNavigationRef.current;
+    pendingNavigationRef.current = null;
+    setIsExitModalVisible(false);
+
+    if (!nextNav) {
+      return;
+    }
+
+    navigationOverrideRef.current = true;
+    if (ackKey) sessionStorage.setItem(ackKey, 'ack');
+    sessionHasChangesRef.current = false;
+
+    // Execute navigation after a short delay to ensure modal closes first
+    setTimeout(() => {
+      try {
+        if (typeof nextNav.exec === "function") {
+          nextNav.exec();
+        }
+      } finally {
+        // Reset override after navigation completes or fails
+        setTimeout(() => {
+          navigationOverrideRef.current = false;
+        }, 100);
+      }
+    }, 10);
+  }, []);
+
+  useEffect(() => {
+    const handleRouteChangeStart = (url, opts = {}) => {
+      if (navigationOverrideRef.current) return;
+
+      // Respect prior acknowledgement if no new edits since last acknowledgement
+      const acknowledged = ackKey ? sessionStorage.getItem(ackKey) === 'ack' : false;
+      if (acknowledged && !sessionHasChangesRef.current) {
+        return;
+      }
+
+      if (!hasUnpublishedChangesRef.current) {
+        return;
+      }
+
+      // Prevent guard when navigating to the same path
+      if (url === router.asPath) {
+        return;
+      }
+
+      pendingNavigationRef.current = {
+        exec: () => router.push(url, undefined, opts),
+      };
+
+      setIsExitModalVisible(true);
+
+      const error = new Error("Route change aborted due to unpublished changes.");
+      error.cancelled = true;
+      router.events.emit("routeChangeError", error, url, opts);
+      throw error;
+    };
+
+    const handleRouteChangeComplete = () => {
+      navigationOverrideRef.current = false;
+    };
+
+    const handleRouteChangeError = () => {
+      navigationOverrideRef.current = false;
+    };
+
+    router.events.on("routeChangeStart", handleRouteChangeStart);
+    router.events.on("routeChangeComplete", handleRouteChangeComplete);
+    router.events.on("routeChangeError", handleRouteChangeError);
+
+    return () => {
+      router.events.off("routeChangeStart", handleRouteChangeStart);
+      router.events.off("routeChangeComplete", handleRouteChangeComplete);
+      router.events.off("routeChangeError", handleRouteChangeError);
+    };
+  }, [router]);
+
+  useEffect(() => {
+    router.beforePopState(() => {
+      if (navigationOverrideRef.current || !hasUnpublishedChangesRef.current) {
+        return true;
+      }
+
+      pendingNavigationRef.current = { exec: () => router.back() };
+      setIsExitModalVisible(true);
+      return false;
+    });
+
+    return () => {
+      router.beforePopState(() => true);
+    };
+  }, [router]);
+
+  useEffect(() => {
+    if (!hasImmediateUnsavedChanges) {
+      setIsExitModalVisible(false);
+      pendingNavigationRef.current = null;
+    }
+  }, [hasImmediateUnsavedChanges]);
+
+
+  // Handle browser refresh/close with native dialog
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnpublishedChangesRef.current) {
+        e.preventDefault();
+        const message = "You're leaving this page but there are unpublished changes, are you sure you want to exit?";
+        e.returnValue = message;
+        return message;
+      }
+    };
+
+    const handleKeydown = (e) => {
+      // Intercept refresh shortcuts and show our modal instead
+      const isRefresh = (e.key === 'F5') || (e.key.toLowerCase() === 'r' && (e.ctrlKey || e.metaKey));
+      if (isRefresh && hasUnpublishedChangesRef.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        pendingNavigationRef.current = { exec: () => window.location.reload() };
+        setIsExitModalVisible(true);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("keydown", handleKeydown, { capture: true });
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("keydown", handleKeydown, { capture: true });
+    };
+  }, []);
 
   // 🔥 NEW: Function to check for unpublished changes (PAGE SCOPE ONLY)
   const checkForUnpublishedChanges = useCallback((currentData = landingPageData) => {
@@ -540,6 +690,9 @@ export default function LandingpageEdit({paramsId}) {
         // Update local state with fresh data from server
         setLandingPageData(response.data);
         
+        // Clear immediate unsaved changes after successful auto-save
+        setHasImmediateUnsavedChanges(false);
+        
         // Re-check for unpublished changes
         setTimeout(() => {
           checkForUnpublishedChanges(response.data);
@@ -558,6 +711,9 @@ export default function LandingpageEdit({paramsId}) {
 
   // 🔥 NEW: Debounced auto-save
   const debouncedAutoSave = useCallback((dataToSave) => {
+    // If exit modal is open, pause autosave until the user decides
+    if (isExitModalVisible) return;
+
     // Clear existing timeout
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
@@ -567,28 +723,39 @@ export default function LandingpageEdit({paramsId}) {
     autoSaveTimeoutRef.current = setTimeout(() => {
       performAutoSave(dataToSave);
     }, 1500); // 1.5 second debounce
-  }, [performAutoSave]);
+  }, [performAutoSave, isExitModalVisible]);
 
   // 🔥 NEW: Enhanced setLandingPageData that triggers auto-save and change detection
   const updateLandingPageData = useCallback((newData) => {
+    // Mark as having immediate unsaved changes
+    setHasImmediateUnsavedChanges(true);
+    sessionHasChangesRef.current = true; // any edit in this session invalidates previous acknowledgements
+    
     if (typeof newData === 'function') {
       setLandingPageData(prevData => {
         const updatedData = newData(prevData);
-        
-        // Trigger auto-save (change detection will happen AFTER save completes)
-        debouncedAutoSave(updatedData);
-        
+
+        if (updatedData) {
+          if (lpId) {
+            debouncedAutoSave(updatedData);
+          }
+          checkForUnpublishedChanges(updatedData);
+        }
+
         return updatedData;
       });
     } else {
       setLandingPageData(newData);
-      
-      // Trigger auto-save (change detection will happen AFTER save completes)
-      if (newData && lpId) {
-        debouncedAutoSave(newData);
+
+      if (newData) {
+        if (lpId) {
+          debouncedAutoSave(newData);
+        }
+        checkForUnpublishedChanges(newData);
+        sessionHasChangesRef.current = true;
       }
     }
-  }, [debouncedAutoSave, lpId]);
+  }, [debouncedAutoSave, lpId, checkForUnpublishedChanges]);
 
   // Centralized job fetching functions
   
@@ -1315,6 +1482,15 @@ export default function LandingpageEdit({paramsId}) {
         isAutoSaving={isAutoSaving}
         hasUnpublishedChanges={hasUnpublishedChanges}
         lpId={lpId}
+        onNavigateAttempt={(href) => {
+          const acknowledged = ackKey ? sessionStorage.getItem(ackKey) === 'ack' : false;
+          if (!hasUnpublishedChangesRef.current || (acknowledged && !sessionHasChangesRef.current)) {
+            router.push(href);
+            return;
+          }
+          pendingNavigationRef.current = { exec: () => router.push(href) };
+          setIsExitModalVisible(true);
+        }}
       />
       <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3 pl-0">
         <div
@@ -1691,6 +1867,56 @@ export default function LandingpageEdit({paramsId}) {
         onClose={() => setIsDebugModalOpen(false)}
         debugData={landingPageData?.debugData}
       />
+
+      <Modal
+        open={isExitModalVisible}
+        onCancel={handleExitCancel}
+        footer={null}
+        maskClosable={false}
+        maxWidth={420}
+        style={{
+          maxWidth: 220,
+        }}
+      >
+        <div className="flex flex-col gap-5">
+          <Heading size="3xl" as="h3" className="!text-black-900_01">
+            You're leaving this page but there are unpublished changes, are you sure you want to exit?
+          </Heading>
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              onClick={handleExitCancel}
+            >
+              No, go back
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              onClick={async () => {
+                const nextNav = pendingNavigationRef.current;
+                if (!nextNav) return;
+                try {
+                  await LandingPageService.publishLandingPage(lpId, 'page');
+                } catch (e) {
+                  // If publish fails, fallback to autosave to avoid losing work
+                  await performAutoSave(landingPageData);
+                }
+                handleExitConfirm();
+              }}
+            >
+              Publish & exit
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 rounded-md bg-[#5207CD] text-white hover:bg-[#0C7CE6]"
+              onClick={handleExitConfirm}
+            >
+              Yes, exit
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
