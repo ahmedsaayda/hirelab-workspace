@@ -413,7 +413,8 @@ const CandidateProfile = ({
   const [interviewFormVisible, setInterviewFormVisible] = useState(false);
   const [interviewHistory, setInterviewHistory] = useState([]);
   const [loadingInterviews, setLoadingInterviews] = useState(false);
-  
+  const [updatingStage, setUpdatingStage] = useState(false);
+
   const router = useRouter();
 
   // Load interview history for candidate
@@ -1411,26 +1412,76 @@ const CandidateProfile = ({
                 size="small"
                 value={candidate?.stageId || stages.find(s => s.title === candidate?.stage || s.name === candidate?.stage)?.id}
                 style={{ minWidth: 180 }}
+                loading={updatingStage}
+                disabled={updatingStage}
                 onChange={async (targetStageId) => {
+                  if (updatingStage) return; // Prevent multiple simultaneous updates
+
+                  const previousStageId = candidate?.stageId;
+                  const newStage = stages.find(s => s.id === targetStageId);
+                  const newStageName = newStage?.title || newStage?.name || 'Unknown';
+
+                  setUpdatingStage(true);
+
                   try {
+                    // Optimistic update - immediately update local state
+                    const updatedCandidate = {
+                      ...candidate,
+                      stageId: targetStageId,
+                      stage: newStageName
+                    };
+                    setCandidate(updatedCandidate);
+
+                    // Call parent with immediate update for optimistic UI
+                    if (onUpdate) {
+                      onUpdate(candidateId, targetStageId);
+                    }
+
+                    // Then sync with server in background
                     await ATSService.moveCandidate({
                       targetStage: targetStageId,
                       candidateId: candidateId,
                       destinationCol: [String(candidateId)],
                     });
-                    message.success('Stage updated');
-                    // Refresh local candidate data and notify parent to refresh board
-                    await loadCandidateData();
-                    if (onUpdate) onUpdate();
+
+                    message.success(`Moved to ${newStageName}`);
+
+                    // Final refresh to ensure consistency (shorter delay for better UX)
+                    setTimeout(() => {
+                      loadCandidateData();
+                      if (onUpdate) {
+                        onUpdate();
+                      }
+                    }, 100);
+
                   } catch (e) {
+                    console.error('Stage update failed:', e);
                     message.error('Failed to update stage');
+
+                    // Revert optimistic update on error
+                    setCandidate({
+                      ...candidate,
+                      stageId: previousStageId,
+                      stage: stages.find(s => s.id === previousStageId)?.title || 'Applied'
+                    });
+                  } finally {
+                    setUpdatingStage(false);
                   }
                 }}
                 options={stages.map(s => ({ label: s.title || s.name, value: s.id }))}
               />
-              <Text className="text-lg font-bold" style={{ color: getProgressColor() }}>
-                {calculateStageProgress()}%
-              </Text>
+              <div className="flex items-center gap-2">
+                <Text className="text-lg font-bold" style={{ color: getProgressColor() }}>
+                  {updatingStage ? (
+                    <span className="opacity-60">Updating...</span>
+                  ) : (
+                    `${calculateStageProgress()}%`
+                  )}
+                </Text>
+                {updatingStage && (
+                  <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                )}
+              </div>
             </div>
         </div>
         

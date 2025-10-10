@@ -2208,6 +2208,74 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     setReviewBreakdownModal(true);
   };
 
+  // Handle optimistic stage updates for immediate UI feedback
+  const handleOptimisticStageUpdate = (candidateId, targetStageId) => {
+    console.log('🚀 Optimistic stage update:', { candidateId, targetStageId });
+
+    // Find the candidate in the current data
+    const candidate = candidates.find(c => c.id === candidateId);
+    if (!candidate) {
+      console.warn('❌ Candidate not found for optimistic update:', candidateId);
+      return;
+    }
+
+    const currentStageId = candidate.stageId;
+    const newStage = pipelineData.columns.find(col => col.id === targetStageId);
+
+    if (!newStage) {
+      console.warn('❌ Target stage not found:', targetStageId);
+      return;
+    }
+
+    console.log('🔄 Moving candidate from stage:', currentStageId, 'to stage:', targetStageId);
+
+    // Update candidates array (for table view)
+    setCandidates(prevCandidates =>
+      prevCandidates.map(c =>
+        c.id === candidateId
+          ? { ...c, stageId: targetStageId, stage: newStage.title }
+          : c
+      )
+    );
+
+    // Update pipeline data (for pipeline view)
+    setPipelineData(prevData => {
+      const newColumns = prevData.columns.map(column => {
+        // Remove candidate from old stage
+        if (column.id === currentStageId) {
+          return {
+            ...column,
+            cards: column.cards.filter(card => card.id !== candidateId)
+          };
+        }
+
+        // Add candidate to new stage
+        if (column.id === targetStageId) {
+          const movedCard = {
+            ...candidate,
+            stageId: targetStageId,
+            stage: newStage.title
+          };
+
+          // Check if candidate is already in this stage (avoid duplicates)
+          const cardExists = column.cards.some(card => card.id === candidateId);
+          if (!cardExists) {
+            return {
+              ...column,
+              cards: [...column.cards, movedCard]
+            };
+          }
+        }
+
+        return column;
+      });
+
+      return { ...prevData, columns: newColumns };
+    });
+
+    console.log('✅ Optimistic stage update completed');
+  };
+
   // Calculate aggregated rating from stage reviews
   const calculateAggregatedRating = async (candidateId) => {
     try {
@@ -2215,9 +2283,9 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         filters: { candidateId: candidateId }
       });
       const reviews = response.data?.items || [];
-      
+
       if (reviews.length === 0) return 0;
-      
+
       const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
       return Math.round((totalRating / reviews.length) * 10) / 10; // Round to 1 decimal
     } catch (error) {
@@ -4041,8 +4109,11 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       <CandidateProfile
         candidateId={candidateProfile}
         onClose={() => setCandidateProfile(null)}
-        onUpdate={(newCandidateId) => {
-          if (newCandidateId) {
+        onUpdate={(newCandidateId, targetStageId) => {
+          if (newCandidateId && targetStageId) {
+            // Handle stage change with optimistic update
+            handleOptimisticStageUpdate(newCandidateId, targetStageId);
+          } else if (newCandidateId) {
             // Navigate to different candidate
             setCandidateProfile(newCandidateId);
           } else {
