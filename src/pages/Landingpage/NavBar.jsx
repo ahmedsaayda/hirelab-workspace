@@ -755,8 +755,12 @@ const handlemediaLink = (platform) => {
       setScrollPosition(container.scrollLeft || 0);
     };
 
-    // Initial measure (after render)
-    const raf = requestAnimationFrame(update);
+    // Initial measure (after render) and reset scroll to beginning
+    const raf = requestAnimationFrame(() => {
+      // Reset scroll position to show first items
+      container.scrollLeft = 0;
+      update();
+    });
 
     window.addEventListener('resize', update);
     container.addEventListener('scroll', update, { passive: true });
@@ -1187,11 +1191,10 @@ const handlemediaLink = (platform) => {
         <div
           ref={scrollRef}
           className="flex items-center overflow-x-auto scrollbar-hide flex-1"
-          style={{ 
+          style={{
             scrollBehavior: "smooth",
             minWidth: 0,  // Allow flex item to shrink below its content size
             WebkitOverflowScrolling: "touch",  // Smooth scrolling on iOS
-            justifyContent: "center",  // Always center navigation items
             gap: "0.5rem"  // Add consistent spacing between items
           }}
         >
