@@ -23,6 +23,7 @@ export default function Header({
   isFormEditor = false,
   hasUnpublishedChanges = false, // 🔥 NEW: Passed from parent
   onNavigateAttempt,
+  onOpenFormSettings,
   ...props
 }) {
   const router = useRouter();
@@ -283,9 +284,15 @@ export default function Header({
           />
           <Img
             src="/images/settings-02.svg"
-            alt="check"
+            alt="settings"
             className="h-[20px] w-[20px] ml-3.5 cursor-pointer settings-icon"
-            onClick={handleTemplateOpen}
+            onClick={() => {
+              if (isFormEditor && typeof onOpenFormSettings === "function") {
+                onOpenFormSettings();
+              } else {
+                handleTemplateOpen();
+              }
+            }}
           />
           {null}
         </div>
@@ -440,7 +447,7 @@ export default function Header({
         </div>
       </div>
       <Modal
-        open={templateMenu}
+        open={templateMenu && !isFormEditor}
         onCancel={() => setTemplateMenu(false)}
         okButtonProps={{ style: { display: "none" } }}
         cancelButtonProps={{ style: { display: "none" } }}
@@ -514,6 +521,9 @@ export default function Header({
               <div className="flex flex-col gap-3 self-stretch">
                 <Button
                   onClick={() => {
+                    if(i !== 0) {
+                      return;
+                    }
                     setLandingPageData((d) => ({
                       ...d,
                       templateId: `${i + 1}`,

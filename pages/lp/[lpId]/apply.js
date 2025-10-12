@@ -446,11 +446,14 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
   const { lpId } = router.query;
   
   const [landingPageData, setLandingPageData] = useState(defaultLandingPageData);
+  const settings = landingPageData?.form?.settings || {};
+  console.log("settings?.redirectToUrl",settings?.redirectToUrl)
   const [formData, setFormData] = useState({});
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formFields, setFormFields] = useState([]);
+  const [optInAccepted, setOptInAccepted] = useState(false);
   // Removed detectedCountry since we're using regular Input instead of PhoneInput
 
   // 🎨 DYNAMIC BRAND COLORS - NO HARDCODING!
@@ -568,6 +571,30 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       setLoading(false);
     }
   }, [lpId, defaultLandingPageData]);
+
+  // Draft persistence (collect partial answers)
+  useEffect(() => {
+    if (!lpId || !settings?.collectPartialAnswers) return;
+    try {
+      const raw = localStorage.getItem(`lp:${lpId}:formDraft`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          setFormData(parsed.formData || {});
+          if (typeof parsed.currentStep === 'number') setCurrentStep(parsed.currentStep);
+          setOptInAccepted(!!parsed.optInAccepted);
+        }
+      }
+    } catch (_) {}
+  }, [lpId, settings?.collectPartialAnswers]);
+
+  useEffect(() => {
+    if (!lpId || !settings?.collectPartialAnswers) return;
+    try {
+      const payload = JSON.stringify({ formData, currentStep, optInAccepted });
+      localStorage.setItem(`lp:${lpId}:formDraft`, payload);
+    } catch (_) {}
+  }, [formData, currentStep, optInAccepted, lpId, settings?.collectPartialAnswers]);
 
   // If SSR provided data, hydrate form fields immediately
   useEffect(() => {
@@ -742,6 +769,13 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       ...prev,
       [fieldId]: value
     }));
+  };
+
+  // Auto-jump utility when setting is enabled (choice-like fields)
+  const maybeAutoJump = () => {
+    if (settings?.autoJumpToNext) {
+      setTimeout(() => handleNext(), 0);
+    }
   };
 
   const handleNext = () => {
@@ -1040,8 +1074,20 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           return;
         }
       }
+      // If this click would move from last question to submit, validate opt-in if required
+      const isGoingToSubmit = currentStep === flowFields.length;
+      if (isGoingToSubmit && settings?.optIn?.enabled && settings?.optIn?.required && !optInAccepted) {
+        message.warning('Please accept the opt-in to continue');
+        return;
+      }
+
       setCurrentStep(prev => prev + 1);
     } else {
+      // Submitting from summary; enforce opt-in if required
+      if (settings?.optIn?.enabled && settings?.optIn?.required && !optInAccepted) {
+        message.warning('Please accept the opt-in to submit');
+        return;
+      }
       handleSubmit();
     }
   };
@@ -1148,17 +1194,42 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
         LandingPageDataId: lpId,
         formData: processedFormData,
         form: landingPageData?.form,
-        searchIndex: `${processedFormData.firstname || ''} ${processedFormData.lastname || ''} ${processedFormData.email || ''}`.trim()
+        searchIndex: `${processedFormData.firstname || ''} ${processedFormData.lastname || ''} ${processedFormData.email || ''}`.trim(),
+        formSettings: landingPageData?.form?.settings || {},
+        optInAccepted: !!optInAccepted,
       };
+
+      // If respondent email configured, pass it explicitly so BE can send
+      if (applicationData.formSettings?.respondentEmail?.enabled) {
+        applicationData.respondentEmail = applicationData.formSettings.respondentEmail;
+      }
 
       console.log('Submitting application data:', applicationData);
 
       // Public endpoint – no authentication required
       await PublicService.createVacancySubmission(applicationData);
+
+      // Clear draft once submitted
+      try { if (settings?.collectPartialAnswers && lpId) localStorage.removeItem(`lp:${lpId}:formDraft`); } catch (_) {}
       
       message.success('Application submitted successfully!');
-      // Redirect to thank you page; CompleteRegistration is fired on thank-you page load
-      router.push(`/lp/${lpId}/thank-you`);
+      // Redirect per settings if provided
+      if (settings?.redirectToUrl) {
+        const redirectUrl = settings.redirectToUrl.trim();
+        // Check if it's an absolute URL (starts with http:// or https:// or //)
+        if (redirectUrl.startsWith('http://') || redirectUrl.startsWith('https://') || redirectUrl.startsWith('//')) {
+          // For absolute URLs, use window.location to avoid Next.js router issues
+          window.location.href = redirectUrl;
+        } else if (redirectUrl.startsWith('www.')) {
+          // For URLs starting with www., prepend https://
+          window.location.href = `https://${redirectUrl}`;
+        } else {
+          // For relative URLs, use Next.js router
+          router.replace(redirectUrl);
+        }
+      } else {
+        router.push(`/lp/${lpId}/thank-you`);
+      }
     } catch (error) {
       console.error('Error submitting application:', error);
       message.error('Failed to submit application. Please try again.');
@@ -1541,7 +1612,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           <MultipleChoice
             field={field}
             value={value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            onChange={(e) => { handleInputChange(field.id, e.target.value); maybeAutoJump(); }}
           />
         );
 
@@ -1550,7 +1621,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           <CustomDropdown
             field={field}
             value={value}
-            onChange={(selectedValue) => handleInputChange(field.id, selectedValue)}
+            onChange={(selectedValue) => { handleInputChange(field.id, selectedValue); maybeAutoJump(); }}
           />
         );
 
@@ -1559,7 +1630,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           <MultiSelectChoice
             field={field}
             value={Array.isArray(value) ? value : []}
-            onChange={(selectedValues) => handleInputChange(field.id, selectedValues)}
+            onChange={(selectedValues) => { handleInputChange(field.id, selectedValues); maybeAutoJump(); }}
           />
         );
 
@@ -1569,7 +1640,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           <YesNoQuestion
             field={field}
             value={value}
-            onChange={(newValue) => handleInputChange(field.id, newValue)}
+            onChange={(newValue) => { handleInputChange(field.id, newValue); maybeAutoJump(); }}
           />
         );
 
@@ -1749,6 +1820,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
     );
   }
 
+  
   const flowFields = getVisibleFieldsForFlow(formFields, formData);
   const totalSteps = flowFields.length + 1; // +1 for intro step
   const progressPercentage = ((currentStep + 1) / Math.max(totalSteps, 1)) * 100;
@@ -1862,14 +1934,16 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           </div>
           
           {/* Progress Bar */}
-          <div className="mt-4">
-            <Progress 
-              percent={progressPercentage} 
-              showInfo={false}
-              strokeColor={primaryColor}
-              className="mb-2"
-            />
-          </div>
+          {settings.showProgressBar !== false && (
+            <div className="mt-4">
+              <Progress 
+                percent={progressPercentage} 
+                showInfo={false}
+                strokeColor={primaryColor}
+                className="mb-2"
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -1885,6 +1959,18 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
               <p className="text-gray-600 mb-8">
                 {landingPageData.form?.description || "We'll ask you a few questions to learn more about you."}
               </p>
+              {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "contact" && (
+                <div className="max-w-md mx-auto text-left mb-6 p-4 rounded border bg-gray-50">
+                  <div className="font-medium">{settings.optIn.header || 'Subscribe for updates'}</div>
+                  {settings.optIn.description && (
+                    <div className="text-sm text-gray-600 mt-1">{settings.optIn.description}</div>
+                  )}
+                  <label className="flex items-center gap-2 mt-2 text-sm">
+                    <Checkbox checked={optInAccepted} onChange={(e) => setOptInAccepted(e.target.checked)} />
+                    <span>I agree to opt-in {settings.optIn.required ? '(required)' : '(optional)'}</span>
+                  </label>
+                </div>
+              )}
               <Button 
                 type="primary" 
                 size="large"
@@ -1916,6 +2002,18 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                   <div className="mb-8">
                     {renderField(flowFields[currentStep - 1])}
                   </div>
+                </div>
+              )}
+              {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "last" && currentStep === flowFields.length && (
+                <div className="mt-4 p-4 rounded border bg-gray-50">
+                  <div className="font-medium">{settings.optIn.header || 'Subscribe for updates'}</div>
+                  {settings.optIn.description && (
+                    <div className="text-sm text-gray-600 mt-1">{settings.optIn.description}</div>
+                  )}
+                  <label className="flex items-center gap-2 mt-2 text-sm">
+                    <Checkbox checked={optInAccepted} onChange={(e) => setOptInAccepted(e.target.checked)} />
+                    <span>I agree to opt-in {settings.optIn.required ? '(required)' : '(optional)'}</span>
+                  </label>
                 </div>
               )}
             </div>

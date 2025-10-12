@@ -335,6 +335,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
   // STATE DECLARATIONS (MOVED UP TO MATCH APPLY.JS)
   const [formData, setFormData] = useState({});
   const [formFields, setFormFields] = useState([]);
+  const [previewOptInAccepted, setPreviewOptInAccepted] = useState(false);
   // Note: currentStep is now controlled by parent component
   // Removed detectedCountry since we're using regular Input instead of PhoneInput
   
@@ -988,7 +989,10 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
           <MultipleChoice
             field={field}
             value={value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            onChange={(e) => {
+              handleInputChange(field.id, e.target.value);
+              if (settings.autoJumpToNext && isPreviewMode) setTimeout(() => handleNext(), 0);
+            }}
           />
         );
 
@@ -997,7 +1001,10 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
           <CustomDropdown
             field={field}
             value={value}
-            onChange={(selectedValue) => handleInputChange(field.id, selectedValue)}
+            onChange={(selectedValue) => {
+              handleInputChange(field.id, selectedValue);
+              if (settings.autoJumpToNext && isPreviewMode) setTimeout(() => handleNext(), 0);
+            }}
           />
         );
 
@@ -1006,7 +1013,10 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
           <MultiSelectChoice
             field={field}
             value={Array.isArray(value) ? value : []}
-            onChange={(selectedValues) => handleInputChange(field.id, selectedValues)}
+            onChange={(selectedValues) => {
+              handleInputChange(field.id, selectedValues);
+              if (settings.autoJumpToNext && isPreviewMode) setTimeout(() => handleNext(), 0);
+            }}
           />
         );
 
@@ -1016,7 +1026,10 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
           <YesNoQuestion
             field={field}
             value={value}
-            onChange={(selectedValue) => handleInputChange(field.id, selectedValue)}
+            onChange={(selectedValue) => {
+              handleInputChange(field.id, selectedValue);
+              if (settings.autoJumpToNext && isPreviewMode) setTimeout(() => handleNext(), 0);
+            }}
           />
         );
 
@@ -1162,6 +1175,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
 
   const flowFields = previewLogicEnabled ? getVisibleFieldsForFlow(formFields, formData) : formFields;
   const totalSteps = formFields.length + 1; // keep sidebar/editor alignment
+  const settings = landingPageData?.form?.settings || {};
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
   console.log("formFields[currentStep - 1] ",formFields[currentStep - 1])
@@ -1242,14 +1256,16 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
           </div>
           
           {/* Progress Bar */}
-          <div className="mt-3">
-            <Progress 
-              percent={progressPercentage} 
-              showInfo={false}
-              strokeColor={primaryColor}
-              className="mb-2"
-            />
-          </div>
+          {settings.showProgressBar !== false && (
+            <div className="mt-3">
+              <Progress 
+                percent={progressPercentage} 
+                showInfo={false}
+                strokeColor={primaryColor}
+                className="mb-2"
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -1266,6 +1282,24 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                 <p className="text-gray-600 mb-6 text-sm">
                   {landingPageData.form?.description || "Please fill out the form below to apply!"}
                 </p>
+                {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "contact" && (
+                  <div className="text-left max-w-md mx-auto mb-4 p-3 rounded border bg-gray-50">
+                    <div className="font-medium text-sm">{settings.optIn.header || "Subscribe for SMS Alerts"}</div>
+                    {settings.optIn.description && (
+                      <div className="text-xs text-gray-600 mt-1">{settings.optIn.description}</div>
+                    )}
+                    <label className="flex items-center gap-2 mt-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={previewOptInAccepted}
+                        onChange={(e) => setPreviewOptInAccepted(e.target.checked)}
+                      />
+                      <span>
+                        I agree to opt-in {settings.optIn.required ? "(required)" : "(optional)"}
+                      </span>
+                    </label>
+                  </div>
+                )}
                 <Button 
                   type="primary" 
                   size="large"
@@ -1295,8 +1329,26 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                     </h2>
                     
                     <div className="flex-1 mb-6">
-                      {renderField(flowFields[currentStep - 1])}
+                    {renderField(flowFields[currentStep - 1])}
                     </div>
+                    {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "last" && (
+                      <div className="mt-2 p-3 rounded border bg-gray-50">
+                        <div className="font-medium text-sm">{settings.optIn.header || "Subscribe for SMS Alerts"}</div>
+                        {settings.optIn.description && (
+                          <div className="text-xs text-gray-600 mt-1">{settings.optIn.description}</div>
+                        )}
+                        <label className="flex items-center gap-2 mt-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={previewOptInAccepted}
+                            onChange={(e) => setPreviewOptInAccepted(e.target.checked)}
+                          />
+                          <span>
+                            I agree to opt-in {settings.optIn.required ? "(required)" : "(optional)"}
+                          </span>
+                        </label>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

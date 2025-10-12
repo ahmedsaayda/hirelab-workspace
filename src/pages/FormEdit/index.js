@@ -14,6 +14,8 @@ import {
   Select,
   DatePicker,
   TimePicker,
+  Drawer,
+  Button as AntButton,
 } from "antd";
 import React, { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
@@ -325,6 +327,7 @@ export default function FormEdit({ paramsId }) {
 
   const [forceUpdate, setForceUpdate] = useState(0); // Force re-render key
   const [aiFormModalVisible, setAiFormModalVisible] = useState(false);
+  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
 
   console.log("formSections", formSections);
 
@@ -845,6 +848,52 @@ export default function FormEdit({ paramsId }) {
     fetchData();
   }, [fetchData]);
 
+  // Settings helpers (minimal additive) - memoized to prevent re-renders
+  const currentSettings = useMemo(() => {
+    const base = landingPageData?.form?.settings || {};
+    return {
+      showProgressBar: true,
+      collectPartialAnswers: false,
+      respondentEmail: {
+        enabled: false,
+        toFieldId: "contact.email",
+        replyTo: "",
+        subject: "",
+        fromName: "",
+        body: "",
+      },
+      optIn: {
+        enabled: false,
+        showMessage: true,
+        messagePlacement: "contact", // "contact" or "last"
+        header: "",
+        description: "",
+        required: false
+      },
+      autoJumpToNext: false,
+      redirectToUrl: "",
+      ...base,
+      respondentEmail: { ...{
+        enabled: false, toFieldId: "contact.email", replyTo: "", subject: "", fromName: "", body: ""
+      }, ...(base?.respondentEmail || {}) },
+      optIn: { ...{ enabled: false, showMessage: true, messagePlacement: "contact", header: "", description: "", required: false }, ...(base?.optIn || {}) },
+    };
+  }, [landingPageData?.form?.settings]);
+
+  // Memoized email options
+  const emailOptions = useMemo(() => {
+    const options = [];
+    const contactExists = formSections.some((f) => f.type === "contact");
+    if (contactExists)
+      options.push({ id: "contact.email", label: "Contact email (contact section)" });
+    formSections
+      .filter((f) => f.type === "email")
+      .forEach((f) => options.push({ id: f.id, label: f.label || f.id }));
+    return options;
+  }, [formSections]);
+
+  // updateSettings defined after save utilities to avoid TDZ issues
+
   const handleDragEnd = (result) => {
     if (!result.destination) return;
 
@@ -1028,6 +1077,271 @@ export default function FormEdit({ paramsId }) {
     },
     [performDirectSave]
   );
+
+  // Settings updater (declared after debouncedSave to avoid TDZ)
+  const updateSettings = useCallback((partial) => {
+    setHasImmediateUnsavedChanges(true);
+    sessionHasChangesRef.current = true;
+    setLandingPageData((prev) => {
+      const next = {
+        ...prev,
+        form: {
+          ...(prev?.form || {}),
+          settings: { ...currentSettings, ...(prev?.form?.settings || {}), ...partial },
+        },
+      };
+      checkForUnpublishedFormChanges(next);
+      debouncedSave(next);
+      return next;
+    });
+  }, [debouncedSave, currentSettings, checkForUnpublishedFormChanges]);
+
+  // Force save settings when Save Changes is clicked
+  const handleSaveSettings = useCallback(() => {
+    if (landingPageData?.form?.settings) {
+      debouncedSave(landingPageData);
+    }
+    setSettingsDrawerOpen(false);
+  }, [landingPageData, debouncedSave]);
+
+  // Memoized SettingRow component to prevent re-renders
+  const SettingRow = useMemo(() =>
+    ({ title, description, extra, disabled = false, divider = true, children }) => (
+      <div className={`py-4 ${divider ? "border-b border-gray-200" : ""}`}>
+        <div className="flex items-start justify-between gap-6">
+          <div className="max-w-[70%]">
+            <div
+              className={`text-sm font-semibold ${
+                disabled ? "text-gray-500" : "text-gray-900"
+              }`}
+            >
+              {title}
+            </div>
+            {description && (
+              <div
+                className={`text-xs mt-1 leading-relaxed ${
+                  disabled ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                {description}
+              </div>
+            )}
+          </div>
+          <div className="flex-shrink-0 mt-1">{extra}</div>
+        </div>
+        {children && <div className="mt-3 pl-0">{children}</div>}
+      </div>
+    ),
+  []);
+
+  // Memoized drawer content to prevent re-renders
+  const drawerContent = useMemo(() => {
+    const s = currentSettings;
+
+    return (
+      <div className="divide-y divide-gray-200">
+        <SettingRow
+          title="Progress Bar"
+          description="Enable or disable a progress bar that shows respondents how far they are in completing the form."
+          extra={
+            <Switch
+              size="small"
+              checked={s.showProgressBar !== false}
+              onChange={(v) => updateSettings({ showProgressBar: v })}
+            />
+          }
+        />
+
+        <SettingRow
+          title="Collect Partial Answers"
+          description="Choose whether or not to allow respondents to save partial answers before completing the entire form."
+          extra={
+            <Switch
+              size="small"
+              checked={!!s.collectPartialAnswers}
+              onChange={(v) => updateSettings({ collectPartialAnswers: v })}
+            />
+          }
+        />
+
+        <SettingRow
+          title="Respondent Email Notification"
+          description="Opt to receive email notifications when a respondent submits the form, providing confirmation of the application."
+          extra={
+            <Switch
+              size="small"
+              checked={!!s.respondentEmail.enabled}
+              onChange={(v) => updateSettings({ respondentEmail: { ...s.respondentEmail, enabled: v } })}
+            />
+          }
+        >
+          {s.respondentEmail.enabled && (
+            <div className="mt-3 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Send confirmation to</div>
+                <Select
+                  className="w-full"
+                  value={s.respondentEmail.toFieldId}
+                  onChange={(val) =>
+                    updateSettings({ respondentEmail: { ...s.respondentEmail, toFieldId: val } })
+                  }
+                >
+                  {emailOptions.map((option) => (
+                    <Option key={option.id} value={option.id}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+              <Input
+                placeholder="Reply-To"
+                value={s.respondentEmail.replyTo}
+                onChange={(e) =>
+                  updateSettings({ respondentEmail: { ...s.respondentEmail, replyTo: e.target.value } })
+                }
+              />
+              <Input
+                placeholder="Subject"
+                value={s.respondentEmail.subject}
+                onChange={(e) =>
+                  updateSettings({ respondentEmail: { ...s.respondentEmail, subject: e.target.value } })
+                }
+              />
+              <Input
+                placeholder="From name"
+                value={s.respondentEmail.fromName}
+                onChange={(e) =>
+                  updateSettings({ respondentEmail: { ...s.respondentEmail, fromName: e.target.value } })
+                }
+              />
+              <TextArea
+                rows={4}
+                placeholder="Email body"
+                value={s.respondentEmail.body}
+                onChange={(e) =>
+                  updateSettings({ respondentEmail: { ...s.respondentEmail, body: e.target.value } })
+                }
+              />
+            </div>
+          )}
+        </SettingRow>
+
+        <SettingRow
+          title="Activate Opt-in"
+          description="Include an opt-in checkbox or mechanism in the form."
+          extra={
+            <Switch
+              size="small"
+              checked={!!s.optIn.enabled}
+              onChange={(v) => updateSettings({ optIn: { ...s.optIn, enabled: v } })}
+            />
+          }
+        />
+
+        <SettingRow
+          title="Opt-in Message"
+          description="Provide a message or description explaining the purpose of the opt-in and what respondents are consenting to."
+          extra={
+            <Switch
+              size="small"
+              checked={s.optIn.showMessage !== false}
+              onChange={(v) =>
+                updateSettings({ optIn: { ...s.optIn, showMessage: v } })
+              }
+              disabled={!s.optIn.enabled}
+            />
+          }
+          disabled={!s.optIn.enabled}
+        >
+          {s.optIn.enabled && (
+            <>
+              <div className="mt-3 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Show on</div>
+                  <Select
+                    className="w-full"
+                    value={s.optIn.messagePlacement || "contact"}
+                    onChange={(val) =>
+                      updateSettings({ optIn: { ...s.optIn, messagePlacement: val } })
+                    }
+                    disabled={!s.optIn.showMessage}
+                  >
+                    <Option value="contact">Contact Information screen</Option>
+                    <Option value="last">Last step</Option>
+                  </Select>
+                </div>
+                {s.optIn.showMessage !== false && (
+                  <>
+                    <Input
+                      placeholder="Header text"
+                      value={s.optIn.header}
+                      onChange={(e) =>
+                        updateSettings({ optIn: { ...s.optIn, header: e.target.value } })
+                      }
+                    />
+                    <TextArea
+                      rows={3}
+                      placeholder="Description text"
+                      value={s.optIn.description}
+                      onChange={(e) =>
+                        updateSettings({ optIn: { ...s.optIn, description: e.target.value } })
+                      }
+                    />
+                  </>
+                )}
+              </div>
+              <div className="flex items-center justify-between mt-3">
+                <div className="text-xs font-medium text-gray-700">Require opt-in</div>
+                <Switch
+                  size="small"
+                  checked={!!s.optIn.required}
+                  onChange={(v) => updateSettings({ optIn: { ...s.optIn, required: v } })}
+                />
+              </div>
+            </>
+          )}
+        </SettingRow>
+
+        <SettingRow
+          title="Redirect To Option"
+          description="Specify a URL or destination where respondents will be redirected after submitting the form."
+          extra={null}
+        >
+          <Input
+            className="mt-3"
+            placeholder="https://your-thank-you-page.com"
+            value={s.redirectToUrl}
+            onChange={(e) => updateSettings({ redirectToUrl: e.target.value })}
+          />
+        </SettingRow>
+
+        <SettingRow
+          title="Auto-Jump to Next Question"
+          description="Automatically moves respondents to the next question after they answer the current one."
+          extra={
+            <Switch
+              size="small"
+              checked={!!s.autoJumpToNext}
+              onChange={(v) => updateSettings({ autoJumpToNext: v })}
+            />
+          }
+        />
+
+        <SettingRow
+          title="Save Answers for Later"
+          description="Allows respondents to save their answers and continue from where they left off if they haven't submitted the form."
+          extra={
+            <Switch
+              size="small"
+              checked={!!s.collectPartialAnswers}
+              onChange={(v) => updateSettings({ collectPartialAnswers: v })}
+            />
+          }
+          divider={false}
+        />
+      </div>
+    );
+  }, [currentSettings, emailOptions, updateSettings]);
 
   // 🎯 SYNC STEP WITH SELECTION: Update currentStep when selectedSection changes
   useEffect(() => {
@@ -2602,6 +2916,7 @@ export default function FormEdit({ paramsId }) {
               }}
               setLandingPageData={setLandingPageData}
               reload={fetchData}
+              onOpenFormSettings={() => setSettingsDrawerOpen(true)}
         onNavigateAttempt={(href) => {
           const acknowledged = ackKey ? sessionStorage.getItem(ackKey) === 'ack' : false;
           if (!hasUnpublishedChangesRef.current || (acknowledged && !sessionHasChangesRef.current)) {
@@ -2661,6 +2976,7 @@ export default function FormEdit({ paramsId }) {
                           <span className="hidden md:inline">Questions</span>
                           <span className="md:hidden">Q</span>
                         </Heading>
+                      
 
                         <BeautifulDragDropContext onDragEnd={handleDragEnd}>
                           <BeautifulDroppable droppableId="sections">
@@ -3833,6 +4149,25 @@ export default function FormEdit({ paramsId }) {
             companyInfo: landingPageData?.companyInfo,
           }}
         />
+
+        {/* Settings Drawer */}
+        <Drawer
+          open={settingsDrawerOpen}
+          onClose={() => setSettingsDrawerOpen(false)}
+          width={690}
+          title={<span className="text-lg font-semibold text-gray-900">Settings</span>}
+          bodyStyle={{ padding: 24 }}
+          footer={
+            <div className="flex justify-end gap-2">
+              <AntButton onClick={() => setSettingsDrawerOpen(false)}>Back</AntButton>
+              <AntButton type="primary" onClick={handleSaveSettings}>
+                Save Changes
+              </AntButton>
+            </div>
+          }
+        >
+          {drawerContent}
+        </Drawer>
 
         <style jsx>{`
           .hello-pangea-dnd-draggable {
