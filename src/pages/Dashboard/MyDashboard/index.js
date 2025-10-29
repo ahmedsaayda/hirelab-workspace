@@ -1,4 +1,4 @@
-import { Tabs } from "antd";
+import { Tabs, Tooltip } from "antd";
 import React, { useEffect, useState } from "react";
 import CalendarRangePicker from "./CalendarRangePicker.js";
 import Overview from "./Overview.js";
@@ -12,6 +12,8 @@ import { selectUser } from "../../../redux/auth/selectors.js";
 import AuthService from "../../../services/AuthService";
 import { CrownOutlined, PlusOutlined } from "@ant-design/icons";
 import { refreshUserData } from "../../../utils/userRefresh.js";
+import { useWorkspace } from "../../../contexts/WorkspaceContext";
+import { HelpCircle } from "lucide-react";
 
 const calendarEvents = [
   {
@@ -218,7 +220,8 @@ const MyDashboard = () => {
   const router = useRouter();
   const [upgradeModalVisible, setUpgradeModalVisible] = useState(false);
   const user = useSelector(selectUser);
-  const landingPageNum = user?.landingPageNum || 0;
+  const { getWorkspaceFunnelUsage, currentWorkspace } = useWorkspace();
+  const [funnelUsage, setFunnelUsage] = useState(null);
   const tier = user?.tier || { id: 'free', name: 'Free Forever', maxFunnels: 1 };
   const upgradeNeeded = user?.upgradeNeeded;
 
@@ -226,6 +229,21 @@ const MyDashboard = () => {
   useEffect(() => {
     refreshUserData();
   }, []);
+
+  // Fetch workspace funnel usage
+  useEffect(() => {
+    const fetchFunnelUsage = async () => {
+      if (user) {
+        try {
+          const usage = await getWorkspaceFunnelUsage();
+          setFunnelUsage(usage);
+        } catch (error) {
+          console.error('Error fetching funnel usage:', error);
+        }
+      }
+    };
+    fetchFunnelUsage();
+  }, [user, getWorkspaceFunnelUsage]);
 
   // Enhanced logging for debugging plan limits
   useEffect(() => {
@@ -235,10 +253,11 @@ const MyDashboard = () => {
         usage: user.usage,
         upgradeNeeded: user.upgradeNeeded,
         landingPageNum: user.landingPageNum,
+        funnelUsage: funnelUsage,
         plans: user.plans
       });
     }
-  }, [user]);
+  }, [user, funnelUsage]);
 
   useEffect(() => {
     var aTags = document.getElementsByTagName("div");
@@ -264,23 +283,21 @@ const MyDashboard = () => {
   };
 
   const handleCreateNewVacancy = () => {
-    // We need to fetch actual landing pages count for accurate usage
-    // For now, we'll rely on the current method but this should be improved
     console.log('🎯 DASHBOARD CREATE VACANCY LIMIT CHECK');
-    
-    // Note: In dashboard we don't have landingPages array, 
-    // so we'll use available user data but this should be synchronized
-    const currentFunnelCount = user?.landingPageNum ?? 0;
+
+    // Use workspace funnel usage data for accurate counting
+    const currentFunnelCount = funnelUsage?.totalCurrentFunnels ?? user?.landingPageNum ?? 0;
     const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
     const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
     const tierName = user?.tier?.name ?? tier?.name ?? 'Unknown';
-    
+
     console.log('Dashboard limit check:', {
       currentFunnelCount,
       maxFunnels,
       hasReachedLimit,
       tierName,
-      note: 'Dashboard uses user.landingPageNum - should sync with vacancies page'
+      funnelUsage: funnelUsage,
+      note: 'Dashboard now uses workspace funnel usage data'
     });
 
     if (hasReachedLimit) {
@@ -304,20 +321,63 @@ const MyDashboard = () => {
             {showInviteModal && (
               <>
                 {(() => {
-                  // Note: Dashboard uses user.landingPageNum for consistency with handleCreateNewVacancy
-                  const currentFunnelCount = user?.landingPageNum ?? 0;
-                  const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+                  // Use workspace-specific funnel usage when in workspace session
+                  let currentFunnelCount, maxFunnels, tierName;
+
+                  if (user?.isWorkspaceSession && user?.workspaceId && funnelUsage?.workspaces) {
+                    // Find the specific workspace usage
+                    const workspaceUsage = funnelUsage.workspaces.find(ws => ws._id === user.workspaceId);
+                    currentFunnelCount = workspaceUsage?.currentFunnels ?? 0;
+                    maxFunnels = workspaceUsage?.maxFunnels ?? 0;
+                    tierName = currentWorkspace?.name ? `${currentWorkspace.name} Workspace` : 'Workspace';
+                  } else {
+                    // Use total usage when not in workspace session
+                    currentFunnelCount = funnelUsage?.totalCurrentFunnels ?? user?.landingPageNum ?? 0;
+                    maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+                    tierName = user?.tier?.name ?? tier?.name ?? 'Free';
+                  }
+
                   const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
-                  const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 
                   return (
                     <div className="flex flex-col items-end gap-2">
                       {/* Usage indicator */}
-                      <div className="text-sm text-gray-500 text-right">
-                        {maxFunnels === null ? 
-                          `${currentFunnelCount} funnels (Unlimited)` : 
+                      <div className="text-sm text-gray-500 text-right flex items-center gap-1">
+                        {maxFunnels === null ?
+                          `${currentFunnelCount} funnels (Unlimited)` :
                           `${currentFunnelCount} / ${maxFunnels} funnels used`
                         }
+                        {/* Funnel breakdown tooltip - only show when not in workspace session */}
+                        {!user?.isWorkspaceSession && funnelUsage?.workspaces && (
+                          <Tooltip
+                            title={
+                              <div className="space-y-2">
+                                <div className="font-medium text-gray-900">Funnel Allocation Breakdown</div>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                              <span>Main Account:</span>
+                              <span>{funnelUsage.mainAccountFunnels || 0} funnels</span>
+                            </div>
+                                  {funnelUsage.workspaces.map(workspace => (
+                                    <div key={workspace._id} className="flex justify-between">
+                                      <span>{workspace.name}:</span>
+                                      <span>{workspace.currentFunnels || 0}/{workspace.maxFunnels || 0} funnels</span>
+                                    </div>
+                                  ))}
+                                  <div className="border-t pt-1 mt-2 font-medium">
+                                    <div className="flex justify-between">
+                                      <span>Total:</span>
+                                      <span>{funnelUsage.totalCurrentFunnels}/{funnelUsage.totalMaxFunnels} funnels</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            }
+                            placement="bottomRight"
+                          >
+                            <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
+                          </Tooltip>
+                        )}
                         <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
                           {tierName} Plan
                         </span>

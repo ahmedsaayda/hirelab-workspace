@@ -13,6 +13,7 @@ import {
   Spin,
   Table,
   Tag,
+  Tooltip,
 } from "antd";
 import { load } from "cheerio";
 import React, {
@@ -25,7 +26,7 @@ import React, {
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
 
-import { CircleX, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { CircleX, ChevronDown, ChevronUp, Search, HelpCircle } from "lucide-react";
 import { formatAvgTime } from "../../../utils/timeFormat";
 import {
   getPartner,
@@ -38,7 +39,10 @@ import AuthService from "../../../services/AuthService.js";
 import CrudService from "../../../services/CrudService.js";
 import PublicService from "../../../services/PublicService.js";
 import UserService from "../../../services/UserService.js";
+import WorkspaceService from "../../../services/WorkspaceService.js";
 import { refreshUserData } from "../../../utils/userRefresh.js";
+import Cookies from "js-cookie";
+import { useWorkspace } from "../../../contexts/WorkspaceContext";
 
 import debounce from "lodash/debounce";
 import moment from "moment";
@@ -119,18 +123,102 @@ const Vacancies = () => {
   const darkMode = useSelector(selectDarkMode);
   const [backendLoading, setBackendLoading] = useState(false);
   const user = useSelector(selectUser);
+  const { getWorkspaceFunnelUsage } = useWorkspace();
+  const [funnelUsage, setFunnelUsage] = useState(null);
   console.log("user?.usage", user?.usage);
   const [loadingFetchData, setLoading] = useState(true);
-  const brandingDetails = {
-    companyName: user?.companyName,
-    companyUrl: user?.companyUrl,
-    companyInfo: user?.companyInfo,
-    companyLogo: user?.companyLogo,
-    primaryColor: user?.primaryColor,
-    secondaryColor: user?.secondaryColor,
-    tertiaryColor: user?.tertiaryColor,
-    selectedFont: user?.selectedFont,
+
+  const {
+    workspaceSession,
+    currentWorkspace,
+    accessibleWorkspaces,
+  } = useWorkspace();
+
+  const resolvedWorkspaceFilters = useMemo(() => {
+    if (user?.isWorkspaceSession && user?.workspaceId) {
+      return { scope: "workspace", id: user.workspaceId };
+    }
+
+    if (!user?.allowWorkspaces) {
+      return { scope: "owner", id: user?._id };
+    }
+
+    return { scope: "owner", id: user?._id };
+  }, [user]);
+
+  // Helper function to get branding details based on workspace session
+  const getBrandingDetails = async () => {
+    if (resolvedWorkspaceFilters.scope === "workspace" && resolvedWorkspaceFilters.id) {
+      // In workspace session - fetch workspace-specific branding
+      try {
+        const response = await WorkspaceService.getWorkspace(resolvedWorkspaceFilters.id);
+
+        if (response.data) {
+          const workspace = response.data.workspace || response.data;
+
+          return {
+            companyName: workspace.companyName || user?.companyName,
+            companyUrl: workspace.companyWebsite || user?.companyUrl,
+            companyInfo: user?.companyInfo, // Company info stays at user level
+            companyLogo: workspace.companyLogo || user?.companyLogo,
+            primaryColor: workspace.primaryColor || user?.primaryColor,
+            secondaryColor: workspace.secondaryColor || user?.secondaryColor,
+            tertiaryColor: workspace.tertiaryColor || user?.tertiaryColor,
+            selectedFont: workspace.selectedFont || user?.selectedFont,
+            titleFont: workspace.titleFont || user?.titleFont,
+            subheaderFont: workspace.subheaderFont || user?.subheaderFont,
+            bodyFont: workspace.bodyFont || user?.bodyFont,
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching workspace branding:', error);
+      }
+
+      // Fallback to user branding if workspace fetch fails
+      return {
+        companyName: user?.companyName,
+        companyUrl: user?.companyUrl,
+        companyInfo: user?.companyInfo,
+        companyLogo: user?.companyLogo,
+        primaryColor: user?.primaryColor,
+        secondaryColor: user?.secondaryColor,
+        tertiaryColor: user?.tertiaryColor,
+        selectedFont: user?.selectedFont,
+        titleFont: user?.titleFont,
+        subheaderFont: user?.subheaderFont,
+        bodyFont: user?.bodyFont,
+      };
+    } else {
+      // Main session - use user branding
+      return {
+        companyName: user?.companyName,
+        companyUrl: user?.companyUrl,
+        companyInfo: user?.companyInfo,
+        companyLogo: user?.companyLogo,
+        primaryColor: user?.primaryColor,
+        secondaryColor: user?.secondaryColor,
+        tertiaryColor: user?.tertiaryColor,
+        selectedFont: user?.selectedFont,
+        titleFont: user?.titleFont,
+        subheaderFont: user?.subheaderFont,
+        bodyFont: user?.bodyFont,
+      };
+    }
   };
+
+  const [brandingDetails, setBrandingDetails] = useState(null);
+
+  // Load branding details on component mount and when user changes
+  useEffect(() => {
+    const loadBrandingDetails = async () => {
+      const details = await getBrandingDetails();
+      setBrandingDetails(details);
+    };
+
+    if (user && resolvedWorkspaceFilters) {
+      loadBrandingDetails();
+    }
+  }, [user, resolvedWorkspaceFilters]);
   const [searchBarValue125, setSearchBarValue125] = React.useState("");
 
   const [searchBarValue56, setSearchBarValue56] = React.useState("");
@@ -225,6 +313,21 @@ const Vacancies = () => {
       );
   }, []);
 
+  // Fetch workspace funnel usage
+  useEffect(() => {
+    const fetchFunnelUsage = async () => {
+      if (user) {
+        try {
+          const usage = await getWorkspaceFunnelUsage();
+          setFunnelUsage(usage);
+        } catch (error) {
+          console.error('Error fetching funnel usage:', error);
+        }
+      }
+    };
+    fetchFunnelUsage();
+  }, [user, getWorkspaceFunnelUsage]);
+
   useEffect(() => {
     if (isNew === "true" ) {
       if (landingPages && landingPages.length > 0) {
@@ -303,16 +406,25 @@ const Vacancies = () => {
                   return acc;
                 }, {})
                 console.log("formattedFilters", formattedFilters)
+              // Build filters based on workspace session
+              const baseFilters = {
+                ...formattedFilters,
+              };
+
+              if (resolvedWorkspaceFilters.scope === "workspace" && resolvedWorkspaceFilters.id) {
+                baseFilters.workspace = resolvedWorkspaceFilters.id;
+              } else if (resolvedWorkspaceFilters.scope === "owner" && resolvedWorkspaceFilters.id) {
+                // Outside of a workspace, show all user's content (don't filter by workspace)
+                baseFilters.user_id = resolvedWorkspaceFilters.id;
+              }
+
               const result = await CrudService.search(
                 "LandingPageData",
                 itemsPerPage,
                 currentPage,
                 {
                   text: searchValue,
-                  filters: {
-                    user_id: user._id,
-                    ...formattedFilters,
-                  },
+                  filters: baseFilters,
                   sort: sorters.reduce(
                     (acc, sorter) => ({
                       ...acc,
@@ -403,17 +515,22 @@ const Vacancies = () => {
     sorters,
     currentPage,
     itemsPerPage,
-    status
+    status,
+    resolvedWorkspaceFilters
   ]);
 
   const fetchAllDataByUser = async () => {
     try {
       setLoading(true);
+      // Build filters based on workspace session for location options
+      const locationFilters = { user_id: user._id };
+      if (user.isWorkspaceSession && user.workspaceId) {
+        locationFilters.workspace = user.workspaceId;
+      }
+
       const result = await CrudService.search("LandingPageData", 999999, 1, {
         text: "",
-        filters: {
-          user_id: user._id,
-        },
+        filters: locationFilters,
         sort: {},
         ...({}),
       });
@@ -592,11 +709,22 @@ const Vacancies = () => {
 
   const handleGenerateLP = ({ jobDescription, jobTitle }) => {
     // Safety check: Verify user hasn't reached limit before starting AI generation
-    // Use actual landingPages count for accurate current usage
-    const currentFunnelCount = landingPages?.length ?? 0;
-    const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    // Use workspace-specific funnel usage when in workspace session
+    let currentFunnelCount, maxFunnels;
+
+    if (user?.isWorkspaceSession && user?.workspaceId && funnelUsage?.workspaces) {
+      // Find the specific workspace usage
+      const workspaceUsage = funnelUsage.workspaces.find(ws => ws._id === user.workspaceId);
+      currentFunnelCount = workspaceUsage?.currentFunnels ?? 0;
+      maxFunnels = workspaceUsage?.maxFunnels ?? 0;
+    } else {
+      // Use total usage when not in workspace session
+      currentFunnelCount = funnelUsage?.totalCurrentFunnels ?? landingPages?.length ?? 0;
+      maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    }
+
     const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
-    
+
     if (hasReachedLimit) {
       console.log('🚫 SAFETY CHECK: Blocking AI generation - user at funnel limit');
       antdmessage.warning(`You've reached your funnel limit (${maxFunnels}). Please upgrade your plan to create more funnels.`);
@@ -616,10 +744,25 @@ const Vacancies = () => {
         30000
       );
 
+      const brandingInfo = brandingDetails ? `
+      Workspace Branding:
+        Company Name: ${brandingDetails.companyName}
+        Company Website: ${brandingDetails.companyWebsite}
+        Company Info: ${brandingDetails.companyInfo}
+        Primary Color: ${brandingDetails.primaryColor}
+        Secondary Color: ${brandingDetails.secondaryColor}
+        Tertiary Color: ${brandingDetails.tertiaryColor}
+        Selected Font: ${brandingDetails.selectedFont?.family}
+        Title Font: ${brandingDetails.titleFont?.family}
+        Subheader Font: ${brandingDetails.subheaderFont?.family}
+        Body Font: ${brandingDetails.bodyFont?.family}
+      ` : '';
+
       const content =
         `      ${jobTitle && "Job Title: " + jobTitle}
       Vacancy Data:
-        ${jobDescription.slice(0, 10000)}` + getAiPromptContent();
+        ${jobDescription.slice(0, 10000)}
+      ${brandingInfo}` + getAiPromptContent();
 
       setAILoading(true);
       socket.current?.send(
@@ -879,17 +1022,31 @@ Respond with json that adheres to the following jsonschema:
   const upgradeNeeded = user?.upgradeNeeded;
 
   const handleCreateNewVacancy = () => {
-    // Use actual landingPages count for accurate current usage
-    const currentFunnelCount = landingPages?.length ?? 0;
-    const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    // Use workspace-specific funnel usage when in workspace session
+    let currentFunnelCount, maxFunnels;
+
+    if (user?.isWorkspaceSession && user?.workspaceId && funnelUsage?.workspaces) {
+      // Find the specific workspace usage
+      const workspaceUsage = funnelUsage.workspaces.find(ws => ws._id === user.workspaceId);
+      currentFunnelCount = workspaceUsage?.currentFunnels ?? 0;
+      maxFunnels = workspaceUsage?.maxFunnels ?? 0;
+    } else {
+      // Use total usage when not in workspace session
+      currentFunnelCount = funnelUsage?.totalCurrentFunnels ?? landingPages?.length ?? 0;
+      maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+    }
+
     const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
     const tierName = user?.tier?.name ?? tier?.name ?? 'Unknown';
-    
+
     console.log('🎯 CREATE VACANCY LIMIT CHECK:', {
+      isWorkspaceSession: user?.isWorkspaceSession,
+      workspaceId: user?.workspaceId,
       currentFunnelCount,
       maxFunnels,
       hasReachedLimit,
-      tierName
+      tierName,
+      funnelUsage: funnelUsage
     });
 
     if (hasReachedLimit) {
@@ -930,30 +1087,76 @@ Respond with json that adheres to the following jsonschema:
             Vacancies
           </h1>
           {(() => {
-            // Use actual landingPages count for accurate current usage
-            const currentFunnelCount = landingPages?.length ?? 0;
-            const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+            // Use workspace-specific funnel usage when in workspace session
+            let currentFunnelCount, maxFunnels, tierName;
+
+            if (user?.isWorkspaceSession && user?.workspaceId && funnelUsage?.workspaces) {
+              // Find the specific workspace usage
+              const workspaceUsage = funnelUsage.workspaces.find(ws => ws._id === user.workspaceId);
+              currentFunnelCount = workspaceUsage?.currentFunnels ?? 0;
+              maxFunnels = workspaceUsage?.maxFunnels ?? 0;
+              tierName = currentWorkspace?.name ? `${currentWorkspace.name} Workspace` : 'Workspace';
+            } else {
+              // Use total usage when not in workspace session
+              currentFunnelCount = funnelUsage?.totalCurrentFunnels ?? landingPages?.length ?? 0;
+              maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+              tierName = user?.tier?.name ?? tier?.name ?? 'Free';
+            }
+
             const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
-            const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 
             console.log('🔍 CORRECTED FUNNEL COUNT:', {
+              isWorkspaceSession: user?.isWorkspaceSession,
+              workspaceId: user?.workspaceId,
               currentFunnelCount,
               landingPagesLength: landingPages?.length,
               maxFunnels,
               hasReachedLimit,
               tierName,
               userUsage: user?.usage,
-              userLandingPageNum: user?.landingPageNum
+              userLandingPageNum: user?.landingPageNum,
+              funnelUsage: funnelUsage
             });
 
             return (
               <div className="flex flex-col items-end gap-2">
                 {/* Usage indicator */}
-                <div className="text-sm text-gray-500">
-                  {maxFunnels === null ? 
-                    `${currentFunnelCount} funnels (Unlimited)` : 
+                <div className="text-sm text-gray-500 flex items-center gap-1">
+                  {maxFunnels === null ?
+                    `${currentFunnelCount} funnels (Unlimited)` :
                     `${currentFunnelCount} / ${maxFunnels} funnels used`
                   }
+                  {/* Funnel breakdown tooltip - only show when not in workspace session */}
+                  {!user?.isWorkspaceSession && funnelUsage?.workspaces && (
+                    <Tooltip
+                      title={
+                        <div className="space-y-2">
+                          <div className="font-medium text-gray-900">Funnel Allocation Breakdown</div>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                              <span>Main Account:</span>
+                              <span>{funnelUsage.mainAccountFunnels || 0} funnels</span>
+                            </div>
+                            {funnelUsage.workspaces.map(workspace => (
+                              <div key={workspace._id} className="flex justify-between">
+                                <span>{workspace.name}:</span>
+                                <span>{workspace.currentFunnels || 0}/{workspace.maxFunnels || 0} funnels</span>
+                              </div>
+                            ))}
+                            <div className="border-t pt-1 mt-2 font-medium">
+                              <div className="flex justify-between">
+                                <span>Total:</span>
+                                <span>{funnelUsage.totalCurrentFunnels}/{funnelUsage.totalMaxFunnels} funnels</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      placement="bottomRight"
+                    >
+                      <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
+                    </Tooltip>
+                  )}
                   <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
                     {tierName} Plan
                   </span>
@@ -991,11 +1194,23 @@ Respond with json that adheres to the following jsonschema:
         <div className="flex flex-col gap-6">
           {/* Plan Limit Alert Banner */}
           {(() => {
-            // Use actual landingPages count for accurate current usage
-            const currentFunnelCount = landingPages?.length ?? 0;
-            const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+            // Use workspace-specific funnel usage when in workspace session
+            let currentFunnelCount, maxFunnels, tierName;
+
+            if (user?.isWorkspaceSession && user?.workspaceId && funnelUsage?.workspaces) {
+              // Find the specific workspace usage
+              const workspaceUsage = funnelUsage.workspaces.find(ws => ws._id === user.workspaceId);
+              currentFunnelCount = workspaceUsage?.currentFunnels ?? 0;
+              maxFunnels = workspaceUsage?.maxFunnels ?? 0;
+              tierName = currentWorkspace?.name ? `${currentWorkspace.name} Workspace` : 'Workspace';
+            } else {
+              // Use total usage when not in workspace session
+              currentFunnelCount = funnelUsage?.totalCurrentFunnels ?? landingPages?.length ?? 0;
+              maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+              tierName = user?.tier?.name ?? tier?.name ?? 'Free';
+            }
+
             const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
-            const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 
             if (hasReachedLimit) {
               return (
@@ -1208,11 +1423,23 @@ Respond with json that adheres to the following jsonschema:
         maskClosable={false}
       >
         {(() => {
-          // Use actual landingPages count for accurate current usage
-          const currentFunnelCount = landingPages?.length ?? 0;
-          const maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+          // Use workspace-specific funnel usage when in workspace session
+          let currentFunnelCount, maxFunnels, tierName;
+
+          if (user?.isWorkspaceSession && user?.workspaceId && funnelUsage?.workspaces) {
+            // Find the specific workspace usage
+            const workspaceUsage = funnelUsage.workspaces.find(ws => ws._id === user.workspaceId);
+            currentFunnelCount = workspaceUsage?.currentFunnels ?? 0;
+            maxFunnels = workspaceUsage?.maxFunnels ?? 0;
+            tierName = currentWorkspace?.name ? `${currentWorkspace.name} Workspace` : 'Workspace';
+          } else {
+            // Use total usage when not in workspace session
+            currentFunnelCount = funnelUsage?.totalCurrentFunnels ?? landingPages?.length ?? 0;
+            maxFunnels = user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? tier?.maxFunnels ?? 1;
+            tierName = user?.tier?.name ?? tier?.name ?? 'Free';
+          }
+
           const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
-          const tierName = user?.tier?.name ?? tier?.name ?? 'Free';
 
           if (hasReachedLimit) {
             // Show upgrade prompt instead of creation options

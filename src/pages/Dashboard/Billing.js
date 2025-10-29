@@ -8,19 +8,22 @@ import {
   Spin,
   Modal
 } from "antd";
-import { 
-  CrownOutlined, 
+import {
+  CrownOutlined,
   CheckCircleOutlined,
   RocketOutlined,
   StarOutlined,
   ExclamationCircleOutlined,
   FileTextOutlined,
+  ApartmentOutlined,
 } from "@ant-design/icons";
 import AuthService from "../../services/AuthService";
 import { useSelector } from "react-redux";
 import { selectUser, selectLoading } from "../../redux/auth/selectors";
 import { useRouter } from "next/router";
 import { refreshUserData } from "../../utils/userRefresh";
+import { useWorkspace } from "../../contexts/WorkspaceContext";
+import { ArrowUpCircle } from "lucide-react";
 
 const Billing = () => {
   const [loading, setLoading] = useState(false);
@@ -31,21 +34,26 @@ const Billing = () => {
   const [currentTier, setCurrentTier] = useState(null);
   const [usage, setUsage] = useState(null);
   const [plansLoading, setPlansLoading] = useState(true);
+  const [workspaceUsage, setWorkspaceUsage] = useState(null);
+  const [workspaceUsageLoading, setWorkspaceUsageLoading] = useState(false);
   const user = useSelector(selectUser);
   const globalLoading = useSelector(selectLoading);
   const router = useRouter();
+  const { getWorkspaceFunnelUsage, purchaseAdditionalFunnels } = useWorkspace();
 
-  // Fetch plans with pricing from API
+  // Fetch plans and workspace usage
   useEffect(() => {
-    const fetchPlans = async () => {
+    const fetchData = async () => {
       try {
         setPlansLoading(true);
+
+        // Fetch plans and usage
         const response = await AuthService.getPlansWithPricing();
         if (response.data) {
           setPlans(response.data.plans || []);
           setCurrentTier(response.data.currentTier);
           setUsage(response.data.usage);
-          
+
           // Set billing frequency based on current subscription
           if (response.data.user?.subscription?.paid) {
             const currentBilling = response.data.user.subscription?.billing_cycle || 'month';
@@ -61,12 +69,24 @@ const Billing = () => {
       } finally {
         setPlansLoading(false);
       }
+
+      // Fetch workspace usage
+      try {
+        setWorkspaceUsageLoading(true);
+        const workspaceUsageData = await getWorkspaceFunnelUsage();
+        setWorkspaceUsage(workspaceUsageData);
+      } catch (error) {
+        console.error('Error fetching workspace usage:', error);
+        // Don't show error for workspace usage - it might not be available for all users
+      } finally {
+        setWorkspaceUsageLoading(false);
+      }
     };
 
     // Check if user returned from payment (refresh user data if so)
     const urlParams = new URLSearchParams(window.location.search);
     const paymentSuccess = urlParams.get('payment') === 'success' || urlParams.get('success') === 'true';
-    
+
     if (paymentSuccess) {
       console.log('🎉 Payment success detected, refreshing user data...');
       refreshUserData().then(() => {
@@ -77,8 +97,8 @@ const Billing = () => {
       });
     }
 
-    fetchPlans();
-  }, []);
+    fetchData();
+  }, [getWorkspaceFunnelUsage]);
 
   // Detect current billing cycle and set as default (fallback)
   useEffect(() => {
@@ -259,7 +279,7 @@ const Billing = () => {
     try {
       setLoading(true);
       const response = await AuthService.getSubscription();
-      
+
       if (response.data?.link) {
         window.open(response.data.link, '_blank');
       } else {
@@ -268,6 +288,21 @@ const Billing = () => {
     } catch (error) {
       console.error("Error opening billing portal:", error);
       message.error("Failed to open billing portal");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePurchaseAdditionalFunnels = async (additionalFunnels) => {
+    try {
+      setLoading(true);
+      await purchaseAdditionalFunnels(additionalFunnels);
+      // Refresh workspace usage data
+      const workspaceUsageData = await getWorkspaceFunnelUsage();
+      setWorkspaceUsage(workspaceUsageData);
+    } catch (error) {
+      console.error("Error purchasing additional funnels:", error);
+      message.error("Failed to purchase additional funnels");
     } finally {
       setLoading(false);
     }
@@ -547,15 +582,140 @@ const Billing = () => {
         </div>
       </Card>
 
+      {/* Workspace Usage */}
+      {workspaceUsage && (
+        <Card
+          title={
+            <div className="flex items-center">
+              <ApartmentOutlined className="mr-2 text-blue-500" />
+              Workspace Usage
+            </div>
+          }
+          className="mb-6"
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600 mb-1">
+                  {workspaceUsage.totalCurrentFunnels}
+                </div>
+                <div className="text-sm text-gray-600">Active Funnels</div>
+                <div className="text-xs text-gray-500">Across all workspaces</div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-green-600 mb-1">
+                  {workspaceUsage.totalMaxFunnels}
+                </div>
+                <div className="text-sm text-gray-600">Max Funnels</div>
+                <div className="text-xs text-gray-500">Total allocated</div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-purple-600 mb-1">
+                  {workspaceUsage.workspaces?.length || 0}
+                </div>
+                <div className="text-sm text-gray-600">Workspaces</div>
+                <div className="text-xs text-gray-500">Total created</div>
+              </div>
+            </div>
+
+            {/* Workspace List */}
+            {workspaceUsage.workspaces && workspaceUsage.workspaces.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-3">Workspace Breakdown</h4>
+                <div className="space-y-2">
+                  {workspaceUsage.workspaces.map((ws) => (
+                    <div key={ws._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <div className="font-medium">{ws.name}</div>
+                        <div className="text-sm text-gray-500">
+                          {ws.currentFunnels} / {ws.maxFunnels} funnels
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          {ws.maxFunnels > 0 ? Math.round((ws.currentFunnels / ws.maxFunnels) * 100) : 0}% used
+                        </div>
+                        <div className={`text-xs ${ws.maxFunnels > 0 && ws.currentFunnels >= ws.maxFunnels ? 'text-red-600' : 'text-green-600'}`}>
+                          {ws.maxFunnels === 0 ? 'No allocation' : (ws.currentFunnels >= ws.maxFunnels ? 'Full' : 'Available')}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Purchase Additional Funnels - Always visible */}
+            <div className=" border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <ArrowUpCircle className="text-blue-600 mt-0.5" />
+                <div className="w-full">
+                  <h4 className="font-semibold text-blue-800 mb-2">Purchase Additional Funnels</h4>
+                  <p className="text-blue-700 text-sm mb-3">
+                    Need more funnels for your workspaces? Each funnel costs €10 and gives you unlimited applications.
+                  </p>
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1 max-w-xs">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Number of funnels
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="50"
+                        placeholder="e.g., 5"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            const value = parseInt(e.target.value);
+                            if (value && value > 0 && value <= 50) {
+                              handlePurchaseAdditionalFunnels(value);
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                    <Button
+                      type="primary"
+                      onClick={() => {
+                        const input = document.querySelector('input[type="number"]');
+                        const value = parseInt(input?.value);
+                        if (value && value > 0 && value <= 50) {
+                          handlePurchaseAdditionalFunnels(value);
+                        } else {
+                          message.error('Please enter a valid number of funnels (1-50)');
+                        }
+                      }}
+                      loading={loading}
+                      className="!bg-blue-600 hover:!bg-blue-700"
+                    >
+                      Purchase
+                    </Button>
+                  </div>
+                  <div className="flex justify-between items-center mt-3">
+                    <p className="text-xs text-gray-500">
+                      Maximum 50 funnels per purchase
+                    </p>
+                    <p className="text-xs text-blue-600 font-medium">
+                      You'll be redirected to Stripe for secure payment
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Manage Subscription */}
       {user?.subscription?.id && (
-        <Card 
+        <Card
           title={
             <div className="flex items-center">
               <FileTextOutlined className="mr-2 text-blue-500" />
               Manage Subscription
             </div>
-          } 
+          }
           className="mb-6"
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
@@ -564,7 +724,7 @@ const Billing = () => {
                 Access billing history, download invoices, and manage payment methods.
               </p>
             </div>
-            <Button 
+            <Button
               type="primary"
               onClick={handleOpenBillingPortal}
               loading={loading}

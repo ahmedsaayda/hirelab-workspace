@@ -9,16 +9,51 @@ import AuthService from "../../../src/services/AuthService";
 
 import { useSelector } from "react-redux";
 import { getPartner, selectLoading } from "../../../src/redux/auth/selectors";
+import { message } from "antd";
 import { Button } from "../Landing/Button";
 import { TextField } from "../Landing/Fields";
 import { Logo } from "../Landing/Logo";
 import { SlimLayout } from "../Landing/SlimLayout";
 import TeamService from "../../../src/services/TeamService";
+import WorkspaceService from "../../../src/services/WorkspaceService";
+import AuthServiceWorkspace from "../../../src/services/AuthService";
 
 const Login = () => {
   const router = useRouter();
   // const loading = useSelector(selectLoading);
   const [isLoading, setIsLoading] = useState(false);
+
+  const consumeWorkspaceInvite = async () => {
+    try {
+      const inviteString = localStorage.getItem("workspaceInvite") || Cookies.get("workspaceInvite");
+      if (!inviteString) return false;
+
+      const invite = JSON.parse(inviteString);
+      if (!invite?.token) return false;
+
+      const response = await WorkspaceService.acceptWorkspaceInvitation(invite.token);
+
+      if (response?.data?.accessToken) {
+        Cookies.set("accessToken", response.data.accessToken);
+      }
+      if (response?.data?.refreshToken) {
+        Cookies.set("refreshToken", response.data.refreshToken);
+      }
+      if (response?.data?.user) {
+        store.dispatch(login(response.data.user));
+      }
+
+      localStorage.removeItem("workspaceInvite");
+      Cookies.remove("workspaceInvite");
+
+      return response?.data?.workspace?._id || true;
+    } catch (error) {
+      console.error("Error consuming workspace invitation after login:", error);
+      localStorage.removeItem("workspaceInvite");
+      Cookies.remove("workspaceInvite");
+      return false;
+    }
+  };
 
   const handleSubmit = async (e) => {
  try {
@@ -38,7 +73,7 @@ const Login = () => {
 
   store.dispatch(login(me.data.me));
 
-  // Check for return URL from query params (team invitation)
+  // Check for return URL from query params (team or workspace invitation)
   const returnUrl = router.query.returnUrl;
   
   // If returnUrl contains a team join link, extract the invite link
@@ -84,9 +119,20 @@ const Login = () => {
     }
   }
 
-  // Redirect to dashboard (team will be set if user joined via invite)
-  // router.push("/dashboard");
-  window.location.href = "/dashboard";
+  let workspaceRedirect = null;
+  if (returnUrl && returnUrl.includes("workspace-invitation")) {
+    workspaceRedirect = await consumeWorkspaceInvite();
+  } else {
+    workspaceRedirect = await consumeWorkspaceInvite();
+  }
+
+  if (workspaceRedirect && typeof workspaceRedirect === "string") {
+    window.location.href = `/dashboard?workspace=${workspaceRedirect}`;
+  } else if (result?.data?.workspaceId) {
+    window.location.href = `/dashboard?workspace=${result.data.workspaceId}`;
+  } else {
+    window.location.href = "/dashboard";
+  }
  } catch (error) {
   setIsLoading(false);
  }finally{

@@ -17,6 +17,7 @@ import { SlimLayout } from "../Landing/SlimLayout";
 import { partner } from "../../constants";
 import TeamService from "../../services/TeamService";
 import TrackingService from "../../services/TrackingService";
+import WorkspaceService from "../../services/WorkspaceService";
 
 const Login = () => {
 
@@ -25,108 +26,155 @@ const Login = () => {
 
   const handleSubmit = useCallback(
     async (e) => {
-      e.preventDefault();
-
-      const [firstName, lastName, email, password] = new Array(4)
-        .fill(0)
-        .map((_, i) => e.target[i].value);
-
-      await AuthService.register({
-        firstName,
-        lastName,
-        email,
-        password,
-      });
-
-      const result = await AuthService.login({
-        email,
-        password,
-      });
-      if (!result?.data?.accessToken)
-        return message.error("Could not load user data");
-
-      Cookies.set("accessToken", result?.data?.accessToken);
-      Cookies.set("refreshToken", result?.data?.refreshToken);
-
-      const me = await AuthService.me();
-      if (!me?.data) return message.error("Could not load user data");
-
-      store.dispatch(login(me.data.me));
-
-      // 🎯 TRACK SUCCESSFUL REGISTRATION CONVERSION
       try {
-        await TrackingService.trackSignUpConversion({
-          email: email,
-          firstName: firstName,
-          lastName: lastName,
-          registration_method: 'email',
-          user_id: me.data.me._id || me.data.me.id,
+        e.preventDefault();
+
+        const [firstName, lastName, email, password] = new Array(4)
+          .fill(0)
+          .map((_, i) => e.target[i].value);
+  
+        await AuthService.register({
+          firstName,
+          lastName,
+          email,
+          password,
         });
+  
+        const result = await AuthService.login({
+          email,
+          password,
+        });
+  
+        console.log(result);
+        if (!result?.data?.accessToken)
+          return message.error("Could not load user data");
+  
+        Cookies.set("accessToken", result?.data?.accessToken);
+        Cookies.set("refreshToken", result?.data?.refreshToken);
+  
+        const me = await AuthService.me();
+        console.log(me);
+        if (!me?.data) return message.error("Could not load user data");
+  
+        store.dispatch(login(me.data.me));
+  
+        // 🎯 TRACK SUCCESSFUL REGISTRATION CONVERSION
+        try {
+          await TrackingService.trackSignUpConversion({
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            registration_method: 'email',
+            user_id: me.data.me._id || me.data.me.id,
+          });
+          
+          console.log('✅ Registration conversion tracking completed');
+        } catch (trackingError) {
+          console.error('⚠️ Registration tracking failed (non-critical):', trackingError);
+          // Continue with registration flow even if tracking fails
+        }
+  
+        // Check for return URL from query params (team invitation)
+        const returnUrl = router.query.returnUrl;
+        let hasTeamInvite = false;
         
-        console.log('✅ Registration conversion tracking completed');
-      } catch (trackingError) {
-        console.error('⚠️ Registration tracking failed (non-critical):', trackingError);
-        // Continue with registration flow even if tracking fails
-      }
-
-      // Check for return URL from query params (team invitation)
-      const returnUrl = router.query.returnUrl;
-      let hasTeamInvite = false;
-      
-
-      
-      // If returnUrl contains a team join link, extract the invite link
-      if (returnUrl && returnUrl.includes('/team/join/')) {
-        const urlParts = returnUrl.split('/team/join/');
-        if (urlParts.length === 2) {
-          const inviteLink = urlParts[1];
-          localStorage.setItem("pendingTeamInvite", inviteLink);
-          Cookies.set("pendingTeamInvite", inviteLink, { expires: 1 });
-          hasTeamInvite = true;
-          console.log("🔥 Registration: Set team invite cookie", inviteLink);
+  
+        
+        // If returnUrl contains a team join link, extract the invite link
+        if (returnUrl && returnUrl.includes('/team/join/')) {
+          const urlParts = returnUrl.split('/team/join/');
+          if (urlParts.length === 2) {
+            const inviteLink = urlParts[1];
+            localStorage.setItem("pendingTeamInvite", inviteLink);
+            Cookies.set("pendingTeamInvite", inviteLink, { expires: 1 });
+            hasTeamInvite = true;
+            console.log("🔥 Registration: Set team invite cookie", inviteLink);
+          }
         }
-      }
-
-      // Check for pending invitation (email invite) - check both localStorage and cookies
-      let pendingInvitation = localStorage.getItem("pendingInvitation") || Cookies.get("pendingInvitation");
-      if (pendingInvitation) {
-        try {
-          await TeamService.acceptInvitation(pendingInvitation);
-          localStorage.removeItem("pendingInvitation");
-          Cookies.remove("pendingInvitation");
-          hasTeamInvite = true;
-          console.log("Registration: Successfully accepted email invitation", pendingInvitation);
-        } catch (error) {
-          console.error("Error accepting invitation:", error);
-          localStorage.removeItem("pendingInvitation");
-          Cookies.remove("pendingInvitation");
+  
+        // Check for pending invitation (email invite) - check both localStorage and cookies
+        let pendingInvitation = localStorage.getItem("pendingInvitation") || Cookies.get("pendingInvitation");
+        if (pendingInvitation) {
+          try {
+            await TeamService.acceptInvitation(pendingInvitation);
+            localStorage.removeItem("pendingInvitation");
+            Cookies.remove("pendingInvitation");
+            hasTeamInvite = true;
+            console.log("Registration: Successfully accepted email invitation", pendingInvitation);
+          } catch (error) {
+            console.error("Error accepting invitation:", error);
+            localStorage.removeItem("pendingInvitation");
+            Cookies.remove("pendingInvitation");
+          }
         }
-      }
-
-      // Check for pending team invite link (shareable link)
-      const pendingTeamInvite = localStorage.getItem("pendingTeamInvite");
-      if (pendingTeamInvite) {
-        try {
-          const response = await TeamService.joinTeamByLink(pendingTeamInvite);
-          if (response.success) {
-            TeamService.setCurrentTeam(response.team);
+  
+        // Check for pending team invite link (shareable link)
+        const pendingTeamInvite = localStorage.getItem("pendingTeamInvite");
+        if (pendingTeamInvite) {
+          try {
+            const response = await TeamService.joinTeamByLink(pendingTeamInvite);
+            if (response.success) {
+              TeamService.setCurrentTeam(response.team);
+              localStorage.removeItem("pendingTeamInvite");
+              Cookies.remove("pendingTeamInvite");
+              hasTeamInvite = true;
+            }
+          } catch (error) {
+            console.error("Error joining team:", error);
             localStorage.removeItem("pendingTeamInvite");
             Cookies.remove("pendingTeamInvite");
-            hasTeamInvite = true;
           }
-        } catch (error) {
-          console.error("Error joining team:", error);
-          localStorage.removeItem("pendingTeamInvite");
-          Cookies.remove("pendingTeamInvite");
         }
-      }
-      
-      // If user joined via team invite, skip onboarding and go to dashboard
-      // Otherwise, continue with normal onboarding flow
-      if (hasTeamInvite) {
-        router.push("/dashboard");
-      } else {
-        router.push("/auth/otpemail");
+        
+        const consumeWorkspaceInvite = async () => {
+          try {
+            const inviteString = localStorage.getItem("workspaceInvite") || Cookies.get("workspaceInvite");
+            if (!inviteString) return false;
+
+            const invite = JSON.parse(inviteString);
+            if (!invite?.token) return false;
+
+            const response = await WorkspaceService.acceptWorkspaceInvitation(invite.token);
+
+            if (response?.data?.accessToken) {
+              Cookies.set("accessToken", response.data.accessToken);
+            }
+            if (response?.data?.refreshToken) {
+              Cookies.set("refreshToken", response.data.refreshToken);
+            }
+            if (response?.data?.user) {
+              store.dispatch(login(response.data.user));
+            }
+
+            localStorage.removeItem("workspaceInvite");
+            Cookies.remove("workspaceInvite");
+
+            return response?.data?.workspace?._id || true;
+          } catch (inviteError) {
+            console.error("Error consuming workspace invitation after registration:", inviteError);
+            localStorage.removeItem("workspaceInvite");
+            Cookies.remove("workspaceInvite");
+            return false;
+          }
+        };
+
+        let workspaceRedirect = await consumeWorkspaceInvite();
+        if (workspaceRedirect && typeof workspaceRedirect === "string") {
+          router.push(`/dashboard?workspace=${workspaceRedirect}`);
+          return;
+        }
+
+        if (workspaceRedirect) {
+          router.push("/dashboard");
+        } else if (result?.data?.workspaceId) {
+          router.push(`/dashboard?workspace=${result.data.workspaceId}`);
+        } else if (hasTeamInvite) {
+          router.push("/dashboard");
+        } else {
+          router.push("/auth/otpemail");
+        }
+      } catch (error) {
+        console.log(error);
       }
     },
     [router]

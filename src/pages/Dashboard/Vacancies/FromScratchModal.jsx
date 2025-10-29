@@ -4,6 +4,7 @@ import { CloseOutlined } from "@ant-design/icons";
 import languages from "./lang.json";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../redux/auth/selectors";
+import useWorkspaceBranding from "../../../hooks/useWorkspaceBranding";
 import { useRouter } from "next/router";
 import { Button, Img, Text, Heading } from "./components/components";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation";
@@ -24,20 +25,8 @@ const languageOptions = Array.from(
 const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
   console.log("FromScratchModal");
   const user = useSelector(selectUser);
+  const { branding: brandingDetails } = useWorkspaceBranding();
   console.log("user", user);
-  const brandingDetails = {
-    companyName: user?.companyName,
-    companyUrl: user?.companyUrl,
-    companyInfo: user?.companyInfo,
-    companyLogo: user?.companyLogo,
-    primaryColor: user?.primaryColor,
-    secondaryColor: user?.secondaryColor,
-    tertiaryColor: user?.tertiaryColor,
-    heroTitleColor: user?.heroTitleColor,
-    titleFont: user?.titleFont,
-    subheaderFont: user?.subheaderFont,
-    bodyFont: user?.bodyFont,
-  };
   const [open, setOpen] = useState(true);
   console.log("open", open);
   const [step, setStep] = useState(1);
@@ -296,6 +285,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         heroDescription: formData.description,
         department: formData.department,
         lang: language,
+        workspace: user?.isWorkspaceSession ? user.workspaceId : undefined,
         menuItems:    [
           {
             "id": "job-specifications",
@@ -940,6 +930,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
           templateId: selectedTemplate,
           user_id: user?._id,
           lang: language,
+          workspace: user?.isWorkspaceSession ? user.workspaceId : undefined,
           applyType: 'form', // 🚀 Always default to custom form
           cta2Link: '#apply' // 🚀 Always default to apply action
         };

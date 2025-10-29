@@ -5,6 +5,7 @@ import ChooseTemplate from "./ChooseTemplate.jsx";
 import AiService from "../../../services/AiService.js";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../redux/auth/selectors.js";
+import useWorkspaceBranding from "../../../hooks/useWorkspaceBranding";
 import { useRouter } from "next/router";
 import { message as antdMessage, Select } from "antd";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation.jsx";
@@ -21,6 +22,7 @@ const languageOptions = Array.from(
 
 function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
   const user = useSelector(selectUser);
+  const { branding: brandingDetails } = useWorkspaceBranding();
   const router = useRouter();;
 
   const [step, setStep] = useState(0);
@@ -76,19 +78,11 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
     saveProgress();
   }, [url, department, language, selectedTemplate]);
 
-  const brandingDetails = {
-    companyName: user?.companyName,
-    companyUrl: user?.companyUrl,
-    companyInfo: user?.companyInfo,
-    companyLogo: user?.companyLogo,
-    primaryColor: user?.primaryColor,
-    secondaryColor: user?.secondaryColor,
-    tertiaryColor: user?.tertiaryColor,
-    heroTitleColor: user?.heroTitleColor,
-    titleFont: user?.titleFont,
-    subheaderFont: user?.subheaderFont,
-    bodyFont: user?.bodyFont,
-  };
+  const [brandingDetailsState, setBrandingDetailsState] = useState(brandingDetails);
+
+  useEffect(() => {
+    setBrandingDetailsState(brandingDetails);
+  }, [brandingDetails]);
 
   console.log("selectedTemplate===", selectedTemplate);
   const isButtonDisabled = () => {
@@ -206,7 +200,8 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
         })),
         lang: language,
         applyType: 'form', // 🚀 Always default to custom form
-        cta2Link: '#apply' // 🚀 Always default to apply action
+        cta2Link: '#apply', // 🚀 Always default to apply action
+        workspace: user?.isWorkspaceSession ? user.workspaceId : undefined
       };
 
 

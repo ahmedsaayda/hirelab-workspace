@@ -290,10 +290,16 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
     setLoading(true); // Start loading before fetching data
     try {
 
-      const baseFilters = {
-        user_id: user._id,
-        ...filters,
-      };
+      // Build filters based on workspace session
+      const baseFilters = { ...filters };
+
+      if (user.isWorkspaceSession && user.workspaceId) {
+        // In workspace session, show workspace media
+        baseFilters.workspace = user.workspaceId;
+      } else {
+        // Not in workspace session, show all user's media
+        baseFilters.user_id = user._id;
+      }
 
       // Only add media type filter if not on "All"
       if (selectedTab === '2') {

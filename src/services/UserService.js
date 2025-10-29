@@ -42,8 +42,18 @@ class UserService {
     return this.api.post(`/extendTokenTime`);
   }
 
-  getDashboardAnalytics(filterVacancy = 'all', filterTimeFrame = 'all') {
-    return this.api.get(`/dashboardAnalytics?filterVacancy=${filterVacancy}&filterTimeFrame=${filterTimeFrame}`);
+  getDashboardAnalytics(filterVacancy = 'all', filterTimeFrame = 'all', workspaceId = null) {
+    const params = new URLSearchParams({
+      filterVacancy,
+      filterTimeFrame
+    });
+
+    // Add workspace filter if in workspace session
+    if (workspaceId) {
+      params.append('workspaceId', workspaceId);
+    }
+
+    return this.api.get(`/dashboardAnalytics?${params.toString()}`);
   }
 }
 

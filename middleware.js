@@ -35,7 +35,8 @@ const publicPaths = [
   '/test', // Your test page
   '/_next', // Next.js assets
   '/favicon.ico',
-  '/api' // API routes
+  '/api', // API routes
+  "/workspace-invitation" // Workspace invitation page
 ];
 
 // Define static file extensions that should be publicly accessible
@@ -365,7 +366,10 @@ export async function middleware(request) {
         redirectPath = '/dashboard/partnerSettings';
         break;
       case 'isOnboardingCompleted':
-        redirectPath = '/onboarding';
+        // if current path is workspace-invitation ignore the redirect
+        if (!pathname.startsWith('/workspace-invitation')) {
+          redirectPath = '/onboarding';
+        } 
         break;
     }
     

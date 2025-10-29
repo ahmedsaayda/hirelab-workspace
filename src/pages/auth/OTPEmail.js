@@ -85,10 +85,26 @@ const OTP = () => {
       await AuthService.otpVerify({
         OTP: `${e.target[0].value}${e.target[1].value}${e.target[2].value}${e.target[3].value}`,
       });
-      // // router.push("/dashboard");
+
+      // Check for pending workspace invitation after email verification
+      const inviteString = localStorage.getItem("workspaceInvite") || Cookies.get("workspaceInvite");
+      if (inviteString) {
+        try {
+          const invite = JSON.parse(inviteString);
+          if (invite?.token && invite?.redirectTo) {
+            // Redirect back to workspace invitation page
+            router.push(invite.redirectTo);
+            return;
+          }
+        } catch (error) {
+          console.error("Error parsing workspace invitation context:", error);
+        }
+      }
+
+      // No workspace invitation, proceed with normal onboarding
       router.push("/onboarding");
     },
-    []
+    [router]
   );
 
   const handleResend = useCallback(async () => {

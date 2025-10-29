@@ -23,14 +23,17 @@ const ColorPickerButton = ({
   color,
   setColor,
 }) => {
+  // Ensure color is a valid hex string
+  const hexColor = typeof color === 'string' ? color : color?.toHexString() || "#0066CC";
+
   // Check luminance to determine text color
-  const luminance = getLuminance(color);
+  const luminance = getLuminance(hexColor);
   const textColor = luminance > 0.5 ? "#000000" : "#ffffff"; // Dark text for light colors, light text for dark colors
 
   return (
     <div className="">
-      <ColorPicker 
-        value={color} 
+      <ColorPicker
+        value={hexColor}
         onChange={(color) => setColor(color?.toHexString())}
         disabledAlpha={true}
         format="hex"
@@ -41,7 +44,7 @@ const ColorPickerButton = ({
             style={{
               width: "35px",
               height: "35px",
-              backgroundColor: color,
+              backgroundColor: hexColor,
               borderRadius: "100%",
               cursor: "pointer",
               // display: "flex",
@@ -52,7 +55,7 @@ const ColorPickerButton = ({
               // textAlign: "center",
             }}
           >
-            {/* {color} */}
+            {/* {hexColor} */}
           </div>
         </div>
       </ColorPicker>

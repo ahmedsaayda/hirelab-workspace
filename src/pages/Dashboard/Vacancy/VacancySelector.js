@@ -21,10 +21,19 @@ const VacancySelector = () => {
 
       setLoading(true);
       try {
+        // Build filters based on workspace session
+        const filters = {};
+
+        if (user.isWorkspaceSession && user.workspaceId) {
+          // In workspace session, show workspace vacancies
+          filters.workspace = user.workspaceId;
+        } else {
+          // Not in workspace session, show user's personal vacancies
+          filters.user_id = user._id;
+        }
+
         const response = await CrudService.search("LandingPageData", 100, 1, {
-          filters: { user_id: user._id, 
-            // published: true
-           },
+          filters,
           sort: { createdAt: -1 },
         });
 

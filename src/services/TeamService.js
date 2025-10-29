@@ -89,12 +89,12 @@ class TeamService {
     }
   }
 
-  // Invite user to team
-  async inviteUser(teamId, email, role = "viewer", permissions = null) {
+  // Invite user to team (supports mainAccountAccess, mainAccountRole, workspaceAssignments)
+  async inviteUser(teamId, email, role = "viewer", permissions = null, options = {}) {
     try {
       const response = await this.api.post(
         `${this.baseURL}/${teamId}/invite`,
-        { email, role, permissions },
+        { email, role, permissions, ...options },
       );
       return response.data;
     } catch (error) {
@@ -154,6 +154,19 @@ class TeamService {
       return response.data;
     } catch (error) {
       console.error("Error removing member:", error);
+      throw error.response?.data || error.message;
+    }
+  }
+
+  async updateTeamMember(teamId, memberId, updateData) {
+    try {
+      const response = await this.api.put(
+        `${this.baseURL}/${teamId}/members/${memberId}`,
+        updateData,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating team member:", error);
       throw error.response?.data || error.message;
     }
   }

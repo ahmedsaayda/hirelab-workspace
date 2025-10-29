@@ -1,12 +1,12 @@
 import { ChartPieIcon, HomeIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { BsFillSearchHeartFill } from "react-icons/bs";
 
-import { Alert, Badge, Skeleton, message } from "antd";
+import { Alert, Badge, List, Button as AntButton, Skeleton, Card, Dropdown, Menu, message, Tag } from "antd";
 import Color from "color";
 import Cookies from "js-cookie";
 import moment from "moment";
 import { refreshUserData } from "../../src/utils/userRefresh";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
 import Intercom from '@intercom/messenger-js-sdk';
@@ -33,6 +33,7 @@ import {
   ToggleRight as Toggle,
   LogOut as LogoutIcon,
   Blocks,
+  PaletteIcon,
 } from "lucide-react";
 import {
   DEVELOPMENT,
@@ -57,6 +58,10 @@ import ThemeOne from "../../src/pages/Dashboard/ThemeOne.js";
 import ThemeTwo from "../../src/pages/Dashboard/ThemeTwo.js";
 import AuthService from "../../src/services/AuthService.js";
 import TeamService from "../../src/services/TeamService.js";
+import WorkspaceService from "../../src/services/WorkspaceService.js";
+import { useWorkspace } from "../../src/contexts/WorkspaceContext";
+import DevDataInspector from "../../src/components/DevDataInspector.jsx";
+import { ApartmentOutlined, ClockCircleOutlined } from "@ant-design/icons";
 
 
 export const THEME_OPTIONS = [
@@ -106,42 +111,44 @@ const Layout = ({children}) => {
   const [needsToSelectCalendlyType, setNeedsToSelectCalendlyType] =
     useState(false);
   const [currentTeamRole, setCurrentTeamRole] = useState(null);
+  const [workspaceMenuVisible, setWorkspaceMenuVisible] = useState(false);
+  const workspaceQueryRef = useRef(null);
+  const {
+    pendingInvitations,
+    acceptWorkspaceInvitation,
+    declineWorkspaceInvitation,
+    loading: workspaceLoading,
+    accessibleWorkspaces,
+    workspaceSession,
+    currentWorkspace,
+    workspaceEnabled,
+    switchToWorkspace,
+    returnToMainSmart,
+  } = useWorkspace();
   const location = useRouter();
   const router = useRouter();
   const user = useSelector(selectUser);
+  console.log("user.workspaceRole :=",user?.workspaceRole,"user id :=",user?._id)
+
+  const handleAcceptInvitation = async (token) => {
+    try {
+      await acceptWorkspaceInvitation(token);
+    } catch (error) {
+      console.error('Error accepting invitation:', error);
+    }
+  };
+
+  const handleDeclineInvitation = async (token) => {
+    try {
+      await declineWorkspaceInvitation(token);
+    } catch (error) {
+      console.error('Error declining invitation:', error);
+    }
+  };
 
   // Helper function to return from workspace
   const handleReturnFromWorkspace = async () => {
-    try {
-      const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-      const token = Cookies.get("accessToken");
-      const response = await fetch(`${BASE_URL}/workspaces/return`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        // Update cookies with new tokens
-        Cookies.set("accessToken", data.accessToken);
-        Cookies.set("refreshToken", data.refreshToken);
-        
-        // Refresh user data in Redux store to clear workspace session
-        await refreshUserData();
-        
-        // Navigate to workspaces page
-        router.push('/dashboard/workspaces');
-      } else {
-        console.error('Failed to return from workspace');
-        message.error('Failed to return to main account');
-      }
-    } catch (error) {
-      console.error('Error returning from workspace:', error);
-      message.error('Error returning to main account');
-    }
+    await returnToMainSmart();
   };
   const darkMode = useSelector(selectDarkMode);
 
@@ -269,6 +276,73 @@ const Layout = ({children}) => {
       );
   }, []);
 
+  useEffect(() => {
+    if (!router?.isReady) return;
+
+    const queryValue = router.query?.workspace;
+    const workspaceId = Array.isArray(queryValue) ? queryValue[0] : queryValue;
+
+    if (!workspaceId) return;
+    if (workspaceQueryRef.current === workspaceId) return;
+
+    const removeWorkspaceQuery = () => {
+      const { workspace, ...restQuery } = router.query || {};
+      router.replace({ pathname: router.pathname, query: restQuery }, undefined, { shallow: true });
+    };
+
+    if (!user) return;
+
+    const alreadyInWorkspace = Boolean(
+      user?.isWorkspaceSession &&
+      user?.workspaceId &&
+      user.workspaceId.toString() === workspaceId
+    );
+
+    if (alreadyInWorkspace) {
+      workspaceQueryRef.current = workspaceId;
+      removeWorkspaceQuery();
+      return;
+    }
+
+    if (!user?.allowWorkspaces) {
+      workspaceQueryRef.current = workspaceId;
+      removeWorkspaceQuery();
+      return;
+    }
+
+    const accessible = accessibleWorkspaces?.find((ws) => {
+      const id = ws?._id || ws?.id || ws?.workspaceId;
+      return id && id.toString() === workspaceId && ws?.status !== "pending";
+    });
+
+    if (!accessible) {
+      if (!accessibleWorkspaces || accessibleWorkspaces.length === 0) {
+        return;
+      }
+
+      message.error("You do not have access to that workspace");
+      workspaceQueryRef.current = workspaceId;
+      removeWorkspaceQuery();
+      return;
+    }
+
+    const performSwitch = async () => {
+      workspaceQueryRef.current = workspaceId;
+      try {
+        await switchToWorkspace(workspaceId, { skipRedirect: true });
+        router.replace("/dashboard", undefined, { shallow: true });
+      } catch (error) {
+        console.error("Error switching workspace from query:", error);
+        message.error(error?.response?.data?.message || "Failed to switch workspace");
+        workspaceQueryRef.current = null;
+      } finally {
+        removeWorkspaceQuery();
+      }
+    };
+
+    performSwitch();
+  }, [router, accessibleWorkspaces, switchToWorkspace, user]);
+
   const adminNavigation = [
     {
       name: "Admin",
@@ -288,6 +362,7 @@ const Layout = ({children}) => {
         //   href: "/dashboard/admin/analytics",
         //   icon: ChartPieIcon,
         // },
+      
       ],
     },
   ];
@@ -321,119 +396,106 @@ const Layout = ({children}) => {
   }
   */
 
+  // Check if user is in their main/default team (not another team they were invited to)
+  const isInMainTeam = user?.currentTeam ? (
+    user.currentTeam.owner?.toString() === user._id?.toString() ||
+    user.currentTeam._id?.toString() === user.defaultTeam?.toString()
+  ) : true; // If no current team, assume main context
+
+  // Check if user has main account access in current team (for invited team members)
+  const hasMainAccessInCurrentTeam = user?.currentTeam ? (
+    isInMainTeam || // Own team
+    (user.currentTeam.permissions &&
+     !(user.currentTeam.permissions.landingPages === 'none' &&
+       user.currentTeam.permissions.mediaLibrary === 'none' &&
+       user.currentTeam.permissions.teamManagement === 'none' &&
+       user.currentTeam.permissions.ats === 'none'))
+  ) : true;
+
+  const canManageWorkspaces = Boolean(user?.allowWorkspaces && isInMainTeam);
+  const isMainBlocked = Boolean(!workspaceSession && !isInMainTeam && !hasMainAccessInCurrentTeam);
+  const workspaceRole = user?.workspaceRole || null;
+  const isWorkspaceGuest = Boolean(user?.isWorkspaceSession && workspaceRole && !['owner', 'admin'].includes(workspaceRole));
+
+  // Determine if user should only see ATS (either team ATS-only or workspace ATS-only)
+  const shouldOnlySeeATS = currentTeamRole === 'atsOnly' || (user?.isWorkspaceSession && workspaceRole === 'atsOnly');
+
   const navigation = [
     {
       name: "Menu",
-      subitems: currentTeamRole === 'atsOnly' ? [
-        // For ATS Only users, show only the ATS tab
-        {
-          name: "ATS",
-          href: "/dashboard/ats",
-          icon: FolderIcon,
-        }
-      ] : [
-        // For all other users, show the full menu
-        {
-          name: "Dashboard",
-          href: "/dashboard",
-          icon: BarIcon,
-        },
-        {
-          name: "Vacancies",
-          href: "/dashboard/vacancies",
-          icon: BriefcaserIcon,
-        },
-        // {
-        //   name: "Tools",
-        //   href: "/dashboard/tools",
-        //   icon: ToolrIcon,
-        // },
-
-      
-        {
-          name: "ATS",
-          href: "/dashboard/ats",
-          icon: FolderIcon,
-          // icon: GroupOfPeople,
-        },
-        {
-          name: "Brand Kit",
-          href: "/onboarding",
-          isOnboardingCompleted: isOnboardingCompleted,
-          icon: BrandKit,
-        },
-       
-        {
-          name: "Domains",
-          href: "/dashboard/custom-domains",
-          icon: CustomDomainsIcon,
-        },
-        ...(user?.allowWorkspaces ? [{
-          name: "Workspaces",
-          href: "/dashboard/workspaces",
-          icon: Blocks,
-        }] : []),
-
-        // {
-        //   name: "Analytics",
-        //   href: "/dashboard/analytics",
-        //   icon: LinerIcon,
-        // },
-        {
-          name: "Media Library",
-          href: "/dashboard/media-library",
-          icon: ImageIcon,
-        },
-      ],
+      subitems: isMainBlocked
+        ? [
+            {
+              name: "Workspaces",
+              href: "/dashboard/workspaces",
+              icon: Blocks,
+            },
+          ]
+        : shouldOnlySeeATS
+        ? [
+            {
+              name: "ATS",
+              href: "/dashboard/ats",
+              icon: FolderIcon,
+            },
+          ]
+        : [
+            {
+              name: "Dashboard",
+              href: "/dashboard",
+              icon: BarIcon,
+            },
+            {
+              name: "Vacancies",
+              href: "/dashboard/vacancies",
+              icon: BriefcaserIcon,
+            },
+            {
+              name: "ATS",
+              href: "/dashboard/ats",
+              icon: FolderIcon,
+            },
+            {
+              name: "Brand Kit",
+              href: "/onboarding",
+              icon: PaletteIcon,
+              hide: isWorkspaceGuest,
+            },
+            {
+              name: "Domains",
+              href: "/dashboard/domains",
+              icon: CustomDomainsIcon,
+              hide: isWorkspaceGuest,
+            },
+            ...(canManageWorkspaces
+              ? [
+                  {
+                    name: "Workspaces",
+                    href: "/dashboard/workspaces",
+                    icon: Blocks,
+                    hide: isWorkspaceGuest,
+                  },
+                ]
+              : []),
+            {
+              name: "Media Library",
+              href: "/dashboard/media-library",
+              icon: ImageIcon,
+              hide: user?.isWorkspaceSession && workspaceRole === 'atsOnly',
+            },
+          ],
     },
-    
-
-    // {
-    //   name: "My Users",
-    //   href: "/dashboard/partnerUsers",
-    //   icon: UsersIcon,
-    //   hide: user?.role !== "partner",
-    // },
-    // {
-    //   name: "My Stats",
-    //   href: "/dashboard/partnerStats",
-    //   icon: ChartPieIcon,
-    //   hide: user?.role !== "partner",
-    // },
-
-    // {
-    //   name: (
-    //     <>
-    //       Support Tickets
-    //       <Badge count={numberTickets} offset={[0, 0]}></Badge>
-    //     </>
-    //   ),
-    //   href: "/dashboard/tickets",
-    //   icon: () => (
-    //     <svg
-    //       xmlns="http://www.w3.org/2000/svg"
-    //       viewBox="0 0 24 24"
-    //       fill="currentColor"
-    //       className="w-6 h-6"
-    //     >
-    //       <path
-    //         fillRule="evenodd"
-    //         d="M19.449 8.448 16.388 11a4.52 4.52 0 0 1 0 2.002l3.061 2.55a8.275 8.275 0 0 0 0-7.103ZM15.552 19.45 13 16.388a4.52 4.52 0 0 1-2.002 0l-2.55 3.061a8.275 8.275 0 0 0 7.103 0ZM4.55 15.552 7.612 13a4.52 4.52 0 0 1 0-2.002L4.551 8.45a8.275 8.275 0 0 0 0 7.103ZM8.448 4.55 11 7.612a4.52 4.52 0 0 1 2.002 0l2.55-3.061a8.275 8.275 0 0 0-7.103 0Zm8.657-.86a9.776 9.776 0 0 1 1.79 1.415 9.776 9.776 0 0 1 1.414 1.788 9.764 9.764 0 0 1 0 10.211 9.777 9.777 0 0 1-1.415 1.79 9.777 9.777 0 0 1-1.788 1.414 9.764 9.764 0 0 1-10.212 0 9.776 9.776 0 0 1-1.788-1.415 9.776 9.776 0 0 1-1.415-1.788 9.764 9.764 0 0 1 0-10.212 9.774 9.774 0 0 1 1.415-1.788A9.774 9.774 0 0 1 6.894 3.69a9.764 9.764 0 0 1 10.211 0ZM14.121 9.88a2.985 2.985 0 0 0-1.11-.704 3.015 3.015 0 0 0-2.022 0 2.985 2.985 0 0 0-1.11.704c-.326.325-.56.705-.704 1.11a3.015 3.015 0 0 0 0 2.022c.144.405.378.785.704 1.11.325.326.705.56 1.11.704.652.233 1.37.233 2.022 0a2.985 2.985 0 0 0 1.11-.704c.326-.325.56-.705.704-1.11a3.016 3.016 0 0 0 0-2.022 2.985 2.985 0 0 0-.704-1.11Z"
-    //         clipRule="evenodd"
-    //       />
-    //     </svg>
-    //   ),
-    //   hide: !["partner", "admin"].includes(user?.role),
-    // },
     ...(user?.role === "admin" ? adminNavigation : []),
   ]
     .map((elem) => ({
       ...elem,
-      subitems: elem.subitems.map((c) => ({
-        ...c,
-        current: location.pathname === c.href,
-        path: c.href?.replace?.("/dashboard", ""),
-      })),
+      subitems: elem.subitems
+        .filter((sub) => !sub.hide)
+        .map((c) => ({
+          ...c,
+          current: location.pathname === c.href,
+          path: c.href?.replace?.("/dashboard", ""),
+        })),
       current: location.pathname === elem.href,
       path: elem.href?.replace?.("/dashboard", ""),
     }))
@@ -455,7 +517,7 @@ const Layout = ({children}) => {
       name: "Plan & Billing",
       href: "/dashboard/billing",
       logo: CreditCard,
-      hide: user?.isWorkspaceSession, // Hide for workspace users
+      hide: isWorkspaceGuest,
     },
     {
       name: "Integrations",
@@ -475,7 +537,7 @@ const Layout = ({children}) => {
       name: "Upgrade",
       href: "/dashboard/billing",
       logo: ArrowUpCircle,
-      hide: user?.isWorkspaceSession, // Hide for workspace users
+      hide: isWorkspaceGuest, // Hide for workspace guests, visible for main/owners
     },
     {
       name: "SaaS Configuration",
@@ -583,6 +645,74 @@ const Layout = ({children}) => {
             />
           )}
           
+          {!user?.isWorkspaceSession && pendingInvitations?.length > 0 && (
+            <Card
+              title="Pending Workspace Invitations"
+              className="mb-4"
+              extra={<Badge count={pendingInvitations.length} />}
+            >
+              <List
+                dataSource={pendingInvitations}
+                renderItem={(invite) => {
+                  console.log("invite :",invite)
+                  return(
+                  <List.Item
+                    actions={[
+                      <AntButton
+                        key="accept"
+                        type="primary"
+                        loading={workspaceLoading}
+                        onClick={() => handleAcceptInvitation(invite.pendingToken || invite.token)}
+                      >
+                        Accept
+                      </AntButton>,
+                      <AntButton
+                        key="decline"
+                        danger
+                        loading={workspaceLoading}
+                        onClick={() => handleDeclineInvitation(invite.pendingToken || invite.token)}
+                      >
+                        Decline
+                      </AntButton>
+                    ]}
+                  >
+<List.Item.Meta
+  avatar={
+    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+      {invite?.companyLogo?<img src={invite?.companyLogo} alt='Workspace Logo' className='w-10 h-10 rounded-full' />:<ApartmentOutlined className="w-5 h-5 text-white" />}
+    </div>
+  }
+  title={
+    <div className="font-semibold text-gray-900">
+      {invite.workspaceName || invite.name || 'Workspace Invitation'}
+    </div>
+  }
+  description={
+    <div className="space-y-1 mt-1">
+      <div className="flex items-center gap-2 text-sm text-gray-600">
+        <Tag 
+          color={invite.role === 'admin' ? 'red' : invite.role === 'editor' ? 'blue' : 'green'}
+          className="text-xs px-2 py-0.5"
+        >
+          {invite.role === 'atsOnly' ? 'ATS Only' : invite.role?.charAt(0).toUpperCase() + invite.role?.slice(1) || 'Member'}
+        </Tag>
+        <span>Invited {moment(invite.invitedAt).fromNow()}</span>
+      </div>
+      {invite.expiresAt && (
+        <div className="flex items-center gap-2 text-sm text-orange-600">
+          <ClockCircleOutlined className="w-3 h-3" />
+          <span>Expires {moment(invite.expiresAt).fromNow()}</span>
+        </div>
+      )}
+    </div>
+  }
+/>
+                  </List.Item>
+                )}}
+              />
+            </Card>
+          )}
+
           {user?.isWorkspaceSession && (
             <Alert
               type="warning"
@@ -591,7 +721,14 @@ const Layout = ({children}) => {
                   <div className="flex items-center gap-2">
                     <Blocks className="w-4 h-4" />
                     <span>
-                      <strong>Workspace Mode:</strong> You are currently working in "{user.workspaceName || 'Workspace'}" workspace.
+                      <strong>Workspace Mode:</strong> You are currently working in "{user.workspaceName || 'Workspace'}" workspace. 
+                      Your have {user.workspaceRole} access.
+                      <Tag 
+                        color={user.workspaceRole === 'admin' ? 'red' : user.workspaceRole === 'editor' ? 'blue' : 'green'}
+                        className="text-xs px-2 py-0.5"
+                      >
+                        {user.workspaceRole === 'atsOnly' ? 'ATS Only' : user.workspaceRole?.charAt(0).toUpperCase() + user.workspaceRole?.slice(1) || 'Viewer'}
+                      </Tag>
                     </span>
                   </div>
                   <button
@@ -613,6 +750,7 @@ const Layout = ({children}) => {
           {/* <SupportWidget /> */}
           <PhoneWidget />
         </Theme>
+        <DevDataInspector datasets={{ /* will be populated per-page where applicable */ }} />
       </div>
     </div>
   );

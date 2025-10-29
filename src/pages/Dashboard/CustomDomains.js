@@ -45,7 +45,9 @@ const CustomDomains = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await DomainsService.list();
+      // Check if user is in workspace session
+      const isWorkspaceSession = user?.isWorkspaceSession && user?.workspaceId;
+      const res = await DomainsService.list(isWorkspaceSession ? { workspace: user.workspaceId } : {});
       setDomains(res.data || []);
     } catch (_) {}
     try {

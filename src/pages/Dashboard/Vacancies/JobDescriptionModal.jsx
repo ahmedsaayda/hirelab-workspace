@@ -5,6 +5,7 @@ import ChooseTemplate from "./ChooseTemplate.jsx";
 import AiService from "../../../services/AiService.js";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../redux/auth/selectors.js";
+import useWorkspaceBranding from "../../../hooks/useWorkspaceBranding";
 import { useRouter } from "next/router";
 import { message as antdMessage, Select } from "antd";
 import AiLoadingStateAnimation from "./AiloadingStateAnnimation.jsx";
@@ -22,6 +23,7 @@ const languageOptions = Array.from(
 
 function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
   const user = useSelector(selectUser);
+  const { branding: brandingDetails } = useWorkspaceBranding();
   const router = useRouter();;
 
   // State variables
@@ -96,20 +98,77 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
     saveProgress();
   }, [jobTitle, jobDescription, department, language, selectedTemplate]);
 
-  // Branding details from user profile
-  const brandingDetails = {
-    companyName: user?.companyName,
-    companyUrl: user?.companyUrl,
-    companyInfo: user?.companyInfo,
-    companyLogo: user?.companyLogo,
-    primaryColor: user?.primaryColor,
-    secondaryColor: user?.secondaryColor,
-    tertiaryColor: user?.tertiaryColor,
-    heroTitleColor: user?.heroTitleColor,
-    titleFont: user?.titleFont,
-    subheaderFont: user?.subheaderFont,
-    bodyFont: user?.bodyFont,
+  // Helper function to get branding details based on workspace session
+  const getBrandingDetails = async () => {
+    if (user?.isWorkspaceSession && user?.workspaceId) {
+      // In workspace session - fetch workspace-specific branding
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/workspaces/${user.workspaceId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')}`,
+          },
+        });
+
+        if (response.ok) {
+          const workspaceData = await response.json();
+          const workspace = workspaceData.workspace || workspaceData;
+
+          return {
+            companyName: workspace.companyName || user?.companyName,
+            companyUrl: workspace.companyWebsite || user?.companyUrl,
+            companyInfo: user?.companyInfo, // Company info stays at user level
+            companyLogo: workspace.companyLogo || user?.companyLogo,
+            primaryColor: workspace.primaryColor || user?.primaryColor,
+            secondaryColor: workspace.secondaryColor || user?.secondaryColor,
+            tertiaryColor: workspace.tertiaryColor || user?.tertiaryColor,
+            heroTitleColor: workspace.heroTitleColor || user?.heroTitleColor,
+            selectedFont: workspace.selectedFont || user?.selectedFont,
+            titleFont: workspace.titleFont || user?.titleFont,
+            subheaderFont: workspace.subheaderFont || user?.subheaderFont,
+            bodyFont: workspace.bodyFont || user?.bodyFont,
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching workspace branding:', error);
+      }
+
+      // Fallback to user branding if workspace fetch fails
+      return {
+        companyName: user?.companyName,
+        companyUrl: user?.companyUrl,
+        companyInfo: user?.companyInfo,
+        companyLogo: user?.companyLogo,
+        primaryColor: user?.primaryColor,
+        secondaryColor: user?.secondaryColor,
+        tertiaryColor: user?.tertiaryColor,
+        heroTitleColor: user?.heroTitleColor,
+        titleFont: user?.titleFont,
+        subheaderFont: user?.subheaderFont,
+        bodyFont: user?.bodyFont,
+      };
+    } else {
+      // Main session - use user branding
+      return {
+        companyName: user?.companyName,
+        companyUrl: user?.companyUrl,
+        companyInfo: user?.companyInfo,
+        companyLogo: user?.companyLogo,
+        primaryColor: user?.primaryColor,
+        secondaryColor: user?.secondaryColor,
+        tertiaryColor: user?.tertiaryColor,
+        heroTitleColor: user?.heroTitleColor,
+        titleFont: user?.titleFont,
+        subheaderFont: user?.subheaderFont,
+        bodyFont: user?.bodyFont,
+      };
+    }
   };
+
+  const [brandingDetailsState, setBrandingDetailsState] = useState(brandingDetails);
+
+  useEffect(() => {
+    setBrandingDetailsState(brandingDetails);
+  }, [brandingDetails]);
 
   const isButtonDisabled =
     step === 0
@@ -348,7 +407,8 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         user_id: user?._id,
         applyType: 'form', // 🚀 Always default to custom form
         cta2Link: '#apply', // 🚀 Always default to apply action
-        lang: language
+        lang: language,
+        workspace: user?.isWorkspaceSession ? user.workspaceId : undefined
       };
 
 

@@ -1245,7 +1245,7 @@ const handleContinue = () => {
   // }, [companyName, companyUrl, companyInfo]);
 
   const handleApplyThemeToLandingPage = () => {
-    // message.info("Branding Theme Applied Successfully!");
+    // Only apply branding to main account vacancies (exclude workspace vacancies)
     const brandingData = {
       updateAll: true,
       primaryColor: primaryColor,
@@ -1290,10 +1290,10 @@ const handleContinue = () => {
         family: bodyFont,
         src: fonts.find((font) => font.family === bodyFont)?.src,
       },
-      "publishedVersion.companyLogo": companyLogo,
+      "publishedVersion.companyLogo": companyLogo
     };
 
-    CrudService.update("LandingPageData", user._id, brandingData);
+    // Removed bulk update of existing vacancies - branding is applied when vacancies are displayed
   };
 
   useEffect(() => {
@@ -1437,98 +1437,134 @@ const handleContinue = () => {
     }
 
     try {
-      const res = await AuthService.updateMe({
-        companyName,
-        companyUrl,
-        companyInfo,
-        companyLogo,
-        fonts,
-        brandColors,
-        primaryColor,
-        secondaryColor,
-        tertiaryColor,
-        yiqThreshold,
-        isUserFirsttime: false,
-        selectedFont: {
-          family: selectedFont,
-          src: fonts.find((font) => font.family === selectedFont)?.src,
-        },
-        titleFont: {
-          family: titleFont,
-          src: fonts.find((font) => font.family === titleFont)?.src,
-        },
-        subheaderFont: {
-          family: subheaderFont,
-          src: fonts.find((font) => font.family === subheaderFont)?.src,
-        },
-        bodyFont: {
-          family: bodyFont,
-          src: fonts.find((font) => font.family === bodyFont)?.src,
-        },
-        onboardingCompleted:true
-      });
+      // Check if we're in a workspace session
+      const isWorkspaceSession = user?.isWorkspaceSession && user?.workspaceId;
+
+      if (isWorkspaceSession) {
+        // Update workspace with branding (workspace-specific branding)
+        const workspaceUpdateData = {
+          primaryColor,
+          secondaryColor,
+          tertiaryColor,
+          selectedFont: {
+            family: selectedFont,
+            src: fonts.find((font) => font.family === selectedFont)?.src,
+          },
+          titleFont: {
+            family: titleFont,
+            src: fonts.find((font) => font.family === titleFont)?.src,
+          },
+          subheaderFont: {
+            family: subheaderFont,
+            src: fonts.find((font) => font.family === subheaderFont)?.src,
+          },
+          bodyFont: {
+            family: bodyFont,
+            src: fonts.find((font) => font.family === bodyFont)?.src,
+          },
+          companyLogo,
+        };
+
+        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/workspaces/${user.workspaceId}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(workspaceUpdateData),
+        });
+
+        console.log('✅ Workspace branding updated for workspace:', user.workspaceId);
+      } else {
+        // Save everything to user account (no workspace creation)
+        const userUpdateData = {
+          companyName,
+          companyUrl,
+          companyInfo,
+          companyLogo,
+          isUserFirsttime: false,
+          onboardingCompleted: true,
+          // Save all branding data to user account
+          selectedFont: {
+            family: selectedFont,
+            src: fonts.find((font) => font.family === selectedFont)?.src,
+          },
+          titleFont: {
+            family: titleFont,
+            src: fonts.find((font) => font.family === titleFont)?.src,
+          },
+          subheaderFont: {
+            family: subheaderFont,
+            src: fonts.find((font) => font.family === subheaderFont)?.src,
+          },
+          bodyFont: {
+            family: bodyFont,
+            src: fonts.find((font) => font.family === bodyFont)?.src,
+          },
+          primaryColor,
+          secondaryColor,
+          tertiaryColor,
+          yiqThreshold,
+        };
+
+        await AuthService.updateMe(userUpdateData);
+        console.log('✅ User branding saved to main account');
+      }
 
       // Refresh user data in Redux store
       const me = await AuthService.me();
       if (me?.data?.me) {
         store.dispatch(login(me.data.me));
       }
-     const modal = Modal.success({
-    title: 'Brand Style Saved',
-    content: (
-      <div>
-        Your brand style has been saved successfully!
-        {user.isUserFirsttime && (
-        <Confetti
-          numberOfPieces={500}
 
-          // @netra this is  givinng this error 
-          /* Type '{ numberOfPieces; size; gravity; colors[]; style: { left; top; transform: "translate(-50%, -50%)"; }; }' is not assignable to type 'IntrinsicAttributes & Partial<IConfettiOptions> & CanvasHTMLAttributes<HTMLCanvasElement> & { ...; } & RefAttributes<...>'.
-  Property 'size' does not exist on type 'IntrinsicAttributes & Partial<IConfettiOptions> & CanvasHTMLAttributes<HTMLCanvasElement> & { ...; } & RefAttributes<...> */
-          // size={30}
-          gravity={1}
-          colors={['#FF69B4', '#FFC67D', '#8BC34A']}
-           style={{
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-        }}
-        />)}
-      </div>
-    ),
-    footer: null,
-    centered: true,
-  });
-    setTimeout(() => {
-      modal.destroy(); 
-    }, 2000);
+      const modal = Modal.success({
+        title: 'Brand Style Saved',
+        content: (
+          <div>
+            {isWorkspaceSession
+              ? `Workspace branding has been updated successfully for "${user.workspaceName}"!`
+              : 'Your brand style has been saved successfully!'
+            }
+            {user.isUserFirsttime && (
+              <Confetti
+                numberOfPieces={500}
+                gravity={1}
+                colors={['#FF69B4', '#FFC67D', '#8BC34A']}
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                }}
+              />
+            )}
+          </div>
+        ),
+        footer: null,
+        centered: true,
+      });
+      setTimeout(() => {
+        modal.destroy();
+      }, 2000);
 
+      console.log("vacancyLenth", vacancyLenth)
+      if (vacancyLenth === 0){
+        router.push("/dashboard/vacancies?new=true");
+      } else{
+        router.push("/dashboard/vacancies");
+      }
 
-    console.log("vacancyLenth", vacancyLenth)
-    if (vacancyLenth === 0){
-    router.push("/dashboard/vacancies?new=true");
-    } else{
-          router.push("/dashboard/vacancies");
+    } catch (error) {
+      Modal.error({
+        title: 'Error',
+        content: 'Failed to save brand style.',
+        footer: null,
+        centered: true,
+      });
+      setTimeout(() => {
+        Modal.destroyAll();
+      }, 2000);
     }
-
-  } catch (error) {
-    Modal.error({
-      title: 'Error',
-      content: 'Failed to save brand style.',
-      footer: null, 
-      centered: true,
-  //      mask: {
-  //   style: {
-  //     backdropFilter: 'blur(20px)', 
-  //   },
-  // },
-    });
-    setTimeout(() => {
-      Modal.destroyAll(); 
-    }, 2000);
-  
-  }
-};
+  };
 
   // const handleBack = () => {
   //   router.push("/dashboard");
@@ -2031,7 +2067,7 @@ const handleLogoUpload = async (url) => {
         <div className="max-w-[600px] text-center">
           <h3 className="text-xl font-bold mb-4">Welcome to HireLab 👋</h3>
           <p className="text-gray-600 mb-4">Before you start building recruitment funnels, let's set up your Brand Kit.</p>
-          
+
           <div className="text-left space-y-3 my-6">
             <div className="flex items-start gap-3">
               <span className="text-blue-500 font-medium">•</span>
@@ -2046,7 +2082,7 @@ const handleLogoUpload = async (url) => {
               <p className="text-gray-700"><strong>Tell us about your company</strong> – so candidates know what makes you unique.</p>
             </div>
           </div>
-          
+
           <p className="text-gray-600 mb-4">Once this is done, our Design AI will automatically apply your brand style to every page you publish.</p>
           <p className="text-gray-800 font-medium">👉 Ready? Let's get started.</p>
         </div>

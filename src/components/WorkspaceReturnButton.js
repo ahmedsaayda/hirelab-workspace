@@ -1,41 +1,16 @@
 import React, { useState } from 'react';
 import { Button, message } from 'antd';
 import { ArrowLeftOutlined, ApartmentOutlined } from '@ant-design/icons';
-import axios from 'axios';
-import Cookies from 'js-cookie';
-import { useDispatch } from 'react-redux';
-import { login } from '../redux/auth/actions';
+import { useWorkspace } from '../contexts/WorkspaceContext';
 
 const WorkspaceReturnButton = ({ user }) => {
   const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch();
-  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const { returnToMainSmart } = useWorkspace();
 
   const handleReturn = async () => {
     setLoading(true);
     try {
-      const token = Cookies.get('accessToken');
-      const response = await axios.post(
-        `${BASE_URL}/workspaces/return`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      // Update cookies with new tokens
-      Cookies.set('accessToken', response.data.accessToken);
-      Cookies.set('refreshToken', response.data.refreshToken);
-
-      // Update Redux store
-      dispatch(login(response.data.user));
-
-      message.success('Returned to main account successfully!');
-      
-      // Redirect to workspaces page
-      window.location.href = '/dashboard/workspaces';
+      await returnToMainSmart();
     } catch (error) {
       console.error('Error returning from workspace:', error);
       message.error('Failed to return from workspace');

@@ -43,6 +43,7 @@ import {
   selectUser,
 } from "../../redux/auth/selectors.js";
 import { store } from "../../redux/store.js";
+import { useWorkspace } from "../../contexts/WorkspaceContext";
 import AuthService from "../../services/AuthService.js";
 import CalendlyService from "../../services/CalendlyService.js";
 import ChatService from "../../services/ChatService.js";
@@ -127,6 +128,7 @@ const Dashboard = () => {
   const router = useRouter();
   const user = useSelector(selectUser);
   const darkMode = useSelector(selectDarkMode);
+  const { workspaceSession, currentWorkspace } = useWorkspace();
 
   const Theme = useCallback(
     (props) => {
@@ -223,7 +225,10 @@ const Dashboard = () => {
       );
   }, []);
 
-  const adminNavigation = [
+  const isOnboardingCompleted =
+    !!user.companyLogo && !!user.companyUrl && !!user.companyInfo;
+
+  const adminNavigation = useMemo(() => [
     {
       name: "Admin",
       subitems: [
@@ -247,10 +252,7 @@ const Dashboard = () => {
         // },
       ],
     },
-  ];
-
-  const isOnboardingCompleted =
-  !!user.companyLogo && !!user.companyUrl && !!user.companyInfo;
+  ], [user, workspaceSession, currentWorkspace, isOnboardingCompleted]);
 
   const isOnboardingCompleted2 = {
     "email": user.email,
@@ -278,7 +280,7 @@ const Dashboard = () => {
   }
   */
 
-  const navigation = [
+  const navigation = useMemo(() => [
     {
       name: "Menu",
       subitems: [
@@ -307,13 +309,14 @@ const Dashboard = () => {
           icon: FolderIcon,
           // icon: GroupOfPeople,
         },
-        {
+        // Only show Brand Kit when NOT in workspace session
+        ...(Boolean(currentWorkspace) ? [] : [{
           name: "Brand Kit",
           // component: <Settings />,
           href: "/onboarding",
           isOnboardingCompleted: isOnboardingCompleted,
           icon: BrandKit,
-        },
+        }]),
         {
           name: "Media Library",
           // component: <MediaLibrary />,
@@ -388,7 +391,7 @@ const Dashboard = () => {
     //   hide: !["partner", "admin"].includes(me?.role),
     // },
     ...(me?.role === "admin" ? adminNavigation : []),
-  ]
+  ], [user, workspaceSession, currentWorkspace, isOnboardingCompleted])
     .map((elem) => ({
       ...elem,
       subitems: elem.subitems.map((c) => ({

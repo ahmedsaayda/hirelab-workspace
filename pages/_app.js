@@ -19,6 +19,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import { ConfigProvider } from "antd";
 import { persistor, store } from "../src/redux/store";
 import { HoverProvider } from "../src/contexts/HoverContext";
+import { WorkspaceProvider } from "../src/contexts/WorkspaceContext";
 import ThemeUpdater from "../src/pages/Dashboard/Vacancies/components/ThemeUpdater";
 import { FocusProvider } from '../src/contexts/FocusContext';
 import AdminReturnButton from "../src/components/AdminReturnButton";
@@ -43,8 +44,10 @@ export default function App({Component, pageProps}) {
                   },
                 }}>
                   <FocusProvider>
-        <AdminReturnButton />
-        <Component {...pageProps} />
+                    <WorkspaceProvider>
+                      <AdminReturnButton />
+                      <Component {...pageProps} />
+                    </WorkspaceProvider>
                   </FocusProvider>
                   </ConfigProvider>
                 </HoverProvider>

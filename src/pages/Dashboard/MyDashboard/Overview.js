@@ -219,7 +219,13 @@ const Overview = () => {
       setLoadingVacancy(true);
       
       // Fetch all dashboard data from the backend with server-side filtering
-      const response = await UserService.getDashboardAnalytics(filterVacancy, filterTimeFrame);
+      // Check if user is in workspace session
+      const isWorkspaceSession = user?.isWorkspaceSession && user?.workspaceId;
+      const response = await UserService.getDashboardAnalytics(
+        filterVacancy,
+        filterTimeFrame,
+        isWorkspaceSession ? user.workspaceId : null
+      );
       const { 
         analyticsData, 
         activeVacancies, 

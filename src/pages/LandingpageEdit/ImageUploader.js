@@ -195,6 +195,7 @@ const ImageUploader = ({
 
   const fetchFileSize = async (url="") => {
     try {
+      console.log("fetchFileSize", url);
       const response = await fetch(url, { method: "HEAD" });
       const size = response.headers.get("content-length");
       const fileName = url?.split("/").pop();
@@ -213,14 +214,15 @@ const ImageUploader = ({
   };
 
   useEffect(() => {
-    if (!multiple && defaultImage) {
+    if (!multiple && defaultImage && defaultImage.trim() !== '') {
       setPreviewUrl(defaultImage);
       fetchFileSize(defaultImage);
     } else if (multiple && Array.isArray(defaultImage)) {
-      setMultipleFiles(defaultImage);
-      defaultImage.forEach((url) => fetchFileSize(url));
+      const validImages = defaultImage.filter(url => url && url.trim() !== '');
+      setMultipleFiles(validImages);
+      validImages.forEach((url) => fetchFileSize(url));
       setMultipleFileTypes(
-        defaultImage.map((url) => {
+        validImages.map((url) => {
           const isVideo = /\.(mp4|webm|ogg|mov|avi)$/i.test(url);
           return isVideo ? "video/mp4" : "image/jpeg";
         })

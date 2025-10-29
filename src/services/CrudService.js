@@ -15,11 +15,18 @@ class CrudService {
   create(model, body) {
     return this.api.post(`/create?ModelName=${model}`, body);
   }
-  update(model, id, body,origine="not specified") {
+  update(model, id, body, additionalData = {}, origine="not specified") {
     if(!id) {
       console.log("No id found for "+origine)
       message.error("No id found for "+origine);}
-    return this.api.put(`/single?ModelName=${model}&id=${id}`, body);
+
+    // Merge additionalData with body if provided
+    const updateData = {
+      ...body,
+      ...additionalData
+    };
+
+    return this.api.put(`/single?ModelName=${model}&id=${id}`, updateData);
   }
   getSingle(model, id,origine="") {
     if(!id) {

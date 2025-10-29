@@ -35,7 +35,9 @@ const MediaLibrary = ({ onSelect }) => {
     showAdvancedOptions: true, //add advanced options (public_id and tag)
     // sources: [ "local", "url"], // restrict the upload sources to URL and local files
     // multiple: false,  //restrict upload to a single file
-    folder: `hirelab_${user?._id}`, //upload files to the specified folder
+    folder: user?.isWorkspaceSession && user?.workspaceId
+      ? `workspace_${user.workspaceId}` // Workspace-specific folder
+      : `hirelab_${user?._id}`, // User-specific folder
     tags: ["media_library"], //add the given tags to the uploaded files
     // context: {alt: "user_uploaded"}, //add the given context data to the uploaded files
     // clientAllowedFormats: ["mp4"], //restrict uploading to image files only
@@ -46,8 +48,14 @@ const MediaLibrary = ({ onSelect }) => {
 
   const queryImages = useCallback(async () => {
     if (!user) return;
+
+    // For workspace sessions, use workspace-specific folder
+    const folderPrefix = user?.isWorkspaceSession && user?.workspaceId
+      ? `workspace_${user.workspaceId}`
+      : `hirelab_${user?._id}`;
+
     const result = await PublicService.cloudinarySearch({
-      expression: `hirelab_${user?._id}`,
+      expression: folderPrefix,
     });
     const resources = result?.data?.result?.resources;
     if (resources) setResources(resources);
@@ -59,7 +67,9 @@ const MediaLibrary = ({ onSelect }) => {
 
   const [loaded, setLoaded] = useState(false);
 
-  const widgetId = `hirelab_${user?._id}`;
+  const widgetId = user?.isWorkspaceSession && user?.workspaceId
+    ? `workspace_${user.workspaceId}`
+    : `hirelab_${user?._id}`;
 
   useEffect(() => {
     // Check if the script is already loaded

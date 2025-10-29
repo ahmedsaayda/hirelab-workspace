@@ -142,6 +142,9 @@ class AuthService {
     return this.api.get("/plans");
   }
 
+  validateWorkspaceInvitation(token) {
+    return axios.get(`${getBackendUrl()}/workspaces/invitations/${token}/meta`);
+  }
 
 
 }

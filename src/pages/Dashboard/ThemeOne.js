@@ -31,7 +31,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Spin, message } from "antd";
-import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
+import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSelector } from "react-redux";
 import Link from "next/link";
 import Cookies from "js-cookie";
@@ -44,6 +44,8 @@ import {
 } from "./Vacancies/components/Icons.js";
 
 import NotificationDropdown from "../../components/NotificationDropdown.jsx";
+import WorkspaceService from "../../services/WorkspaceService.js";
+import { useWorkspace } from "../../contexts/WorkspaceContext";
 
 import { 
   User, 
@@ -65,11 +67,13 @@ import {
   selectLoading,
   selectUser,
 } from "../../redux/auth/selectors.js";
+import { ArrowLeftCircle, Building2 } from "lucide-react";
 import { partner } from "../../constants.js";
 import CrudService from "../../services/CrudService.js";
 import TeamService from "../../services/TeamService.js";
 import debounce from "lodash/debounce";
 import { useRouter } from "next/router";
+import debugLogger from "../../utils/debugLogger.js";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -92,8 +96,25 @@ export default function Example({
   const [userTeams, setUserTeams] = useState([]);
   const [currentTeam, setCurrentTeam] = useState(null);
   const [currentUserRole, setCurrentUserRole] = useState("viewer");
+  const {
+    accessibleWorkspaces,
+    pendingInvitations,
+    refreshAccessibleWorkspaces,
+    workspaceSession,
+    currentWorkspace,
+    workspaceSwitcherEntries,
+    returnFromWorkspace,
+    returnToMainSmart,
+    switchToWorkspace,
+  } = useWorkspace();
+  const [workspaceMenuVisible, setWorkspaceMenuVisible] = useState(false);
   const [loadingTeams, setLoadingTeams] = useState(false);
+  const [hasMainAccessInCurrentTeam, setHasMainAccessInCurrentTeam] = useState(true);
+  const [mainAccessResolved, setMainAccessResolved] = useState(false);
+  console.log("[theme one logs]hasMainAccessInCurrentTeam",hasMainAccessInCurrentTeam)
   const router = useRouter();
+  const prevAllowRef = useRef(user?.allowWorkspaces);
+  const autoRoutedRef = useRef(false);
 
   // Search functionality state
   const [searchQuery, setSearchQuery] = useState("");
@@ -105,6 +126,39 @@ export default function Example({
   const { width } = useWindowDimensions();
 
   console.log('useruseruseruser',{user , navigation});
+
+  
+  // Derive own team vs invited team and block state for main account access
+  const isOwnTeamContext = Boolean(currentTeam?._id) && Boolean(user?.defaultTeam) && (String(currentTeam._id) === String(user.defaultTeam));
+  const isMainBlocked = Boolean(!workspaceSession && mainAccessResolved && !isOwnTeamContext && !hasMainAccessInCurrentTeam);
+
+  //one log that summerize all data about team to debug the user in ivited team logic
+
+  useEffect(() => {
+    // console.log("[theme one logs]user",user)
+    // console.log("[theme one logs]currentTeam",currentTeam)
+    // console.log("[theme one logs]userTeams",userTeams)
+    // console.log("[theme one logs]workspaceSession",workspaceSession)
+    // console.log("[theme one logs]workspaceSwitcherEntries",workspaceSwitcherEntries)
+    // console.log("[theme one logs]switchToWorkspace",switchToWorkspace)
+    // console.log("[theme one logs]returnToMainSmart",returnToMainSmart)
+
+
+    // Debug logging for team context
+    console.log("[team context]", {
+      isOwnTeamContext,
+      isMainBlocked,
+      hasMainAccessInCurrentTeam,
+      mainAccessResolved,
+      currentTeamId: currentTeam?._id,
+      userDefaultTeam: user?.defaultTeam,
+      userCurrentTeam: user?.currentTeam,
+      userCurrentTeamId: user?.currentTeam?._id || user?.currentTeam
+    });
+
+
+
+  }, [user, currentTeam, userTeams, workspaceSession, workspaceSwitcherEntries, switchToWorkspace, returnToMainSmart]);
 
   // Debounced search function
   const debouncedSearch = useMemo(
@@ -177,9 +231,11 @@ export default function Example({
 
   const handleCloseModal = () => {
     setShowInviteModal(false);
-   
   };
   const handleOpenModal = async () => {
+    if (workspaceSession) {
+      return message.info("Team invitations are managed from your primary account.");
+    }
     try {
       // Ensure teams are loaded (team creation now happens automatically in loadUserTeams)
       if (!currentTeam) {
@@ -188,7 +244,7 @@ export default function Example({
       
       // Open modal if we have a current team
       if (currentTeam) {
-        console.log("Opening modal for team:", currentTeam.name);
+        console.log("[theme one logs]Opening modal for team:", currentTeam.name);
         setShowInviteModal(true);
       } else {
         message.error('Unable to access your team. Please refresh the page and try again.');
@@ -214,22 +270,32 @@ export default function Example({
       setCurrentUserRole("viewer");
       
       // Validate and set current team
-      const storedTeam = TeamService.getCurrentTeam();
+      // First check if user has currentTeam set in Redux (from backend updates)
       let teamToSet = null;
-      
-      if (storedTeam && userTeams.length > 0) {
-        // Only use stored team if user is actually a member of it
-        teamToSet = userTeams.find(t => t._id === storedTeam._id);
-        
-        if (!teamToSet) {
-          // Stored team is invalid, clear it and use first available team
-          console.warn("Stored team is no longer accessible, clearing localStorage");
-          TeamService.removeCurrentTeam();
+
+      if (user?.currentTeam && userTeams.length > 0) {
+        // Use the currentTeam from user data (set by backend)
+        teamToSet = userTeams.find(t => t._id === user.currentTeam._id || t._id === user.currentTeam);
+        console.log("[loadUserTeams] Using user.currentTeam:", user.currentTeam, "found team:", teamToSet);
+      }
+
+      if (!teamToSet) {
+        // Fallback to stored team in localStorage
+        const storedTeam = TeamService.getCurrentTeam();
+        if (storedTeam && userTeams.length > 0) {
+          // Only use stored team if user is actually a member of it
+          teamToSet = userTeams.find(t => t._id === storedTeam._id);
+
+          if (!teamToSet) {
+            // Stored team is invalid, clear it and use first available team
+            console.warn("Stored team is no longer accessible, clearing localStorage");
+            TeamService.removeCurrentTeam();
+            teamToSet = userTeams[0];
+          }
+        } else if (userTeams.length > 0) {
+          // No stored team or empty teams, use first available
           teamToSet = userTeams[0];
         }
-      } else if (userTeams.length > 0) {
-        // No stored team or empty teams, use first available
-        teamToSet = userTeams[0];
       }
       
       // Set the validated team
@@ -237,10 +303,11 @@ export default function Example({
         setCurrentTeam(teamToSet);
         setCurrentUserRole(teamToSet.role || "viewer");
         TeamService.setCurrentTeam(teamToSet);
-        console.log("Set current team:", teamToSet.name, "Role:", teamToSet.role);
+        console.log("[theme one logs]Set current team:", teamToSet.name, "Role:", teamToSet.role);
+        console.log("[loadUserTeams] Final team set:", teamToSet._id, "user.currentTeam:", user?.currentTeam);
       } else {
         // No teams available, create one automatically
-        console.log("No teams available for user, creating one automatically");
+        console.log("[theme one logs]No teams available for user, creating one automatically");
         try {
           const createResponse = await TeamService.createTeamForUser();
           
@@ -293,6 +360,8 @@ export default function Example({
       console.log(`🔄 Clearing localStorage and reloading...`);
       localStorage.removeItem("pendingInvitation");
       localStorage.removeItem("teamMemberState");
+      // Mark that we just switched teams so we can optionally auto-route into a workspace on load
+      try { localStorage.setItem('autoRouteOnLoad', '1'); } catch(e) {}
       
       // Add cache busting to force clean reload
       window.location.href = window.location.pathname + "?t=" + Date.now();
@@ -303,10 +372,51 @@ export default function Example({
 
   // Load teams on component mount
   useEffect(() => {
-    if (user) {
+    if (user && !workspaceSession) {
       loadUserTeams();
+    } else {
+      setUserTeams([]);
+      setCurrentTeam(null);
+      setCurrentUserRole("viewer");
     }
-  }, [user]);
+  }, [user, workspaceSession]);
+
+  // Determine if current team grants main account access for this user
+  useEffect(() => {
+    const resolve = async () => {
+      if (!currentTeam || !user) {
+        setHasMainAccessInCurrentTeam(true);
+        setMainAccessResolved(true);
+        return;
+      }
+
+      const isOwnTeam = Boolean(currentTeam?._id) && Boolean(user?.defaultTeam) && (String(currentTeam._id) === String(user.defaultTeam));
+      if (isOwnTeam) {
+        setHasMainAccessInCurrentTeam(true);
+        setMainAccessResolved(true);
+        return;
+      }
+
+      try {
+        const details = await TeamService.getTeamDetails(currentTeam._id);
+        const access = details?.team?.userMainAccountAccess;
+        if (typeof access === 'boolean') {
+          setHasMainAccessInCurrentTeam(access);
+          setMainAccessResolved(true);
+          return;
+        }
+      } catch (e) {
+        // ignore and fall back
+      }
+
+      // Fallback: infer from permissions if team details unavailable
+      const perms = currentTeam.permissions || {};
+      const hasAnyAccess = !(perms.landingPages === 'none' && perms.mediaLibrary === 'none' && perms.teamManagement === 'none' && perms.ats === 'none');
+      setHasMainAccessInCurrentTeam(hasAnyAccess);
+      setMainAccessResolved(true);
+    };
+    resolve();
+  }, [currentTeam?._id, user?.defaultTeam]);
 
   // 🔥 Check if user has pending EMAIL invitations and redirect
   useEffect(() => {
@@ -316,12 +426,12 @@ export default function Example({
           // Check if user has pending invitations by email
           const response = await TeamService.getInvitationByEmail(user.email);
           if (response.success && response.invitation) {
-            console.log("🔥 User has pending invitation, redirecting:", response.invitation.token);
+            console.log("[theme one logs]🔥 User has pending invitation, redirecting:", response.invitation.token);
             router.push(`/team/invitation/${response.invitation.token}`);
           }
         } catch (error) {
           // No pending invitations, continue normally
-          console.log("No pending invitations for user");
+          console.log("[theme one logs]No pending invitations for user");
         }
       }
     };
@@ -335,6 +445,175 @@ export default function Example({
       debouncedSearch.cancel();
     };
   }, [debouncedSearch]);
+
+  // Proactively refresh accessible workspaces when relevant context changes
+  useEffect(() => {
+    if (!user) return;
+    // Initial load and when team owner context changes
+    refreshAccessibleWorkspaces?.();
+  }, [user?._id, currentTeam?.owner?._id]);
+
+  // Enforce redirect when in invited team with no main account access
+  useEffect(() => {
+    if (!isMainBlocked) return;
+    const entries = workspaceSwitcherEntries();
+    const currentOwnerId = currentTeam?.owner?._id || currentTeam?.owner || null;
+    const filteredActive = (entries.active || []).filter((e) => !currentOwnerId || e.ownerId === currentOwnerId);
+    if (filteredActive.length > 0) {
+      switchToWorkspace(filteredActive[0].id, { skipRedirect: false }).catch(() => {
+        router.replace('/dashboard/workspaces');
+      });
+    } else {
+      router.replace('/dashboard/workspaces');
+    }
+  }, [isMainBlocked, currentTeam?._id]);
+
+  // If workspace feature is revoked, ensure switcher closes and data refreshes
+  useEffect(() => {
+    const prev = prevAllowRef.current;
+    const curr = Boolean(user?.allowWorkspaces);
+    if (prev === true && curr === false) {
+      try {
+        setWorkspaceMenuVisible(false);
+        refreshAccessibleWorkspaces?.();
+      } catch (e) {}
+    }
+    prevAllowRef.current = curr;
+  }, [user?.allowWorkspaces, refreshAccessibleWorkspaces]);
+
+  const { acceptWorkspaceInvitation } = WorkspaceService;
+
+  const workspaceMenu = useMemo(() => {
+    const entries = workspaceSwitcherEntries();
+    // Filter workspaces to only those owned by the current team's owner (context isolation)
+    const currentOwnerId = currentTeam?.owner?._id || currentTeam?.owner || null;
+    const filteredActive = (entries.active || []).filter((e) => !currentOwnerId || e.ownerId === currentOwnerId);
+    const filteredPending = (entries.pending || []).filter((e) => !currentOwnerId || e.ownerId === currentOwnerId);
+
+    // Show workspace switcher if user has workspace privilege OR has accessible workspaces for the current team owner.
+    // IMPORTANT: When allowWorkspaces is false and currentOwnerId is not yet resolved, do NOT show switcher.
+    const isOwnTeam = Boolean(currentTeam?._id) && Boolean(user?.defaultTeam) && (String(currentTeam._id) === String(user.defaultTeam));
+    const hasWorkspaceAccess = (
+      Boolean(user?.allowWorkspaces) ||
+      (Boolean(currentOwnerId) && !isOwnTeam && ((filteredActive.length > 0) || (filteredPending.length > 0)))
+    );
+
+    const mainAccountItem = (workspaceSession || Boolean(user?.allowWorkspaces)) && hasMainAccessInCurrentTeam
+      ? [{
+          key: 'workspace-main-account',
+          label: (
+            <div className="font-medium">Main Account</div>
+          ),
+          onSelect: async () => {
+            setWorkspaceMenuVisible(false);
+            if (workspaceSession) {
+              try {
+                await returnFromWorkspace({ redirectTo: '/dashboard', skipRedirect: false });
+              } catch (error) {
+                console.error('Error returning to main account:', error);
+                message.error(error?.response?.data?.message || 'Failed to return to main account');
+              }
+            } else {
+              router.push('/dashboard');
+            }
+          },
+        }]
+      : [];
+
+    const pendingItems = filteredPending.map((invite) => ({
+      key: `workspace-pending-${invite.token}`,
+      label: (
+        <div className="flex flex-col">
+          <span className="font-medium">{invite.name}</span>
+          <span className="text-xs text-gray-500">Pending ({invite.role || 'member'})</span>
+          <button
+            className="text-xs text-indigo-600 mt-1 text-left"
+            onClick={async () => {
+              setWorkspaceMenuVisible(false);
+              try {
+                await acceptWorkspaceInvitation(invite.token);
+                await refreshAccessibleWorkspaces();
+              } catch (error) {
+                message.error(error.response?.data?.message || 'Failed to accept invitation');
+              }
+            }}
+          >
+            Accept invitation
+          </button>
+        </div>
+      ),
+    }));
+
+    const activeItems = filteredActive.map((entry) => ({
+      key: `workspace-active-${entry.id}`,
+      label: (
+        <div className="flex flex-col">
+          <span className="font-medium">{entry.name}</span>
+          <span className="text-xs text-gray-500">Role: {entry.role || 'member'}</span>
+        </div>
+      ),
+      onSelect: async () => {
+        setWorkspaceMenuVisible(false);
+        if (entry.id) {
+          try {
+            await switchToWorkspace(entry.id, { skipRedirect: false });
+          } catch (error) {
+            console.error('Error switching workspace:', error);
+            message.error(error?.response?.data?.message || 'Failed to switch workspace');
+          }
+        }
+      },
+    }));
+
+    const items = [...mainAccountItem, ...pendingItems, ...activeItems];
+
+    if (workspaceSession) {
+      items.push({ type: 'divider', key: 'divider-main' });
+      items.push({
+        key: 'workspace-return-main',
+        label: (
+          <div className="flex items-center gap-2">
+            <ArrowLeftCircle className="w-4 h-4" />
+            <span>Return to main account</span>
+          </div>
+        ),
+        onSelect: async () => {
+          setWorkspaceMenuVisible(false);
+          await returnToMainSmart();
+        },
+      });
+    }
+
+    const hasEntries = workspaceSession ? (items.length > 0) : (hasWorkspaceAccess && items.length > 0);
+    return { items, hasEntries };
+  }, [workspaceSwitcherEntries, acceptWorkspaceInvitation, refreshAccessibleWorkspaces, workspaceSession, user?.allowWorkspaces, returnFromWorkspace, switchToWorkspace, currentTeam?._id, currentTeam?.owner?._id, currentTeam?.owner, user?.defaultTeam, hasMainAccessInCurrentTeam]);
+
+  // Auto-route only immediately after explicit team switches (one-time), to avoid landing on invited team main account
+  useEffect(() => {
+    if (workspaceSession) return;
+    const flag = (() => { try { return localStorage.getItem('autoRouteOnLoad'); } catch(e) { return null; } })();
+    if (flag !== '1') return;
+    // Wait until access is resolved before making a decision and clearing the flag
+    if (!mainAccessResolved) return;
+
+    const entries = workspaceSwitcherEntries();
+    const currentOwnerId = currentTeam?.owner?._id || currentTeam?.owner || null;
+    const isOwnTeam = Boolean(currentTeam?._id) && Boolean(user?.defaultTeam) && (String(currentTeam._id) === String(user.defaultTeam));
+    if (isOwnTeam) { try { localStorage.removeItem('autoRouteOnLoad'); } catch(e) {} return; }
+    if (hasMainAccessInCurrentTeam) { try { localStorage.removeItem('autoRouteOnLoad'); } catch(e) {} return; } // only auto-route when main-account access is false
+    const filteredActive = (entries.active || []).filter((e) => !currentOwnerId || e.ownerId === currentOwnerId);
+    if (filteredActive.length > 0) {
+      switchToWorkspace(filteredActive[0].id, { skipRedirect: false }).catch(() => {});
+    }
+    try { localStorage.removeItem('autoRouteOnLoad'); } catch(e) {}
+  }, [workspaceSession, currentTeam?._id, currentTeam?.owner?._id, currentTeam?.owner, user?.defaultTeam, workspaceSwitcherEntries, switchToWorkspace, hasMainAccessInCurrentTeam, mainAccessResolved]);
+
+  // Reset auto-route guard when team context or permissions change
+  useEffect(() => {
+    autoRoutedRef.current = false;
+  }, [currentTeam?._id, user?.allowWorkspaces]);
+
+  useEffect(() => {}, [workspaceSession]);
 
   return (
     <div>
@@ -781,32 +1060,71 @@ export default function Example({
                   >
                     <span className="sr-only">View notifications</span>
                     <div className="top-right-options flex items-center h-full">
-                      <div
-                        onClick={() => {
-                          handleOpenModal();
-                          setSelectedTopRightOption("invite");
-                        }}
-                        className={`top-right-inner-circle ${
-                          selectedTopRightOption === "invite"
-                            ? "active"
-                            : ""
-                        } cursor-pointer flex items-center h-full ${
-                          loadingTeams ? "opacity-50" : ""
-                        }`}
-                      >
-                        {loadingTeams ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-transparent"></div>
-                        ) : (
-                          <UserPlus />
-                        )}
-                      </div>
+                      {workspaceMenu.hasEntries && (
+                        <div className="mr-2">
+                          <div className="relative">
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                              onClick={() => setWorkspaceMenuVisible((prev) => !prev)}
+                            >
+                              {workspaceSession && currentWorkspace?.name ? currentWorkspace.name : 'Workspaces'}
+                              <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                            </button>
+                            {workspaceMenuVisible && (
+                              <div className="absolute right-0 z-50 mt-2 w-64 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                {workspaceMenu.items.map((item) => (
+                                  item.type === 'divider' ? (
+                                    <div key={item.key} className="border-t border-gray-100 my-1" />
+                                  ) : (
+                                    <button
+                                      key={item.key}
+                                      onClick={() => {
+                                        setWorkspaceMenuVisible(false);
+                                        item.onSelect?.();
+                                      }}
+                                      className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                                    >
+                                      {item.label}
+                                    </button>
+                                  )
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {!workspaceSession && (
+                        <div
+                          onClick={() => {
+                            handleOpenModal();
+                            setSelectedTopRightOption("invite");
+                          }}
+                          className={`top-right-inner-circle ${
+                            selectedTopRightOption === "invite"
+                              ? "active"
+                              : ""
+                          } cursor-pointer flex items-center h-full ${
+                            loadingTeams ? "opacity-50" : ""
+                          }`}
+                        >
+                          {loadingTeams ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-transparent"></div>
+                          ) : (
+                            <UserPlus />
+                          )}
+                        </div>
+                      )}
                       {showInviteModal && (
-                        <InviteModal 
-                          open={showInviteModal} 
-                          onClose={handleCloseModal} 
+                        <InviteModal
+                          open={showInviteModal}
+                          onClose={handleCloseModal}
                           teamId={currentTeam?._id}
                           teamName={currentTeam?.name}
                           currentUserRole={currentUserRole}
+                          workspaceId={workspaceSession ? currentWorkspace?.id : undefined}
+                          workspaceName={workspaceSession ? currentWorkspace?.name : undefined}
+                          defaultInvitationType={workspaceSession ? "workspace" : "team"}
                         />
                       )}
                       <div
@@ -927,7 +1245,7 @@ export default function Example({
                           <Menu.Item key={item.name}>
                             {({ active }) => {
 
-                              console.log("item.logo",item.logo )
+                              console.log("[theme one logs]item.logo",item.logo )
                               return (
                                 <div className={classNames(
                                   item.grayout ? "opacity-50 cursor-not-allowed" : 

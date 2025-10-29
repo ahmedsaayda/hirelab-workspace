@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 // Global CSS fix for ALL primary buttons to match brand-style-form.jsx hover behavior
@@ -114,6 +114,7 @@ import CandidateChatService from '../../../services/CandidateChatService';
 import VacancySelector from './VacancySelector.js';
 import moment from 'moment';
 import { selectUser } from '../../../redux/auth/selectors';
+import { useWorkspace } from '../../../contexts/WorkspaceContext';
 
 // Import modern component sub-components
 import CandidateCard from './components/CandidateCard';
@@ -714,6 +715,19 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
 
   // Get current user
   const user = useSelector(selectUser);
+  const { workspaceSession } = useWorkspace();
+
+  const vacancyScope = useMemo(() => {
+    if (user?.isWorkspaceSession && user?.workspaceId) {
+      return { type: 'workspace', id: user.workspaceId };
+    }
+
+    if (!user?.allowWorkspaces) {
+      return { type: 'owner', id: user?._id };
+    }
+
+    return { type: 'owner', id: user?._id };
+  }, [user]);
   
   // Lock page vertical scroll while ATS is mounted so columns handle their own scrolling
   useEffect(() => {
@@ -1013,7 +1027,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   const loadATSData = useCallback(async (options = {}) => {
     console.log('🔄 LOAD DEBUG: Loading ATS data with options:', options);
     // Don't load data if user is not available yet
-    if (!user || !user._id) {
+    if (!user || !user._id || !vacancyScope?.id) {
       console.log('⏳ Waiting for user to be available...');
       return;
     }
@@ -1066,11 +1080,11 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       
       // Always fetch user's vacancies for filter dropdown (both single and multi-job view)
       try {
-        console.log('🔍 Fetching user vacancies for filter dropdown - User ID:', user?._id);
+        console.log('🔍 Fetching user vacancies for filter dropdown - scope:', vacancyScope);
         const vacanciesResponse = await CrudService.search('LandingPageData', 1000, 1, {
-          filters: {
-            user_id: user._id
-          },
+          filters: vacancyScope.type === 'workspace'
+            ? { workspace: vacancyScope.id }
+            : { owner: vacancyScope.id },
           sort: { createdAt: -1 }
         });
         fetchedVacancies = vacanciesResponse.data?.items || vacanciesResponse.data?.data || [];
@@ -1100,12 +1114,9 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
           console.log('🔍 Fetching all candidates for multi-job view');
           const candidatesResponse = await CrudService.search('VacancySubmission', 1000, 1, {
             populate: "assignedTo",
-            filters: {
-              // LandingPageDataId: {
-              //   $in: fetchedVacancies.map(v => v._id)
-              // }
-              user_id: user._id
-            }
+            filters: vacancyScope.type === 'workspace'
+              ? { workspace: vacancyScope.id }
+              : { owner: vacancyScope.id }
           });
           console.log('👥 All candidates response:', candidatesResponse);
           allCandidates = candidatesResponse.data?.items || candidatesResponse.data?.data || [];
@@ -1144,7 +1155,10 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
           try {
             console.log('🔄 Trying fallback approach - get all candidates');
             const candidatesResponse2 = await CrudService.search('VacancySubmission', 1000, 1, {
-              populate: "assignedTo"
+              populate: "assignedTo",
+              filters: vacancyScope.type === 'workspace'
+                ? { workspace: vacancyScope.id }
+                : { owner: vacancyScope.id }
             });
             console.log('👥 All candidates response:', candidatesResponse2);
             const allSubmissions = candidatesResponse2.data?.items || candidatesResponse2.data?.data || [];
@@ -1586,7 +1600,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       setCandidatesLoading(false);
       setColumnsLoading(false);
     }
-  }, [VacancyId, debouncedSearchTerm, vacancyInfo, filters, isMultiJobView, user]);
+  }, [VacancyId, debouncedSearchTerm, vacancyInfo, filters, isMultiJobView, user, vacancyScope]);
 
   // Counter to track how many times this function is called
   let ensureDefaultStagesCallCount = 0;
@@ -1846,7 +1860,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   useEffect(() => {
     loadATSData({ isInitialLoad: !hasLoadedOnce });
     if (!hasLoadedOnce) setHasLoadedOnce(true);
-  }, [loadATSData, hasLoadedOnce]);
+  }, [loadATSData, hasLoadedOnce, user, vacancyScope]);
 
   // Load current team information
   useEffect(() => {

@@ -75,6 +75,9 @@ class PublicService {
       ...data,
     });
   }
+  fetchWorkspaceInvitationMeta(token) {
+    return this.api.get(`/workspace-invitations/${token}/meta`);
+  }
 }
 
 export default new PublicService(`${getBackendUrl()}/public`);

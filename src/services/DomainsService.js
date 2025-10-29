@@ -8,8 +8,8 @@ class DomainsService {
     middleField(this.api);
   }
 
-  list() {
-    return this.api.get("/");
+  list(params = {}) {
+    return this.api.get("/", { params });
   }
 
   add(domain) {
