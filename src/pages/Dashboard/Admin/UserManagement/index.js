@@ -751,6 +751,9 @@ const UserManagement = () => {
               rowKey="_id"
               pagination={false}
               className="custom-table"
+              scroll={{
+                x:600
+              }}
             />
 
             <div className="mt-4 flex justify-end">
