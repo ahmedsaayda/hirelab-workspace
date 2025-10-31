@@ -322,7 +322,7 @@ const Billing = () => {
     }
   };
 
-  if (globalLoading || plansLoading) {
+  if ( plansLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <Spin size="large" />
