@@ -357,7 +357,7 @@ const {  subheaderFont, bodyFont } = getFonts(landingPageData);
 
           {/* Image Section with Advanced Cropping Effect */}
           <div className="relative order-first md:order-last rounded-2xl " style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}>
-            <div className="overflow-hidden relative shadow-md">
+            <div className="overflow-hidden relative ">
               <div ref={refs.avatarRef} className="relative aspect-[5/5] md:aspect-[4/4] w-full h-full">
               
               {/* Main Image */}
