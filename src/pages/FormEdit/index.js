@@ -1152,17 +1152,7 @@ export default function FormEdit({ paramsId }) {
           }
         />
 
-        <SettingRow
-          title="Collect Partial Answers"
-          description="Choose whether or not to allow respondents to save partial answers before completing the entire form."
-          extra={
-            <Switch
-              size="small"
-              checked={!!s.collectPartialAnswers}
-              onChange={(v) => updateSettings({ collectPartialAnswers: v })}
-            />
-          }
-        />
+   
 
         <SettingRow
           title="Respondent Email Notification"
