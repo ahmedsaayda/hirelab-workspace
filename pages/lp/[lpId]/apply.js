@@ -772,13 +772,13 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
   };
 
   // Auto-jump utility when setting is enabled (choice-like fields)
-  const maybeAutoJump = () => {
+  const maybeAutoJump = (fieldValue) => {
     if (settings?.autoJumpToNext) {
-      setTimeout(() => handleNext(), 0);
+      setTimeout(() => handleNext(fieldValue), 0);
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (providedFieldValue) => {
     // Guard: if fields are not yet loaded, don't proceed or submit
     if (!Array.isArray(formFields) || formFields.length === 0) {
       message.warning('Loading form... Please wait a moment.');
@@ -943,10 +943,24 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           return;
         }
       } else if (currentField.type === 'multiselect') {
-        // Multi-select validation
-        const values = formData[currentField.id];
+        // Multi-select validation - use provided value for auto-jump
+        const values = providedFieldValue !== undefined ? providedFieldValue : formData[currentField.id];
         if (!values || !Array.isArray(values) || values.length === 0) {
           message.warning('Please select at least one option');
+          return;
+        }
+      } else if (currentField.type === 'multichoice' || currentField.type === 'dropdown') {
+        // Choice field validation - use provided value for auto-jump
+        const value = providedFieldValue !== undefined ? providedFieldValue : formData[currentField.id];
+        if (!value || (typeof value === 'string' && !value.trim())) {
+          message.warning(`${currentField.label || 'This field'} is required`);
+          return;
+        }
+      } else if (currentField.type === 'yesno' || currentField.type === 'boolean') {
+        // Yes/No field validation - use provided value for auto-jump
+        const value = providedFieldValue !== undefined ? providedFieldValue : formData[currentField.id];
+        if (value === undefined || value === null || value === '') {
+          message.warning(`${currentField.label || 'This field'} is required`);
           return;
         }
       } else {
@@ -1612,7 +1626,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           <MultipleChoice
             field={field}
             value={value}
-            onChange={(e) => { handleInputChange(field.id, e.target.value); maybeAutoJump(); }}
+            onChange={(e) => { handleInputChange(field.id, e.target.value); maybeAutoJump(e.target.value); }}
           />
         );
 
@@ -1621,7 +1635,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           <CustomDropdown
             field={field}
             value={value}
-            onChange={(selectedValue) => { handleInputChange(field.id, selectedValue); maybeAutoJump(); }}
+            onChange={(selectedValue) => { handleInputChange(field.id, selectedValue); maybeAutoJump(selectedValue); }}
           />
         );
 
@@ -1630,7 +1644,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           <MultiSelectChoice
             field={field}
             value={Array.isArray(value) ? value : []}
-            onChange={(selectedValues) => { handleInputChange(field.id, selectedValues); maybeAutoJump(); }}
+            onChange={(selectedValues) => { handleInputChange(field.id, selectedValues); maybeAutoJump(selectedValues); }}
           />
         );
 
@@ -1640,7 +1654,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           <YesNoQuestion
             field={field}
             value={value}
-            onChange={(newValue) => { handleInputChange(field.id, newValue); maybeAutoJump(); }}
+            onChange={(newValue) => { handleInputChange(field.id, newValue); maybeAutoJump(newValue); }}
           />
         );
 
