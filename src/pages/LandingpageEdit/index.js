@@ -1413,7 +1413,7 @@ export default function LandingpageEdit({paramsId}) {
                     setActiveKey("flexaligntop");
                   }}
                   style={{
-                    paddingTop:10
+                    paddingTop:40,
                   }}
               >
                 <HeroSection
