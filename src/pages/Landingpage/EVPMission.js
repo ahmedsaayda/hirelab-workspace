@@ -401,7 +401,7 @@ const {  subheaderFont, bodyFont } = getFonts(landingPageData);
           {/* Right Bar Decoration */}
             <div className="rightBar z-10 absolute top-[-1px] left-[-1px] bottom-[110px] w-[85px] bg-white rounded-b-2xl ">
               
-              <div className={  `z-40 absolute h-[60px] w-[60px] bottom-[0px] mb-7 left-[-80px] rounded-xl smx:hidden `} style={{background: `${getColor("tertiary", 200)}`}} />
+              <div className={  `z-40 absolute h-[60px] w-[60px] bottom-[0px] mb-7 left-[-60px] rounded-xl smx:hidden `} style={{background: `${getColor("tertiary", 200)}`}} />
 
               
               <div className="absolute bottom-[-30px] left-[-10px] ">
