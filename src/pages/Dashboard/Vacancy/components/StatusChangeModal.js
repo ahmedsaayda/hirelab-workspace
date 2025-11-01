@@ -6,14 +6,30 @@ import CrudService from '../../../../services/CrudService';
 const { Option } = Select;
 const { Text } = Typography;
 
-const StatusChangeModal = ({ 
-  visible, 
-  onCancel, 
-  candidate, 
-  onStatusUpdate 
+const StatusChangeModal = ({
+  visible,
+  onCancel,
+  candidate,
+  onStatusUpdate
 }) => {
   const [selectedStatus, setSelectedStatus] = useState(candidate?.statusPhase || 'new');
   const [updating, setUpdating] = useState(false);
+
+  // Ensure we have a valid candidate ID
+  const candidateId = candidate?.id || candidate?._id;
+
+  // Debug logging for candidate data
+  console.log('StatusChangeModal: Rendering with candidate:', {
+    candidate: candidate ? {
+      id: candidate.id,
+      _id: candidate._id,
+      fullname: candidate.fullname,
+      email: candidate.email,
+      statusPhase: candidate.statusPhase
+    } : null,
+    candidateId,
+    visible
+  });
 
   const statusOptions = [
     { value: 'new', label: 'New', color: '#6b7280' },
@@ -32,22 +48,30 @@ const StatusChangeModal = ({
   ];
 
   const handleUpdateStatus = async () => {
-    if (!candidate || selectedStatus === candidate.statusPhase) {
+    console.log('StatusChangeModal: handleUpdateStatus called', {
+      candidate: candidate ? { id: candidate.id, _id: candidate._id, fullname: candidate.fullname } : null,
+      candidateId,
+      selectedStatus,
+      currentStatus: candidate?.statusPhase
+    });
+
+    if (!candidate || !candidateId || selectedStatus === candidate.statusPhase) {
+      console.log('StatusChangeModal: Skipping update - invalid candidate or no status change');
       onCancel();
       return;
     }
 
     setUpdating(true);
     try {
-      await CrudService.update('VacancySubmission', candidate.id, {
+      await CrudService.update('VacancySubmission', candidateId, {
         statusPhase: selectedStatus,
         statusPhaseUpdatedAt: new Date().toISOString()
       });
 
       message.success('Status updated successfully');
-      
+
       if (onStatusUpdate) {
-        onStatusUpdate(candidate.id, {
+        onStatusUpdate(candidateId, {
           statusPhase: selectedStatus,
           statusPhaseUpdatedAt: new Date().toISOString()
         });
@@ -70,6 +94,14 @@ const StatusChangeModal = ({
     return statusOptions.find(option => option.value === selectedStatus);
   };
 
+  console.log('StatusChangeModal: About to render Modal with visible:', visible, 'candidateId:', candidateId);
+
+  // If visible is false, don't render anything
+  if (!visible) {
+    console.log('StatusChangeModal: Not rendering because visible is false');
+    return null;
+  }
+
   return (
     <Modal
       title={
@@ -87,6 +119,11 @@ const StatusChangeModal = ({
       onCancel={onCancel}
       footer={null}
       width={500}
+      style={{ zIndex: 999999, backgroundColor: 'white' }}
+      centered
+      mask={false}
+      destroyOnClose={true}
+      getContainer={() => document.body}
     >
       <div className="space-y-6">
         {/* Current Status */}
