@@ -31,13 +31,13 @@ export function HoverProvider({ children }) {
     }, 50);
   };
 
-  const setScrollToSectionWithDebug = (section) => {
+  const setScrollToSectionWithDebug = (section="") => {
     console.log({
       section,
       lastScrollToSection,
     })
     if(lastScrollToSection !== section) {
-      setScrollToSection(section)
+      setScrollToSection(section?.toLowerCase())
     }
   }
   
