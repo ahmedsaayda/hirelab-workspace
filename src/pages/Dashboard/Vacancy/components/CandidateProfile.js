@@ -992,6 +992,8 @@ const CandidateProfile = ({
           Call
         </Button>
         
+        {/* 
+        start chat button hidden as requested by Ralph (2025-10-29) , a feature to work on later.
         <Button 
           icon={<MessageOutlined />}
           onClick={handleStartChat}
@@ -999,7 +1001,7 @@ const CandidateProfile = ({
           className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40 hover:text-white"
         >
           Start Chat
-        </Button>
+        </Button> */}
         
         <Button 
           icon={<ClockCircleOutlined />}
