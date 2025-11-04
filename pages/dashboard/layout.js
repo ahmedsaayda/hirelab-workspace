@@ -463,7 +463,7 @@ const Layout = ({children}) => {
             },
             {
               name: "Domains",
-              href: "/dashboard/domains",
+              href: "/dashboard/custom-domains",
               icon: CustomDomainsIcon,
               hide: isWorkspaceGuest,
             },
