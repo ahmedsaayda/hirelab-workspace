@@ -87,7 +87,7 @@ export function InviteModal({
   // Check permissions
   const canManageTeam = currentUserRole === 'owner' || currentUserRole === 'admin';
   const isWorkspaceFeatureEnabled = Boolean((reduxUser && reduxUser.allowWorkspaces !== undefined) ? reduxUser.allowWorkspaces : user?.allowWorkspaces);
-
+console.log("isWorkspaceFeatureEnabled:",isWorkspaceFeatureEnabled)
   // Defaults
   useEffect(() => {
     setMainAccountAccess(true);
@@ -529,7 +529,7 @@ export function InviteModal({
                 className="!rounded !border-[#E5E7EB] flex-1"
                 onPressEnter={handleInviteUser}
               />
-              {isWorkspaceFeatureEnabled && (
+              {/* {!isWorkspaceFeatureEnabled && (
                 <Select
                   value={selectedRole}
                   onChange={(value) => {
@@ -572,7 +572,7 @@ export function InviteModal({
                   <Select.Option value="admin">Admin</Select.Option>
                   <Select.Option value="atsOnly">ATS Only</Select.Option>
                 </Select>
-              )}
+              )} */}
               <Button
                 type="primary"
                 onClick={handleInviteUser}
