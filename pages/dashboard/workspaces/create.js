@@ -29,6 +29,18 @@ const WorkspaceCreatePage = () => {
   const [secondaryColor, setSecondaryColor] = useState("#333333");
   const [tertiaryColor, setTertiaryColor] = useState("#666666");
 
+  // Compute remaining funnels from user data (if available)
+  const planMaxFunnels = useMemo(() => {
+    return user?.planFeatures?.maxFunnels ?? user?.tier?.maxFunnels ?? null;
+  }, [user?.planFeatures, user?.tier]);
+
+  const remainingFunnels = useMemo(() => {
+    if (planMaxFunnels === null) return null; // unlimited / unknown
+    const allocated = user?.totalAllocatedFunnels ?? 0;
+    const rem = planMaxFunnels - allocated;
+    return rem < 0 ? 0 : rem;
+  }, [planMaxFunnels, user?.totalAllocatedFunnels]);
+
   const handlePrimaryColorChange = useCallback((color) => {
     console.log("Primary color changed to:", color);
     setPrimaryColor(color);
@@ -196,36 +208,50 @@ const WorkspaceCreatePage = () => {
   };
 
   const handleFinish = (values) => {
-    console.log("Form values:", values);
-
-    // Transform form values to match backend expectations
-    const workspaceData = {
-      clientName: values.clientName,
-      name: values.clientName, // Use clientName as workspace name
+    // Normalize hex colors and font objects
+    const normalizeHex = (hex) => {
+      if (!hex) return hex;
+      return hex.startsWith('#') ? hex : `#${hex}`;
     };
 
-    // Only add optional fields if they have values
-    if (values.clientDomain) workspaceData.clientDomain = values.clientDomain;
-    if (values.clientEmail) workspaceData.clientEmail = values.clientEmail;
-    if (values.companyName) workspaceData.companyName = values.companyName;
-    if (values.companyWebsite) workspaceData.companyWebsite = values.companyWebsite;
-    if (values.companyAddress) workspaceData.companyAddress = values.companyAddress;
-    if (values.companyLogo) workspaceData.companyLogo = values.companyLogo;
-    if (values.primaryColor) workspaceData.primaryColor = values.primaryColor;
-    if (values.secondaryColor) workspaceData.secondaryColor = values.secondaryColor;
-    if (values.tertiaryColor) workspaceData.tertiaryColor = values.tertiaryColor;
-    if (values.heroBackgroundColor) workspaceData.heroBackgroundColor = values.heroBackgroundColor;
-    if (values.heroTitleColor) workspaceData.heroTitleColor = values.heroTitleColor;
-    if (values.brandColors) workspaceData.brandColors = values.brandColors;
-    if (values.selectedFont) workspaceData.selectedFont = values.selectedFont;
-    if (values.titleFont) workspaceData.titleFont = values.titleFont;
-    if (values.subheaderFont) workspaceData.subheaderFont = values.subheaderFont;
-    if (values.bodyFont) workspaceData.bodyFont = values.bodyFont;
-    if (values.maxFunnels !== undefined) workspaceData.maxFunnels = Number(values.maxFunnels);
-    if (values.atsAccess !== undefined) workspaceData.atsAccess = values.atsAccess;
-    if (values.customDomain) workspaceData.customDomain = values.customDomain;
+    const toFontObj = (family) => {
+      if (!family) return undefined;
+      const match = (googleFonts || []).find((f) => f.family === family) || (fonts || []).find((f) => f.family === family);
+      return { family, src: match?.src || '' };
+    };
 
-    console.log("Workspace data to send:", workspaceData);
+    // Build full payload explicitly so branding always persists
+    const workspaceData = {
+      // Required
+      clientName: values.clientName,
+      name: values.clientName,
+
+      // Client info
+      clientDomain: values.clientDomain || "",
+      clientEmail: values.clientEmail || "",
+
+      // Brand kit
+      companyName: values.companyName || values.clientName,
+      companyWebsite: values.companyWebsite || "",
+      companyAddress: values.companyAddress || "",
+      companyLogo: values.companyLogo || "",
+      primaryColor: normalizeHex(values.primaryColor || "#0066CC"),
+      secondaryColor: normalizeHex(values.secondaryColor || "#333333"),
+      tertiaryColor: normalizeHex(values.tertiaryColor || "#666666"),
+      heroBackgroundColor: normalizeHex(values.heroBackgroundColor || "#F5F8FC"),
+      heroTitleColor: normalizeHex(values.heroTitleColor || "#222222"),
+      // Optional font selections (if present)
+      ...(values.selectedFont ? { selectedFont: toFontObj(values.selectedFont) } : {}),
+      ...(values.titleFont ? { titleFont: toFontObj(values.titleFont) } : {}),
+      ...(values.subheaderFont ? { subheaderFont: toFontObj(values.subheaderFont) } : {}),
+      ...(values.bodyFont ? { bodyFont: toFontObj(values.bodyFont) } : {}),
+
+      // Settings
+      maxFunnels: Number(values.maxFunnels ?? 0),
+      atsAccess: values.atsAccess !== false,
+      customDomain: values.customDomain || "",
+    };
+
     handleCreateWorkspace(workspaceData);
   };
 
@@ -270,7 +296,11 @@ const WorkspaceCreatePage = () => {
           <Form
             form={form}
             layout="vertical"
-            onFinish={handleFinish}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && currentStep < steps.length - 1) {
+                e.preventDefault();
+              }
+            }}
             initialValues={{
               maxFunnels: 0,
               atsAccess: true,
@@ -382,6 +412,9 @@ const WorkspaceCreatePage = () => {
                   </Typography.Text>
                   <div className="flex flex-wrap gap-4 justify-start items-start">
                     {/* Main color section */}
+                    <Form.Item name="primaryColor" hidden>
+                      <Input />
+                    </Form.Item>
                     <div className="flex gap-2 justify-center items-center">
                       <ColorPickerButton
                         label="Main"
@@ -398,6 +431,9 @@ const WorkspaceCreatePage = () => {
                       </div>
                     </div>
                     {/* Secondary color section */}
+                    <Form.Item name="secondaryColor" hidden>
+                      <Input />
+                    </Form.Item>
                     <div className="flex gap-2 justify-center items-center">
                       <ColorPickerButton
                         label="Secondary"
@@ -414,6 +450,9 @@ const WorkspaceCreatePage = () => {
                       </div>
                     </div>
                     {/* Tertiary color section */}
+                    <Form.Item name="tertiaryColor" hidden>
+                      <Input />
+                    </Form.Item>
                     <div className="flex gap-2 justify-center items-center">
                       <ColorPickerButton
                         label="Tertiary"
@@ -430,6 +469,20 @@ const WorkspaceCreatePage = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Hidden form fields for branding */}
+                  <Form.Item name="companyLogo" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="titleFont" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="subheaderFont" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="bodyFont" hidden>
+                    <Input />
+                  </Form.Item>
                 </div>
 
                 {/* Typography Section */}
@@ -621,13 +674,39 @@ const WorkspaceCreatePage = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Form.Item label="Max Funnels" name="maxFunnels">
+                <Form.Item
+                  label="Max Funnels"
+                  name="maxFunnels"
+                  rules={[
+                    () => ({
+                      validator(_, value) {
+                        if (value === undefined || value === null || value === "") return Promise.resolve();
+                        const num = Number(value);
+                        if (Number.isNaN(num) || num < 0) {
+                          return Promise.reject(new Error('Enter a valid non-negative number'));
+                        }
+                        if (remainingFunnels !== null && num > remainingFunnels) {
+                          return Promise.reject(new Error(`Cannot exceed available limit (${remainingFunnels})`));
+                        }
+                        return Promise.resolve();
+                      }
+                    })
+                  ]}
+                  extra={remainingFunnels !== null ? `Available to allocate: ${remainingFunnels}` : undefined}
+                >
                   <Input
                     type="number"
                     size="large"
                     min={0}
-                    max={100}
+                    max={remainingFunnels ?? 100}
                     placeholder="10"
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      if (remainingFunnels !== null && val > remainingFunnels) {
+                        message.warning(`Cannot exceed available limit (${remainingFunnels})`);
+                        form.setFieldsValue({ maxFunnels: remainingFunnels });
+                      }
+                    }}
                   />
                 </Form.Item>
 
@@ -666,7 +745,12 @@ const WorkspaceCreatePage = () => {
               ) : (
                 <Button
                   type="primary"
-                  htmlType="submit"
+                  onClick={() => {
+                    form
+                      .validateFields()
+                      .then((values) => handleFinish(values))
+                      .catch(() => {});
+                  }}
                   loading={loading}
                   icon={<SaveOutlined />}
                 >

@@ -24,6 +24,7 @@ import ColorPickerButton from "../../onboarding/components/ColorPickerButton.jsx
 import WorkspaceUserManagement from "./WorkspaceUserManagement";
 import CategoryManagement from "./CategoryManagement";
 import WorkspaceService from "../../../services/WorkspaceService";
+import Cookies from "js-cookie";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -41,6 +42,9 @@ const WorkspaceCreationWizard = ({
   const [form] = Form.useForm();
   const [workspaceData, setWorkspaceData] = useState({});
   const [selectedFontStyle, setSelectedFontStyle] = useState("h1");
+  const [fonts, setFonts] = useState([]);
+  const [googleFonts, setGoogleFonts] = useState([]);
+  const [fontCategories, setFontCategories] = useState({});
 
   const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -48,25 +52,66 @@ const WorkspaceCreationWizard = ({
   const steps = [
     {
       title: "Client Information",
-      description: "Tell us about the client/brand you want to manage.",
+      description: "Basic client details",
       step: 1,
     },
     {
       title: "Brand Kit",
-      description: "Set up the visual identity for this workspace.",
+      description: "Logo and branding",
       step: 2,
     },
     {
-      title: "Funnel Quota",
-      description: "How many recruitment funnels do you need?",
+      title: "Settings",
+      description: "Funnels and access",
       step: 3,
     },
-    {
-      title: "Access Control",
-      description: "Configure who can access this workspace.",
-      step: 4,
-    },
   ];
+
+  // Load fonts
+  useEffect(() => {
+    // Fetch Google Fonts
+    fetch('https://www.googleapis.com/webfonts/v1/webfonts?sort=popularity&key=AIzaSyAOES8EmKhuJEnsn9kS1XKBpxxp-TgN8Jc')
+      .then(response => response.json())
+      .then(data => {
+        // Get the top 100 popular fonts
+        const popularFonts = data.items.slice(0, 100);
+
+        // Transform the response into the format needed
+        const fontList = popularFonts.map(font => ({
+          family: font.family,
+          src: `https://fonts.googleapis.com/css2?family=${font.family.replace(/ /g, '+')}:wght@400;700&display=swap`,
+          category: font.category
+        }));
+
+        // Group fonts by category
+        const categories = {};
+        fontList.forEach(font => {
+          if (!categories[font.category]) {
+            categories[font.category] = [];
+          }
+          categories[font.category].push(font);
+        });
+
+        setFontCategories(categories);
+        setGoogleFonts(fontList);
+
+        // Load web fonts for preview
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?${popularFonts.map(f => `family=${f.family.replace(/ /g, '+')}:wght@400;700`).join('&')}&display=swap`;
+        document.head.appendChild(link);
+
+        // Merge with any existing custom fonts
+        setFonts(prev => {
+          const customFonts = prev.filter(f => f.family && f.src);
+          return [...customFonts, ...fontList];
+        });
+      })
+      .catch(err => {
+        console.error('Error fetching Google Fonts:', err);
+        message.error('Failed to load fonts. Using default fonts instead.');
+      });
+  }, []);
 
   useEffect(() => {
     if (editingWorkspace) {
@@ -117,7 +162,15 @@ const WorkspaceCreationWizard = ({
   }, [editingWorkspace, form]);
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    // Validate current step before proceeding
+    if (currentStep === 1) {
+      if (!workspaceData.name || workspaceData.name.trim() === '') {
+        message.error('Please enter a workspace name before proceeding');
+        return;
+      }
+    }
+
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -134,7 +187,24 @@ const WorkspaceCreationWizard = ({
     }
   };
 
-  const handleSubmit = async (values) => {
+  console.log("[debug workspace workspaceData]", );
+  const handleSubmit = async (values, options = {}) => {
+    // Guard: only allow manual submission in creation flow
+    if (!editingWorkspace && options.manual !== true) {
+      return;
+    }
+
+    console.log("[debug workspace submission on workspace wizard]",{
+      workspaceData,
+      steps,
+      step: currentStep,
+    });
+    // Validate required fields
+    if (!workspaceData.name || workspaceData.name.trim() === '') {
+      message.error('Please enter a workspace name');
+      return;
+    }
+
     setLoading(true);
     try {
       const token = Cookies.get("accessToken");
@@ -144,38 +214,28 @@ const WorkspaceCreationWizard = ({
         await WorkspaceService.updateWorkspace(editingWorkspace._id, values);
         message.success("Workspace updated successfully!");
       } else {
-        // Create new workspace
+        // Create new workspace - merge form values with workspaceData branding
         const workspacePayload = {
-          clientName: values.name,
-          clientDomain: values.clientDomain,
-          clientEmail: values.clientEmail,
-          companyName: values.companyName,
-          companyWebsite: values.companyWebsite,
-          companyLogo: values.companyLogo,
-          primaryColor: values.primaryColor,
-          secondaryColor: values.secondaryColor,
-          tertiaryColor: values.tertiaryColor,
-          selectedFont: {
-            family: values.selectedFont,
-            src: "",
-          },
-          titleFont: {
-            family: values.titleFont,
-            src: "",
-          },
-          subheaderFont: {
-            family: values.subheaderFont,
-            src: "",
-          },
-          bodyFont: {
-            family: values.bodyFont,
-            src: "",
-          },
-          maxFunnels: values.maxFunnels,
-          atsAccess: values.atsAccess,
-          customDomain: values.customDomain,
-          name: values.name,
-          description: `Workspace for ${values.name}`,
+          clientName: workspaceData.name,
+          clientDomain: workspaceData.clientDomain,
+          clientEmail: workspaceData.clientEmail,
+          companyName: workspaceData.name,
+          companyWebsite: workspaceData.clientDomain,
+          companyLogo: workspaceData.companyLogo,
+          primaryColor: workspaceData.primaryColor,
+          secondaryColor: workspaceData.secondaryColor,
+          tertiaryColor: workspaceData.tertiaryColor,
+          heroBackgroundColor: workspaceData.heroBackgroundColor,
+          heroTitleColor: workspaceData.heroTitleColor,
+          selectedFont: workspaceData.selectedFont,
+          titleFont: workspaceData.titleFont,
+          subheaderFont: workspaceData.subheaderFont,
+          bodyFont: workspaceData.bodyFont,
+          maxFunnels: values?.maxFunnels || 10,
+          atsAccess: values?.atsAccess !== false,
+          customDomain: values?.customDomain,
+          name: workspaceData.name,
+          description: `Workspace for ${workspaceData.name}`,
         };
 
         await WorkspaceService.createWorkspace(workspacePayload);
@@ -317,43 +377,69 @@ const WorkspaceCreationWizard = ({
               <p className="text-gray-600">Tell us about the client/brand you want to manage.</p>
             </div>
 
-            <Form.Item
-              name="name"
-              label="Workspace Name"
-              rules={[{ required: true, message: "Please enter workspace name!" }]}
-            >
-              <Input
-                size="large"
-                placeholder="Enter workspace name"
-                value={workspaceData.name}
-                onChange={(e) => setWorkspaceData({...workspaceData, name: e.target.value})}
-              />
-            </Form.Item>
-
-            <Form.Item name="clientDomain" label="Domain">
-              <Input
-                size="large"
-                placeholder="client.com"
-                value={workspaceData.clientDomain}
-                onChange={(e) => setWorkspaceData({...workspaceData, clientDomain: e.target.value})}
-              />
-              <div className="text-xs text-gray-500 mt-1">
-                This will be used for custom domain mapping (optional)
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Workspace Name *</label>
+                <Input
+                  size="large"
+                  placeholder="Enter workspace name"
+                  value={workspaceData.name}
+                  onChange={(e) => setWorkspaceData({...workspaceData, name: e.target.value})}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (currentStep < 4) {
+                        handleNext();
+                      }
+                    }
+                  }}
+                />
+                {!workspaceData.name && <div className="text-xs text-red-500 mt-1">Please enter workspace name</div>}
               </div>
-            </Form.Item>
 
-            <Form.Item name="clientEmail" label="Contact Email">
-              <Input
-                size="large"
-                type="email"
-                placeholder="contact@client.com"
-                value={workspaceData.clientEmail}
-                onChange={(e) => setWorkspaceData({...workspaceData, clientEmail: e.target.value})}
-              />
-              <div className="text-xs text-gray-500 mt-1">
-                Primary contact for this workspace
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Domain</label>
+                <Input
+                  size="large"
+                  placeholder="client.com"
+                  value={workspaceData.clientDomain}
+                  onChange={(e) => setWorkspaceData({...workspaceData, clientDomain: e.target.value})}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (currentStep < 4) {
+                        handleNext();
+                      }
+                    }
+                  }}
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  This will be used for custom domain mapping (optional)
+                </div>
               </div>
-            </Form.Item>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
+                <Input
+                  size="large"
+                  type="email"
+                  placeholder="contact@client.com"
+                  value={workspaceData.clientEmail}
+                  onChange={(e) => setWorkspaceData({...workspaceData, clientEmail: e.target.value})}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (currentStep < 4) {
+                        handleNext();
+                      }
+                    }
+                  }}
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  Primary contact for this workspace
+                </div>
+              </div>
+            </div>
           </div>
         );
 
@@ -374,9 +460,36 @@ const WorkspaceCreationWizard = ({
                     <div className="space-y-2">
                       <div className="text-gray-600">Click to upload or drag and drop</div>
                       <div className="text-sm text-gray-500">PNG, JPG, SVG up to 2MB</div>
-                      <Button type="primary" className="mt-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            // Convert to base64 for storage
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                              setWorkspaceData({...workspaceData, companyLogo: e.target.result});
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        style={{ display: 'none' }}
+                        id="logo-upload"
+                      />
+                      <Button
+                        type="primary"
+                        className="mt-2"
+                        onClick={() => document.getElementById('logo-upload').click()}
+                      >
                         Select Logo
                       </Button>
+                      {workspaceData.companyLogo && (
+                        <div className="mt-2">
+                          <Avatar src={workspaceData.companyLogo} size={40} />
+                          <div className="text-xs text-green-600 mt-1">Logo selected</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -410,35 +523,222 @@ const WorkspaceCreationWizard = ({
                     </div>
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Typography</label>
+
+                  {/* Font Style Selector */}
+                  <div className="flex space-x-2 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFontStyle("h1")}
+                      className={`px-3 py-2 text-sm rounded-md border ${
+                        selectedFontStyle === "h1"
+                          ? "bg-blue-100 border-blue-300 text-blue-700"
+                          : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      Titles (H1)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFontStyle("h2")}
+                      className={`px-3 py-2 text-sm rounded-md border ${
+                        selectedFontStyle === "h2"
+                          ? "bg-blue-100 border-blue-300 text-blue-700"
+                          : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      Subheaders (H2)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFontStyle("h3")}
+                      className={`px-3 py-2 text-sm rounded-md border ${
+                        selectedFontStyle === "h3"
+                          ? "bg-blue-100 border-blue-300 text-blue-700"
+                          : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      Body (H3)
+                    </button>
+                  </div>
+
+                  {/* Font Selector */}
+                  <div className="mb-4">
+                    <div className="flex mb-2">
+                      <Typography.Text strong className="text-md text-gray-700">
+                        Select a font for {selectedFontStyle === "h1" ? "titles" :
+                                          selectedFontStyle === "h2" ? "subheaders" : "body text"}
+                      </Typography.Text>
+                    </div>
+
+                    <Select
+                      showSearch
+                      value={
+                        selectedFontStyle === "h1"
+                          ? workspaceData.titleFont?.family || ""
+                          : selectedFontStyle === "h2"
+                          ? workspaceData.subheaderFont?.family || ""
+                          : workspaceData.bodyFont?.family || ""
+                      }
+                      onChange={(value) => {
+                        const selectedFont = googleFonts.find(f => f.family === value) ||
+                                            fonts.find(f => f.family === value);
+
+                        if (selectedFontStyle === "h1") {
+                          setWorkspaceData(prev => ({
+                            ...prev,
+                            titleFont: {
+                              family: value,
+                              src: selectedFont?.src || "",
+                            },
+                            selectedFont: {
+                              family: value,
+                              src: selectedFont?.src || "",
+                            },
+                          }));
+                        } else if (selectedFontStyle === "h2") {
+                          setWorkspaceData(prev => ({
+                            ...prev,
+                            subheaderFont: {
+                              family: value,
+                              src: selectedFont?.src || "",
+                            },
+                          }));
+                        } else {
+                          setWorkspaceData(prev => ({
+                            ...prev,
+                            bodyFont: {
+                              family: value,
+                              src: selectedFont?.src || "",
+                            },
+                          }));
+                        }
+                      }}
+                      className="w-full"
+                      placeholder={`Select a font for ${
+                        selectedFontStyle === "h1"
+                          ? "titles"
+                          : selectedFontStyle === "h2"
+                          ? "subheaders"
+                          : "body text"
+                      }`}
+                      optionLabelProp="label"
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        (option?.label)
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                    >
+                      {Object.keys(fontCategories).map(category => (
+                        <Select.OptGroup key={category} label={category.charAt(0).toUpperCase() + category.slice(1)}>
+                          {fontCategories[category].map(font => (
+                            <Select.Option
+                              key={font.family}
+                              value={font.family}
+                              label={font.family}
+                            >
+                              <div style={{ fontFamily: font.family }}>
+                                {font.family}
+                              </div>
+                            </Select.Option>
+                          ))}
+                        </Select.OptGroup>
+                      ))}
+
+                      {fonts.filter((f) =>
+                        !googleFonts.some((gf) => gf.family === f.family)).length > 0 && (
+                        <Select.OptGroup label="Custom Fonts">
+                          {fonts
+                            .filter((f) =>
+                              !googleFonts.some((gf) => gf.family === f.family))
+                            .map((font) => (
+                              <Select.Option key={font.family} value={font.family} label={font.family}>
+                                <div>{font.family}</div>
+                              </Select.Option>
+                            ))}
+                        </Select.OptGroup>
+                      )}
+                    </Select>
+                  </div>
+                </div>
               </div>
 
               {/* Right: Preview */}
               <div className="space-y-6">
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">Preview</h4>
-                  <Card className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <Card
+                    className="border border-gray-200 rounded-lg overflow-hidden"
+                    style={{
+                      backgroundColor: workspaceData.heroBackgroundColor || '#F5F8FC',
+                      color: workspaceData.heroTitleColor || '#222222'
+                    }}
+                  >
                     <div className="p-4">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-                          <span className="text-gray-500 text-xs">Logo</span>
-                        </div>
+                        {workspaceData.companyLogo ? (
+                          <img
+                            src={workspaceData.companyLogo}
+                            alt="Logo"
+                            className="w-8 h-8 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
+                            <span className="text-gray-500 text-xs">Logo</span>
+                          </div>
+                        )}
                         <div>
-                          <div className="font-semibold text-gray-800">Senior Frontend Developer</div>
-                          <div className="text-sm text-gray-600">TechCorp Inc.</div>
+                          <div
+                            className="font-semibold"
+                            style={{
+                              fontFamily: workspaceData.titleFont?.family || 'inherit',
+                              color: workspaceData.heroTitleColor || '#222222'
+                            }}
+                          >
+                            Senior Frontend Developer
+                          </div>
+                          <div
+                            className="text-sm"
+                            style={{
+                              fontFamily: workspaceData.subheaderFont?.family || 'inherit',
+                              color: workspaceData.secondaryColor || '#4B5563'
+                            }}
+                          >
+                            TechCorp Inc.
+                          </div>
                         </div>
                         <div className="ml-auto">
-                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Active</span>
+                          <span
+                            className="text-xs px-2 py-1 rounded"
+                            style={{
+                              backgroundColor: workspaceData.primaryColor || '#373AED',
+                              color: 'white'
+                            }}
+                          >
+                            Active
+                          </span>
                         </div>
                       </div>
 
                       <div className="space-y-2 mb-4">
                         <div className="flex justify-between text-sm">
-                          <span>24 Applications</span>
-                          <span>156 Views</span>
+                          <span style={{ fontFamily: workspaceData.bodyFont?.family || 'inherit' }}>
+                            24 Applications
+                          </span>
+                          <span style={{ fontFamily: workspaceData.bodyFont?.family || 'inherit' }}>
+                            156 Views
+                          </span>
                         </div>
                       </div>
 
-                      <Button type="primary" block>
+                      <Button
+                        type="primary"
+                        block
+                        style={{ backgroundColor: workspaceData.primaryColor || '#373AED' }}
+                      >
                         View Funnel
                       </Button>
                     </div>
@@ -453,51 +753,75 @@ const WorkspaceCreationWizard = ({
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Funnel Quota</h3>
-              <p className="text-gray-600">How many recruitment funnels do you need for this workspace?</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Settings</h3>
+              <p className="text-gray-600">Configure funnels and access for this workspace.</p>
             </div>
 
             <div className="space-y-6">
-              {/* Current Plan */}
-              <div className="text-center">
-                <div className="text-sm text-gray-600 mb-2">Current Plan</div>
-                <div className="text-2xl font-bold text-gray-900">Professional</div>
-              </div>
+              {/* Funnel Quota Section */}
+              <div className="border border-gray-200 rounded-lg p-6">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Funnel Quota</h4>
+                <p className="text-gray-600 mb-4">How many recruitment funnels do you need for this workspace?</p>
 
-              {/* Funnel Usage */}
-              <div className="space-y-4">
-                <div className="text-center">
-                  <div className="text-sm text-gray-600 mb-2">Funnel Usage</div>
-                  <div className="text-xl font-semibold text-gray-900">
-                    {workspaceData.maxFunnels || 10} of {workspaceData.maxFunnels || 10} funnels
+                {/* Current Plan */}
+                <div className="text-center mb-4">
+                  <div className="text-sm text-gray-600 mb-2">Current Plan</div>
+                  <div className="text-2xl font-bold text-gray-900">Professional</div>
+                </div>
+
+                {/* Funnel Usage */}
+                <div className="space-y-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-2">Funnel Usage</div>
+                    <div className="text-xl font-semibold text-gray-900">
+                      {workspaceData.maxFunnels || 10} of {workspaceData.maxFunnels || 10} funnels
+                    </div>
+                  </div>
+
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${((workspaceData.maxFunnels || 10) / (workspaceData.maxFunnels || 10)) * 100}%` }}
+                    ></div>
+                  </div>
+
+                  <div className="text-center text-sm text-gray-500">
+                    0 / {workspaceData.maxFunnels || 10}
                   </div>
                 </div>
 
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${((workspaceData.maxFunnels || 10) / (workspaceData.maxFunnels || 10)) * 100}%` }}
-                  ></div>
-                </div>
+                {/* Increase Funnel Quota */}
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h5 className="text-md font-medium text-gray-900 mb-3">Increase Funnel Quota</h5>
 
-                <div className="text-center text-sm text-gray-500">
-                  0 / {workspaceData.maxFunnels || 10}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <div className="font-medium">Add 5 more funnels (+$25/month)</div>
+                        <div className="text-sm text-gray-600">Additional funnels will be billed on your next invoice</div>
+                      </div>
+                      <Button type="primary" size="small">
+                        Select
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Increase Funnel Quota */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Increase Funnel Quota</h4>
+              {/* Access Control Section */}
+              <div className="border border-gray-200 rounded-lg p-6">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Access Control</h4>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div>
-                      <div className="font-medium">Add 5 more funnels (+$25/month)</div>
-                      <div className="text-sm text-gray-600">Additional funnels will be billed on your next invoice</div>
+                      <div className="font-medium">Enable ATS Access</div>
+                      <div className="text-sm text-gray-600">Allow workspace members to access applicant data</div>
                     </div>
-                    <Button type="primary" size="small">
-                      Select
-                    </Button>
+                    <Switch
+                      checked={workspaceData.atsAccess !== false}
+                      onChange={(checked) => setWorkspaceData({...workspaceData, atsAccess: checked})}
+                    />
                   </div>
                 </div>
               </div>
@@ -525,29 +849,6 @@ const WorkspaceCreationWizard = ({
           </div>
         );
 
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Access Control</h3>
-              <p className="text-gray-600">Configure who can access this workspace's ATS system.</p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div className="font-medium">Enable ATS Access</div>
-                  <div className="text-sm text-gray-600">Allow workspace members to access applicant data</div>
-                </div>
-                <Switch
-                  checked={workspaceData.atsAccess !== false}
-                  onChange={(checked) => setWorkspaceData({...workspaceData, atsAccess: checked})}
-                />
-              </div>
-            </div>
-          </div>
-        );
-
       default:
         return null;
     }
@@ -566,7 +867,7 @@ const WorkspaceCreationWizard = ({
       {!editingWorkspace && (
         <div className="flex justify-center mb-6">
           <div className="flex items-center space-x-4">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3].map((step) => (
               <div
                 key={step}
                 className={`flex items-center ${step <= currentStep ? 'cursor-pointer' : 'cursor-not-allowed'}`}
@@ -584,9 +885,9 @@ const WorkspaceCreationWizard = ({
                   {step < currentStep ? '✓' : step}
                 </div>
                 <span className={`ml-2 text-sm ${step <= currentStep ? 'text-gray-900' : 'text-gray-500'}`}>
-                  {step === 1 ? 'Client Info' : step === 2 ? 'Brand Kit' : step === 3 ? 'Funnel Quota' : 'Access Control'}
+                  {step === 1 ? 'Client Info' : step === 2 ? 'Brand Kit' : 'Settings'}
                 </span>
-                {step < 4 && (
+                {step < 3 && (
                   <div
                     className={`w-12 h-0.5 mx-2 ${
                       step < currentStep ? 'bg-green-600' : 'bg-gray-200'
@@ -599,33 +900,21 @@ const WorkspaceCreationWizard = ({
         </div>
       )}
 
-      {/* Form Content */}
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        className="space-y-6"
-      >
-        {/* Show different content based on editing mode */}
-        {editingWorkspace ? renderEditForm() : renderStepContent()}
+      {/* Step Content - No form wrapper for intermediate steps */}
+      {editingWorkspace ? (
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          className="space-y-6"
+        >
+          {renderEditForm()}
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between pt-6 border-t border-gray-200">
-          <Button
-            onClick={() => {
-              if (editingWorkspace) {
-                onClose();
-              } else if (currentStep > 1) {
-                setCurrentStep(currentStep - 1);
-              } else {
-                onClose();
-              }
-            }}
-          >
-            {editingWorkspace ? "Cancel" : (currentStep === 1 ? "Cancel" : "Previous")}
-          </Button>
-
-          {editingWorkspace ? (
+          {/* Navigation Buttons for Editing */}
+          <div className="flex justify-between pt-6 border-t border-gray-200">
+            <Button onClick={onClose}>
+              Cancel
+            </Button>
             <Button
               type="primary"
               htmlType="submit"
@@ -633,24 +922,47 @@ const WorkspaceCreationWizard = ({
             >
               Update Workspace
             </Button>
-          ) : currentStep < 4 ? (
+          </div>
+        </Form>
+      ) : (
+        <>
+          {/* Step Content */}
+          {renderStepContent()}
+
+          {/* Navigation Buttons for Creation */}
+          <div className="flex justify-between pt-6 border-t border-gray-200">
             <Button
-              type="primary"
-              onClick={handleNext}
+              onClick={() => {
+                if (currentStep > 1) {
+                  setCurrentStep(currentStep - 1);
+                } else {
+                  onClose();
+                }
+              }}
             >
-              Next
+              {currentStep === 1 ? "Cancel" : "Previous"}
             </Button>
-          ) : (
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-            >
-              Create Workspace
-            </Button>
-          )}
-        </div>
-      </Form>
+
+            {currentStep < 3 ? (
+              <Button
+                type="primary"
+                onClick={handleNext}
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                type="primary"
+                onClick={() => handleSubmit({}, { manual: true })}
+                loading={loading}
+                disabled={loading}
+              >
+                Create Workspace
+              </Button>
+            )}
+          </div>
+        </>
+      )}
     </Modal>
   );
 };
