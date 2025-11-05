@@ -482,23 +482,24 @@ const Template1 = ({ landingPageData, fetchData }) => {
         <div className="md:hidden">
           <div
             ref={scrollRef}
-            className="flex overflow-x-auto snap-x snap-mandatory"
+            className="flex overflow-x-auto snap-x snap-mandatory h-fit"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch", // For smooth scrolling on iOS
+              
             }}
           >
             {images.map((image, index) => (
               <div
                 key={index}
-                className="flex-shrink-0 px-2 w-full snap-center"
+                className="flex-shrink-0 px-2 w-full snap-center m-auto"
               >
-                <div className="overflow-hidden rounded-2xl">
+                <div className="overflow-hidden rounded-2xl ">
                   <img
                     src={image.src}
                     alt={image.alt}
-                    className="object-cover w-full h-64"
+                    className="object-contain w-full aspect-auto object-center"
                     onError={(e) =>
                       (e.target.src = "/dhwise-images/placeholder.png")
                     }
