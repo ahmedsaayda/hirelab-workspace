@@ -326,15 +326,7 @@ const WorkspaceManagement = () => {
                     </span>
                   </div>
 
-                  {/* ATS Access Toggle */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-700">ATS Access</span>
-                    <Switch
-                      checked={workspace.atsAccess}
-                      onChange={(checked) => handleToggleATSAccess(workspace._id, checked)}
-                      size="small"
-                    />
-                  </div>
+              
                 </div>
 
                 {/* Action Buttons */}
