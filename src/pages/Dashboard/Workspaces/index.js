@@ -337,6 +337,8 @@ const WorkspaceManagement = () => {
                     className="flex-1 bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700"
                     icon={<SwapOutlined />}
                     onClick={() => handleSwitchToWorkspace(workspace._id)}
+                    disabled={loading}
+                    loading={loading}
                   >
                     Switch
                   </Button>

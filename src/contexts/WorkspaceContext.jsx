@@ -95,19 +95,37 @@ export const WorkspaceProvider = ({ children }) => {
 
   // Switch to a workspace
   const switchToWorkspace = useCallback(async (workspaceId, { skipRedirect = false } = {}) => {
+    // Prevent multiple simultaneous switches
+    if (loading) {
+      console.log("Workspace switch already in progress, ignoring...");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await WorkspaceService.switchToWorkspace(workspaceId);
 
-      Cookies.set("accessToken", response.data.accessToken);
-      Cookies.set("refreshToken", response.data.refreshToken);
+      // Set cookies with explicit options for better reliability
+      Cookies.set("accessToken", response.data.accessToken, {
+        path: "/",
+        secure: window.location.protocol === "https:",
+        sameSite: "lax"
+      });
+      Cookies.set("refreshToken", response.data.refreshToken, {
+        path: "/",
+        secure: window.location.protocol === "https:",
+        sameSite: "lax"
+      });
 
       dispatch(refreshUser(response.data.user));
 
       message.success(`Switched to workspace successfully!`);
 
       if (!skipRedirect) {
-        window.location.href = "/dashboard";
+        // Add a small delay to ensure cookies are fully written before redirect
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 100);
       }
 
       return response.data;
@@ -118,7 +136,7 @@ export const WorkspaceProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [dispatch]);
+  }, [dispatch, loading]);
 
   const refreshAccessibleWorkspaces = useCallback(async () => {
     const accessToken = Cookies.get("accessToken");
