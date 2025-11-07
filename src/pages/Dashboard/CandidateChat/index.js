@@ -11,6 +11,7 @@ import ChatFileUpload from "../../../components/ChatFileUpload";
 import ChatAttachments from "../../../components/ChatAttachments";
 import InterviewSchedulingMessage from "../../../components/InterviewSchedulingMessage";
 import InterviewSchedulingModal from "../Vacancy/components/InterviewSchedulingModal";
+import CandidateProfile from "../Vacancy/components/CandidateProfile";
 import UploadService from "../../../services/UploadService";
 
 const { TextArea } = Input;
@@ -39,6 +40,9 @@ const CandidateChat = () => {
   const [interviewSchedulingModal, setInterviewSchedulingModal] = useState(false);
   const [schedulingLoading, setSchedulingLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [messageSearchResults, setMessageSearchResults] = useState([]);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [candidateProfileId, setCandidateProfileId] = useState(null);
 
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -103,8 +107,10 @@ const CandidateChat = () => {
             setPage(2);
           }
           
-          if (chatId && response.data.chats.length > 0) {
-            const urlChat = response.data.chats.find(c => c._id === chatId);
+          // Attempt to preselect chat from URL
+          const resolvedChatId = Array.isArray(chatId) ? chatId[0] : chatId;
+          if (resolvedChatId && response.data.chats.length > 0) {
+            const urlChat = response.data.chats.find(c => c._id === resolvedChatId);
             if (urlChat) {
               setCurrentChat(urlChat);
             }
@@ -218,6 +224,17 @@ const CandidateChat = () => {
       clearInterval(teamCheckInterval);
     };
   }, [loadTeamChats, chats.length, loadingChats]);
+
+  // If URL chatId becomes available after mount, select that chat from existing list
+  useEffect(() => {
+    const resolvedChatId = Array.isArray(chatId) ? chatId[0] : chatId;
+    if (resolvedChatId && chats.length > 0) {
+      const urlChat = chats.find(c => c._id === resolvedChatId);
+      if (urlChat && (!currentChat || currentChat._id !== urlChat._id)) {
+        setCurrentChat(urlChat);
+      }
+    }
+  }, [chatId, chats, currentChat]);
 
   // Load messages when current chat changes
   useEffect(() => {
@@ -626,6 +643,34 @@ const CandidateChat = () => {
     return searchableText.includes(searchLower);
   });
 
+  // Debounced message search
+  useEffect(() => {
+    const term = (searchTerm || "").trim();
+    if (!term) {
+      setMessageSearchResults([]);
+      setLoadingSearch(false);
+      return;
+    }
+    let cancelled = false;
+    setLoadingSearch(true);
+    const t = setTimeout(async () => {
+      try {
+        const response = await CandidateChatService.searchMessages(term, 1, 10);
+        if (!cancelled) {
+          setMessageSearchResults(response.data?.messages || []);
+        }
+      } catch (e) {
+        if (!cancelled) setMessageSearchResults([]);
+      } finally {
+        if (!cancelled) setLoadingSearch(false);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [searchTerm]);
+
   return (
     <div className="w-full h-full bg-gray-50 flex" style={{ height: 'calc(100vh - 120px)' }}>
       <div className="flex h-full w-full">
@@ -670,6 +715,32 @@ const CandidateChat = () => {
               </div>
             )}
             
+            {searchTerm.trim() && messageSearchResults.length > 0 && (
+              <div className="px-4 py-2">
+                <div className="text-xs font-semibold text-gray-500 uppercase mb-2">Messages</div>
+                <div className="space-y-2">
+                  {messageSearchResults.map((res) => (
+                    <div
+                      key={res._id}
+                      onClick={() => {
+                        const chat = chats.find(c => c._id === res.chatId);
+                        if (chat) setCurrentChat(chat);
+                      }}
+                      className="p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <div className="text-xs text-gray-600 mb-1">
+                        {res.meta?.candidateName || res.meta?.candidateEmail || 'Candidate'} • {res.meta?.jobTitle || ''}
+                      </div>
+                      <div className="text-sm text-gray-900 truncate">
+                        {res.message}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="h-px bg-gray-200 my-3" />
+              </div>
+            )}
+
             {filteredChats.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
                 <div className="text-4xl mb-2">💬</div>
@@ -986,6 +1057,17 @@ const CandidateChat = () => {
                   Schedule
                 </Button>
               </div>
+
+              <div className="mb-4">
+                <Button
+                  type="default"
+                  size="small"
+                  onClick={() => setCandidateProfileId(currentChat.candidateId?._id || currentChat.candidateId)}
+                  className="border-purple-300 text-purple-600 hover:border-purple-500 hover:text-purple-700"
+                >
+                  Open Candidate Card
+                </Button>
+              </div>
               
               {currentChat.candidateId?.meetingScheduled && 
                currentChat.candidateId?.interviewMeetingTimestamp ? (
@@ -1056,6 +1138,20 @@ const CandidateChat = () => {
         } : null}
         loading={schedulingLoading}
       />
+
+      {/* Candidate Profile Drawer */}
+      {candidateProfileId && (
+        <CandidateProfile
+          candidateId={candidateProfileId}
+          onClose={() => setCandidateProfileId(null)}
+          onUpdate={() => setCandidateProfileId(null)}
+          stages={[]}
+          allCandidateIds={[candidateProfileId]}
+          onEmail={() => message.info('Compose from chat coming soon')}
+          onStatusChange={() => {}}
+          onShowReviewBreakdown={() => {}}
+        />
+      )}
     </div>
   );
 };

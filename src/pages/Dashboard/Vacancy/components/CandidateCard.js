@@ -267,7 +267,15 @@ const CandidateCard = ({
         onPhone && onPhone();
       },
     },
-   
+    {
+      key: 'chat',
+      label: 'Send Message',
+      icon: <MessageOutlined />,
+      onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        onChat && onChat();
+      },
+    },
     {
       key: 'schedule',
       label: 'Schedule Interview',

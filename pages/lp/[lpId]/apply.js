@@ -1126,6 +1126,10 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
             if (subField.type === 'contact') {
               processedFormData[`firstname`] = formData[`${subField.id}_firstName`] || "";
               processedFormData[`lastname`] = formData[`${subField.id}_lastName`] || "";
+              // Some builders embed email inside the contact field (id_email)
+              if (!processedFormData[`email`]) {
+                processedFormData[`email`] = formData[`${subField.id}_email`] || "";
+              }
             } else if (subField.type === 'email') {
               processedFormData[`email`] = formData[subField.id] || "";
             } else if (subField.type === 'phone') {
@@ -1142,6 +1146,9 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
         } else if (field.type === 'contact') {
           processedFormData[`firstname`] = formData[`${field.id}_firstName`] || "";
           processedFormData[`lastname`] = formData[`${field.id}_lastName`] || "";
+          if (!processedFormData[`email`]) {
+            processedFormData[`email`] = formData[`${field.id}_email`] || "";
+          }
         } else if (field.type === 'email') {
           processedFormData[`email`] = formData[field.id] || "";
         } else if (field.type === 'phone') {

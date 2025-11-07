@@ -17,7 +17,8 @@ import {
   Upload,
   Select,
   Tooltip,
-  Modal
+  Modal,
+  Mentions
 } from 'antd';
 import { 
   UserOutlined, 
@@ -48,6 +49,8 @@ import FileViewer from '../../../../components/FileViewer';
 import { extractFileName, extractFileUrl, downloadFile } from '../../../../utils/fileViewerHelper';
 import { useRouter } from 'next/router';
 import InterviewFormModal from './InterviewFormModal';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../../../redux/auth/selectors';
 
 // Add custom styles for the drawer
 const drawerStyles = `
@@ -386,6 +389,7 @@ const getStatusPhaseColor = (phase) => {
   return colors[phase] || 'bg-gray-100 text-gray-700';
 };
 const { TextArea } = Input;
+const { Option: MentionsOption } = Mentions;
 
 const CandidateProfile = ({ 
   candidateId, 
@@ -414,8 +418,10 @@ const CandidateProfile = ({
   const [interviewHistory, setInterviewHistory] = useState([]);
   const [loadingInterviews, setLoadingInterviews] = useState(false);
   const [updatingStage, setUpdatingStage] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([]);
 
   const router = useRouter();
+  const currentUser = useSelector(selectUser);
 
   // Load interview history for candidate
   const loadInterviewHistory = async () => {
@@ -469,6 +475,10 @@ const CandidateProfile = ({
       loadCandidateData();
       loadAllCandidates();
       loadInterviewHistory();
+      // Load team members for @ mentions
+      CandidateChatService.getTeamMembers()
+        .then(res => setTeamMembers(res.data?.members || []))
+        .catch(() => setTeamMembers([]));
     }
   }, [candidateId]);
 
@@ -518,10 +528,16 @@ const CandidateProfile = ({
   const loadCandidateData = async () => {
     setLoading(true);
     try {
-      const response = await CrudService.getSingle('VacancySubmission', candidateId);
-      if (response.data) {
+      // Use search with populate so we have sender user details for email logs
+      const response = await CrudService.search('VacancySubmission', 1, 1, {
+        filters: { _id: candidateId },
+        populate: { path: 'emailSent.user_id', select: 'firstName lastName email' },
+        populate2: { path: 'smsSent.user_id', select: 'firstName lastName email' },
+      });
+      const doc = response.data?.items?.[0];
+      if (doc) {
         // Transform VacancySubmission data to match expected candidate structure
-        const formData = response.data.formData || {};
+        const formData = doc.formData || {};
         
         // Extract name using same logic as NewATS.js
         let fullname = '';
@@ -579,29 +595,29 @@ const CandidateProfile = ({
         });
 
         const transformedCandidate = {
-          ...response.data,
+          ...doc,
           fullname: fullname || 'Unknown',
           email: email,
           phone: phone,
           avatar: avatar, // null instead of empty string prevents broken image
           position: formData.position || 'Position',
-          stage: stages.find(stage => stage.id === response.data.stageId)?.title || 'Applied'
+          stage: stages.find(stage => stage.id === doc.stageId)?.title || 'Applied'
         };
         setCandidate(transformedCandidate);
         
         // Set last communication date
-        const communicationDate = response.data.lastCommunication 
-          ? moment(response.data.lastCommunication) 
+        const communicationDate = doc.lastCommunication 
+          ? moment(doc.lastCommunication) 
           : null;
         setLastCommunication(communicationDate);
         
         // Debug resume URL loading
-        let resumeUrlFromResponse = response.data.resumeUrl || formData.resumeUrl || null;
+        let resumeUrlFromResponse = doc.resumeUrl || formData.resumeUrl || null;
         
         // Also check for file uploads in formData with form field structure
-        if (!resumeUrlFromResponse && formData && response.data.form?.fields) {
+        if (!resumeUrlFromResponse && formData && doc.form?.fields) {
           // Look for file type fields in the form structure
-          const fileFields = response.data.form.fields.filter(field => field.type === 'file');
+          const fileFields = doc.form.fields.filter(field => field.type === 'file');
           for (const fileField of fileFields) {
             const fileData = formData[fileField.id];
             let fileUrl = null;
@@ -677,12 +693,14 @@ const CandidateProfile = ({
     if (!newNote.trim()) return;
 
     try {
-      await CrudService.create('CandidateNote', {
-        vacancySubmission: candidateId,
-        note: newNote,
-        createdAt: new Date().toISOString(),
-        // loggedBy set on backend using current user/team member
-      });
+      await CandidateChatService.addCandidateNote(candidateId, newNote);
+      // Notify mentioned teammates via backend
+      try {
+        await CandidateChatService.notifyNoteMentions(candidateId, newNote);
+      } catch (notifyErr) {
+        // Non-blocking
+        console.warn('Mention notification failed:', notifyErr?.message);
+      }
       setNewNote('');
       loadCandidateNotes(candidateId);
       message.success('Note added successfully');
@@ -1972,6 +1990,22 @@ const CandidateProfile = ({
     </div>
   );
 
+  // Highlight @mentions in note text
+  const renderNoteWithMentions = (text) => {
+    if (!text) return null;
+    const parts = String(text).split(/(@[^\s]+)/g);
+    return parts.map((part, idx) => {
+      if (part.startsWith && part.startsWith('@')) {
+        return (
+          <span key={`m-${idx}`} className="text-blue-600">
+            {part}
+          </span>
+        );
+      }
+      return <span key={`t-${idx}`}>{part}</span>;
+    });
+  };
+
   const renderNotesTab = () => (
     <div className="space-y-6 p-4">
       {/* Add Note */}
@@ -1979,13 +2013,24 @@ const CandidateProfile = ({
         <div className="space-y-3">
           <div>
             <Text className="text-sm font-medium text-gray-700 mb-2 block">Add Internal Note</Text>
-            <TextArea
-              placeholder="Add a note about this candidate..."
+            <Mentions
               value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
+              onChange={(val) => setNewNote(val)}
+              prefix="@"
               rows={3}
-              className="resize-none"
-            />
+              placeholder="Add a note about this candidate... Use @ to mention teammates"
+            >
+              {teamMembers
+                .filter(u => (u.email || '').toLowerCase() !== (currentUser?.email || '').toLowerCase())
+                .map((u) => {
+                const name = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+                return (
+                  <MentionsOption key={u._id} value={u.email}>
+                    {name ? `${name} (${u.email})` : u.email}
+                  </MentionsOption>
+                );
+              })}
+            </Mentions>
           </div>
           <div className="flex justify-end">
             <Button 
@@ -2019,7 +2064,9 @@ const CandidateProfile = ({
                     {moment(note.createdAt).format('MMM DD, YYYY HH:mm')}
                   </Text>
                 </div>
-                <Paragraph className="m-0 text-gray-700">{note.note}</Paragraph>
+                <Paragraph className="m-0 text-gray-700">
+                  {renderNoteWithMentions(note.note)}
+                </Paragraph>
               </div>
             </List.Item>
           )}
@@ -2034,6 +2081,82 @@ const CandidateProfile = ({
       </div>
     </div>
   );
+
+  const renderCommunicationTab = () => {
+    const sent = candidate?.emailSent || [];
+    const received = candidate?.emailReceived || [];
+    const combined = [
+      ...received.map((m) => ({ ...m, direction: 'in' })),
+      ...sent.map((m) => ({ ...m, direction: 'out' })),
+    ].sort((a, b) => new Date(b.timestamp || b.createdAt || 0) - new Date(a.timestamp || a.createdAt || 0));
+
+    return (
+      <div className="space-y-4 p-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <MailOutlined />
+              <Text className="text-sm font-medium text-gray-900">Email Communication</Text>
+            </div>
+            <Text className="text-xs text-gray-500">
+              {combined.length} messages
+            </Text>
+          </div>
+          <List
+            dataSource={combined}
+            renderItem={(item) => (
+              <List.Item className="!border-b-gray-100 !px-0">
+                <div className="w-full">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {item.direction === 'in' ? (
+                        <span className="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">Received</span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700">Sent</span>
+                      )}
+                      <Text className="text-sm font-medium text-gray-900">
+                        {item.subject || '(no subject)'}
+                      </Text>
+                    </div>
+                    <Text className="text-xs text-gray-500">
+                      {moment(item.timestamp || item.createdAt).format('MMM DD, YYYY HH:mm')}
+                    </Text>
+                  </div>
+                  <div className="mt-1">
+                    <Text className="text-xs text-gray-500">
+                      {item.direction === 'in'
+                        ? `From: ${item.from || 'Candidate'}`
+                        : (() => {
+                            const u = item.user_id;
+                            if (u && typeof u === 'object') {
+                              const name = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+                              const email = u.email || '';
+                              if (name && email) return `From: ${name} <${email}>`;
+                              if (name) return `From: ${name}`;
+                              if (email) return `From: ${email}`;
+                            }
+                            return `From: ${u || 'Recruiter'}`;
+                          })()}
+                    </Text>
+                  </div>
+                  <Paragraph className="m-0 mt-2 text-gray-700 whitespace-pre-wrap">
+                    {(item.body || item.message || '').toString().slice(0, 1000)}
+                  </Paragraph>
+                </div>
+              </List.Item>
+            )}
+            locale={{
+              emptyText: (
+                <div className="text-center py-8">
+                  <Text className="text-gray-500">No email communication yet</Text>
+                </div>
+              ),
+            }}
+          />
+        </div>
+      </div>
+    );
+  };
 
   const renderNavigation = () => (
     <div className="bg-white border-t border-gray-200 px-4 py-3">
@@ -2130,6 +2253,20 @@ const CandidateProfile = ({
             children: (
               <div className="overview-tab-content">
                 {renderOverviewTab()}
+              </div>
+            ),
+          },
+          {
+            key: 'communication',
+            label: (
+              <div className="flex items-center gap-2">
+                <MailOutlined />
+                <span>Communication</span>
+              </div>
+            ),
+            children: (
+              <div className="communication-tab-content">
+                {renderCommunicationTab()}
               </div>
             ),
           },

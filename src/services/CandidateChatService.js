@@ -40,6 +40,24 @@ class CandidateChatService {
       baseURL: baseURL || window.location.origin,
     });
   }
+
+  // Search messages across team chats
+  searchMessages(q, page = 1, limit = 10) {
+    const qp = new URLSearchParams({ q, page: String(page), limit: String(limit) }).toString();
+    return this.api.get(`/search?${qp}`);
+  }
+
+  getTeamMembers() {
+    return this.api.get(`/team-members`);
+  }
+
+  notifyNoteMentions(candidateId, note) {
+    return this.api.post(`/notify-note-mentions`, { candidateId, note });
+  }
+
+  addCandidateNote(candidateId, note) {
+    return this.api.post(`/add-note`, { candidateId, note });
+  }
 }
 
 export default new CandidateChatService(`${getBackendUrl()}/candidateChat`); 
