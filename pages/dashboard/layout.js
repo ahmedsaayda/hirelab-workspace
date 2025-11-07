@@ -367,6 +367,21 @@ const Layout = ({children}) => {
     },
   ];
 
+
+  useEffect(() => {
+    if (user) {
+      console.log(user.email);
+  
+      window.$crisp = window.$crisp || [];
+  
+      // set email and name
+      window.$crisp.push(["set", "user:email", user.email]);
+      if (user.name) {
+        window.$crisp.push(["set", "user:nickname", ["default", user.name]]);
+      }
+    }
+  }, [user]);
+
   const isOnboardingCompleted =
   !!user?.companyLogo && !!user?.companyUrl && !!user?.companyInfo;
 
