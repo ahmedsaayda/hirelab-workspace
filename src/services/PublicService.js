@@ -60,8 +60,8 @@ class PublicService {
   queryJobsOfRecruiter({ page = 1, limit = 10, recruiterId }) {
     return this.api.post(`/queryJobsOfRecruiter`, { page, limit, recruiterId });
   }
-  queryLandingPagesOfRecruiter({ page = 1, limit = 10, recruiterId, includeUnpublished = false }) {
-    return this.api.post(`/queryLandingPagesOfRecruiter`, { page, limit, recruiterId, includeUnpublished });
+  queryLandingPagesOfRecruiter({ page = 1, limit = 10, recruiterId, includeUnpublished = false, workspace }) {
+    return this.api.post(`/queryLandingPagesOfRecruiter`, { page, limit, recruiterId, includeUnpublished, workspace });
   }
   getLPBrand(id) {
     return this.api.get(`/getLPBrand?id=${id}`);

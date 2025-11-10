@@ -334,9 +334,7 @@ const WorkspaceCreatePage = () => {
                   <Input size="large" placeholder="Enter client name" />
                 </Form.Item>
 
-                <Form.Item label="Client Domain" name="clientDomain">
-                  <Input size="large" placeholder="clientcompany.com" />
-                </Form.Item>
+              
 
                 <Form.Item
                   label="Client Email"

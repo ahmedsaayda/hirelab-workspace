@@ -15,7 +15,10 @@ export default function CustomDomainMain() {
     const load = async () => {
       // Fallback for dev: if userId not present in route, resolve from backend using Host
       let resolvedUserId = userId;
-      if (!resolvedUserId && typeof window !== 'undefined') {
+      let resolvedWorkspaceId = null;
+
+      // Always resolve by hostname to determine scope (workspace vs main)
+      if (typeof window !== 'undefined') {
         try {
           const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5155/api';
           const currentHostname = window.location.hostname.replace('www.', ''); // no port
@@ -31,17 +34,27 @@ export default function CustomDomainMain() {
           const res = await fetch(`${backendUrl}/domains/by-hostname?hostname=${chosenHost}`);
           if (res.ok) {
             const data = await res.json();
-            resolvedUserId = data?.user_id;
-            console.log('[CDM] resolved userId', resolvedUserId);
+            // Prefer host-resolved user/workspace when available
+            resolvedUserId = data?.user_id || resolvedUserId;
+            resolvedWorkspaceId = data?.workspaceId || null;
+            console.log('[CDM] resolved', { resolvedUserId, resolvedWorkspaceId });
           } else {
             console.log('[CDM] by-hostname not ok', await res.text());
           }
         } catch (_) {}
       }
+
       if (!resolvedUserId) { setLoading(false); return; }
       setLoading(true);
       try {
-        const res = await PublicService.queryLandingPagesOfRecruiter({ page: 1, limit: 100, recruiterId: resolvedUserId, includeUnpublished: false });
+        const res = await PublicService.queryLandingPagesOfRecruiter({
+          page: 1,
+          limit: 100,
+          recruiterId: resolvedUserId,
+          includeUnpublished: false,
+          // If this domain belongs to a workspace, restrict to that workspace only
+          workspace: resolvedWorkspaceId || undefined
+        });
         const data = res?.data;
         const arr = Array.isArray(data?.result)
           ? data.result

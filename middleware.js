@@ -200,14 +200,18 @@ export async function middleware(request) {
       try {
         const backendUrl = process.env.NODE_ENV !== 'production' ? 'http://localhost:5155/api' : process.env.NEXT_PUBLIC_BACKEND_URL;
         if (!backendUrl) return null;
-        // 1) Resolve user by hostname
+        // 1) Resolve user/workspace by hostname
         const r1 = await fetch(`${backendUrl}/domains/by-hostname?hostname=${encodeURIComponent(host)}`, { method: 'GET' });
         if (!r1.ok) throw new Error('host not found');
         const info = await r1.json();
         const userId = info?.user_id;
+        const workspaceId = info?.workspaceId || null;
         if (!userId) return null;
-        // 2) Fetch settings (public) for that user
-        const r2 = await fetch(`${backendUrl}/domains/global-settings/${encodeURIComponent(userId)}`, { method: 'GET' });
+        // 2) Fetch settings (public) for that user or workspace
+        const settingsUrl = workspaceId
+          ? `${backendUrl}/domains/global-settings/workspace/${encodeURIComponent(workspaceId)}`
+          : `${backendUrl}/domains/global-settings/${encodeURIComponent(userId)}`;
+        const r2 = await fetch(settingsUrl, { method: 'GET' });
         if (!r2.ok) throw new Error('settings not found');
         const settings = await r2.json();
         const list = Array.isArray(settings?.prettyUrls) ? settings.prettyUrls : [];

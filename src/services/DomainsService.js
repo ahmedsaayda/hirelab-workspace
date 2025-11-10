@@ -12,29 +12,29 @@ class DomainsService {
     return this.api.get("/", { params });
   }
 
-  add(domain) {
+  add(domain, params = {}) {
     // Avoid collision with interceptor that injects { domain: window.location.host }
-    return this.api.post("/add", { domainToConnect: domain });
+    return this.api.post("/add", { domainToConnect: domain }, { params });
   }
 
-  remove(domainId) {
-    return this.api.delete(`/${domainId}`);
+  remove(domainId, params = {}) {
+    return this.api.delete(`/${domainId}`, { params });
   }
 
-  check(domain) {
-    return this.api.get(`/${encodeURIComponent(domain)}/check-dns`);
+  check(domain, params = {}) {
+    return this.api.get(`/${encodeURIComponent(domain)}/check-dns`, { params });
   }
 
-  dnsConfig(domain) {
-    return this.api.get(`/${encodeURIComponent(domain)}/dns-config`);
+  dnsConfig(domain, params = {}) {
+    return this.api.get(`/${encodeURIComponent(domain)}/dns-config`, { params });
   }
 
-  getSettings() {
-    return this.api.get(`/global-settings`);
+  getSettings(params = {}) {
+    return this.api.get(`/global-settings`, { params });
   }
 
-  saveSettings(payload) {
-    return this.api.put(`/global-settings`, payload);
+  saveSettings(payload, params = {}) {
+    return this.api.put(`/global-settings`, payload, { params });
   }
 
   // Public helpers

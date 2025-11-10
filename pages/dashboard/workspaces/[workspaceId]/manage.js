@@ -43,6 +43,7 @@ import ImageUploader from "../../../../src/pages/LandingpageEdit/ImageUploader.j
 import ColorPickerButton from "../../../../src/pages/onboarding/components/ColorPickerButton.jsx";
 import WorkspaceService from "../../../../src/services/WorkspaceService.js";
 import { refreshUserData } from "../../../../src/utils/userRefresh";
+import DomainsService from "../../../../src/services/DomainsService.js";
 
 const { Title, Text } = Typography;
 
@@ -91,6 +92,15 @@ const WorkspaceManagePage = () => {
   const [availableMembers, setAvailableMembers] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [memberSelectionLoading, setMemberSelectionLoading] = useState(false);
+  // Domains state (workspace-scoped)
+  const [domains, setDomains] = useState([]);
+  const [newDomain, setNewDomain] = useState('');
+  const [dnsInstr, setDnsInstr] = useState(null);
+  const [dnsList, setDnsList] = useState([]);
+  const [domainLoading, setDomainLoading] = useState(false);
+  const [domainTab, setDomainTab] = useState({ loadingLandingPages: false, lpOptions: [] });
+  const [domainSettings, setDomainSettings] = useState(null);
+  const [prettyList, setPrettyList] = useState([]);
 
   // Get max allowed funnels for this workspace from backend calculation
   const getMaxAllowedFunnels = () => {
@@ -236,6 +246,118 @@ const WorkspaceManagePage = () => {
       setLoading(false);
     }
   };
+  // Domains helpers (workspace-scoped)
+  const loadDomains = async () => {
+    setDomainLoading(true);
+    try {
+      const res = await DomainsService.list({ workspace: workspaceId });
+      setDomains(res.data || []);
+    } catch (_) {}
+    try {
+      const s = await DomainsService.getSettings({ workspace: workspaceId });
+      const set = s?.data || {};
+      setDomainSettings(set);
+      setPrettyList(Array.isArray(set.prettyUrls) ? set.prettyUrls : []);
+    } catch (_) {}
+    setDomainLoading(false);
+  };
+  const loadWorkspaceLandingPages = async (force = false) => {
+    if (domainTab.lpOptions.length > 0 && !force) return;
+    setDomainTab(prev => ({ ...prev, loadingLandingPages: true }));
+    try {
+      const CrudService = (await import('../../../../src/services/CrudService')).default;
+      if (!workspaceId) return;
+      const result = await CrudService.search("LandingPageData", 999999, 1, {
+        text: "",
+        filters: {
+          workspace: workspaceId,
+          published: true,
+        },
+        sort: {},
+      });
+      const items = Array.isArray(result?.data?.items) ? result.data.items : [];
+      const options = items.map(i => ({ label: `${i.vacancyTitle || i.name || 'Untitled Job'}`, value: i._id }));
+      setDomainTab(prev => ({ ...prev, lpOptions: options }));
+    } catch (e) {
+      // non-blocking
+    }
+    setDomainTab(prev => ({ ...prev, loadingLandingPages: false }));
+  };
+  const onAddDomain = async () => {
+    if (!newDomain?.trim()) return;
+    setDomainLoading(true);
+    try {
+      const domain = newDomain.trim();
+      const res = await DomainsService.add(domain, { workspace: workspaceId });
+      if (res?.data?.dns_instructions) setDnsInstr(res.data.dns_instructions);
+      try {
+        const cfg = await DomainsService.dnsConfig(domain, { workspace: workspaceId });
+        const list = cfg?.data?.records || [];
+        setDnsList(list);
+        if (list?.length) setDnsInstr({ type: list[0].recordType, name: list[0].name, value: list[0].value });
+      } catch (_) {}
+      setNewDomain('');
+      await loadDomains();
+    } catch (_) {}
+    setDomainLoading(false);
+  };
+  const onDisconnectDomain = async (row) => {
+    setDomainLoading(true);
+    try { await DomainsService.remove(row._id, { workspace: workspaceId }); } catch (_) {}
+    await loadDomains();
+    setDomainLoading(false);
+  };
+  const onRefreshDNS = async (row) => {
+    setDomainLoading(true);
+    try {
+      try { await DomainsService.check(row.domain, { workspace: workspaceId }); } catch (_) {}
+      const res = await DomainsService.dnsConfig(row.domain, { workspace: workspaceId });
+      const list = res?.data?.records || [];
+      setDnsList(list);
+      if (list?.length) setDnsInstr({ type: list[0].recordType, name: list[0].name, value: list[0].value });
+      await loadDomains();
+    } catch (_) {}
+    setDomainLoading(false);
+  };
+  const saveWorkspacePretty = async () => {
+    setDomainLoading(true);
+    try {
+      const payload = {
+        ...(domainSettings || {}),
+        prettyUrls: prettyList.map(x => ({
+          slug: x.slug,
+          landingPageId: x.landingPageId,
+          active: x.active !== false,
+        })),
+      };
+      await DomainsService.saveSettings(payload, { workspace: workspaceId });
+      const s = await DomainsService.getSettings({ workspace: workspaceId });
+      const set = s?.data || {};
+      setDomainSettings(set);
+      setPrettyList(Array.isArray(set.prettyUrls) ? set.prettyUrls : []);
+      message.success('Pretty URLs saved');
+    } catch (e) {
+      message.error('Failed to save');
+    }
+    setDomainLoading(false);
+  };
+  const addPrettyUrl = () => setPrettyList([...(prettyList||[]), { slug: '', landingPageId: null, active: true }]);
+  const removePrettyUrl = (index) => {
+    const next = [...prettyList];
+    next.splice(index, 1);
+    setPrettyList(next);
+  };
+  const updatePrettyUrl = (index, field, value) => {
+    const next = [...prettyList];
+    next[index] = { ...next[index], [field]: value };
+    setPrettyList(next);
+  };
+  useEffect(() => {
+    if (activeTab === 'domains' && workspaceId) {
+      loadDomains();
+      loadWorkspaceLandingPages();
+    }
+  }, [activeTab, workspaceId]);
 
   const handleSave = async (values) => {
     setSaving(true);
@@ -789,6 +911,7 @@ const WorkspaceManagePage = () => {
                   { key: 'branding', label: 'Branding', icon: <EditOutlined /> },
                   { key: 'settings', label: 'Settings', icon: <SettingOutlined /> },
                   { key: 'team', label: 'Team', icon: <UserOutlined /> },
+                  { key: 'domains', label: 'Domains', icon: <SettingOutlined /> },
                   { key: 'categories', label: 'Categories', icon: <ApartmentOutlined /> }
                 ].map((tab) => (
                   <Button
@@ -812,6 +935,99 @@ const WorkspaceManagePage = () => {
 
           {/* Tab Content */}
           <div className="bg-white">
+            {activeTab === 'domains' && (
+              <div className="p-4 sm:p-6 space-y-6">
+                <Card title="Workspace Domains" className="mb-4">
+                  <div className="space-y-4">
+                    <div className="flex gap-3 items-center flex-wrap">
+                      <div className="relative flex-1 max-w-md">
+                        <Input
+                          value={newDomain}
+                          onChange={(e)=>setNewDomain(e.target.value)}
+                          placeholder="Enter your domain (e.g., careers.yourcompany.com)"
+                          allowClear
+                          size="large"
+                          className="rounded-lg border-gray-300"
+                        />
+                      </div>
+                      <Button 
+                        type="primary" 
+                        size="large" 
+                        loading={domainLoading} 
+                        onClick={onAddDomain}
+                        className="bg-purple-600 hover:bg-purple-700 border-purple-600 rounded-lg px-6 shadow-sm"
+                      >
+                        Connect Domain
+                      </Button>
+                    </div>
+                    {domains?.length > 0 && (
+                      <div className="space-y-3">
+                        {domains.map((d) => (
+                          <div key={d._id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="font-medium">{d.domain}</span>
+                              <Tag color={d.status === 'active' ? 'green' : 'gold'}>{d.status}</Tag>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button size="small" onClick={() => onRefreshDNS(d)}>Check DNS</Button>
+                              <Button danger size="small" onClick={() => onDisconnectDomain(d)}>Disconnect</Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+                <Card title="Pretty URLs" className="mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm text-gray-700">Map human-readable slugs to your job pages</span>
+                    <div className="flex gap-2">
+                      <Button onClick={addPrettyUrl}>Add Mapping</Button>
+                      <Button type="primary" loading={domainLoading} onClick={saveWorkspacePretty}>Save Changes</Button>
+                    </div>
+                  </div>
+                  {prettyList?.length === 0 ? (
+                    <div className="text-gray-500 text-sm">No pretty URLs yet.</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {prettyList.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-3 border rounded-lg">
+                          <div className="flex-1 flex items-center gap-2">
+                            <span className="text-gray-600 font-medium whitespace-nowrap">
+                              {domains?.[0]?.domain || 'yourdomain.com'}/
+                            </span>
+                            <Input 
+                              value={item.slug}
+                              onChange={(e) => {
+                                const v = e.target.value.replace(/^\//,'').toLowerCase();
+                                updatePrettyUrl(idx, 'slug', v);
+                              }}
+                              placeholder="enter-slug-here"
+                              className="max-w-xs rounded-lg border-gray-300"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Select
+                              className="w-full"
+                              placeholder="Select landing page"
+                              value={item.landingPageId}
+                              onChange={(val) => updatePrettyUrl(idx, 'landingPageId', val)}
+                              options={domainTab.lpOptions}
+                              showSearch
+                              optionFilterProp="label"
+                              loading={domainTab.loadingLandingPages}
+                              onFocus={() => loadWorkspaceLandingPages(true)}
+                              notFoundContent={domainTab.loadingLandingPages ? 'Loading...' : 'No landing pages found'}
+                            />
+                          </div>
+                          <Button danger onClick={() => removePrettyUrl(idx)}>Remove</Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )}
             {activeTab === 'basic' && (
               <div className="p-4 sm:p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -822,9 +1038,7 @@ const WorkspaceManagePage = () => {
                   >
                     <Input size="large" placeholder="Enter workspace name" />
                   </Form.Item>
-                  <Form.Item label="Domain" name="clientDomain">
-                    <Input size="large" placeholder="workspace.example.com" />
-                  </Form.Item>
+                
                   <Form.Item label="Contact Email" name="clientEmail">
                     <Input size="large" placeholder="contact@workspace.com" />
                   </Form.Item>
