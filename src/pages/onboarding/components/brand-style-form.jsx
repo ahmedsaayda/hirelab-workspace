@@ -20,6 +20,7 @@ import {
 import { PlusOutlined, EyeOutlined, LoadingOutlined } from "@ant-design/icons";
 import { ColorPicker } from "./color-picker.jsx";
 import scraperService from "../../../services/ScraperService.js";
+import AiService from "../../../services/AiService.js";
 import AuthService from "../../../services/AuthService.js";
 import HeroSection from "../../Landingpage/HeroSection.js";
 import NavBar from "../../Landingpage/NavBar.jsx";
@@ -1742,182 +1743,15 @@ const handleLogoUpload = async (url) => {
 
   const enhanceScrapedDataWithAI = async (url, scrapedData) => {
     try {
-      // Similar to how we use socket in PasteUrlModal
-      const socket = new WebSocket(
-        "wss://booklified-chat-socket.herokuapp.com"
-      );
-
-      return new Promise((resolve, reject) => {
-        socket.addEventListener("open", () => {
-          // Create a ping interval with correct typing for browser environment
-          let pingIntervalId = window.setInterval(() => {
-            socket.send(JSON.stringify({ id: "PING" }));
-          }, 30000);
-
-          // Helper function to safely clear the interval
-          const clearPingInterval = () => {
-            if (pingIntervalId !== null) {
-              window.clearInterval(pingIntervalId);
-              pingIntervalId = null;
-            }
-          };
-
-          // Create prompt for AI
-          const domain = new URL(url).hostname.replace(/^www\./, "");
-          const companyName = scrapedData.companyName || domain.split(".")[0];
-
-          const prompt = `
-            I need information about a company with the website ${url}. 
-            
-            Here's what I've already found through web scraping:
-            - Company name: ${scrapedData.companyName || "Not found"}
-            - Company description: ${scrapedData.information || "Not found"}
-            - Logo URL: ${scrapedData.logo || "Not found"}
-            - Brand colors: ${
-              scrapedData.brandColors.length
-                ? scrapedData.brandColors.join(", ")
-                : "None found"
-            }
-            - Fonts: ${
-              scrapedData.fonts.length
-                ? scrapedData.fonts.map((f) => f.family).join(", ")
-                : "None found"
-            }
-            
-            Please provide me with:
-            1. A more accurate company name if the one I found seems incorrect or not professional or don't make sense...
-            2. A professional, concise description of what the company does in maximum 200 words (but no hallucination here). A professional description of the company that would be used when creating vacancy posts that make anyone want to apply.
-            3. 3 and exactly 3 from the logo you can detect the correct colors brand colors that would match their brand identity (as hex codes)
-            4. 2-3 font families that would be appropriate for their brand
-            
-            Format your response as a valid JSON with these fields:
-            - companyName
-            - information (company description) Max 200 words
-            - brandColors: array of hex color codes as strings if you know the colors of the brand and you think the provided colors are not correct please change them to the correct ones
-            - fonts: array of font family names as strings
-            
-            Only return the JSON, no other text.
-            If possible search the web for more information about the company.
-          `;
-
-          // Send the prompt to the AI service
-          socket.send(
-            JSON.stringify({
-              id: "OPEN_AI_PROMPT",
-              payload: {
-                content: prompt,
-                model: "gpt-4o-mini-2024-07-18", // Same model as in PasteUrlModal
-                app_id: "hirelab",
-                max_tokens: 10000,
-              },
-            })
-          );
-
-          // Handle messages from the socket
-          socket.addEventListener("message", (event) => {
-            try {
-              const message = JSON.parse(event.data);
-
-              if (message.id === "PING") {
-                // Handle ping
-              } else if (message.payload?.response) {
-                // Parse the response
-                let responseText = message.payload.response?.trim();
-
-                // Extract JSON if it's wrapped in markdown code blocks
-                if (responseText.includes("```json")) {
-                  responseText = responseText
-                    .replace(/```json|```/g, "")
-                    ?.trim();
-                }
-
-                // Remove any text before { and after }
-                const firstBrace = responseText.indexOf("{");
-                const lastBrace = responseText.lastIndexOf("}");
-
-                if (firstBrace >= 0 && lastBrace >= 0) {
-                  responseText = responseText.substring(
-                    firstBrace,
-                    lastBrace + 1
-                  );
-                }
-
-                try {
-                  const enhancedData = JSON.parse(responseText);
-
-                  // Merge the enhanced data with our scraped data
-                  const result = {
-                    ...scrapedData,
-                    companyName:
-                      enhancedData.companyName || scrapedData.companyName,
-                    information:
-                      enhancedData.information || scrapedData.information,
-                  };
-
-                  // Convert font names to the expected format
-                  if (enhancedData.fonts && enhancedData.fonts.length > 0) {
-                    result.fonts = enhancedData.fonts.map((fontName) => ({
-                      family: fontName,
-                      src: "",
-                    }));
-                  }
-
-                  // Add brand colors if we got them
-                  if (
-                    enhancedData.brandColors &&
-                    enhancedData.brandColors.length > 0
-                  ) {
-                    result.brandColors = enhancedData.brandColors.map(
-                      (color) =>
-                        color.startsWith("#")
-                          ? color.toUpperCase()
-                          : `#${color.toUpperCase()}`
-                    );
-                  }
-
-                  // Clean up and resolve
-                  clearPingInterval();
-                  socket.close();
-                  resolve(result);
-                } catch (jsonError) {
-                  console.error("Error parsing AI response:", jsonError);
-                  clearPingInterval();
-                  socket.close();
-                  resolve(scrapedData); // Return the original data if we can't parse the AI response
-                }
-              }
-            } catch (error) {
-              console.error("Error processing WebSocket message:", error);
-              clearPingInterval();
-              socket.close();
-              resolve(scrapedData); // Return the original data on error
-            }
-          });
-
-          // Handle errors and close events
-          socket.addEventListener("error", (error) => {
-            console.error("WebSocket error:", error);
-            clearPingInterval();
-            resolve(scrapedData); // Return the original data on error
-          });
-
-          socket.addEventListener("close", () => {
-            clearPingInterval();
-          });
-
-          // Set a timeout in case AI takes too long
-          setTimeout(() => {
-            clearPingInterval();
-            if (socket.readyState === WebSocket.OPEN) {
-              socket.close();
-            }
-            resolve(scrapedData); // Return the original data if AI takes too long
-          }, 30000); // 30 second timeout
-        });
+      const response = await AiService.enhanceCompanyData({
+        url,
+        scrapedData,
       });
+      const result = response?.data?.data || scrapedData || {};
+      return result;
     } catch (error) {
-      console.error("Error enhancing data with AI:", error);
-      return scrapedData; // Return the original data on error
+      console.error("Error enhancing data with AI via backend:", error);
+      return scrapedData;
     }
   };
 

@@ -4,6 +4,7 @@ import CrudService from "../../../services/CrudService";
 import { Heading } from "./components/components";
 import vacacnyExempleForAiEditModal from "./vacacnyExempleForAiEditModal.json";
 import aiRulesForAiEditModal from "./aiRulesForAiEditModal.json";
+import AiService from "../../../services/AiService";
 
 
 
@@ -560,165 +561,60 @@ const AIEditModal = ({
       }
 
       setSocketError(null);
-      setConnectionStatus("connecting");
+      setConnectionStatus("generating");
 
-      const socket = new WebSocket(
-        "wss://booklified-chat-socket.herokuapp.com"
-      );
+      // Extract relevant vacancy context
+      const vacancyContext = {
+        title: vacancyData.vacancyTitle || "",
+        description: vacancyData.heroDescription || "",
+        jobDescription: vacancyData.jobDescription || "",
+        companyInfo: vacancyData.aboutTheCompanyDescription || "",
+        department: vacancyData.department || "",
+        language: vacancyData.language || vacancyData.lang || undefined,
+      };
 
-      let timeoutId = setTimeout(() => {
-        setSocketError("Connection timeout. Please try again.");
-        setGenerating(false);
+      // Map fields payload for backend
+      const fieldsPayload = sectionConfig.fields.map((field) => ({
+        key: field.key,
+        label: field.label,
+        type: field.type,
+        maxLength: field.maxLength,
+        objectExemple: field.objectExemple,
+      }));
+
+      // Try to derive language: from vacancy data or from prompt hints (e.g., "arabic")
+      let desiredLanguage =
+        vacancyData.language ||
+        vacancyData.lang ||
+        (/(arabic|arab)/i.test(prompt) ? "Arabic" : undefined);
+
+      const { data } = await AiService.generateSectionContent({
+        sectionName,
+        fields: fieldsPayload,
+        prompt,
+        tone,
+        vacancyContext,
+        rules: aiRulesForAiEditModal,
+        example: vacacnyExempleForAiEditModal,
+        language: desiredLanguage,
+      });
+
+      const content = data?.data?.content;
+      if (!content || typeof content !== "object") {
+        setSocketError("Invalid response from AI. Please try again.");
         setConnectionStatus("error");
-        socket.close();
-      }, 30000); // 30 second timeout
+        return;
+      }
 
-      socket.addEventListener("open", () => {
-        clearTimeout(timeoutId);
-        setConnectionStatus("generating");
-
-        const socketPing = setInterval(
-          () => socket.send(JSON.stringify({ id: "PING" })),
-          30000
-        );
-
-        // Extract relevant vacancy context
-        const vacancyContext = {
-          title: vacancyData.vacancyTitle || "",
-          description: vacancyData.heroDescription || "",
-          jobDescription: vacancyData.jobDescription || "",
-          companyInfo: vacancyData.aboutTheCompanyDescription || "",
-          department: vacancyData.department || "",
-        };
-
-        // When formatting the content for the AI, handle object types correctly
-        const content = `
-          -You are a professional content writer for job vacancy landing pages.
-          -User request:${prompt}
-          -CURRENT VACANCY CONTEXT:
-           *Title: ${vacancyContext.title}
-           *Department: ${vacancyContext.department}
-           *Description: ${vacancyContext.description}
-           *Job Description: ${vacancyContext.jobDescription}
-           *Company Info: ${vacancyContext.companyInfo}
-          
-          -TASK:
-          Generate content for the "${sectionName}" section of this vacancy landing page.
-          
-          -Fields to generate:
-          ${sectionConfig.fields
-            .map((field) => {
-              let fieldInfo = `- ${field.label} (${field.type}${
-                field.maxLength ? `, max ${field.maxLength} characters` : ""
-              })`;
-
-              // For object types, provide more information
-              if (field.type === "object") {
-                fieldInfo += `\n  Current value: ${
-                  typeof vacancyData[field.key] === "object"
-                    ? JSON.stringify(vacancyData[field.key])
-                    : "none"
-                }`;
-
-                // Add example if available
-                if (field.objectExemple) {
-                  fieldInfo += `\n  Example structure: ${JSON.stringify(
-                    field.objectExemple
-                  )}`;
-                }
-              }
-
-              return fieldInfo;
-            })
-            .join("\n")}
-
-          -Important instructions:
-           *!!!generated content must never exceed the max length of the field
-           *Tone: ${tone}
-           *Maintain professional terminology where applicable
-           *Respect character limits strictly
-           *Ensure content is consistent with the rest of the vacancy information
-           *For object type fields, respond with a valid JSON string representation of the object
-           *Format response as valid JSON
-
-          Respond with a JSON object containing the following fields:
-          {
-            ${sectionConfig.fields
-              .map(
-                (field) =>
-                  `"${field.key}": ${
-                    field.type === "object"
-                      ? `"[valid JSON string for ${field.label}]"`
-                      : `"content for ${field.label}"`
-                  }`
-              )
-              .join(",\n")}
-          }
-          -Ensure each field's content matches its type and respects any maximum length constraints.
-          -For the best result i am providing you with a vacancy exemple,our backend schema and a list of rules that must be respected.
-          ${JSON.stringify(vacacnyExempleForAiEditModal)}
-          Rules:
-          ${JSON.stringify(aiRulesForAiEditModal)}
-        `;
-
-        console.log("Content:", content);
-
-        socket.send(
-          JSON.stringify({
-            id: "OPEN_AI_PROMPT",
-            payload: {
-              content,
-              // model: "gpt-4o-mini-2024-07-18",
-              model: "gpt-4.1-mini-2025-04-14",
-              app_id: "hirelab",
-              max_tokens: 10000,
-            },
-          })
-        );
-
-        // Clear ping interval when socket closes
-        socket.addEventListener("close", () => {
-          if (socketPing) {
-            clearInterval(socketPing);
-          }
-        });
-        setGenerating(false);
-      });
-
-      socket.addEventListener("message", (event) => {
-        const message = JSON.parse(event.data);
-        const response = message.payload?.response;
-        console.log("Response:", response);
-
-        if (response) {
-          try {
-            const result = JSON.parse(response);
-            console.log("Result:", result);
-            setGeneratedContent(result);
-            setStep("review");
-            setConnectionStatus("completed");
-          } catch (error) {
-            console.error("Failed to parse AI response:", error);
-            setSocketError("Failed to parse AI response. Please try again.");
-            setConnectionStatus("error");
-          }
-        }
-        setGenerating(false);
-        socket.close();
-      });
-
-      socket.addEventListener("error", (error) => {
-        console.error("WebSocket connection failed", error);
-        setSocketError("Connection failed. Please try again.");
-        setGenerating(false);
-        setConnectionStatus("error");
-      });
+      setGeneratedContent(content);
+      setStep("review");
+      setConnectionStatus("completed");
     } catch (error) {
       console.error("Error generating content:", error);
       setSocketError("An error occurred. Please try again.");
-      setGenerating(false);
       setConnectionStatus("error");
     } finally {
+      setGenerating(false);
     }
   };
 

@@ -60,6 +60,16 @@ class AiService {
   generateApplicationForm(data) {
     return this.api.post("/generate-application-form", data);
   }
+
+  // Enhance scraped company data (backend AI)
+  enhanceCompanyData(data) {
+    return this.api.post("/enhance-company-data", data);
+  }
+
+  // Generate section content for AI editor modal
+  generateSectionContent(data) {
+    return this.api.post("/generate-section-content", data);
+  }
 }
 
 export default new AiService(`${getBackendUrl()}/ai`);
