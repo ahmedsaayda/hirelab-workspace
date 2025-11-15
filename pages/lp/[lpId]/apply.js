@@ -1234,20 +1234,13 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       try { if (settings?.collectPartialAnswers && lpId) localStorage.removeItem(`lp:${lpId}:formDraft`); } catch (_) {}
       
       message.success('Application submitted successfully!');
-      // Redirect per settings if provided
-      if (settings?.redirectToUrl) {
-        const redirectUrl = settings.redirectToUrl.trim();
-        // Check if it's an absolute URL (starts with http:// or https:// or //)
-        if (redirectUrl.startsWith('http://') || redirectUrl.startsWith('https://') || redirectUrl.startsWith('//')) {
-          // For absolute URLs, use window.location to avoid Next.js router issues
-          window.location.href = redirectUrl;
-        } else if (redirectUrl.startsWith('www.')) {
-          // For URLs starting with www., prepend https://
-          window.location.href = `https://${redirectUrl}`;
-        } else {
-          // For relative URLs, use Next.js router
-          router.replace(redirectUrl);
-        }
+      // Redirect: either external redirectToUrl or fallback to thank-you
+      if ((settings?.redirectToUrl || '').trim()) {
+        const raw = settings.redirectToUrl.trim();
+        const hasProtocol = /^(https?:)?\/\//i.test(raw);
+        const cleaned = raw.replace(/\s+/g, '').replace(/^\/+/, '');
+        const finalUrl = hasProtocol ? raw : `https://${cleaned}`;
+        window.location.href = finalUrl;
       } else {
         router.push(`/lp/${lpId}/thank-you`);
       }

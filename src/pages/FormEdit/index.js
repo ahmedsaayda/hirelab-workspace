@@ -1297,12 +1297,49 @@ export default function FormEdit({ paramsId }) {
           description="Specify a URL or destination where respondents will be redirected after submitting the form."
           extra={null}
         >
-          <Input
-            className="mt-3"
-            placeholder="https://your-thank-you-page.com"
-            value={s.redirectToUrl}
-            onChange={(e) => updateSettings({ redirectToUrl: e.target.value })}
-          />
+          {(() => {
+            const raw = (s.redirectToUrl || "").trim();
+            const isAbsolute = /^(https?:)?\/\//i.test(raw);
+            const isRelativePath = raw.startsWith("/");
+            const isLikelyDomain = /^[a-z0-9.-]+\.[a-z]{2,}(:\d+)?(\/.*)?$/i.test(raw);
+            const isEmpty = raw.length === 0;
+            const isValid = isEmpty || isAbsolute || isRelativePath || raw.startsWith("www.") || isLikelyDomain;
+            return (
+              <>
+                <Input
+                  className="mt-3"
+                  placeholder="https://your-thank-you-page.com"
+                  value={s.redirectToUrl}
+                  status={!isValid ? "error" : undefined}
+                  onChange={(e) => updateSettings({ redirectToUrl: e.target.value })}
+                  onBlur={(e) => {
+                    const v = (e.target.value || "").trim();
+                    if (!v) {
+                      updateSettings({ redirectToUrl: "" });
+                      return;
+                    }
+                    const abs = /^(https?:)?\/\//i.test(v);
+                    const rel = v.startsWith("/");
+                    const domainLike = v.startsWith("www.") || /^[a-z0-9.-]+\.[a-z]{2,}(:\d+)?(\/.*)?$/i.test(v);
+                    if (abs || rel) {
+                      if (v !== s.redirectToUrl) updateSettings({ redirectToUrl: v });
+                      return;
+                    }
+                    // For domain-like values (e.g., google.com), auto-prefix https://
+                    const normalized = domainLike ? `https://${v}` : v;
+                    if (normalized !== s.redirectToUrl) {
+                      updateSettings({ redirectToUrl: normalized });
+                    }
+                  }}
+                />
+                {!isValid && (
+                  <div className="text-xs text-red-500 mt-1">
+                    Enter a valid URL (e.g., https://example.com) or a relative path starting with /
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </SettingRow>
 
         <SettingRow
