@@ -224,6 +224,8 @@ export default function Header({
         return currentPath.includes('/edit-page/');
       case 'formBuilder':
         return currentPath.includes('/form-editor/');
+      case 'adsEditor':
+        return currentPath.includes('/lp-editor/') && currentPath.includes('/ads');
       case 'launch':
         return currentPath.includes('/launch/');
       case 'ats':
@@ -377,6 +379,21 @@ export default function Header({
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="8" cy="8" r="7.5" fill={isNavItemActive("formBuilder") ? "white" : "#5207CD"} stroke={isNavItemActive("formBuilder") ? "white" : "#5207CD"}/>
                       <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke={isNavItemActive("formBuilder") ? "#5207CD" : "white"} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ),
+                  className: "rounded-lg",
+                  disabled: false,
+                },
+                {
+                  id: "adsEditor",
+                  label: "Ads", 
+                  link: (id) => `/lp-editor/${id}/ads`,
+                  bgColor: isNavItemActive("adsEditor") ? "bg-[#5207CD]" : "bg-[#F3F0FF]",
+                  textColor: isNavItemActive("adsEditor") ? "!text-[#FFFFFF]" : "!text-[#5207CD]",
+                  icon: (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="8" cy="8" r="7.5" fill={isNavItemActive("adsEditor") ? "white" : "#5207CD"} stroke={isNavItemActive("adsEditor") ? "white" : "#5207CD"}/>
+                      <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke={isNavItemActive("adsEditor") ? "#5207CD" : "white"} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ),
                   className: "rounded-lg",
