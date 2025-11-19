@@ -1364,9 +1364,15 @@ const CandidateProfile = ({
                     {item.answer}
                   </a>
                 ) : (
-                  <Text className="text-gray-900 font-medium break-words">
-                    {item.answer}
-                  </Text>
+                  (['text','longtext','motivation','textarea'].includes(item.type) && item.answer) ? (
+                    <Text className="text-gray-900 font-medium break-words">
+                      {renderTextWithLinks(item.answer)}
+                    </Text>
+                  ) : (
+                    <Text className="text-gray-900 font-medium break-words">
+                      {item.answer}
+                    </Text>
+                  )
                 )}
               </div>
               
@@ -1989,6 +1995,30 @@ const CandidateProfile = ({
       )}
     </div>
   );
+
+  // Convert URLs inside plain text to clickable links (used for text-like form answers)
+  const renderTextWithLinks = (text) => {
+    if (!text) return null;
+    const urlPattern = /(https?:\/\/[^\s]+)/gi;
+    const parts = String(text).split(urlPattern);
+    return parts.map((part, idx) => {
+      const isUrl = /^https?:\/\/[^\s]+$/i.test(part);
+      if (isUrl) {
+        return (
+          <a
+            key={`link-${idx}`}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline font-medium break-words"
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={`text-${idx}`}>{part}</span>;
+    });
+  };
 
   // Highlight @mentions in note text
   const renderNoteWithMentions = (text) => {

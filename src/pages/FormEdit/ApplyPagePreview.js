@@ -310,7 +310,7 @@ const FileUpload = ({ value, onChange, placeholder }) => (
       </div>
       <div>
         <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
-        <p className="text-sm text-gray-500 mt-1">SVG, PNG, JPG or GIF (max. 800x400px)</p>
+        <p className="text-sm text-gray-500 mt-1">PDF, Documents, Images, Videos, Audio files (max 10MB)</p>
         {value && <p className="text-sm text-green-600 mt-2">✓ {value}</p>}
       </div>
       <input
@@ -322,7 +322,7 @@ const FileUpload = ({ value, onChange, placeholder }) => (
           }
         }}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.svg"
+        accept=".pdf,.doc,.docx,.txt,.rtf,.png,.jpg,.jpeg,.gif,.svg,.webp,.bmp,.mp4,.webm,.ogg,.avi,.mov,.wmv,.flv,.mp3,.wav,.aac,.flac,.wma,.zip,.rar,.7z,.tar,.gz,.xls,.xlsx,.csv,.ppt,.pptx"
       />
     </div>
   </div>
