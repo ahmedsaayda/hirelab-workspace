@@ -7,6 +7,8 @@ import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/auth/selectors";
 import CrudService from "../../services/CrudService";
 import LandingPageService from "../../services/landingPageService";
+import AdsService from "../../services/AdsService";
+import MetaService from "../../services/MetaService";
 import Header from "../Dashboard/Vacancies/components/components/Header";
 import { Button, Heading, Text } from "../Dashboard/Vacancies/components/components";
 import ApplyCustomFont from "../Landingpage/ApplyCustomFont";
@@ -106,6 +108,7 @@ export default function AdsEdit({ paramsId }) {
   const [landingPageData, setLandingPageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [adsData, setAdsData] = useState(null);
+  const [workspaceId, setWorkspaceId] = useState(null);
   const [selectedAdType, setSelectedAdType] = useState("job");
   const [selectedPlatform, setSelectedPlatform] = useState("facebook");
   const [selectedFormat, setSelectedFormat] = useState("story");
@@ -116,6 +119,12 @@ export default function AdsEdit({ paramsId }) {
   const [generating, setGenerating] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
   const [editingVariant, setEditingVariant] = useState(null); // Track which variant is being edited
+  const [assetModalOpen, setAssetModalOpen] = useState(false);
+  const [adAccounts, setAdAccounts] = useState([]);
+  const [pages, setPages] = useState([]);
+  const [selectedAdAccountId, setSelectedAdAccountId] = useState("");
+  const [selectedPageId, setSelectedPageId] = useState("");
+  const [metaStatus, setMetaStatus] = useState({ connected: false });
 
   // Brand data
   const [userBrandData, setUserBrandData] = useState(null);
@@ -140,10 +149,8 @@ export default function AdsEdit({ paramsId }) {
         setSelectedVariant(firstVariant.id);
       }
 
-      // Save to database
-      await CrudService.update("LandingPageData", lpId, {
-        adsData: generatedAds,
-      });
+      // Save to backend (embedded under LandingPageData.ads)
+      await AdsService.saveAds(lpId, generatedAds);
 
       message.success("Ads generated successfully!");
     } catch (error) {
@@ -159,25 +166,31 @@ export default function AdsEdit({ paramsId }) {
     if (!lpId) return;
 
     setLoading(true);
-    CrudService.getSingle("LandingPageData", lpId, "ads edit")
-      .then((res) => {
-        if (res.data) {
-          setLandingPageData(res.data);
-          
-          // Check if ads data exists
-          if (!res.data.adsData || Object.keys(res.data.adsData).length === 0) {
-            setIsEmpty(true);
-            setAdsData(null);
-          } else {
-            setIsEmpty(false);
-            setAdsData(res.data.adsData);
-            
-            // Auto-select first variant
-            const firstAdType = AD_TYPES[0].id;
-            const firstVariant = res.data.adsData[firstAdType]?.variants?.[0];
-            if (firstVariant) {
-              setSelectedVariant(firstVariant.id);
-            }
+    // Fetch LP shell
+    const lpPromise = CrudService.getSingle("LandingPageData", lpId, "ads edit");
+    // Fetch ads
+    const adsPromise = AdsService.getAds(lpId);
+
+    Promise.all([lpPromise, adsPromise])
+      .then(([lpRes, adsRes]) => {
+        if (lpRes?.data) {
+          setLandingPageData(lpRes.data);
+          // Capture workspace for Meta connect state
+          if (lpRes.data?.workspace) setWorkspaceId(lpRes.data.workspace);
+        }
+        const adsPayload = adsRes?.data?.data || {};
+        if (!adsPayload || Object.keys(adsPayload).length === 0) {
+          setIsEmpty(true);
+          setAdsData(null);
+        } else {
+          setIsEmpty(false);
+          setAdsData(adsPayload);
+
+          // Auto-select first variant
+          const firstAdType = AD_TYPES[0].id;
+          const firstVariant = adsPayload[firstAdType]?.variants?.[0];
+          if (firstVariant) {
+            setSelectedVariant(firstVariant.id);
           }
         }
       })
@@ -193,6 +206,63 @@ export default function AdsEdit({ paramsId }) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Fetch Meta connect status (workspace-based if available)
+  useEffect(() => {
+    const loadMeta = async () => {
+      try {
+        const res = await MetaService.getStatus(workspaceId || undefined);
+        if (res?.data?.success) setMetaStatus(res.data.data);
+      } catch (e) {
+        // ignore
+      }
+    };
+    loadMeta();
+  }, [workspaceId]);
+
+  const openAssetModal = async () => {
+    try {
+      const res = await MetaService.listAssets(workspaceId || undefined);
+      const data = res?.data?.data || {};
+      setAdAccounts(data.adAccounts || []);
+      setPages(data.pages || []);
+      setAssetModalOpen(true);
+    } catch (e) {
+      message.error("Failed to load Meta assets");
+    }
+  };
+
+  const saveAssets = async () => {
+    if (!selectedAdAccountId || !selectedPageId) {
+      message.warning("Select an Ad Account and a Page");
+      return;
+    }
+    try {
+      await MetaService.saveAssets({
+        workspaceId: workspaceId || undefined,
+        adAccountId: selectedAdAccountId,
+        pageId: selectedPageId,
+      });
+      setAssetModalOpen(false);
+      const res = await MetaService.getStatus(workspaceId || undefined);
+      if (res?.data?.success) setMetaStatus(res.data.data);
+      message.success("Meta assets saved");
+    } catch (e) {
+      message.error("Failed to save Meta assets");
+    }
+  };
+  
+  const refreshAssets = async () => {
+    try {
+      const res = await MetaService.listAssets(workspaceId || undefined);
+      const data = res?.data?.data || {};
+      setAdAccounts(data.adAccounts || []);
+      setPages(data.pages || []);
+      message.success("Assets refreshed");
+    } catch (e) {
+      message.error("Failed to refresh assets");
+    }
+  };
 
   // Set brand data
   useEffect(() => {
@@ -222,6 +292,38 @@ export default function AdsEdit({ paramsId }) {
     });
 
     return ads;
+  };
+
+  // Publish to Meta (MVP)
+  const publishToMeta = async () => {
+    try {
+      // Collect approved or currently selected variants as defaults
+      const ids = [];
+      Object.keys(adsData || {}).forEach((adType) => {
+        const group = adsData[adType];
+        (group?.variants || []).forEach((v) => {
+          if (v.approved || v.id === selectedVariant) {
+            ids.push(v.id);
+          }
+        });
+      });
+      if (ids.length === 0) {
+        message.warning("No approved variants to publish");
+        return;
+      }
+      // For safety at this stage, push creatives only (no campaign/adset/ad)
+      const res = await AdsService.publish(lpId, { adIds: ids, budget: 0, assetsOnly: true });
+      if (res?.data?.success) {
+        message.success("Publish request submitted");
+        // Refresh to pick up publish metadata
+        fetchData();
+      } else {
+        message.error(res?.data?.message || "Failed to publish");
+      }
+    } catch (err) {
+      console.error("Publish error", err);
+      message.error(err?.response?.data?.message || err.message || "Failed to publish");
+    }
   };
 
   // Generate variants for a specific ad type
@@ -412,9 +514,7 @@ export default function AdsEdit({ paramsId }) {
   // Save ads data
   const saveAdsData = async () => {
     try {
-      await CrudService.update("LandingPageData", lpId, {
-        adsData: adsData,
-      });
+      await AdsService.saveAds(lpId, adsData);
       message.success("Ads saved successfully");
     } catch (error) {
       console.error("Error saving ads:", error);
@@ -581,16 +681,60 @@ export default function AdsEdit({ paramsId }) {
               </button>
             </div>
 
-            <button
-              onClick={handleApproveAll}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#0a8f63] hover:bg-[#099152] text-white font-semibold text-sm rounded-lg border border-[#0a8f63] transition-colors shadow-sm"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <rect width="16" height="16" rx="8" fill="white" opacity="0.2"/>
-                <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Approve All
-            </button>
+            {!metaStatus?.connected ? (
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await MetaService.getAuthUrl(workspaceId || undefined);
+                    const url = res?.data?.url;
+                    if (url) window.location.href = url;
+                    else message.error("Failed to get Meta connect URL");
+                  } catch {
+                    message.error("Failed to get Meta connect URL");
+                  }
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#0e87fe] hover:bg-[#0b6ecb] text-white font-semibold text-sm rounded-lg border border-[#0e87fe] transition-colors shadow-sm"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 3v18m9-9H3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Connect Meta
+              </button>
+            ) : (
+              <>
+                {metaStatus?.via === "workspace" && (!metaStatus?.adAccountId || !metaStatus?.pageId) && (
+                  <button
+                    onClick={openAssetModal}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-[#ffb020] hover:bg-[#e09a1c] text-white font-semibold text-sm rounded-lg border border-[#ffb020] transition-colors shadow-sm"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 3v18m9-9H3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Select Ad Account & Page
+                  </button>
+                )}
+                <button
+                  onClick={handleApproveAll}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-[#0a8f63] hover:bg-[#099152] text-white font-semibold text-sm rounded-lg border border-[#0a8f63] transition-colors shadow-sm"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect width="16" height="16" rx="8" fill="white" opacity="0.2"/>
+                    <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Approve All
+                </button>
+                <button
+                  onClick={publishToMeta}
+                  className="ml-3 flex items-center gap-2 px-4 py-2.5 bg-[#0e87fe] hover:bg-[#0b6ecb] text-white font-semibold text-sm rounded-lg border border-[#0e87fe] transition-colors shadow-sm"
+                  disabled={metaStatus?.via === "workspace" && (!metaStatus?.adAccountId || !metaStatus?.pageId)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 3v18m9-9H3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Publish (Meta)
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -698,15 +842,7 @@ export default function AdsEdit({ paramsId }) {
                       Live preview
                     </h2>
                     
-                    <button className="flex items-center gap-2 hover:bg-gray-50 px-0 py-1 rounded transition-colors w-fit">
-                      <img src={PLATFORMS.find(p => p.id === selectedPlatform)?.icon} alt="" className="w-[18px] h-[18px]" />
-                      <span className="font-semibold text-sm text-[#475467] leading-5">
-                        {PLATFORMS.find(p => p.id === selectedPlatform)?.label}
-                      </span>
-                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <path d="M4.5 6.75L9 11.25L13.5 6.75" stroke="#667085" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
+                  
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -783,6 +919,72 @@ export default function AdsEdit({ paramsId }) {
         }}
         landingPageData={landingPageData}
       />
+
+      {/* Meta Asset Selection Modal */}
+      <Modal
+        open={assetModalOpen}
+        onCancel={() => setAssetModalOpen(false)}
+        onOk={saveAssets}
+        okText="Save"
+        title="Select Ad Account & Page"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <a
+              href="https://www.facebook.com/pages/create/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#0e87fe] text-sm hover:underline"
+              title="Create a Facebook Page"
+            >
+              Create a Facebook Page
+            </a>
+            <button
+              type="button"
+              onClick={refreshAssets}
+              className="px-3 py-1.5 text-sm rounded-md border border-[#d0d5dd] hover:bg-gray-50"
+              title="Refresh ad accounts and pages"
+            >
+              Refresh assets
+            </button>
+          </div>
+          <div>
+            <div className="text-sm font-semibold mb-1">Ad Account</div>
+            <select
+              className="w-full border rounded-md p-2"
+              value={selectedAdAccountId}
+              onChange={(e) => setSelectedAdAccountId(e.target.value)}
+            >
+              <option value="">Choose an Ad Account</option>
+              {adAccounts.map(acc => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.name} ({acc.account_id}) {acc.currency ? `- ${acc.currency}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <div className="text-sm font-semibold mb-1">Page</div>
+            <select
+              className="w-full border rounded-md p-2"
+              value={selectedPageId}
+              onChange={(e) => setSelectedPageId(e.target.value)}
+            >
+              <option value="">Choose a Page</option>
+              {pages.map(pg => (
+                <option key={pg.id} value={pg.id}>
+                  {pg.name} ({pg.id})
+                </option>
+              ))}
+            </select>
+            {pages.length === 0 && (
+              <div className="mt-2 text-xs text-[#667085]">
+                No Pages found. Click "Create a Facebook Page", then "Refresh assets".
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

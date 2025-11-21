@@ -47,9 +47,11 @@ export const WorkspaceProvider = ({ children }) => {
 
       try {
         const response = await WorkspaceService.getAccessibleWorkspaces();
+        console.log("response :",response)
         setAccessibleWorkspaces(response.data || []);
-        const pending = (response.data || []).filter((workspace) => workspace?.status === 'pending');
-        setPendingInvitations(pending);
+        const pending = (response.data || []).filter?.((workspace) => workspace?.status === 'pending');
+        console.log("pending :",pending)
+        setPendingInvitations(pending || []);
       } catch (error) {
         if (error.response?.status !== 401) {
           console.error("Error fetching accessible workspaces:", error);
@@ -513,10 +515,10 @@ export const WorkspaceProvider = ({ children }) => {
   }, []);
 
   const getWorkspaceSwitcherEntries = useCallback(() => {
-    const activeWorkspaces = (accessibleWorkspaces || []).filter((entry) => entry.status === 'active');
+    const activeWorkspaces = (accessibleWorkspaces || []).filter?.((entry) => entry.status === 'active');
     const pending = pendingInvitations || [];
 
-    const entries = activeWorkspaces.map((workspace) => ({
+    const entries = activeWorkspaces?.map?.((workspace) => ({
       id: workspace._id,
       name: workspace.name || workspace.clientName || 'Workspace',
       ownerId: workspace.ownerId,
@@ -524,7 +526,7 @@ export const WorkspaceProvider = ({ children }) => {
       status: 'active',
     }));
 
-    const invites = pending.map((entry) => ({
+    const invites = pending?.map?.((entry) => ({
       id: entry.workspaceId,
       name: entry.workspaceName,
       ownerId: entry.ownerId,
