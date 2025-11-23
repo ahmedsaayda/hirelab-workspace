@@ -1,5 +1,5 @@
 import Cookies from "js-cookie";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Select from "../Dashboard/Vacancies/components/Select";
@@ -18,16 +18,24 @@ import { partner } from "../../constants";
 import TeamService from "../../services/TeamService";
 import TrackingService from "../../services/TrackingService";
 import WorkspaceService from "../../services/WorkspaceService";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const Login = () => {
 
   const router = useRouter();
   const loading = useSelector(selectLoading);
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
 
   const handleSubmit = useCallback(
     async (e) => {
       try {
         e.preventDefault();
+        const latestToken = captchaToken || recaptchaRef.current?.getValue?.();
+        if (!latestToken) {
+          message.error("Please complete the CAPTCHA");
+          return;
+        }
 
         const [firstName, lastName, email, password] = new Array(4)
           .fill(0)
@@ -38,6 +46,7 @@ const Login = () => {
           lastName,
           email,
           password,
+          captchaToken: latestToken
         });
   
         const result = await AuthService.login({
@@ -177,7 +186,7 @@ const Login = () => {
         console.log(error);
       }
     },
-    [router]
+    [router, captchaToken]
   );
 
   return (
@@ -253,13 +262,21 @@ const Login = () => {
                 </label>
               </div>
             }
+            <div className="flex justify-center">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                onChange={setCaptchaToken}
+                onExpired={() => setCaptchaToken(null)}
+              />
+            </div>
             <div>
               <Button
               type="primary"
               variant="solid"
               color="blue"
               className="w-full"
-              disabled={loading}
+              disabled={loading || !captchaToken}
               >
                 {!loading ? <span>Sign up</span> :<svg width="20" height="20" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#60A5FA" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 120"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"></animateTransform></circle></svg> }
               </Button>
