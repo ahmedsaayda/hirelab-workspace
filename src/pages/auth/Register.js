@@ -18,24 +18,23 @@ import { partner } from "../../constants";
 import TeamService from "../../services/TeamService";
 import TrackingService from "../../services/TrackingService";
 import WorkspaceService from "../../services/WorkspaceService";
-import ReCAPTCHA from "react-google-recaptcha";
+import { GoogleReCaptchaProvider, useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
-const Login = () => {
+const RegisterInner = () => {
 
   const router = useRouter();
   const loading = useSelector(selectLoading);
-  const [captchaToken, setCaptchaToken] = useState(null);
-  const recaptchaRef = useRef(null);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleSubmit = useCallback(
     async (e) => {
       try {
         e.preventDefault();
-        const latestToken = captchaToken || recaptchaRef.current?.getValue?.();
-        if (!latestToken) {
-          message.error("Please complete the CAPTCHA");
+        if (!executeRecaptcha) {
+          message.error("Captcha not ready. Please try again.");
           return;
         }
+        const latestToken = await executeRecaptcha("register");
 
         const [firstName, lastName, email, password] = new Array(4)
           .fill(0)
@@ -186,7 +185,7 @@ const Login = () => {
         console.log(error);
       }
     },
-    [router, captchaToken]
+    [router, executeRecaptcha]
   );
 
   return (
@@ -262,21 +261,13 @@ const Login = () => {
                 </label>
               </div>
             }
-            <div className="flex justify-center">
-              <ReCAPTCHA
-                ref={recaptchaRef}
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-                onChange={setCaptchaToken}
-                onExpired={() => setCaptchaToken(null)}
-              />
-            </div>
             <div>
               <Button
               type="primary"
               variant="solid"
               color="blue"
               className="w-full"
-              disabled={loading || !captchaToken}
+              disabled={loading}
               >
                 {!loading ? <span>Sign up</span> :<svg width="20" height="20" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#60A5FA" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 120"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"></animateTransform></circle></svg> }
               </Button>
@@ -285,6 +276,17 @@ const Login = () => {
         </SlimLayout>
       </div>
     </>
+  );
+};
+
+const Login = () => {
+  return (
+    <GoogleReCaptchaProvider
+      reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+      scriptProps={{ async: true, defer: true }}
+    >
+      <RegisterInner />
+    </GoogleReCaptchaProvider>
   );
 };
 

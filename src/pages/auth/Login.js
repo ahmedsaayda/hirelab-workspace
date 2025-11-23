@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import ReCAPTCHA from "react-google-recaptcha";
+import { GoogleReCaptchaProvider, useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { login } from "../../../src/redux/auth/actions";
 import { store } from "../../../src/redux/store";
 import AuthService from "../../../src/services/AuthService";
@@ -19,11 +19,11 @@ import TeamService from "../../../src/services/TeamService";
 import WorkspaceService from "../../../src/services/WorkspaceService";
 import AuthServiceWorkspace from "../../../src/services/AuthService";
 
-const Login = () => {
+const LoginInner = () => {
   const router = useRouter();
   // const loading = useSelector(selectLoading);
   const [isLoading, setIsLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState(null);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const consumeWorkspaceInvite = async () => {
     try {
@@ -61,11 +61,12 @@ const Login = () => {
  try {
   setIsLoading(true);
   e.preventDefault();
-  if (!captchaToken) {
-    message.error("Please complete the CAPTCHA");
+  if (!executeRecaptcha) {
+    message.error("Captcha not ready. Please try again.");
     setIsLoading(false);
     return;
   }
+  const captchaToken = await executeRecaptcha("login");
   const result = await AuthService.login({
     email: e.target[0].value,
     password: e.target[1].value,
@@ -189,19 +190,13 @@ const Login = () => {
             defaultValue=""
             required
           />
-          <div className="flex justify-center">
-            <ReCAPTCHA
-              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-              onChange={setCaptchaToken}
-            />
-          </div>
           <div>
             <Button
               type="primary"
               variant="solid"
               color="blue"
               className="w-full"
-              disabled={isLoading || !captchaToken}
+              disabled={isLoading}
             >
              {isLoading ? <svg width="20" height="20" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#60A5FA" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 120"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"></animateTransform></circle></svg>: <span>Sign in</span>}
             </Button>
@@ -215,6 +210,17 @@ const Login = () => {
         </form>
       </SlimLayout>
     </div>
+  );
+};
+
+const Login = () => {
+  return (
+    <GoogleReCaptchaProvider
+      reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+      scriptProps={{ async: true, defer: true }}
+    >
+      <LoginInner />
+    </GoogleReCaptchaProvider>
   );
 };
 

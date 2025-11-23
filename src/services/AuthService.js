@@ -12,7 +12,7 @@ class AuthService {
     middleField(this.api);
   }
 
-  register({ role, email, phone, password, firstName, lastName }) {
+  register({ role, email, phone, password, firstName, lastName, captchaToken }) {
     return this.api.post("/register", {
       role,
       email,
@@ -20,6 +20,7 @@ class AuthService {
       password,
       firstName,
       lastName,
+      ...(captchaToken ? { captchaToken } : {}),
     });
   }
 
@@ -27,8 +28,8 @@ class AuthService {
     return this.api.post("/registerTeam", data);
   }
 
-  login({ email, password }) {
-    return this.api.post("/login", { email, password });
+  login({ email, password, captchaToken }) {
+    return this.api.post("/login", { email, password, captchaToken });
   }
 
   logout() {
