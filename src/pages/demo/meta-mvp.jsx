@@ -5,7 +5,8 @@ export default function MetaMvpDemo() {
   const [adImage, setAdImage] = useState("https://hirelab.io/wp-content/uploads/2024/06/HireLab-Logo-Purple-2025.png");
   const [adHeadline, setAdHeadline] = useState("HireLab - The Future of Hiring(test)");
   const [adBudget, setAdBudget] = useState(1);
-  const [landingPageId, setLandingPageId] = useState("");
+  const [landingPageId, setLandingPageId] = useState("6901761b563848ce0d3b21c6");
+  const [destinationUrl, setDestinationUrl] = useState("https://hirelab.io/lp/6901761b563848ce0d3b21c6");
   const [cta, setCta] = useState("APPLY_NOW");
   const [adJobCity, setAdJobCity] = useState("");
   const [adJobInterest, setAdJobInterest] = useState("");
@@ -18,6 +19,13 @@ export default function MetaMvpDemo() {
     setLoading(true);
     setResult(null);
     setError(null);
+    const hasLpId = !!landingPageId?.trim();
+    const hasDest = !!destinationUrl?.trim();
+    if (!hasLpId && !hasDest) {
+      setLoading(false);
+      setError({ message: "Provide either a Landing Page ID or a public Destination URL." });
+      return;
+    }
     try {
       const payload = {
         adImage,
@@ -26,7 +34,8 @@ export default function MetaMvpDemo() {
         adJobCity: adJobCity || undefined,
         adJobInterest: adJobInterest || undefined,
         adBudget: Number(adBudget) || 25,
-        promote: landingPageId ? { _id: landingPageId } : undefined,
+        promote: hasLpId ? { _id: landingPageId } : undefined,
+        destinationUrl: hasDest ? destinationUrl : undefined,
       };
       const resp = await UserService.postAd(payload);
       // Legacy flow: backend returns { url: oauthUri } if no/expired token
@@ -85,12 +94,22 @@ export default function MetaMvpDemo() {
           />
         </label>
         <label>
-          Landing Page ID (for link)
+          Landing Page ID (for default link)
           <input
             type="text"
-            placeholder="LandingPage _id (optional but recommended)"
+            placeholder="LandingPage _id (optional if Destination URL is provided)"
             value={landingPageId}
             onChange={(e) => setLandingPageId(e.target.value)}
+            style={{ width: "100%", padding: 8 }}
+          />
+        </label>
+        <label>
+          Destination URL (public https)
+          <input
+            type="text"
+            placeholder="https://your-public-url.example.com"
+            value={destinationUrl}
+            onChange={(e) => setDestinationUrl(e.target.value)}
             style={{ width: "100%", padding: 8 }}
           />
         </label>
