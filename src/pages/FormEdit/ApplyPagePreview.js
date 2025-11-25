@@ -300,7 +300,7 @@ const YesNoQuestion = ({ field, value, onChange }) => {
   );
 };
 
-const FileUpload = ({ value, onChange, placeholder }) => (
+const FileUpload = ({ value, onChange, placeholder, isVideo = false }) => (
   <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
     <div className="space-y-4">
       <div className="text-blue-500">
@@ -310,7 +310,9 @@ const FileUpload = ({ value, onChange, placeholder }) => (
       </div>
       <div>
         <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
-        <p className="text-sm text-gray-500 mt-1">PDF, Documents, Images, Videos, Audio files (max 10MB)</p>
+        <p className="text-sm text-gray-500 mt-1">
+          {isVideo ? 'Videos up to 100MB (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)' : 'Videos up to 100MB; other files up to 10MB'}
+        </p>
         {value && <p className="text-sm text-green-600 mt-2">✓ {value}</p>}
       </div>
       <input
@@ -322,7 +324,7 @@ const FileUpload = ({ value, onChange, placeholder }) => (
           }
         }}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        accept=".pdf,.doc,.docx,.txt,.rtf,.png,.jpg,.jpeg,.gif,.svg,.webp,.bmp,.mp4,.webm,.ogg,.avi,.mov,.wmv,.flv,.mp3,.wav,.aac,.flac,.wma,.zip,.rar,.7z,.tar,.gz,.xls,.xlsx,.csv,.ppt,.pptx"
+        accept={isVideo ? '.mp4,.webm,.ogg,.avi,.mov,.wmv,.flv' : '.pdf,.doc,.docx,.txt,.rtf,.png,.jpg,.jpeg,.gif,.svg,.webp,.bmp,.mp4,.webm,.ogg,.avi,.mov,.wmv,.flv,.mp3,.wav,.aac,.flac,.wma,.zip,.rar,.7z,.tar,.gz,.xls,.xlsx,.csv,.ppt,.pptx'}
       />
     </div>
   </div>
@@ -1146,6 +1148,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
             value={value}
             onChange={(fileName) => handleInputChange(field.id, fileName)}
             placeholder={field.placeholder}
+            isVideo={!!field.videoOnly}
           />
         );
 

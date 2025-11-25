@@ -2660,6 +2660,29 @@ export default function FormEdit({ paramsId }) {
           </>
         )}
 
+        {/* File field: video-only toggle */}
+        {currentSection.type === "file" && (
+          <Form.Item
+            label={<span className="font-bold text-[14px] text-[#475647]">Upload Type</span>}
+          >
+            <div className="rounded-lg border border-solid border-blue_gray-100 p-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={!!currentSection.videoOnly}
+                  onChange={(e) =>
+                    handleUpdateSection(currentSection.id, { videoOnly: e.target.checked })
+                  }
+                />
+                <span>Video upload (100MB limit)</span>
+              </label>
+              <div className="text-xs text-gray-500 mt-2">
+                When enabled, only video files are accepted and up to 100MB. Otherwise, documents/images/audio/etc up to 10MB.
+              </div>
+            </div>
+          </Form.Item>
+        )}
+
         {/* Multichoice, Dropdown, Multiselect Option Editors */}
         {(currentSection.type === "multichoice" ||
           currentSection.type === "dropdown" ||

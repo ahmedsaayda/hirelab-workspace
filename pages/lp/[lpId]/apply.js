@@ -322,7 +322,7 @@ const YesNoQuestion = ({ field, value, onChange }) => {
   );
 };
 
-const FileUpload = ({ value, onChange, placeholder }) => {
+const FileUpload = ({ value, onChange, placeholder, videoOnly = false }) => {
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState('');
 
@@ -351,24 +351,26 @@ const FileUpload = ({ value, onChange, placeholder }) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type and size - expanded to support all file types
-    const allowedTypes = [
+    // Validate file type and size based on config
+    const VIDEO_EXTS = ['.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv'];
+    const NON_VIDEO_EXTS = [
       '.pdf', '.doc', '.docx', '.txt', '.rtf',
       '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp',
-      '.mp4', '.webm', '.ogg', '.avi', '.mov', '.wmv', '.flv',
-      '.mp3', '.wav', '.ogg', '.aac', '.flac', '.wma',
+      '.mp3', '.wav', '.aac', '.flac', '.wma',
       '.zip', '.rar', '.7z', '.tar', '.gz',
       '.xls', '.xlsx', '.csv', '.ppt', '.pptx'
     ];
+    const allowedTypes = videoOnly ? VIDEO_EXTS : [...VIDEO_EXTS, ...NON_VIDEO_EXTS];
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     
     if (!allowedTypes.includes(fileExtension)) {
-      message.error('Please select a valid file type (PDF, DOC, DOCX, TXT, Images, Videos, Audio, Archives, etc.)');
+      message.error(videoOnly ? 'Please upload a video file (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)' : 'Please select a valid file type (Documents, Images, Videos, Audio, Archives, etc.)');
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      message.error('File size must be less than 10MB');
+    const MAX_BYTES = videoOnly ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > MAX_BYTES) {
+      message.error(videoOnly ? 'Video size must be ≤ 100MB' : 'File size must be ≤ 10MB');
       return;
     }
 
@@ -377,7 +379,7 @@ const FileUpload = ({ value, onChange, placeholder }) => {
       console.log('📄 Uploading file:', file.name);
       
       // Upload file using UploadService
-      const response = await UploadService.upload(file, 10); // 10MB max
+      const response = await UploadService.upload(file, videoOnly ? 100 : 10); // enforce on uploader too
       
       if (response && response.data && response.data.secure_url) {
         const uploadedUrl = response.data.secure_url;
@@ -423,7 +425,9 @@ const FileUpload = ({ value, onChange, placeholder }) => {
           ) : (
             <>
               <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
-              <p className="text-sm text-gray-500 mt-1">PDF, Documents, Images, Videos, Audio files (max 10MB)</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {videoOnly ? 'Videos up to 100MB (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)' : 'Videos up to 100MB; other files up to 10MB'}
+              </p>
             </>
           )}
           {fileName && !uploading && <p className="text-sm text-green-600 mt-2">✓ {fileName}</p>}
@@ -434,7 +438,9 @@ const FileUpload = ({ value, onChange, placeholder }) => {
           onChange={handleFileUpload}
           disabled={uploading}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-          accept=".pdf,.doc,.docx,.txt,.rtf,.png,.jpg,.jpeg,.gif,.svg,.webp,.bmp,.mp4,.webm,.ogg,.avi,.mov,.wmv,.flv,.mp3,.wav,.aac,.flac,.wma,.zip,.rar,.7z,.tar,.gz,.xls,.xlsx,.csv,.ppt,.pptx"
+          accept={videoOnly
+            ? '.mp4,.webm,.ogg,.avi,.mov,.wmv,.flv'
+            : '.pdf,.doc,.docx,.txt,.rtf,.png,.jpg,.jpeg,.gif,.svg,.webp,.bmp,.mp4,.webm,.ogg,.avi,.mov,.wmv,.flv,.mp3,.wav,.aac,.flac,.wma,.zip,.rar,.7z,.tar,.gz,.xls,.xlsx,.csv,.ppt,.pptx'}
         />
       </div>
     </div>
@@ -1793,6 +1799,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
             value={value}
             onChange={(fileUrl) => handleInputChange(field.id, fileUrl)}
             placeholder={field.placeholder}
+            videoOnly={!!field.videoOnly}
           />
         );
 
