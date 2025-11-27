@@ -214,31 +214,36 @@ const useResponsiveFontSize = (
         }
       }
       
-      // For single words, dynamically adjust size to fit container width
-      if (isSingleWord) {
+      // Ensure no single word ever breaks: measure the longest word
+      // and shrink the font until that word fits within the container.
+      {
         const containerWidth = container.offsetWidth - 20; // Account for padding
         let testSize = currentSize;
-        
-        // Create temporary element to measure text width
+
+        // Pick the longest "word" (split on whitespace). If text is a single word, this is the text itself.
+        const longestWord =
+          (text || "")
+            .split(/\s+/)
+            .filter(Boolean)
+            .sort((a, b) => b.length - a.length)[0] || text;
+
+        // Create temporary element to measure word width
         const tempElement = document.createElement('span');
         tempElement.style.position = 'absolute';
         tempElement.style.visibility = 'hidden';
         tempElement.style.whiteSpace = 'nowrap';
         tempElement.style.fontFamily = container.style.fontFamily || 'inherit';
-        tempElement.textContent = text;
+        tempElement.textContent = longestWord;
         document.body.appendChild(tempElement);
-        
-        // Decrease font size until text fits in one line
+
+        // Decrease font size until the longest word fits in one line
         while (testSize > 12) { // Minimum font size
           tempElement.style.fontSize = `${testSize}px`;
-          const textWidth = tempElement.offsetWidth;
-          
-          if (textWidth <= containerWidth) {
-            break;
-          }
+          const wordWidth = tempElement.offsetWidth;
+          if (wordWidth <= containerWidth) break;
           testSize -= 1;
         }
-        
+
         document.body.removeChild(tempElement);
         currentSize = testSize;
       }
@@ -255,22 +260,10 @@ const useResponsiveFontSize = (
         container.style.wordWrap = 'normal';
         container.style.whiteSpace = 'nowrap';
       } else {
-        // For multiple words: allow normal wrapping
-        container.style.wordBreak = 'normal';
-        
-        // Check if CSS.supports is available and if keep-all is supported
-        try {
-          if (typeof CSS !== 'undefined' && CSS.supports && CSS.supports('word-break', 'keep-all')) {
-            container.style.wordBreak = 'keep-all';
-          }
-        } catch (e) {
-          // Fallback for browsers without CSS.supports
-          container.style.wordBreak = 'normal';
-        }
-        
-        // Cross-browser text wrapping
-        container.style.overflowWrap = 'break-word';
-        container.style.wordWrap = 'break-word'; // IE fallback
+        // For multiple words: wrap only at whitespace, never inside a word
+        container.style.wordBreak = 'keep-all';
+        container.style.overflowWrap = 'normal';
+        container.style.wordWrap = 'normal'; // IE fallback
         container.style.whiteSpace = 'normal';
       }
       
