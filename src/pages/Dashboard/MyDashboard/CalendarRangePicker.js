@@ -1,10 +1,38 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-const CalendarRangePicker = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [isSelectingRange, setIsSelectingRange] = useState(false);
+const formatDateKey = (year, monthIndex, day) => {
+  // monthIndex is zero-based
+  const m = String(monthIndex + 1).padStart(2, "0");
+  const d = String(day).padStart(2, "0");
+  return `${year}-${m}-${d}`;
+};
+
+const CalendarRangePicker = ({
+  selectedDate,
+  onDateChange,
+  highlightedDates = [],
+}) => {
+  const [currentDate, setCurrentDate] = useState(
+    selectedDate || new Date()
+  );
+
+  // Keep viewed month in sync with externally selected date
+  useEffect(() => {
+    if (selectedDate) {
+      setCurrentDate(
+        new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          1
+        )
+      );
+    }
+  }, [selectedDate]);
+
+  const highlightedSet = useMemo(
+    () => new Set(highlightedDates || []),
+    [highlightedDates]
+  );
 
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -23,11 +51,23 @@ const CalendarRangePicker = () => {
   };
 
   const getPreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    setCurrentDate(
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() - 1,
+        1
+      )
+    );
   };
 
   const getNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    setCurrentDate(
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        1
+      )
+    );
   };
 
   const isToday = (day) => {
@@ -39,48 +79,15 @@ const CalendarRangePicker = () => {
     );
   };
 
-  const isInRange = (day) => {
-    if (!startDate || !endDate) return false;
-    
-    const currentDateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    return currentDateObj >= startDate && currentDateObj <= endDate;
-  };
-
-  const isRangeStart = (day) => {
-    if (!startDate) return false;
-    return (
-      day === startDate.getDate() &&
-      currentDate.getMonth() === startDate.getMonth() &&
-      currentDate.getFullYear() === startDate.getFullYear()
-    );
-  };
-
-  const isRangeEnd = (day) => {
-    if (!endDate) return false;
-    return (
-      day === endDate.getDate() &&
-      currentDate.getMonth() === endDate.getMonth() &&
-      currentDate.getFullYear() === endDate.getFullYear()
-    );
-  };
-
   const handleDateClick = (day) => {
-    const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    
-    if (!startDate || (startDate && endDate)) {
-      // Start new range
-      setStartDate(clickedDate);
-      setEndDate(null);
-      setIsSelectingRange(true);
-    } else if (startDate && !endDate) {
-      // Complete the range
-      if (clickedDate < startDate) {
-        setEndDate(startDate);
-        setStartDate(clickedDate);
-      } else {
-        setEndDate(clickedDate);
-      }
-      setIsSelectingRange(false);
+    const clickedDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day
+    );
+
+    if (onDateChange) {
+      onDateChange(clickedDate);
     }
   };
 
@@ -107,29 +114,47 @@ const CalendarRangePicker = () => {
     // Current month days
     for (let day = 1; day <= daysInMonth; day++) {
       const isCurrentDay = isToday(day);
-      const isStart = isRangeStart(day);
-      const isEnd = isRangeEnd(day);
-      const inRange = isInRange(day);
-      
-      let className = "flex items-center justify-center w-8 h-8 text-sm cursor-pointer transition-colors ";
-      
-      if (isStart || isEnd) {
-        className += "bg-blue-500 text-white font-medium rounded-full ";
-      } else if (inRange) {
-        className += "bg-blue-100 text-blue-700 font-medium rounded-full ";
+      const isSelected =
+        selectedDate &&
+        day === selectedDate.getDate() &&
+        currentDate.getMonth() === selectedDate.getMonth() &&
+        currentDate.getFullYear() === selectedDate.getFullYear();
+
+      const dateKey = formatDateKey(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        day
+      );
+      const hasEvent = highlightedSet.has(dateKey);
+
+      let className =
+        "relative flex items-center justify-center w-8 h-8 text-sm cursor-pointer transition-colors ";
+
+      if (isSelected) {
+        className +=
+          "bg-purple-600 text-white font-medium rounded-full ";
       } else if (isCurrentDay) {
-        className += "bg-gray-200 text-gray-900 font-medium rounded-full ";
+        className +=
+          "bg-gray-200 text-gray-900 font-medium rounded-full ";
       } else {
-        className += "text-gray-700 hover:bg-gray-100 hover:rounded-full ";
+        className +=
+          "text-gray-700 hover:bg-gray-100 hover:rounded-full ";
       }
-      
+
       days.push(
         <div
           key={day}
           onClick={() => handleDateClick(day)}
           className={className}
         >
-          {day}
+          <span className="relative z-10">{day}</span>
+          {hasEvent && (
+            <span
+              className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${
+                isSelected ? "bg-white" : "bg-emerald-500"
+              }`}
+            />
+          )}
         </div>
       );
     }

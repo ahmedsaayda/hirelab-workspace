@@ -1,5 +1,5 @@
 import { Tabs, Tooltip } from "antd";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import CalendarRangePicker from "./CalendarRangePicker.js";
 import Overview from "./Overview.js";
 import Reports from "./Reports.js";
@@ -14,193 +14,13 @@ import { CrownOutlined, PlusOutlined } from "@ant-design/icons";
 import { refreshUserData } from "../../../utils/userRefresh.js";
 import { useWorkspace } from "../../../contexts/WorkspaceContext";
 import { HelpCircle } from "lucide-react";
+import CandidateChatService from "../../../services/CandidateChatService.js";
+import moment from "moment";
 
-const calendarEvents = [
-  {
-    title: "Agenda Title",
-    start: "08:00",
-    end: "08:30",
-    background: "#EFF8FF",
-    dot: (
-      <svg
-        width={10}
-        height={11}
-        viewBox="0 0 10 11"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          id="Vertical container"
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#5207CD"
-        />
-      </svg>
-    ),
-  },
-  {
-    title: "Title for the Agenda",
-    start: "08:00",
-    end: "08:30",
-    background: "#FFE2E5",
-    dot: (
-      <svg
-        width={10}
-        height={11}
-        viewBox="0 0 10 11"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          id="Vertical container"
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M4.89642 3.78531C3.75416 3.78531 2.82486 4.71462 2.82486 5.85687C2.82486 6.99913 3.75417 7.92843 4.89642 7.92843C6.03868 7.92843 6.96798 6.99912 6.96798 5.85687C6.96798 4.71461 6.03867 3.78531 4.89642 3.78531ZM4.89642 0.960449C7.60064 0.960449 9.79284 3.15266 9.79284 5.85687C9.79284 8.56109 7.60063 10.7533 4.89642 10.7533C2.19221 10.7533 0 8.56108 0 5.85687C0 3.15266 2.19221 0.960449 4.89642 0.960449Z"
-          fill="#F75656"
-        />
-      </svg>
-    ),
-  },
-  {
-    title: "Agenda",
-    start: "08:00",
-    end: "08:30",
-    background: "#EFF8FF",
-    dot: (
-      <svg
-        width={10}
-        height={11}
-        viewBox="0 0 10 11"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          id="Vertical container"
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#5207CD"
-        />
-      </svg>
-    ),
-  },
-  {
-    title: "Agenda",
-    start: "08:00",
-    end: "08:30",
-    background: "#EFF8FF",
-    dot: (
-      <svg
-        width={10}
-        height={11}
-        viewBox="0 0 10 11"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          id="Vertical container"
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#5207CD"
-        />
-      </svg>
-    ),
-  },
-  {
-    title: "Agenda",
-    start: "08:00",
-    end: "08:30",
-    background: "#EFF8FF",
-    dot: (
-      <svg
-        width={10}
-        height={11}
-        viewBox="0 0 10 11"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          id="Vertical container"
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#5207CD"
-        />
-      </svg>
-    ),
-  },
-  {
-    title: "Agenda",
-    start: "08:00",
-    end: "08:30",
-    background: "#EFF8FF",
-    dot: (
-      <svg
-        width={10}
-        height={11}
-        viewBox="0 0 10 11"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          id="Vertical container"
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#5207CD"
-        />
-      </svg>
-    ),
-  },
-  {
-    title: "Agenda",
-    start: "08:00",
-    end: "08:30",
-    background: "#EFF8FF",
-    dot: (
-      <svg
-        width={10}
-        height={11}
-        viewBox="0 0 10 11"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          id="Vertical container"
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#5207CD"
-        />
-      </svg>
-    ),
-  },
-  {
-    title: "Agenda",
-    start: "08:00",
-    end: "08:30",
-    background: "#EFF8FF",
-    dot: (
-      <svg
-        width={10}
-        height={11}
-        viewBox="0 0 10 11"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          id="Vertical container"
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
-          fill="#5207CD"
-        />
-      </svg>
-    ),
-  },
-];
+// Helper to normalize to date key (YYYY-MM-DD) in local time
+const toDateKey = (date) => {
+  return moment(date).format("YYYY-MM-DD");
+};
 
 const MyDashboard = () => {
   const items = [
@@ -224,6 +44,11 @@ const MyDashboard = () => {
   const [funnelUsage, setFunnelUsage] = useState(null);
   const tier = user?.tier || { id: 'free', name: 'Free Forever', maxFunnels: 1 };
   const upgradeNeeded = user?.upgradeNeeded;
+
+  // Interview calendar state
+  const [interviewEvents, setInterviewEvents] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [calendarLoading, setCalendarLoading] = useState(false);
 
   // Add effect to check for subscription changes
   useEffect(() => {
@@ -272,6 +97,78 @@ const MyDashboard = () => {
       }
     }
   }, []);
+
+  const loadInterviewEvents = useCallback(async () => {
+    // Ensure a team is selected (same logic as CandidateChat)
+    const currentTeam = JSON.parse(
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("currentTeam") || "null"
+        : "null"
+    );
+    if (!currentTeam) {
+      setInterviewEvents([]);
+      return;
+    }
+
+    setCalendarLoading(true);
+    try {
+      // Load first 100 chats, which is typically plenty for upcoming interviews
+      const response = await CandidateChatService.getTeamChats(1, 100);
+      const chats = response.data?.chats || [];
+
+      const events = [];
+
+      chats.forEach((chat) => {
+        const candidate = chat.candidateId || {};
+        if (!candidate.meetingScheduled || !candidate.interviewMeetingTimestamp) {
+          return;
+        }
+
+        const start = new Date(candidate.interviewMeetingTimestamp);
+        const end = candidate.interviewMeetingTimestampEnd
+          ? new Date(candidate.interviewMeetingTimestampEnd)
+          : new Date(start.getTime() + 60 * 60 * 1000);
+
+        events.push({
+          id: `${chat._id}-${start.toISOString()}`,
+          chatId: chat._id,
+          candidateId: candidate._id,
+          candidateName: chat.candidateName || candidate.formData?.fullname || candidate.formData?.name || "Candidate",
+          jobTitle: chat.jobTitle,
+          start,
+          end,
+          timezone: candidate.interviewMeetingTimezone || "UTC",
+          meetingLink: candidate.interviewMeetingLink || null,
+        });
+      });
+
+      // Sort by start time
+      events.sort((a, b) => a.start - b.start);
+      setInterviewEvents(events);
+    } catch (error) {
+      console.error("Error loading interview events for calendar:", error);
+      // Fallback to empty list on error
+      setInterviewEvents([]);
+    } finally {
+      setCalendarLoading(false);
+    }
+  }, []);
+
+  // Initial load of interview events
+  useEffect(() => {
+    loadInterviewEvents();
+  }, [loadInterviewEvents]);
+
+  // Derive highlighted dates and events for the currently selected day
+  const highlightedDates = useMemo(
+    () => Array.from(new Set(interviewEvents.map((e) => toDateKey(e.start)))),
+    [interviewEvents]
+  );
+
+  const eventsForSelectedDate = useMemo(() => {
+    const key = toDateKey(selectedDate);
+    return interviewEvents.filter((e) => toDateKey(e.start) === key);
+  }, [interviewEvents, selectedDate]);
 
   const handleTabChange = (key) => {
     setActiveKey(key);
@@ -417,23 +314,67 @@ const MyDashboard = () => {
       </div>
 
       <div className="w-full lg:w-[30%] flex flex-col gap-[32px] bg-white dark:bg-black px-[10px] py-[24px] rounded-xl overflow-auto">
-        <CalendarRangePicker />
-        {calendarEvents.map((calEvent, i) => (
-          <div
-            key={i}
-            className="flex flex-col gap-[8px] p-[16px] rounded-lg"
-            style={{ background: calEvent.background, width: "100%" }}
-          >
-            <div className="flex items-center gap-[7px]">
-              {calEvent.dot && calEvent.dot}
-              <div className="text-md" style={{ fontSize: 13 }}>
-                {calEvent.start} - {calEvent.end}
-              </div>
-            </div>
+        <CalendarRangePicker
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          highlightedDates={highlightedDates}
+        />
 
-            <div className="text-md font-bold">{calEvent.title}</div>
+        {calendarLoading && (
+          <div className="px-4 py-3 text-sm text-gray-500 border border-dashed rounded-lg">
+            Loading interviews...
           </div>
-        ))}
+        )}
+
+        {!calendarLoading && eventsForSelectedDate.length === 0 && (
+          <div className="px-4 py-3 text-sm text-gray-500 border border-dashed rounded-lg">
+            No interviews scheduled for this date.
+          </div>
+        )}
+
+        {!calendarLoading &&
+          eventsForSelectedDate.map((event) => (
+            <div
+              key={event.id}
+              className="flex flex-col gap-[8px] p-[16px] rounded-lg cursor-pointer hover:shadow-sm border border-gray-100"
+              style={{ background: "#EFF8FF", width: "100%" }}
+              onClick={() =>
+                router.push(`/dashboard/candidate-chat?chatId=${event.chatId}`)
+              }
+            >
+              <div className="flex items-center gap-[7px]">
+                <svg
+                  width={10}
+                  height={11}
+                  viewBox="0 0 10 11"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M4.89642 3.35709C3.75416 3.35709 2.82486 4.2864 2.82486 5.42865C2.82486 6.57091 3.75417 7.50021 4.89642 7.50021C6.03868 7.50021 6.96798 6.5709 6.96798 5.42865C6.96798 4.28639 6.03867 3.35709 4.89642 3.35709ZM4.89642 0.532227C7.60064 0.532227 9.79284 2.72444 9.79284 5.42865C9.79284 8.13287 7.60063 10.3251 4.89642 10.3251C2.19221 10.3251 0 8.13286 0 5.42865C0 2.72444 2.19221 0.532227 4.89642 0.532227Z"
+                    fill="#5207CD"
+                  />
+                </svg>
+                <div className="text-md" style={{ fontSize: 13 }}>
+                  {moment(event.start).format("HH:mm")} -{" "}
+                  {moment(event.end).format("HH:mm")}{" "}
+                  {event.timezone ? `(${event.timezone})` : ""}
+                </div>
+              </div>
+
+              <div className="text-md font-bold">
+                {event.candidateName}
+                {event.jobTitle ? ` — ${event.jobTitle}` : ""}
+              </div>
+              {event.meetingLink && (
+                <div className="text-xs text-purple-600 underline">
+                  Join link available
+                </div>
+              )}
+            </div>
+          ))}
       </div>
 
       <UpgradeModal
