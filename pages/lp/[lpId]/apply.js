@@ -360,26 +360,31 @@ const FileUpload = ({ value, onChange, placeholder, videoOnly = false }) => {
       '.zip', '.rar', '.7z', '.tar', '.gz',
       '.xls', '.xlsx', '.csv', '.ppt', '.pptx'
     ];
-    const allowedTypes = videoOnly ? VIDEO_EXTS : [...VIDEO_EXTS, ...NON_VIDEO_EXTS];
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    
-    if (!allowedTypes.includes(fileExtension)) {
-      message.error(videoOnly ? 'Please upload a video file (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)' : 'Please select a valid file type (Documents, Images, Videos, Audio, Archives, etc.)');
-      return;
-    }
+  const allowedTypes = videoOnly ? VIDEO_EXTS : [...VIDEO_EXTS, ...NON_VIDEO_EXTS];
+  const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+  const isVideo = VIDEO_EXTS.includes(fileExtension);
+  
+  if (!allowedTypes.includes(fileExtension)) {
+    message.error(
+      videoOnly
+        ? 'Please upload a video file (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)'
+        : 'Please select a valid file type (Documents, Images, Videos, Audio, Archives, etc.)'
+    );
+    return;
+  }
 
-    const MAX_BYTES = videoOnly ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
-    if (file.size > MAX_BYTES) {
-      message.error(videoOnly ? 'Video size must be ≤ 100MB' : 'File size must be ≤ 10MB');
-      return;
-    }
+  const MAX_BYTES = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+  if (file.size > MAX_BYTES) {
+    message.error(isVideo ? 'Video size must be ≤ 100MB' : 'File size must be ≤ 10MB');
+    return;
+  }
 
     setUploading(true);
     try {
       console.log('📄 Uploading file:', file.name);
       
-      // Upload file using UploadService
-      const response = await UploadService.upload(file, videoOnly ? 100 : 10); // enforce on uploader too
+    // Upload file using UploadService (100MB limit for videos, 10MB for others)
+    const response = await UploadService.upload(file, isVideo ? 100 : 10);
       
       if (response && response.data && response.data.secure_url) {
         const uploadedUrl = response.data.secure_url;
@@ -425,9 +430,11 @@ const FileUpload = ({ value, onChange, placeholder, videoOnly = false }) => {
           ) : (
             <>
               <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
-              <p className="text-sm text-gray-500 mt-1">
-                {videoOnly ? 'Videos up to 100MB (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)' : 'Videos up to 100MB; other files up to 10MB'}
-              </p>
+        <p className="text-sm text-gray-500 mt-1">
+          {videoOnly
+            ? 'Videos up to 100MB (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)'
+            : 'Videos up to 100MB; other files up to 10MB'}
+        </p>
             </>
           )}
           {fileName && !uploading && <p className="text-sm text-green-600 mt-2">✓ {fileName}</p>}

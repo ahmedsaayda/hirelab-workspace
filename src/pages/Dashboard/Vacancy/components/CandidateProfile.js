@@ -1333,27 +1333,67 @@ const CandidateProfile = ({
                   )}
                 </div>
                 {item.type === 'file' && formData[item.fieldId] ? (
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => {
-                        const fileData = formData[item.fieldId];
-                        const fileUrl = extractFileUrl(fileData) || extractFileUrl(formData[item.fieldId]);
-                        const fileName = extractFileName(fileData) || extractFileName(formData[`${item.fieldId}_filename`]);
-                        
-                        handleViewFile(fileUrl, fileName, item.label || 'File');
-                      }}
-                      className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0"
-                    >
-                      <FileTextOutlined className="text-sm" />
-                      {(() => {
-                        const fileData = formData[item.fieldId];
-                        const fileName = extractFileName(fileData) || extractFileName(formData[`${item.fieldId}_filename`]) || 'View File';
-                        
-                        // Truncate long filenames
-                        return fileName.length > 30 ? fileName.substring(0, 30) + '...' : fileName;
-                      })()}
-                    </button>
-                  </div>
+                  (() => {
+                    const fileData = formData[item.fieldId];
+                    const fileUrl = extractFileUrl(fileData) || extractFileUrl(formData[item.fieldId]);
+                    const fileName =
+                      extractFileName(fileData) ||
+                      extractFileName(formData[`${item.fieldId}_filename`]) ||
+                      'View File';
+
+                    const mimeType =
+                      (fileData && fileData.fileType) ||
+                      (fileData && fileData.type) ||
+                      '';
+                    const isVideo =
+                      (typeof mimeType === 'string' && mimeType.startsWith('video/')) ||
+                      (typeof fileUrl === 'string' &&
+                        (fileUrl.toLowerCase().endsWith('.mp4') ||
+                          fileUrl.toLowerCase().endsWith('.webm') ||
+                          fileUrl.toLowerCase().endsWith('.ogg') ||
+                          fileUrl.toLowerCase().endsWith('.mov')));
+
+                    if (isVideo && fileUrl) {
+                      return (
+                        <div className="flex flex-col gap-2 w-full">
+                          <video
+                            controls
+                            className="w-full max-h-64 rounded-md bg-black"
+                            src={fileUrl}
+                          >
+                            Your browser does not support the video tag.
+                          </video>
+                          <button
+                            onClick={() =>
+                              handleViewFile(fileUrl, fileName, item.label || 'Video')
+                            }
+                            className="self-start text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0"
+                          >
+                            <FileTextOutlined className="text-sm" />
+                            {fileName.length > 30
+                              ? fileName.substring(0, 30) + '...'
+                              : fileName}
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() =>
+                            handleViewFile(fileUrl, fileName, item.label || 'File')
+                          }
+                          className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0"
+                        >
+                          <FileTextOutlined className="text-sm" />
+                          {fileName.length > 30
+                            ? fileName.substring(0, 30) + '...'
+                            : fileName}
+                        </button>
+                      </div>
+                    );
+                  })()
                 ) : item.type === 'website' && item.answer && item.answer.startsWith('http') ? (
                   <a 
                     href={item.answer} 

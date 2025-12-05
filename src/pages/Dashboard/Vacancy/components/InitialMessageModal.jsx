@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Modal, Button, Input, message, Typography } from 'antd';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Modal, Button, Input, message, Typography, Select, Space, Spin, Popconfirm } from 'antd';
 import { MessageOutlined } from '@ant-design/icons';
+import CrudService from '../../../../services/CrudService';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -16,6 +17,34 @@ const InitialMessageModal = ({
     localStorage.getItem('initialChatMessageTemplate') || 
     `Hello {candidateName}! I'd like to discuss your application for {jobTitle}. Please feel free to ask any questions you may have.`
   );
+
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templateLoading, setTemplateLoading] = useState(false);
+
+  const reloadTemplates = useCallback(async () => {
+    try {
+      const { data } = await CrudService.search("MessageTemplate", 10000000, 1, {
+        sort: { createdAt: 1 },
+      });
+      setTemplates(data.items || []);
+    } catch (err) {
+      console.error("Failed to load message templates:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (visible) {
+      reloadTemplates();
+    }
+  }, [visible, reloadTemplates]);
+
+  useEffect(() => {
+    const selected = templates.find((t) => t._id === selectedTemplate);
+    if (selected) {
+      setMessageText(selected.message || "");
+    }
+  }, [selectedTemplate, templates]);
 
   const handleSend = () => {
     if (!messageText.trim()) {
@@ -81,7 +110,104 @@ const InitialMessageModal = ({
             </Text>
           </div>
         </div>
-        
+
+        {/* Template selector & library (same pattern as email templates) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Template
+          </label>
+          <div className="w-full flex items-center gap-2">
+            <Select
+              className="grow"
+              value={selectedTemplate}
+              onChange={(value) => setSelectedTemplate(value)}
+              showSearch
+              placeholder="Select a saved template or write a new one"
+              filterOption={(input, option) => {
+                const label = (option?.label || "")
+                  .toString()
+                  .toLowerCase();
+                return label.includes(input.toLowerCase());
+              }}
+            >
+              {templates.map((t) => {
+                const label =
+                  t.subject?.trim() ||
+                  (t.message || "")
+                    .replace(/\s+/g, " ")
+                    .slice(0, 60) ||
+                  "-";
+                return (
+                  <Select.Option key={t._id} value={t._id} label={label}>
+                    <Space className="flex justify-between w-full">
+                      <div className="truncate max-w-[260px]">{label}</div>
+                      <div>
+                        <Popconfirm
+                          title="Delete this template?"
+                          onConfirm={async () => {
+                            setTemplateLoading(true);
+                            try {
+                              await CrudService.delete("MessageTemplate", t._id);
+                              await reloadTemplates();
+                              if (selectedTemplate === t._id) {
+                                setSelectedTemplate(null);
+                              }
+                            } catch (e) {
+                              console.error("Failed to delete template:", e);
+                            } finally {
+                              setTemplateLoading(false);
+                            }
+                          }}
+                        >
+                          <Button
+                            size="small"
+                            danger
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            disabled={templateLoading}
+                          >
+                            Delete
+                          </Button>
+                        </Popconfirm>
+                      </div>
+                    </Space>
+                  </Select.Option>
+                );
+              })}
+            </Select>
+
+            <Button
+              type="primary"
+              className="bg-indigo-500 border-indigo-500"
+              disabled={templateLoading}
+              onClick={async () => {
+                if (!messageText.trim()) {
+                  return message.error("Message cannot be empty");
+                }
+                setTemplateLoading(true);
+                try {
+                  const current = await CrudService.create("MessageTemplate", {
+                    subject: "",
+                    message: messageText,
+                    includeBCC: false,
+                  });
+                  await reloadTemplates();
+                  const id = current?.data?.result?._id;
+                  if (id) setSelectedTemplate(id);
+                } catch (e) {
+                  console.error("Failed to save template:", e);
+                } finally {
+                  setTemplateLoading(false);
+                }
+              }}
+            >
+              {!templateLoading ? "Save Current" : <Spin size="small">Save Current</Spin>}
+            </Button>
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Message Template

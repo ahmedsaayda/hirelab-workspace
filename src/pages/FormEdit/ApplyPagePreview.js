@@ -311,7 +311,9 @@ const FileUpload = ({ value, onChange, placeholder, isVideo = false }) => (
       <div>
         <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
         <p className="text-sm text-gray-500 mt-1">
-          {isVideo ? 'Videos up to 100MB (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)' : 'Videos up to 100MB; other files up to 10MB'}
+          {isVideo
+            ? 'Videos up to 100MB (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)'
+            : 'Videos up to 100MB; other files up to 10MB'}
         </p>
         {value && <p className="text-sm text-green-600 mt-2">✓ {value}</p>}
       </div>
