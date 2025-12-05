@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { Card, Button, Typography, Spin, Empty, Avatar } from 'antd';
-import { ArrowLeftOutlined, EnvironmentOutlined, ClockOutlined, DollarOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EnvironmentOutlined, ClockCircleOutlined, DollarOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 const { Title, Text, Paragraph } = Typography;
@@ -198,7 +198,7 @@ const CategoryPage = () => {
 
                       {funnel.employmentType && (
                         <div className="flex items-center gap-1">
-                          <ClockOutlined />
+                          <ClockCircleOutlined />
                           <span>{funnel.employmentType}</span>
                         </div>
                       )}
