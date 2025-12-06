@@ -1,5 +1,13 @@
 import Head from "next/head";
-import LandingpagePage from "../../../src/pages/Landingpage";
+import dynamic from "next/dynamic";
+
+// Render the heavy landing page UI purely on the client.
+// This keeps the server bundle for /lp/[lpId] very small and avoids SSR issues
+// with browser-only dependencies in the landing page tree.
+const LandingpagePage = dynamic(
+  () => import("../../../src/pages/Landingpage"),
+  { ssr: false }
+);
 
 export default function Page({ landingPageData, lpId, error, errorMessage }) {
   // Graceful error UI for unpublished/missing or server issues
