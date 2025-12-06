@@ -118,7 +118,7 @@ export default function Page({ landingPageData, lpId, error, errorMessage }) {
         {landingPageData && (
           <script
             type="application/ld+json"
-            // eslint-disable-next-line react/no-danger
+            // eslint-disable-next-line
             dangerouslySetInnerHTML={{
               __html: JSON.stringify({
                 "@context": "https://schema.org/",
