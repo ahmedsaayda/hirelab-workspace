@@ -44,10 +44,17 @@ const nextConfig = {
     // Limit concurrent operations to avoid file handle limits
     config.parallelism = 2;
 
-    // Ensure server bundles don't try to access Node-only modules like "fs"
+    // Fix for rc-util ES module import issues
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
+    };
+
+    // Simple fix for rc-util warning import issue
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'rc-util/es/warning': path.resolve(__dirname, 'warning-fallback.js'),
+      'rc-util/lib/warning': path.resolve(__dirname, 'warning-fallback.js'),
     };
 
     return config;

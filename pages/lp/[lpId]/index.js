@@ -1,46 +1,35 @@
-import Head from "next/head";
-import dynamic from "next/dynamic";
+import LandingpagePage from "../../../src/pages/Landingpage";
+import { useRouter } from 'next/router';
+import Head from 'next/head';
+import axios from 'axios';
 
-// Render the heavy landing page UI purely on the client.
-// This keeps the server bundle for /lp/[lpId] very small and avoids SSR issues
-// with browser-only dependencies in the landing page tree.
-const LandingpagePage = dynamic(
-  () => import("../../../src/pages/Landingpage"),
-  { ssr: false }
-);
+export default function Page({ landingPageData, lpId, error }) {
+  const router = useRouter();
 
-export default function Page({ landingPageData, lpId, error, errorMessage }) {
-  // Graceful error UI for unpublished/missing or server issues
+  // If there's an error or no data, show error page
   if (error || !landingPageData) {
-    const title =
-      error === "NOT_FOUND" ? "Page Not Found" : "Something went wrong";
-    const description =
-      error === "NOT_FOUND"
-        ? errorMessage ||
-          "The page you are looking for does not exist or is not published."
-        : errorMessage ||
-          "We encountered an error while loading this page. Please try again later.";
-
     return (
       <>
         <Head>
-          <title>{title} - Hirelab</title>
-          <meta name="description" content={description} />
+          <title>Page Not Found - Hirelab</title>
           <meta name="robots" content="noindex, nofollow" />
         </Head>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-          <div className="max-w-md text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">{title}</h1>
-            <p className="text-gray-600 mb-6">{description}</p>
-            <button
-              onClick={() =>
-                typeof window !== "undefined"
-                  ? window.location.assign("/")
-                  : null
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              {error === 'NOT_FOUND' ? 'Page Not Found' : 'Something went wrong'}
+            </h1>
+            <p className="text-gray-600 mb-4">
+              {error === 'NOT_FOUND' 
+                ? 'The page you are looking for does not exist or has been removed.'
+                : 'We encountered an error loading this page.'
               }
-              className="inline-flex items-center px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            </p>
+            <button 
+              onClick={() => router.push('/')}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
-              Go back to homepage
+              Go Home
             </button>
           </div>
         </div>
@@ -48,36 +37,18 @@ export default function Page({ landingPageData, lpId, error, errorMessage }) {
     );
   }
 
-  // Default SEO metadata for published landing pages
-  const seoTitle = landingPageData?.vacancyTitle
-    ? `${landingPageData.vacancyTitle} - ${
-        landingPageData?.companyName || "Hirelab"
-      }`
-    : "Job Opportunity - Hirelab";
+  // Generate SEO meta data
+  const seoTitle = landingPageData?.vacancyTitle 
+    ? `${landingPageData.vacancyTitle} - ${landingPageData?.companyName || 'Hirelab'}`
+    : 'Job Opportunity - Hirelab';
+    
+  const seoDescription = landingPageData?.heroDescription 
+    ? landingPageData.heroDescription.substring(0, 160) + (landingPageData.heroDescription.length > 160 ? '...' : '')
+    : `Join ${landingPageData?.companyName || 'our team'} and take your career to the next level. Apply now for this exciting opportunity.`;
 
-  const rawDescription =
-    landingPageData?.metaDescription ||
-    landingPageData?.heroDescription ||
-    `Join ${
-      landingPageData?.companyName || "our team"
-    } and take your career to the next level. Apply now for this exciting opportunity.`;
-
-  const seoDescription =
-    typeof rawDescription === "string"
-      ? `${rawDescription.slice(0, 160)}${
-          rawDescription.length > 160 ? "..." : ""
-        }`
-      : "Discover your next career opportunity with Hirelab.";
-
-  const canonicalBase =
-    process.env.NEXT_PUBLIC_LIVE_URL || "https://hirelab.com";
-  const canonicalUrl = `${canonicalBase.replace(/\/+$/, "")}/lp/${lpId}`;
-  const heroImageUrl =
-    landingPageData?.heroImage ||
-    landingPageData?.heroPicture ||
-    landingPageData?.companyLogo ||
-    null;
-
+  const canonicalUrl = `${process.env.NEXT_PUBLIC_LIVE_URL || 'https://hirelab.com'}/lp/${lpId}`;
+  const heroImageUrl = landingPageData?.heroImage || landingPageData?.heroPicture || landingPageData?.companyLogo || null;
+  
   return (
     <>
       <Head>
@@ -89,21 +60,13 @@ export default function Page({ landingPageData, lpId, error, errorMessage }) {
 
         {/* Performance: Preconnect/DNS-prefetch for common CDNs */}
         <link rel="dns-prefetch" href="//res.cloudinary.com" />
-        <link
-          rel="preconnect"
-          href="https://res.cloudinary.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         {heroImageUrl && (
           <link rel="preload" as="image" href={heroImageUrl} />
         )}
-
+        
         {/* Open Graph Meta Tags */}
         <meta property="og:title" content={seoTitle} />
         <meta property="og:description" content={seoDescription} />
@@ -113,7 +76,7 @@ export default function Page({ landingPageData, lpId, error, errorMessage }) {
         {landingPageData?.companyLogo && (
           <meta property="og:image" content={landingPageData.companyLogo} />
         )}
-
+        
         {/* Twitter Card Meta Tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={seoTitle} />
@@ -121,197 +84,139 @@ export default function Page({ landingPageData, lpId, error, errorMessage }) {
         {landingPageData?.companyLogo && (
           <meta name="twitter:image" content={landingPageData.companyLogo} />
         )}
-
+        
         {/* Job Posting Structured Data */}
         {landingPageData && (
           <script
             type="application/ld+json"
-            // eslint-disable-next-line
             dangerouslySetInnerHTML={{
               __html: JSON.stringify({
                 "@context": "https://schema.org/",
                 "@type": "JobPosting",
-                title: landingPageData.vacancyTitle || "Job Opportunity",
-                description:
-                  landingPageData.heroDescription || seoDescription,
-                hiringOrganization: {
+                "title": landingPageData.vacancyTitle || "Job Opportunity",
+                "description": landingPageData.heroDescription || seoDescription,
+                "hiringOrganization": {
                   "@type": "Organization",
-                  name: landingPageData.companyName || "Company",
-                  ...(landingPageData.companyLogo && {
-                    logo: landingPageData.companyLogo,
-                  }),
+                  "name": landingPageData.companyName || "Company",
+                  ...(landingPageData.companyLogo && { "logo": landingPageData.companyLogo })
                 },
-                jobLocation: {
+                "jobLocation": {
                   "@type": "Place",
-                  address: {
+                  "address": {
                     "@type": "PostalAddress",
-                    addressLocality: landingPageData.location || "Remote",
-                  },
+                    "addressLocality": landingPageData.location || "Remote"
+                  }
                 },
-                employmentType:
-                  landingPageData.employmentType || "FULL_TIME",
-                datePosted:
-                  landingPageData.createdAt || new Date().toISOString(),
-                ...(landingPageData.department && {
-                  industry: landingPageData.department,
-                }),
-                url: canonicalUrl,
-              }),
+                "employmentType": landingPageData.employmentType || "FULL_TIME",
+                "datePosted": landingPageData.createdAt || new Date().toISOString(),
+                ...(landingPageData.department && { "industry": landingPageData.department }),
+                "url": canonicalUrl
+              })
             }}
           />
         )}
-
+        
         {/* Additional SEO Tags */}
         <meta name="robots" content="index, follow" />
-        <meta
-          name="author"
-          content={landingPageData?.companyName || "Hirelab"}
-        />
+        <meta name="author" content={landingPageData?.companyName || 'Hirelab'} />
         {landingPageData?.department && (
-          <meta
-            name="keywords"
-            content={`${landingPageData.vacancyTitle}, ${landingPageData.companyName}, ${landingPageData.department}, job, career, hiring`}
-          />
+          <meta name="keywords" content={`${landingPageData.vacancyTitle}, ${landingPageData.companyName}, ${landingPageData.department}, job, career, hiring`} />
         )}
-
+        
         {/* Favicon */}
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <LandingpagePage paramsId={lpId} defaultLandingPageData={landingPageData} />
+      
+      <LandingpagePage 
+        paramsId={lpId} 
+        defaultLandingPageData={landingPageData}
+      />
     </>
   );
 }
 
+// Server-side data fetching
 export async function getServerSideProps(context) {
-  const { params, req, res } = context;
-  const lpId = params?.lpId || context.query?.lpId;
-
+  const { lpId } = context.query;
+  
+  // Early return if no lpId
   if (!lpId) {
-    res.statusCode = 404;
     return {
-      props: {
-        error: "NOT_FOUND",
-        lpId: null,
-        landingPageData: null,
-        errorMessage: "Missing landing page identifier.",
-      },
-    };
-  }
-
-  // Resolve backend URL
-  const backendUrl =
-    process.env.NEXT_PUBLIC_BACKEND_URL ||
-    (process.env.NODE_ENV !== "production"
-      ? "http://localhost:5155/api"
-      : null);
-
-  if (!backendUrl) {
-    res.statusCode = 500;
-    return {
-      props: {
-        error: "SERVER_ERROR",
-        lpId,
-        landingPageData: null,
-        errorMessage: "Backend URL is not configured.",
-      },
+      notFound: true,
     };
   }
 
   try {
-    const host =
-      req?.headers?.["x-forwarded-host"] ||
-      req?.headers?.host ||
-      undefined;
+    // Determine backend URL for server-side requests
+    const backendUrl = process.env.NODE_ENV !== "production"
+      ? "http://localhost:5155/api"
+      : process.env.NEXT_PUBLIC_BACKEND_URL;
 
-    const base = backendUrl.replace(/\/+$/, "");
-    let url = `${base}/public/getLP?id=${encodeURIComponent(lpId)}`;
-    if (host) {
-      url += `&domain=${encodeURIComponent(host)}`;
-    }
-
-    const apiRes = await fetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
+    // Fetch page data from backend
+    const response = await axios.get(`${backendUrl}/public/getLP?id=${lpId}`, {
+      timeout: 10000, // 10 second timeout
+      headers: {
+        'User-Agent': 'HirelabBot/1.0',
+      }
     });
 
-    let payload = null;
-    try {
-      payload = await apiRes.json();
-    } catch (_) {
-      // ignore JSON parse errors, we'll handle below
-    }
-
-    if (!apiRes.ok) {
-      const msg =
-        (payload && (payload.message || payload.error)) ||
-        `Upstream error (${apiRes.status})`;
-
-      if (apiRes.status === 404) {
-        res.statusCode = 404;
-        return {
-          props: {
-            error: "NOT_FOUND",
-            lpId,
-            landingPageData: null,
-            errorMessage: msg,
-          },
-        };
-      }
-
-      res.statusCode = apiRes.status || 500;
+    // Check if page exists and is published
+    if (!response.data?.lp) {
       return {
         props: {
-          error: "SERVER_ERROR",
+          error: 'NOT_FOUND',
           lpId,
-          landingPageData: null,
-          errorMessage: msg,
-        },
+          landingPageData: null
+        }
       };
     }
 
-    const landingPageData = payload?.lp || payload || null;
+    const landingPageData = response.data.lp;
 
-    if (!landingPageData || landingPageData.published === false) {
-      res.statusCode = 404;
+    console.log("landingPageData",landingPageData);
+    
+    // Check if page is published (optional check - uncomment if needed)
+    if (!landingPageData.published) {
       return {
-        props: {
-          error: "NOT_FOUND",
-          lpId,
-          landingPageData: null,
-          errorMessage: "Page not found or not published.",
-        },
+        notFound: true,
       };
     }
 
-    // Light edge caching for successful responses
+    // Cache SSR response at the edge for brief period to improve TTFB
     try {
-      res.setHeader(
-        "Cache-Control",
-        "public, s-maxage=60, stale-while-revalidate=300"
-      );
-    } catch (_) {
-      // ignore header errors
-    }
+      context.res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    } catch (_) {}
 
     return {
       props: {
         landingPageData,
         lpId,
-        error: null,
-        errorMessage: null,
-      },
+        error: null
+      }
     };
-  } catch (err) {
-    console.error("Error in getServerSideProps /lp/[lpId]:", err);
-    res.statusCode = 500;
+
+  } catch (error) {
+    console.error('Error fetching page data:', error.message);
+    
+    // If it's a 404 from the API, return not found
+    if (error.response?.status === 404) {
+      return {
+        props: {
+          error: 'NOT_FOUND',
+          lpId,
+          landingPageData: null
+        }
+      };
+    }
+    
+    // For other errors, return error state but don't return notFound
+    // This allows the page to render with error handling
     return {
       props: {
-        error: "SERVER_ERROR",
+        error: 'SERVER_ERROR',
         lpId,
-        landingPageData: null,
-        errorMessage: "An unexpected error occurred while loading this page.",
-      },
+        landingPageData: null
+      }
     };
   }
 }
