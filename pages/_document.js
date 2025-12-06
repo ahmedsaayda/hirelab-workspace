@@ -11,6 +11,9 @@ class MyDocument extends Document {
   }
 
   render() {
+    const page = this.props?.__NEXT_DATA__?.page || '';
+    const isLpRoute = page.startsWith('/lp');
+
     return (
       <Html lang="en">
         <Head>
@@ -18,14 +21,16 @@ class MyDocument extends Document {
           <meta charSet="utf-8" />
           <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
           <meta name="theme-color" content="#000000" />
-          <Script
-            id="crisp-chat"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-              __html:
-                'window.$crisp=[];window.CRISP_WEBSITE_ID="cb79e205-2211-45f2-abe2-5ef37c50359e";(function(){var d=document;var s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();',
-            }}
-          />
+          {!isLpRoute && (
+            <Script
+              id="crisp-chat"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html:
+                  'window.$crisp=[];window.CRISP_WEBSITE_ID="cb79e205-2211-45f2-abe2-5ef37c50359e";(function(){var d=document;var s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();',
+              }}
+            />
+          )}
 
           {/* Favicon and app icons */}
           <link rel="icon" href="/favicon.ico" />
