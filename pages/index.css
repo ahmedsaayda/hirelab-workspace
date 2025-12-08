@@ -318,3 +318,15 @@ html {
   border-style: solid;
   border-color: #d9d9d9;
 }
+
+/*  all inputs and text areas font size should be input { font-size: max(1em, 12px); } to avoide zoom effect on iphones and other devices  , make sure this override any other font size setup at any level */
+input {
+  font-size: max(1em, 12px) !important;
+}
+textarea {
+  font-size: max(1em, 12px) !important;
+}
+select {
+  font-size: max(1em, 12px) !important;
+}
+
