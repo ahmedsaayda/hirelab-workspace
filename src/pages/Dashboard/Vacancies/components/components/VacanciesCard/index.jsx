@@ -59,7 +59,7 @@ export default function VacanciesCard({
     >
       <div className="flex flex-col h-full">
         {/* Preview Section - Compact */}
-        <div className="relative h-36 bg-slate-100 overflow-hidden">
+        <div className="overflow-hidden relative h-36 bg-slate-100">
           <HeroThumbnail landingPageData={props} />
           {/* Status Toggle - Overlay */}
           <div className="absolute top-2 right-2">
@@ -92,14 +92,14 @@ export default function VacanciesCard({
         <div className="flex-1 p-3">
           {/* Title (single line with ellipsis) */}
           <h3
-            className="font-semibold text-gray-900 text-sm mb-2 leading-tight truncate"
+            className="mb-2 text-sm font-semibold leading-tight text-gray-900 truncate"
             title={heading}
           >
             {heading}
           </h3>
 
           {/* Tags: Location + Department */}
-          <div className="flex items-center gap-2 mb-2 w-full">
+          <div className="flex gap-2 items-center mb-2 w-full">
             {props?.location?.length > 0 && (
               <span 
                 className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded bg-purple-100 text-purple-700 min-w-0 ${
@@ -132,19 +132,19 @@ export default function VacanciesCard({
 
           {/* Analytics: compact two-row layout */}
           <div className="mt-1 space-y-1 text-xs text-gray-600">
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1">
+            <div className="flex gap-4 items-center">
+              <span className="flex gap-1 items-center">
                 <Clock size={12} /> {daysLive} days
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex gap-1 items-center">
                 <Component size={12} /> {applicants || 0} applicants
               </span>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1">
+            <div className="flex gap-4 items-center">
+              <span className="flex gap-1 items-center">
                 <Eye size={12} /> {visits || 0} visits
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex gap-1 items-center">
                 <Clock size={12} /> {typeof avgTimeSpent === 'string' ? avgTimeSpent : formatAvgTime(avgTimeSpent)} Avg
               </span>
             </div>
@@ -152,7 +152,7 @@ export default function VacanciesCard({
         </div>
         
         {/* Action Bar - Compact */}
-        <div className="flex border-t border-gray-100 bg-gray-50">
+        <div className="flex bg-gray-50 border-t border-gray-100">
           <Dropdown
             menu={{
               items: [
@@ -184,36 +184,36 @@ export default function VacanciesCard({
               ].filter((a) => !a?.hide),
             }}
           >
-            <button className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 transition-colors">
+            <button className="flex flex-1 justify-center items-center py-2 transition-colors hover:bg-gray-100">
               <Img
                 src="/images/more-vertical.svg"
                 alt="menu"
-                className="h-4 w-4"
+                className="w-4 h-4"
               />
             </button>
           </Dropdown>
 
           <button
             onClick={handleCopyLink}
-            className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 transition-colors border-l border-gray-200"
+            className="flex flex-1 justify-center items-center py-2 border-l border-gray-200 transition-colors hover:bg-gray-100"
             title="Copy public link"
           >
-            <LinkOutlined className="h-4 w-4 text-gray-600" />
+            <LinkOutlined className="w-4 h-4 text-gray-600" />
           </button>
 
           <Link
             href={`/lp/${record._id}`}
             target="_blank"
-            className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 transition-colors border-l border-gray-200"
+            className="flex flex-1 justify-center items-center py-2 border-l border-gray-200 transition-colors hover:bg-gray-100"
           >
-            <Eye className="h-4 w-4 text-gray-600" />
+            <Eye className="w-4 h-4 text-gray-600" />
           </Link>
 
           <Link
             href={`/edit-page/${record._id}`}
-            className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 transition-colors border-l border-gray-200"
+            className="flex flex-1 justify-center items-center py-2 border-l border-gray-200 transition-colors hover:bg-gray-100"
           >
-            <Pencil className="h-4 w-4 text-gray-600" />
+            <Pencil className="w-4 h-4 text-gray-600" />
           </Link>
         </div>
       </div>

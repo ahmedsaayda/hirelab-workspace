@@ -63,6 +63,9 @@ class ATSService {
   duplicateVacancy(data) {
     return this.api.post("/duplicateVacancy", data);
   }
+  duplicateLandingPage(data) {
+    return this.api.post("/duplicateLandingPage", data);
+  }
   createVacancy(data) {
     return this.api.post("/createVacancy", { ...data, askForCV: true });
   }

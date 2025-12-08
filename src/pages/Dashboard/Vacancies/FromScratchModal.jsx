@@ -12,6 +12,7 @@ import VacacnySchema from "./vacacnyExemple.json";
 import AiRules from "./aiRules.json";
 import ChooseTemplate from "./ChooseTemplate";
 import AiService from "../../../services/AiService";
+import UploadService from "../../../services/UploadService";
 import { departmentOptions } from "./departmentOptions";
 
 // Convert the language object to array of options and remove duplicates
@@ -871,10 +872,10 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
 
     try {
       if (formData.useAI) {
-        // Initialize loading steps
         const steps = [
           "Analyzing job requirements...",
           "Crafting compelling job description...",
+          "Finding perfect visuals...",
           "Designing the perfect landing page...",
           "Adding company branding...",
           "Finalizing your vacancy...",
@@ -886,26 +887,59 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         // Set loading state after initializing steps
         setBackendLoading(true);
 
-        // Process with AI
-        const aiResponse = await AiService.processFromScratchWithAI({
-          jobTitle: formData.jobTitle,
-          department: formData.department,
-          description: formData.description,
-          perks: formData.perks,
-          language: formData.language,
-          tone: formData.tone,
-          companyInfo: user?.companyInfo,
-          userData: {
-            email: user?.email,
-            phone: user?.phone,
-            avatar: user?.avatar,
-            firstName: user?.firstName,
-            lastName: user?.lastName,
-          }
-        });
+        // Process with AI and Image Search in parallel
+        console.log("FromScratchModal: Starting parallel AI processing and Image Search");
+        const searchQuery = `${formData.jobTitle} ${formData.department}`;
+        console.log(`FromScratchModal: Searching images with query: "${searchQuery}"`);
+
+        const [aiResponse, imageResponse] = await Promise.all([
+          AiService.processFromScratchWithAI({
+            jobTitle: formData.jobTitle,
+            department: formData.department,
+            description: formData.description,
+            perks: formData.perks,
+            language: formData.language,
+            tone: formData.tone,
+            companyInfo: user?.companyInfo,
+            userData: {
+              email: user?.email,
+              phone: user?.phone,
+              avatar: user?.avatar,
+              firstName: user?.firstName,
+              lastName: user?.lastName,
+            }
+          }),
+          AiService.searchUnsplash(searchQuery)
+        ]);
+
+        console.log("FromScratchModal: Parallel requests completed");
+        console.log("FromScratchModal: Image Response:", imageResponse?.data);
 
         if (!aiResponse.data.success) {
           throw new Error(aiResponse.data.error || 'AI processing failed');
+        }
+
+        // Handle Image Upload
+        let uploadedHeroImage = null;
+        if (imageResponse?.data?.success && imageResponse.data.data.length > 0) {
+          try {
+            console.log(`FromScratchModal: Found ${imageResponse.data.data.length} images. Uploading first one...`);
+            const imageUrl = imageResponse.data.data[0].url;
+            console.log("FromScratchModal: Uploading image to Cloudinary:", imageUrl);
+            
+            const uploadRes = await UploadService.upload(imageUrl, 10);
+            
+            if (uploadRes?.data?.secure_url) {
+              uploadedHeroImage = uploadRes.data.secure_url;
+              console.log("FromScratchModal: Successfully uploaded Unsplash image:", uploadedHeroImage);
+            } else {
+              console.warn("FromScratchModal: Upload response missing secure_url", uploadRes);
+            }
+          } catch (uploadError) {
+            console.error("FromScratchModal: Failed to upload Unsplash image:", uploadError);
+          }
+        } else {
+            console.log("FromScratchModal: No images found from Unsplash search or search failed.");
         }
 
         // Get the AI-processed content
@@ -917,6 +951,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         // Create the vacancy
         const vacancyData = {
           ...aiResult,
+          heroImage: uploadedHeroImage || aiResult.heroImage, // Use uploaded image if available
           specifications: aiResult.specifications?.map((spec) => ({
             ...spec,
             enabled: true

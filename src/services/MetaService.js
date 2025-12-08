@@ -9,8 +9,8 @@ class MetaService {
     middleField(this.api);
   }
 
-  getAuthUrl(workspaceId) {
-    return this.api.get(`/auth-url`, { params: { workspaceId } });
+  getAuthUrl(workspaceId, returnUrl) {
+    return this.api.get(`/auth-url`, { params: { workspaceId, returnUrl } });
   }
 
   getStatus(workspaceId) {

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Heading } from "./components/components/index.jsx";
 import ChooseTemplate from "./ChooseTemplate.jsx";
 import AiService from "../../../services/AiService.js";
+import UploadService from "../../../services/UploadService.js";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../redux/auth/selectors.js";
 import useWorkspaceBranding from "../../../hooks/useWorkspaceBranding";
@@ -147,18 +148,52 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
       console.log("markdown", markdown);
       console.log("metadata", metadata);
       
+      const jobTitle = metadata?.title || "Job Position";
+
       // Step 2: Process with AI
-      const aiResponse = await AiService.processContentWithAI({
-        url: url,
-        content: {
-          markdown: markdown?.slice(0, 30000) || "",
-          // metadata
-        },
-        language: language
-      });
+      console.log("PasteUrlModal: Starting parallel AI processing and Image Search");
+      const searchQuery = `${jobTitle} ${department}`;
+      console.log(`PasteUrlModal: Searching images with query: "${searchQuery}"`);
+
+      const [aiResponse, imageResponse] = await Promise.all([
+        AiService.processContentWithAI({
+          url: url,
+          content: {
+            markdown: markdown?.slice(0, 30000) || "",
+            // metadata
+          },
+          language: language
+        }),
+        AiService.searchUnsplash(searchQuery)
+      ]);
+
+      console.log("PasteUrlModal: Parallel requests completed");
+      console.log("PasteUrlModal: Image Response:", imageResponse?.data);
 
       if (!aiResponse.data.success) {
         throw new Error(aiResponse.data.error || 'AI processing failed');
+      }
+
+      // Handle Image Upload
+      let uploadedHeroImage = null;
+      if (imageResponse?.data?.success && imageResponse.data.data.length > 0) {
+        try {
+          console.log(`PasteUrlModal: Found ${imageResponse.data.data.length} images. Uploading first one...`);
+          const imageUrl = imageResponse.data.data[0].url;
+          console.log("PasteUrlModal: Uploading image to Cloudinary:", imageUrl);
+
+          const uploadRes = await UploadService.upload(imageUrl, 10);
+          if (uploadRes?.data?.secure_url) {
+            uploadedHeroImage = uploadRes.data.secure_url;
+            console.log("PasteUrlModal: Successfully uploaded Unsplash image:", uploadedHeroImage);
+          } else {
+            console.warn("PasteUrlModal: Upload response missing secure_url", uploadRes);
+          }
+        } catch (uploadError) {
+          console.error("PasteUrlModal: Failed to upload Unsplash image:", uploadError);
+        }
+      } else {
+          console.log("PasteUrlModal: No images found from Unsplash search or search failed.");
       }
 
       // Get the AI-processed content
@@ -187,6 +222,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
         ...aiResult,
         ...brandingDetails,
         templateId: selectedTemplate,
+        heroImage: uploadedHeroImage || aiResult.heroImage,
         department: department,
         user_id: user?._id,
         specifications: aiResult.specifications?.map((spec) => ({

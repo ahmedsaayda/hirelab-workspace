@@ -26,6 +26,12 @@ class AiService {
     return this.api.post("/process-from-scratch", data);
   }
 
+  // Search images from Unsplash
+  searchUnsplash(query) {
+    console.log(`[AiService] searching Unsplash for: "${query}"`);
+    return this.api.post("/search-images", { query });
+  }
+
   // Create vacancy in database
   createVacancy(vacancyData) {
     return this.api.post("/create-vacancy", vacancyData);

@@ -26,7 +26,7 @@ import React, {
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
 
-import { CircleX, ChevronDown, ChevronUp, Search, HelpCircle } from "lucide-react";
+import { CircleX, ChevronDown, ChevronUp, Search, HelpCircle, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { formatAvgTime } from "../../../utils/timeFormat";
 import {
   getPartner,
@@ -46,8 +46,9 @@ import { useWorkspace } from "../../../contexts/WorkspaceContext";
 
 import debounce from "lodash/debounce";
 import moment from "moment";
-import { FaSortAmountDownAlt } from "react-icons/fa";
+import { FaSortAmountDownAlt, FaFacebook, FaGoogle, FaLinkedin } from "react-icons/fa";
 import AILoadingAnimation from "../../../../pages/AILoadingAnimation.js";
+import AdsLaunchService from "../../../services/AdsLaunchService.js";
 import { Button, Heading, Img, Input } from "./components/components/index.jsx";
 import CreateANewVacancyInput from "./components/components/CreateANewVacancyInput/index.jsx";
 import VacanciesCard from "./components/components/VacanciesCard/index.jsx";
@@ -81,10 +82,32 @@ const englishStages = [
 const Vacancies = () => {
   const router = useRouter();
   const queryParams = useSearchParams();
+  const isCampaignsRoute =
+    (router?.pathname && router.pathname.includes("/dashboard/campaigns")) ||
+    (router?.asPath && router.asPath.includes("/dashboard/campaigns"));
+  const initialView = (router?.query?.view || new URLSearchParams(router.asPath.split('?')[1] || '').get('view')) === 'timeline' ? 'timeline' : 'cards';
+  const [viewMode, setViewMode] = useState(initialView);
+  const initialTimeframe = new URLSearchParams(router.asPath.split('?')[1] || '').get('timeframe') || (isCampaignsRoute ? '6m' : 'all'); // default to 6m on Campaigns
+  const [timeframe, setTimeframe] = useState(initialTimeframe); // all | 3m | 6m
+  const initialTab = new URLSearchParams(router.asPath.split('?')[1] || '').get('tab') || 'timeline';
+  const [timelineTab, setTimelineTab] = useState(initialTab); // timeline | performance | settings
   
   // Extract query parameters from Next.js router
   const searchParams = new URLSearchParams(router.asPath.split('?')[1] || '');
   const isNew = router.query.new || searchParams.get('new');
+  const isDemo = router.query.demo === 'true' || searchParams.get('demo') === 'true';
+  console.log('isNew', isNew);
+  console.log('searchParams', searchParams);
+  console.log('router.query', router.query);
+  console.log('initialView', initialView);
+  console.log('timeframe', timeframe);
+  console.log('timelineTab', timelineTab);
+  console.log('initialTab', initialTab);
+  console.log('isDemo', isDemo);
+  console.log('isCampaignsRoute', isCampaignsRoute);
+  console.log('viewMode', viewMode);
+  console.log('searchParams', searchParams);
+  console.log('searchParams', searchParams);
 
   const getQueryParam = (name) => {
     return router.query[name] || searchParams.get(name);
@@ -571,6 +594,48 @@ const Vacancies = () => {
     fetchData();
   }, [fetchData]);
 
+  // Test Data Injection (Meta campaign test_id) for dashboard views
+  const testDataLoadedRef = useRef(false);
+  useEffect(() => {
+    const testId = router.query.test_id || searchParams?.get("test_id");
+    if (!testId || testDataLoadedRef.current || landingPages.length === 0) return;
+
+    const hostLpId = landingPages[0]?._id;
+    if (!hostLpId) return;
+
+    AdsLaunchService.getSummary(hostLpId, { test_id: testId })
+      .then((res) => {
+        const data = res?.data?.data;
+        if (data) {
+          const insight = (data.insights || [])[0] || {};
+          const leadsAction =
+            Array.isArray(insight.actions) &&
+            insight.actions.find((a) => a.action_type === "lead");
+
+          const mapped = {
+            _id: `test-${testId}`,
+            vacancyTitle: `${data.campaign?.name || "Test Meta Campaign"} (Test Data)`,
+            location: "Test Location",
+            createdAt: data.campaign?.start_time || new Date().toISOString(),
+            visits: Number(insight.clicks || 0),
+            applicants: Number(leadsAction?.value || 0),
+            adBudget: data.campaign?.daily_budget
+              ? Number(data.campaign.daily_budget) / 100
+              : 0,
+            isTest: true,
+          };
+
+          setLandingPages((prev) => {
+            const filtered = prev.filter((p) => p._id !== mapped._id);
+            return [mapped, ...filtered];
+          });
+          testDataLoadedRef.current = true;
+          antdmessage.info("Loaded test Meta campaign data from ID: " + testId);
+        }
+      })
+      .catch((e) => console.error("Failed to load test campaign", e));
+  }, [router.query.test_id, searchParams, landingPages]);
+
   const applyFilters = (filters) => {
     setFilters(filters);
     debouncedFetch({
@@ -949,26 +1014,28 @@ Respond with json that adheres to the following jsonschema:
 
   const onDuplicate = async (landingPage) => {
     try {
-      const { _id, ...vacancyData } = landingPage;
-      const res = await CrudService.create("LandingPageData", {
-        ...brandingDetails,
-        ...vacancyData,
-        vacancyTitle: `${vacancyData.vacancyTitle} (Copy)`,
+      // Use dedicated ATS service to duplicate landing page including stages
+      const res = await ATSService.duplicateLandingPage({
+        landingPageId: landingPage._id,
       });
+
       antdmessage.success("Vacancy duplicated successfully");
+
+      // Refresh list and user usage
       await fetchData();
       await refreshUserData();
+
+      // Navigate directly to the editor for the new copy
+      const newId = res?.data?.landingPage?._id;
+      if (newId) {
+        router.push(`/edit-page/${newId}`);
+      }
     } catch (error) {
       console.error("Error duplicating vacancy:", error);
-      
-      // Handle plan limit errors from the API
-      if (error.response?.data?.error === "PLAN_LIMIT_EXCEEDED") {
-        console.log("Plan limit exceeded during duplication, showing upgrade modal");
-        setUpgradeModalVisible(true);
-        return;
-      }
-      
-      antdmessage.error(error.response?.data?.message || "Failed to duplicate vacancy. Please try again.");
+      antdmessage.error(
+        error?.response?.data?.message ||
+          "Failed to duplicate vacancy. Please try again."
+      );
     }
   };
 
@@ -1081,11 +1148,12 @@ Respond with json that adheres to the following jsonschema:
   if (facebookLoading) return <Skeleton active />;
   return (
     <>
-      <div className="flex flex-col flex-1 gap-6 pl-6 pt-3.5 pb-3 mdx:self-stretch">
+      <div className="flex flex-col flex-1 gap-6 pt-3.5 pb-3 pl-6 mdx:self-stretch">
         <div className="flex gap-4 justify-between items-center smx:flex-col">
           <h1 className="text-2xl font-semibold text-gray-900">
-            Vacancies
+            {isCampaignsRoute ? "Campaigns" : "Vacancies"}
           </h1>
+          <div className="flex gap-2 items-center"></div>
           {(() => {
             // Use workspace-specific funnel usage when in workspace session
             let currentFunnelCount, maxFunnels, tierName;
@@ -1119,9 +1187,9 @@ Respond with json that adheres to the following jsonschema:
             });
 
             return (
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-col gap-2 items-end">
                 {/* Usage indicator */}
-                <div className="text-sm text-gray-500 flex items-center gap-1">
+                <div className="flex gap-1 items-center text-sm text-gray-500">
                   {maxFunnels === null ?
                     `${currentFunnelCount} funnels (Unlimited)` :
                     `${currentFunnelCount} / ${maxFunnels} funnels used`
@@ -1143,7 +1211,7 @@ Respond with json that adheres to the following jsonschema:
                                 <span>{workspace.currentFunnels || 0}/{workspace.maxFunnels || 0} funnels</span>
                               </div>
                             ))}
-                            <div className="border-t pt-1 mt-2 font-medium">
+                            <div className="pt-1 mt-2 font-medium border-t">
                               <div className="flex justify-between">
                                 <span>Total:</span>
                                 <span>{funnelUsage.totalCurrentFunnels}/{funnelUsage.totalMaxFunnels} funnels</span>
@@ -1154,14 +1222,32 @@ Respond with json that adheres to the following jsonschema:
                       }
                       placement="bottomRight"
                     >
-                      <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
+                      <HelpCircle className="w-4 h-4 text-gray-400 cursor-help hover:text-gray-600" />
                     </Tooltip>
                   )}
-                  <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
+                  <span className="px-2 py-1 ml-2 text-xs bg-gray-100 rounded">
                     {tierName} Plan
                   </span>
                 </div>
                 
+                {/* View switch (right-aligned) */}
+                {isCampaignsRoute && (
+                  <button
+                    onClick={() => {
+                      const next = viewMode === 'cards' ? 'timeline' : 'cards';
+                      setViewMode(next);
+                      const url = new URL(window.location.href);
+                      if (next === 'cards') url.searchParams.delete('view');
+                      else url.searchParams.set('view', 'timeline');
+                      router.push(url.pathname + url.search, undefined, { shallow: true });
+                    }}
+                    className="inline-flex gap-2 items-center px-3 py-1 text-xs font-medium text-gray-700 bg-white rounded-lg border border-gray-200 transition-colors duration-200 hover:bg-gray-50"
+                    title="Switch view"
+                  >
+                    {viewMode === 'cards' ? 'Timeline view' : 'Cards view'}
+                  </button>
+                )}
+
                 {/* Create button */}
                 <button
                   onClick={hasReachedLimit ? () => setUpgradeModalVisible(true) : handleCreateNewVacancy}
@@ -1170,7 +1256,7 @@ Respond with json that adheres to the following jsonschema:
                       ? 'text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100' 
                       : 'text-white bg-indigo-600 hover:bg-indigo-700'
                   }`}
-                  title={hasReachedLimit ? `You've reached your ${maxFunnels} funnel limit. Click to upgrade.` : 'Create a new vacancy'}
+                  title={hasReachedLimit ? `You've reached your ${maxFunnels} funnel limit. Click to upgrade.` : (isCampaignsRoute ? 'Create a new campaign' : 'Create a new vacancy')}
                 >
                   {hasReachedLimit ? (
                     <>
@@ -1183,7 +1269,7 @@ Respond with json that adheres to the following jsonschema:
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
-                      Create New Vacancy
+                      {isCampaignsRoute ? 'Create New Campaign' : 'Create New Vacancy'}
                     </>
                   )}
                 </button>
@@ -1214,10 +1300,10 @@ Respond with json that adheres to the following jsonschema:
 
             if (hasReachedLimit) {
               return (
-                <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg p-4 mb-4">
-                  <div className="flex items-start gap-3">
+                <div className="p-4 mb-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+                  <div className="flex gap-3 items-start">
                     <div className="flex-shrink-0">
-                      <svg className="w-5 h-5 text-orange-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="mt-0.5 w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.382 16.5c-.77.833.192 2.5 1.732 2.5z" />
                       </svg>
                     </div>
@@ -1234,7 +1320,7 @@ Respond with json that adheres to the following jsonschema:
                       <div className="mt-3">
                         <button
                           onClick={() => setUpgradeModalVisible(true)}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-100 hover:bg-orange-200 rounded-md transition-colors"
+                          className="inline-flex gap-2 items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-100 rounded-md transition-colors hover:bg-orange-200"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -1254,22 +1340,22 @@ Respond with json that adheres to the following jsonschema:
             <div className="flex gap-3 w-full smx:flex-col">
               {/* Modern Search Bar */}
               <div className="relative flex-1">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <div className="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                   </svg>
                 </div>
                 <input
                   type="text"
-                  placeholder="Search vacancies..."
+                  placeholder={isCampaignsRoute ? "Search campaigns..." : "Search vacancies..."}
                   value={searchValue}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="block py-2 pr-3 pl-10 w-full text-sm placeholder-gray-500 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
                 {searchValue && (
                   <button
                     onClick={() => handleSearch("")}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    className="flex absolute inset-y-0 right-0 items-center pr-3"
                   >
                     <svg className="w-4 h-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1281,8 +1367,8 @@ Respond with json that adheres to the following jsonschema:
               {/* Active Sort Pills */}
               {sorters.map((sorter) => (
                 <div key={sorter.key} 
-                // className="inline-flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg border border-blue-200"
-                className="inline-flex items-center gap-1 px-3 py-2  text-blue-700 text-sm font-medium rounded-lg border border-blue-200"
+                // className="inline-flex gap-1 items-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg border border-blue-200"
+                className="inline-flex gap-1 items-center px-3 py-2 text-sm font-medium text-blue-700 rounded-lg border border-blue-200"
                 >
                   <span>
                     {sorter.key === "createdAt" ? (sorter.direction === "asc" ? "Oldest" : "Newest") :
@@ -1324,7 +1410,7 @@ Respond with json that adheres to the following jsonschema:
 
               {/* Modern Sort Button */}
               <Dropdown overlay={sorterMenu} trigger={["click"]}>
-                <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                <button className="inline-flex gap-2 items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-200 transition-colors duration-200 hover:bg-gray-50">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                   </svg>
@@ -1340,12 +1426,56 @@ Respond with json that adheres to the following jsonschema:
               {<FilterTags filters={filters} setFilters={setFilters} />}
             </div>
 
+            {isCampaignsRoute && viewMode === 'timeline' && (
+              <div className="flex gap-3 items-center mt-2">
+                <label className="text-xs text-[#475467]">Timeframe</label>
+                <select
+                  className="text-xs px-2 py-1 rounded-md border text-[#475467]"
+                  value={timeframe}
+                  onChange={(e) => {
+                    setTimeframe(e.target.value);
+                    const url = new URL(window.location.href);
+                    if (e.target.value === 'all') url.searchParams.delete('timeframe');
+                    else url.searchParams.set('timeframe', e.target.value);
+                    router.push(url.pathname + url.search, undefined, { shallow: true });
+                  }}
+                >
+                  <option value="all">All time</option>
+                  <option value="6m">Last 6 months</option>
+                  <option value="3m">Last 3 months</option>
+                </select>
+                <label className="ml-4 inline-flex items-center gap-2 text-xs text-[#475467] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    defaultChecked={status === 'published'}
+                    onChange={(e) => {
+                      const url = new URL(window.location.href);
+                      if (e.target.checked) url.searchParams.set('status', 'published');
+                      else url.searchParams.delete('status');
+                      router.push(url.pathname + url.search, undefined, { shallow: true });
+                    }}
+                  />
+                  Active only
+                </label>
+                <button
+                  className="ml-4 text-xs px-2 py-1 rounded-md border text-[#475467]"
+                  onClick={() => {
+                    // Toggle chronological sort
+                    const isAsc = sorters?.[0]?.key === 'createdAt' && sorters?.[0]?.direction === 'asc';
+                    handleSorterChange({ key: 'createdAt', direction: isAsc ? 'desc' : 'asc' });
+                  }}
+                >
+                  Chronological
+                </button>
+              </div>
+            )}
+
             {status && (
               <div className="filter-status-indicator inline-flex bg-[#5207CD] text-white p-1 px-2 mt-1 rounded-full items-center">
-                <span>{status === 'published' ? 'Published' : 'Unpublished'} vacancies</span>
+                <span>{status === 'published' ? 'Published' : 'Unpublished'} {isCampaignsRoute ? 'campaigns' : 'vacancies'}</span>
                 <span
-                  onClick={() => router.push('/dashboard/vacancies')}
-                  className="flex justify-center items-center ml-2 cursor-pointer transition focus:outline-none"
+                  onClick={() => router.push(isCampaignsRoute ? '/dashboard/campaigns' : '/dashboard/vacancies')}
+                  className="flex justify-center items-center ml-2 transition cursor-pointer focus:outline-none"
                 >
                   <CircleX size={18} fill={"#9fa3a7"} />
                 </span>
@@ -1353,7 +1483,8 @@ Respond with json that adheres to the following jsonschema:
             )}
 
           </div>
-          <div className="grid grid-cols-1 gap-3 justify-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 place-items-center sm:place-items-stretch">
+          {viewMode === 'cards' && (
+          <div className="grid grid-cols-1 gap-3 justify-center place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:place-items-stretch">
             {landingPages.map((d, index) => {
               return (
                 <VacanciesCard
@@ -1384,6 +1515,60 @@ Respond with json that adheres to the following jsonschema:
               </>
             )}
           </div>
+          )}
+          {viewMode === 'timeline' && (
+            <div className="flex flex-col gap-6 w-full">
+              {/* Header Container based on Figma */}
+              <div className="h-[76px] relative w-full shrink-0">
+                  <div className="absolute top-1/2 -translate-y-1/2 left-0 flex flex-col gap-[10px] items-start">
+                      <h2 className="text-[30px] font-bold text-gray-900 leading-9 m-0">Campaign Timeline</h2>
+                      <div className="flex gap-[4.5px]">
+                          <button
+                              onClick={() => {
+                                  setTimelineTab('timeline');
+                                  const url = new URL(window.location.href);
+                                  url.searchParams.delete('tab');
+                                  router.push(url.pathname + url.search, undefined, { shallow: true });
+                              }}
+                              className={`px-3 py-[6px] text-base leading-6 border-b-2 transition-colors ${
+                                timelineTab === 'timeline' 
+                                  ? 'text-violet-700 border-violet-700 font-semibold' 
+                                  : 'text-gray-500 border-transparent font-medium hover:text-gray-700'
+                              }`}
+                          >
+                              Timeline
+                          </button>
+                          <button
+                              onClick={() => {
+                                  setTimelineTab('performance');
+                                  const url = new URL(window.location.href);
+                                  url.searchParams.set('tab', 'performance');
+                                  router.push(url.pathname + url.search, undefined, { shallow: true });
+                              }}
+                              className={`px-3 py-[6px] text-base leading-6 border-b-2 border-transparent transition-colors ${
+                                timelineTab === 'performance' 
+                                  ? 'text-violet-700 border-violet-700 font-semibold' 
+                                  : 'text-gray-500 font-medium hover:text-gray-700'
+                              }`}
+                          >
+                              Performance
+                          </button>
+                      </div>
+                  </div>
+
+                  <div className="flex absolute right-0 top-1/2 gap-2 items-center -translate-y-1/2">
+                       <div className="w-5 h-5 bg-[#0075ff] rounded-[2.5px] cursor-pointer"></div>
+                       <span className="text-sm font-medium text-gray-700">AI Dynamic Adjustment</span>
+                  </div>
+              </div>
+
+              {timelineTab === 'timeline' && (
+                  <Timeline campaigns={landingPages} timeframe={timeframe} isDemo={isDemo} />
+              )}
+
+              {timelineTab === 'performance' && <CampaignsPerformance campaigns={landingPages} isDemo={isDemo} />}
+            </div>
+          )}
 
           <div className="flex justify-center mt-6">
             <Pagination
@@ -1461,9 +1646,9 @@ Respond with json that adheres to the following jsonschema:
                   />
                 </div>
                 
-                <div className="flex flex-col items-center gap-4 text-center">
+                <div className="flex flex-col gap-4 items-center text-center">
                   {/* Limit reached icon */}
-                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                  <div className="flex justify-center items-center w-16 h-16 bg-orange-100 rounded-full">
                     <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
@@ -1474,7 +1659,7 @@ Respond with json that adheres to the following jsonschema:
                     <h3 className="text-lg font-semibold text-gray-800">
                       You've reached your funnel limit
                     </h3>
-                    <p className="text-gray-600 max-w-md">
+                    <p className="max-w-md text-gray-600">
                       You're currently using <span className="font-medium">{currentFunnelCount} of {maxFunnels}</span> funnels 
                       available on the <span className="font-medium">{tierName} plan</span>. 
                       Upgrade your plan to create more recruitment funnels and unlock additional features.
@@ -1482,28 +1667,28 @@ Respond with json that adheres to the following jsonschema:
                   </div>
                   
                   {/* Upgrade benefits */}
-                  <div className="bg-gray-50 rounded-lg p-4 w-full max-w-md">
-                    <h4 className="font-medium text-gray-800 mb-2">Upgrade to unlock:</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li className="flex items-center gap-2">
+                  <div className="p-4 w-full max-w-md bg-gray-50 rounded-lg">
+                    <h4 className="mb-2 font-medium text-gray-800">Upgrade to unlock:</h4>
+                    <ul className="space-y-1 text-sm text-gray-600">
+                      <li className="flex gap-2 items-center">
                         <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         More recruitment funnels
                       </li>
-                      <li className="flex items-center gap-2">
+                      <li className="flex gap-2 items-center">
                         <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         Advanced customization options
                       </li>
-                      <li className="flex items-center gap-2">
+                      <li className="flex gap-2 items-center">
                         <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         Priority support
                       </li>
-                      <li className="flex items-center gap-2">
+                      <li className="flex gap-2 items-center">
                         <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
@@ -1513,13 +1698,13 @@ Respond with json that adheres to the following jsonschema:
                   </div>
                   
                   {/* Action buttons */}
-                  <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md pt-2">
+                  <div className="flex flex-col gap-3 pt-2 w-full max-w-md sm:flex-row">
                     <button
                       onClick={() => {
                         setAddNewModal(false);
                         setUpgradeModalVisible(true);
                       }}
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                      className="flex flex-1 gap-2 justify-center items-center px-4 py-3 font-medium text-white bg-indigo-600 rounded-lg transition-colors duration-200 hover:bg-indigo-700"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -1528,7 +1713,7 @@ Respond with json that adheres to the following jsonschema:
                     </button>
                     <button
                       onClick={() => setAddNewModal(false)}
-                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                      className="flex-1 px-4 py-3 font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors duration-200 hover:bg-gray-200"
                     >
                       Cancel
                     </button>
@@ -2308,3 +2493,501 @@ form: {
 };
 
 export default Vacancies;
+
+// Corrected Timeline Component matching Figma design with responsiveness and real data
+function Timeline({ campaigns, timeframe, isDemo }) {
+  const [expanded, setExpanded] = React.useState(new Set());
+
+  // Calculate timeframe window
+  const now = new Date();
+  const timeframeStart = React.useMemo(() => {
+    const d = new Date();
+    if (timeframe === '3m') d.setMonth(d.getMonth() - 3);
+    else if (timeframe === '6m') d.setMonth(d.getMonth() - 6);
+    else d.setMonth(d.getMonth() - 12); // Default to year view for 'all'
+    return d;
+  }, [timeframe]);
+
+  const windowMs = now.getTime() - timeframeStart.getTime();
+
+  // Dummy data for demo mode
+  const dummyCampaigns = [
+    {
+      _id: "demo-1",
+      vacancyTitle: "Project Manager",
+      location: "Amsterdam",
+      createdAt: new Date(now.getFullYear(), now.getMonth() - 2, 15).toISOString(),
+      visits: 3600,
+      applicants: 256,
+      adBudget: 45
+    },
+    {
+      _id: "demo-2",
+      vacancyTitle: "Operations Manager",
+      location: "London",
+      createdAt: new Date(now.getFullYear(), now.getMonth() - 1, 5).toISOString(),
+      visits: 2100,
+      applicants: 137,
+      adBudget: 35
+    },
+    {
+      _id: "demo-3",
+      vacancyTitle: "CS Agent",
+      location: "Berlin",
+      createdAt: new Date(now.getFullYear(), now.getMonth(), 10).toISOString(),
+      visits: 1800,
+      applicants: 112,
+      adBudget: 25
+    }
+  ];
+
+  const dataToRender = isDemo ? dummyCampaigns : (campaigns || []);
+
+  // Process rows from campaigns data
+  const rows = React.useMemo(() => {
+    return dataToRender.map(c => {
+      // Logic for bars
+      const createdAt = new Date(c.createdAt);
+      let startPct = 0;
+      let widthPct = 0;
+
+      if (createdAt > timeframeStart) {
+          startPct = ((createdAt.getTime() - timeframeStart.getTime()) / windowMs) * 100;
+          widthPct = ((now.getTime() - createdAt.getTime()) / windowMs) * 100;
+      } else {
+          startPct = 0;
+          widthPct = ((now.getTime() - timeframeStart.getTime()) / windowMs) * 100;
+      }
+      
+      // Ensure bounds
+      startPct = Math.max(0, Math.min(100, startPct));
+      widthPct = Math.max(0, Math.min(100 - startPct, widthPct));
+
+      // Construct Meta channel (default for now as per requirement)
+      // Only show if there is an ad budget or in demo mode
+      const dailyBudget = c.adBudget || 0;
+      const channels = [];
+
+      if (dailyBudget > 0 || isDemo) {
+        const daysActive = Math.max(1, Math.ceil((now - createdAt) / (1000 * 60 * 60 * 24)));
+        const totalBudget = dailyBudget * daysActive;
+
+        const metaChannel = {
+          name: "Meta",
+          label: "Meta Ads",
+          dailyBudget: dailyBudget,
+          totalBudget: totalBudget,
+          color: "#3b82f6", // blue-500
+          startPct,
+          widthPct
+        };
+        channels.push(metaChannel);
+      }
+
+      const locationStr = Array.isArray(c.location) ? c.location.join(', ') : (c.location || "Remote");
+
+      const totalBudget = channels.reduce((acc, ch) => acc + ch.totalBudget, 0);
+
+      return {
+        id: c._id,
+        title: c.vacancyTitle,
+        location: `${locationStr} - ${moment(c.createdAt).format('DD/MM/YYYY')} - Present`,
+        budgets: { total: totalBudget },
+        analytics: {
+          reach: c.visits ? (c.visits * 5).toLocaleString() : "0", // Estimate
+          visits: c.visits || 0,
+          ctr: isDemo ? "2.9%" : "N/A",
+          cpc: isDemo ? "€0.40" : "N/A"
+        },
+        channels: channels
+      };
+    });
+  }, [dataToRender, timeframeStart, windowMs, isDemo]);
+
+
+  const toggleRow = (id) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const months = React.useMemo(() => {
+     const m = [];
+     const d = new Date(timeframeStart);
+     // Move to start of month
+     d.setDate(1);
+     
+     const end = new Date(now);
+     
+     while (d <= end) {
+         m.push(d.toLocaleString('default', { month: 'short' }));
+         d.setMonth(d.getMonth() + 1);
+     }
+     // Ensure we don't have too many labels if timeframe is long
+     if (m.length > 12) {
+         return m.filter((_, i) => i % 2 === 0);
+     }
+     return m;
+  }, [timeframeStart]);
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-[12px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] overflow-hidden w-full flex flex-col">
+      <div className="overflow-x-auto">
+        <div className="min-w-[1000px]">
+            {/* Calendar Header */}
+            <div className="flex items-center border-b border-gray-200">
+                <div className="w-[343.5px] shrink-0 p-4 flex items-center justify-between sticky left-0 bg-white z-20 border-r border-gray-200">
+                    <button className="p-1 rounded hover:bg-gray-100"><ChevronLeft className="w-3 h-3 text-gray-500" /></button>
+                    <span className="text-base font-semibold text-gray-800">{now.getFullYear()}</span>
+                    <button className="p-1 rounded hover:bg-gray-100"><ChevronRight className="w-3 h-3 text-gray-500" /></button>
+                </div>
+                <div className="flex flex-1 border-l border-transparent">
+                    {months.map((m, i) => (
+                        <div key={i} className={`flex-1 py-4 flex justify-center text-base ${m === 'Oct' ? 'text-violet-700 font-semibold' : 'text-gray-500 font-medium'}`}>
+                            {m}
+                        </div>
+                    ))}
+                </div>
+                <div className="w-[150px] shrink-0"></div>
+            </div>
+
+            {/* Rows */}
+            {rows.map((row) => (
+                <div key={row.id} className="border-b border-gray-200 last:border-0">
+                    {/* Main Row */}
+                    <div className="flex min-h-[76px] relative group">
+                        {/* Left: Info - Sticky */}
+                        <div className="w-[343.5px] shrink-0 p-4 border-r border-gray-200 flex justify-between items-start bg-white z-20 sticky left-0 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
+                            <div className="flex flex-col gap-1">
+                                <div className="text-base font-bold text-gray-900">{row.title}</div>
+                                <div className="text-xs text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis max-w-[280px]">{row.location}</div>
+                            </div>
+                            <button onClick={() => toggleRow(row.id)} className="p-0.5 mt-0.5 shrink-0">
+                                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${expanded.has(row.id) ? 'rotate-180' : ''}`} />
+                            </button>
+                        </div>
+
+                        {/* Middle: Visualization */}
+                        <div className="flex-1 relative border-r border-gray-200 min-w-[500px]">
+                            {/* Background Grid */}
+                            <div className="flex absolute inset-0">
+                                {months.map((_, i) => (
+                                    <div key={i} className="flex-1 border-r border-gray-100 border-dashed last:border-0" />
+                                ))}
+                            </div>
+                            
+                            {/* Overlay Metric Bar */}
+                            <div className="absolute inset-0 p-2 pt-3">
+                                <div className="h-8 bg-[#f5f3ff]/60 rounded text-xs flex items-center justify-between px-4 lg:px-10 text-gray-600 border border-transparent mx-4 lg:mx-20 whitespace-nowrap overflow-hidden">
+                                    <span className="mr-2">Reach: {row.analytics.reach}</span>
+                                    <span className="mr-2">Visit: {row.analytics.visits}</span>
+                                    <span className="mr-2">CTR {row.analytics.ctr}</span>
+                                    <span>CPC {row.analytics.cpc}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right: Total */}
+                        <div className="w-[150px] shrink-0 p-4 flex items-center justify-end font-bold text-gray-900 text-base bg-white">
+                            Total: ${row.budgets.total.toLocaleString()}
+                        </div>
+                    </div>
+
+                    {/* Expanded Channels */}
+                    {expanded.has(row.id) && (
+                        <div className="bg-white">
+                            {row.channels.map((ch, idx) => (
+                                <div key={idx} className="flex min-h-[76px] border-t border-gray-100">
+                                    {/* Left: Channel Info - Sticky */}
+                                    <div className="w-[343.5px] shrink-0 p-4 border-r border-gray-200 flex items-center gap-3 bg-white z-20 sticky left-0 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
+                                        <div className="flex justify-center items-center w-8 h-8 shrink-0">
+                                            {ch.name === 'Meta' && <FaFacebook className="w-6 h-6 text-blue-600" />}
+                                            {ch.name === 'Google' && <FaGoogle className="w-5 h-5 text-green-500" />}
+                                            {ch.name === 'LinkedIn' && <FaLinkedin className="w-6 h-6 text-blue-700" />}
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-semibold text-gray-800">
+                                                ${ch.dailyBudget} <span className="font-normal text-gray-500">Daily budget</span>
+                                            </div>
+                                            <div className="mt-0.5 text-xs text-gray-400">
+                                                ${ch.totalBudget.toLocaleString()} Total budget
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Middle: Bar */}
+                                    <div className="flex-1 relative border-r border-gray-200 min-w-[500px]">
+                                        <div className="flex absolute inset-0">
+                                            {months.map((_, i) => <div key={i} className="flex-1 border-r border-gray-100 border-dashed last:border-0" />)}
+                                        </div>
+                                        <div className="absolute inset-0 py-5">
+                                            <div 
+                                                className="flex overflow-hidden relative justify-center items-center px-2 h-8 text-sm font-medium text-white whitespace-nowrap rounded-lg shadow-sm"
+                                                style={{ 
+                                                    backgroundColor: ch.color,
+                                                    left: `${ch.startPct}%`,
+                                                    width: `${ch.widthPct}%`
+                                                }}
+                                            >
+                                                {ch.label}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Spacer */}
+                                    <div className="w-[150px] shrink-0 bg-white"></div>
+                                </div>
+                            ))}
+
+                            {/* Add Channel Button Row */}
+                            <div className="flex min-h-[76px] border-t border-gray-100">
+                                <div className="w-[343.5px] shrink-0 flex items-center justify-center border-r border-gray-200 p-4 bg-white z-20 sticky left-0 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
+                                    <button className="flex gap-2 items-center px-4 py-1.5 text-sm font-medium text-gray-500 bg-gray-100 rounded-full transition-colors hover:bg-gray-200">
+                                        <Plus className="w-3.5 h-3.5" />
+                                        Add new channel
+                                    </button>
+                                </div>
+                                <div className="flex-1 border-r border-gray-200 bg-white min-w-[500px]"></div>
+                                <div className="w-[150px] shrink-0 bg-white"></div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Performance tab with real data
+function CampaignsPerformance({ campaigns, isDemo }) {
+  // Dummy data for demo mode
+  const dummyCampaigns = [
+    {
+      vacancyTitle: "Project Manager",
+      visits: 3600,
+      applicants: 256
+    },
+    {
+      vacancyTitle: "Operations Manager",
+      visits: 2100,
+      applicants: 137
+    },
+    {
+      vacancyTitle: "CS Agent",
+      visits: 1800,
+      applicants: 112
+    }
+  ];
+
+  const dataToRender = isDemo ? dummyCampaigns : (campaigns || []);
+
+  // Aggregate data
+  const stats = React.useMemo(() => {
+    let totalVisits = 0;
+    let totalApplicants = 0;
+    
+    dataToRender.forEach(c => {
+       totalVisits += (c.visits || 0);
+       totalApplicants += (c.applicants || 0);
+    });
+
+    // Estimates/Placeholders where data is missing
+    const totalReach = totalVisits > 0 ? totalVisits * 3 : 0; 
+    
+    return {
+        reach: totalReach,
+        visits: totalVisits,
+        applicants: totalApplicants,
+    };
+  }, [dataToRender]);
+
+  const kpis = [
+    { label: 'Reach', value: stats.reach.toLocaleString(), delta: isDemo ? '+12%' : 'N/A', positive: true, icon: <Search className="w-5 h-5" /> },
+    { label: 'Visits', value: stats.visits.toLocaleString(), delta: isDemo ? '+5%' : 'N/A', positive: true, icon: <Search className="w-5 h-5" /> },
+    { label: 'Time on Site', value: isDemo ? '2m 30s' : 'N/A', delta: isDemo ? '+10%' : 'N/A', positive: true, icon: <Search className="w-5 h-5" /> },
+    { label: 'Applicants', value: stats.applicants.toLocaleString(), delta: isDemo ? '+21%' : 'N/A', positive: true, icon: <Search className="w-5 h-5" /> },
+    { label: 'Cost Per Applicant', value: isDemo ? '€15.50' : 'N/A', delta: isDemo ? '↓ 8%' : 'N/A', positive: true, icon: <Search className="w-5 h-5" /> },
+  ];
+
+  // Channels - Only Meta for now as per requirement
+  const channels = [
+    { 
+        name: 'Meta', 
+        applicants: stats.applicants, 
+        cpa: isDemo ? '€18.20' : 'N/A', 
+        ctr: isDemo ? '2.5%' : 'N/A', 
+        color: '#3b82f6', 
+        icon: <FaFacebook className="w-5 h-5 text-white" /> 
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-6">
+        {/* AI Recommendations - Sidebar */}
+        <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm h-fit">
+          <div className="flex gap-2 items-center mb-4">
+             <div className="text-yellow-500">
+                <CrownOutlined className="text-xl" />
+             </div>
+             <div className="text-lg font-semibold text-gray-800">AI Recommendations</div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="p-4 bg-white rounded-lg border border-blue-100 shadow-sm">
+              <div className="mb-1 text-sm font-semibold text-gray-900">Optimize Meta Ad Copy</div>
+              <div className="text-xs leading-5 text-gray-600">Your Meta ads have high reach but low clicks. A/B test new headlines for better engagement.</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main content */}
+        <div className="flex flex-col gap-6 w-full min-w-0">
+          {/* KPI tiles */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {kpis.map((k) => (
+              <div key={k.label} className="p-5 rounded-xl border border-gray-200 bg-white shadow-sm flex flex-col justify-between h-[120px]">
+                <div className="text-sm font-medium text-gray-500">{k.label}</div>
+                <div className="flex justify-between items-end">
+                  <div className="text-2xl font-bold text-gray-900">{k.value}</div>
+                  <div className={`flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${k.positive ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                    <span className="mr-1">{k.positive ? '↑' : '↓'}</span>
+                    {k.delta}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Channels cards */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {channels.map((c) => (
+              <div key={c.name} className="p-5 bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex gap-3 items-center mb-4">
+                    <div className={`flex justify-center items-center w-8 h-8 rounded-lg`} style={{ backgroundColor: c.color }}>
+                        {c.icon}
+                    </div>
+                    <div className="text-base font-semibold text-gray-800">{c.name}</div>
+                </div>
+                
+                <div className="flex justify-between items-end mb-2">
+                    <span className="text-sm text-gray-800">Applicants</span>
+                    <span className="text-sm font-semibold text-gray-800">{c.applicants.toLocaleString()}</span>
+                </div>
+                
+                <div className="overflow-hidden mb-4 h-2 bg-gray-100 rounded-full">
+                  <div className="h-full rounded-full" style={{ width: '65%', backgroundColor: c.color }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <div>CPA: {c.cpa}</div>
+                  <div>CTR: {c.ctr}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Funnel strip */}
+          <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="mb-8 text-base font-semibold text-gray-800">Campaign Funnel</div>
+            <div className="flex justify-between items-start px-4 md:px-12 lg:px-24">
+                {/* Step 1: Reach */}
+                <div className="flex z-10 flex-col items-center w-24">
+                    <div className="mb-2 text-sm text-gray-500">Reach</div>
+                    <div className="text-2xl font-bold text-gray-900">{stats.reach.toLocaleString()}</div>
+                </div>
+
+                {/* Connector 1 */}
+                <div className="flex relative flex-col flex-1 items-center mx-4 mt-3">
+                     {/* Line */}
+                     <div className="w-full h-[2px] bg-gray-200 relative">
+                        {/* Optional Tick/Arrow on line */}
+                        <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-gray-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                     </div>
+                     
+                     {/* Badge below line */}
+                     <div className="px-2.5 py-0.5 mt-4 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-100">
+                        {isDemo ? '3.1%' : (stats.reach > 0 ? ((stats.visits / stats.reach) * 100).toFixed(1) + '%' : '0%')}
+                     </div>
+                </div>
+
+                {/* Step 2: Visits/Clicks */}
+                <div className="flex z-10 flex-col items-center w-24">
+                    <div className="mb-2 text-sm text-gray-500">Clicks</div>
+                    <div className="text-2xl font-bold text-gray-900">{stats.visits.toLocaleString()}</div>
+                </div>
+
+                {/* Connector 2 */}
+                <div className="flex relative flex-col flex-1 items-center mx-4 mt-3">
+                     {/* Line */}
+                     <div className="w-full h-[2px] bg-gray-200 relative">
+                        <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-gray-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                     </div>
+                     
+                     {/* Badge below line */}
+                     <div className="px-2.5 py-0.5 mt-4 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-100">
+                        {isDemo ? '13%' : (stats.visits > 0 ? ((stats.applicants / stats.visits) * 100).toFixed(1) + '%' : '0%')}
+                     </div>
+                </div>
+
+                {/* Step 3: Applies */}
+                <div className="flex z-10 flex-col items-center w-24">
+                    <div className="mb-2 text-sm text-gray-500">Applies</div>
+                    <div className="text-2xl font-bold text-violet-700">{stats.applicants.toLocaleString()}</div>
+                </div>
+            </div>
+          </div>
+
+          {/* Campaigns table */}
+          <div className="overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="p-6 border-b border-gray-200">
+                <div className="text-base font-semibold text-gray-800">Campaigns</div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm text-left">
+                <thead className="text-xs font-medium text-gray-500 uppercase bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 font-medium">Campaign</th>
+                    <th className="px-6 py-4 font-medium">Channel</th>
+                    <th className="px-6 py-4 font-medium">Spend</th>
+                    <th className="px-6 py-4 font-medium">Applicants</th>
+                    <th className="px-6 py-4 font-medium">CPA</th>
+                    <th className="px-6 py-4"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {dataToRender.map((r, i) => (
+                    <tr key={i} className="transition-colors hover:bg-gray-50">
+                      <td className="px-6 py-4 font-semibold text-gray-800">{r.vacancyTitle}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-[#8b5cf6] text-white border-transparent">
+                               <FaFacebook className="w-3 h-3" />
+                               Meta
+                           </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-600">{isDemo ? '€2,500' : 'N/A'}</td>
+                      <td className="px-6 py-4 text-gray-600">{r.applicants || 0}</td>
+                      <td className="px-6 py-4 text-gray-600">{isDemo ? '€18.24' : 'N/A'}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button className="p-1 text-gray-400 rounded hover:text-gray-600 hover:bg-gray-100">
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

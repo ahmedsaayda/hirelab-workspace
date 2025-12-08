@@ -21,9 +21,12 @@ export default function Header({
   lastSaved,
   lpId,
   isFormEditor = false,
+  isAdsEditor = false,
   hasUnpublishedChanges = false, // 🔥 NEW: Passed from parent
   onNavigateAttempt,
   onOpenFormSettings,
+  onOpenSettings,
+  customActions,
   ...props
 }) {
   const router = useRouter();
@@ -289,7 +292,9 @@ export default function Header({
             alt="settings"
             className="h-[20px] w-[20px] ml-3.5 cursor-pointer settings-icon"
             onClick={() => {
-              if (isFormEditor && typeof onOpenFormSettings === "function") {
+              if (onOpenSettings) {
+                onOpenSettings();
+              } else if (isFormEditor && typeof onOpenFormSettings === "function") {
                 onOpenFormSettings();
               } else {
                 handleTemplateOpen();
@@ -301,52 +306,56 @@ export default function Header({
         <div className="flex justify-between items-center w-full mdx:flex-col mdx:gap-3">
           {/* Left side - Publish button + status */}
           <div className="flex items-center mdx:w-full mdx:justify-center ml-2">
-            <div className={`flex items-center gap-2 rounded-lg border border-solid px-2 py-[10px] shadow-sm ${
-              landingPageData?.published && !hasUnpublishedChanges ? "bg-[#ECFDF3]" : "bg-[#5207CD]"
-            } mdx:w-full mdx:justify-center`}>
-              <button
-                onClick={!(isPublishing || isSaving || isAutoSaving) ? handlePublish : undefined}
-                className={`flex gap-2  items-center ${(isPublishing || isSaving || isAutoSaving) ? 'cursor-default' : 'cursor-pointer'} mdx:justify-center`}
-                disabled={isPublishing || isSaving || isAutoSaving}
-              >
-                {(isSaving || isAutoSaving) ? (
-                  <Spin size="small" indicator={<LoadingOutlined style={{ fontSize: 16, color: '#FFFFFF' }} spin />} />
-                ) : isPublishing ? (
-                  <Spin size="small" indicator={<LoadingOutlined style={{ fontSize: 16, color: '#FFFFFF' }} spin />} />
-                ) : (landingPageData?.published && !hasUnpublishedChanges ? (
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="#17B26A" />
-                    <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
-                    <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="white" />
-                    <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
-                    <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="#5207CD" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                ))}
-                <Heading
-                  size="3xl"
-                  as="p"
-                  className={landingPageData?.published && !hasUnpublishedChanges ? "!text-[#039855]" : "!text-[#FFFFFF]"}
-                >
-                  {(isSaving || isAutoSaving) ? "Saving..." : 
-                   isPublishing ? "Publishing..." :
-                   landingPageData?.published ? 
-                     (hasUnpublishedChanges ? "Publish Changes" : "Published") : 
-                     "Publish"}
-                </Heading>
-              </button>
-            </div>
-            {landingPageData?.published && (
-              <button
-                onClick={handleCopyLink}
-                className="ml-2 flex items-center justify-center rounded-lg border border-solid px-2 py-[10px] shadow-sm bg-[#0080FF] hover:bg-[#0C7CE6]"
-                title="Copy public link"
-              >
-                <LinkOutlined style={{ fontSize: '16px', color: 'white' }} />
-              </button>
+            {customActions ? customActions : (
+              <>
+                <div className={`flex items-center gap-2 rounded-lg border border-solid px-2 py-[10px] shadow-sm ${
+                  landingPageData?.published && !hasUnpublishedChanges ? "bg-[#ECFDF3]" : "bg-[#5207CD]"
+                } mdx:w-full mdx:justify-center`}>
+                  <button
+                    onClick={!(isPublishing || isSaving || isAutoSaving) ? handlePublish : undefined}
+                    className={`flex gap-2  items-center ${(isPublishing || isSaving || isAutoSaving) ? 'cursor-default' : 'cursor-pointer'} mdx:justify-center`}
+                    disabled={isPublishing || isSaving || isAutoSaving}
+                  >
+                    {(isSaving || isAutoSaving) ? (
+                      <Spin size="small" indicator={<LoadingOutlined style={{ fontSize: 16, color: '#FFFFFF' }} spin />} />
+                    ) : isPublishing ? (
+                      <Spin size="small" indicator={<LoadingOutlined style={{ fontSize: 16, color: '#FFFFFF' }} spin />} />
+                    ) : (landingPageData?.published && !hasUnpublishedChanges ? (
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="#17B26A" />
+                        <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
+                        <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" fill="white" />
+                        <rect x="0.5" y="0.5" width="15" height="15" rx="7.5" stroke="white" />
+                        <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="#5207CD" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    ))}
+                    <Heading
+                      size="3xl"
+                      as="p"
+                      className={landingPageData?.published && !hasUnpublishedChanges ? "!text-[#039855]" : "!text-[#FFFFFF]"}
+                    >
+                      {(isSaving || isAutoSaving) ? "Saving..." : 
+                      isPublishing ? "Publishing..." :
+                      landingPageData?.published ? 
+                        (hasUnpublishedChanges ? "Publish Changes" : "Published") : 
+                        "Publish"}
+                    </Heading>
+                  </button>
+                </div>
+                {landingPageData?.published && (
+                  <button
+                    onClick={handleCopyLink}
+                    className="ml-2 flex items-center justify-center rounded-lg border border-solid px-2 py-[10px] shadow-sm bg-[#0080FF] hover:bg-[#0C7CE6]"
+                    title="Copy public link"
+                  >
+                    <LinkOutlined style={{ fontSize: '16px', color: 'white' }} />
+                  </button>
+                )}
+              </>
             )}
           </div>
 

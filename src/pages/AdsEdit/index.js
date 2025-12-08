@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/router";
 import { message, Modal, Tooltip, Skeleton, Switch } from "antd";
 import { useSelector } from "react-redux";
@@ -9,6 +9,8 @@ import CrudService from "../../services/CrudService";
 import LandingPageService from "../../services/landingPageService";
 import AdsService from "../../services/AdsService";
 import MetaService from "../../services/MetaService";
+import { toBlob } from "html-to-image";
+import UploadService from "../../services/UploadService";
 import Header from "../Dashboard/Vacancies/components/components/Header";
 import { Button, Heading, Text } from "../Dashboard/Vacancies/components/components";
 import ApplyCustomFont from "../Landingpage/ApplyCustomFont";
@@ -99,6 +101,10 @@ const PLATFORMS = [
   { id: "tiktok", label: "TikTok", icon: "/icons/tiktok.svg" },
 ];
 
+// Tiny transparent PNG used as safe placeholder for missing images and html-to-image fallbacks
+const TRANSPARENT_PNG =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
+
 export default function AdsEdit({ paramsId }) {
   const router = useRouter();
   const lpId = paramsId;
@@ -125,6 +131,16 @@ export default function AdsEdit({ paramsId }) {
   const [selectedAdAccountId, setSelectedAdAccountId] = useState("");
   const [selectedPageId, setSelectedPageId] = useState("");
   const [metaStatus, setMetaStatus] = useState({ connected: false });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmVariants, setConfirmVariants] = useState([]);
+  const captureRef = useRef(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [reuseCampaign, setReuseCampaign] = useState(true);
+  const [reuseAdSet, setReuseAdSet] = useState(false);
+  const [preparingLaunch, setPreparingLaunch] = useState(false);
+  const [preparedOnce, setPreparedOnce] = useState(false);
+  const [preparedModalOpen, setPreparedModalOpen] = useState(false);
+  const [preparedVariants, setPreparedVariants] = useState([]);
 
   // Brand data
   const [userBrandData, setUserBrandData] = useState(null);
@@ -207,12 +223,30 @@ export default function AdsEdit({ paramsId }) {
     fetchData();
   }, [fetchData]);
 
+  // Check for OAuth success on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('meta_success');
+    if (success === 'true') {
+      message.success("Meta connected successfully!");
+      // Clean up URL by removing the success parameter
+      const newUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+
   // Fetch Meta connect status (workspace-based if available)
   useEffect(() => {
     const loadMeta = async () => {
       try {
         const res = await MetaService.getStatus(workspaceId || undefined);
-        if (res?.data?.success) setMetaStatus(res.data.data);
+        if (res?.data?.success) {
+          setMetaStatus(res.data.data);
+          if (res.data.data?.via === "user") {
+            if (res.data.data?.adAccountId) setSelectedAdAccountId(res.data.data.adAccountId);
+            if (res.data.data?.pageId) setSelectedPageId(res.data.data.pageId);
+          }
+        }
       } catch (e) {
         // ignore
       }
@@ -237,18 +271,38 @@ export default function AdsEdit({ paramsId }) {
       message.warning("Select an Ad Account and a Page");
       return;
     }
-    try {
-      await MetaService.saveAssets({
-        workspaceId: workspaceId || undefined,
-        adAccountId: selectedAdAccountId,
-        pageId: selectedPageId,
-      });
-      setAssetModalOpen(false);
-      const res = await MetaService.getStatus(workspaceId || undefined);
-      if (res?.data?.success) setMetaStatus(res.data.data);
-      message.success("Meta assets saved");
-    } catch (e) {
-      message.error("Failed to save Meta assets");
+    // If workspace is present, persist selection to workspace; otherwise keep as per-publish overrides
+    if (workspaceId) {
+      try {
+        await MetaService.saveAssets({
+          workspaceId: workspaceId || undefined,
+          adAccountId: selectedAdAccountId,
+          pageId: selectedPageId,
+        });
+        setAssetModalOpen(false);
+        const res = await MetaService.getStatus(workspaceId || undefined);
+        if (res?.data?.success) setMetaStatus(res.data.data);
+        message.success("Meta assets saved");
+      } catch (e) {
+        message.error("Failed to save Meta assets");
+      }
+    } else {
+      try {
+        await MetaService.saveAssets({
+          adAccountId: selectedAdAccountId,
+          pageId: selectedPageId,
+        });
+        setAssetModalOpen(false);
+        const res = await MetaService.getStatus(undefined);
+        if (res?.data?.success) {
+          setMetaStatus(res.data.data);
+          if (res.data.data?.adAccountId) setSelectedAdAccountId(res.data.data.adAccountId);
+          if (res.data.data?.pageId) setSelectedPageId(res.data.data.pageId);
+        }
+        message.success("Meta assets saved for your account");
+      } catch (e) {
+        message.error("Failed to save Meta assets");
+      }
     }
   };
   
@@ -294,6 +348,63 @@ export default function AdsEdit({ paramsId }) {
     return ads;
   };
 
+  // Cloudinary upload helper via shared UploadService
+  const uploadToCloudinary = async (blob) => {
+    // Convert Blob to File for UploadService
+    const file = new File([blob], `ad-${Date.now()}.png`, { type: "image/png" });
+    // Align with working uploader (ImageUploader) which uses UploadService.upload
+    const res = await UploadService.upload(file, 20); // 20MB cap
+    const url = res?.data?.secure_url;
+    if (!url) throw new Error("Cloudinary upload failed");
+    return url;
+  };
+
+  const isPublicUrl = (u) =>
+    /^https?:\/\//i.test(String(u || "")) &&
+    !/(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)/i.test(
+      String(u || "")
+    );
+
+  // Wait until preview has content
+  const waitForPreviewRender = async (timeoutMs = 3000) => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const node = captureRef.current;
+      if (node && node.childNodes && node.childNodes.length > 0 && node.clientWidth > 0 && node.clientHeight > 0) {
+        return true;
+      }
+      // small delay
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((r) => setTimeout(r, 120));
+    }
+    return false;
+  };
+
+  // Render the current preview node to Cloudinary and return URL
+  const renderCurrentPreviewToCloudinary = async (format) => {
+    const node = captureRef.current;
+    if (!node) throw new Error("Preview not mounted");
+    const blob = await toBlob(node, {
+      width: format?.width,
+      height: format?.height,
+      pixelRatio: 1,
+      cacheBust: true,
+      backgroundColor: "#ffffff",
+      // Avoid cross-origin stylesheet access (Google Fonts, Crisp, etc.)
+      skipFonts: true,
+      // Ensure failed images don't break rendering
+      imagePlaceholder: TRANSPARENT_PNG,
+      // CORS-friendly fetch options for assets
+      fetchRequestInit: {
+        mode: "cors",
+        credentials: "omit",
+      },
+    });
+    if (!blob) throw new Error("Failed to render preview");
+    const url = await uploadToCloudinary(blob);
+    return url;
+  };
+
   // Publish to Meta (MVP)
   const publishToMeta = async () => {
     try {
@@ -311,8 +422,18 @@ export default function AdsEdit({ paramsId }) {
         message.warning("No approved variants to publish");
         return;
       }
-      // For safety at this stage, push creatives only (no campaign/adset/ad)
-      const res = await AdsService.publish(lpId, { adIds: ids, budget: 0, assetsOnly: true });
+      // Full flow publish: campaign -> ad set -> ad (backend keeps PAUSED)
+      // When connected via user token, require and pass per-publish overrides
+      if (metaStatus?.via === "user" && (!selectedAdAccountId || !selectedPageId)) {
+        message.warning("Select an Ad Account & Page before publishing");
+        return;
+      }
+      const body = { adIds: ids, budget: 0, reuseCampaign, reuseAdSet };
+      if (metaStatus?.via === "user") {
+        body.adAccountId = selectedAdAccountId;
+        body.pageId = selectedPageId;
+      }
+      const res = await AdsService.publish(lpId, body);
       if (res?.data?.success) {
         message.success("Publish request submitted");
         // Refresh to pick up publish metadata
@@ -324,6 +445,30 @@ export default function AdsEdit({ paramsId }) {
       console.error("Publish error", err);
       message.error(err?.response?.data?.message || err.message || "Failed to publish");
     }
+  };
+
+  // Open confirmation modal with selected creatives
+  const openPublishConfirm = () => {
+    // Build selected list (same criteria as publish)
+    const selectedList = [];
+    Object.keys(adsData || {}).forEach((adType) => {
+      const group = adsData[adType];
+      (group?.variants || []).forEach((v) => {
+        if (v.approved || v.id === selectedVariant) {
+          selectedList.push({ ...v, adTypeId: adType });
+        }
+      });
+    });
+    if (selectedList.length === 0) {
+      message.warning("No approved variants to publish");
+      return;
+    }
+    if (metaStatus?.via === "user" && (!selectedAdAccountId || !selectedPageId)) {
+      message.warning("Select an Ad Account & Page before publishing");
+      return;
+    }
+    setConfirmVariants(selectedList);
+    setConfirmOpen(true);
   };
 
   // Generate variants for a specific ad type
@@ -411,7 +556,8 @@ export default function AdsEdit({ paramsId }) {
       });
     }
 
-    return images.length > 0 ? images : ["/images/default-ad-image.jpg"];
+    // Use a data URL placeholder instead of a missing local file to avoid 404s during capture
+    return images.length > 0 ? images : [TRANSPARENT_PNG];
   };
 
   // Get default title based on ad type
@@ -575,17 +721,66 @@ export default function AdsEdit({ paramsId }) {
     setIsLibraryModalOpen(true);
   };
 
-  // Handle approve all
-  const handleApproveAll = () => {
-    const updatedAds = { ...adsData };
-    Object.keys(updatedAds).forEach((adType) => {
-      updatedAds[adType].variants = updatedAds[adType].variants.map(v => ({
-        ...v,
-        approved: true,
-      }));
-    });
-    setAdsData(updatedAds);
-    message.success("All variants approved");
+  // Handle approve all – now also prepares Cloudinary images for launch (but does NOT publish)
+  const handleApproveAll = async () => {
+    if (!adsData) return;
+
+    try {
+      setPreparingLaunch(true);
+
+      // 1) Mark all variants as approved in memory
+      const updatedAds = { ...adsData };
+      const variantsToPrepare = [];
+      Object.keys(updatedAds).forEach((adType) => {
+        const group = updatedAds[adType];
+        if (!group?.variants) return;
+        group.variants = group.variants.map((v) => {
+          const approvedVariant = { ...v, approved: true };
+          variantsToPrepare.push({ ...approvedVariant, adTypeId: adType });
+          return approvedVariant;
+        });
+      });
+
+      if (variantsToPrepare.length === 0) {
+        message.warning("No variants to prepare");
+        setPreparingLaunch(false);
+        return;
+      }
+
+      setAdsData(updatedAds);
+
+      // 2) Render each approved variant via preview and upload to Cloudinary
+      const format = AD_FORMATS.find((f) => f.id === selectedFormat);
+      for (const v of variantsToPrepare) {
+        // Switch preview to the variant so the preview renders the correct component
+        setSelectedAdType(v.adTypeId);
+        setSelectedVariant(v.id);
+        // eslint-disable-next-line no-await-in-loop
+        await waitForPreviewRender(4000);
+        // eslint-disable-next-line no-await-in-loop
+        const url = await renderCurrentPreviewToCloudinary(format);
+        const group = updatedAds[v.adTypeId];
+        if (group?.variants) {
+          const idx = group.variants.findIndex((x) => x.id === v.id);
+          if (idx >= 0) {
+            group.variants[idx] = { ...group.variants[idx], publishImage: url };
+          }
+        }
+      }
+
+      // 3) Persist updated ads with Cloudinary URLs only (no Meta publish)
+      await AdsService.saveAds(lpId, updatedAds);
+      setAdsData(updatedAds);
+      setPreparedOnce(true);
+      setPreparedVariants(variantsToPrepare);
+      setPreparedModalOpen(true);
+      message.success("All variants approved and prepared for launch");
+    } catch (err) {
+      console.error("Error preparing creatives for launch", err);
+      message.error("Failed to prepare creatives for launch");
+    } finally {
+      setPreparingLaunch(false);
+    }
   };
 
   // Toggle ad type
@@ -601,7 +796,7 @@ export default function AdsEdit({ paramsId }) {
 
   if (loading || !landingPageData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen">
         <Skeleton active />
       </div>
     );
@@ -616,18 +811,18 @@ export default function AdsEdit({ paramsId }) {
         <div className="flex flex-col h-screen bg-[#f8f8f8]">
           {/* Header */}
           <div className="bg-white px-8 py-6 border-b border-[#eaecf0] flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-3 items-center">
                 <button
-                  onClick={() => router.push(`/lp-editor/${lpId}/form`)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={() => router.push(`/form-editor/${lpId}`)}
+                  className="p-2 rounded-lg transition-colors hover:bg-gray-100"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex gap-2 items-center">
                   <div className="w-2 h-2 bg-[#98a2b3] rounded-full" />
                   <span className="font-semibold text-base text-[#475467]">{landingPageData?.vacancyTitle}</span>
                 </div>
@@ -650,100 +845,103 @@ export default function AdsEdit({ paramsId }) {
       
       <div className="flex flex-col h-screen bg-[#f8f8f8]">
         {/* Header */}
-        <div className="bg-white px-8 py-6 border-b border-[#eaecf0] flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => router.push(`/lp-editor/${lpId}/form`)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-[#0a8f63] rounded-full" />
-                <span className="font-semibold text-base text-[#475467]">{landingPageData?.vacancyTitle}</span>
-              </div>
-
-              <Switch
-                checked={adsData?.[selectedAdType]?.enabled}
-                onChange={() => toggleAdType(selectedAdType)}
-                size="small"
-              />
-
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-            </div>
-
-            {!metaStatus?.connected ? (
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await MetaService.getAuthUrl(workspaceId || undefined);
-                    const url = res?.data?.url;
-                    if (url) window.location.href = url;
-                    else message.error("Failed to get Meta connect URL");
-                  } catch {
-                    message.error("Failed to get Meta connect URL");
-                  }
-                }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-[#0e87fe] hover:bg-[#0b6ecb] text-white font-semibold text-sm rounded-lg border border-[#0e87fe] transition-colors shadow-sm"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 3v18m9-9H3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Connect Meta
-              </button>
-            ) : (
-              <>
-                {metaStatus?.via === "workspace" && (!metaStatus?.adAccountId || !metaStatus?.pageId) && (
+        <div className="px-8 py-6 bg-white border-b border-[#eaecf0] flex-shrink-0">
+          <Header
+            landingPageData={landingPageData}
+            setPublished={(val) => {
+               if (landingPageData) {
+                 const newData = { ...landingPageData, published: val };
+                 setLandingPageData(newData);
+                 CrudService.update("LandingPageData", lpId, { published: val }).then(() => {
+                    message.success(val ? "Page published" : "Page unpublished");
+                 });
+               }
+            }}
+            setLandingPageData={setLandingPageData}
+            reload={fetchData}
+            lpId={lpId}
+            isAdsEditor={true}
+            onOpenSettings={openAssetModal}
+            customActions={
+              <div className="flex gap-3 items-center">
+                 <Switch
+                    checked={adsData?.[selectedAdType]?.enabled}
+                    onChange={() => toggleAdType(selectedAdType)}
+                    size="small"
+                    className="mr-2"
+                  />
+                {!metaStatus?.connected ? (
                   <button
-                    onClick={openAssetModal}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-[#ffb020] hover:bg-[#e09a1c] text-white font-semibold text-sm rounded-lg border border-[#ffb020] transition-colors shadow-sm"
+                    onClick={async () => {
+                      try {
+                        const currentUrl = window.location.href;
+                        const res = await MetaService.getAuthUrl(workspaceId || undefined, currentUrl);
+                        const url = res?.data?.url;
+                        if (url) window.location.href = url;
+                        else message.error("Failed to get Meta connect URL");
+                      } catch {
+                        message.error("Failed to get Meta connect URL");
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-[#0e87fe] hover:bg-[#0b6ecb] text-white font-semibold text-sm rounded-lg border border-[#0e87fe] transition-colors shadow-sm"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <path d="M12 3v18m9-9H3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    Select Ad Account & Page
+                    Connect Meta
                   </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleApproveAll}
+                      disabled={preparingLaunch}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-colors shadow-sm ${
+                        preparingLaunch
+                          ? "bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-[#0a8f63] hover:bg-[#099152] text-white border-[#0a8f63]"
+                      }`}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <rect width="16" height="16" rx="8" fill="white" opacity="0.2"/>
+                        <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      {preparingLaunch
+                        ? "Preparing..."
+                        : preparedOnce
+                        ? "Approve & Prepare again"
+                        : "Approve & Prepare"}
+                    </button>
+                    {preparedOnce && !preparingLaunch && (
+                      <span className="text-xs font-medium text-[#0a8f63]">
+                        ✓ Creatives ready for Launch
+                      </span>
+                    )}
+                    <button
+                      onClick={openPublishConfirm}
+                      disabled={
+                        (metaStatus?.via === "workspace" && (!metaStatus?.adAccountId || !metaStatus?.pageId)) ||
+                        (metaStatus?.via === "user" && (!selectedAdAccountId || !selectedPageId))
+                      }
+                      className="flex items-center gap-2 px-4 py-2.5 bg-[#0e87fe] hover:bg-[#0b6ecb] text-white font-semibold text-sm rounded-lg border border-[#0e87fe] transition-colors shadow-sm"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3v18m9-9H3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Publish (Meta)
+                    </button>
+                  </>
                 )}
-                <button
-                  onClick={handleApproveAll}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-[#0a8f63] hover:bg-[#099152] text-white font-semibold text-sm rounded-lg border border-[#0a8f63] transition-colors shadow-sm"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <rect width="16" height="16" rx="8" fill="white" opacity="0.2"/>
-                    <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Approve All
-                </button>
-                <button
-                  onClick={publishToMeta}
-                  className="ml-3 flex items-center gap-2 px-4 py-2.5 bg-[#0e87fe] hover:bg-[#0b6ecb] text-white font-semibold text-sm rounded-lg border border-[#0e87fe] transition-colors shadow-sm"
-                  disabled={metaStatus?.via === "workspace" && (!metaStatus?.adAccountId || !metaStatus?.pageId)}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 3v18m9-9H3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Publish (Meta)
-                </button>
-              </>
-            )}
-          </div>
+              </div>
+            }
+          />
         </div>
 
         {/* Main Content Container */}
-        <div className="flex-1 overflow-hidden px-8 py-6">
+        <div className="overflow-hidden flex-1 px-8 py-6">
           <div className="bg-white border border-[#eaecf0] rounded-xl h-full overflow-hidden flex">
             {/* Left Sidebar - Ad Types */}
             <div className="bg-white border-r border-[#eceef5] flex flex-col items-center pt-8 pb-6 px-4 gap-6 flex-shrink-0">
-              <h2 className="font-semibold text-xl text-black leading-5">
+              <h2 className="text-xl font-semibold leading-5 text-black">
                 Ad Types
               </h2>
               
@@ -767,14 +965,14 @@ export default function AdsEdit({ paramsId }) {
 
           {/* Middle Section - Variants List */}
           <div className="w-[486px] bg-white border-r border-[#eceef5] flex flex-col h-full">
-            <div className="p-8 flex flex-col h-full">
+            <div className="flex flex-col p-8 h-full">
               {/* Header */}
-              <div className="flex items-center justify-between mb-5 flex-shrink-0">
-                <h2 className="font-semibold text-xl text-black leading-5">
+              <div className="flex flex-shrink-0 justify-between items-center mb-5">
+                <h2 className="text-xl font-semibold leading-5 text-black">
                   Variants
                 </h2>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex gap-2 items-center">
                   <div className="w-2 h-2 bg-[#0a8f63] rounded-full" />
                   <span className="font-semibold text-sm text-[#475467] leading-5">
                     {currentVariants.length} variants
@@ -786,7 +984,7 @@ export default function AdsEdit({ paramsId }) {
               <div className="h-[1px] bg-[#eaecf0] mb-5 flex-shrink-0" />
 
               {/* Variants List - Scrollable */}
-              <div className="flex-1 overflow-y-auto pr-2 space-y-4 min-h-0">
+              <div className="overflow-y-auto flex-1 pr-2 space-y-4 min-h-0">
                 {currentVariants.map((variant) => (
                   <AdVariantCard
                     key={variant.id}
@@ -801,17 +999,24 @@ export default function AdsEdit({ paramsId }) {
                         setEditingVariant(variant);
                       }
                     }}
-                    onSave={(updatedVariant) => {
+                    onSave={async (updatedVariant) => {
                       const updatedVariants = currentVariants.map(v =>
                         v.id === updatedVariant.id ? updatedVariant : v
                       );
-                      setAdsData({
+                      const nextData = {
                         ...adsData,
                         [selectedAdType]: {
                           ...adsData[selectedAdType],
                           variants: updatedVariants,
                         },
-                      });
+                      };
+                      setAdsData(nextData);
+                      try {
+                        await AdsService.saveAds(lpId, nextData);
+                        message.success("Variant saved");
+                      } catch {
+                        message.error("Failed to save variant");
+                      }
                     }}
                     onDelete={() => handleVariantDelete(variant.id)}
                     onReplace={() => handleVariantReplace(variant.id)}
@@ -833,19 +1038,19 @@ export default function AdsEdit({ paramsId }) {
           </div>
 
           {/* Right Section - Live Preview */}
-          <div className="flex-1 bg-white flex flex-col h-full overflow-hidden">
-            <div className="p-8 flex flex-col h-full">
+          <div className="flex overflow-hidden flex-col flex-1 h-full bg-white">
+            <div className="flex flex-col p-8 h-full">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-5 flex-shrink-0">
+                <div className="flex flex-shrink-0 justify-between items-center mb-5">
                   <div className="flex flex-col gap-1.5">
-                    <h2 className="font-semibold text-xl text-black leading-5 capitalize">
+                    <h2 className="text-xl font-semibold leading-5 text-black capitalize">
                       Live preview
                     </h2>
                     
                   
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex gap-3 items-center">
                     {AD_FORMATS.map((format) => (
                       <button
                         key={format.id}
@@ -866,9 +1071,10 @@ export default function AdsEdit({ paramsId }) {
                 <div className="h-[1px] bg-[#eaecf0] mb-8 flex-shrink-0" />
 
                 {/* Preview Container - Centered and Scrollable */}
-                <div className="flex-1 overflow-y-auto flex items-start justify-center min-h-0">
+                <div className="flex overflow-y-auto flex-1 justify-center items-start min-h-0">
                   {variantForPreview && (
                     <AdPreview
+                      refEl={captureRef}
                       variant={variantForPreview}
                       format={AD_FORMATS.find(f => f.id === selectedFormat)}
                       platform={selectedPlatform}
@@ -903,19 +1109,25 @@ export default function AdsEdit({ paramsId }) {
         open={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         variant={variantForPreview}
-        onSave={(updatedVariant) => {
+        onSave={async (updatedVariant) => {
           const updatedVariants = currentVariants.map(v =>
             v.id === updatedVariant.id ? updatedVariant : v
           );
-          setAdsData({
+          const nextData = {
             ...adsData,
             [selectedAdType]: {
               ...adsData[selectedAdType],
               variants: updatedVariants,
             },
-          });
+          };
+          setAdsData(nextData);
           setIsEditModalOpen(false);
-          message.success("Variant updated");
+          try {
+            await AdsService.saveAds(lpId, nextData);
+            message.success("Variant updated");
+          } catch {
+            message.error("Failed to save variant");
+          }
         }}
         landingPageData={landingPageData}
       />
@@ -929,7 +1141,7 @@ export default function AdsEdit({ paramsId }) {
         title="Select Ad Account & Page"
       >
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex justify-between items-center">
             <a
               href="https://www.facebook.com/pages/create/"
               target="_blank"
@@ -949,9 +1161,9 @@ export default function AdsEdit({ paramsId }) {
             </button>
           </div>
           <div>
-            <div className="text-sm font-semibold mb-1">Ad Account</div>
+            <div className="mb-1 text-sm font-semibold">Ad Account</div>
             <select
-              className="w-full border rounded-md p-2"
+              className="p-2 w-full rounded-md border"
               value={selectedAdAccountId}
               onChange={(e) => setSelectedAdAccountId(e.target.value)}
             >
@@ -964,9 +1176,9 @@ export default function AdsEdit({ paramsId }) {
             </select>
           </div>
           <div>
-            <div className="text-sm font-semibold mb-1">Page</div>
+            <div className="mb-1 text-sm font-semibold">Page</div>
             <select
-              className="w-full border rounded-md p-2"
+              className="p-2 w-full rounded-md border"
               value={selectedPageId}
               onChange={(e) => setSelectedPageId(e.target.value)}
             >
@@ -983,6 +1195,132 @@ export default function AdsEdit({ paramsId }) {
               </div>
             )}
           </div>
+        </div>
+      </Modal>
+      
+      {/* Publish Confirmation Modal */}
+      <Modal
+        open={confirmOpen}
+        onCancel={() => setConfirmOpen(false)}
+        confirmLoading={confirmLoading}
+        onOk={async () => {
+          try {
+            setConfirmLoading(true);
+            // Render & upload each variant to get a public image URL (Cloudinary)
+            const format = AD_FORMATS.find((f) => f.id === selectedFormat);
+            const updated = { ...adsData };
+            for (const v of confirmVariants) {
+              // Switch preview to the variant so the preview renders the correct component
+              setSelectedAdType(v.adTypeId);
+              setSelectedVariant(v.id);
+              // Wait for the preview to render
+              // eslint-disable-next-line no-await-in-loop
+              await waitForPreviewRender(4000);
+              // Render to Cloudinary
+              // eslint-disable-next-line no-await-in-loop
+              const url = await renderCurrentPreviewToCloudinary(format);
+              const group = updated[v.adTypeId];
+              if (group?.variants) {
+                const idx = group.variants.findIndex((x) => x.id === v.id);
+                if (idx >= 0) {
+                  group.variants[idx] = { ...group.variants[idx], publishImage: url };
+                }
+              }
+            }
+            // Persist updated images
+            // eslint-disable-next-line no-await-in-loop
+            await AdsService.saveAds(lpId, updated);
+            setConfirmOpen(false);
+            await publishToMeta();
+          } catch (e) {
+            message.error(e?.message || "Failed to prepare creatives");
+          } finally {
+            setConfirmLoading(false);
+          }
+        }}
+        okText="Confirm & Publish"
+        title="Confirm creatives to publish"
+        width={960}
+      >
+        <div className="mb-4 text-[#475467]">
+          {confirmVariants.length} creative{confirmVariants.length !== 1 ? "s" : ""} will be published to Meta.
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {confirmVariants.map((v) => {
+            const formatObj = AD_FORMATS.find((f) => f.id === selectedFormat);
+            return (
+              <div key={v.id} className="border border-[#eaecf0] rounded-lg overflow-hidden">
+                <div className="overflow-hidden w-full bg-gray-50">
+                  <div className="p-3">
+                    <div className="w-full">
+                      <AdPreview
+                        variant={v}
+                        format={formatObj}
+                        platform={selectedPlatform}
+                        brandData={userBrandData}
+                        landingPageData={landingPageData}
+                        adType={v.adTypeId}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#0e87fe] capitalize">
+                      {v.adTypeId}
+                    </div>
+                    {v.approved ? (
+                      <span className="text-xs text-[#0a8f63]">Approved</span>
+                    ) : (
+                      <span className="text-xs text-[#667085]">Selected</span>
+                    )}
+                  </div>
+                  <div className="text-sm font-semibold text-[#101828] truncate" title={v.title}>
+                    {v.title || v.id}
+                  </div>
+                  {v.description && (
+                    <div className="text-xs text-[#667085] mt-1 line-clamp-2">
+                      {v.description}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Modal>
+
+      {/* Prepared creatives summary modal */}
+      <Modal
+        open={preparedModalOpen}
+        onCancel={() => setPreparedModalOpen(false)}
+        footer={null}
+        title="Creatives prepared for Launch"
+        width={960}
+      >
+        <div className="mb-3 text-[#475467] text-sm">
+          {preparedVariants.length} creative{preparedVariants.length !== 1 ? "s" : ""} are now
+          marked approved and have launch-ready images.
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {preparedVariants.map((v) => (
+            <div key={v.id} className="border border-[#eaecf0] rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#0e87fe] capitalize">
+                  {v.adTypeId}
+                </span>
+                {v.approved && (
+                  <span className="text-[11px] text-[#0a8f63] font-medium">Approved</span>
+                )}
+              </div>
+              <div className="text-sm font-semibold text-[#101828] truncate" title={v.title}>
+                {v.title || v.id}
+              </div>
+              {v.description && (
+                <div className="mt-1 text-xs text-[#667085] line-clamp-2">{v.description}</div>
+              )}
+            </div>
+          ))}
         </div>
       </Modal>
     </>

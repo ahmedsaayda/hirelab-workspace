@@ -1,7 +1,9 @@
 import React from "react";
-import StoryFrame from "./StoryFrame";
+import StoryOverlay from "./StoryFrame";
+import FeedContext from "./FeedContext";
+import MobileDeviceFrame from "./MobileDeviceFrame";
 
-export default function AdPreview({ variant, format, platform, brandData, landingPageData, adType }) {
+export default function AdPreview({ variant, format, platform, brandData, landingPageData, adType, refEl }) {
   if (!variant) return null;
 
   const { width, height, aspectRatio } = format;
@@ -14,24 +16,15 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       const container = document.querySelector('.ad-preview-container');
       if (!container) return 0.2;
 
-      const containerWidth = container.clientWidth - 64;
+      // Target height should be relatively large to show phone frame properly
       const containerHeight = container.clientHeight - 64;
+      // Phone frame height is fixed at 812px (logic in MobileDeviceFrame is 812px)
+      const targetHeight = 812;
+      
+      // Scale based on available height vs phone frame height
+      let calculatedScale = containerHeight / targetHeight;
 
-      const widthScale = containerWidth / width;
-      const heightScale = containerHeight / height;
-
-      let calculatedScale = Math.min(widthScale, heightScale);
-
-      // Apply a slight reduction so the creative has breathing room inside the preview
-      if (format?.id === 'story' || format?.aspectRatio === '9:16') {
-        calculatedScale *= 0.88;
-      } else if (format?.id === 'portrait' || format?.aspectRatio === '4:5') {
-        calculatedScale *= 0.9;
-      } else {
-        calculatedScale *= 0.92;
-      }
-
-      return Math.min(Math.max(calculatedScale, 0.3), 0.92);
+      return Math.min(Math.max(calculatedScale, 0.3), 1);
     };
 
     // Initial calculation
@@ -51,7 +44,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       clearTimeout(timer);
       window.removeEventListener('resize', handleResize);
     };
-  }, [width, height]);
+  }, []);
 
   // Handle async component loading for custom templates
   const [TemplateComponent, setTemplateComponent] = React.useState(null);
@@ -115,7 +108,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
 
   // Get component loader for specific ad type, variant, and format
   const getComponentLoader = (adTypeId, variantNumber, formatId) => {
-    console.log('Loading component for:', { adTypeId, variantNumber, formatId });
+    // console.log('Loading component for:', { adTypeId, variantNumber, formatId });
     
     const componentMap = {
       // Job ads
@@ -197,7 +190,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
     };
 
     const loader = componentMap[adTypeId]?.[formatId]?.[variantNumber];
-    console.log('Component loader found:', !!loader, 'for', { adTypeId, formatId, variantNumber });
+    // console.log('Component loader found:', !!loader, 'for', { adTypeId, formatId, variantNumber });
     return loader || null;
   };
 
@@ -218,9 +211,11 @@ export default function AdPreview({ variant, format, platform, brandData, landin
     // Determine if this is a story format
     const isStoryFormat = format?.id === 'story' || format?.aspectRatio === '9:16';
 
+    let content;
+
     // Show loading state while component is loading
     if (isLoading) {
-      const loadingContent = (
+      content = (
         <div className="w-full h-full bg-gray-100 flex items-center justify-center rounded-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
@@ -228,53 +223,110 @@ export default function AdPreview({ variant, format, platform, brandData, landin
           </div>
         </div>
       );
-      return isStoryFormat ? <StoryFrame brandData={brandData}>{loadingContent}</StoryFrame> : loadingContent;
-    }
-
-    // Check if we have a loaded custom template component
-    if (TemplateComponent && typeof TemplateComponent === 'function') {
-      const templateContent = <TemplateComponent variant={variant} brandData={brandData} landingPageData={landingPageData} />;
-      return templateContent;
-    }
-
-    // Show clean placeholder for all unimplemented variants
-    const placeholderContent = (
-      <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300">
-        <div className="text-center p-6">
-          <div className="mb-4">
-            <svg className="w-16 h-16 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div className="text-xl font-bold text-gray-700 mb-2">
-            {adTypeLabel}
-          </div>
-          <div className="text-base font-medium text-gray-600 mb-4">
-            {formatLabel}
-          </div>
-          <div className="text-xs text-gray-500 bg-white px-3 py-1.5 rounded-full inline-block">
-            {width} × {height}px ({aspectRatio})
+    } else if (TemplateComponent && typeof TemplateComponent === 'function') {
+      // Check if we have a loaded custom template component
+      content = <TemplateComponent variant={variant} brandData={brandData} landingPageData={landingPageData} />;
+    } else {
+      // Show clean placeholder for all unimplemented variants
+      content = (
+        <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300">
+          <div className="text-center p-6">
+            <div className="mb-4">
+              <svg className="w-16 h-16 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div className="text-xl font-bold text-gray-700 mb-2">
+              {adTypeLabel}
+            </div>
+            <div className="text-base font-medium text-gray-600 mb-4">
+              {formatLabel}
+            </div>
+            <div className="text-xs text-gray-500 bg-white px-3 py-1.5 rounded-full inline-block">
+              {width} × {height}px ({aspectRatio})
+            </div>
           </div>
         </div>
-      </div>
-    );
-    return isStoryFormat ? <StoryFrame brandData={brandData}>{placeholderContent}</StoryFrame> : placeholderContent;
+      );
+    }
+
+    // Capture ref should be on the actual content div if we want to capture the ad image
+    // However, here we are wrapping it in device frames which we DON'T want to capture as part of the ad image
+    // We need to figure out where to put refEl.
+    // Ideally, refEl should be on the div wrapping 'content' that is inside the frame but has the correct dimensions
+    // But for now, let's wrap the content in the appropriate context
+    
+    if (isStoryFormat) {
+      // For stories, we want the creative to behave like a real Story/Reel:
+      // it should fill the full height of the device. To avoid any gap at the
+      // bottom, we scale based ONLY on height (cover behavior), allowing a bit
+      // of horizontal crop if needed.
+      const frameHeight = 812;
+      const contentScale = frameHeight / height;
+
+      return (
+        <StoryOverlay brandData={brandData}>
+          <div className="w-full h-full flex items-center justify-center bg-black">
+            <div 
+               style={{ 
+                 width: `${width}px`, 
+                 height: `${height}px`,
+                 transform: `scale(${contentScale})`,
+                 transformOrigin: 'center center',
+               }}
+            >
+              <div ref={refEl} className="w-full h-full">
+                {content}
+              </div>
+            </div>
+          </div>
+        </StoryOverlay>
+      );
+    } else {
+      return (
+        <FeedContext 
+          brandData={brandData} 
+          text={variant?.description || landingPageData?.heroDescription}
+          title={variant?.title || landingPageData?.vacancyTitle}
+          ctaText="Learn More"
+        >
+          {/* 
+             We need to ensure the ad content (1080x1080 or 1080x1350) scales to fit 
+             inside the FeedContext content area (which is ~375px wide).
+             The TemplateComponent renders at full resolution (e.g. 1080px).
+             We need to scale it down.
+          */}
+          <div className="relative w-full" style={{ aspectRatio: format.aspectRatio === '1:1' ? '1/1' : '4/5' }}>
+             <div 
+               className="absolute top-0 left-0 origin-top-left"
+               style={{ 
+                 width: `${width}px`, 
+                 height: `${height}px`,
+                 transform: `scale(${375 / width})` // Scale to fit phone width
+               }}
+             >
+               <div ref={refEl} className="w-full h-full">
+                 {content}
+               </div>
+             </div>
+          </div>
+        </FeedContext>
+      );
+    }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[400px] w-full h-full bg-gray-50 overflow-hidden">
+    <div className="flex items-center justify-center min-h-[600px] w-full h-full bg-gray-50 overflow-hidden">
       <div className="ad-preview-container flex items-center justify-center p-8 w-full h-full overflow-hidden">
         <div
-          className="bg-white shadow-lg rounded-lg"
+          className="relative origin-center transition-transform duration-300 ease-out"
           style={{
             transform: `scale(${scale})`,
-            transformOrigin: 'center center',
-            width: `${width}px`,
-            height: `${height}px`,
-            transition: 'transform 0.3s ease-out',
           }}
         >
-          {renderPreview()}
+          <MobileDeviceFrame isStory={format?.id === 'story' || format?.aspectRatio === '9:16'}>
+            {renderPreview()}
+          </MobileDeviceFrame>
         </div>
       </div>
     </div>

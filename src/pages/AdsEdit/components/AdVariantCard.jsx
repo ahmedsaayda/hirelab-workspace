@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Input } from "antd";
+import React, { useRef, useState } from "react";
+import { Input, message } from "antd";
+import ImageSelectionModal from "../../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
 
 const { TextArea } = Input;
 
@@ -19,6 +20,7 @@ export default function AdVariantCard({
     description: variant?.description || "",
     image: variant?.image || "",
   });
+  const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
 
   // If in edit mode, show expanded editor
   if (isEditing) {
@@ -67,31 +69,32 @@ export default function AdVariantCard({
           />
         </div>
 
-        {/* Image Picker */}
+        {/* Image Picker - unified with media library (click area opens library; supports upload inside) */}
         <div className="mb-4">
-          <label className="text-xs font-medium text-[#344054] block mb-2">Change Image</label>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              landingPageData?.heroImage,
-              landingPageData?.jobDescriptionImage,
-              ...(landingPageData?.aboutTheCompanyImages || []).slice(0, 4),
-            ]
-              .filter(Boolean)
-              .slice(0, 6)
-              .map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setEditData({ ...editData, image: img })}
-                  className={`aspect-video rounded-lg overflow-hidden border-2 transition-all ${
-                    editData.image === img
-                      ? "border-[#0e87fe] ring-2 ring-[#0e87fe] ring-opacity-20"
-                      : "border-[#e4e7ec] hover:border-[#98a2b3]"
-                  }`}
-                >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-          </div>
+          <label className="text-xs font-medium text-[#344054] block mb-2">Image</label>
+          <button
+            type="button"
+            onClick={() => setIsImagePickerOpen(true)}
+            className="w-full border border-dashed border-[#d0d5dd] rounded-lg p-3 text-left hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                {editData.image ? (
+                  <img src={editData.image} alt="Selected" className="w-full h-full object-cover" />
+                ) : (
+                  <svg className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 7a2 2 0 012-2h14a2 2 0 012 2M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M8 11l4 4 4-4" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-medium text-[#101828]">
+                  {editData.image ? "Change image" : "Click to choose or upload"}
+                </div>
+                <div className="text-xs text-[#667085]">Opens media library. You can upload or pick existing.</div>
+              </div>
+            </div>
+          </button>
         </div>
 
         {/* Save Button */}
@@ -104,6 +107,28 @@ export default function AdVariantCard({
         >
           Save Changes
         </button>
+
+        <ImageSelectionModal
+          isOpen={isImagePickerOpen}
+          onClose={() => setIsImagePickerOpen(false)}
+          type="image"
+          accept="image/*"
+          multiple={false}
+          existingFiles={editData?.image ? [editData.image] : []}
+          onImageSelected={(files = []) => {
+            const first = files?.[0];
+            const url =
+              first?.thumbnail ||
+              first?.url ||
+              first?.secure_url ||
+              (typeof first === "string" ? first : "");
+            if (url) {
+              setEditData((prev) => ({ ...prev, image: url }));
+              message.success("Image selected from library");
+            }
+            setIsImagePickerOpen(false);
+          }}
+        />
       </div>
     );
   }

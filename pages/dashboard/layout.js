@@ -461,8 +461,8 @@ const Layout = ({children}) => {
               icon: BarIcon,
             },
             {
-              name: "Vacancies",
-              href: "/dashboard/vacancies",
+              name: "Campaigns",
+              href: "/dashboard/campaigns",
               icon: BriefcaserIcon,
             },
             {

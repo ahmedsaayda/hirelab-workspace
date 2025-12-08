@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Modal, Input, Select, Upload, message } from "antd";
+import React, { useRef, useState, useEffect } from "react";
+import { Modal, Input, Select, message } from "antd";
+import ImageSelectionModal from "../../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -11,6 +12,7 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
     image: "",
     callToAction: "Apply Now",
   });
+  const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
 
   useEffect(() => {
     if (variant) {
@@ -37,15 +39,7 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
     onSave(updatedVariant);
   };
 
-  const handleImageUpload = ({ file }) => {
-    if (file.status === "done") {
-      setFormData({
-        ...formData,
-        image: file.response.url,
-      });
-      message.success("Image uploaded successfully");
-    }
-  };
+  // Unified media picker—no direct upload input here
 
   const handleImageSelect = (imageUrl) => {
     setFormData({
@@ -76,6 +70,7 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
   }, [landingPageData]);
 
   return (
+    <>
     <Modal
       title="Edit Ad Variant"
       open={open}
@@ -149,83 +144,35 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
           </Select>
         </div>
 
-        {/* Image Selection */}
+        {/* Image Selection - unified single field opens media library (choose or upload) */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Ad Image
           </label>
 
-          {/* Current Image Preview */}
-          {formData.image && (
-            <div className="mb-3 relative group">
-              <img
-                src={formData.image}
-                alt="Current"
-                className="w-full h-48 object-cover rounded-lg"
-              />
-              <button
-                onClick={() => setFormData({ ...formData, image: "" })}
-                className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Image Selection Tabs */}
-          <div className="border border-gray-300 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 border-b border-gray-300 p-2 flex gap-2">
-              <button className="px-3 py-1.5 text-sm font-medium bg-white text-gray-900 rounded border border-gray-300">
-                From Landing Page
-              </button>
-              <button className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900">
-                Upload New
-              </button>
-            </div>
-
-            {/* Available Images Grid */}
-            <div className="p-3">
-              {availableImages.length > 0 ? (
-                <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
-                  {availableImages.map((img, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleImageSelect(img)}
-                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                        formData.image === img
-                          ? "border-blue-500 ring-2 ring-blue-200"
-                          : "border-gray-200 hover:border-blue-300"
-                      }`}
-                    >
-                      <img
-                        src={img}
-                        alt={`Option ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      {formData.image === img && (
-                        <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <svg className="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <button
+            type="button"
+            onClick={() => setIsImagePickerOpen(true)}
+            className="w-full border border-dashed border-gray-300 rounded-lg p-3 text-left hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                {formData.image ? (
+                  <img src={formData.image} alt="Selected" className="w-full h-full object-cover" />
+                ) : (
+                  <svg className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 7a2 2 0 012-2h14a2 2 0 012 2M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M8 11l4 4 4-4" />
                   </svg>
-                  <p className="text-sm">No images available from landing page</p>
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-medium text-gray-900">
+                  {formData.image ? "Change image" : "Click to choose or upload"}
                 </div>
-              )}
+                <div className="text-xs text-gray-500">Opens media library. You can upload new or pick existing.</div>
+              </div>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* AI Suggestions (Future Feature) */}
@@ -249,6 +196,28 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
         </div>
       </div>
     </Modal>
+    <ImageSelectionModal
+      isOpen={isImagePickerOpen}
+      onClose={() => setIsImagePickerOpen(false)}
+      type="image"
+      accept="image/*"
+      multiple={false}
+      existingFiles={formData?.image ? [formData.image] : []}
+      onImageSelected={(files = []) => {
+        const first = files?.[0];
+        const url =
+          first?.thumbnail ||
+          first?.url ||
+          first?.secure_url ||
+          (typeof first === "string" ? first : "");
+        if (url) {
+          setFormData((prev) => ({ ...prev, image: url }));
+          message.success("Image selected from library");
+        }
+        setIsImagePickerOpen(false);
+      }}
+    />
+    </>
   );
 }
 

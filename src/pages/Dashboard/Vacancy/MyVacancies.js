@@ -314,44 +314,44 @@ const MyVacancies = () => {
   return (
     <>
       {contextHolder}
-      <div className="flex flex-col w-full ">
-        <div className="flex items-center mb-3 ">
-          <div className="flex flex-col w-full  items-start">
-            <h1 className="text-3xl font-semibold mb-1">My Campaigns</h1>
+      <div className="flex flex-col w-full">
+        <div className="flex items-center mb-3">
+          <div className="flex flex-col items-start w-full">
+            <h1 className="mb-1 text-3xl font-semibold">My Campaigns</h1>
             <p className="font-normal text-base text-[#475467]">
               Create and manage your AI Recruitment Interview Campaigns.
             </p>
           </div>
           <button
-            className="bg-gradient text-sm text-white font-semibold  leading-6 whitespace-nowrap p-2 rounded-md"
+            className="p-2 text-sm font-semibold leading-6 text-white whitespace-nowrap rounded-md bg-gradient"
             onClick={handleCreateCampaigns}
           >
             + Create new Campaigns
           </button>
         </div>
 
-        {/* <div className="container mx-auto p-4" id="vacancyContainer"> */}
+        {/* <div className="container p-4 mx-auto" id="vacancyContainer"> */}
 
-        <div className="relative my-3 flex items-center">
+        <div className="flex relative items-center my-3">
           <input
             type="text"
             placeholder="Search for campaigns"
-            className="block w-full text-2xlrounded-md border-0 py-2 pr-14  dark:text-gray-400  shadow-sm dark:shadow-gray-400/50  ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-900  dark:bg-gray-900"
+            className="block py-2 pr-14 w-full border-0 ring-1 ring-inset ring-gray-300 shadow-sm text-2xlrounded-md dark:text-gray-400 dark:shadow-gray-400/50 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-900"
             value={searchTerm}
             onChange={handleInputChange}
             autoComplete="new-password"
           />
         </div>
 
-        <div className="grid md:grid-cols-2 gap-x-4 lg:gap-x-6 gap-y-6 my-vacancies-grid mt-2">
+        <div className="grid gap-x-4 gap-y-6 mt-2 md:grid-cols-2 lg:gap-x-6 my-vacancies-grid">
           {removeDuplicateObjects(
             [singleVacancy, ...vacancies].filter((a) => !!a)
           ).map((vacancy) => (
-            <div key={vacancy._id} className="bg-white rounded-lg p-2 md:p-4">
-              <div className="flex justify-start my-1 items-center">
+            <div key={vacancy._id} className="p-2 bg-white rounded-lg md:p-4">
+              <div className="flex justify-start items-center my-1">
                 <div className="flex flex-shrink gap-2 items-center">
                   <img src={partner.logo} height={30} width={30} />
-                  <h3 className="font-semibold text-base ">
+                  <h3 className="text-base font-semibold">
                     {partner.brandName}
                   </h3>
                 </div>
@@ -365,7 +365,7 @@ const MyVacancies = () => {
                   </h5>
                 </div>
                 <Switch
-                  className="flex flex-shrink ml-auto "
+                  className="flex flex-shrink ml-auto"
                   size="medium"
                   defaultChecked={vacancy.enabled !== false}
                   onChange={async (e) => {
@@ -377,8 +377,8 @@ const MyVacancies = () => {
               </div>
               <div className="flex justify-between items-center">
                 <Link href={`/dashboard/vacancydetails?id=${vacancy._id}`}>
-                  <div className="flex my-2 cursor-pointer items-center">
-                    <h3 className="font-semibold text-base">{vacancy.name} </h3>
+                  <div className="flex items-center my-2 cursor-pointer">
+                    <h3 className="text-base font-semibold">{vacancy.name} </h3>
                     {vacancy.training && (
                       <h5 className="border border-solid border-[#FFC300] text-sm bg-[#f7dc6f] text-center font-medium rounded-xl mx-5 px-2">
                         TRAINING
@@ -388,30 +388,30 @@ const MyVacancies = () => {
                 </Link>
               </div>
               <div className="flex justify-between items-center">
-                <div className="flex py-2 wrap gap-7">
+                <div className="flex gap-7 py-2 wrap">
                   <div>
-                    <p className="font-semibold text-xs">Date</p>
-                    <div className="flex items-center gap-2 pt-1">
+                    <p className="text-xs font-semibold">Date</p>
+                    <div className="flex gap-2 items-center pt-1">
                       <CalendarIcon height={16} />
-                      <span className="text-medium text-sm">
+                      <span className="text-sm text-medium">
                         {formatDate(vacancy.createdAt)}
                       </span>
                     </div>
                   </div>
                   <div>
-                    <p className="font-semibold text-xs ">Total Applicants</p>
-                    <div className="flex items-center gap-2 pt-1 ">
+                    <p className="text-xs font-semibold">Total Applicants</p>
+                    <div className="flex gap-2 items-center pt-1">
                       <UsersIcon height={16} />
-                      <span className="text-medium text-sm">
+                      <span className="text-sm text-medium">
                         {vacancy.numberApplicants}
                       </span>
                     </div>
                   </div>
                   <div>
-                    <p className="font-semibold text-xs">Interviewed</p>
-                    <div className="flex items-center gap-2 pt-1">
+                    <p className="text-xs font-semibold">Interviewed</p>
+                    <div className="flex gap-2 items-center pt-1">
                       <ChatBubbleOvalLeftIcon height={16} />
-                      <span className="text-medium text-sm">
+                      <span className="text-sm text-medium">
                         {vacancy.interviewedApplicants}
                       </span>
                     </div>
@@ -423,36 +423,47 @@ const MyVacancies = () => {
               </div>
               <div className="flex gap-3 my-1 text-xs font-medium">
                 <Link
-                  className="border border-solid rounded-lg p-2 flex flex-1 w-full justify-center"
+                  className="flex flex-1 justify-center p-2 w-full rounded-lg border border-solid"
                   href={`/dashboard/vacancyedit?id=${vacancy._id}`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex gap-3 items-center">
                     <PencilIcon height={16} />
                     Edit
                   </div>
                 </Link>
-                <button className="border border-solid rounded-lg p-2 flex flex-1 w-full justify-center">
+                <button className="flex flex-1 justify-center p-2 w-full rounded-lg border border-solid">
                   <Popconfirm
                     title="Are you sure to duplicate this funnel?"
                     onConfirm={async () => {
-                      const vac = await ATSService.duplicateVacancy({
-                        vacancyId: vacancy._id,
-                      });
-                      router.push(
-                        `/dashboard/vacancydetails?id=${vac.data.vacancy._id}`
-                      );
+                      try {
+                        setLoading(true);
+                        // In the new architecture, campaigns are landing pages,
+                        // so we always duplicate the underlying LandingPageData
+                        const lp = await ATSService.duplicateLandingPage({
+                          landingPageId: vacancy._id,
+                        });
+
+                        console.log("lp", lp);
+                        // Navigate directly to the landing page editor for the new copy
+                        const newId = lp?.data?.landingPage?._id;
+                        if (newId) {
+                          router.push(`/edit-page/${newId}`);
+                        }
+                      } finally {
+                        setLoading(false);
+                      }
                     }}
-                    className="flex items-center gap-3"
+                    className="flex gap-3 items-center"
                   >
                     <DocumentDuplicateIcon height={16} />
                     Duplicate
                   </Popconfirm>
                 </button>
-                <button className="border border-solid rounded-lg p-2 flex flex-1 w-full justify-center">
+                <button className="flex flex-1 justify-center p-2 w-full rounded-lg border border-solid">
                   <Popconfirm
                     title="Are you sure?"
                     onConfirm={() => handleFirstConfirm(vacancy._id)}
-                    className="flex items-center gap-3"
+                    className="flex gap-3 items-center"
                   >
                     <TrashIcon height={16} />
                     Delete
@@ -463,8 +474,8 @@ const MyVacancies = () => {
           ))}
         </div>
 
-        <div className="flex align-center justify-center w-full gap-4">
-          <div className="flex justify-end mt-2 w-full ">
+        <div className="flex gap-4 justify-center w-full align-center">
+          <div className="flex justify-end mt-2 w-full">
             {page > 2 && (
               <Button
                 loading={loading}
@@ -498,19 +509,19 @@ const MyVacancies = () => {
         destroyOnClose
       >
         <div>
-          <div className="mx-auto max-w-7xl px-6 ">
-            <div className="mt-20 flow-root">
-              <div className="isolate -mt-16 grid max-w-sm grid-cols-1 gap-y-16 divide-y divide-gray-100 sm:mx-auto  ">
+          <div className="px-6 mx-auto max-w-7xl">
+            <div className="flow-root mt-20">
+              <div className="grid isolate grid-cols-1 gap-y-16 -mt-16 max-w-sm divide-y divide-gray-100 sm:mx-auto">
                 {tiers.map((tier) => (
-                  <div key={tier.id} className="  pt-16  lg:pt-0 xl:px-14">
+                  <div key={tier.id} className="pt-16 lg:pt-0 xl:px-14">
                     <h3
                       id={tier.id}
-                      className="text-base font-semibold leading-7 "
+                      className="text-base font-semibold leading-7"
                     >
                       {tier.name}
                     </h3>
-                    <p className="mt-6 flex items-baseline gap-x-1">
-                      <span className="text-5xl font-bold tracking-tight ">
+                    <p className="flex gap-x-1 items-baseline mt-6">
+                      <span className="text-5xl font-bold tracking-tight">
                         ${tier.price}
                       </span>
                     </p>
@@ -537,7 +548,7 @@ const MyVacancies = () => {
                     >
                       <a
                         aria-describedby={tier.id}
-                        className=" mt-10 block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                        className="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                       >
                         Promote now
                       </a>
@@ -552,7 +563,7 @@ const MyVacancies = () => {
                       {tier.features.map((feature) => (
                         <li key={feature} className="flex gap-x-3">
                           <CheckCircleIcon
-                            className="h-6 w-5 flex-none text-indigo-600"
+                            className="flex-none w-5 h-6 text-indigo-600"
                             aria-hidden="true"
                           />
                           {feature}

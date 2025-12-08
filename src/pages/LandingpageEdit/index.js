@@ -37,7 +37,7 @@ import AboutCompany from "../Landingpage/AboutCompany.js";
 import TextBox from "../Landingpage/TextBox.js";
 import { AiOutlineFolderOpen } from "react-icons/ai";
 import MediaLibrary from "../Dashboard/Vacancies/components/mediaLibrary/index.jsx";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, Copy as CopyIcon } from "lucide-react";
 import {
   AboutCompanyEdit,
   LeaderIntroductionEdit,
@@ -430,6 +430,11 @@ export default function LandingpageEdit({paramsId}) {
   const [isAIModalVisible, setIsAIModalVisible] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isCopySectionModalVisible, setIsCopySectionModalVisible] = useState(false);
+  const [copySectionLoading, setCopySectionLoading] = useState(false);
+  const [copySourceLandingPageId, setCopySourceLandingPageId] = useState("");
+  const [copySourcePreview, setCopySourcePreview] = useState(null);
+  const [copyPreviewLoading, setCopyPreviewLoading] = useState(false);
   const [isExitModalVisible, setIsExitModalVisible] = useState(false);
   const pendingNavigationRef = useRef(null);
   const navigationOverrideRef = useRef(false);
@@ -759,25 +764,24 @@ export default function LandingpageEdit({paramsId}) {
 
   // Centralized job fetching functions
   
-  // Fetch available jobs for RecommendedJobsSelector (EditorRender)
+  // Fetch available jobs for RecommendedJobsSelector (EditorRender) and section copy
   const fetchAvailableJobs = useCallback(async () => {
-    if (!user?._id) {
+    // Ensure we have a user context before querying
+    if (!user) {
       setAvailableJobs([]);
       return;
     }
 
     setJobsLoading(true);
     try {
-      
       const result = await CrudService.search(
         "LandingPageData",
         999, // Get a large number of results
         1,
         {
           text: "",
-          filters: {
-            user_id: user._id,
-          },
+          // Let the backend handle workspace / owner scoping automatically
+          filters: {},
           sort: { createdAt: -1 }, // Most recent first
         }
       );
@@ -804,7 +808,7 @@ export default function LandingpageEdit({paramsId}) {
     } finally {
       setJobsLoading(false);
     }
-  }, [user?._id, lpId]);
+  }, [user, lpId]);
 
   // Fetch similar jobs for Footer component
   const fetchSimilarJobs = useCallback(async () => {
@@ -1231,6 +1235,360 @@ export default function LandingpageEdit({paramsId}) {
     }));
   };
 
+  const truncate = (text = "", max = 160) => {
+    if (!text) return "";
+    return text.length > max ? `${text.slice(0, max)}…` : text;
+  };
+
+  const renderCopyPreview = (sectionKey, source) => {
+    if (!sectionKey || !source) return null;
+
+    switch (sectionKey) {
+      case "flexaligntop": {
+        const locations = Array.isArray(source.location)
+          ? source.location.join(", ")
+          : source.location;
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Hero from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {locations && (
+              <div>
+                <span className="font-medium">Location: </span>
+                <span>{locations}</span>
+              </div>
+            )}
+            {source.salaryAvailable && (
+              <div>
+                <span className="font-medium">Salary: </span>
+                <span>
+                  {source.salaryRange
+                    ? `${source.salaryMin || ""}-${source.salaryMax || ""} ${source.salaryCurrency || ""} / ${source.salaryTime || ""}`
+                    : source.salaryText || "Competitive"}
+                </span>
+              </div>
+            )}
+            {source.heroDescription && (
+              <div>
+                <div className="font-medium">Hero description</div>
+                <div className="text-gray-600 whitespace-pre-line">
+                  {truncate(source.heroDescription, 220)}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+      case "Job Specifications": {
+        const specs = source.specifications || [];
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Job Specifications from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.jobSpecificationTitle && (
+              <div className="font-medium">{source.jobSpecificationTitle}</div>
+            )}
+            {specs.length > 0 && (
+              <ul className="list-disc pl-4 space-y-0.5">
+                {specs.slice(0, 4).map((s, idx) => (
+                  <li key={idx}>
+                    <span className="font-medium">{s.title}</span>
+                    {s.description && (
+                      <span className="text-gray-600">
+                        {": "}
+                        {truncate(s.description, 80)}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      }
+      case "Recruiter Contact": {
+        const recruiters = source.recruiters || [];
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Recruiter Contact from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.recruiterContactTitle && (
+              <div className="font-medium">{source.recruiterContactTitle}</div>
+            )}
+            {recruiters.length > 0 && (
+              <ul className="space-y-0.5">
+                {recruiters.slice(0, 3).map((r, idx) => (
+                  <li key={idx}>
+                    <span className="font-medium">
+                      {r.recruiterFullname || "Recruiter"}
+                    </span>
+                    {r.recruiterRole && (
+                      <span className="text-gray-600"> — {r.recruiterRole}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      }
+      case "Job Description": {
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Job Description from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.jobDescriptionTitle && (
+              <div className="font-medium">{source.jobDescriptionTitle}</div>
+            )}
+            {source.jobDescriptionSubheader && (
+              <div className="text-gray-600">
+                {truncate(source.jobDescriptionSubheader, 120)}
+              </div>
+            )}
+            {source.jobDescription && (
+              <div className="text-gray-600 whitespace-pre-line">
+                {truncate(source.jobDescription, 220)}
+              </div>
+            )}
+          </div>
+        );
+      }
+      case "Agenda": {
+        const schedule = source.dailyScheduleList || [];
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Agenda from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.agendaTitle && (
+              <div className="font-medium">{source.agendaTitle}</div>
+            )}
+            {schedule.length > 0 && (
+              <ul className="list-disc pl-4 space-y-0.5">
+                {schedule.slice(0, 4).map((item, idx) => (
+                  <li key={idx}>
+                    <span className="font-medium">
+                      {item.dateTimeSlot?.startTime}–{item.dateTimeSlot?.endTime}
+                    </span>
+                    {item.eventTitle && (
+                      <span className="text-gray-600"> — {item.eventTitle}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      }
+      case "Company Facts": {
+        const facts = source.companyFacts || [];
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Company Facts from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.companyFactsTitle && (
+              <div className="font-medium">{source.companyFactsTitle}</div>
+            )}
+            {facts.length > 0 && (
+              <ul className="list-disc pl-4 space-y-0.5">
+                {facts.slice(0, 4).map((f, idx) => (
+                  <li key={idx}>
+                    <span className="font-medium">
+                      {f.headingText || "Fact"}
+                    </span>
+                    {f.descriptionText && (
+                      <span className="text-gray-600">
+                        {": "}
+                        {truncate(f.descriptionText, 80)}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      }
+      case "About The Company":
+      case "About Company": {
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              About The Company from:{" "}
+              {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.aboutTheCompanyTitle && (
+              <div className="font-medium">{source.aboutTheCompanyTitle}</div>
+            )}
+            {source.aboutTheCompanyText && (
+              <div className="text-gray-600 whitespace-pre-line">
+                {truncate(source.aboutTheCompanyText, 220)}
+              </div>
+            )}
+          </div>
+        );
+      }
+      case "flexalign": {
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Footer from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.footerTitle && (
+              <div className="font-medium">{source.footerTitle}</div>
+            )}
+            {source.footerDescription && (
+              <div className="text-gray-600 whitespace-pre-line">
+                {truncate(source.footerDescription, 200)}
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2 mt-1">
+              {source.footerPrimaryCtaText && (
+                <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700">
+                  Primary CTA: {source.footerPrimaryCtaText}
+                </span>
+              )}
+              {source.footerSecondaryCtaText && (
+                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">
+                  Secondary CTA: {source.footerSecondaryCtaText}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      }
+      default:
+        return null;
+    }
+  };
+
+  // Helper to copy fields for the currently active section from a source landing page
+  const applySectionCopy = (sectionKey, source, target) => {
+    if (!sectionKey || !source || !target) return target;
+
+    const next = { ...target };
+
+    switch (sectionKey) {
+      case "flexaligntop": {
+        next.vacancyTitle = source.vacancyTitle;
+        next.heroDescription = source.heroDescription;
+        next.heroImage = source.heroImage;
+        next.salaryAvailable = source.salaryAvailable;
+        next.salaryText = source.salaryText;
+        next.salaryRange = source.salaryRange;
+        next.salaryMin = source.salaryMin;
+        next.salaryMax = source.salaryMax;
+        next.salaryCurrency = source.salaryCurrency;
+        next.salaryTime = source.salaryTime;
+        next.hoursRange = source.hoursRange;
+        next.hoursMin = source.hoursMin;
+        next.hoursMax = source.hoursMax;
+        next.hoursUnit = source.hoursUnit;
+        next.location = source.location;
+        break;
+      }
+      case "Job Specifications": {
+        next.jobSpecificationTitle = source.jobSpecificationTitle;
+        next.jobSpecificationDescription = source.jobSpecificationDescription;
+        next.specifications = source.specifications;
+        break;
+      }
+      case "Recruiter Contact": {
+        next.recruiterContactTitle = source.recruiterContactTitle;
+        next.recruiterContactText = source.recruiterContactText;
+        next.recruiters = source.recruiters;
+        break;
+      }
+      case "Job Description": {
+        next.jobDescriptionTitle = source.jobDescriptionTitle;
+        next.jobDescriptionSubheader = source.jobDescriptionSubheader;
+        next.jobDescription = source.jobDescription;
+        next.jobDescriptionImage = source.jobDescriptionImage;
+        break;
+      }
+      case "Agenda": {
+        next.agendaTitle = source.agendaTitle;
+        next.agendaDescription = source.agendaDescription;
+        next.dailyScheduleList = source.dailyScheduleList;
+        break;
+      }
+      case "Company Facts": {
+        next.companyFactsTitle = source.companyFactsTitle;
+        next.companyFactsDescription = source.companyFactsDescription;
+        next.companyFacts = source.companyFacts;
+        break;
+      }
+      case "About The Company":
+      case "About Company": {
+        next.aboutTheCompanyTitle = source.aboutTheCompanyTitle;
+        next.aboutTheCompanyText = source.aboutTheCompanyText;
+        next.aboutTheCompanyDescription = source.aboutTheCompanyDescription;
+        next.aboutTheCompanyImages = source.aboutTheCompanyImages;
+        break;
+      }
+      case "flexalign": {
+        next.footerTitle = source.footerTitle;
+        next.footerPrimaryCtaText = source.footerPrimaryCtaText;
+        next.footerSecondaryCtaText = source.footerSecondaryCtaText;
+        next.footerDescription = source.footerDescription;
+        break;
+      }
+      default:
+        // For unsupported sections, just return target unchanged
+        return target;
+    }
+
+    return next;
+  };
+
+  const handleCopySectionConfirm = async () => {
+    if (!copySourceLandingPageId) {
+      message.info("Please select a campaign to copy from");
+      return;
+    }
+
+    if (!activeKey) {
+      message.error("No active section selected to copy into");
+      return;
+    }
+
+    try {
+      setCopySectionLoading(true);
+      let source = copySourcePreview;
+
+      if (!source || source._id !== copySourceLandingPageId) {
+        const res = await CrudService.getSingle(
+          "LandingPageData",
+          copySourceLandingPageId,
+          "copy-section"
+        );
+        source = res?.data;
+      }
+
+      if (!source) {
+        message.error("Unable to load selected campaign");
+        return;
+      }
+
+      updateLandingPageData((prev) => applySectionCopy(activeKey, source, prev));
+      message.success("Section copied from selected campaign");
+      setIsCopySectionModalVisible(false);
+    } catch (error) {
+      console.error("Error copying section from campaign:", error);
+      message.error(
+        error?.response?.data?.message ||
+          "Failed to copy section. Please try again."
+      );
+    } finally {
+      setCopySectionLoading(false);
+    }
+  };
+
   const mediaLimits = {
     // Existing sections
     flexaligntop: { 
@@ -1527,23 +1885,32 @@ export default function LandingpageEdit({paramsId}) {
                 </Heading>
 
                 {activeSection && (
-                  <div className="flex flex-row items-center">
+                  <div className="flex flex-row items-center gap-2">
                   {/* Auto-save indicator */}
                     {isAutoSaving && (
-                    <div className=" items-center gap-2 text-sm text-blue-600 mr-2 hidden ">
-                      <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                    <div className="hidden gap-2 items-center mr-2 text-sm text-blue-600">
+                      <div className="w-4 h-4 rounded-full border-2 border-blue-600 animate-spin border-t-transparent"></div>
                       <span>Saving...</span>
                     </div>
                   )}
                     <button
                       onClick={() => setIsAIModalVisible(true)}
-                      className="flex justify-center items-center"
+                      className="flex justify-center items-center mr-2"
                     >
                       <Img
                         src="/images2/img_magic_wand_01.svg"
                         alt="magicwandone"
                         className="h-[20px] w-[20px] cursor-pointer"
                       />
+                    </button>
+
+                    {/* Copy section from another campaign */}
+                    <button
+                      onClick={() => setIsCopySectionModalVisible(true)}
+                      className="flex justify-center items-center mr-2 rounded-md border border-gray-200 px-2 py-1 hover:bg-gray-50"
+                      title="Copy this section from another campaign"
+                    >
+                      <CopyIcon className="w-4 h-4 text-[#344054]" />
                     </button>
 
                     <AIEditModal
@@ -1716,7 +2083,7 @@ export default function LandingpageEdit({paramsId}) {
                         e.stopPropagation();
                         setActiveKey(section.key);
                       }}
-                      className={`cursor-pointer ${isHidden ? 'opacity-20 blur-xl pointer-events-none relative' : ''}`}
+                      className={`cursor-pointer ${isHidden ? 'relative opacity-20 blur-xl pointer-events-none' : ''}`}
                       style={isHidden ? { 
                         filter: 'grayscale(50%) blur(5px)',
                         opacity: 0.5,
@@ -1744,6 +2111,99 @@ export default function LandingpageEdit({paramsId}) {
          </div>
         </div>
       </div>
+
+      {/* Copy Section Modal */}
+      <Modal
+        open={isCopySectionModalVisible}
+        onCancel={() => {
+          if (!copySectionLoading) {
+            setIsCopySectionModalVisible(false);
+          }
+        }}
+        onOk={handleCopySectionConfirm}
+        okButtonProps={{ loading: copySectionLoading }}
+        title="Copy section from another campaign"
+        destroyOnClose
+      >
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-gray-600">
+            Select a campaign to copy the{" "}
+            <span className="font-semibold">
+              {activeSection?.key
+                ?.replace?.("flexaligntop", "Hero")
+                ?.replace?.("form-editor", "Form Editor")
+                ?.replace?.("flexalign", "Footer")
+                ?.replace?.("About Company", "About The Company")}
+            </span>{" "}
+            section from.
+          </p>
+
+          {jobsLoading ? (
+            <p className="text-sm text-gray-500">Loading campaigns...</p>
+          ) : availableJobs.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              No other campaigns found to copy from. Create another campaign first,
+              then you can reuse its content here.
+            </p>
+          ) : (
+            <>
+              <select
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                value={copySourceLandingPageId}
+                onChange={async (e) => {
+                  const value = e.target.value;
+                  setCopySourceLandingPageId(value);
+                  setCopySourcePreview(null);
+                  setCopyPreviewLoading(false);
+
+                  if (!value) return;
+
+                  try {
+                    setCopyPreviewLoading(true);
+                    const res = await CrudService.getSingle(
+                      "LandingPageData",
+                      value,
+                      "copy-preview"
+                    );
+                    setCopySourcePreview(res?.data || null);
+                  } catch (err) {
+                    console.error("Error loading campaign preview:", err);
+                    message.error(
+                      err?.response?.data?.message ||
+                        "Failed to load campaign preview"
+                    );
+                    setCopySourcePreview(null);
+                  } finally {
+                    setCopyPreviewLoading(false);
+                  }
+                }}
+              >
+                <option value="">Select a campaign</option>
+                {availableJobs.map((job) => (
+                  <option key={job.value} value={job.value}>
+                    {job.label}
+                  </option>
+                ))}
+              </select>
+
+              {copyPreviewLoading && (
+                <p className="mt-2 text-xs text-gray-500">
+                  Loading preview for selected campaign...
+                </p>
+              )}
+
+              {!copyPreviewLoading &&
+                copySourceLandingPageId &&
+                renderCopyPreview(activeKey, copySourcePreview)}
+
+              <p className="mt-2 text-xs text-gray-500">
+                Only content for the current section will be replaced. Other sections
+                on this page will remain unchanged.
+              </p>
+            </>
+          )}
+        </div>
+      </Modal>
 
       <Modal
         open={addMenuItem}
@@ -1842,7 +2302,7 @@ export default function LandingpageEdit({paramsId}) {
       {landingPageData?.debugData && (
         <button
           onClick={() => setIsDebugModalOpen(true)}
-          className="fixed bottom-4 right-4 z-50 bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-full shadow-lg transition-all duration-200 flex items-center justify-center"
+          className="flex fixed right-4 bottom-4 z-50 justify-center items-center p-3 text-white bg-orange-500 rounded-full shadow-lg transition-all duration-200 hover:bg-orange-600"
           title="Debug Vacancy Creation"
         >
           <svg 
@@ -1885,14 +2345,14 @@ export default function LandingpageEdit({paramsId}) {
           <div className="flex gap-3 justify-end">
             <button
               type="button"
-              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 text-gray-700 rounded-md border border-gray-300 hover:bg-gray-50"
               onClick={handleExitCancel}
             >
               No, go back
             </button>
             <button
               type="button"
-              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 text-gray-700 rounded-md border border-gray-300 hover:bg-gray-50"
               onClick={async () => {
                 const nextNav = pendingNavigationRef.current;
                 if (!nextNav) return;

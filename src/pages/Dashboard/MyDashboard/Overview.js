@@ -1,6 +1,12 @@
 import {
   Button,
-  Input, Modal, Progress, Switch, message as antdmessage, Select, DatePicker,
+  Input,
+  Modal,
+  Progress,
+  Switch,
+  message as antdmessage,
+  Select,
+  DatePicker,
 } from "antd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { DotIcon } from "../Vacancies/components/Icons";
@@ -13,6 +19,7 @@ import { selectDarkMode, selectUser } from "../../../redux/auth/selectors";
 import VacanciesCard from "../Vacancies/components/components/VacanciesCard";
 import UserService from "../../../services/UserService";
 import CrudService from "../../../services/CrudService";
+import ATSService from "../../../services/ATSService";
 import { Heading } from "../Vacancies/components/components";
 import { debounce } from "lodash";
 import { motion } from "framer-motion";
@@ -304,6 +311,31 @@ const Overview = () => {
       antdmessage.error("Failed to rename vacancy. Please try again.");
     }
   };
+
+  const onDuplicate = async (landingPage) => {
+    try {
+      const res = await ATSService.duplicateLandingPage({
+        landingPageId: landingPage._id,
+      });
+
+      antdmessage.success("Vacancy duplicated successfully");
+
+      // Refresh dashboard data
+      await getData();
+
+      // Navigate to editor for the new copy
+      const newId = res?.data?.landingPage?._id;
+      if (newId) {
+        router.push(`/edit-page/${newId}`);
+      }
+    } catch (error) {
+      console.error("Error duplicating vacancy from overview:", error);
+      antdmessage.error(
+        error?.response?.data?.message ||
+          "Failed to duplicate vacancy. Please try again."
+      );
+    }
+  };
   const handlePublishedClick = () => {
     router.push('/dashboard/vacancies?status=published');
   };
@@ -318,7 +350,7 @@ const Overview = () => {
         <div className="hidden text-xl font-semibold leading-8 mb-[12px]">
           Let's get started...
         </div>
-        <div className="hidden grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2 w-full">
+        <div className="grid hidden grid-cols-2 gap-2 w-full sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
           {steps.map((step, i) => (
             <a
               href={step.href}
@@ -348,20 +380,20 @@ const Overview = () => {
       </div>
       <div>
         <div className="flex items-center justify-between mb-[12px]">
-          <div className="flex items-center gap-2">
+          <div className="flex gap-2 items-center">
             <div className="text-xl font-semibold leading-8">
               Total summary
             </div>
             {(filterVacancy !== 'all' || filterTimeFrame !== 'all') && (
-              <div className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+              <div className="px-2 py-1 text-xs text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-200">
                 Filtered
               </div>
             )}
           </div>
           
           {/* Compact Filter Controls */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+          <div className="flex gap-3 items-center">
+            <div className="flex gap-2 items-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">Vacancy:</span>
               <Select
                 value={filterVacancy}
@@ -379,7 +411,7 @@ const Overview = () => {
               </Select>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex gap-2 items-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">Period:</span>
               <Select
                 value={filterTimeFrame}
@@ -395,7 +427,7 @@ const Overview = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 w-full gmx:flex gmx:gap-2 gmx:w-full gmx:max-w-screen gmx:overflow-x-auto">
+        <div className="grid grid-cols-2 gap-2 w-full md:grid-cols-3 lg:grid-cols-3 gmx:flex gmx:gap-2 gmx:w-full gmx:max-w-screen gmx:overflow-x-auto">
           {totalSummary.map((step, i) => {
             // Determine if this card should show "coming soon"
             const isComingSoon = step.name === "Awareness"; // Only Awareness is coming soon now
@@ -422,8 +454,7 @@ const Overview = () => {
               <div
                 key={i}
                 className={`bg-white gmx:flex-1 gmx:min-w-[180px] dark:bg-black cursor-default px-[12px] py-[20px] rounded-lg w-auto shadow-lg ${
-                  isComingSoon ? "opacity-60" : ""
-                }`}
+                  isComingSoon ? "opacity-60" : ""}`}
               >
                 <div className="flex flex-col gap-[12px] ">
                   <div
@@ -442,16 +473,16 @@ const Overview = () => {
                       {step.name}
                     </div>
                     {isComingSoon ? (
-                      <div className="flex items-center justify-between">
+                      <div className="flex justify-between items-center">
                         <div className="text-sm font-bold">Coming Soon</div>
-                        <div className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                        <div className="px-2 py-1 text-xs text-gray-400 bg-gray-100 rounded dark:bg-gray-700">
                           Soon
                         </div>
                       </div>
                     ) : (
                       step.metrics.map((metric, metricIndex) => (
-                        <div key={metricIndex} className="flex items-center justify-between">
-                          <div className="text-sm font-bold ">{metric.title}</div>
+                        <div key={metricIndex} className="flex justify-between items-center">
+                          <div className="text-sm font-bold">{metric.title}</div>
                           <div
                             className="text-sm font-semibold"
                             style={{ color: step.color }}
@@ -469,10 +500,10 @@ const Overview = () => {
         </div>
       </div>
 
-      <div className="hidden ">
+      <div className="hidden">
         <div className="flex flex-col md:flex-row gap-[12px]">
           <div
-            className={`bg-white dark:bg-black cursor-default px-[16px] py-[24px] rounded-lg w-[250px] md:w-[360px] overflow-auto`}
+            className={`overflow-auto bg-white rounded-lg cursor-default dark:bg-black px-[16px] py-[24px] w-[250px] md:w-[360px]`}
           >
             <div className="flex flex-col gap-[18px]">
               <div className="text-sm font-bold">Applicants Goal</div>
@@ -499,7 +530,7 @@ const Overview = () => {
             </div>
           </div>
           <div
-            className={`bg-white dark:bg-black cursor-default px-[16px] py-[24px] rounded-lg w-[250px] md:w-[360px] overflow-auto`}
+            className={`overflow-auto bg-white rounded-lg cursor-default dark:bg-black px-[16px] py-[24px] w-[250px] md:w-[360px]`}
           >
             <div className="flex flex-col gap-[18px]">
               <div className="text-sm font-bold">Hiring Goal</div>
@@ -520,12 +551,12 @@ const Overview = () => {
         </div>
       </div>
 
-      <div className="hidden ">
+      <div className="hidden">
         <div className="flex flex-col md:flex-row gap-[24px]">
           {positions.map((position, i) => (
             <div
               key={i}
-              className={`bg-white dark:bg-black cursor-default px-[24px] py-[20px] rounded-lg w-[226px] flex flex-col gap-[16px]`}
+              className={`flex flex-col bg-white rounded-lg cursor-default dark:bg-black px-[24px] py-[20px] w-[226px] gap-[16px]`}
             >
               <ConfigProvider
                 theme={{
@@ -533,13 +564,13 @@ const Overview = () => {
                   algorithm: darkMode ? darkAlgorithm : defaultAlgorithm,
                 }}
               >
-                <div className="flex items-start justify-between">
+                <div className="flex justify-between items-start">
                   <div className="flex flex-col gap-[4px]">
                     <div className="text-sm font-normal text-[#475467] dark:text-gray-300">
                       Position
                     </div>
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="text-sm font-bold ">{position.title}</div>
+                    <div key={i} className="flex justify-between items-center">
+                      <div className="text-sm font-bold">{position.title}</div>
                     </div>
                   </div>
                   <div>
@@ -657,7 +688,7 @@ const Overview = () => {
         {/* Active Vacancies Section */}
         <div>
           {(
-            <div className="flex justify-between items-center px-2  ps-0  pt-4">
+            <div className="flex justify-between items-center px-2 pt-4 ps-0">
               <Heading size="5xl" as="p" className="!text-gray-900   ">Active vacancies {activeVacancies.length > 0 && <span className="text-gray-600 text-[10px]">{`(${activeVacancies.length})`}</span>}</Heading>
               <span
                 className="text-blue-400 underline cursor-pointer"
@@ -678,6 +709,7 @@ const Overview = () => {
                 record={d}
                 fetchData={getData}
                 onRename={() => onRename(d)}
+                onDuplicate={() => onDuplicate(d)}
               />
             ))}
             {loadingVacancy && (
@@ -697,7 +729,7 @@ const Overview = () => {
         {/* Unpublished Vacancies Section */}
         <div>
           {(
-            <div className="flex justify-between items-center px-2 ps-0 pt-4">
+            <div className="flex justify-between items-center px-2 pt-4 ps-0">
               <Heading size="5xl" as="p" className="text-gray-900">
                 Unpublished vacancies {unpublishedVacancies.length > 0 && <span className="text-gray-600 text-[10px]">{`(${unpublishedVacancies.length})`}</span>}
               </Heading>
@@ -720,6 +752,7 @@ const Overview = () => {
                 record={d}
                 fetchData={getData}
                 onRename={() => onRename(d)}
+                onDuplicate={() => onDuplicate(d)}
 
               />
             ))}
