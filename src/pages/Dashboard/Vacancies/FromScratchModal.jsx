@@ -909,7 +909,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
               lastName: user?.lastName,
             }
           }),
-          AiService.searchUnsplash(searchQuery)
+          AiService.searchUnsplash(searchQuery, 12)
         ]);
 
         console.log("FromScratchModal: Parallel requests completed");
@@ -919,24 +919,33 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
           throw new Error(aiResponse.data.error || 'AI processing failed');
         }
 
-        // Handle Image Upload
-        let uploadedHeroImage = null;
+        // Handle Image Uploads
+        let uploadedImages = [];
         if (imageResponse?.data?.success && imageResponse.data.data.length > 0) {
           try {
-            console.log(`FromScratchModal: Found ${imageResponse.data.data.length} images. Uploading first one...`);
-            const imageUrl = imageResponse.data.data[0].url;
-            console.log("FromScratchModal: Uploading image to Cloudinary:", imageUrl);
+            const imagesToUpload = imageResponse.data.data;
+            console.log(`FromScratchModal: Found ${imagesToUpload.length} images. Uploading them...`);
             
-            const uploadRes = await UploadService.upload(imageUrl, 10);
+            // Upload images in parallel
+            const uploadPromises = imagesToUpload.map(async (img) => {
+              try {
+                const res = await UploadService.upload(img.url, 10);
+                if (res?.data?.secure_url) {
+                  return res.data.secure_url;
+                }
+                return null;
+              } catch (e) {
+                console.error("Failed to upload image:", img.url, e);
+                return null;
+              }
+            });
+
+            const results = await Promise.all(uploadPromises);
+            uploadedImages = results.filter(url => url !== null);
+            console.log(`FromScratchModal: Successfully uploaded ${uploadedImages.length} images.`);
             
-            if (uploadRes?.data?.secure_url) {
-              uploadedHeroImage = uploadRes.data.secure_url;
-              console.log("FromScratchModal: Successfully uploaded Unsplash image:", uploadedHeroImage);
-            } else {
-              console.warn("FromScratchModal: Upload response missing secure_url", uploadRes);
-            }
           } catch (uploadError) {
-            console.error("FromScratchModal: Failed to upload Unsplash image:", uploadError);
+            console.error("FromScratchModal: Failed to upload Unsplash images:", uploadError);
           }
         } else {
             console.log("FromScratchModal: No images found from Unsplash search or search failed.");
@@ -946,12 +955,33 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         const aiResult = JSON.parse(aiResponse.data.data.content);
         console.log("FromScratchModal aiResult", aiResult);
 
-
+        // Distribute images to fields
+        // 0: heroImage
+        // 1: jobDescriptionImage
+        // 2: textBoxImage
+        // 3: evpMissionAvatar
+        // 4: leaderIntroductionAvatar
+        // 5-7: aboutTheCompanyImages
+        // 8-11: photoImages
+        
+        const heroImage = uploadedImages[0] || aiResult.heroImage;
+        const jobDescriptionImage = uploadedImages[1] || "";
+        const textBoxImage = uploadedImages[2] || "";
+        const evpMissionAvatar = uploadedImages[3] || "";
+        const leaderIntroductionAvatar = uploadedImages[4] || "";
+        const aboutTheCompanyImages = uploadedImages.slice(5, 8);
+        const photoImages = uploadedImages.slice(8, 12);
 
         // Create the vacancy
         const vacancyData = {
           ...aiResult,
-          heroImage: uploadedHeroImage || aiResult.heroImage, // Use uploaded image if available
+          heroImage,
+          jobDescriptionImage,
+          textBoxImage,
+          evpMissionAvatar,
+          leaderIntroductionAvatar,
+          aboutTheCompanyImages: aboutTheCompanyImages.length > 0 ? aboutTheCompanyImages : aiResult.aboutTheCompanyImages || [],
+          photoImages: photoImages.length > 0 ? photoImages : aiResult.photoImages || [],
           specifications: aiResult.specifications?.map((spec) => ({
             ...spec,
             enabled: true

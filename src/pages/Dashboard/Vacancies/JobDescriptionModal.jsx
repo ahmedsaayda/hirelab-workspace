@@ -281,7 +281,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
           content: JSON.stringify(content),
           language: language
         }),
-        AiService.searchUnsplash(searchQuery)
+        AiService.searchUnsplash(searchQuery, 12)
       ]);
 
       console.log("JobDescriptionModal: Parallel requests completed");
@@ -291,24 +291,32 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         throw new Error(aiResponse.data.error || 'AI processing failed');
       }
 
-      // Handle Image Upload
-      let uploadedHeroImage = null;
+      // Handle Image Uploads
+      let uploadedImages = [];
       if (imageResponse?.data?.success && imageResponse.data.data.length > 0) {
         try {
-          console.log(`JobDescriptionModal: Found ${imageResponse.data.data.length} images. Uploading first one...`);
-          const imageUrl = imageResponse.data.data[0].url;
-          console.log("JobDescriptionModal: Uploading image to Cloudinary:", imageUrl);
-
-          const uploadRes = await UploadService.upload(imageUrl, 10);
+          const imagesToUpload = imageResponse.data.data;
+          console.log(`JobDescriptionModal: Found ${imagesToUpload.length} images. Uploading them...`);
           
-          if (uploadRes?.data?.secure_url) {
-            uploadedHeroImage = uploadRes.data.secure_url;
-            console.log("JobDescriptionModal: Successfully uploaded Unsplash image:", uploadedHeroImage);
-          } else {
-             console.warn("JobDescriptionModal: Upload response missing secure_url", uploadRes);
-          }
+          const uploadPromises = imagesToUpload.map(async (img) => {
+            try {
+              const res = await UploadService.upload(img.url, 10);
+              if (res?.data?.secure_url) {
+                return res.data.secure_url;
+              }
+              return null;
+            } catch (e) {
+              console.error("Failed to upload image:", img.url, e);
+              return null;
+            }
+          });
+
+          const results = await Promise.all(uploadPromises);
+          uploadedImages = results.filter(url => url !== null);
+          console.log(`JobDescriptionModal: Successfully uploaded ${uploadedImages.length} images.`);
+          
         } catch (uploadError) {
-          console.error("JobDescriptionModal: Failed to upload Unsplash image:", uploadError);
+          console.error("JobDescriptionModal: Failed to upload Unsplash images:", uploadError);
         }
       } else {
           console.log("JobDescriptionModal: No images found from Unsplash search or search failed.");
@@ -435,7 +443,13 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
       const vacancyPayload = {
         ...cleanResponse,
         ...brandingDetails,
-        heroImage: uploadedHeroImage || cleanResponse.heroImage,
+        heroImage: uploadedImages[0] || cleanResponse.heroImage,
+        jobDescriptionImage: uploadedImages[1] || "",
+        textBoxImage: uploadedImages[2] || "",
+        evpMissionAvatar: uploadedImages[3] || "",
+        leaderIntroductionAvatar: uploadedImages[4] || "",
+        aboutTheCompanyImages: uploadedImages.slice(5, 8).length > 0 ? uploadedImages.slice(5, 8) : (cleanResponse.aboutTheCompanyImages || []),
+        photoImages: uploadedImages.slice(8, 12).length > 0 ? uploadedImages.slice(8, 12) : (cleanResponse.photoImages || []),
         templateId: selectedTemplate,
         vacancyTitle: jobTitle,
         department: department,

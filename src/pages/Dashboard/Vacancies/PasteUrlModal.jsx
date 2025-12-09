@@ -164,7 +164,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
           },
           language: language
         }),
-        AiService.searchUnsplash(searchQuery)
+        AiService.searchUnsplash(searchQuery, 12)
       ]);
 
       console.log("PasteUrlModal: Parallel requests completed");
@@ -174,23 +174,32 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
         throw new Error(aiResponse.data.error || 'AI processing failed');
       }
 
-      // Handle Image Upload
-      let uploadedHeroImage = null;
+      // Handle Image Uploads
+      let uploadedImages = [];
       if (imageResponse?.data?.success && imageResponse.data.data.length > 0) {
         try {
-          console.log(`PasteUrlModal: Found ${imageResponse.data.data.length} images. Uploading first one...`);
-          const imageUrl = imageResponse.data.data[0].url;
-          console.log("PasteUrlModal: Uploading image to Cloudinary:", imageUrl);
+          const imagesToUpload = imageResponse.data.data;
+          console.log(`PasteUrlModal: Found ${imagesToUpload.length} images. Uploading them...`);
+          
+          const uploadPromises = imagesToUpload.map(async (img) => {
+            try {
+              const res = await UploadService.upload(img.url, 10);
+              if (res?.data?.secure_url) {
+                return res.data.secure_url;
+              }
+              return null;
+            } catch (e) {
+              console.error("Failed to upload image:", img.url, e);
+              return null;
+            }
+          });
 
-          const uploadRes = await UploadService.upload(imageUrl, 10);
-          if (uploadRes?.data?.secure_url) {
-            uploadedHeroImage = uploadRes.data.secure_url;
-            console.log("PasteUrlModal: Successfully uploaded Unsplash image:", uploadedHeroImage);
-          } else {
-            console.warn("PasteUrlModal: Upload response missing secure_url", uploadRes);
-          }
+          const results = await Promise.all(uploadPromises);
+          uploadedImages = results.filter(url => url !== null);
+          console.log(`PasteUrlModal: Successfully uploaded ${uploadedImages.length} images.`);
+          
         } catch (uploadError) {
-          console.error("PasteUrlModal: Failed to upload Unsplash image:", uploadError);
+          console.error("PasteUrlModal: Failed to upload Unsplash images:", uploadError);
         }
       } else {
           console.log("PasteUrlModal: No images found from Unsplash search or search failed.");
@@ -222,7 +231,13 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
         ...aiResult,
         ...brandingDetails,
         templateId: selectedTemplate,
-        heroImage: uploadedHeroImage || aiResult.heroImage,
+        heroImage: uploadedImages[0] || aiResult.heroImage,
+        jobDescriptionImage: uploadedImages[1] || "",
+        textBoxImage: uploadedImages[2] || "",
+        evpMissionAvatar: uploadedImages[3] || "",
+        leaderIntroductionAvatar: uploadedImages[4] || "",
+        aboutTheCompanyImages: uploadedImages.slice(5, 8).length > 0 ? uploadedImages.slice(5, 8) : (aiResult.aboutTheCompanyImages || []),
+        photoImages: uploadedImages.slice(8, 12).length > 0 ? uploadedImages.slice(8, 12) : (aiResult.photoImages || []),
         department: department,
         user_id: user?._id,
         specifications: aiResult.specifications?.map((spec) => ({
