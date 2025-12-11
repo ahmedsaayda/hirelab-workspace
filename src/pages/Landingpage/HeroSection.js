@@ -168,14 +168,21 @@ const useResponsiveFontSize = (
   const [fontSize, setFontSize] = useState(initialSize);
 
   useEffect(() => {
-    if (!containerRef.current || !text) return;
-
     const container = containerRef.current;
+    if (!container || !text || typeof window === "undefined") return;
     
     const adjustFontSize = () => {
       // Cross-browser window width detection
-      const screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-      const isMobile = screenWidth < 768;
+      const screenWidth =
+        window.innerWidth ||
+        document.documentElement.clientWidth ||
+        document.body.clientWidth;
+
+      // In the editor preview we expose the device via window.__previewDevice.
+      // Respect that first so switching between Desktop/Mobile preview
+      // recalculates sizes correctly, without changing live page behaviour.
+      const previewDevice = window.__previewDevice;
+      const isMobile = previewDevice === "mobile" || screenWidth < 768;
       const textLength = text.length;
       
       // Check if text is a single word (no spaces)
@@ -294,6 +301,8 @@ const useResponsiveFontSize = (
     // Cross-browser event listener setup
     if (window.addEventListener) {
       window.addEventListener("resize", handleResize, false);
+      // Fired by PreviewContainer when switching between Desktop/Mobile preview
+      window.addEventListener("deviceChange", handleResize, false);
     } else if (window.attachEvent) {
       // IE8 and older
       window.attachEvent("onresize", handleResize);
@@ -307,6 +316,7 @@ const useResponsiveFontSize = (
       // Cross-browser event listener cleanup
       if (window.removeEventListener) {
         window.removeEventListener("resize", handleResize, false);
+        window.removeEventListener("deviceChange", handleResize, false);
       } else if (window.detachEvent) {
         // IE8 and older
         window.detachEvent("onresize", handleResize);
@@ -513,7 +523,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
     >
       <div
         ref={refs.sectionRef}
-        className="relative mx-auto w-full hero-section rounded-lg"
+        className="relative mx-auto w-full rounded-lg hero-section"
         style={{
           color: textColor,
           fontFamily: bodyFont?.family,
@@ -522,11 +532,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
         {MemoizedGridPattern}
         {/* Blur effect at the top center of the hero section like a lamp is glowing through the top */}
         <div className="absolute top-0 left-0 w-1/2 translate-x-1/2  bg-gradient-to-r from-white  to-white opacity-10 blur-[50px] rounded-full" />
-        <div className=" mx-auto rounded-b-xl ">
-          <div className="relative px-6 pt-10  md:px-8 md:pt-10 rounded-lg overflow-hidden  ">
+        <div className="mx-auto rounded-b-xl">
+          <div className="overflow-hidden relative px-6 pt-10 rounded-lg md:px-8 md:pt-10">
             {" "}
             {/* <SimpleGridBackground /> */}
-            <div className="flex flex-col items-center mx-auto max-w-2xl text-center mt-10 md:mt-0">
+            <div className="flex flex-col items-center mx-auto mt-10 max-w-2xl text-center md:mt-0">
               <span
                 ref={refs.weAreHiringRef}
                 onClick={() => handleItemClick("weAreHiring")}
@@ -539,7 +549,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
               </span>
 
               <h2
-                className="mb-8 font-semibold w-full max-w-full text-center"
+                className="mb-8 w-full max-w-full font-semibold text-center"
                 ref={(el) => {
                   refs.vacancyTitleRef.current = el;
                   titleContainerRef.current = el;
@@ -623,13 +633,13 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       <p
                         ref={refs.salaryTextRef}
                         onClick={() => handleItemClick("salaryText")}
-                        className="text-xs font-light "
+                        className="text-xs font-light"
                         style={{ color: textColor }}
                       >
                         {landingPageData?.salaryText || getTranslation(landingPageData?.lang, 'competitiveSalary') || 'Competitive Salary'}
                       </p>
                     ) : (
-                      <p className="text-xs font-light "
+                      <p className="text-xs font-light"
                         style={{
                           color: textColor
                         }}
@@ -779,7 +789,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     handleItemClick("location");
                   }}
                 >
-                  <span className="text-xs font-medium  md:text-sm"
+                  <span className="text-xs font-medium md:text-sm"
                   style={{
                     color: textColor,
                   }}
@@ -799,8 +809,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         className={`transition-transform ${
-                          showLocationDropdown ? "rotate-180" : ""
-                        }`}
+                          showLocationDropdown ? "rotate-180" : ""}`}
                       >
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
@@ -828,7 +837,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       }}
                     >
                       <div className="flex justify-between items-center px-4 py-2 border-b border-white/10">
-                        <span className="text-xs font-medium ">{getTranslation(landingPageData?.lang, 'locations')}</span>
+                        <span className="text-xs font-medium">{getTranslation(landingPageData?.lang, 'locations')}</span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -844,7 +853,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         .map((loc, index) => (
                           <div
                             key={index}
-                            className="px-4 py-2 text-xs font-medium  cursor-pointer md:text-sm hover:bg-white/10"
+                            className="px-4 py-2 text-xs font-medium cursor-pointer md:text-sm hover:bg-white/10"
                             onClick={() => {
                               setSelectedLocation(loc);
                               setShowLocationDropdown(false);
@@ -866,7 +875,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
             {/* Main Content with Image and Info */}
             <div className=" mt-10 -mb-[10px] xl:mb-[-8px] max-w-[1300px] mx-auto ">
               {/* Image Container */}
-              <div className="relative mx-auto max-w-3xl shadow-xl ">
+              <div className="relative mx-auto max-w-3xl shadow-xl">
                <div className="relative">
                 <Image
                   src={
@@ -952,7 +961,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       ) : (
                         <span
                           ref={refs.salaryRangeRef}
-                          className="font-medium  whitespace-nowrap"
+                          className="font-medium whitespace-nowrap"
                           onClick={() => handleItemClick("salaryMin")}
                           style={{
                             color:textColor
@@ -1072,7 +1081,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           handleItemClick("location");
                         }}
                       >
-                        <span className="font-medium "
+                        <span className="font-medium"
                         style={{
                           color:textColor
                         }}
@@ -1092,8 +1101,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               className={`transition-transform ${
-                                showLocationDropdown ? "rotate-180" : ""
-                              }`}
+                                showLocationDropdown ? "rotate-180" : ""}`}
                             >
                               <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
@@ -1121,7 +1129,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                             }}
                           >
                             <div className="flex justify-between items-center px-4 py-2 border-b border-white/10">
-                              <span className="text-xs font-medium "
+                              <span className="text-xs font-medium"
                               style={{
                                 color:textColor
                               }}
@@ -1144,7 +1152,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                               .map((loc, index) => (
                                 <div
                                   key={index}
-                                  className="px-4 py-2 text-xs font-medium  cursor-pointer lg:text-sm hover:bg-white/10"
+                                  className="px-4 py-2 text-xs font-medium cursor-pointer lg:text-sm hover:bg-white/10"
                                   onClick={() => {
                                     setSelectedLocation(loc);
                                     setShowLocationDropdown(false);
