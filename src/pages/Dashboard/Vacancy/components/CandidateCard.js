@@ -191,6 +191,24 @@ const CandidateCard = ({
     }
   };
 
+  const hasScheduledInterview = Boolean(candidate?.meetingScheduled || candidate?.interviewMeetingTimestamp);
+
+  const formatInterviewWindow = () => {
+    if (!candidate?.interviewMeetingTimestamp) return 'Time to be announced';
+    const start = moment(candidate.interviewMeetingTimestamp);
+    const end = candidate.interviewMeetingTimestampEnd 
+      ? moment(candidate.interviewMeetingTimestampEnd) 
+      : start.clone().add(1, 'hour');
+    const timezone = candidate.interviewMeetingTimezone || 'UTC';
+
+    // If the meeting spans multiple days, show both dates; otherwise show a compact range
+    if (start.isSame(end, 'day')) {
+      return `${start.format('ddd, MMM D • h:mm A')} - ${end.format('h:mm A')} ${timezone}`;
+    }
+
+    return `${start.format('ddd, MMM D • h:mm A')} - ${end.format('ddd, MMM D • h:mm A')} ${timezone}`;
+  };
+
   const menuItems = [
     {
       key: 'view',
@@ -352,6 +370,32 @@ const CandidateCard = ({
           `}>
             <div className="w-2 h-2 rounded-full bg-current opacity-60"></div>
             {getStatusPhaseLabel(candidate.statusPhase)}
+          </div>
+        </div>
+      )}
+
+      {/* Scheduled Interview */}
+      {hasScheduledInterview && (
+        <div className="mb-2 p-2 bg-green-50 border border-green-100 rounded flex items-start gap-2">
+          <div className="mt-0.5 text-green-600">
+            <CalendarOutlined />
+          </div>
+          <div className="text-xs text-green-800">
+            <div className="font-semibold">Interview scheduled</div>
+            <div className="text-[11px] leading-4">
+              {formatInterviewWindow()}
+            </div>
+            {candidate.interviewMeetingLink && (
+              <a
+                href={candidate.interviewMeetingLink}
+                target="_blank"
+                rel="noreferrer"
+                className="text-green-700 underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Join link
+              </a>
+            )}
           </div>
         </div>
       )}

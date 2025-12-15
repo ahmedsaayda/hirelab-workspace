@@ -601,7 +601,13 @@ const CandidateProfile = ({
           phone: phone,
           avatar: avatar, // null instead of empty string prevents broken image
           position: formData.position || 'Position',
-          stage: stages.find(stage => stage.id === doc.stageId)?.title || 'Applied'
+          stage: stages.find(stage => stage.id === doc.stageId)?.title || 'Applied',
+          // Interview scheduling fields
+          meetingScheduled: doc.meetingScheduled || false,
+          interviewMeetingTimestamp: doc.interviewMeetingTimestamp,
+          interviewMeetingTimestampEnd: doc.interviewMeetingTimestampEnd,
+          interviewMeetingTimezone: doc.interviewMeetingTimezone,
+          interviewMeetingLink: doc.interviewMeetingLink
         };
         setCandidate(transformedCandidate);
         
@@ -809,6 +815,21 @@ const CandidateProfile = ({
     } else {
       return '#10b981'; // emerald-500 - almost complete/hired
     }
+  };
+
+  const formatInterviewWindow = () => {
+    if (!candidate?.interviewMeetingTimestamp) return 'Time to be announced';
+    const start = moment(candidate.interviewMeetingTimestamp);
+    const end = candidate.interviewMeetingTimestampEnd
+      ? moment(candidate.interviewMeetingTimestampEnd)
+      : start.clone().add(1, 'hour');
+    const timezone = candidate.interviewMeetingTimezone || 'UTC';
+
+    if (start.isSame(end, 'day')) {
+      return `${start.format('ddd, MMM D • h:mm A')} - ${end.format('h:mm A')} ${timezone}`;
+    }
+
+    return `${start.format('ddd, MMM D • h:mm A')} - ${end.format('ddd, MMM D • h:mm A')} ${timezone}`;
   };
 
   const handleResumeUpload = async ({ file }) => {
@@ -1576,6 +1597,33 @@ const CandidateProfile = ({
           </div>
         </div>
       </div>
+
+      {/* Scheduled Interview Card */}
+      {(candidate?.meetingScheduled || candidate?.interviewMeetingTimestamp) && (
+        <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 bg-purple-200 rounded-lg flex items-center justify-center">
+              <CalendarOutlined className="text-purple-700" />
+            </div>
+            <div className="flex-1">
+              <Text className="text-sm font-semibold text-purple-900 block">Interview scheduled</Text>
+              <Text className="text-xs text-purple-700 block mt-1">
+                {formatInterviewWindow()}
+              </Text>
+              {candidate?.interviewMeetingLink && (
+                <a
+                  href={candidate.interviewMeetingLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-purple-700 underline mt-2 inline-block"
+                >
+                  Join link
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Contact Information Card */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
