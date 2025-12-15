@@ -462,9 +462,10 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
   const settings = landingPageData?.form?.settings || {};
   console.log("settings?.redirectToUrl",settings?.redirectToUrl)
   const [formData, setFormData] = useState({});
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+const [hasSavedContact, setHasSavedContact] = useState(false);
   const [formFields, setFormFields] = useState([]);
   const [optInAccepted, setOptInAccepted] = useState(false);
   // Removed detectedCountry since we're using regular Input instead of PhoneInput
@@ -594,7 +595,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object') {
           setFormData(parsed.formData || {});
-          if (typeof parsed.currentStep === 'number') setCurrentStep(parsed.currentStep);
+          if (typeof parsed.currentStep === 'number') setCurrentStep(Math.max(1, parsed.currentStep));
           setOptInAccepted(!!parsed.optInAccepted);
         }
       }
@@ -782,6 +783,10 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       ...prev,
       [fieldId]: value
     }));
+  // If email changes, allow another early save attempt
+  if (String(fieldId).toLowerCase().includes('email')) {
+    setHasSavedContact(false);
+  }
   };
 
   // Auto-jump utility when setting is enabled (choice-like fields)
@@ -790,6 +795,135 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       setTimeout(() => handleNext(fieldValue), 0);
     }
   };
+
+const isContactStep = (field) => {
+  if (!field) return false;
+  if (field.type === 'contact') return true;
+  if (field.type === 'lead-capture-group' && Array.isArray(field.fields)) {
+    return field.fields.some((f) => f.type === 'contact');
+  }
+  return false;
+};
+
+const buildProcessedFormData = () => {
+  const processedFormData = { ...formData };
+  
+  // Process form fields to match the expected format
+  formFields.forEach(field => {
+    if (field.type === 'lead-capture-group') {
+      // Process each field in the lead capture group
+      field.fields.forEach(subField => {
+        if (subField.type === 'contact') {
+          processedFormData[`firstname`] = formData[`${subField.id}_firstName`] || "";
+          processedFormData[`lastname`] = formData[`${subField.id}_lastName`] || "";
+          // Some builders embed email inside the contact field (id_email)
+          if (!processedFormData[`email`]) {
+            processedFormData[`email`] = formData[`${subField.id}_email`] || "";
+          }
+        } else if (subField.type === 'email') {
+          processedFormData[`email`] = formData[subField.id] || "";
+        } else if (subField.type === 'phone') {
+          processedFormData[`phone`] = formData[subField.id] || "";
+        }
+      });
+    } else if (field.type === 'address') {
+      processedFormData[`line1`] = formData[`${field.id}_line1`] || "";
+      processedFormData[`line2`] = formData[`${field.id}_line2`] || "";
+      processedFormData[`city`] = formData[`${field.id}_city`] || "";
+      processedFormData[`state`] = formData[`${field.id}_state`] || "";
+      processedFormData[`zip`] = formData[`${field.id}_zip`] || "";
+      processedFormData[`country`] = formData[`${field.id}_country`] || "";
+    } else if (field.type === 'contact') {
+      processedFormData[`firstname`] = formData[`${field.id}_firstName`] || "";
+      processedFormData[`lastname`] = formData[`${field.id}_lastName`] || "";
+      if (!processedFormData[`email`]) {
+        processedFormData[`email`] = formData[`${field.id}_email`] || "";
+      }
+    } else if (field.type === 'email') {
+      processedFormData[`email`] = formData[field.id] || "";
+    } else if (field.type === 'phone') {
+      processedFormData[`phone`] = formData[field.id] || "";
+    } else if (field.type === 'date') {
+      // Handle single DatePicker value (stored as 'YYYY-MM-DD' format)
+      const dateValue = formData[field.id] || "";
+      
+      if (dateValue) {
+        // Convert from 'YYYY-MM-DD' to the desired format
+        const dateFormat = field.dateFormat || "MMDDYYYY";
+        const dateSeparator = field.dateSeparator || "/";
+        
+        try {
+          const date = dayjs(dateValue);
+          if (date.isValid()) {
+            let formattedDate = "";
+            if (dateFormat === 'MMDDYYYY') {
+              formattedDate = date.format(`MM${dateSeparator}DD${dateSeparator}YYYY`);
+            } else if (dateFormat === 'DDMMYYYY') {
+              formattedDate = date.format(`DD${dateSeparator}MM${dateSeparator}YYYY`);
+            } else if (dateFormat === 'YYYYMMDD') {
+              formattedDate = date.format(`YYYY${dateSeparator}MM${dateSeparator}DD`);
+            } else {
+              // Default to ISO format if format is not recognized
+              formattedDate = date.format('YYYY-MM-DD');
+            }
+            processedFormData[field.id] = formattedDate;
+          } else {
+            processedFormData[field.id] = "";
+          }
+        } catch (error) {
+          console.error('Error formatting date:', error);
+          processedFormData[field.id] = dateValue; // Fallback to original value
+        }
+      } else {
+        processedFormData[field.id] = "";
+      }
+    } else if (field.type === 'file') {
+      // Handle file fields - store complete object for better handling
+      const fileData = formData[field.id];
+      if (fileData) {
+        if (typeof fileData === 'object' && fileData.url) {
+          // New format: store the complete object
+          processedFormData[field.id] = fileData;
+        } else if (typeof fileData === 'string') {
+          // Legacy format: URL string - convert to object format
+          processedFormData[field.id] = {
+            url: fileData,
+            filename: fileData.split('/').pop().split('_').pop() || 'download'
+          };
+        }
+      } else {
+        processedFormData[field.id] = "";
+      }
+    } else {
+      // Handle other field types
+      processedFormData[field.id] = formData[field.id] || "";
+    }
+  });
+
+  return processedFormData;
+};
+
+const saveContactSnapshot = async () => {
+  // Respect setting: if disabled, skip early storage
+  if (settings?.storeCandidateInfoBeforeApplied === false) return;
+  if (hasSavedContact) return;
+  try {
+    const processedFormData = buildProcessedFormData();
+    const applicationData = {
+      LandingPageDataId: lpId,
+      formData: processedFormData,
+      form: landingPageData?.form,
+      searchIndex: `${processedFormData.firstname || ''} ${processedFormData.lastname || ''} ${processedFormData.email || ''}`.trim(),
+      formSettings: landingPageData?.form?.settings || {},
+      optInAccepted: !!optInAccepted,
+      partial: true, // mark as early contact save
+    };
+    await PublicService.createVacancySubmission(applicationData);
+    setHasSavedContact(true);
+  } catch (err) {
+    console.warn('Unable to save contact snapshot early:', err?.message || err);
+  }
+};
 
   const handleNext = (providedFieldValue) => {
     // Guard: if fields are not yet loaded, don't proceed or submit
@@ -804,13 +938,8 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       handleSubmit();
       return;
     }
-    // If on intro, go to first visible field (index 0 in flowFields => step 1)
-    if (currentStep === 0) {
-      setCurrentStep(1);
-      return;
-    }
     // Validate current step
-    const currentField = flowFields[currentStep - 1]; // -1 because step 0 is intro
+    const currentField = flowFields[currentStep - 1];
     if (currentStep > 0 && currentField?.required) {
       // Special validation for lead capture group
       if (currentField.type === 'lead-capture-group') {
@@ -993,134 +1122,102 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       return;
     }
 
-    if (currentStep < flowFields.length) {
-      // When user moves from intro (0) to first input step (1), mark application started (Lead) if not already
-      try {
-        if (currentStep === 0 && landingPageData?.metaPixelId && window.fbq) {
-          const leadKey = `metaLeadFired_${lpId}`;
-          const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(leadKey) === '1';
-          
-          console.log('🔍 APPLY-STEP: Lead event check on step transition', {
-            currentStep,
-            leadKey,
-            already
-          });
-          
-          if (!already) {
-            console.log('🎯 APPLY-STEP: Firing HireLab Lead event (Step 0 -> 1)');
-            waitForPixel(() => {
-              try {
-                window.fbq('track', 'Lead', {
-                  content_name: landingPageData?.vacancyTitle || '',
-                  funnel_id: lpId || '',
-                  brand: landingPageData?.companyName || '',
-                  job_category: landingPageData?.department || ''
-                });
-                try { sessionStorage.setItem(leadKey, '1'); } catch (_) {}
-                console.log('✅ APPLY-STEP: Lead event fired successfully');
-              } catch (e) {
-                console.error('❌ APPLY-STEP: Lead event failed:', e);
-              }
-            });
-          } else {
-            console.log('⏭️ APPLY-STEP: Lead event already fired');
-          }
-        }
-      } catch (e) { 
-        console.error('❌ APPLY-STEP: Lead event failed:', e);
-      }
-
-      // Fire Contact event when completing a contact step
-      try {
-        if (currentStep > 0 && landingPageData?.metaPixelId && window.fbq) {
-          const currentField = flowFields[currentStep - 1]; // the step we just completed
-          const isContactGroup = currentField?.type === 'lead-capture-group';
-          const isContactComposite = currentField?.type === 'contact';
-          
-          console.log("🔍 CONTACT: Checking contact step completion", {
-            currentStep,
-            currentField: currentField?.type,
-            isContactGroup,
-            isContactComposite
-          });
-
-          if (isContactGroup || isContactComposite) {
-            // Check for actual contact data with dynamic field IDs
-            const hasContactInfo = Object.keys(formData).some(key => 
-              (key.includes('firstName') || key.includes('lastName') || 
-               key.includes('email') || key.includes('phone')) && 
-              formData[key]?.trim()
-            );
-            
-            console.log("🔍 CONTACT: Contact info check", {
-              hasContactInfo,
-              formDataKeys: Object.keys(formData),
-              formData
-            });
-            
-            if (hasContactInfo) {
-              const contactKey = `metaContactFired_${lpId}`;
-              const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(contactKey) === '1';
-              
-              console.log("🔍 CONTACT: Contact event status", {
-                contactKey,
-                already
+    // Fire Lead when moving off first step
+    try {
+      if (currentStep === 1 && landingPageData?.metaPixelId && window.fbq) {
+        const leadKey = `metaLeadFired_${lpId}`;
+        const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(leadKey) === '1';
+        if (!already) {
+          waitForPixel(() => {
+            try {
+              window.fbq('track', 'Lead', {
+                content_name: landingPageData?.vacancyTitle || '',
+                funnel_id: lpId || '',
+                brand: landingPageData?.companyName || '',
+                job_category: landingPageData?.department || ''
               });
-              
-              if (!already) {
-                console.log('🎯 CONTACT: Firing Hirelab.Contact_Information event');
-                waitForPixel(() => {
-                  try {
-                                      window.fbq('trackCustom', 'Hirelab.Contact_Information', {
+              try { sessionStorage.setItem(leadKey, '1'); } catch (_) {}
+            } catch (e) {
+              console.error('❌ APPLY-STEP: Lead event failed:', e);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.error('❌ APPLY-STEP: Lead event failed:', e);
+    }
+
+    // Fire Contact event when completing a contact step
+    try {
+      if (currentStep > 0 && landingPageData?.metaPixelId && window.fbq) {
+        const currentField = flowFields[currentStep - 1]; // the step we just completed
+        const isContactGroup = currentField?.type === 'lead-capture-group';
+        const isContactComposite = currentField?.type === 'contact';
+        
+        if (isContactGroup || isContactComposite) {
+          // Check for actual contact data with dynamic field IDs
+          const hasContactInfo = Object.keys(formData).some(key => 
+            (key.includes('firstName') || key.includes('lastName') || 
+             key.includes('email') || key.includes('phone')) && 
+            formData[key]?.trim()
+          );
+          
+          if (hasContactInfo) {
+            const contactKey = `metaContactFired_${lpId}`;
+            const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(contactKey) === '1';
+            
+            if (!already) {
+              waitForPixel(() => {
+                try {
+                  window.fbq('trackCustom', 'Hirelab.Contact_Information', {
                     content_name: landingPageData?.vacancyTitle || '',
                     funnel_id: lpId || '',
                     company: landingPageData?.companyName || '',
                     job_category: landingPageData?.department || ''
                   });
-                    try { sessionStorage.setItem(contactKey, '1'); } catch (_) {}
-                    console.log('✅ CONTACT: Hirelab.Contact_Information event fired successfully');
-                  } catch (fbqError) {
-                    console.error('❌ CONTACT: Contact Info event failed:', fbqError);
-                  }
-                });
-              } else {
-                console.log('⏭️ CONTACT: Contact Info event already fired');
-              }
+                  try { sessionStorage.setItem(contactKey, '1'); } catch (_) {}
+                } catch (fbqError) {
+                  console.error('❌ CONTACT: Contact Info event failed:', fbqError);
+                }
+              });
             }
           }
         }
-      } catch (e) { 
-        console.error('❌ CONTACT: Contact event logic failed:', e);
       }
+    } catch (e) { 
+      console.error('❌ CONTACT: Contact event logic failed:', e);
+    }
 
-      // Compute next step considering jump target
-      if (jumpTarget && jumpTarget !== 'next') {
-        const targetIndex = flowFields.findIndex(f => f.id === jumpTarget);
-        if (targetIndex >= 0) {
-          setCurrentStep(targetIndex + 1); // +1 for intro offset
-          return;
-        }
-      }
-      // If this click would move from last question to submit, validate opt-in if required
-      const isGoingToSubmit = currentStep === flowFields.length;
-      if (isGoingToSubmit && settings?.optIn?.enabled && settings?.optIn?.required && !optInAccepted) {
-        message.warning('Please accept the opt-in to continue');
+    // Compute next step considering jump target
+    if (jumpTarget && jumpTarget !== 'next') {
+      const targetIndex = flowFields.findIndex(f => f.id === jumpTarget);
+      if (targetIndex >= 0) {
+        setCurrentStep(targetIndex + 1);
         return;
       }
+    }
 
-      setCurrentStep(prev => prev + 1);
-    } else {
-      // Submitting from summary; enforce opt-in if required
-      if (settings?.optIn?.enabled && settings?.optIn?.required && !optInAccepted) {
-        message.warning('Please accept the opt-in to submit');
-        return;
-      }
+    // If this click would move from last question to submit, validate opt-in if required
+    const isGoingToSubmit = currentStep === flowFields.length;
+    if (isGoingToSubmit && settings?.optIn?.enabled && settings?.optIn?.required && !optInAccepted) {
+      message.warning('Please accept the opt-in to continue');
+      return;
+    }
+
+    // On contact step, persist a draft submission early (deduped by email on backend)
+    if (isContactStep(currentField)) {
+      saveContactSnapshot();
+    }
+
+    if (currentStep >= flowFields.length) {
       handleSubmit();
+    } else {
+      setCurrentStep(prev => prev + 1);
     }
   };
 
   const handlePrevious = () => {
-    if (currentStep > 0) {
+    if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
     }
   };
@@ -1128,100 +1225,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      // Process form data to match expected format
-      const processedFormData = { ...formData };
-      
-      // Process form fields to match the expected format
-      formFields.forEach(field => {
-        if (field.type === 'lead-capture-group') {
-          // Process each field in the lead capture group
-          field.fields.forEach(subField => {
-            if (subField.type === 'contact') {
-              processedFormData[`firstname`] = formData[`${subField.id}_firstName`] || "";
-              processedFormData[`lastname`] = formData[`${subField.id}_lastName`] || "";
-              // Some builders embed email inside the contact field (id_email)
-              if (!processedFormData[`email`]) {
-                processedFormData[`email`] = formData[`${subField.id}_email`] || "";
-              }
-            } else if (subField.type === 'email') {
-              processedFormData[`email`] = formData[subField.id] || "";
-            } else if (subField.type === 'phone') {
-              processedFormData[`phone`] = formData[subField.id] || "";
-            }
-          });
-        } else if (field.type === 'address') {
-          processedFormData[`line1`] = formData[`${field.id}_line1`] || "";
-          processedFormData[`line2`] = formData[`${field.id}_line2`] || "";
-          processedFormData[`city`] = formData[`${field.id}_city`] || "";
-          processedFormData[`state`] = formData[`${field.id}_state`] || "";
-          processedFormData[`zip`] = formData[`${field.id}_zip`] || "";
-          processedFormData[`country`] = formData[`${field.id}_country`] || "";
-        } else if (field.type === 'contact') {
-          processedFormData[`firstname`] = formData[`${field.id}_firstName`] || "";
-          processedFormData[`lastname`] = formData[`${field.id}_lastName`] || "";
-          if (!processedFormData[`email`]) {
-            processedFormData[`email`] = formData[`${field.id}_email`] || "";
-          }
-        } else if (field.type === 'email') {
-          processedFormData[`email`] = formData[field.id] || "";
-        } else if (field.type === 'phone') {
-          processedFormData[`phone`] = formData[field.id] || "";
-        } else if (field.type === 'date') {
-          // Handle single DatePicker value (stored as 'YYYY-MM-DD' format)
-          const dateValue = formData[field.id] || "";
-          
-          if (dateValue) {
-            // Convert from 'YYYY-MM-DD' to the desired format
-            const dateFormat = field.dateFormat || "MMDDYYYY";
-            const dateSeparator = field.dateSeparator || "/";
-            
-            try {
-              const date = dayjs(dateValue);
-              if (date.isValid()) {
-                let formattedDate = "";
-                if (dateFormat === 'MMDDYYYY') {
-                  formattedDate = date.format(`MM${dateSeparator}DD${dateSeparator}YYYY`);
-                } else if (dateFormat === 'DDMMYYYY') {
-                  formattedDate = date.format(`DD${dateSeparator}MM${dateSeparator}YYYY`);
-                } else if (dateFormat === 'YYYYMMDD') {
-                  formattedDate = date.format(`YYYY${dateSeparator}MM${dateSeparator}DD`);
-                } else {
-                  // Default to ISO format if format is not recognized
-                  formattedDate = date.format('YYYY-MM-DD');
-                }
-                processedFormData[field.id] = formattedDate;
-              } else {
-                processedFormData[field.id] = "";
-              }
-            } catch (error) {
-              console.error('Error formatting date:', error);
-              processedFormData[field.id] = dateValue; // Fallback to original value
-            }
-          } else {
-            processedFormData[field.id] = "";
-          }
-        } else if (field.type === 'file') {
-          // Handle file fields - store complete object for better handling
-          const fileData = formData[field.id];
-          if (fileData) {
-            if (typeof fileData === 'object' && fileData.url) {
-              // New format: store the complete object
-              processedFormData[field.id] = fileData;
-            } else if (typeof fileData === 'string') {
-              // Legacy format: URL string - convert to object format
-              processedFormData[field.id] = {
-                url: fileData,
-                filename: fileData.split('/').pop().split('_').pop() || 'download'
-              };
-            }
-          } else {
-            processedFormData[field.id] = "";
-          }
-        } else {
-          // Handle other field types
-          processedFormData[field.id] = formData[field.id] || "";
-        }
-      });
+      const processedFormData = buildProcessedFormData();
 
       // Submit to your backend/ATS using the correct model name
       const applicationData = {
@@ -1850,8 +1854,8 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
   
   const flowFields = getVisibleFieldsForFlow(formFields, formData);
-  const totalSteps = flowFields.length + 1; // +1 for intro step
-  const progressPercentage = ((currentStep + 1) / Math.max(totalSteps, 1)) * 100;
+  const totalSteps = flowFields.length;
+  const progressPercentage = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0;
 
   const seoTitle = landingPageData?.vacancyTitle 
     ? `Apply for ${landingPageData.vacancyTitle} - ${landingPageData?.companyName || 'Hirelab'}`
@@ -1948,7 +1952,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                   {landingPageData.vacancyTitle || 'Job Application'}
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Step {currentStep + 1} of {totalSteps}
+                  Step {currentStep} of {totalSteps}
                 </p>
               </div>
             </div>
@@ -1978,82 +1982,56 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
       {/* Form Content */}
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-sm border p-8">
-          {currentStep === 0 ? (
-            // Intro Step
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                {landingPageData.form?.title || "Let's get started"}
-              </h2>
-              <p className="text-gray-600 mb-8">
-                {landingPageData.form?.description || "We'll ask you a few questions to learn more about you."}
-              </p>
-              {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "contact" && (
-                <div className="max-w-md mx-auto text-left mb-6 p-4 rounded border bg-gray-50">
-                  <div className="font-medium">{settings.optIn.header || 'Subscribe for updates'}</div>
-                  {settings.optIn.description && (
-                    <div className="text-sm text-gray-600 mt-1">{settings.optIn.description}</div>
-                  )}
-                  <label className="flex items-center gap-2 mt-2 text-sm">
-                    <Checkbox checked={optInAccepted} onChange={(e) => setOptInAccepted(e.target.checked)} />
-                    <span>I agree to opt-in {settings.optIn.required ? '(required)' : '(optional)'}</span>
-                  </label>
-                </div>
-              )}
-              <Button 
-                type="primary" 
-                size="large"
-                onClick={handleNext}
-                className="brand-button !border-0"
-                style={{
-                  backgroundColor: primaryColor,
-                  borderColor: primaryColor,
-                  color: 'white',
-                  background: primaryColor,
-                  border: `1px solid ${primaryColor}`
-                }}
-              >
-                {landingPageData.form?.startApplicationText || getTranslation(landingPageData?.lang, 'startApplication')}
-              </Button>
-            </div>
-          ) : (
-            // Question Step
-            <div>
-              {flowFields[currentStep - 1] && (
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    {flowFields[currentStep - 1].label}
-                    {flowFields[currentStep - 1].required && (
-                      <span className="text-red-500 ml-1">*</span>
+          {/* Question Step (intro removed; start at contact) */}
+          <div>
+            {flowFields[currentStep - 1] && (
+              <div>
+                {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "contact" && currentStep === 1 && (
+                  <div className="mb-4 p-4 rounded border bg-gray-50">
+                    <div className="font-medium">{settings.optIn.header || 'Subscribe for updates'}</div>
+                    {settings.optIn.description && (
+                      <div className="text-sm text-gray-600 mt-1">{settings.optIn.description}</div>
                     )}
-                  </h2>
-                  
-                  <div className="mb-8">
-                    {renderField(flowFields[currentStep - 1])}
+                    <label className="flex items-center gap-2 mt-2 text-sm">
+                      <Checkbox checked={optInAccepted} onChange={(e) => setOptInAccepted(e.target.checked)} />
+                      <span>I agree to opt-in {settings.optIn.required ? '(required)' : '(optional)'}</span>
+                    </label>
                   </div>
-                </div>
-              )}
-              {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "last" && currentStep === flowFields.length && (
-                <div className="mt-4 p-4 rounded border bg-gray-50">
-                  <div className="font-medium">{settings.optIn.header || 'Subscribe for updates'}</div>
-                  {settings.optIn.description && (
-                    <div className="text-sm text-gray-600 mt-1">{settings.optIn.description}</div>
+                )}
+
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  {flowFields[currentStep - 1].label}
+                  {flowFields[currentStep - 1].required && (
+                    <span className="text-red-500 ml-1">*</span>
                   )}
-                  <label className="flex items-center gap-2 mt-2 text-sm">
-                    <Checkbox checked={optInAccepted} onChange={(e) => setOptInAccepted(e.target.checked)} />
-                    <span>I agree to opt-in {settings.optIn.required ? '(required)' : '(optional)'}</span>
-                  </label>
+                </h2>
+                
+                <div className="mb-8">
+                  {renderField(flowFields[currentStep - 1])}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+            {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "last" && currentStep === flowFields.length && (
+              <div className="mt-4 p-4 rounded border bg-gray-50">
+                <div className="font-medium">{settings.optIn.header || 'Subscribe for updates'}</div>
+                {settings.optIn.description && (
+                  <div className="text-sm text-gray-600 mt-1">{settings.optIn.description}</div>
+                )}
+                <label className="flex items-center gap-2 mt-2 text-sm">
+                  <Checkbox checked={optInAccepted} onChange={(e) => setOptInAccepted(e.target.checked)} />
+                  <span>I agree to opt-in {settings.optIn.required ? '(required)' : '(optional)'}</span>
+                </label>
+              </div>
+            )}
+          </div>
 
           {/* Navigation */}
-          {currentStep > 0 && (
+          {flowFields.length > 0 && (
             <div className="flex justify-between items-center pt-6 border-t">
               <Button 
                 onClick={handlePrevious}
                 className="flex items-center space-x-2"
-                disabled={currentStep === 0}
+                disabled={currentStep <= 1}
               >
                 <ArrowLeft size={16} />
                 <span>{landingPageData.form?.previousText || getTranslation(landingPageData?.lang, 'previous')}</span>
@@ -2072,8 +2050,12 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                   border: `1px solid ${primaryColor}`
                 }}
               >
-                <span>{currentStep === flowFields.length ? (landingPageData.form?.submitText || getTranslation(landingPageData?.lang, 'submit')) : (landingPageData.form?.nextText || getTranslation(landingPageData?.lang, 'next'))}</span>
-                <ArrowRight size={16} />
+                <span>
+                  {currentStep === flowFields.length 
+                    ? (landingPageData.form?.submitText || getTranslation(landingPageData?.lang, 'submit'))
+                    : (landingPageData.form?.nextText || getTranslation(landingPageData?.lang, 'next'))}
+                </span>
+                {currentStep !== flowFields.length && <ArrowRight size={16} />}
               </Button>
             </div>
           )}

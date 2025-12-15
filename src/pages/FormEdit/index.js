@@ -854,6 +854,7 @@ export default function FormEdit({ paramsId }) {
     return {
       showProgressBar: true,
       collectPartialAnswers: false,
+      storeCandidateInfoBeforeApplied: true,
       respondentEmail: {
         enabled: false,
         toFieldId: "contact.email",
@@ -873,6 +874,10 @@ export default function FormEdit({ paramsId }) {
       autoJumpToNext: false,
       redirectToUrl: "",
       ...base,
+      storeCandidateInfoBeforeApplied:
+        base.storeCandidateInfoBeforeApplied !== undefined
+          ? base.storeCandidateInfoBeforeApplied
+          : true,
       respondentEmail: { ...{
         enabled: false, toFieldId: "contact.email", replyTo: "", subject: "", fromName: "", body: ""
       }, ...(base?.respondentEmail || {}) },
@@ -1362,6 +1367,18 @@ export default function FormEdit({ paramsId }) {
               size="small"
               checked={!!s.collectPartialAnswers}
               onChange={(v) => updateSettings({ collectPartialAnswers: v })}
+            />
+          }
+        />
+
+        <SettingRow
+          title="Store Candidate Info Before Applied"
+          description="If on, we store contact details mid-form (Applying) so you can follow up even if they stop. If off, we only save after full submission."
+          extra={
+            <Switch
+              size="small"
+              checked={s.storeCandidateInfoBeforeApplied !== false}
+              onChange={(v) => updateSettings({ storeCandidateInfoBeforeApplied: v })}
             />
           }
           divider={false}
@@ -3600,104 +3617,7 @@ export default function FormEdit({ paramsId }) {
                           <>
                             {/* Form Title and Description with Custom Autosave */}
                             <div className="mb-6 space-y-4">
-                              <div>
-                                <label className="block mb-2 text-sm font-medium text-gray-700">
-                                  Form Title
-                                </label>
-                                <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                                  <CustomInput
-                                    value={landingPageData?.form?.title || ""}
-                                    onChange={(value) => {
-                                      setHasImmediateUnsavedChanges(true);
-                                        sessionHasChangesRef.current = true;
-                                      const updatedData = {
-                                        ...landingPageData,
-                                        form: {
-                                          ...landingPageData?.form,
-                                          title: value.slice(0, 100),
-                                        },
-                                      };
-                                      setLandingPageData(updatedData);
-                                        checkForUnpublishedFormChanges(updatedData);
-                                      debouncedSave(updatedData);
-                                    }}
-                                    placeholder="e.g., Let's get started"
-                                    maxLength={100}
-                                    className="text-sm border-none focus:ring-0"
-                                    shape="round"
-                                  />
-                                </div>
-                                <div className="mt-1 text-xs text-gray-500">
-                                  {(landingPageData?.form?.title || "").length}
-                                  /100
-                                </div>
-                              </div>
-                              <div>
-                                <label className="block mb-2 text-sm font-medium text-gray-700">
-                                  Form Description
-                                </label>
-                                <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                                  <CustomInput
-                                    value={
-                                      landingPageData?.form?.description || ""
-                                    }
-                                    onChange={(value) => {
-                                      setHasImmediateUnsavedChanges(true);
-                                        sessionHasChangesRef.current = true;
-                                      const updatedData = {
-                                        ...landingPageData,
-                                        form: {
-                                          ...landingPageData?.form,
-                                          description: value.slice(0, 150),
-                                        },
-                                      };
-                                      setLandingPageData(updatedData);
-                                        checkForUnpublishedFormChanges(updatedData);
-                                      debouncedSave(updatedData);
-                                    }}
-                                    placeholder="e.g., We'll ask you a few questions to learn more about you."
-                                    maxLength={500}
-                                    textarea={true}
-                                    className="text-sm border-none focus:ring-0"
-                                    shape="round"
-                                  />
-                                </div>
-                                <div className="mt-1 text-xs text-gray-500">
-                                  {
-                                    (landingPageData?.form?.description || "")
-                                      .length
-                                  }
-                                  /500
-                                </div>
-                              </div>
-                              {/* Form Buttons Texts */}
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                                    Start Button Text
-                                  </label>
-                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                                    <CustomInput
-                                      value={landingPageData?.form?.startApplicationText || "Start Application"}
-                                      onChange={(value) => {
-                                        setHasImmediateUnsavedChanges(true);
-                                        sessionHasChangesRef.current = true;
-                                        const updatedData = {
-                                          ...landingPageData,
-                                          form: {
-                                            ...landingPageData?.form,
-                                            startApplicationText: value,
-                                          },
-                                        };
-                                        setLandingPageData(updatedData);
-                                        checkForUnpublishedFormChanges(updatedData);
-                                        debouncedSave(updatedData);
-                                      }}
-                                      className="text-sm border-none focus:ring-0"
-                                      shape="round"
-                                    />
-                                  </div>
-                                </div>
                                 <div>
                                   <label className="block mb-2 text-sm font-medium text-gray-700">
                                     Submit Button Text
