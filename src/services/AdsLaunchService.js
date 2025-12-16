@@ -13,6 +13,10 @@ class AdsLaunchService {
     return this.api.get(`/landingPage/landingpage/${lpId}/ads/launch`, { params });
   }
 
+  saveLaunchSettings(lpId, payload) {
+    return this.api.post(`/landingPage/landingpage/${lpId}/ads/launch/settings`, payload);
+  }
+
   updateCampaign(lpId, payload) {
     return this.api.post(`/landingPage/landingpage/${lpId}/ads/meta/campaign`, payload);
   }

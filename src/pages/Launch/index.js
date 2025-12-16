@@ -36,10 +36,15 @@ export default function Launch({ paramsId }) {
   const [loading, setLoading] = useState(true);
   const [landingPageData, setLandingPageData] = useState({ vacancyTitle: "" });
   const [summary, setSummary] = useState(null);
+  console.log("summary", summary);
   const [datePreset, setDatePreset] = useState("last_7d");
   const [activeStep, setActiveStep] = useState("settings"); // settings | audience | creatives | overview
   const [launching, setLaunching] = useState(false);
   const [launchDailyBudget, setLaunchDailyBudget] = useState(null);
+  const [optimizationGoal, setOptimizationGoal] = useState(null);
+  const [pacingPlan, setPacingPlan] = useState(null);
+  const [scheduleOverride, setScheduleOverride] = useState({ start: null, end: null });
+  const [hasUnsyncedMetaChanges, setHasUnsyncedMetaChanges] = useState(false);
 
   const reload = async () => {
     if (!lpId) return;
@@ -59,7 +64,9 @@ export default function Launch({ paramsId }) {
   const [audienceLocations, setAudienceLocations] = useState([]);
   const [audienceKeywords, setAudienceKeywords] = useState([]);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-  const [newLocation, setNewLocation] = useState("");
+  const [locationSearchTerm, setLocationSearchTerm] = useState("");
+  const [locationSearchResults, setLocationSearchResults] = useState([]);
+  const [locationSearchLoading, setLocationSearchLoading] = useState(false);
   const [isKeywordModalOpen, setIsKeywordModalOpen] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
 
@@ -70,7 +77,7 @@ export default function Launch({ paramsId }) {
   // Keep format functions but don't return early yet if we want hooks to run consistently
   // The early return "if (!lpId || loading)" causes issues if other hooks come after it.
   // We need to move ALL hooks before any conditional return.
-  
+
   const last = Array.isArray(summary?.insights) ? summary.insights[0] : null;
 
   const formatNumber = (n) => {
@@ -107,7 +114,7 @@ export default function Launch({ paramsId }) {
   };
   const { impressions, reach, clicks, ctr, cpc, spend } = getKpis();
 
-  const getOverviewData = () => {
+  const getOverviewData = (settingsOverride, locationsOverride) => {
     if (isDemo) {
       return {
         year: "2025",
@@ -151,25 +158,94 @@ export default function Launch({ paramsId }) {
     }
 
     const campaignName = summary?.campaign?.name || summary?.vacancyTitle || "Campaign";
-    const channels = summary?.adSets?.map(adSet => ({
-        name: adSet.name || "Channel",
-        daily: formatCurrency(adSet.daily_budget ? Number(adSet.daily_budget)/100 : 0),
-        total: "—",
-        color: (adSet.name?.toLowerCase().includes("google")) ? "green" : "blue", // Default to blue (Meta) as it's the primary platform
-        icon: (adSet.name?.toLowerCase().includes("google")) ? <FaGoogle className="text-2xl text-green-600" /> : <FaFacebook className="text-2xl text-blue-600" />
+    const channels = summary?.adSets?.map((adSet) => ({
+      name: adSet.name || "Channel",
+      daily: formatCurrency(
+        adSet.daily_budget ? Number(adSet.daily_budget) / 100 : 0
+      ),
+      total: "—",
+      color: adSet.name?.toLowerCase().includes("google") ? "green" : "blue", // Default to blue (Meta) as it's the primary platform
+      icon: adSet.name?.toLowerCase().includes("google") ? (
+        <FaGoogle className="text-2xl text-green-600" />
+      ) : (
+        <FaFacebook className="text-2xl text-blue-600" />
+      ),
     })) || [];
+
+    // Effective schedule for overview:
+    // - If campaign exists → provider start/stop
+    // - Else fall back to current settings from Launch
+    const hasCampaign = !!summary?.campaign;
+    const settingsSchedule = settingsOverride?.schedule || {};
+    const firstAdSet = Array.isArray(summary?.adSets) ? summary.adSets[0] : null;
+    const providerStart = summary?.campaign?.start_time || firstAdSet?.start_time || null;
+    const providerEnd = summary?.campaign?.stop_time || firstAdSet?.end_time || null;
+    const startMoment = hasCampaign
+      ? providerStart
+        ? dayjs(providerStart)
+        : settingsSchedule.start || null
+      : settingsSchedule.start || null;
+    const endMoment = hasCampaign
+      ? providerEnd
+        ? dayjs(providerEnd)
+        : settingsSchedule.end || null
+      : settingsSchedule.end || null;
+
+    const dateRange = startMoment
+      ? `${startMoment.format("DD/MM/YYYY")} - ${
+          endMoment ? endMoment.format("DD/MM/YYYY") : "Ongoing"
+        }`
+      : "—";
+
+    // Effective daily budget:
+    // - Prefer provider campaign daily budget
+    // - Else first ad set daily budget
+    // - Else current settings daily budget
+    let providerDaily = null;
+    if (hasCampaign && summary?.campaign?.daily_budget) {
+      providerDaily = Number(summary.campaign.daily_budget) / 100;
+    } else if (hasCampaign && Array.isArray(summary?.adSets)) {
+      const withBudget = summary.adSets.find((s) => s.daily_budget);
+      if (withBudget?.daily_budget) {
+        providerDaily = Number(withBudget.daily_budget) / 100;
+      }
+    }
+    const rawSettingsDaily = settingsOverride?.budget?.daily;
+    const settingsDaily =
+      rawSettingsDaily != null && Number.isFinite(Number(rawSettingsDaily)) && Number(rawSettingsDaily) > 0
+        ? Number(rawSettingsDaily)
+        : null;
+    const effectiveDaily =
+      providerDaily != null
+        ? providerDaily
+        : settingsDaily != null
+        ? settingsDaily
+        : 0;
+
+    const totalBudgetLabel = formatCurrency(effectiveDaily || 0);
+
+    // Target area overview: from audience locations or LP location
+    let targetArea = "—";
+    if (Array.isArray(locationsOverride) && locationsOverride.length > 0) {
+      targetArea = locationsOverride.map((l) => l.name).join(", ");
+    } else if (
+      Array.isArray(landingPageData?.location) &&
+      landingPageData.location.length > 0
+    ) {
+      targetArea = landingPageData.location.join(", ");
+    }
 
     return {
         year: new Date().getFullYear(),
         months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], // dynamic?
         role: campaignName,
-        dateRange: summary?.campaign?.start_time ? `${dayjs(summary.campaign.start_time).format('DD/MM/YYYY')} - ${summary.campaign.stop_time ? dayjs(summary.campaign.stop_time).format('DD/MM/YYYY') : 'Ongoing'}` : "—",
-        totalBudget: formatCurrency(summary?.campaign?.daily_budget ? Number(summary.campaign.daily_budget)/100 : 0), // simplistic
+        dateRange,
+        totalBudget: totalBudgetLabel,
         channels: channels,
         summary: {
-           budget: "—",
+           budget: totalBudgetLabel,
            budgetNote: "",
-           targetArea: "—",
+           targetArea,
            adTypes: { total: 0, jobAds: 0, employerBrand: 0, testimonial: 0 },
            optimization: summary?.campaign?.objective || "—"
         },
@@ -246,9 +322,73 @@ export default function Launch({ paramsId }) {
       };
     }
 
+    const hasCampaign = !!summary?.campaign;
+    const draft = summary?.launchSettings || {};
+
     // Real data mapping
+    // Map Meta objective to UI-friendly optimization label
+    // Default to "Leads" for new campaigns or drafts
+    let optimizationGoalValue = "LEADS";
+    const rawObjective = summary?.campaign?.objective;
+    if (rawObjective === "OUTCOME_LEADS" || rawObjective === "LEAD_GENERATION" || rawObjective === "LEADS") {
+      optimizationGoalValue = "LEADS";
+    } else if (rawObjective === "OUTCOME_TRAFFIC") {
+      optimizationGoalValue = "OUTCOME_TRAFFIC";
+    }
+    if (!hasCampaign && draft.optimizationGoal) {
+      optimizationGoalValue = draft.optimizationGoal;
+    }
+
+    // Derive budget (campaign → ad set → saved draft → default):
+    let providerDailyBudget = null;
+    if (hasCampaign && summary?.campaign?.daily_budget) {
+      providerDailyBudget = Number(summary.campaign.daily_budget) / 100;
+    } else if (hasCampaign && Array.isArray(summary?.adSets)) {
+      const withBudget = summary.adSets.find((s) => s.daily_budget);
+      if (withBudget?.daily_budget) {
+        providerDailyBudget = Number(withBudget.daily_budget) / 100;
+      }
+    }
+
+    const draftDaily = draft.budgetDaily != null ? Number(draft.budgetDaily) : null;
+
+    const effectiveDailyBudget =
+      providerDailyBudget != null
+        ? providerDailyBudget
+        : draftDaily != null
+        ? draftDaily
+        : 20;
+
+    const approxTwoWeekTotal = effectiveDailyBudget * 14;
+
+    // Schedule (campaign → first ad set → saved draft):
+    const firstAdSet = Array.isArray(summary?.adSets) ? summary.adSets[0] : null;
+    const providerStartRaw =
+      summary?.campaign?.start_time || firstAdSet?.start_time || null;
+    const providerEndRaw =
+      summary?.campaign?.stop_time || firstAdSet?.end_time || null;
+    const scheduleStart = hasCampaign
+      ? providerStartRaw
+        ? dayjs(providerStartRaw)
+        : draft.scheduleStart
+        ? dayjs(draft.scheduleStart)
+        : null
+      : draft.scheduleStart
+      ? dayjs(draft.scheduleStart)
+      : null;
+
+    const scheduleEnd = hasCampaign
+      ? providerEndRaw
+        ? dayjs(providerEndRaw)
+        : draft.scheduleEnd
+        ? dayjs(draft.scheduleEnd)
+        : null
+      : draft.scheduleEnd
+      ? dayjs(draft.scheduleEnd)
+      : null;
+
     return {
-        optimizationGoal: summary?.campaign?.objective || "OUTCOME_TRAFFIC",
+        optimizationGoal: optimizationGoalValue,
         platforms: ["Facebook", "Instagram", "LinkedIn", "Google", "TikTok", "Snapchat"].map(p => ({
             name: p,
             icon: p === "Facebook" ? <FaFacebook className="text-2xl text-blue-600" /> :
@@ -262,23 +402,40 @@ export default function Launch({ paramsId }) {
             label: !(p === "Facebook" || p === "Instagram") ? "Coming soon" : undefined
         })),
         budget: {
-            total: summary?.campaign?.daily_budget ? Number(summary.campaign.daily_budget)/100 * 14 : 300, // approx
-            daily: summary?.campaign?.daily_budget ? Number(summary.campaign.daily_budget)/100 : 20,
-            split: []
+            total: approxTwoWeekTotal,
+            daily: effectiveDailyBudget,
+            split: [
+              { name: "Meta", pct: 70, color: "blue" },
+              { name: "Instagram", pct: 30, color: "pink" },
+            ]
         },
         prediction: {
             reach: reach,
             cpa: cpc
         },
-        pacing: "Standard",
-        suggestion: null,
+        pacing: hasCampaign ? "Standard" : draft.pacing || "Standard",
+        suggestion: summary?.campaign
+          ? null
+          : {
+              text: "Start with a 14-day run and review performance after the first week.",
+              action: "Apply suggestion",
+            },
         schedule: {
-            start: summary?.campaign?.start_time ? dayjs(summary.campaign.start_time) : null,
-            end: summary?.campaign?.stop_time ? dayjs(summary.campaign.stop_time) : null
+            start: scheduleStart,
+            end: scheduleEnd,
         },
         aiInsights: {
-            text: "AI insights will appear here once the campaign is active.",
-            recommendations: null
+            text: landingPageData?.vacancyTitle
+              ? `HireLab AI will optimize this campaign for “${landingPageData.vacancyTitle}” based on similar roles and markets.`
+              : "HireLab AI will optimize this campaign based on similar jobs and markets.",
+            recommendations: {
+              title: "Suggested Budget & Platforms",
+              desc: "Meta Feed + Instagram are recommended to maximize applications for this role.",
+              items: [
+                { name: "Meta", pct: "70%", icon: <FaFacebook className="text-gray-600" /> },
+                { name: "Instagram", pct: "30%", icon: <FaInstagram className="text-gray-600" /> },
+              ],
+            },
         }
     };
   };
@@ -329,8 +486,49 @@ export default function Launch({ paramsId }) {
         };
     }
 
+    // Prefer LP-level saved selections (draft or last chosen) so locations "come from the page"
+    let locations = [];
+    const saved = summary?.launchSettings?.audienceLocations;
+    if (Array.isArray(saved) && saved.length > 0) {
+      locations = saved.map((loc) => ({
+        name: loc?.name || "City",
+        radius: `${Number(loc?.radiusKm) || 25} KM`,
+        lat: typeof loc?.lat === "number" ? loc.lat : loc?.lat != null ? Number(loc.lat) : undefined,
+        lon: typeof loc?.lon === "number" ? loc.lon : loc?.lon != null ? Number(loc.lon) : undefined,
+        countryCode: loc?.countryCode || null,
+        map: null,
+      }));
+    } else if (Array.isArray(summary?.adSets) && summary.adSets.length > 0) {
+      // After publish: hydrate from Meta ad set targeting if available
+      const t = summary.adSets[0]?.targeting;
+      const targetingObj =
+        typeof t === "string"
+          ? (() => {
+              try { return JSON.parse(t); } catch { return null; }
+            })()
+          : t;
+      const geo = targetingObj?.geo_locations;
+      const customs = Array.isArray(geo?.custom_locations) ? geo.custom_locations : [];
+      if (customs.length > 0) {
+        locations = customs.map((c) => ({
+          name: "Selected location",
+          radius: `${Number(c.radius) || 25} KM`,
+          lat: typeof c.latitude === "number" ? c.latitude : c.latitude != null ? Number(c.latitude) : undefined,
+          lon: typeof c.longitude === "number" ? c.longitude : c.longitude != null ? Number(c.longitude) : undefined,
+          countryCode: null,
+          map: null,
+        }));
+      }
+    } else if (Array.isArray(landingPageData?.location) && landingPageData.location.length > 0) {
+      locations = landingPageData.location.map((loc) => ({
+        name: loc,
+        radius: "25 KM",
+        map: null,
+      }));
+    }
+
     return {
-        locations: summary?.campaign?.targeting?.geo_locations?.countries?.map(c => ({ name: c, radius: "Country", map: null })) || [],
+        locations,
         keywords: summary?.campaign?.targeting?.interests?.map(i => ({ name: i.name, color: "purple" })) || [],
         keywordsCount: "",
         retargeting: {
@@ -357,6 +555,26 @@ export default function Launch({ paramsId }) {
     setAudienceKeywords(data.keywords);
   }, [isDemo, summary]);
 
+  // Initialize / sync editable settings state from Meta or draft defaults once summary / LP data are available
+  useEffect(() => {
+    const base = getSettingsData();
+    if (optimizationGoal === null && base.optimizationGoal) {
+      setOptimizationGoal(base.optimizationGoal);
+    }
+    if (pacingPlan === null && base.pacing) {
+      setPacingPlan(base.pacing);
+    }
+    // When the underlying summary changes (Meta or draft), reset schedule & budget from it
+    setScheduleOverride({
+      start: base.schedule?.start || null,
+      end: base.schedule?.end || null,
+    });
+    setLaunchDailyBudget(
+      base.budget?.daily != null ? Number(base.budget.daily) : null
+    );
+    setHasUnsyncedMetaChanges(false);
+  }, [summary, isDemo, landingPageData]);
+
   // Keep Launch header in sync with Meta campaign status and title
   useEffect(() => {
     if (!summary) return;
@@ -370,6 +588,47 @@ export default function Launch({ paramsId }) {
     }));
   }, [summary]);
 
+  // Auto-save draft settings to our DB before first Meta publish (no campaign yet)
+  useEffect(() => {
+    if (!lpId || summary?.campaign) return; // Only draft mode (no campaign in Meta yet)
+    const payload = {
+      optimizationGoal,
+      pacing: pacingPlan,
+      budgetDaily:
+        launchDailyBudget != null
+          ? Number(launchDailyBudget)
+          : null,
+      scheduleStart: scheduleOverride.start
+        ? scheduleOverride.start.toISOString()
+        : null,
+      scheduleEnd: scheduleOverride.end
+        ? scheduleOverride.end.toISOString()
+        : null,
+      audienceLocations: (audienceLocations || []).map((loc) => ({
+        name: loc?.name,
+        radiusKm: parseInt(loc?.radius, 10) || 25,
+        lat: loc?.lat,
+        lon: loc?.lon,
+        countryCode: loc?.countryCode || null,
+      })),
+    };
+    const timer = setTimeout(() => {
+      AdsLaunchService.saveLaunchSettings(lpId, payload).catch(() => {
+        // Silent fail; user will still be able to launch using current in-memory values
+      });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [
+    lpId,
+    summary?.campaign,
+    optimizationGoal,
+    pacingPlan,
+    launchDailyBudget,
+    scheduleOverride.start,
+    scheduleOverride.end,
+    audienceLocations,
+  ]);
+
   if (!lpId || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -378,16 +637,56 @@ export default function Launch({ paramsId }) {
     );
   }
 
-  const handleAddLocation = () => {
-    if (newLocation.trim()) {
-      setAudienceLocations([...audienceLocations, { 
-        name: newLocation, 
-        radius: "30 KM", 
-        map: `https://placehold.co/400x256/e2e8f0/94a3b8?text=${encodeURIComponent(newLocation)}+Map`
-      }]);
-      setNewLocation("");
-      setIsLocationModalOpen(false);
+  const searchCities = async (query) => {
+    if (!query || query.trim().length < 2) {
+      setLocationSearchResults([]);
+      return;
     }
+    try {
+      setLocationSearchLoading(true);
+      const resp = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=${encodeURIComponent(
+          query.trim()
+        )}`
+      );
+      const data = await resp.json();
+      setLocationSearchResults(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setLocationSearchResults([]);
+    } finally {
+      setLocationSearchLoading(false);
+    }
+  };
+
+  const handleSelectSearchLocation = (result) => {
+    if (!result) return;
+    const address = result.address || {};
+    const city =
+      address.city ||
+      address.town ||
+      address.village ||
+      (result.display_name || "").split(",")[0];
+    const countryCode = (address.country_code || "").toUpperCase() || null;
+    const name = countryCode ? `${city}, ${countryCode}` : city;
+    const lat = parseFloat(result.lat);
+    const lon = parseFloat(result.lon);
+    if (!name || Number.isNaN(lat) || Number.isNaN(lon)) return;
+    setAudienceLocations((prev) => [
+      ...prev,
+      {
+        name,
+        radius: "25 KM",
+        lat,
+        lon,
+        countryCode,
+      },
+    ]);
+    if (summary?.campaign) {
+      setHasUnsyncedMetaChanges(true);
+    }
+    setIsLocationModalOpen(false);
+    setLocationSearchTerm("");
+    setLocationSearchResults([]);
   };
 
   const handleAddKeyword = () => {
@@ -402,6 +701,9 @@ export default function Launch({ paramsId }) {
     const newLocs = [...audienceLocations];
     newLocs.splice(index, 1);
     setAudienceLocations(newLocs);
+    if (summary?.campaign) {
+      setHasUnsyncedMetaChanges(true);
+    }
   };
 
   const handleRemoveKeyword = (index) => {
@@ -411,13 +713,63 @@ export default function Launch({ paramsId }) {
   };
 
   const handleRadiusChange = (value, index) => {
-      const newLocs = [...audienceLocations];
-      newLocs[index].radius = `${value} KM`;
-      setAudienceLocations(newLocs);
+    const newLocs = [...audienceLocations];
+    newLocs[index].radius = `${value} KM`;
+    setAudienceLocations(newLocs);
+    if (summary?.campaign) {
+      setHasUnsyncedMetaChanges(true);
+    }
+  };
+
+  const handleApplyQuickSuggestion = () => {
+    const base = getSettingsData();
+    const now = dayjs();
+    const start = base.schedule?.start || now;
+    const end = base.schedule?.end || now.add(14, "day");
+    setScheduleOverride({ start, end });
+    if (base.budget?.daily) {
+      setLaunchDailyBudget(Number(base.budget.daily));
+    }
+    setPacingPlan("Balanced Plan");
+    message.success("Suggestion applied to schedule and pacing.");
   };
 
   const audienceData = getAudienceData(); // Keep for other static parts, but use state for interactive parts
-  const settingsData = getSettingsData();
+  const baseSettingsData = getSettingsData();
+  const settingsData = {
+    ...baseSettingsData,
+    optimizationGoal: optimizationGoal ?? baseSettingsData.optimizationGoal,
+    pacing: pacingPlan ?? baseSettingsData.pacing,
+    schedule: {
+      ...(baseSettingsData.schedule || {}),
+      start: scheduleOverride.start || baseSettingsData.schedule?.start || null,
+      end: scheduleOverride.end || baseSettingsData.schedule?.end || null,
+    },
+    budget: {
+      ...(baseSettingsData.budget || {}),
+      daily:
+        launchDailyBudget != null
+          ? Number(launchDailyBudget)
+          : Number(baseSettingsData.budget?.daily || 0),
+    },
+  };
+
+  const scheduleDurationDays =
+    settingsData.schedule?.start && settingsData.schedule?.end
+      ? settingsData.schedule.end.diff(settingsData.schedule.start, "day") + 1
+      : null;
+
+  const effectiveDailyBudget =
+    Number.isFinite(Number(settingsData.budget.daily)) ?
+      Number(settingsData.budget.daily) :
+      0;
+
+  const approxTotalBudget = scheduleDurationDays
+    ? (effectiveDailyBudget * scheduleDurationDays).toFixed(2)
+    : (effectiveDailyBudget * 14).toFixed(2);
+
+  const durationLabel = scheduleDurationDays ? `${scheduleDurationDays} days` : "—";
+
   const overviewData = getOverviewData();
 
   const setCampaignPublished = async (next) => {
@@ -429,6 +781,122 @@ export default function Launch({ paramsId }) {
       message.success(next ? "Campaign resumed" : "Campaign paused");
     } catch {
       message.error("Failed to update campaign");
+    }
+  };
+
+  const syncMetaChanges = async () => {
+    if (!summary?.campaignId && !summary?.campaign?.id) {
+      message.info("No Meta campaign yet – settings are saved as draft in HireLab.");
+      return;
+    }
+    try {
+      const original = baseSettingsData;
+      const current = settingsData;
+
+      const updates = [];
+
+      // Budget change → update campaign daily budget
+      if (
+        Number(current.budget?.daily || 0) !==
+        Number(original.budget?.daily || 0)
+      ) {
+        updates.push(updateCampaignBudget(current.budget.daily));
+      }
+
+      // Schedule change → propagate to all ad sets (best-effort)
+      const originalStart = original.schedule?.start
+        ? original.schedule.start.toISOString()
+        : null;
+      const originalEnd = original.schedule?.end
+        ? original.schedule.end.toISOString()
+        : null;
+      const currentStart = current.schedule?.start
+        ? current.schedule.start.toISOString()
+        : null;
+      const currentEnd = current.schedule?.end
+        ? current.schedule.end.toISOString()
+        : null;
+
+      if (originalStart !== currentStart || originalEnd !== currentEnd) {
+        (summary?.adSets || []).forEach((set) => {
+          if (!set.id) return;
+          updates.push(
+            updateAdSetSchedule(set.id, current.schedule.start, current.schedule.end)
+          );
+        });
+      }
+
+      // Audience locations change → update ad set targeting (best-effort)
+      const canonicalizeLaunchLoc = (l) => {
+        if (!l) return null;
+        const lat = typeof l.lat === "number" ? l.lat : Number(l.lat);
+        const lon = typeof l.lon === "number" ? l.lon : Number(l.lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+        const radiusKm =
+          l.radiusKm != null
+            ? Number(l.radiusKm)
+            : parseInt(String(l.radius || ""), 10) || 25;
+        const countryCode = (l.countryCode || "").toUpperCase() || null;
+        return `${lat.toFixed(6)}|${lon.toFixed(6)}|${radiusKm}|${countryCode || ""}`;
+      };
+      const originalAudience = Array.isArray(summary?.launchSettings?.audienceLocations)
+        ? summary.launchSettings.audienceLocations
+        : [];
+      const origKey = originalAudience
+        .map(canonicalizeLaunchLoc)
+        .filter(Boolean)
+        .sort()
+        .join(";");
+      const currKey = (audienceLocations || [])
+        .map(canonicalizeLaunchLoc)
+        .filter(Boolean)
+        .sort()
+        .join(";");
+
+      if (origKey !== currKey) {
+        const audiencePayload = (audienceLocations || [])
+          .map((loc) => ({
+            name: loc?.name,
+            radiusKm: parseInt(String(loc?.radius || ""), 10) || 25,
+            lat: typeof loc?.lat === "number" ? loc.lat : Number(loc?.lat),
+            lon: typeof loc?.lon === "number" ? loc.lon : Number(loc?.lon),
+            countryCode: loc?.countryCode || null,
+          }))
+          .filter((l) => Number.isFinite(l.lat) && Number.isFinite(l.lon));
+
+        (summary?.adSets || []).forEach((set) => {
+          if (!set.id) return;
+          updates.push(
+            AdsLaunchService.updateAdSet(lpId, {
+              id: set.id,
+              audienceLocations: audiencePayload,
+              // keep default placements unless we later expose per-adset placement editing
+              placements: ["facebook_feed", "instagram_story"],
+            })
+          );
+        });
+
+        // Persist the user's intended audience into our DB as well (post-publish edits)
+        updates.push(
+          AdsLaunchService.saveLaunchSettings(lpId, { audienceLocations: audiencePayload })
+        );
+      }
+
+      if (updates.length === 0) {
+        message.info("No changes to sync with Meta.");
+        setHasUnsyncedMetaChanges(false);
+        return;
+      }
+
+      await Promise.all(updates);
+      setHasUnsyncedMetaChanges(false);
+      message.success("Changes synced with Meta.");
+    } catch (e) {
+      message.error(
+        e?.response?.data?.message ||
+          e?.message ||
+          "Failed to sync changes with Meta"
+      );
     }
   };
 
@@ -461,6 +929,21 @@ export default function Launch({ paramsId }) {
       message.error("Failed to update budget");
     }
   };
+  const updateCampaignBudget = async (value) => {
+    try {
+      if (!summary?.campaignId && !summary?.campaign?.id) return;
+      const id = summary.campaignId || summary.campaign.id;
+      const minor = Math.max(1, Math.floor(Number(value) * 100));
+      await AdsLaunchService.updateCampaign(lpId, {
+        id,
+        daily_budget: String(minor),
+      });
+      await reload();
+      message.success("Campaign budget updated");
+    } catch {
+      message.error("Failed to update campaign budget");
+    }
+  };
   const updateAdSetSchedule = async (adSetId, start, end) => {
     try {
       await AdsLaunchService.updateAdSet(lpId, {
@@ -475,11 +958,27 @@ export default function Launch({ paramsId }) {
     }
   };
   const toggleCampaign = async () => {
-    const isActive = summary?.campaign?.status === "ACTIVE";
+      const isActive = summary?.campaign?.status === "ACTIVE";
     await setCampaignPublished(!isActive);
   };
 
   const handleLaunchCampaign = async () => {
+    if (!summary) {
+      message.error("Launch data is still loading. Please wait a moment and try again.");
+      return;
+    }
+    if (!summary?.metaPixelId) {
+      message.error(
+        "Meta Pixel / hirelab.FormSubmitted conversion is not configured. Please configure it in Meta settings before publishing."
+      );
+      return;
+    }
+    if (!summary?.adAccountId || !summary?.pageId) {
+      message.error(
+        "Meta Ad Account and Page are not configured. Please open the Ads Editor Meta settings and select an Ad Account & Page before launching."
+      );
+      return;
+    }
     if (!summary?.editorAds) {
       message.warning("No creatives available to launch");
       return;
@@ -502,26 +1001,57 @@ export default function Launch({ paramsId }) {
         return;
       }
 
-      // Use budget & schedule from settings (or overrides) when launching
-      const settings = getSettingsData();
-      const effectiveDaily =
-        launchDailyBudget != null ? Number(launchDailyBudget) : Number(settings?.budget?.daily || 0);
+      // Use budget & schedule from current settings state (or overrides) when launching
+      const settings = settingsData;
+      const effectiveDaily = Number(settings?.budget?.daily || 0);
+      if (!Number.isFinite(effectiveDaily) || effectiveDaily <= 0) {
+        message.error("Daily budget must be greater than 0 before launching.");
+        return;
+      }
       const budgetMinor = Math.max(1, Math.floor(effectiveDaily * 100)); // Meta expects minor units
 
       const schedule = settings?.schedule || {};
+      if (!schedule.start || !schedule.end) {
+        message.error("Please select both a start date and an end date in Schedule & Duration before launching.");
+        return;
+      }
       const startIso =
         schedule.start && schedule.start.toISOString ? schedule.start.toISOString() : null;
       const endIso =
         schedule.end && schedule.end.toISOString ? schedule.end.toISOString() : null;
 
-      const payload = { adIds: ids, budget: budgetMinor };
+      // Always try to reuse the same Meta campaign instead of creating a new one
+      const existingCampaignId =
+        summary?.campaignId || summary?.campaign?.id || null;
+
+      const payload = {
+        adIds: ids,
+        budget: budgetMinor,
+        // Be explicit so backend never creates a second campaign for this LP
+        reuseCampaign: true,
+      };
+      if (existingCampaignId) {
+        payload.existingCampaignId = existingCampaignId;
+      }
       if (startIso) payload.start_time = startIso;
       if (endIso) payload.end_time = endIso;
+
+      // Audience locations (cities + radius) from Launch Audience step
+      const audiencePayload = (audienceLocations || []).map((loc) => ({
+        name: loc.name,
+        radiusKm: parseInt(loc.radius, 10) || 25,
+        lat: typeof loc.lat === "number" ? loc.lat : null,
+        lon: typeof loc.lon === "number" ? loc.lon : null,
+        countryCode: loc.countryCode || null,
+      }));
+      if (audiencePayload.length) {
+        payload.audienceLocations = audiencePayload;
+      }
 
       const res = await AdsService.publish(lpId, payload);
       if (res?.data?.success) {
         message.success("Campaign launch requested");
-        await reload();
+      await reload();
       } else {
         message.error(res?.data?.message || "Failed to launch campaign");
       }
@@ -567,30 +1097,30 @@ export default function Launch({ paramsId }) {
               <div className="mb-4 text-lg font-semibold text-gray-800">Campaign Setup</div>
               <div className="space-y-2">
               {["settings", "audience", "creatives", "overview"].map((step, idx) => (
-                <button
-                  key={step}
-                  onClick={() => setActiveStep(step)}
+              <button
+                key={step}
+                onClick={() => setActiveStep(step)}
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
                     activeStep === step ? "bg-violet-50" : "bg-white hover:bg-gray-50"
-                  }`}
-                >
-                  <span
+                }`}
+              >
+                <span
                     className={`inline-flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold ${
                       activeStep === step
                         ? "bg-[#5207CD] text-white"
                         : "bg-[#F3E8FF] text-[#6B21A8]"
-                    }`}
-                  >
-                    {idx + 1}
-                  </span>
+                  }`}
+                >
+                  {idx + 1}
+                </span>
                   <span className={`font-medium ${activeStep === step ? "text-violet-700 font-semibold" : "text-gray-600"}`}>
-                    {step === "overview" && "Overview"}
-                    {step === "settings" && "Campaign Settings"}
-                    {step === "audience" && "Audience"}
-                    {step === "creatives" && "Creatives"}
+                {step === "overview" && "Overview"}
+                {step === "settings" && "Campaign Settings"}
+                {step === "audience" && "Audience"}
+                {step === "creatives" && "Creatives"}
                   </span>
-                </button>
-              ))}
+              </button>
+            ))}
               </div>
               <button
                 onClick={handleLaunchCampaign}
@@ -602,7 +1132,7 @@ export default function Launch({ paramsId }) {
                 }`}
               >
                 <span className="text-lg">🚀</span> {launching ? "Launching..." : "Launch Campaign"}
-              </button>
+            </button>
             </div>
 
             {activeStep === 'overview' && (
@@ -794,7 +1324,7 @@ export default function Launch({ paramsId }) {
                         <div>Total:</div>
                         <div>{overviewData.totalBudget}</div>
                       </div>
-                   </div>
+                </div>
 
                    <div className="flex gap-6">
                       {/* Left info */}
@@ -802,26 +1332,26 @@ export default function Launch({ paramsId }) {
                         <div>
                           <div className="font-semibold text-gray-800 truncate" title={overviewData.role}>{overviewData.role}</div>
                           <div className="mt-1 text-xs text-gray-500">{overviewData.dateRange}</div>
-                        </div>
+                  </div>
                         
                         <div className="space-y-3">
                           {overviewData.channels.map((ch, i) => (
                               <div key={i} className="flex gap-3 items-start">
                                 <div className={`w-8 h-8 rounded bg-${ch.color}-50 flex items-center justify-center shrink-0`}>
                                    {ch.icon}
-                                </div>
+                  </div>
                                 <div>
                                    <div className="text-sm font-semibold text-gray-800">{ch.daily} <span className="font-normal text-gray-500">Daily budget</span></div>
                                    <div className="text-xs text-gray-500">{ch.total} Total budget</div>
-                                </div>
-                              </div>
+                  </div>
+                  </div>
                           ))}
-                        </div>
+                </div>
 
                         <button className="flex gap-2 justify-center items-center px-3 py-2 w-full text-sm text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50">
                           <span className="text-lg leading-none">+</span> Add new channel
                         </button>
-                      </div>
+                    </div>
 
                       {/* Right bars */}
                       <div className="relative flex-1 pt-2">
@@ -829,7 +1359,7 @@ export default function Launch({ paramsId }) {
                             {[1,2,3,4,5,6].map(i => (
                                 <div key={i} className="flex-1 border-r border-gray-100 border-dashed last:border-0"></div>
                             ))}
-                         </div>
+                    </div>
                          
                          <div className="relative z-10 mt-8 space-y-2">
                             {overviewData.channels.map((ch, idx) => (
@@ -843,12 +1373,12 @@ export default function Launch({ paramsId }) {
                                     title={`${ch.name} Campaign`}
                                 >
                                   <span className="w-full truncate">{ch.name} Campaign</span>
-                                </div>
+                    </div>
                             ))}
-                         </div>
-                      </div>
-                   </div>
-                </div>
+                    </div>
+                  </div>
+                    </div>
+                    </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                    {/* AI Campaign Summary */}
@@ -856,9 +1386,9 @@ export default function Launch({ paramsId }) {
                       <div className="flex gap-3 items-center mb-6">
                          <div className="flex justify-center items-center w-8 h-8 bg-violet-50 rounded-lg">
                             <Target className="w-5 h-5 text-violet-600" />
-                         </div>
+                    </div>
                          <div className="text-lg font-semibold text-gray-800">AI Campaign Summary</div>
-                      </div>
+                  </div>
 
                       <div className="space-y-5">
                          <div className="flex justify-between items-start">
@@ -870,28 +1400,28 @@ export default function Launch({ paramsId }) {
                          <div className="flex justify-between items-start">
                             <div className="text-sm text-gray-500">Target Area</div>
                             <div className="text-sm font-semibold text-right text-gray-800">{overviewData.summary.targetArea}</div>
-                         </div>
-                         
+                </div>
+
                          <div>
                             <div className="flex justify-between items-start mb-3">
                                 <div className="text-sm text-gray-500">Ad Types</div>
                                 <div className="text-sm font-semibold text-gray-800">{overviewData.summary.adTypes.total} variations</div>
-                            </div>
+                    </div>
                             <div className="flex gap-3">
                                <div className="flex flex-col flex-1 items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
                                   <div className="text-lg font-bold text-violet-600">{overviewData.summary.adTypes.jobAds}</div>
                                   <div className="mt-1 text-xs text-gray-500">Job Ads</div>
-                               </div>
+                  </div>
                                <div className="flex flex-col flex-1 items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
                                   <div className="text-lg font-bold text-violet-600">{overviewData.summary.adTypes.employerBrand}</div>
                                   <div className="mt-1 text-xs text-center text-gray-500">Employer Brand</div>
-                               </div>
+                    </div>
                                <div className="flex flex-col flex-1 items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
                                   <div className="text-lg font-bold text-violet-600">{overviewData.summary.adTypes.testimonial}</div>
                                   <div className="mt-1 text-xs text-gray-500">Testimonial</div>
-                               </div>
-                            </div>
-                         </div>
+                    </div>
+                  </div>
+                </div>
 
                          <div className="flex justify-between items-start pt-2">
                             <div className="text-sm text-gray-500">Optimization</div>
@@ -938,43 +1468,65 @@ export default function Launch({ paramsId }) {
 
             {activeStep === "settings" && (
               <div className="space-y-6">
-                 {/* Objectives */}
-                 <div className="flex gap-6">
-                    <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                       <div className="flex gap-3 items-center mb-4">
-                          <Target className="w-4 h-4 text-violet-700" />
-                          <div className="text-base font-semibold text-gray-700">Optimization Goal</div>
-                       </div>
-                       <Select 
-                          value={settingsData.optimizationGoal}
-                          className="w-full h-11"
-                          options={[
-                             { label: 'Apply Now (Conversion)', value: 'Apply Now (Conversion)' },
-                             { label: 'Traffic', value: 'OUTCOME_TRAFFIC' },
-                             { label: 'Leads', value: 'LEADS' }
-                          ]}
-                       />
+                {/* Meta sync banner for live campaigns */}
+                {summary?.campaign && hasUnsyncedMetaChanges && (
+                  <div className="flex justify-between items-center px-4 py-3 text-xs text-amber-800 bg-amber-50 rounded-lg border border-amber-200">
+                    <div className="flex gap-2 items-center">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>
+                        You have unsaved changes to a live Meta campaign. These are only in HireLab until you sync.
+                      </span>
                     </div>
-                    <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                       <div className="flex gap-3 items-center mb-4">
-                          <Target className="w-4 h-4 text-violet-700" />
-                          <div className="text-base font-semibold text-gray-700">Optimization Goal</div>
-                       </div>
-                       <div className="px-4 py-3 text-base text-gray-700 bg-white rounded-lg border border-gray-200">
-                          {settingsData.optimizationGoal}
-                       </div>
+                    <button
+                      onClick={syncMetaChanges}
+                      className="px-3 py-1.5 text-xs font-semibold text-white bg-[#5207CD] rounded-full hover:bg-[#4506A6]"
+                    >
+                      Save & sync with Meta
+                    </button>
+                  </div>
+                )}
+                {/* Objectives */}
+                <div className="flex gap-6">
+                  <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="flex gap-3 items-center mb-4">
+                      <Target className="w-4 h-4 text-violet-700" />
+                      <div className="text-base font-semibold text-gray-700">Optimization Goal</div>
                     </div>
-                 </div>
+                    <Select
+                      value={settingsData.optimizationGoal}
+                      className="w-full h-11"
+                      onChange={(val) => setOptimizationGoal(val)}
+                      options={[
+                        { label: "Apply Now (Conversion)", value: "Apply Now (Conversion)" },
+                        { label: "Traffic", value: "OUTCOME_TRAFFIC" },
+                        { label: "Leads", value: "LEADS" },
+                      ]}
+                    />
+                  </div>
+                  <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="flex gap-3 items-center mb-4">
+                      <Target className="w-4 h-4 text-violet-700" />
+                      <div className="text-base font-semibold text-gray-700">Optimization Goal</div>
+                    </div>
+                    <div className="px-4 py-3 text-base text-gray-700 bg-white rounded-lg border border-gray-200">
+                      {settingsData.optimizationGoal === "OUTCOME_TRAFFIC"
+                        ? "Traffic"
+                        : settingsData.optimizationGoal === "LEADS"
+                        ? "Leads"
+                        : settingsData.optimizationGoal || "Leads"}
+                    </div>
+                  </div>
+                </div>
 
                  {/* Platform Allocation */}
                  <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div className="flex gap-3 items-center mb-2">
                        <Users className="w-5 h-5 text-violet-700" />
                        <div className="text-xl font-bold text-gray-800">Platform Allocation</div>
-                    </div>
+                      </div>
                     <div className="mb-6 text-sm text-gray-500">
                       Currently, only Meta platforms are supported. Other platforms are coming soon.
-                    </div>
+                      </div>
                     
                     <div className="flex overflow-x-auto gap-4 pb-2">
                        {settingsData.platforms.map((p, i) => (
@@ -993,12 +1545,12 @@ export default function Launch({ paramsId }) {
                              {p.disabled && (
                                <div className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-500">
                                  {p.label || "Coming soon"}
-                               </div>
-                             )}
-                          </div>
-                       ))}
                     </div>
-                 </div>
+                             )}
+                  </div>
+                       ))}
+                  </div>
+                </div>
 
                  {/* Budget Allocation */}
                  <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -1010,23 +1562,18 @@ export default function Launch({ paramsId }) {
                     <div className="flex gap-8">
                        <div className="flex-1 space-y-6">
                           <div className="grid grid-cols-2 gap-6">
-                             <div>
+                    <div>
                                 <div className="mb-2 text-sm font-medium text-gray-600">Total Budget (approx.)</div>
                                 <div className="relative">
-                                   <input 
-                                      type="text" 
-                                      value={`€ ${
-                                        (launchDailyBudget != null
-                                          ? Number(launchDailyBudget)
-                                          : Number(settingsData.budget.total || 0)
-                                        ).toFixed(2)
-                                      }`}
-                                      className="px-4 w-full h-11 text-gray-900 rounded-lg border border-gray-200 focus:outline-none focus:border-violet-500"
-                                      readOnly
+                                   <input
+                                     type="text"
+                                     value={`€ ${approxTotalBudget}`}
+                                     className="px-4 w-full h-11 text-gray-900 rounded-lg border border-gray-200 focus:outline-none focus:border-violet-500"
+                                     readOnly
                                    />
                                 </div>
-                             </div>
-                             <div>
+                    </div>
+                    <div>
                                 <div className="mb-2 text-sm font-medium text-gray-600">Daily Budget</div>
                                 <div className="relative">
                                    <InputNumber
@@ -1036,15 +1583,20 @@ export default function Launch({ paramsId }) {
                                           ? Number(launchDailyBudget)
                                           : Number(settingsData.budget.daily || 0)
                                       }
-                                      onChange={(val) => setLaunchDailyBudget(val)}
+                                      onChange={(val) => {
+                                        setLaunchDailyBudget(val);
+                                        if (summary?.campaign) {
+                                          setHasUnsyncedMetaChanges(true);
+                                        }
+                                      }}
                                       className="w-full h-11 [&_.ant-input-number-input]:h-11 [&_.ant-input-number-input]:px-4"
                                       controls={false}
                                     />
-                                </div>
+                    </div>
                              </div>
                           </div>
 
-                          <div>
+                    <div>
                              <div className="mb-3 text-sm font-medium text-gray-600">Channel Split</div>
                              <div className="flex gap-4">
                                 {settingsData.budget.split.map((s, i) => (
@@ -1056,9 +1608,9 @@ export default function Launch({ paramsId }) {
                                       <span className="pl-2 ml-1 text-sm font-bold text-gray-700 border-l border-gray-200">{s.pct}%</span>
                                    </div>
                                 ))}
-                             </div>
-                          </div>
-                       </div>
+                    </div>
+                  </div>
+                </div>
 
                        <div className="flex flex-col justify-center items-center p-5 w-80 text-center bg-violet-50 rounded-xl">
                           <div className="mb-1 text-sm font-medium text-violet-800">Live AI Prediction</div>
@@ -1066,7 +1618,7 @@ export default function Launch({ paramsId }) {
                           <div className="mb-2 text-sm font-medium text-violet-800">Estimated Reach</div>
                           <div className="px-3 py-1 text-xs text-violet-600 bg-violet-100 rounded-full">
                              CPA: {settingsData.prediction.cpa}
-                          </div>
+                  </div>
                        </div>
                     </div>
                  </div>
@@ -1080,34 +1632,43 @@ export default function Launch({ paramsId }) {
 
                     <div className="flex gap-6 items-end">
                        <div className="flex-1">
-                          <div className="mb-2 text-sm font-medium text-gray-600">Start Date</div>
-                          <div className="relative">
-                             <input 
-                                type="text" 
-                                value={settingsData.schedule.start ? settingsData.schedule.start.format('DD-MM-YYYY') : ''}
-                                className="px-4 w-full h-11 text-gray-900 rounded-lg border border-gray-200"
-                                readOnly
+                         <div className="mb-2 text-sm font-medium text-gray-600">Start Date</div>
+                         <div className="relative">
+                             <DatePicker
+                                className="w-full h-11"
+                                value={settingsData.schedule.start || null}
+                                onChange={(date) => {
+                                  setScheduleOverride((prev) => ({ ...prev, start: date || null }));
+                                  if (summary?.campaign) {
+                                    setHasUnsyncedMetaChanges(true);
+                                  }
+                                }}
+                                format="DD-MM-YYYY"
                              />
-                             <Calendar className="absolute right-3 top-1/2 w-4 h-4 text-gray-400 -translate-y-1/2" />
-                          </div>
+                         </div>
                        </div>
                        <div className="flex-1">
-                          <div className="mb-2 text-sm font-medium text-gray-600">End Date</div>
-                          <div className="relative">
-                             <input 
-                                type="text" 
-                                value={settingsData.schedule.end ? settingsData.schedule.end.format('DD-MM-YYYY') : ''}
-                                className="px-4 w-full h-11 text-gray-900 rounded-lg border border-gray-200"
-                                readOnly
+                         <div className="mb-2 text-sm font-medium text-gray-600">End Date</div>
+                         <div className="relative">
+                             <DatePicker
+                                className="w-full h-11"
+                                value={settingsData.schedule.end || null}
+                                onChange={(date) => {
+                                  setScheduleOverride((prev) => ({ ...prev, end: date || null }));
+                                  if (summary?.campaign) {
+                                    setHasUnsyncedMetaChanges(true);
+                                  }
+                                }}
+                                format="DD-MM-YYYY"
                              />
-                             <Calendar className="absolute right-3 top-1/2 w-4 h-4 text-gray-400 -translate-y-1/2" />
-                          </div>
+                         </div>
                        </div>
                        <div className="pb-3 w-40">
-                          <div className="text-sm font-medium text-gray-600">Duration</div>
+                         <div className="text-sm font-medium text-gray-600">Duration</div>
+                         <div className="mt-1 text-base text-gray-800">{durationLabel}</div>
                        </div>
-                    </div>
-                 </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1115,22 +1676,33 @@ export default function Launch({ paramsId }) {
               <div className="space-y-6">
                  {/* Location Targeting */}
                  <div className="space-y-4">
-                    <div className="flex gap-3 items-center">
-                       <MapPin className="w-5 h-5 text-gray-700" />
-                       <div className="text-xl font-bold text-gray-800">Location Targeting</div>
+                    <div className="flex justify-between items-center gap-3">
+                       <div className="flex gap-3 items-center">
+                          <MapPin className="w-5 h-5 text-gray-700" />
+                          <div className="text-xl font-bold text-gray-800">Location Targeting</div>
+                       </div>
+                       {audienceLocations?.length > 0 && (
+                         <button
+                           onClick={() => setAudienceLocations([])}
+                           className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-white rounded-full border border-red-200 hover:bg-red-50"
+                         >
+                           Remove all
+                         </button>
+                       )}
                     </div>
                     
-                    <div className="flex overflow-x-auto gap-6 pb-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                        {audienceLocations.map((loc, i) => (
-                          <div key={i} className="flex relative flex-col items-center p-4 w-56 bg-white rounded-xl border border-gray-200 shadow-sm shrink-0 group">
+                          <div key={i} className="flex relative flex-col items-center p-4 w-full min-w-0 bg-white rounded-xl border border-gray-200 shadow-sm group">
                              <button 
                                 onClick={() => handleRemoveLocation(i)}
-                                className="absolute top-2 right-2 p-1 text-gray-400 bg-white rounded-full shadow-sm opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
+                                aria-label="Remove location"
+                                className="absolute top-2 right-2 z-10 p-1 text-gray-400 bg-white rounded-full shadow-sm opacity-100 transition-opacity hover:text-red-500"
                              >
                                 <X className="w-3 h-3" />
                              </button>
                              <div className="overflow-hidden relative mb-3 w-full h-36 bg-gray-100 rounded-lg">
-                                {/* Using iframe for "map integration" feeling */}
+                                {/* Map preview centered on selected city when we have coordinates */}
                                 <iframe 
                                     width="100%" 
                                     height="100%" 
@@ -1138,10 +1710,14 @@ export default function Launch({ paramsId }) {
                                     scrolling="no" 
                                     marginHeight="0" 
                                     marginWidth="0" 
-                                    src={`https://www.openstreetmap.org/export/embed.html?bbox=-180,-90,180,90&layer=mapnik&marker=${encodeURIComponent(loc.name)}`} // Very basic global map if coords unknown, but shows map interface
+                                    src={
+                                      typeof loc.lat === "number" && typeof loc.lon === "number"
+                                        ? `https://www.openstreetmap.org/export/embed.html?bbox=${loc.lon-0.5},${loc.lat-0.5},${loc.lon+0.5},${loc.lat+0.5}&layer=mapnik&marker=${loc.lat},${loc.lon}`
+                                        : `https://www.openstreetmap.org/export/embed.html?bbox=-180,-90,180,90&layer=mapnik`
+                                    }
                                     style={{ pointerEvents: 'none' }} // Disable interaction to keep it as "preview"
                                 ></iframe>
-                                <div className="absolute inset-0 bg-black/5"></div> {/* Overlay to make text readable if needed or just consistent look */}
+                                <div className="absolute inset-0 bg-black/5"></div>
                              </div>
                              <div className="mb-1 text-base font-bold text-gray-800">{loc.name}</div>
                              <div className="px-2 mb-1 w-full">
@@ -1158,19 +1734,82 @@ export default function Launch({ paramsId }) {
                           </div>
                        ))}
                        <div 
-                          className="flex flex-col justify-center items-center w-56 bg-white rounded-xl border-2 border-gray-300 border-dashed transition-colors cursor-pointer shrink-0 hover:bg-gray-50"
+                          className="flex relative flex-col items-center p-4 w-full min-w-0 bg-white rounded-xl border-2 border-gray-300 border-dashed transition-colors cursor-pointer hover:bg-gray-50"
                           onClick={() => setIsLocationModalOpen(true)}
                        >
-                          <div className="flex justify-center items-center mb-3 w-12 h-12 bg-gray-100 rounded-full">
-                             <Plus className="w-5 h-5 text-gray-600" />
+                          {/* Keep dimensions consistent with other cards */}
+                          <div className="overflow-hidden relative mb-3 w-full h-36 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="flex absolute inset-0 justify-center items-center">
+                              <div className="flex justify-center items-center w-12 h-12 bg-gray-100 rounded-full">
+                                <Plus className="w-5 h-5 text-gray-600" />
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-base font-semibold text-gray-600">Add location</div>
+                          <div className="mb-1 text-base font-bold text-gray-700">Add location</div>
+                          <div className="px-2 mb-1 w-full">
+                            <div className="h-6"></div>
+                          </div>
+                          <div className="text-sm font-medium text-gray-400">—</div>
                        </div>
                     </div>
                  </div>
 
-                 <Modal title="Add Location" open={isLocationModalOpen} onOk={handleAddLocation} onCancel={() => setIsLocationModalOpen(false)}>
-                    <Input placeholder="Enter city name (e.g. London)" value={newLocation} onChange={(e) => setNewLocation(e.target.value)} onPressEnter={handleAddLocation} />
+                 <Modal
+                   title="Add Location"
+                   open={isLocationModalOpen}
+                   footer={null}
+                   onCancel={() => {
+                     setIsLocationModalOpen(false);
+                     setLocationSearchTerm("");
+                     setLocationSearchResults([]);
+                   }}
+                 >
+                   <Input
+                     placeholder="Search city (e.g. Amsterdam)"
+                     value={locationSearchTerm}
+                     onChange={(e) => {
+                       const val = e.target.value;
+                       setLocationSearchTerm(val);
+                       searchCities(val);
+                     }}
+                   />
+                   <div className="mt-3 max-h-64 overflow-y-auto space-y-1">
+                     {locationSearchLoading && (
+                       <div className="text-xs text-gray-500">Searching...</div>
+                     )}
+                     {!locationSearchLoading &&
+                       locationSearchResults.map((r) => {
+                         const address = r.address || {};
+                         const city =
+                           address.city ||
+                           address.town ||
+                           address.village ||
+                           (r.display_name || "").split(",")[0];
+                         const countryCode = (address.country_code || "")
+                           .toUpperCase()
+                           .trim();
+                         const label = countryCode
+                           ? `${city}, ${countryCode}`
+                           : city;
+                         return (
+                           <button
+                             key={`${r.place_id}`}
+                             type="button"
+                             className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100"
+                             onClick={() => handleSelectSearchLocation(r)}
+                           >
+                             {label}
+                           </button>
+                         );
+                       })}
+                     {!locationSearchLoading &&
+                       !locationSearchResults.length &&
+                       locationSearchTerm.trim().length >= 2 && (
+                         <div className="text-xs text-gray-400">
+                           No results found.
+                         </div>
+                       )}
+                   </div>
                  </Modal>
 
                  {/* Inclusive & Automated Demographics */}
@@ -1205,7 +1844,11 @@ export default function Launch({ paramsId }) {
                           <div key={i} className="flex gap-2 items-center px-3 py-1.5 bg-gray-100 rounded-lg group">
                              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
                              <span className="text-sm font-medium text-gray-700">{k.name}</span>
-                             <button onClick={() => handleRemoveKeyword(i)} className="ml-1 text-gray-400 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100">
+                             <button
+                               onClick={() => handleRemoveKeyword(i)}
+                               aria-label="Remove keyword"
+                               className="ml-1 text-gray-400 opacity-100 transition-opacity hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
+                             >
                                 <X className="w-3 h-3" />
                              </button>
                           </div>

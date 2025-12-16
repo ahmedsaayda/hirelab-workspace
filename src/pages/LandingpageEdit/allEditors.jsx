@@ -389,7 +389,7 @@ const FooterEdit = (props) => {
           {key:"similarJobs", label:"Select Jobs", type: "jobSelector"}
         ]}
         renderMore={
-          <div className="flex items-center gap-2">
+          <div className="flex gap-2 items-center">
             <div>Show Similar Jobs</div>
             <Switch checked={props.landingPageData?.showSimilarJobs} onChange={handleShowSimilarJobsChange} />
           </div>
@@ -1176,7 +1176,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
             <div
               onMouseEnter={() => setHoveredField("heroImage")}
               onMouseLeave={() => setHoveredField(null)}
-              className="flex flex-col col-span-2 gap-2 mt-5 w-full px-2"
+              className="flex flex-col col-span-2 gap-2 px-2 mt-5 w-full"
             >
               <label as="p" className="self-start !text-blue_gray-700">
                 Image
@@ -1367,8 +1367,8 @@ const CompanyFactsEdit = (props) => {
           },
         ]}
         renderMore={shouldShowMessage(factsCount) ? (
-          <div className="mt-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
-            <div className="flex items-start gap-2">
+          <div className="p-3 mt-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex gap-2 items-start">
               <div className="mt-0.5">
                 <svg 
                   width="16" 
@@ -1385,7 +1385,7 @@ const CompanyFactsEdit = (props) => {
               </div>
               <div className="flex-1">
                 <div 
-                  className="text-xs font-medium flex items-center gap-1"
+                  className="flex gap-1 items-center text-xs font-medium"
                   style={{ color: getDisplayColor(factsCount) }}
                 >
                   <div 
@@ -1394,11 +1394,11 @@ const CompanyFactsEdit = (props) => {
                   />
                   {getDisplayMessage(factsCount)}
                 </div>
-                <div className="text-xs text-gray-600 mt-2">
+                <div className="mt-2 text-xs text-gray-600">
                   Due to design consistency, company facts are displayed in groups of 3 or 6.
                 </div>
                 {factsCount > 6 && (
-                  <div className="text-xs text-amber-600 mt-1">
+                  <div className="mt-1 text-xs text-amber-600">
                     Consider removing some facts or keeping only the most important ones.
                   </div>
                 )}

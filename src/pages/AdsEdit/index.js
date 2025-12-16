@@ -141,6 +141,34 @@ export default function AdsEdit({ paramsId }) {
   const [preparedOnce, setPreparedOnce] = useState(false);
   const [preparedModalOpen, setPreparedModalOpen] = useState(false);
   const [preparedVariants, setPreparedVariants] = useState([]);
+  const [prepareMessages, setPrepareMessages] = useState([]);
+  const [hasUnsavedAdsChanges, setHasUnsavedAdsChanges] = useState(false);
+  const [hasUnsyncedMetaAdsChanges, setHasUnsyncedMetaAdsChanges] = useState(false);
+
+  // Dirty tracking baselines
+  const lastSavedAdsHashRef = useRef("");
+  const lastMetaSyncedAdsHashRef = useRef("");
+
+  const serializeAdsData = useCallback((data) => {
+    try {
+      return JSON.stringify(data || {});
+    } catch {
+      return "";
+    }
+  }, []);
+
+  const detectHasMetaPublish = useCallback((data) => {
+    const ads = data || {};
+    try {
+      return Object.keys(ads).some((adType) =>
+        (ads[adType]?.variants || []).some(
+          (v) => v?.publish?.adId || v?.publish?.campaignId || v?.publish?.adSetId
+        )
+      );
+    } catch {
+      return false;
+    }
+  }, []);
 
   // Brand data
   const [userBrandData, setUserBrandData] = useState(null);
@@ -167,6 +195,8 @@ export default function AdsEdit({ paramsId }) {
 
       // Save to backend (embedded under LandingPageData.ads)
       await AdsService.saveAds(lpId, generatedAds);
+      const savedHash = serializeAdsData(generatedAds);
+      lastSavedAdsHashRef.current = savedHash;
 
       message.success("Ads generated successfully!");
     } catch (error) {
@@ -200,6 +230,14 @@ export default function AdsEdit({ paramsId }) {
           setAdsData(null);
         } else {
           setIsEmpty(false);
+          // Reset baselines from server state
+          const serverHash = serializeAdsData(adsPayload);
+          lastSavedAdsHashRef.current = serverHash;
+          setHasUnsavedAdsChanges(false);
+          if (detectHasMetaPublish(adsPayload)) {
+            lastMetaSyncedAdsHashRef.current = serverHash;
+            setHasUnsyncedMetaAdsChanges(false);
+          }
           setAdsData(adsPayload);
 
           // Auto-select first variant
@@ -217,7 +255,49 @@ export default function AdsEdit({ paramsId }) {
       .finally(() => {
         setLoading(false);
       });
-  }, [lpId]);
+  }, [lpId, serializeAdsData, detectHasMetaPublish]);
+
+  const hasMetaPublished = useMemo(() => detectHasMetaPublish(adsData), [adsData, detectHasMetaPublish]);
+
+  // Track unsaved draft changes + "not synced to Meta" changes (once published)
+  useEffect(() => {
+    if (!adsData) {
+      setHasUnsavedAdsChanges(false);
+      setHasUnsyncedMetaAdsChanges(false);
+      return;
+    }
+    const currentHash = serializeAdsData(adsData);
+    setHasUnsavedAdsChanges(currentHash !== lastSavedAdsHashRef.current);
+    if (hasMetaPublished && lastMetaSyncedAdsHashRef.current) {
+      setHasUnsyncedMetaAdsChanges(currentHash !== lastMetaSyncedAdsHashRef.current);
+    } else {
+      setHasUnsyncedMetaAdsChanges(false);
+    }
+  }, [adsData, hasMetaPublished, serializeAdsData]);
+
+  // Prompt before leaving if there are unsaved changes or Meta-unsynced edits
+  useEffect(() => {
+    const shouldBlock = hasUnsavedAdsChanges || hasUnsyncedMetaAdsChanges;
+    const onBeforeUnload = (e) => {
+      if (!shouldBlock) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    const onRouteChangeStart = () => {
+      if (!shouldBlock) return;
+      const ok = window.confirm("You have unsaved changes to ads. Leave without saving?");
+      if (ok) return;
+      router.events.emit("routeChangeError");
+      // eslint-disable-next-line no-throw-literal
+      throw "routeChange aborted";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    router.events.on("routeChangeStart", onRouteChangeStart);
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      router.events.off("routeChangeStart", onRouteChangeStart);
+    };
+  }, [router, hasUnsavedAdsChanges, hasUnsyncedMetaAdsChanges]);
 
   useEffect(() => {
     fetchData();
@@ -278,6 +358,7 @@ export default function AdsEdit({ paramsId }) {
           workspaceId: workspaceId || undefined,
           adAccountId: selectedAdAccountId,
           pageId: selectedPageId,
+          lpId,
         });
         setAssetModalOpen(false);
         const res = await MetaService.getStatus(workspaceId || undefined);
@@ -291,6 +372,7 @@ export default function AdsEdit({ paramsId }) {
         await MetaService.saveAssets({
           adAccountId: selectedAdAccountId,
           pageId: selectedPageId,
+          lpId,
         });
         setAssetModalOpen(false);
         const res = await MetaService.getStatus(undefined);
@@ -365,6 +447,14 @@ export default function AdsEdit({ paramsId }) {
       String(u || "")
     );
 
+  // Append a short status line to the Approve & Prepare activity log
+  const appendPrepareMessage = useCallback((msg) => {
+    setPrepareMessages((prev) => {
+      const next = [...prev, msg];
+      return next.length > 6 ? next.slice(next.length - 6) : next;
+    });
+  }, []);
+
   // Wait until preview has content
   const waitForPreviewRender = async (timeoutMs = 3000) => {
     const start = Date.now();
@@ -422,6 +512,12 @@ export default function AdsEdit({ paramsId }) {
         message.warning("No approved variants to publish");
         return;
       }
+      if (!landingPageData?.metaPixelId) {
+        message.error(
+          "Meta Pixel / hirelab.FormSubmitted conversion is not configured. Please configure it in Meta settings before publishing."
+        );
+        return;
+      }
       // Full flow publish: campaign -> ad set -> ad (backend keeps PAUSED)
       // When connected via user token, require and pass per-publish overrides
       if (metaStatus?.via === "user" && (!selectedAdAccountId || !selectedPageId)) {
@@ -436,6 +532,10 @@ export default function AdsEdit({ paramsId }) {
       const res = await AdsService.publish(lpId, body);
       if (res?.data?.success) {
         message.success("Publish request submitted");
+        // Treat current ads snapshot as "synced to Meta" baseline for prompting.
+        // After fetchData() returns, we'll also reset baselines from server data.
+        lastMetaSyncedAdsHashRef.current = serializeAdsData(adsData);
+        setHasUnsyncedMetaAdsChanges(false);
         // Refresh to pick up publish metadata
         fetchData();
       } else {
@@ -560,51 +660,96 @@ export default function AdsEdit({ paramsId }) {
     return images.length > 0 ? images : [TRANSPARENT_PNG];
   };
 
-  // Get default title based on ad type
+  // Helper to strip placeholder boilerplate like "[Insert ...]" and "Example:"
+  const sanitizePlaceholderText = (text) => {
+    if (!text || typeof text !== "string") return "";
+    let cleaned = text;
+    if (cleaned.includes("[Insert") || cleaned.includes("Example:")) {
+      cleaned = cleaned
+        .replace(/\[.*?\]/g, " ")
+        .replace(/Example:/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+    return cleaned;
+  };
+
+  const snippetFromText = (text, maxLen = 80) => {
+    const cleaned = sanitizePlaceholderText(text);
+    if (!cleaned) return "";
+    const oneLine = cleaned.replace(/\s+/g, " ").trim();
+    if (!oneLine) return "";
+    return oneLine.length > maxLen ? `${oneLine.slice(0, maxLen - 3)}...` : oneLine;
+  };
+
+  const pickSectionSentence = (text) => {
+    if (!text || typeof text !== "string") return "";
+    const cleaned = sanitizePlaceholderText(text);
+    if (!cleaned) return "";
+    const firstSentence = cleaned.split(/[.!?]/)[0] || cleaned;
+    return firstSentence.trim();
+  };
+
+  // Get default title based on ad type, using vacancy context
   const getDefaultTitle = (adTypeId, variantIndex, lpData) => {
+    const company = lpData?.companyName || "our company";
+    const vacancy = lpData?.vacancyTitle || "this role";
+
+    const testimonialTitles = [
+      snippetFromText(lpData?.testimonials?.[0]?.comment) || "Hear From Our Team",
+      snippetFromText(lpData?.testimonials?.[1]?.comment) || "Real Stories From Our People",
+      snippetFromText(lpData?.testimonials?.[2]?.comment) || "Employee Spotlight",
+    ];
+
     const titles = {
       job: [
         lpData?.vacancyTitle || "Join Our Team",
         `We're Hiring: ${lpData?.vacancyTitle || "Great Opportunity"}`,
-        `${lpData?.vacancyTitle || "Career Opportunity"} at ${lpData?.companyName || "Us"}`,
+        `${lpData?.vacancyTitle || "Career Opportunity"} at ${company}`,
       ],
       "employer-brand": [
-        lpData?.evpMissionTitle || "Where Talent Thrives",
-        `Life at ${lpData?.companyName || "Our Company"}`,
-        lpData?.aboutTheCompanyTitle || "Build Your Future",
+        `Life at ${company}`,
+        `Our Mission at ${company}`,
+        lpData?.aboutTheCompanyTitle || "Why People Love Working Here",
       ],
-      testimonial: [
-        lpData?.testimonials?.[0]?.comment?.substring(0, 50) || "Hear From Our Team",
-        lpData?.testimonials?.[1]?.comment?.substring(0, 50) || "Real Stories",
-        lpData?.testimonials?.[2]?.comment?.substring(0, 50) || "Employee Spotlight",
-      ],
+      testimonial: testimonialTitles,
       company: [
-        lpData?.aboutTheCompanyTitle || "People are Our Strength",
-        `About ${lpData?.companyName || "Our Company"}`,
-        lpData?.companyFactsTitle || "Our Culture",
+        lpData?.aboutTheCompanyTitle || `Inside ${company}`,
+        `About ${company}`,
+        lpData?.companyFactsTitle || "Our Culture & Values",
       ],
       retargeting: [
-        `Still Interested in ${lpData?.vacancyTitle || "This Role"}?`,
-        `Don't Miss Out - ${lpData?.vacancyTitle || "Apply Now"}`,
-        `Join ${lpData?.companyName || "Our Team"} Today`,
+        `Still Interested in ${vacancy}?`,
+        `Don't Miss Out – ${vacancy}`,
+        `Join ${company} Today`,
       ],
     };
 
     return titles[adTypeId]?.[variantIndex] || lpData?.vacancyTitle || "Join Our Team";
   };
 
-  // Get default description
+  // Get default description using vacancy & company sections
   const getDefaultDescription = (adTypeId, variantIndex, lpData) => {
+    const evpSentence = pickSectionSentence(lpData?.evpMissionDescription);
+    const aboutSentence =
+      pickSectionSentence(lpData?.aboutTheCompanyDescription || lpData?.aboutTheCompanyText) ||
+      pickSectionSentence(lpData?.companyInfo);
+    const jobSentence =
+      pickSectionSentence(lpData?.heroDescription) ||
+      pickSectionSentence(lpData?.jobDescription);
+
     const descriptions = {
       job: [
-        "Ideal for a mid-level recruiter role, highlights impact and growth.",
-        "Professional tone, emphasizes seniority and responsibility.",
-        "Direct and action-oriented for immediate applications.",
+        jobSentence || "Highlighting impact, growth and day‑to‑day responsibilities in this role.",
+        "Professional tone that emphasizes ownership, responsibility and influence.",
+        "Clear call-to-action for candidates who want to make a difference in this role.",
       ],
       "employer-brand": [
-        "Showcasing our values and mission that drive success.",
-        "Where innovation meets opportunity.",
-        "Building careers, not just filling positions.",
+        evpSentence ||
+          aboutSentence ||
+          "Showcasing our values, mission and what makes our culture unique.",
+        aboutSentence || "Where innovation, collaboration and growth come together.",
+        "A workplace built around purpose, development and long‑term careers.",
       ],
       testimonial: [
         "Discover what our employees love about working here.",
@@ -612,18 +757,19 @@ export default function AdsEdit({ paramsId }) {
         "See why people choose to grow their careers with us.",
       ],
       company: [
-        "More people-focused and brand-aligned, appealing to candidates who value culture.",
-        "Learn about our commitment to excellence and innovation.",
-        "Discover the benefits and opportunities that set us apart.",
+        aboutSentence ||
+          "More people‑focused and brand‑aligned, appealing to candidates who value culture.",
+        "Learn about our commitment to excellence, innovation and client impact.",
+        "Discover the benefits and opportunities that set us apart as an employer.",
       ],
       retargeting: [
-        "The opportunity is still available - apply now!",
-        "Complete your application and join our team.",
-        "Take the next step in your career journey.",
+        "The opportunity is still available – apply now and complete your application.",
+        "Come back and finish your application to move forward in the process.",
+        "Take the next step in your career journey with us.",
       ],
     };
 
-    return descriptions[adTypeId]?.[variantIndex] || lpData?.heroDescription || "";
+    return descriptions[adTypeId]?.[variantIndex] || jobSentence || lpData?.heroDescription || "";
   };
 
   // Get current variants for selected ad type
@@ -661,6 +807,7 @@ export default function AdsEdit({ paramsId }) {
   const saveAdsData = async () => {
     try {
       await AdsService.saveAds(lpId, adsData);
+      lastSavedAdsHashRef.current = serializeAdsData(adsData);
       message.success("Ads saved successfully");
     } catch (error) {
       console.error("Error saving ads:", error);
@@ -726,6 +873,9 @@ export default function AdsEdit({ paramsId }) {
     if (!adsData) return;
 
     try {
+      setPrepareMessages([
+        "Starting: marking all variants as approved...",
+      ]);
       setPreparingLaunch(true);
 
       // 1) Mark all variants as approved in memory
@@ -743,6 +893,9 @@ export default function AdsEdit({ paramsId }) {
 
       if (variantsToPrepare.length === 0) {
         message.warning("No variants to prepare");
+        setPrepareMessages([
+          "No variants found to prepare. Please generate or approve at least one variant.",
+        ]);
         setPreparingLaunch(false);
         return;
       }
@@ -751,7 +904,12 @@ export default function AdsEdit({ paramsId }) {
 
       // 2) Render each approved variant via preview and upload to Cloudinary
       const format = AD_FORMATS.find((f) => f.id === selectedFormat);
-      for (const v of variantsToPrepare) {
+      for (let index = 0; index < variantsToPrepare.length; index += 1) {
+        const v = variantsToPrepare[index];
+        const stepLabel = `${v.adTypeId} · ${v.title || v.id}`;
+        appendPrepareMessage(
+          `Preparing ${index + 1}/${variantsToPrepare.length}: ${stepLabel}`
+        );
         // Switch preview to the variant so the preview renders the correct component
         setSelectedAdType(v.adTypeId);
         setSelectedVariant(v.id);
@@ -766,10 +924,13 @@ export default function AdsEdit({ paramsId }) {
             group.variants[idx] = { ...group.variants[idx], publishImage: url };
           }
         }
+        appendPrepareMessage(`✓ Image uploaded for ${stepLabel}`);
       }
 
+      appendPrepareMessage("Saving creatives with launch-ready images...");
       // 3) Persist updated ads with Cloudinary URLs only (no Meta publish)
       await AdsService.saveAds(lpId, updatedAds);
+      lastSavedAdsHashRef.current = serializeAdsData(updatedAds);
       setAdsData(updatedAds);
       setPreparedOnce(true);
       setPreparedVariants(variantsToPrepare);
@@ -778,6 +939,9 @@ export default function AdsEdit({ paramsId }) {
     } catch (err) {
       console.error("Error preparing creatives for launch", err);
       message.error("Failed to prepare creatives for launch");
+      appendPrepareMessage(
+        "Error: something went wrong while preparing creatives. Please try again."
+      );
     } finally {
       setPreparingLaunch(false);
     }
@@ -785,13 +949,22 @@ export default function AdsEdit({ paramsId }) {
 
   // Toggle ad type
   const toggleAdType = (adTypeId) => {
-    setAdsData({
+    const nextData = {
       ...adsData,
       [adTypeId]: {
         ...adsData[adTypeId],
         enabled: !adsData[adTypeId].enabled,
       },
-    });
+    };
+    setAdsData(nextData);
+    // Persist immediately so toggles are not lost and we can confidently prompt on real unsaved edits.
+    AdsService.saveAds(lpId, nextData)
+      .then(() => {
+        lastSavedAdsHashRef.current = serializeAdsData(nextData);
+      })
+      .catch(() => {
+        message.error("Failed to save ad type toggle");
+      });
   };
 
   if (loading || !landingPageData) {
@@ -838,6 +1011,7 @@ export default function AdsEdit({ paramsId }) {
       </>
     );
   }
+  
 
   return (
     <>
@@ -864,18 +1038,21 @@ export default function AdsEdit({ paramsId }) {
             onOpenSettings={openAssetModal}
             customActions={
               <div className="flex gap-3 items-center">
-                 <Switch
-                    checked={adsData?.[selectedAdType]?.enabled}
-                    onChange={() => toggleAdType(selectedAdType)}
-                    size="small"
-                    className="mr-2"
-                  />
+                <Switch
+                  checked={adsData?.[selectedAdType]?.enabled}
+                  onChange={() => toggleAdType(selectedAdType)}
+                  size="small"
+                  className="mr-2"
+                />
                 {!metaStatus?.connected ? (
                   <button
                     onClick={async () => {
                       try {
                         const currentUrl = window.location.href;
-                        const res = await MetaService.getAuthUrl(workspaceId || undefined, currentUrl);
+                        const res = await MetaService.getAuthUrl(
+                          workspaceId || undefined,
+                          currentUrl
+                        );
                         const url = res?.data?.url;
                         if (url) window.location.href = url;
                         else message.error("Failed to get Meta connect URL");
@@ -883,10 +1060,16 @@ export default function AdsEdit({ paramsId }) {
                         message.error("Failed to get Meta connect URL");
                       }
                     }}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-[#0e87fe] hover:bg-[#0b6ecb] text-white font-semibold text-sm rounded-lg border border-[#0e87fe] transition-colors shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#5207CD] hover:bg-[#3b0aa1] text-white font-semibold text-sm border border-[#5207CD] transition-colors shadow-sm"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 3v18m9-9H3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path
+                        d="M12 3v18m9-9H3"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                     Connect Meta
                   </button>
@@ -895,15 +1078,27 @@ export default function AdsEdit({ paramsId }) {
                     <button
                       onClick={handleApproveAll}
                       disabled={preparingLaunch}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-colors shadow-sm ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-colors shadow-sm ${
                         preparingLaunch
                           ? "bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-[#0a8f63] hover:bg-[#099152] text-white border-[#0a8f63]"
-                      }`}
+                          : "bg-[#16A34A] hover:bg-[#15803D] text-white border-[#16A34A]"
+                        }`}
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <rect width="16" height="16" rx="8" fill="white" opacity="0.2"/>
-                        <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
+                        <rect
+                          width="16"
+                          height="16"
+                          rx="8"
+                          fill="white"
+                          opacity="0.2"
+                        />
+                        <path
+                          d="M11.3327 5.5L6.74935 10.0833L4.66602 8"
+                          stroke="white"
+                          strokeWidth="1.67"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                       {preparingLaunch
                         ? "Preparing..."
@@ -919,13 +1114,21 @@ export default function AdsEdit({ paramsId }) {
                     <button
                       onClick={openPublishConfirm}
                       disabled={
-                        (metaStatus?.via === "workspace" && (!metaStatus?.adAccountId || !metaStatus?.pageId)) ||
-                        (metaStatus?.via === "user" && (!selectedAdAccountId || !selectedPageId))
+                        (metaStatus?.via === "workspace" &&
+                          (!metaStatus?.adAccountId || !metaStatus?.pageId)) ||
+                        (metaStatus?.via === "user" &&
+                          (!selectedAdAccountId || !selectedPageId))
                       }
-                      className="flex items-center gap-2 px-4 py-2.5 bg-[#0e87fe] hover:bg-[#0b6ecb] text-white font-semibold text-sm rounded-lg border border-[#0e87fe] transition-colors shadow-sm"
+                      className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#5207CD] hover:bg-[#3b0aa1] text-white font-semibold text-sm border border-[#5207CD] transition-colors shadow-sm"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 3v18m9-9H3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path
+                          d="M12 3v18m9-9H3"
+                          stroke="white"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                       Publish (Meta)
                     </button>
@@ -935,6 +1138,35 @@ export default function AdsEdit({ paramsId }) {
             }
           />
         </div>
+
+        {/* Unsaved / unsynced changes banner */}
+        {(hasUnsavedAdsChanges || (hasMetaPublished && hasUnsyncedMetaAdsChanges)) && (
+          <div className="px-8 py-3 bg-amber-50 border-b border-amber-200 flex items-center justify-between">
+            <div className="text-xs text-amber-900">
+              {hasUnsavedAdsChanges
+                ? "You have unsaved ad changes."
+                : "You changed ads after publishing — changes are not synced to Meta yet."}
+            </div>
+            <div className="flex gap-2">
+              {hasUnsavedAdsChanges && (
+                <button
+                  onClick={saveAdsData}
+                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#5207CD] rounded-full hover:bg-[#4506A6]"
+                >
+                  Save changes
+                </button>
+              )}
+              {hasMetaPublished && hasUnsyncedMetaAdsChanges && (
+                <button
+                  onClick={openPublishConfirm}
+                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#16A34A] rounded-full hover:bg-[#15803D]"
+                >
+                  Publish updates to Meta
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Main Content Container */}
         <div className="overflow-hidden flex-1 px-8 py-6">
@@ -1013,6 +1245,7 @@ export default function AdsEdit({ paramsId }) {
                       setAdsData(nextData);
                       try {
                         await AdsService.saveAds(lpId, nextData);
+                        lastSavedAdsHashRef.current = serializeAdsData(nextData);
                         message.success("Variant saved");
                       } catch {
                         message.error("Failed to save variant");
@@ -1050,20 +1283,23 @@ export default function AdsEdit({ paramsId }) {
                   
                   </div>
 
-                  <div className="flex gap-3 items-center">
-                    {AD_FORMATS.map((format) => (
-                      <button
-                        key={format.id}
-                        onClick={() => setSelectedFormat(format.id)}
-                        className={`px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors border ${
-                          selectedFormat === format.id
-                            ? "bg-[#0e87fe] text-white border-[#0e87fe]"
-                            : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
-                        }`}
-                      >
-                        {format.label}
-                      </button>
-                    ))}
+                  <div className="flex gap-2 items-center">
+                    {AD_FORMATS.map((format) => {
+                      const isActive = selectedFormat === format.id;
+                      return (
+                        <button
+                          key={format.id}
+                          onClick={() => setSelectedFormat(format.id)}
+                          className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors border ${
+                            isActive
+                              ? "bg-[#5207CD] text-white border-[#5207CD]"
+                              : "bg-[#F3F0FF] text-[#5207CD] border-transparent hover:bg-[#E4D9FF]"
+                          }`}
+                        >
+                          {format.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1089,6 +1325,21 @@ export default function AdsEdit({ paramsId }) {
         </div>
       </div>
       </div>
+
+      {/* Side toast for Approve & Prepare status (non-blocking, no layout shift) */}
+      {prepareMessages.length > 0 && (
+        <div className="fixed right-6 bottom-24 z-50 max-w-sm">
+          <div className="rounded-lg bg-white shadow-lg border border-[#e5e7eb] px-4 py-3 text-xs text-[#111827] space-y-1">
+            <div className="font-semibold text-[#111827]">Preparing creatives…</div>
+            {prepareMessages.slice(-3).map((msg, idx) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <div key={idx} className="text-[11px] text-[#4b5563]">
+                {msg}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Ad Library Modal */}
       <AdLibraryModal
@@ -1124,6 +1375,7 @@ export default function AdsEdit({ paramsId }) {
           setIsEditModalOpen(false);
           try {
             await AdsService.saveAds(lpId, nextData);
+            lastSavedAdsHashRef.current = serializeAdsData(nextData);
             message.success("Variant updated");
           } catch {
             message.error("Failed to save variant");
@@ -1230,6 +1482,7 @@ export default function AdsEdit({ paramsId }) {
             // Persist updated images
             // eslint-disable-next-line no-await-in-loop
             await AdsService.saveAds(lpId, updated);
+            lastSavedAdsHashRef.current = serializeAdsData(updated);
             setConfirmOpen(false);
             await publishToMeta();
           } catch (e) {
@@ -1305,7 +1558,7 @@ export default function AdsEdit({ paramsId }) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {preparedVariants.map((v) => (
             <div key={v.id} className="border border-[#eaecf0] rounded-lg p-3">
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex justify-between items-center mb-1">
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#0e87fe] capitalize">
                   {v.adTypeId}
                 </span>

@@ -27,11 +27,11 @@ export default function AdVariantCard({
     return (
       <div className="bg-white border-2 border-[#0e87fe] rounded-xl p-4 transition-all">
         {/* Editor Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex justify-between items-center mb-4">
           <h3 className="font-semibold text-base text-[#101828]">Edit Variant</h3>
           <button
             onClick={() => onEdit(null)}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            className="p-1 rounded transition-colors hover:bg-gray-100"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M12 4L4 12M4 4L12 12" stroke="#667085" strokeWidth="1.5" strokeLinecap="round"/>
@@ -41,7 +41,7 @@ export default function AdVariantCard({
 
         {/* Primary Text */}
         <div className="mb-3">
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex justify-between items-center mb-1.5">
             <label className="text-xs font-medium text-[#344054]">Primary Text</label>
             <span className="text-xs text-[#667085]">{editData.title.length}/40</span>
           </div>
@@ -56,7 +56,7 @@ export default function AdVariantCard({
 
         {/* Description */}
         <div className="mb-3">
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex justify-between items-center mb-1.5">
             <label className="text-xs font-medium text-[#344054]">Description</label>
             <span className="text-xs text-[#667085]">{editData.description.length}/150</span>
           </div>
@@ -77,10 +77,10 @@ export default function AdVariantCard({
             onClick={() => setIsImagePickerOpen(true)}
             className="w-full border border-dashed border-[#d0d5dd] rounded-lg p-3 text-left hover:bg-gray-50 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+            <div className="flex gap-3 items-center">
+              <div className="flex overflow-hidden justify-center items-center w-16 h-16 bg-gray-100 rounded">
                 {editData.image ? (
-                  <img src={editData.image} alt="Selected" className="w-full h-full object-cover" />
+                  <img src={editData.image} alt="Selected" className="object-cover w-full h-full" />
                 ) : (
                   <svg className="w-8 h-8 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 7a2 2 0 012-2h14a2 2 0 012 2M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M8 11l4 4 4-4" />
@@ -143,17 +143,17 @@ export default function AdVariantCard({
       }`}
     >
       {/* Content Container */}
-      <div className="flex gap-2 items-start mb-4 pr-6">
+      <div className="flex gap-2 items-start pr-6 mb-4">
         {/* Image Thumbnail */}
         <div className="relative w-[70px] h-[70px] flex-shrink-0 bg-gray-100 rounded-[10px] overflow-hidden">
           {variant.image ? (
             <img
               src={variant.image}
               alt={variant.title}
-              className="w-full h-full object-cover"
+              className="object-cover w-full h-full"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <div className="flex justify-center items-center w-full h-full text-gray-400">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -172,7 +172,7 @@ export default function AdVariantCard({
         </div>
 
         {/* Text Content */}
-        <div className="flex-1 flex flex-col gap-1.5 justify-center min-w-0">
+        <div className="flex flex-col flex-1 gap-1.5 justify-center min-w-0">
           <h4 className="font-semibold text-base leading-6 text-[#101828]">
             {variant.title}
           </h4>
@@ -269,7 +269,7 @@ export default function AdVariantCard({
 
       {/* Approved Badge */}
       {variant.approved && (
-        <div className="absolute -top-2 -right-2 bg-[#0a8f63] text-white text-xs font-semibold px-2 py-1 rounded-full shadow-md">
+        <div className="absolute top-2 left-4 bg-[#0a8f63] text-white text-xs font-semibold px-2 py-1 rounded-full shadow-md">
           ✓ Approved
         </div>
       )}
