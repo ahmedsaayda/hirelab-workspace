@@ -57,9 +57,14 @@ const ImageSelectionModal = ({
   const [unsplashQuery, setUnsplashQuery] = useState("");
   const [unsplashLoading, setUnsplashLoading] = useState(false);
   const [unsplashResults, setUnsplashResults] = useState([]);
+  console.log("unsplashResults", unsplashResults);
   const [unsplashPage, setUnsplashPage] = useState(1);
   const [unsplashHasMore, setUnsplashHasMore] = useState(true);
   const unsplashSentinelRef = useRef(null);
+  const unsplashInFlightRef = useRef(false);
+  const unsplashRequestedPagesRef = useRef(new Set());
+  const unsplashLoadedPagesRef = useRef(new Set());
+  const unsplashSeenIdsRef = useRef(new Set());
 
   // Function to check if a media type is allowed
   const isMediaTypeAllowed = (mediaType) => {
@@ -322,19 +327,61 @@ const ImageSelectionModal = ({
     setUnsplashPage(1);
     setUnsplashHasMore(true);
     setUnsplashResults([]);
+    unsplashInFlightRef.current = false;
+    unsplashRequestedPagesRef.current = new Set();
+    unsplashLoadedPagesRef.current = new Set();
+    unsplashSeenIdsRef.current = new Set();
   }, [unsplashQuery, isOpen, activeOption]);
 
   const fetchUnsplashPage = async ({ query, page }) => {
     const q = (query || "").trim();
     if (!q) return;
+    // Prevent duplicate loads of the same page and concurrent fetches
+    if (unsplashInFlightRef.current) return;
+    if (unsplashLoadedPagesRef.current.has(page)) return;
+    if (unsplashRequestedPagesRef.current.has(page)) return;
     try {
+      unsplashInFlightRef.current = true;
+      unsplashRequestedPagesRef.current.add(page);
       setUnsplashLoading(true);
       const res = await AiService.searchUnsplash(q, 24, page);
       const items = res?.data?.data || [];
       const meta = res?.data?.meta || {};
       const nextItems = Array.isArray(items) ? items : [];
+      console.log("[Stock images] response meta:", meta);
 
-      setUnsplashResults((prev) => (page === 1 ? nextItems : [...prev, ...nextItems]));
+      // De-dupe against what we already rendered (avoid stale closures)
+      // We also update the refs so observer race conditions can't re-add the same ids.
+      let dedupedCount = 0;
+      setUnsplashResults((prev) => {
+        const existingIds = new Set((prev || []).map((x) => x?.id).filter(Boolean));
+        const existingUrls = new Set((prev || []).map((x) => x?.url).filter(Boolean));
+        const normalizeAlt = (a) => (typeof a === "string" ? a.trim().toLowerCase() : "");
+        const existingAlts = new Set((prev || []).map((x) => normalizeAlt(x?.alt)).filter(Boolean));
+        const next = nextItems.filter((it) => {
+          const id = it?.id;
+          const url = it?.url;
+          const alt = normalizeAlt(it?.alt);
+          if (!id || !url) return false;
+          if (existingIds.has(id) || existingUrls.has(url)) return false;
+          // Also de-dupe by alt text (helps reduce "same looking" stock results)
+          if (alt && existingAlts.has(alt)) return false;
+          existingIds.add(id);
+          existingUrls.add(url);
+          if (alt) existingAlts.add(alt);
+          return true;
+        });
+        dedupedCount = next.length;
+
+        // Update ref sets as well (defensive)
+        next.forEach((it) => {
+          if (it?.id) unsplashSeenIdsRef.current.add(it.id);
+        });
+
+        return page === 1 ? next : [...prev, ...next];
+      });
+
+      unsplashLoadedPagesRef.current.add(page);
 
       const totalPages = Number(meta.total_pages || 0);
       if (totalPages && page >= totalPages) {
@@ -348,6 +395,8 @@ const ImageSelectionModal = ({
       setUnsplashHasMore(false);
     } finally {
       setUnsplashLoading(false);
+      unsplashInFlightRef.current = false;
+      unsplashRequestedPagesRef.current.delete(page);
     }
   };
 
@@ -387,8 +436,11 @@ const ImageSelectionModal = ({
         if (!q) return;
         if (unsplashLoading) return;
         if (!unsplashHasMore) return;
+        if (unsplashInFlightRef.current) return;
 
         const nextPage = unsplashPage + 1;
+        // Guard: only fetch a page once
+        if (unsplashLoadedPagesRef.current.has(nextPage)) return;
         setUnsplashPage(nextPage);
         fetchUnsplashPage({ query: q, page: nextPage });
       },
@@ -442,17 +494,17 @@ const ImageSelectionModal = ({
   
 
   const renderPreview = (file) => (
-    <div key={file.url} className="flex items-center p-2 border rounded mb-2 bg-white">
+    <div key={file.url} className="flex items-center p-2 mb-2 bg-white rounded border">
       <img
         src={file.url}
         alt="Preview"
-        className="w-10 h-10 sm:w-12 sm:h-12 object-cover mr-2 sm:mr-3 rounded"
+        className="object-cover mr-2 w-10 h-10 rounded sm:w-12 sm:h-12 sm:mr-3"
         onError={(e) => {
           (e.target).style.display = "none";
         }}
       />
       <div className="flex-1 min-w-0">
-        <p className="text-xs sm:text-sm truncate">
+        <p className="text-xs truncate sm:text-sm">
           {file.url.split("/").pop()?.split("?")[0]}
         </p>
         {typeof file.progress === "number" && (
@@ -467,7 +519,7 @@ const ImageSelectionModal = ({
         type="button"
         title="Remove file"
         onClick={() => handleRemoveFile(file.url)}
-        className="p-1 sm:p-2 rounded-full hover:bg-gray-100 flex-shrink-0"
+        className="flex-shrink-0 p-1 rounded-full sm:p-2 hover:bg-gray-100"
       >
         <Img
           src="/images2/img_trash_01.svg"
@@ -557,8 +609,8 @@ const ImageSelectionModal = ({
       <Modal isOpen={isOpen} onClose={handleModalClose} title="Media Library">
         <div className="flex flex-col lg:flex-row h-[calc(100vh-200px)] max-h-[800px] w-full">
           {/* Sidebar */}
-          <div className="p-2 lg:p-4 w-full lg:w-48 border-b lg:border-b-0 lg:border-r border-gray-100 flex-shrink-0">
-            <div className="flex lg:flex-col gap-2 lg:gap-0 overflow-x-auto lg:overflow-x-visible">
+          <div className="flex-shrink-0 p-2 w-full border-b border-gray-100 lg:p-4 lg:w-48 lg:border-b-0 lg:border-r">
+            <div className="flex overflow-x-auto gap-2 lg:flex-col lg:gap-0 lg:overflow-x-visible">
               <SidebarOption
                 icon={<UploadIcon size={20} className="text-blue-500" />}
                 label="Upload"
@@ -587,16 +639,16 @@ const ImageSelectionModal = ({
           </div>
 
           {/* Main content */}
-          <div className="flex-1 overflow-hidden p-2 lg:p-4">
+          <div className="overflow-hidden flex-1 p-2 lg:p-4">
             {activeOption === "upload" && (
-              <div className="flex flex-col lg:flex-row w-full h-full gap-4"
+              <div className="flex flex-col gap-4 w-full h-full lg:flex-row"
              
               >
                 {/* Left: DropZone and controls */}
                 <div
                 
                   className="lg:w-[35%] w-full ">
-                    <div className=" relative flex flex-col border-2  border-gray-300 bg-gray-50 h-full p-2 lg:p-4 pb-24 rounded-lg overflow-y-scroll">
+                    <div className="flex overflow-y-scroll relative flex-col p-2 pb-24 h-full bg-gray-50 rounded-lg border-2 border-gray-300 lg:p-4">
                     <div className="h-full"
                       
                       >
@@ -605,9 +657,9 @@ const ImageSelectionModal = ({
                           multiple={multiple}
                           accept={type === "video" ? "video/*" : type === "image" ? "image/*" : accept}
                         />
-                        <div className="w-full mt-4 flex flex-col ">
-                          <h4 className="text-sm font-medium mb-2">Selected Files</h4>
-                          <div className="flex-1 overflow-y-auto min-h-0 pb-16">
+                        <div className="flex flex-col mt-4 w-full">
+                          <h4 className="mb-2 text-sm font-medium">Selected Files</h4>
+                          <div className="overflow-y-auto flex-1 pb-16 min-h-0">
                             {files.map(renderPreview)}
                           </div>
                         </div>
@@ -615,11 +667,11 @@ const ImageSelectionModal = ({
                       </div>
                     </div>
                       {!autosave && (
-                        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 py-3 flex justify-end z-10">
+                        <div className="flex sticky bottom-0 z-10 justify-end px-4 py-3 bg-gray-50 border-t border-gray-200">
                           <button
                             onClick={handleDone}
                             disabled={isUploading||files.length===0}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
+                            className="flex-shrink-0 px-4 py-2 w-full text-white bg-blue-500 rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 lg:w-auto"
                           >
                             {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : "Video"}`}
                           </button>
@@ -631,45 +683,45 @@ const ImageSelectionModal = ({
                 {/* Right: Recent uploads */}
                 <div className="w-full lg:w-[65%] h-full flex flex-col overflow-hidden">
                   <div className="flex-shrink-0">
-                    <h4 className="text-sm font-semibold mb-2">Recent Uploads</h4>
+                    <h4 className="mb-2 text-sm font-semibold">Recent Uploads</h4>
                     <div className="mb-2">
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <span className="absolute left-3 top-1/2 text-gray-400 -translate-y-1/2">
                           <SearchOutlined />
                         </span>
                         <input
                           value={searchValue}
                           onChange={(e) => setSearchValue(e.target.value)}
                           placeholder="Search your media library..."
-                          className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="py-2 pr-3 pl-10 w-full text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                     </div>
                     {/* Only show tabs if type is "all" */}
-                    <Tabs activeKey={selectedTab} onChange={setSelectedTab} type="line" className="w-full mb-2">
+                    <Tabs activeKey={selectedTab} onChange={setSelectedTab} type="line" className="mb-2 w-full">
                         <TabPane tab="All" key="all" disabled={type !== "all"} />
                         <TabPane tab="Images" key="images" disabled={type !== "image" && type !== "all"}  />
                         <TabPane tab="Videos" key="videos" disabled={type !== "video" && type !== "all"} />
                       </Tabs>
                     {/* {type === "all" ? (
-                      <Tabs activeKey={selectedTab} onChange={setSelectedTab} type="line" className="w-full mb-2">
+                      <Tabs activeKey={selectedTab} onChange={setSelectedTab} type="line" className="mb-2 w-full">
                         <TabPane tab="All" key="all" />
                         <TabPane tab="Images" key="images" />
                         <TabPane tab="Videos" key="videos" />
                       </Tabs>
                     ) : (
-                      <div className="w-full mb-2 border-b border-gray-200">
-                        <h3 className="text-sm font-medium pb-2 capitalize">
+                      <div className="mb-2 w-full border-b border-gray-200">
+                        <h3 className="pb-2 text-sm font-medium capitalize">
                           {type === "video" ? "Videos" : "Images"}
                         </h3>
                       </div>
                     )} */}
                   </div>
 
-                  <div className="flex-1 overflow-y-auto min-h-0 pb-4">
+                  <div className="overflow-y-auto flex-1 pb-4 min-h-0">
                     {recentLoading ? (
-                      <div className="text-gray-500 w-full">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="w-full text-gray-500">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                           {[1, 2, 3].map((index) => (
                             <div key={index} className="w-full">
                               <Skeleton variant="rectangular" width="100%" height={180} />
@@ -682,9 +734,9 @@ const ImageSelectionModal = ({
                         </div>
                       </div>
                     ) : filteredMedia.length === 0 ? (
-                      <div className="text-gray-400 py-8 text-center">No {type !== "all" ? type : ""} media found</div>
+                      <div className="py-8 text-center text-gray-400">No {type !== "all" ? type : ""} media found</div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+                      <div className="grid grid-cols-1 gap-3 w-full sm:grid-cols-2 lg:grid-cols-4">
                         {filteredMedia.map((media) => (
                           <div key={media._id} className="cursor-pointer" onClick={() => handleSelectRecent(media)}>
                             <MediaCard
@@ -714,17 +766,17 @@ const ImageSelectionModal = ({
             )}
 
             {activeOption === "link" && (
-              <div className="flex flex-col space-y-4 max-w-md mx-auto p-4">
-                <h4 className="text-lg font-medium mb-4">Add {type === "video" ? "Video" : "Image"} from URL</h4>
+              <div className="flex flex-col p-4 mx-auto space-y-4 max-w-md">
+                <h4 className="mb-4 text-lg font-medium">Add {type === "video" ? "Video" : "Image"} from URL</h4>
                 <input
                   type="text"
                   placeholder={`https://example.com/${type === "video" ? "video.mp4" : "image.jpg"}`}
-                  className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                  className="px-4 py-2 w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onChange={(e) => setLinkValue(e.target.value)}
                   value={linkValue}
                 />
                 <button 
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full sm:w-auto"
+                  className="px-4 py-2 w-full text-white bg-blue-500 rounded hover:bg-blue-600 sm:w-auto"
                   onClick={handleLinkAdd}
                 >
                   Add {type === "video" ? "Video" : "Image"}
@@ -753,15 +805,15 @@ const ImageSelectionModal = ({
             )}
 
             {activeOption === "unsplash" && (
-              <div className="flex flex-col lg:flex-row w-full h-full gap-4">
+              <div className="flex flex-col gap-4 w-full h-full lg:flex-row">
                 {/* Left: Selected */}
                 <div className="lg:w-[35%] w-full">
-                  <div className="relative flex flex-col border-2 border-gray-300 bg-gray-50 h-full p-2 lg:p-4 pb-24 rounded-lg overflow-y-scroll">
-                    <div className="w-full mt-2 flex flex-col">
-                      <h4 className="text-sm font-medium mb-2">Selected Files</h4>
-                      <div className="flex-1 overflow-y-auto min-h-0 pb-16">
+                  <div className="flex overflow-y-scroll relative flex-col p-2 pb-24 h-full bg-gray-50 rounded-lg border-2 border-gray-300 lg:p-4">
+                    <div className="flex flex-col mt-2 w-full">
+                      <h4 className="mb-2 text-sm font-medium">Selected Files</h4>
+                      <div className="overflow-y-auto flex-1 pb-16 min-h-0">
                         {files.length === 0 ? (
-                          <div className="text-gray-400 py-8 text-center text-sm">
+                          <div className="py-8 text-sm text-center text-gray-400">
                             Search Unsplash and click an image to add it.
                           </div>
                         ) : (
@@ -772,11 +824,11 @@ const ImageSelectionModal = ({
                   </div>
 
                   {!autosave && (
-                    <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 py-3 flex justify-end z-10">
+                    <div className="flex sticky bottom-0 z-10 justify-end px-4 py-3 bg-gray-50 border-t border-gray-200">
                       <button
                         onClick={handleDone}
                         disabled={isUploading || files.length === 0}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 w-full lg:w-auto flex-shrink-0"
+                        className="flex-shrink-0 px-4 py-2 w-full text-white bg-blue-500 rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 lg:w-auto"
                       >
                         {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : "Video"}`}
                       </button>
@@ -787,17 +839,17 @@ const ImageSelectionModal = ({
                 {/* Right: Unsplash search */}
                 <div className="w-full lg:w-[65%] h-full flex flex-col overflow-hidden">
                   <div className="flex-shrink-0">
-                    <h4 className="text-sm font-semibold mb-2">Stock images</h4>
+                    <h4 className="mb-2 text-sm font-semibold">Stock images</h4>
                     <div className="mb-2">
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <span className="absolute left-3 top-1/2 text-gray-400 -translate-y-1/2">
                           <SearchOutlined />
                         </span>
                         <input
                           value={unsplashQuery}
                           onChange={(e) => setUnsplashQuery(e.target.value)}
                           placeholder="Search stock images (e.g., Software Engineer office)..."
-                          className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="py-2 pr-3 pl-10 w-full text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div className="mt-1 text-xs text-gray-500">
@@ -806,15 +858,15 @@ const ImageSelectionModal = ({
                     </div>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto min-h-0 pb-4">
+                  <div className="overflow-y-auto flex-1 pb-4 min-h-0">
                     {!unsplashQuery.trim() ? (
-                      <div className="text-gray-400 py-8 text-center">
+                      <div className="py-8 text-center text-gray-400">
                         Start typing to search stock images
                       </div>
                     ) : unsplashLoading && unsplashResults.length === 0 ? (
                       // Only show skeletons for the initial load (so we don't wipe results + reset scroll)
-                      <div className="text-gray-500 w-full">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="w-full text-gray-500">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                           {[1, 2, 3, 4].map((index) => (
                             <div key={index} className="w-full">
                               <Skeleton variant="rectangular" width="100%" height={180} />
@@ -827,9 +879,9 @@ const ImageSelectionModal = ({
                         </div>
                       </div>
                     ) : unsplashResults.length === 0 ? (
-                      <div className="text-gray-400 py-8 text-center">No results</div>
+                      <div className="py-8 text-center text-gray-400">No results</div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+                      <div className="grid grid-cols-1 gap-3 w-full sm:grid-cols-2 lg:grid-cols-4">
                         {unsplashResults.map((img) => (
                           <button
                             key={img.id}
@@ -867,11 +919,11 @@ const ImageSelectionModal = ({
                               }
                             }}
                           >
-                            <div className="rounded-lg overflow-hidden border bg-white">
+                            <div className="overflow-hidden bg-white rounded-lg border">
                               <img
                                 src={img.thumb || img.url}
                                 alt={img.alt || "Unsplash image"}
-                                className="w-full h-40 object-cover"
+                                className="object-cover w-full h-40"
                               />
                               <div className="p-2">
                                 <div className="text-xs text-gray-700 truncate">
@@ -884,14 +936,14 @@ const ImageSelectionModal = ({
                             </div>
                           </button>
                         ))}
-                        <div ref={unsplashSentinelRef} className="h-1 w-full col-span-full" />
+                        <div ref={unsplashSentinelRef} className="col-span-full w-full h-1" />
                         {unsplashLoading && unsplashResults.length > 0 && (
-                          <div className="col-span-full text-center text-xs text-gray-500 py-2">
+                          <div className="col-span-full py-2 text-xs text-center text-gray-500">
                             Loading more...
                           </div>
                         )}
                         {!unsplashHasMore && unsplashResults.length > 0 && (
-                          <div className="col-span-full text-center text-xs text-gray-400 py-2">
+                          <div className="col-span-full py-2 text-xs text-center text-gray-400">
                             End of results
                           </div>
                         )}
