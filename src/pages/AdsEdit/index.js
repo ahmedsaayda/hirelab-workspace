@@ -1141,7 +1141,7 @@ export default function AdsEdit({ paramsId }) {
 
         {/* Unsaved / unsynced changes banner */}
         {(hasUnsavedAdsChanges || (hasMetaPublished && hasUnsyncedMetaAdsChanges)) && (
-          <div className="px-8 py-3 bg-amber-50 border-b border-amber-200 flex items-center justify-between">
+          <div className="flex justify-between items-center px-8 py-3 bg-amber-50 border-b border-amber-200">
             <div className="text-xs text-amber-900">
               {hasUnsavedAdsChanges
                 ? "You have unsaved ad changes."
@@ -1332,7 +1332,6 @@ export default function AdsEdit({ paramsId }) {
           <div className="rounded-lg bg-white shadow-lg border border-[#e5e7eb] px-4 py-3 text-xs text-[#111827] space-y-1">
             <div className="font-semibold text-[#111827]">Preparing creatives…</div>
             {prepareMessages.slice(-3).map((msg, idx) => (
-              // eslint-disable-next-line react/no-array-index-key
               <div key={idx} className="text-[11px] text-[#4b5563]">
                 {msg}
               </div>
