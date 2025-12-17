@@ -1278,7 +1278,7 @@ export default function Launch({ paramsId }) {
                 {activeStep === "audience" && "Audience"}
                 {activeStep === "creatives" && "Creatives"}
               </Heading>
-              <div className="flex gap-3 items-center">
+               {activeStep === "overview" && <div className="flex gap-3 items-center">
                 <button
                   className="text-xs px-3 py-1 rounded-md border text-[#475467] hover:bg-gray-50"
                   onClick={toggleCampaign}
@@ -1302,7 +1302,7 @@ export default function Launch({ paramsId }) {
                 <div className="text-xs px-2 py-1 rounded-full border text-[#475467]">
                   {summary?.campaign?.status || "Not Created"}
                 </div>
-              </div>
+              </div>}
             </div>
 
             {activeStep === "overview" && (

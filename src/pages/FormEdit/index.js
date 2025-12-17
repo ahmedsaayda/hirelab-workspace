@@ -323,7 +323,8 @@ export default function FormEdit({ paramsId }) {
   }, [landingPageData]);
 
   // 🎯 SINGLE SOURCE OF TRUTH: Current step state
-  const [currentStep, setCurrentStep] = useState(0); // 0 = intro, 1+ = form fields
+  // 0 = form settings, 1+ = form fields
+  const [currentStep, setCurrentStep] = useState(1);
 
   const [forceUpdate, setForceUpdate] = useState(0); // Force re-render key
   const [aiFormModalVisible, setAiFormModalVisible] = useState(false);
@@ -1390,7 +1391,7 @@ export default function FormEdit({ paramsId }) {
   // 🎯 SYNC STEP WITH SELECTION: Update currentStep when selectedSection changes
   useEffect(() => {
     if (isEditingForm || !selectedSection) {
-      // Intro step when editing form or no selection
+      // Settings view when no section is selected
       setCurrentStep(0);
     } else {
       // Find the step for the selected field
@@ -1398,12 +1399,12 @@ export default function FormEdit({ paramsId }) {
         (field) => field.id === selectedSection.id
       );
       if (fieldIndex >= 0) {
-        const step = fieldIndex + 1; // +1 because step 0 is intro
+        const step = fieldIndex + 1; // 1-based for fields
         setCurrentStep(step);
         console.log("🎯 Step sync: Selected field leads to step", step);
       } else {
-        setCurrentStep(0); // Fallback to intro
-        console.log("🎯 Step sync: Field not found, defaulting to intro step");
+        setCurrentStep(0); // Fallback to settings
+        console.log("🎯 Step sync: Field not found, defaulting to settings");
       }
     }
   }, [selectedSection, isEditingForm, formSections]);
@@ -1411,15 +1412,16 @@ export default function FormEdit({ paramsId }) {
   // 🎯 SYNC SELECTION WITH STEP: Update selectedSection when currentStep changes externally
   const handleStepChange = (newStep) => {
     console.log("🎯 Step change requested:", newStep);
-    setCurrentStep(newStep);
+    const safeStep = newStep; // allow 0 for settings, 1+ for fields
+    setCurrentStep(safeStep);
 
-    if (newStep === 0) {
-      // Step 0 = intro, clear selection
+    if (safeStep <= 0) {
+      // Settings view
       setSelectedSection(null);
       setIsEditingForm(true);
     } else {
       // Step 1+ = field selection
-      const fieldIndex = newStep - 1;
+      const fieldIndex = safeStep - 1;
       const targetField = formSections[fieldIndex];
       if (targetField) {
         setSelectedSection(targetField);

@@ -130,6 +130,7 @@ export default function AdsEdit({ paramsId }) {
   const [pages, setPages] = useState([]);
   const [selectedAdAccountId, setSelectedAdAccountId] = useState("");
   const [selectedPageId, setSelectedPageId] = useState("");
+  const [allPages, setAllPages] = useState([]);
   const [metaStatus, setMetaStatus] = useState({ connected: false });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmVariants, setConfirmVariants] = useState([]);
@@ -339,6 +340,7 @@ export default function AdsEdit({ paramsId }) {
       const res = await MetaService.listAssets(workspaceId || undefined);
       const data = res?.data?.data || {};
       setAdAccounts(data.adAccounts || []);
+      setAllPages(data.pages || []);
       setPages(data.pages || []);
       setAssetModalOpen(true);
     } catch (e) {
@@ -393,12 +395,51 @@ export default function AdsEdit({ paramsId }) {
       const res = await MetaService.listAssets(workspaceId || undefined);
       const data = res?.data?.data || {};
       setAdAccounts(data.adAccounts || []);
+      setAllPages(data.pages || []);
       setPages(data.pages || []);
       message.success("Assets refreshed");
     } catch (e) {
       message.error("Failed to refresh assets");
     }
   };
+
+  const filterPagesForAccount = useCallback(
+    (accountId, pagesList) => {
+      if (!accountId) return pagesList || [];
+      const list = pagesList || [];
+      const filtered = list.filter((pg) => {
+        const connected = pg?.connected_ad_account_id || pg?.adAccountId || pg?.account_id;
+        const fromArray =
+          Array.isArray(pg?.connected_ad_accounts) &&
+          pg.connected_ad_accounts.some((id) => String(id) === String(accountId));
+        const fromAdAccounts =
+          Array.isArray(pg?.ad_accounts) &&
+          pg.ad_accounts.some(
+            (acc) => String(acc?.id) === String(accountId) || String(acc?.account_id) === String(accountId)
+          );
+        return (
+          String(connected || "") === String(accountId) ||
+          fromArray ||
+          fromAdAccounts
+        );
+      });
+      return filtered.length > 0 ? filtered : list;
+    },
+    []
+  );
+
+  // When ad account changes, filter pages and reset selection
+  useEffect(() => {
+    if (!allPages || allPages.length === 0) return;
+    const nextPages = filterPagesForAccount(selectedAdAccountId, allPages);
+    setPages(nextPages);
+    // Auto-select first page when available
+    if (nextPages.length > 0) {
+      setSelectedPageId(nextPages[0].id || nextPages[0]._id || nextPages[0].pageId || "");
+    } else {
+      setSelectedPageId("");
+    }
+  }, [selectedAdAccountId, allPages, filterPagesForAccount]);
 
   // Set brand data
   useEffect(() => {
