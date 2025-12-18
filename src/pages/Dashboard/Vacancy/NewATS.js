@@ -1501,12 +1501,6 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
               assignedTo: candidate.assignedTo,
               assignedAt: candidate.assignedAt,
               assignedBy: candidate.assignedBy,
-              // Interview scheduling data
-              meetingScheduled: candidate.meetingScheduled || false,
-              interviewMeetingTimestamp: candidate.interviewMeetingTimestamp,
-              interviewMeetingTimestampEnd: candidate.interviewMeetingTimestampEnd,
-              interviewMeetingTimezone: candidate.interviewMeetingTimezone,
-              interviewMeetingLink: candidate.interviewMeetingLink,
               // Status phase data
               statusPhase: candidate.statusPhase || 'new',
               statusPhaseUpdatedAt: candidate.statusPhaseUpdatedAt,
@@ -1607,18 +1601,6 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       setColumnsLoading(false);
     }
   }, [VacancyId, debouncedSearchTerm, vacancyInfo, filters, isMultiJobView, user, vacancyScope]);
-
-  // Open candidate profile directly when candidateId is provided in query (deep link from notifications/emails)
-  useEffect(() => {
-    const queryCandidateId = router.query?.candidateId;
-    if (!queryCandidateId || !candidates.length) return;
-
-    const candidateId = Array.isArray(queryCandidateId) ? queryCandidateId[0] : queryCandidateId;
-    const match = candidates.find(c => c.id === candidateId || c._id === candidateId);
-    if (match) {
-      setCandidateProfile(match.id);
-    }
-  }, [router.query?.candidateId, candidates]);
 
   // Counter to track how many times this function is called
   let ensureDefaultStagesCallCount = 0;

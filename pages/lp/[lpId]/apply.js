@@ -805,77 +805,6 @@ const isContactStep = (field) => {
   return false;
 };
 
-const isValidYesNoValue = (field, val) => {
-  if (!field) return false;
-  // For explicit boolean fields, allow booleans or normalized yes/no strings
-  if (field.type === 'boolean') {
-    return val === true || val === false || val === 'yes' || val === 'no';
-  }
-  // For yes/no choice fields, only accept explicit selections
-  return val === 'yes' || val === 'no';
-};
-
-const hasValue = (field, data = {}) => {
-  if (!field) return false;
-  if (field.type === 'contact') {
-    const fn = data[`${field.id}_firstName`];
-    const ln = data[`${field.id}_lastName`];
-    const em = data[`${field.id}_email`];
-    const ph = data[`${field.id}_phone`];
-    return (
-      (field.firstName?.required ? !!fn?.trim() : true) &&
-      (field.lastName?.required ? !!ln?.trim() : true) &&
-      (field.email?.required ? !!em?.trim() : true) &&
-      (field.phone?.required ? !!ph?.trim() : true)
-    );
-  }
-  if (field.type === 'address') {
-    const parts = [
-      { key: 'line1', cfg: field.line1 },
-      { key: 'line2', cfg: field.line2 },
-      { key: 'city', cfg: field.city },
-      { key: 'state', cfg: field.state },
-      { key: 'zip', cfg: field.zip },
-      { key: 'country', cfg: field.country },
-    ].filter(p => p.cfg?.visible !== false);
-    if (parts.length === 0) return true;
-    const requiredVisible = parts.filter(p => p.cfg?.required);
-    if (requiredVisible.length > 0) {
-      return requiredVisible.every(p => {
-        const val = data[`${field.id}_${p.key}`];
-        return val && (typeof val !== 'string' || val.trim());
-      });
-    }
-    return parts.some(p => {
-      const val = data[`${field.id}_${p.key}`];
-      return val && (typeof val !== 'string' || val.trim());
-    });
-  }
-  const val = data[field.id];
-  if (field.type === 'yesno' || field.type === 'boolean') {
-    return isValidYesNoValue(field, val);
-  }
-  if (Array.isArray(val)) return val.length > 0;
-  return val !== undefined && val !== null && !(typeof val === 'string' && !val.trim());
-};
-
-const isNextDisabledForField = (field, data = {}) => {
-  if (!field) return true;
-  if (!field.required) return false;
-  const lacksValue = !hasValue(field, data);
-  const yesNoInvalid =
-    (field.type === 'yesno' || field.type === 'boolean') &&
-    !isValidYesNoValue(field, data[field.id]);
-  const textEmpty =
-    (field.type === 'textarea' ||
-      field.type === 'text' ||
-      field.type === 'short-text' ||
-      field.type === 'long-text' ||
-      field.type === 'input') &&
-    (!(data[field.id]) || (typeof data[field.id] === 'string' && !data[field.id].trim()));
-  return lacksValue || yesNoInvalid || textEmpty;
-};
-
 const buildProcessedFormData = () => {
   const processedFormData = { ...formData };
   
@@ -1011,68 +940,6 @@ const saveContactSnapshot = async () => {
     }
     // Validate current step
     const currentField = flowFields[currentStep - 1];
-    if (!currentField) {
-      message.warning('Please complete the visible step before continuing.');
-      setCurrentStep(Math.min(Math.max(1, flowFields.length), flowFields.length || 1));
-      return;
-    }
-
-    // Debugging info for required-step validation
-    console.debug('[APPLY][handleNext] step', currentStep, 'field', {
-      id: currentField.id,
-      type: currentField.type,
-      required: currentField.required,
-      providedFieldValue,
-      formValue: formData[currentField.id],
-    });
-
-    // Build effective data when value is passed directly (auto-jump flows)
-    const effectiveData = providedFieldValue !== undefined
-      ? { ...formData, [currentField.id]: providedFieldValue }
-      : formData;
-
-    // Extra guard: block if the current field is required but lacks a value
-    const isDisabled = isNextDisabledForField(currentField, effectiveData);
-    console.warn('[APPLY][next-check]', {
-      step: currentStep,
-      fieldId: currentField?.id,
-      type: currentField?.type,
-      required: currentField?.required,
-      providedFieldValue,
-      formValue: formData[currentField?.id],
-      effectiveValue: effectiveData[currentField?.id],
-      hasValue: hasValue(currentField, effectiveData),
-      isValidYesNo: isValidYesNoValue(currentField, effectiveData[currentField?.id]),
-      disabled: isDisabled,
-    });
-    if (isDisabled) {
-      console.warn('[APPLY][block-advance]', {
-        step: currentStep,
-        fieldId: currentField?.id,
-        type: currentField?.type,
-        required: currentField?.required,
-        value: effectiveData[currentField?.id],
-      });
-      message.warning(`${currentField?.label || 'This field'} is required`);
-      return;
-    }
-
-    if (currentField?.required) {
-      const val = effectiveData[currentField.id];
-      const yesNoMissing = (currentField.type === 'yesno' || currentField.type === 'boolean') &&
-        !isValidYesNoValue(currentField, val);
-      console.warn('[APPLY][validate-step]', {
-        val,
-        effectiveDataVal: val,
-        yesNoMissing,
-        hasValue: hasValue(currentField, effectiveData),
-      });
-      if (!hasValue(currentField, effectiveData) || yesNoMissing) {
-        message.warning(`${currentField.label || 'This field'} is required`);
-        return;
-      }
-    }
-
     if (currentStep > 0 && currentField?.required) {
       // Special validation for lead capture group
       if (currentField.type === 'lead-capture-group') {
@@ -1234,7 +1101,7 @@ const saveContactSnapshot = async () => {
       } else if (currentField.type === 'yesno' || currentField.type === 'boolean') {
         // Yes/No field validation - use provided value for auto-jump
         const value = providedFieldValue !== undefined ? providedFieldValue : formData[currentField.id];
-        if (!isValidYesNoValue(currentField, value)) {
+        if (value === undefined || value === null || value === '') {
           message.warning(`${currentField.label || 'This field'} is required`);
           return;
         }
@@ -1340,13 +1207,6 @@ const saveContactSnapshot = async () => {
     // On contact step, persist a draft submission early (deduped by email on backend)
     if (isContactStep(currentField)) {
       saveContactSnapshot();
-    }
-
-    // Final guard before moving on: required fields must be answered
-    if (currentField?.required && (!hasValue(currentField, effectiveData) ||
-      ((currentField.type === 'yesno' || currentField.type === 'boolean') && !isValidYesNoValue(currentField, effectiveData[currentField.id])))) {
-      message.warning(`${currentField.label || 'This field'} is required`);
-      return;
     }
 
     if (currentStep >= flowFields.length) {
@@ -2179,12 +2039,9 @@ const saveContactSnapshot = async () => {
 
               <Button 
                 type="primary"
-                onClick={() => handleNext()}
+                onClick={handleNext}
                 loading={submitting}
                 className="brand-button flex items-center space-x-2 !border-0"
-                disabled={
-                  isNextDisabledForField(flowFields[currentStep - 1], formData)
-                }
                 style={{
                   backgroundColor: primaryColor,
                   borderColor: primaryColor,

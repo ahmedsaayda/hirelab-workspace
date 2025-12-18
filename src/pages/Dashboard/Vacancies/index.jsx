@@ -2828,23 +2828,7 @@ function CampaignsPerformance({ campaigns, isDemo }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-6">
-        {/* AI Recommendations - Sidebar */}
-        <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm h-fit">
-          <div className="flex gap-2 items-center mb-4">
-             <div className="text-yellow-500">
-                <CrownOutlined className="text-xl" />
-             </div>
-             <div className="text-lg font-semibold text-gray-800">AI Recommendations</div>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="p-4 bg-white rounded-lg border border-blue-100 shadow-sm">
-              <div className="mb-1 text-sm font-semibold text-gray-900">Optimize Meta Ad Copy</div>
-              <div className="text-xs leading-5 text-gray-600">Your Meta ads have high reach but low clicks. A/B test new headlines for better engagement.</div>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-6">
 
         {/* Main content */}
         <div className="flex flex-col gap-6 w-full min-w-0">

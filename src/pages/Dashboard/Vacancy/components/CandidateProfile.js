@@ -601,13 +601,7 @@ const CandidateProfile = ({
           phone: phone,
           avatar: avatar, // null instead of empty string prevents broken image
           position: formData.position || 'Position',
-          stage: stages.find(stage => stage.id === doc.stageId)?.title || 'Applied',
-          // Interview scheduling fields
-          meetingScheduled: doc.meetingScheduled || false,
-          interviewMeetingTimestamp: doc.interviewMeetingTimestamp,
-          interviewMeetingTimestampEnd: doc.interviewMeetingTimestampEnd,
-          interviewMeetingTimezone: doc.interviewMeetingTimezone,
-          interviewMeetingLink: doc.interviewMeetingLink
+          stage: stages.find(stage => stage.id === doc.stageId)?.title || 'Applied'
         };
         setCandidate(transformedCandidate);
         
@@ -815,21 +809,6 @@ const CandidateProfile = ({
     } else {
       return '#10b981'; // emerald-500 - almost complete/hired
     }
-  };
-
-  const formatInterviewWindow = () => {
-    if (!candidate?.interviewMeetingTimestamp) return 'Time to be announced';
-    const start = moment(candidate.interviewMeetingTimestamp);
-    const end = candidate.interviewMeetingTimestampEnd
-      ? moment(candidate.interviewMeetingTimestampEnd)
-      : start.clone().add(1, 'hour');
-    const timezone = candidate.interviewMeetingTimezone || 'UTC';
-
-    if (start.isSame(end, 'day')) {
-      return `${start.format('ddd, MMM D • h:mm A')} - ${end.format('h:mm A')} ${timezone}`;
-    }
-
-    return `${start.format('ddd, MMM D • h:mm A')} - ${end.format('ddd, MMM D • h:mm A')} ${timezone}`;
   };
 
   const handleResumeUpload = async ({ file }) => {
@@ -1354,67 +1333,27 @@ const CandidateProfile = ({
                   )}
                 </div>
                 {item.type === 'file' && formData[item.fieldId] ? (
-                  (() => {
-                    const fileData = formData[item.fieldId];
-                    const fileUrl = extractFileUrl(fileData) || extractFileUrl(formData[item.fieldId]);
-                    const fileName =
-                      extractFileName(fileData) ||
-                      extractFileName(formData[`${item.fieldId}_filename`]) ||
-                      'View File';
-
-                    const mimeType =
-                      (fileData && fileData.fileType) ||
-                      (fileData && fileData.type) ||
-                      '';
-                    const isVideo =
-                      (typeof mimeType === 'string' && mimeType.startsWith('video/')) ||
-                      (typeof fileUrl === 'string' &&
-                        (fileUrl.toLowerCase().endsWith('.mp4') ||
-                          fileUrl.toLowerCase().endsWith('.webm') ||
-                          fileUrl.toLowerCase().endsWith('.ogg') ||
-                          fileUrl.toLowerCase().endsWith('.mov')));
-
-                    if (isVideo && fileUrl) {
-                      return (
-                        <div className="flex flex-col gap-2 w-full">
-                          <video
-                            controls
-                            className="w-full max-h-64 rounded-md bg-black"
-                            src={fileUrl}
-                          >
-                            Your browser does not support the video tag.
-                          </video>
-                          <button
-                            onClick={() =>
-                              handleViewFile(fileUrl, fileName, item.label || 'Video')
-                            }
-                            className="self-start text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0"
-                          >
-                            <FileTextOutlined className="text-sm" />
-                            {fileName.length > 30
-                              ? fileName.substring(0, 30) + '...'
-                              : fileName}
-                          </button>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() =>
-                            handleViewFile(fileUrl, fileName, item.label || 'File')
-                          }
-                          className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0"
-                        >
-                          <FileTextOutlined className="text-sm" />
-                          {fileName.length > 30
-                            ? fileName.substring(0, 30) + '...'
-                            : fileName}
-                        </button>
-                      </div>
-                    );
-                  })()
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => {
+                        const fileData = formData[item.fieldId];
+                        const fileUrl = extractFileUrl(fileData) || extractFileUrl(formData[item.fieldId]);
+                        const fileName = extractFileName(fileData) || extractFileName(formData[`${item.fieldId}_filename`]);
+                        
+                        handleViewFile(fileUrl, fileName, item.label || 'File');
+                      }}
+                      className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0"
+                    >
+                      <FileTextOutlined className="text-sm" />
+                      {(() => {
+                        const fileData = formData[item.fieldId];
+                        const fileName = extractFileName(fileData) || extractFileName(formData[`${item.fieldId}_filename`]) || 'View File';
+                        
+                        // Truncate long filenames
+                        return fileName.length > 30 ? fileName.substring(0, 30) + '...' : fileName;
+                      })()}
+                    </button>
+                  </div>
                 ) : item.type === 'website' && item.answer && item.answer.startsWith('http') ? (
                   <a 
                     href={item.answer} 
@@ -1597,33 +1536,6 @@ const CandidateProfile = ({
           </div>
         </div>
       </div>
-
-      {/* Scheduled Interview Card */}
-      {(candidate?.meetingScheduled || candidate?.interviewMeetingTimestamp) && (
-        <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-purple-200 rounded-lg flex items-center justify-center">
-              <CalendarOutlined className="text-purple-700" />
-            </div>
-            <div className="flex-1">
-              <Text className="text-sm font-semibold text-purple-900 block">Interview scheduled</Text>
-              <Text className="text-xs text-purple-700 block mt-1">
-                {formatInterviewWindow()}
-              </Text>
-              {candidate?.interviewMeetingLink && (
-                <a
-                  href={candidate.interviewMeetingLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-purple-700 underline mt-2 inline-block"
-                >
-                  Join link
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Contact Information Card */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">

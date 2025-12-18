@@ -343,10 +343,15 @@ const Template1 = React.memo(({ landingPageData, fetchData }) => {
     <div
       id="job-specifications"
       ref={sectionRef}
-      className="px-4 pt-16 pb-16 w-full bg-white md:px-8"
+      className="px-4 w-full bg-white md:px-8"
     >
       <div className="container mx-auto">
         {/* Decorative Elements */}
+        <svg height="100" viewBox="0 0 794 100" fill="none" xmlns="http://www.w3.org/2000/svg" 
+          className="w-full max-w-[794px] mx-auto"
+        />
+
+
         <div className="relative">
           <div
             className="absolute -top-[25px] left-1/4 w-16 h-16 rounded-lg opacity-30 smx:top-[-20px] smx:left-4 smx:w-12 smx:h-12"
@@ -362,7 +367,7 @@ const Template1 = React.memo(({ landingPageData, fetchData }) => {
           ></div>
         </div>
 
-        <svg height="180" viewBox="0 0 794 180" fill="none" xmlns="http://www.w3.org/2000/svg" 
+        <svg height="40" viewBox="0 0 794 40" fill="none" xmlns="http://www.w3.org/2000/svg" 
           className="w-full max-w-[794px] mx-auto"
         />
 

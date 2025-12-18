@@ -311,9 +311,7 @@ const FileUpload = ({ value, onChange, placeholder, isVideo = false }) => (
       <div>
         <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
         <p className="text-sm text-gray-500 mt-1">
-          {isVideo
-            ? 'Videos up to 100MB (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)'
-            : 'Videos up to 100MB; other files up to 10MB'}
+          {isVideo ? 'Videos up to 100MB (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)' : 'Videos up to 100MB; other files up to 10MB'}
         </p>
         {value && <p className="text-sm text-green-600 mt-2">✓ {value}</p>}
       </div>
@@ -332,7 +330,7 @@ const FileUpload = ({ value, onChange, placeholder, isVideo = false }) => (
   </div>
 );
 
-export default function ApplyPagePreview({ landingPageData, currentStep = 1, isPreviewMode = true, onStepChange }) {
+export default function ApplyPagePreview({ landingPageData, currentStep = 0, isPreviewMode = true, onStepChange }) {
   // 🎨 BRAND COLORS FROM DATABASE  
   const user = useSelector(selectUser);
   
@@ -465,8 +463,8 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 1, isP
       // Always keep full list for stable indexing with sidebar and editor
       setFormFields(rawFields);
       
-      // Reset form data if form structure changed dramatically
-      if (!formFields.length) {
+      // Reset form data if we're at step 0 or form structure changed dramatically
+      if (currentStep === 0 || !formFields.length) {
         setFormData({});
       }
     }
@@ -490,46 +488,20 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 1, isP
       if (flowFields.length === 0) {
         message.success('Preview: would submit (no questions visible)');
         setFormData({});
+        if (onStepChange) onStepChange(0);
+        return;
+      }
+      if (currentStep === 0) {
         if (onStepChange) onStepChange(1);
         return;
       }
-      const currentIndex = safeStep - 1;
+      const currentIndex = currentStep - 1;
       const currentField = formFields[currentIndex];
-      // Lightweight required validation in preview so required fields can't be skipped
-      if (currentField?.required) {
-        if (currentField.type === 'contact') {
-          const fn = formData[`${currentField.id}_firstName`];
-          const ln = formData[`${currentField.id}_lastName`];
-          const em = formData[`${currentField.id}_email`];
-          const ph = formData[`${currentField.id}_phone`];
-          if (
-            (currentField.firstName?.required && !fn?.trim()) ||
-            (currentField.lastName?.required && !ln?.trim()) ||
-            (currentField.email?.required && !em?.trim()) ||
-            (currentField.phone?.required && !ph?.trim())
-          ) {
-            message.warning('Please fill in all required contact fields');
-            return;
-          }
-        } else if (currentField.type === 'yesno' || currentField.type === 'boolean') {
-          const value = formData[currentField.id];
-          if (value === undefined || value === null || value === '') {
-            message.warning(`${currentField.label || 'This field'} is required`);
-            return;
-          }
-        } else {
-          const value = formData[currentField.id];
-          if (!value || (typeof value === 'string' && !value.trim()) || (Array.isArray(value) && value.length === 0)) {
-            message.warning(`${currentField.label || 'This field'} is required`);
-            return;
-          }
-        }
-      }
       const jumpTarget = previewLogicEnabled ? resolveJumpTarget(currentField, formData) : null;
       if (jumpTarget === 'end') {
         message.success('Preview: would submit here (jump to end)');
         setFormData({});
-        if (onStepChange) onStepChange(1);
+        if (onStepChange) onStepChange(0);
         return;
       }
       const findFieldIndexById = (id) => formFields.findIndex(f => f.id === id);
@@ -554,14 +526,14 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 1, isP
       } else {
         message.success('This is a preview - form would be submitted here');
         setFormData({});
-        if (onStepChange) onStepChange(1);
+        if (onStepChange) onStepChange(0);
       }
       return;
     }
 
     // Basic validation for preview (simplified)
-    const currentField = formFields[safeStep - 1];
-    if (safeStep > 0 && currentField?.required) {
+    const currentField = formFields[currentStep - 1];
+    if (currentStep > 0 && currentField?.required) {
       if (currentField.type === 'contact') {
         // Validate contact field (first name, last name, email, phone)
         let hasError = false;
@@ -1205,10 +1177,9 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 1, isP
   }
 
   const flowFields = previewLogicEnabled ? getVisibleFieldsForFlow(formFields, formData) : formFields;
-  const totalSteps = Math.max(flowFields.length, 1); // no intro step
+  const totalSteps = formFields.length + 1; // keep sidebar/editor alignment
   const settings = landingPageData?.form?.settings || {};
-  const safeStep = Math.min(Math.max(currentStep || 1, 1), totalSteps);
-  const progressPercentage = totalSteps > 0 ? (safeStep / totalSteps) * 100 : 0;
+  const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
   console.log("formFields[currentStep - 1] ",formFields[currentStep - 1])
   return (
@@ -1269,7 +1240,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 1, isP
                   {landingPageData.vacancyTitle || 'Job Application'}
                 </h1>
                 <p className="text-xs text-gray-500">
-                  Step {safeStep} of {totalSteps}
+                  Step {currentStep + 1} of {totalSteps}
                 </p>
               </div>
             </div>
@@ -1305,59 +1276,86 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 1, isP
       <div className="flex-1 flex flex-col p-4 overflow-hidden">
         <div className="bg-white rounded-lg shadow-sm border p-6 flex-1 flex flex-col overflow-auto">
           <div className="flex-1 flex flex-col">
-            {/* Question Step (no intro) */}
-            <div className="flex-1 flex flex-col">
-              {flowFields[safeStep - 1] && (
-                <div className="flex-1 flex flex-col">
-                  {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "contact" && safeStep === 1 && (
-                    <div className="text-left max-w-md mb-4 p-3 rounded border bg-gray-50">
-                      <div className="font-medium text-sm">{settings.optIn.header || "Subscribe for SMS Alerts"}</div>
-                      {settings.optIn.description && (
-                        <div className="text-xs text-gray-600 mt-1">{settings.optIn.description}</div>
-                      )}
-                      <label className="flex items-center gap-2 mt-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={previewOptInAccepted}
-                          onChange={(e) => setPreviewOptInAccepted(e.target.checked)}
-                        />
-                        <span>
-                          I agree to opt-in {settings.optIn.required ? "(required)" : "(optional)"}
-                        </span>
-                      </label>
-                    </div>
-                  )}
-                  <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                    {flowFields[safeStep - 1].label}
-                    {flowFields[safeStep - 1].required && (
-                      <span className="text-red-500 ml-1">*</span>
+            {currentStep === 0 ? (
+              // Intro Step
+              <div className="text-center flex-1 flex flex-col justify-center">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">
+                  {landingPageData.form?.title || "Application Form"}
+                </h2>
+                <p className="text-gray-600 mb-6 text-sm">
+                  {landingPageData.form?.description || "Please fill out the form below to apply!"}
+                </p>
+                {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "contact" && (
+                  <div className="text-left max-w-md mx-auto mb-4 p-3 rounded border bg-gray-50">
+                    <div className="font-medium text-sm">{settings.optIn.header || "Subscribe for SMS Alerts"}</div>
+                    {settings.optIn.description && (
+                      <div className="text-xs text-gray-600 mt-1">{settings.optIn.description}</div>
                     )}
-                  </h2>
-                  
-                  <div className="flex-1 mb-6">
-                  {renderField(flowFields[safeStep - 1])}
+                    <label className="flex items-center gap-2 mt-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={previewOptInAccepted}
+                        onChange={(e) => setPreviewOptInAccepted(e.target.checked)}
+                      />
+                      <span>
+                        I agree to opt-in {settings.optIn.required ? "(required)" : "(optional)"}
+                      </span>
+                    </label>
                   </div>
-                  {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "last" && (
-                    <div className="mt-2 p-3 rounded border bg-gray-50">
-                      <div className="font-medium text-sm">{settings.optIn.header || "Subscribe for SMS Alerts"}</div>
-                      {settings.optIn.description && (
-                        <div className="text-xs text-gray-600 mt-1">{settings.optIn.description}</div>
+                )}
+                <Button 
+                  type="primary" 
+                  size="large"
+                  onClick={handleNext}
+                  className="brand-button !border-0"
+                  style={{
+                    backgroundColor: primaryColor,
+                    borderColor: primaryColor,
+                    color: 'white',
+                    background: primaryColor,
+                    border: `1px solid ${primaryColor}`
+                  }}
+                >
+                  {landingPageData.form?.startApplicationText || getTranslation(landingPageData?.lang || 'en', 'startApplication')}
+                </Button>
+              </div>
+            ) : (
+              // Question Step
+              <div className="flex-1 flex flex-col">
+                {flowFields[currentStep - 1] && (
+                  <div className="flex-1 flex flex-col">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                      {flowFields[currentStep - 1].label}
+                      {flowFields[currentStep - 1].required && (
+                        <span className="text-red-500 ml-1">*</span>
                       )}
-                      <label className="flex items-center gap-2 mt-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={previewOptInAccepted}
-                          onChange={(e) => setPreviewOptInAccepted(e.target.checked)}
-                        />
-                        <span>
-                          I agree to opt-in {settings.optIn.required ? "(required)" : "(optional)"}
-                        </span>
-                      </label>
+                    </h2>
+                    
+                    <div className="flex-1 mb-6">
+                    {renderField(flowFields[currentStep - 1])}
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "last" && (
+                      <div className="mt-2 p-3 rounded border bg-gray-50">
+                        <div className="font-medium text-sm">{settings.optIn.header || "Subscribe for SMS Alerts"}</div>
+                        {settings.optIn.description && (
+                          <div className="text-xs text-gray-600 mt-1">{settings.optIn.description}</div>
+                        )}
+                        <label className="flex items-center gap-2 mt-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={previewOptInAccepted}
+                            onChange={(e) => setPreviewOptInAccepted(e.target.checked)}
+                          />
+                          <span>
+                            I agree to opt-in {settings.optIn.required ? "(required)" : "(optional)"}
+                          </span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Navigation */}

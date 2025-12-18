@@ -363,7 +363,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
         />
       </svg>
 
-      <div className="mx-auto mt-28 mb-24 max-w-6xl md:my-48">
+      <div className="mx-auto mb-24 max-w-6xl md:my-8">
         <div className="grid gap-8 items-start md:grid-cols-2 md:gap-16">
           <div className="lg:hidden">
           {layoutAdjustment()}

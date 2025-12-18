@@ -323,8 +323,7 @@ export default function FormEdit({ paramsId }) {
   }, [landingPageData]);
 
   // 🎯 SINGLE SOURCE OF TRUTH: Current step state
-  // 0 = form settings, 1+ = form fields
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0); // 0 = intro, 1+ = form fields
 
   const [forceUpdate, setForceUpdate] = useState(0); // Force re-render key
   const [aiFormModalVisible, setAiFormModalVisible] = useState(false);
@@ -855,7 +854,6 @@ export default function FormEdit({ paramsId }) {
     return {
       showProgressBar: true,
       collectPartialAnswers: false,
-      storeCandidateInfoBeforeApplied: true,
       respondentEmail: {
         enabled: false,
         toFieldId: "contact.email",
@@ -875,10 +873,6 @@ export default function FormEdit({ paramsId }) {
       autoJumpToNext: false,
       redirectToUrl: "",
       ...base,
-      storeCandidateInfoBeforeApplied:
-        base.storeCandidateInfoBeforeApplied !== undefined
-          ? base.storeCandidateInfoBeforeApplied
-          : true,
       respondentEmail: { ...{
         enabled: false, toFieldId: "contact.email", replyTo: "", subject: "", fromName: "", body: ""
       }, ...(base?.respondentEmail || {}) },
@@ -1370,18 +1364,6 @@ export default function FormEdit({ paramsId }) {
               onChange={(v) => updateSettings({ collectPartialAnswers: v })}
             />
           }
-        />
-
-        <SettingRow
-          title="Store Candidate Info Before Applied"
-          description="If on, we store contact details mid-form (Applying) so you can follow up even if they stop. If off, we only save after full submission."
-          extra={
-            <Switch
-              size="small"
-              checked={s.storeCandidateInfoBeforeApplied !== false}
-              onChange={(v) => updateSettings({ storeCandidateInfoBeforeApplied: v })}
-            />
-          }
           divider={false}
         />
       </div>
@@ -1391,7 +1373,7 @@ export default function FormEdit({ paramsId }) {
   // 🎯 SYNC STEP WITH SELECTION: Update currentStep when selectedSection changes
   useEffect(() => {
     if (isEditingForm || !selectedSection) {
-      // Settings view when no section is selected
+      // Intro step when editing form or no selection
       setCurrentStep(0);
     } else {
       // Find the step for the selected field
@@ -1399,12 +1381,12 @@ export default function FormEdit({ paramsId }) {
         (field) => field.id === selectedSection.id
       );
       if (fieldIndex >= 0) {
-        const step = fieldIndex + 1; // 1-based for fields
+        const step = fieldIndex + 1; // +1 because step 0 is intro
         setCurrentStep(step);
         console.log("🎯 Step sync: Selected field leads to step", step);
       } else {
-        setCurrentStep(0); // Fallback to settings
-        console.log("🎯 Step sync: Field not found, defaulting to settings");
+        setCurrentStep(0); // Fallback to intro
+        console.log("🎯 Step sync: Field not found, defaulting to intro step");
       }
     }
   }, [selectedSection, isEditingForm, formSections]);
@@ -1412,16 +1394,15 @@ export default function FormEdit({ paramsId }) {
   // 🎯 SYNC SELECTION WITH STEP: Update selectedSection when currentStep changes externally
   const handleStepChange = (newStep) => {
     console.log("🎯 Step change requested:", newStep);
-    const safeStep = newStep; // allow 0 for settings, 1+ for fields
-    setCurrentStep(safeStep);
+    setCurrentStep(newStep);
 
-    if (safeStep <= 0) {
-      // Settings view
+    if (newStep === 0) {
+      // Step 0 = intro, clear selection
       setSelectedSection(null);
       setIsEditingForm(true);
     } else {
       // Step 1+ = field selection
-      const fieldIndex = safeStep - 1;
+      const fieldIndex = newStep - 1;
       const targetField = formSections[fieldIndex];
       if (targetField) {
         setSelectedSection(targetField);
@@ -3619,7 +3600,104 @@ export default function FormEdit({ paramsId }) {
                           <>
                             {/* Form Title and Description with Custom Autosave */}
                             <div className="mb-6 space-y-4">
+                              <div>
+                                <label className="block mb-2 text-sm font-medium text-gray-700">
+                                  Form Title
+                                </label>
+                                <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                  <CustomInput
+                                    value={landingPageData?.form?.title || ""}
+                                    onChange={(value) => {
+                                      setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
+                                      const updatedData = {
+                                        ...landingPageData,
+                                        form: {
+                                          ...landingPageData?.form,
+                                          title: value.slice(0, 100),
+                                        },
+                                      };
+                                      setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
+                                      debouncedSave(updatedData);
+                                    }}
+                                    placeholder="e.g., Let's get started"
+                                    maxLength={100}
+                                    className="text-sm border-none focus:ring-0"
+                                    shape="round"
+                                  />
+                                </div>
+                                <div className="mt-1 text-xs text-gray-500">
+                                  {(landingPageData?.form?.title || "").length}
+                                  /100
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block mb-2 text-sm font-medium text-gray-700">
+                                  Form Description
+                                </label>
+                                <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                  <CustomInput
+                                    value={
+                                      landingPageData?.form?.description || ""
+                                    }
+                                    onChange={(value) => {
+                                      setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
+                                      const updatedData = {
+                                        ...landingPageData,
+                                        form: {
+                                          ...landingPageData?.form,
+                                          description: value.slice(0, 150),
+                                        },
+                                      };
+                                      setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
+                                      debouncedSave(updatedData);
+                                    }}
+                                    placeholder="e.g., We'll ask you a few questions to learn more about you."
+                                    maxLength={500}
+                                    textarea={true}
+                                    className="text-sm border-none focus:ring-0"
+                                    shape="round"
+                                  />
+                                </div>
+                                <div className="mt-1 text-xs text-gray-500">
+                                  {
+                                    (landingPageData?.form?.description || "")
+                                      .length
+                                  }
+                                  /500
+                                </div>
+                              </div>
+                              {/* Form Buttons Texts */}
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Start Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.startApplicationText || "Start Application"}
+                                      onChange={(value) => {
+                                        setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            startApplicationText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
+                                </div>
                                 <div>
                                   <label className="block mb-2 text-sm font-medium text-gray-700">
                                     Submit Button Text
