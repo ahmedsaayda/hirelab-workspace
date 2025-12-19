@@ -676,7 +676,7 @@ export default function AdsEdit({ paramsId }) {
     };
 
     run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, [landingPageData, adsData, lpId]);
 
   // Publish to Meta (MVP)
