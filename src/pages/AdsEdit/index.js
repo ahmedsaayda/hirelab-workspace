@@ -1104,12 +1104,14 @@ export default function AdsEdit({ paramsId }) {
         appendPrepareMessage(`✓ Image ready for ${stepLabel}`);
       }
 
-      // Update ad set metadata state to "ready" and persist
+      // Update ad set metadata state to "launched" and persist
+      // Ads are created ACTIVE on Meta immediately after approval
       const localMeta = Array.isArray(updatedAds?._adSetsMeta) ? [...updatedAds._adSetsMeta] : [];
       const metaIdx = localMeta.findIndex((s) => s.id === adSetId);
       const metaUpdate = {
         id: adSetId,
-        state: "ready",
+        state: "launched",
+        launchedAt: new Date().toISOString(),
         approvedAt: new Date().toISOString(),
         approvedFormat: selectedFormat,
         approvedVariantIds: variantsToPrepare.map((v) => v.id),
@@ -1126,8 +1128,9 @@ export default function AdsEdit({ paramsId }) {
       lastSavedAdsHashRef.current = serializeAdsData(updatedAds);
       setAdsData(updatedAds);
 
-      // Create ads on Meta (PAUSED) - this ensures they exist under the ad set
-      appendPrepareMessage("Creating ads on Meta (paused)...");
+      // Create ads on Meta (ACTIVE) - ads go live immediately after approval
+      // Campaign-level publish/unpublish controls overall delivery
+      appendPrepareMessage("Publishing ads to Meta...");
       try {
         // Get settings from Meta ad set data (source of truth)
         const metaAdSet = launchSummary?.adSets?.find((s) => (s.id || s.adset_id) === adSetId);
@@ -1139,21 +1142,20 @@ export default function AdsEdit({ paramsId }) {
           start_time: metaAdSet?.start_time || null,
           end_time: metaAdSet?.end_time || null,
           placements: ["facebook_feed", "instagram_story"],
-          launch: false, // Keep PAUSED - don't activate yet
         });
-        appendPrepareMessage("✓ Ads created on Meta (paused)");
+        appendPrepareMessage("✓ Ads published to Meta");
       } catch (publishErr) {
         console.error("Error creating ads on Meta:", publishErr);
         appendPrepareMessage(`⚠ Warning: Ads not created on Meta: ${publishErr?.response?.data?.message || publishErr?.message || "Unknown error"}`);
-        // Don't throw - still allow user to proceed to launch page
+        // Don't throw - still allow user to proceed
       }
 
       setPreparedOnce(true);
       setPreparedVariants(variantsToPrepare);
       // Don't open modal - we're navigating away immediately
-      message.success("Creatives approved! Redirecting to launch settings...");
+      message.success("Ads published! Redirecting to ad set overview...");
 
-      // Route user to Launch settings for this specific ad set
+      // Route user to Launch/management page for this specific ad set
       // Use window.location for reliable navigation (router.push can fail with pending state updates)
       window.location.href = `/launch/${lpId}?adset=${encodeURIComponent(adSetId)}`;
     } catch (err) {
@@ -1647,7 +1649,7 @@ export default function AdsEdit({ paramsId }) {
             disabled={preparingLaunch}
             className={`px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors ${preparingLaunch ? "bg-emerald-300 cursor-not-allowed" : "bg-[#16A34A] hover:bg-[#15803D]"
               }`}
-            title="Approves creatives and generates final images. Next you’ll configure launch settings."
+            title="Approves creatives, generates final images, and publishes ads to Meta."
           >
             {preparingLaunch ? "Approving…" : "Approve creatives"}
           </button>
