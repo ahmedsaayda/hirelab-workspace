@@ -42,13 +42,15 @@ export default function AdVariantCard({
         {/* Primary Text */}
         <div className="mb-3">
           <div className="flex justify-between items-center mb-1.5">
-            <label className="text-xs font-medium text-[#344054]">Primary Text</label>
-            <span className="text-xs text-[#667085]">{editData.title.length}/40</span>
+            <label className="text-xs font-medium text-[#344054]">Headline</label>
+            <span className={`text-xs ${editData.title.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+              {editData.title.length}/40 {editData.title.length > 40 && "(May be truncated)"}
+            </span>
           </div>
           <TextArea
             value={editData.title}
             onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-            maxLength={40}
+            maxLength={60} // Allow a bit more but warn
             rows={2}
             className="text-sm"
           />
@@ -57,16 +59,21 @@ export default function AdVariantCard({
         {/* Description */}
         <div className="mb-3">
           <div className="flex justify-between items-center mb-1.5">
-            <label className="text-xs font-medium text-[#344054]">Description</label>
-            <span className="text-xs text-[#667085]">{editData.description.length}/150</span>
+            <label className="text-xs font-medium text-[#344054]">Primary Text</label>
+            <span className="text-xs text-[#667085]">{editData.description.length} chars</span>
           </div>
           <TextArea
             value={editData.description}
             onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-            maxLength={150}
-            rows={2}
+            maxLength={2200}
+            rows={4}
             className="text-sm"
           />
+          {editData.description.length > 125 && (
+            <div className="mt-1 text-[10px] text-[#667085]">
+              ℹ️ First 125 chars are the "hook" visible before "See more".
+            </div>
+          )}
         </div>
 
         {/* Image Picker - unified with media library (click area opens library; supports upload inside) */}

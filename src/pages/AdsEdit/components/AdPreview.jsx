@@ -187,11 +187,31 @@ export default function AdPreview({ variant, format, platform, brandData, landin
         landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default) },
         portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default) },
       },
+      // Retargeting ads
+      retargeting: {
+        story: { 1: () => import('./ads/Retargeting/Story/Variant1.jsx').then(m => m.default) },
+        square: { 1: () => import('./ads/Retargeting/Square/Variant1.jsx').then(m => m.default) },
+        landscape: { 1: () => import('./ads/Retargeting/Landscape/Variant1.jsx').then(m => m.default) },
+        portrait: { 1: () => import('./ads/Retargeting/Landscape/Variant1.jsx').then(m => m.default) },
+      },
     };
 
-    const loader = componentMap[adTypeId]?.[formatId]?.[variantNumber];
-    // console.log('Component loader found:', !!loader, 'for', { adTypeId, formatId, variantNumber });
-    return loader || null;
+    const variantsForTypeAndFormat = componentMap[adTypeId]?.[formatId];
+    if (!variantsForTypeAndFormat) return null;
+
+    // Direct match
+    const direct = variantsForTypeAndFormat?.[variantNumber];
+    if (direct) return direct;
+
+    // Fallback behavior:
+    // - Most ad types only have Variant1 implemented -> always use 1
+    // - Job ads have Variant1 + Variant2 -> alternate (same design set, different images)
+    if (adTypeId === "job") {
+      const alt = ((Number(variantNumber) - 1) % 2) + 1; // 1,2,1,2...
+      return variantsForTypeAndFormat?.[alt] || variantsForTypeAndFormat?.[1] || null;
+    }
+
+    return variantsForTypeAndFormat?.[1] || null;
   };
 
   // Get ad type label

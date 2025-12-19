@@ -23,6 +23,8 @@ import AdEditModal from "./components/AdEditModal";
 import InlineEditor from "./components/InlineEditor";
 import EmptyState from "./components/EmptyState";
 
+import { generateVariants, extractImagesForAdType, generateCopyForAdType } from "./utils/adGenerationUtils";
+
 // Ad type icons as inline SVGs
 const AdTypeIcon = ({ type, active }) => {
   const color = active ? "#0e87fe" : "#667085";
@@ -152,6 +154,7 @@ export default function AdsEdit({ paramsId }) {
   const [creatingAdSet, setCreatingAdSet] = useState(false);
   const [adSetActionLoading, setAdSetActionLoading] = useState({ id: null, action: null });
   const [metaConfigModalOpen, setMetaConfigModalOpen] = useState(false);
+  const autoExpandedOnceRef = useRef(false);
 
   // Dirty tracking baselines
   const lastSavedAdsHashRef = useRef("");
@@ -533,16 +536,7 @@ export default function AdsEdit({ paramsId }) {
 
   // Initialize ads data from landing page content
   const initializeAdsData = (lpData) => {
-    const ads = {};
-
-    AD_TYPES.forEach((adType) => {
-      ads[adType.id] = {
-        variants: generateVariantsForAdType(adType.id, lpData),
-        enabled: adType.id === "job", // Job ads enabled by default
-      };
-    });
-
-    return ads;
+    return generateVariants(lpData);
   };
 
   // Cloudinary upload helper via shared UploadService
@@ -609,6 +603,81 @@ export default function AdsEdit({ paramsId }) {
     const url = await uploadToCloudinary(blob);
     return url;
   };
+
+  // Under-the-hood: expand variants using all available images (without overwriting existing variants)
+  useEffect(() => {
+    const run = async () => {
+      if (!landingPageData || !adsData) return;
+      if (autoExpandedOnceRef.current) return;
+
+      // Only auto-expand if ads exist (i.e. user already generated or has saved ads)
+      const hasAny = (() => {
+        try {
+          return Object.keys(adsData || {}).some((k) => Array.isArray(adsData?.[k]?.variants) && adsData[k].variants.length > 0);
+        } catch {
+          return false;
+        }
+      })();
+      if (!hasAny) return;
+
+      const MAX_VARIANTS_PER_TYPE = 20;
+      let changed = false;
+      const nextAds = { ...(adsData || {}) };
+
+      AD_TYPES.forEach((t) => {
+        const adTypeId = t.id;
+        const group = nextAds?.[adTypeId];
+        if (!group || !Array.isArray(group.variants)) return;
+
+        const images = extractImagesForAdType(adTypeId, landingPageData);
+        if (!images.length) return;
+
+        const current = group.variants;
+        const used = new Set(current.map((v) => v?.image).filter(Boolean));
+        const remainingSlots = Math.max(0, MAX_VARIANTS_PER_TYPE - current.length);
+        if (remainingSlots <= 0) return;
+
+        const unused = images.filter((img) => img && !used.has(img)).slice(0, remainingSlots);
+        if (!unused.length) return;
+
+        const newVariants = unused.map((img, idx) => {
+          const i = current.length + idx;
+          const copy = generateCopyForAdType(adTypeId, landingPageData, i);
+          const variantNumber = adTypeId === "job" ? ((i % 2) + 1) : 1; // reuse implemented templates
+          return {
+            id: `${adTypeId}-variant-${Date.now()}-${idx}`,
+            title: copy.title,
+            description: copy.description,
+            callToAction: copy.cta,
+            source: copy.source,
+            image: img,
+            template: "template-1",
+            adTypeId,
+            variantNumber,
+            selected: false,
+            approved: false,
+          };
+        });
+
+        group.variants = [...current, ...newVariants];
+        changed = true;
+      });
+
+      autoExpandedOnceRef.current = true;
+      if (!changed) return;
+
+      try {
+        setAdsData(nextAds);
+        await AdsService.saveAds(lpId, nextAds);
+        lastSavedAdsHashRef.current = serializeAdsData(nextAds);
+      } catch (e) {
+        // If save fails, keep editor usable; user can still manually save later
+      }
+    };
+
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [landingPageData, adsData, lpId]);
 
   // Publish to Meta (MVP)
   const publishToMeta = async () => {
@@ -693,206 +762,6 @@ export default function AdsEdit({ paramsId }) {
     setConfirmOpen(true);
   };
 
-  // Generate variants for a specific ad type
-  const generateVariantsForAdType = (adTypeId, lpData) => {
-    const variants = [];
-    const images = extractImagesFromLandingPage(lpData);
-
-    // Job ads get 2 variants, all other ad types get 1 variant
-    const variantCount = adTypeId === "job" ? 2 : 1;
-
-    for (let i = 0; i < variantCount; i++) {
-      variants.push({
-        id: `${adTypeId}-variant-${i + 1}`,
-        title: getDefaultTitle(adTypeId, i, lpData),
-        description: getDefaultDescription(adTypeId, i, lpData),
-        image: images[i % images.length],
-        template: "template-1", // We'll use template 1 for now
-        adTypeId: adTypeId, // Required for component loading
-        variantNumber: i + 1, // Required for component loading
-        selected: i === 0, // First variant selected by default
-        approved: false,
-      });
-    }
-
-    return variants;
-  };
-
-  // Extract images from landing page
-  const extractImagesFromLandingPage = (lpData) => {
-    const images = [];
-
-    // Extract from hero section
-    if (lpData?.heroImage) {
-      images.push(lpData.heroImage);
-    }
-
-    // Extract from job description
-    if (lpData?.jobDescriptionImage) {
-      images.push(lpData.jobDescriptionImage);
-    }
-
-    // Extract from about company images
-    if (lpData?.aboutTheCompanyImages && lpData.aboutTheCompanyImages.length > 0) {
-      images.push(...lpData.aboutTheCompanyImages);
-    }
-
-    // Extract from photo carousel
-    if (lpData?.photoImages && lpData.photoImages.length > 0) {
-      images.push(...lpData.photoImages);
-    }
-
-    // Extract from testimonials
-    if (lpData?.testimonials) {
-      lpData.testimonials.forEach((t) => {
-        if (t.avatar) images.push(t.avatar);
-      });
-    }
-
-    // Extract from recruiters
-    if (lpData?.recruiters) {
-      lpData.recruiters.forEach((r) => {
-        if (r.recruiterAvatar) images.push(r.recruiterAvatar);
-      });
-    }
-
-    // Extract from leader introduction
-    if (lpData?.leaderIntroductionAvatar) {
-      images.push(lpData.leaderIntroductionAvatar);
-    }
-
-    // Extract from EVP mission
-    if (lpData?.evpMissionAvatar) {
-      images.push(lpData.evpMissionAvatar);
-    }
-
-    // Fallback to company logo if no images
-    if (images.length === 0 && lpData?.companyLogo) {
-      images.push(lpData.companyLogo);
-    }
-
-    // Extract from agenda/benefits
-    if (lpData?.agenda?.items) {
-      lpData.agenda.items.forEach((item) => {
-        if (item.image) images.push(item.image);
-      });
-    }
-
-    // Use a data URL placeholder instead of a missing local file to avoid 404s during capture
-    return images.length > 0 ? images : [TRANSPARENT_PNG];
-  };
-
-  // Helper to strip placeholder boilerplate like "[Insert ...]" and "Example:"
-  const sanitizePlaceholderText = (text) => {
-    if (!text || typeof text !== "string") return "";
-    let cleaned = text;
-    if (cleaned.includes("[Insert") || cleaned.includes("Example:")) {
-      cleaned = cleaned
-        .replace(/\[.*?\]/g, " ")
-        .replace(/Example:/gi, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-    return cleaned;
-  };
-
-  const snippetFromText = (text, maxLen = 80) => {
-    const cleaned = sanitizePlaceholderText(text);
-    if (!cleaned) return "";
-    const oneLine = cleaned.replace(/\s+/g, " ").trim();
-    if (!oneLine) return "";
-    return oneLine.length > maxLen ? `${oneLine.slice(0, maxLen - 3)}...` : oneLine;
-  };
-
-  const pickSectionSentence = (text) => {
-    if (!text || typeof text !== "string") return "";
-    const cleaned = sanitizePlaceholderText(text);
-    if (!cleaned) return "";
-    const firstSentence = cleaned.split(/[.!?]/)[0] || cleaned;
-    return firstSentence.trim();
-  };
-
-  // Get default title based on ad type, using vacancy context
-  const getDefaultTitle = (adTypeId, variantIndex, lpData) => {
-    const company = lpData?.companyName || "our company";
-    const vacancy = lpData?.vacancyTitle || "this role";
-
-    const testimonialTitles = [
-      snippetFromText(lpData?.testimonials?.[0]?.comment) || "Hear From Our Team",
-      snippetFromText(lpData?.testimonials?.[1]?.comment) || "Real Stories From Our People",
-      snippetFromText(lpData?.testimonials?.[2]?.comment) || "Employee Spotlight",
-    ];
-
-    const titles = {
-      job: [
-        lpData?.vacancyTitle || "Join Our Team",
-        `We're Hiring: ${lpData?.vacancyTitle || "Great Opportunity"}`,
-        `${lpData?.vacancyTitle || "Career Opportunity"} at ${company}`,
-      ],
-      "employer-brand": [
-        `Life at ${company}`,
-        `Our Mission at ${company}`,
-        lpData?.aboutTheCompanyTitle || "Why People Love Working Here",
-      ],
-      testimonial: testimonialTitles,
-      company: [
-        lpData?.aboutTheCompanyTitle || `Inside ${company}`,
-        `About ${company}`,
-        lpData?.companyFactsTitle || "Our Culture & Values",
-      ],
-      retargeting: [
-        `Still Interested in ${vacancy}?`,
-        `Don't Miss Out – ${vacancy}`,
-        `Join ${company} Today`,
-      ],
-    };
-
-    return titles[adTypeId]?.[variantIndex] || lpData?.vacancyTitle || "Join Our Team";
-  };
-
-  // Get default description using vacancy & company sections
-  const getDefaultDescription = (adTypeId, variantIndex, lpData) => {
-    const evpSentence = pickSectionSentence(lpData?.evpMissionDescription);
-    const aboutSentence =
-      pickSectionSentence(lpData?.aboutTheCompanyDescription || lpData?.aboutTheCompanyText) ||
-      pickSectionSentence(lpData?.companyInfo);
-    const jobSentence =
-      pickSectionSentence(lpData?.heroDescription) ||
-      pickSectionSentence(lpData?.jobDescription);
-
-    const descriptions = {
-      job: [
-        jobSentence || "Highlighting impact, growth and day‑to‑day responsibilities in this role.",
-        "Professional tone that emphasizes ownership, responsibility and influence.",
-        "Clear call-to-action for candidates who want to make a difference in this role.",
-      ],
-      "employer-brand": [
-        evpSentence ||
-        aboutSentence ||
-        "Showcasing our values, mission and what makes our culture unique.",
-        aboutSentence || "Where innovation, collaboration and growth come together.",
-        "A workplace built around purpose, development and long‑term careers.",
-      ],
-      testimonial: [
-        "Discover what our employees love about working here.",
-        "Real experiences from real team members.",
-        "See why people choose to grow their careers with us.",
-      ],
-      company: [
-        aboutSentence ||
-        "More people‑focused and brand‑aligned, appealing to candidates who value culture.",
-        "Learn about our commitment to excellence, innovation and client impact.",
-        "Discover the benefits and opportunities that set us apart as an employer.",
-      ],
-      retargeting: [
-        "The opportunity is still available – apply now and complete your application.",
-        "Come back and finish your application to move forward in the process.",
-        "Take the next step in your career journey with us.",
-      ],
-    };
-
-    return descriptions[adTypeId]?.[variantIndex] || jobSentence || lpData?.heroDescription || "";
-  };
 
   // Get current variants for selected ad type
   const currentVariants = useMemo(() => {
