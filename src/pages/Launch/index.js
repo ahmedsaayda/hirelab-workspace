@@ -6,6 +6,7 @@ import { FaFacebook, FaGoogle, FaLinkedin, FaTiktok, FaSnapchat, FaInstagram } f
 import { Check, ChevronRight, AlertCircle, TrendingUp, Users, Target, BarChart2, RefreshCw, Calendar, Clock, DollarSign, Zap, MapPin, Search, Plus, X } from "lucide-react";
 import AdsLaunchService from "../../services/AdsLaunchService";
 import AdsService from "../../services/AdsService";
+import LandingPageService from "../../services/landingPageService";
 import Header from "../Dashboard/Vacancies/components/components/Header";
 import { Heading } from "../Dashboard/Vacancies/components/components";
 import dayjs from "dayjs";
@@ -1115,13 +1116,21 @@ export default function Launch({ paramsId }) {
       <div className="px-8 pt-6">
         <Header
           landingPageData={landingPageData}
-          setPublished={(val) => {
+          setPublished={async (val) => {
             if (landingPageData) {
-              const newData = { ...landingPageData, published: val };
-              setLandingPageData(newData);
-              CrudService.update("LandingPageData", lpId, { published: val }).then(() => {
-                message.success(val ? "Page published" : "Page unpublished");
-              });
+              try {
+                if (val) {
+                  await LandingPageService.publishLandingPage(lpId, "page");
+                  message.success("Page published (Meta ads enabled)");
+                } else {
+                  await LandingPageService.unPublishLandingPage(lpId);
+                  message.success("Page unpublished (Meta ads paused)");
+                }
+                setLandingPageData({ ...landingPageData, published: val });
+                reload();
+              } catch (e) {
+                message.error("Failed to update publish status");
+              }
             }
           }} setLandingPageData={setLandingPageData}
           reload={reload}

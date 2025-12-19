@@ -1517,10 +1517,10 @@ export default function AdsEdit({ paramsId }) {
               <div className="text-sm text-[#667085] mt-1">Performance metrics from Meta</div>
             </div>
             <div className={`px-3 py-1.5 text-xs font-semibold rounded-full ${isActive
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : isPaused
-                  ? "bg-gray-100 text-gray-700 border border-gray-300"
-                  : "bg-red-50 text-red-700 border border-red-200"
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              : isPaused
+                ? "bg-gray-100 text-gray-700 border border-gray-300"
+                : "bg-red-50 text-red-700 border border-red-200"
               }`}>
               {isActive ? "Running" : isPaused ? "Paused" : "Inactive"}
             </div>
@@ -1846,13 +1846,21 @@ export default function AdsEdit({ paramsId }) {
         <div className="px-8 py-6 bg-white border-b border-[#eaecf0] flex-shrink-0">
           <Header
             landingPageData={landingPageData}
-            setPublished={(val) => {
+            setPublished={async (val) => {
               if (landingPageData) {
-                const newData = { ...landingPageData, published: val };
-                setLandingPageData(newData);
-                CrudService.update("LandingPageData", lpId, { published: val }).then(() => {
-                  message.success(val ? "Page published" : "Page unpublished");
-                });
+                try {
+                  if (val) {
+                    await LandingPageService.publishLandingPage(lpId, "page");
+                    message.success("Page published (Meta ads enabled)");
+                  } else {
+                    await LandingPageService.unPublishLandingPage(lpId);
+                    message.success("Page unpublished (Meta ads paused)");
+                  }
+                  setLandingPageData({ ...landingPageData, published: val });
+                  fetchData();
+                } catch (e) {
+                  message.error("Failed to update publish status");
+                }
               }
             }}
             setLandingPageData={setLandingPageData}

@@ -73,7 +73,7 @@ export const renderSection = ({
   fetchData,
   landingPageData = defaultLandingPageData,
   setLandingPageData,
-  key=section?.key || "section", // Use stable key instead of Math.random()
+  key = section?.key || "section", // Use stable key instead of Math.random()
   similarJobs,
   similarJobsLoading,
 }) => {
@@ -88,19 +88,19 @@ export const renderSection = ({
       return (
         <FormE
           showFormEditor={false}
-          setShowFormEditor={() => {}}
+          setShowFormEditor={() => { }}
           landingPageData={landingPageData}
           noModal
         />
       );
     case "flexalign":
-      return <Footer 
-        key={key} 
-        fetchData={fetchData} 
-        landingPageData={landingPageData} 
+      return <Footer
+        key={key}
+        fetchData={fetchData}
+        landingPageData={landingPageData}
         similarJobs={similarJobs}
         similarJobsLoading={similarJobsLoading}
-        onClickApply={() => {}}
+        onClickApply={() => { }}
         lpId={landingPageData?._id}
         isEdit={true}
       />;
@@ -195,15 +195,15 @@ export const renderEditor = ({
   jobsLoading,
 }) => {
   // This function should render the corresponding section based on its key.
-  const props = { 
-    fetchData, 
-    landingPageData, 
+  const props = {
+    fetchData,
+    landingPageData,
     setLandingPageData,
     availableJobs,
     jobsLoading,
   };
-  console.log("render Editor the key is",section?.key)
-  console.log("render Editor the section is",section)
+  console.log("render Editor the key is", section?.key)
+  console.log("render Editor the section is", section)
   switch (section?.key) {
     case "flexaligntop":
       return <HeroSectionEdit {...props} />;
@@ -375,10 +375,9 @@ const Category = ({ title, items, onClick, existingItems }) => (
           <button
             key={index}
             className={`flex justify-start items-center p-3 rounded border shadow-sm 
-              ${
-                isAlreadyAdded
-                  ? "bg-gray-100 opacity-60 cursor-not-allowed"
-                  : "hover:bg-gray-100 focus:outline-none focus:ring"
+              ${isAlreadyAdded
+                ? "bg-gray-100 opacity-60 cursor-not-allowed"
+                : "hover:bg-gray-100 focus:outline-none focus:ring"
               }`}
             onClick={() => !isAlreadyAdded && onClick(item.key)}
             disabled={isAlreadyAdded}
@@ -398,17 +397,17 @@ const Category = ({ title, items, onClick, existingItems }) => (
   </div>
 );
 
-export default function LandingpageEdit({paramsId}) {
+export default function LandingpageEdit({ paramsId }) {
   const dispatch = useDispatch();
   let lpId = paramsId;
   const router = useRouter();
-  if(!lpId) lpId = router.query.lpId;
-  console.log("lpId",lpId)
+  if (!lpId) lpId = router.query.lpId;
+  console.log("lpId", lpId)
   const user = useSelector(selectUser);
   const { setScrollToSection, hoveredField, setHoveredField } = useHover();
   const [landingPageData, setLandingPageData] = useState(null);
   const [activeKey, setActiveKey] = useState("flexaligntop");
-  console.log("the activeKey is",activeKey)
+  console.log("the activeKey is", activeKey)
   const [addMenuItem, setAddMenuItem] = useState(false);
   const [templateMenu, setTemplateMenu] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(890);
@@ -453,8 +452,8 @@ export default function LandingpageEdit({paramsId}) {
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [hasImmediateUnsavedChanges, setHasImmediateUnsavedChanges] = useState(false);
-  
-  
+
+
   const combinedSections = [
     { key: "flexaligntop" },
     ...(landingPageData?.menuItems ?? []).filter(item => item.active).sort((a, b) => (a.sort || 0) - (b.sort || 0)),
@@ -463,15 +462,15 @@ export default function LandingpageEdit({paramsId}) {
   ];
   const activeSection = combinedSections.find(section => section.key === activeKey) || combinedSections[0];
   const activeIdx = combinedSections.findIndex(section => section.key === activeKey);
-  
+
   const fetchData = useCallback(() => {
-    console.log("will fetch data for id",lpId)
-    if(!lpId) {
+    console.log("will fetch data for id", lpId)
+    if (!lpId) {
       return;
     }
-    try{
+    try {
       if (lpId) {
-        CrudService.getSingle("LandingPageData", lpId,"landing page edit").then((res) => {
+        CrudService.getSingle("LandingPageData", lpId, "landing page edit").then((res) => {
           if (res.data) {
             // Add showHirelabBranding flag based on user's subscription status
             const showHirelabBranding = !user?.subscription?.paid;
@@ -480,16 +479,16 @@ export default function LandingpageEdit({paramsId}) {
               showHirelabBranding
             };
             setLandingPageData(landingPageDataWithBranding);
-            
+
             // 🔥 Check for unpublished changes after loading data
             checkForUnpublishedChanges(landingPageDataWithBranding);
           }
-        },"landing page id");
+        }, "landing page id");
 
       }
-    }catch(err){
+    } catch (err) {
       message.error("Failed to load landing page data");
-      console.log("error fetching data",err)
+      console.log("error fetching data", err)
     }
   }, [lpId, user?.subscription?.paid]);
 
@@ -661,7 +660,7 @@ export default function LandingpageEdit({paramsId}) {
 
       // Quick comparison using JSON.stringify
       const hasChanges = JSON.stringify(currentPageData) !== JSON.stringify(publishedPageData);
-      
+
       console.log("🔍 PAGE Change Detection:", {
         hasChanges,
         currentDataKeys: Object.keys(currentPageData).length,
@@ -686,24 +685,24 @@ export default function LandingpageEdit({paramsId}) {
     try {
       // Clean data for saving (remove system fields)
       const { _id, showHirelabBranding, debugData, ...cleanData } = dataToSave;
-      
+
       console.log("💾 Auto-saving page changes (not touching publishedVersion)");
-      
+
       const response = await CrudService.update("LandingPageData", lpId, cleanData, "landing page edit");
-      
+
       if (response?.data) {
         // Update local state with fresh data from server
         setLandingPageData(response.data);
-        
+
         // Clear immediate unsaved changes after successful auto-save
         setHasImmediateUnsavedChanges(false);
-        
+
         // Re-check for unpublished changes
         setTimeout(() => {
           checkForUnpublishedChanges(response.data);
         }, 100);
       }
-      
+
       return true;
     } catch (error) {
       console.error("❌ Auto-save failed:", error);
@@ -735,7 +734,7 @@ export default function LandingpageEdit({paramsId}) {
     // Mark as having immediate unsaved changes
     setHasImmediateUnsavedChanges(true);
     sessionHasChangesRef.current = true; // any edit in this session invalidates previous acknowledgements
-    
+
     if (typeof newData === 'function') {
       setLandingPageData(prevData => {
         const updatedData = newData(prevData);
@@ -763,7 +762,7 @@ export default function LandingpageEdit({paramsId}) {
   }, [debouncedAutoSave, lpId, checkForUnpublishedChanges]);
 
   // Centralized job fetching functions
-  
+
   // Fetch available jobs for RecommendedJobsSelector (EditorRender) and section copy
   const fetchAvailableJobs = useCallback(async () => {
     // Ensure we have a user context before querying
@@ -776,12 +775,14 @@ export default function LandingpageEdit({paramsId}) {
     try {
       const result = await CrudService.search(
         "LandingPageData",
-        999, // Get a large number of results
+        99999, // Get a large number of results
         1,
         {
           text: "",
           // Let the backend handle workspace / owner scoping automatically
-          filters: {},
+          filters: {
+            user_id: user._id,
+          },
           sort: { createdAt: -1 }, // Most recent first
         }
       );
@@ -822,11 +823,11 @@ export default function LandingpageEdit({paramsId}) {
 
     setSimilarJobsLoading(true);
     try {
-      
+
       const res = await CrudService.search("LandingPageData", 100, 1, {
         filters: { _id: { $in: similarJobsIds } },
       });
-      
+
       if (res?.data?.items) {
         setSimilarJobs(res?.data?.items);
       }
@@ -960,8 +961,8 @@ export default function LandingpageEdit({paramsId}) {
     let newMenuItems;
     if (existingSectionIndex !== -1) {
       // Section exists but is inactive, activate it
-      newMenuItems = existingMenuItems.map((item, index) => 
-        index === existingSectionIndex 
+      newMenuItems = existingMenuItems.map((item, index) =>
+        index === existingSectionIndex
           ? { ...item, active: true, visible: true }
           : item
       );
@@ -996,14 +997,14 @@ export default function LandingpageEdit({paramsId}) {
   const removeSection = (i) => {
     const currentActiveMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
     const dynamicIndex = i - 1;
-    
+
     if (dynamicIndex < 0 || dynamicIndex >= currentActiveMenuItems.length) return;
-    
+
     const sectionToRemove = currentActiveMenuItems[dynamicIndex];
-    
+
     // Mark the section as inactive instead of removing it
-    const newMenuItems = (landingPageData?.menuItems ?? []).map(item => 
-      item.key === sectionToRemove.key 
+    const newMenuItems = (landingPageData?.menuItems ?? []).map(item =>
+      item.key === sectionToRemove.key
         ? { ...item, active: false, visible: false }
         : item
     );
@@ -1012,10 +1013,10 @@ export default function LandingpageEdit({paramsId}) {
       ...prevData,
       menuItems: newMenuItems,
     }));
-    
+
     // Update activeKey based on remaining active sections
     const removedSection = currentActiveMenuItems[i - 1];
-    
+
     if (activeKey === removedSection?.key) {
       // If we're removing the currently active section, switch to hero section
       if (i > 1) {
@@ -1029,13 +1030,13 @@ export default function LandingpageEdit({paramsId}) {
 
   const handleUp = (i) => {
     if (i <= 1) return;
-    
+
     const currentActiveItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
     if (i - 2 < 0 || i - 1 >= currentActiveItems.length) return;
-    
+
     const currentItem = currentActiveItems[i - 1];
     const itemAbove = currentActiveItems[i - 2];
-    
+
     // Swap sort values
     const newMenuItems = (landingPageData?.menuItems ?? []).map(item => {
       if (item.key === currentItem.key) {
@@ -1045,17 +1046,17 @@ export default function LandingpageEdit({paramsId}) {
       }
       return item;
     });
-    
+
     updateMenuItems(newMenuItems);
   };
 
   const handleDown = (i) => {
     const currentActiveItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
     if (i >= currentActiveItems.length) return;
-    
+
     const currentItem = currentActiveItems[i - 1];
     const itemBelow = currentActiveItems[i];
-    
+
     // Swap sort values
     const newMenuItems = (landingPageData?.menuItems ?? []).map(item => {
       if (item.key === currentItem.key) {
@@ -1065,7 +1066,7 @@ export default function LandingpageEdit({paramsId}) {
       }
       return item;
     });
-    
+
     updateMenuItems(newMenuItems);
   };
 
@@ -1080,7 +1081,7 @@ export default function LandingpageEdit({paramsId}) {
       }
       return item;
     });
-    
+
     updateMenuItems(updatedMenuItems);
   };
 
@@ -1116,28 +1117,28 @@ export default function LandingpageEdit({paramsId}) {
         }));
       }
     } else if (activeSection.key === "Video") {
-      const {sectionName,type,  ...VideoTemplateData} = data[0]?.templateData
+      const { sectionName, type, ...VideoTemplateData } = data[0]?.templateData
       updateLandingPageData((prev) => ({
         ...prev,
         ...VideoTemplateData
       }));
     } else if (activeSection.key === "EVP / Mission") {
-      if(data[0].type === "section-template"){
-        const { sectionName,type, ...templateDataWithoutType } = data[0].templateData;
+      if (data[0].type === "section-template") {
+        const { sectionName, type, ...templateDataWithoutType } = data[0].templateData;
 
         updateLandingPageData((prev) => ({
           ...prev,
           ...templateDataWithoutType,
         }));
-      }else{
+      } else {
         updateLandingPageData((prev) => ({
           ...prev,
           evpMissionAvatar: data[0]?.thumbnail,
-        }));        
+        }));
       }
 
     } else if (activeSection.key === "Image Carousel") {
-      
+
       updateLandingPageData((prev) => ({
         ...prev,
         photoImages: [
@@ -1145,7 +1146,7 @@ export default function LandingpageEdit({paramsId}) {
           ...data.map((d) => d.thumbnail),
         ],
       }));
-    } 
+    }
     else if (activeSection.key === "Employee Testimonials") {
       updateLandingPageData((prev) => ({
         ...prev,
@@ -1184,43 +1185,43 @@ export default function LandingpageEdit({paramsId}) {
           ...templateDataWithoutType,
         }));
       }
-    } else if (activeSection.key === "Job Description"){
-      const {sectionName,type,  ...templateData} = data[0]?.templateData
+    } else if (activeSection.key === "Job Description") {
+      const { sectionName, type, ...templateData } = data[0]?.templateData
       updateLandingPageData((prev) => ({
         ...prev,
         ...templateData
       }));
-    } else if (activeSection.key === "About The Company"){
-      const {sectionName,type,  ...templateData} = data[0]?.templateData
+    } else if (activeSection.key === "About The Company") {
+      const { sectionName, type, ...templateData } = data[0]?.templateData
       updateLandingPageData((prev) => ({
         ...prev,
         ...templateData
       }));
-    }else if (activeSection.key === "Job Specifications"){
-      const {sectionName,type,  ...templateData} = data[0]?.templateData
+    } else if (activeSection.key === "Job Specifications") {
+      const { sectionName, type, ...templateData } = data[0]?.templateData
       updateLandingPageData((prev) => ({
         ...prev,
         ...templateData
       }));
-    }else if (activeSection.key === "Agenda"){
-      const {sectionName,type,  ...templateData} = data[0]?.templateData
+    } else if (activeSection.key === "Agenda") {
+      const { sectionName, type, ...templateData } = data[0]?.templateData
       updateLandingPageData((prev) => ({
         ...prev,
         ...templateData
       }));
-    }else if (activeSection.key === "Text Box"){
-      if(data[0].type === "section-template"){
-        const { sectionName,type, ...templateDataWithoutType } = data[0].templateData;
+    } else if (activeSection.key === "Text Box") {
+      if (data[0].type === "section-template") {
+        const { sectionName, type, ...templateDataWithoutType } = data[0].templateData;
 
         updateLandingPageData((prev) => ({
           ...prev,
           ...templateDataWithoutType,
         }));
-      }else{
+      } else {
         updateLandingPageData((prev) => ({
           ...prev,
           textBoxImage: data[0]?.thumbnail,
-        }));        
+        }));
       }
 
     }
@@ -1582,7 +1583,7 @@ export default function LandingpageEdit({paramsId}) {
       console.error("Error copying section from campaign:", error);
       message.error(
         error?.response?.data?.message ||
-          "Failed to copy section. Please try again."
+        "Failed to copy section. Please try again."
       );
     } finally {
       setCopySectionLoading(false);
@@ -1591,9 +1592,9 @@ export default function LandingpageEdit({paramsId}) {
 
   const mediaLimits = {
     // Existing sections
-    flexaligntop: { 
-      images: 1, 
-      videos: 0, 
+    flexaligntop: {
+      images: 1,
+      videos: 0,
       mediaType: "image",
       sectionName: "Hero Section"
     },
@@ -1601,25 +1602,25 @@ export default function LandingpageEdit({paramsId}) {
       images: 5 - landingPageData?.aboutTheCompanyImages?.length,
       videos: 0,
       mediaType: "image",
-      sectionName: "About The Company" 
+      sectionName: "About The Company"
     },
-    "Leader Introduction": { 
-      images: 1, 
-      videos: 0, 
+    "Leader Introduction": {
+      images: 1,
+      videos: 0,
       mediaType: "image",
       sectionName: "Leader Introduction"
     },
-    Video: { 
-      images: 0, 
-      videos: 1, 
+    Video: {
+      images: 0,
+      videos: 1,
       mediaType: "video",
-      sectionName: "Video" 
+      sectionName: "Video"
     },
     "EVP / Mission": {
       images: 1,
       videos: 0,
       mediaType: "image",
-      sectionName: "EVP / Mission" 
+      sectionName: "EVP / Mission"
     },
     "Image Carousel": {
       images: 12 - Number(landingPageData?.photoImages?.length),
@@ -1643,9 +1644,9 @@ export default function LandingpageEdit({paramsId}) {
       ).length || Infinity,
       videos: 0,
       mediaType: "image",
-      sectionName: "Recruiter Contact" 
+      sectionName: "Recruiter Contact"
     },
-  
+
     // New sections from switch case
     "form-editor": {
       images: 0,
@@ -1704,7 +1705,7 @@ export default function LandingpageEdit({paramsId}) {
   };
 
 
-  const sendRedux = ()=>{
+  const sendRedux = () => {
     if (mediaLimits && activeSection) {
       dispatch(setMediaLimits(mediaLimits));
       dispatch(setActiveSection(activeSection));
@@ -1714,7 +1715,7 @@ export default function LandingpageEdit({paramsId}) {
   useEffect(() => {
     sendRedux()
   }, [activeKey, activeSection])
-  
+
 
   // 🔥 NEW: Proper publish handler for PAGE scope
   const handlePublish = async () => {
@@ -1722,20 +1723,20 @@ export default function LandingpageEdit({paramsId}) {
 
     message.loading("Publishing page changes...", 0);
     setIsAutoSaving(false); // Stop auto-saving during publish
-    
+
     try {
       // Use the proper scope-based publish endpoint
       const res = await LandingPageService.publishLandingPage(lpId, "page");
-      
+
       console.log("✅ PAGE publish response:", res);
       message.destroy();
       message.success("Page published successfully!");
-      
+
       // Refresh data to get latest publishedVersion
       setTimeout(() => {
         fetchData();
       }, 500);
-      
+
     } catch (err) {
       message.destroy();
       message.error("Failed to publish: " + (err.message || "Unknown error"));
@@ -1755,7 +1756,7 @@ export default function LandingpageEdit({paramsId}) {
             <>
               <NavBar
                 landingPageData={landingPageData}
-                onClickApply={() => {}}
+                onClickApply={() => { }}
                 fullscreen={fullscreen}
                 setFullscreen={setFullscreen}
                 showBackToEditButton={true}
@@ -1765,18 +1766,18 @@ export default function LandingpageEdit({paramsId}) {
               />
               <div
                 key="hero-section"
-                                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setActiveKey("flexaligntop");
-                  }}
-                  style={{
-                    paddingTop:40,
-                  }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setActiveKey("flexaligntop");
+                }}
+                style={{
+                  paddingTop: 40,
+                }}
               >
                 <HeroSection
                   landingPageData={landingPageData}
-                  fetchData={() => {}}
+                  fetchData={() => { }}
                 />
               </div>
               {[
@@ -1785,35 +1786,35 @@ export default function LandingpageEdit({paramsId}) {
                 { key: "flexalign" },
                 { key: "search" },
               ]
-              .filter(section => {
-                // Always show special keys like flexalign and search
-                if (section.key === "flexalign" || section.key === "search") return true;
-                // For menuItems, only show if active and visible
-                return section.active && section.visible !== false;
-              })
-              
-              .map((section, idx) => {
-                return (
-                  <div
-                    key={`section-${idx}`}
-                                          onClick={(e) => {
+                .filter(section => {
+                  // Always show special keys like flexalign and search
+                  if (section.key === "flexalign" || section.key === "search") return true;
+                  // For menuItems, only show if active and visible
+                  return section.active && section.visible !== false;
+                })
+
+                .map((section, idx) => {
+                  return (
+                    <div
+                      key={`section-${idx}`}
+                      onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         setActiveKey(section.key);
                       }}
-                    className="cursor-pointer"
-                  >
-                    {renderSection({
-                      section,
-                      fetchData,
-                      landingPageData,
-                      setLandingPageData: updateLandingPageData,
-                      similarJobs,
-                      similarJobsLoading,
-                    })}
-                  </div>
-                );
-              })}
+                      className="cursor-pointer"
+                    >
+                      {renderSection({
+                        section,
+                        fetchData,
+                        landingPageData,
+                        setLandingPageData: updateLandingPageData,
+                        similarJobs,
+                        similarJobsLoading,
+                      })}
+                    </div>
+                  );
+                })}
             </>
           }
           landingPageData={landingPageData}
@@ -1852,10 +1853,9 @@ export default function LandingpageEdit({paramsId}) {
       />
       <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3 pl-0">
         <div
-          className={` py-4 flex flex-shrink-0  lg:min-w-[590px] flex-grow ${
-            fullscreen ? "w-0 overflow-hidden" : "w-full lg:w-[35%]"
-          } transition-all duration-300 justify-center  `}
-          style={{ scrollbarWidth: "none" ,}}
+          className={` py-4 flex flex-shrink-0  lg:min-w-[590px] flex-grow ${fullscreen ? "w-0 overflow-hidden" : "w-full lg:w-[35%]"
+            } transition-all duration-300 justify-center  `}
+          style={{ scrollbarWidth: "none", }}
         >
           <Sidebar17
             handleUp={handleUp}
@@ -1886,13 +1886,13 @@ export default function LandingpageEdit({paramsId}) {
 
                 {activeSection && (
                   <div className="flex flex-row items-center gap-2">
-                  {/* Auto-save indicator */}
+                    {/* Auto-save indicator */}
                     {isAutoSaving && (
-                    <div className="hidden gap-2 items-center mr-2 text-sm text-blue-600">
-                      <div className="w-4 h-4 rounded-full border-2 border-blue-600 animate-spin border-t-transparent"></div>
-                      <span>Saving...</span>
-                    </div>
-                  )}
+                      <div className="hidden gap-2 items-center mr-2 text-sm text-blue-600">
+                        <div className="w-4 h-4 rounded-full border-2 border-blue-600 animate-spin border-t-transparent"></div>
+                        <span>Saving...</span>
+                      </div>
+                    )}
                     <button
                       onClick={() => setIsAIModalVisible(true)}
                       className="flex justify-center items-center mr-2"
@@ -1940,11 +1940,11 @@ export default function LandingpageEdit({paramsId}) {
                       }}
                       title="Media Library"
                     >
-                     
+
                     </button>
 
 
-                  
+
 
                     <div>
                       {isOpen && (
@@ -1955,19 +1955,18 @@ export default function LandingpageEdit({paramsId}) {
                               <div className="flex gap-4 items-center">
                                 <h2 className="text-xl font-semibold">
                                   {`  
-                                  ${
-                                    activeSection?.key
+                                  ${activeSection?.key
                                       ? `
                                   ${activeSection?.key
-                                    ?.replace?.("flexaligntop", "Hero")
-                                    ?.replace?.("form-editor", "Form Editor")
-                                    ?.replace?.("flexalign", "Footer")
-                                    ?.replace?.(
-                                      "About Company",
-                                      "About The Company"
-                                    )} Section`
+                                        ?.replace?.("flexaligntop", "Hero")
+                                        ?.replace?.("form-editor", "Form Editor")
+                                        ?.replace?.("flexalign", "Footer")
+                                        ?.replace?.(
+                                          "About Company",
+                                          "About The Company"
+                                        )} Section`
                                       : ""
-                                  }`}
+                                    }`}
                                 </h2>
                               </div>
                               <button
@@ -1997,11 +1996,11 @@ export default function LandingpageEdit({paramsId}) {
                       )}
                     </div>
                     <div>
-                    <ImageSelectionModal 
-                      isOpen={isImageOpen} 
-                      onClose={closeModal} 
-                      onImageSelected={handleImageSelected} 
-                    />
+                      <ImageSelectionModal
+                        isOpen={isImageOpen}
+                        onClose={closeModal}
+                        onImageSelected={handleImageSelected}
+                      />
                     </div>
                   </div>
                 )}
@@ -2022,93 +2021,92 @@ export default function LandingpageEdit({paramsId}) {
         </div>
 
         <div
-          className={`overflow-scroll overflow-x-hidden  ${
-            fullscreen ? "w-full" : "w-full"
-          } transition-all duration-300 border-r border-solid border-blue_gray-50 px-2  mdx:w-full p-1`}
-          style={{ scrollbarWidth: "none" ,}}
+          className={`overflow-scroll overflow-x-hidden  ${fullscreen ? "w-full" : "w-full"
+            } transition-all duration-300 border-r border-solid border-blue_gray-50 px-2  mdx:w-full p-1`}
+          style={{ scrollbarWidth: "none", }}
         >
-         
+
 
           <div className=" h-[650px] overflow-x-hidden overflow-y-auto lg:h-[calc(100vh-100px)] min-h-[450px]  text-sm text-center text-gray-400 border border-blue-600 rounded-lg"
             style={{
               scrollbarWidth: "none",
-              padding:0,
-              }}>
+              padding: 0,
+            }}>
 
-          <PreviewContainer
-            pageComponent={
-              <div style={{
-                width:"100%",
-              }}>
-                <NavBar
-                  landingPageData={landingPageData}
-                  onClickApply={() => {}}
-                  fullscreen={fullscreen}
-                  showBackToEditButton={false}
-                  lpId={lpId}
-                  isEdit={true}
-                  setLandingPageData={updateLandingPageData}
-                />
-                            <div
-                  key="hero-section"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setActiveKey("flexaligntop");
-                  }}
-                >
-                  <HeroSection
+            <PreviewContainer
+              pageComponent={
+                <div style={{
+                  width: "100%",
+                }}>
+                  <NavBar
                     landingPageData={landingPageData}
-                    fetchData={() => {}}
+                    onClickApply={() => { }}
+                    fullscreen={fullscreen}
+                    showBackToEditButton={false}
+                    lpId={lpId}
+                    isEdit={true}
+                    setLandingPageData={updateLandingPageData}
                   />
+                  <div
+                    key="hero-section"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setActiveKey("flexaligntop");
+                    }}
+                  >
+                    <HeroSection
+                      landingPageData={landingPageData}
+                      fetchData={() => { }}
+                    />
+                  </div>
+                  {[
+                    // { key: "flexaligntop" },
+                    ...(landingPageData?.menuItems ?? [])?.sort((a, b) => a.sort - b.sort),
+                    { key: "flexalign", id: "footer", visible: true, active: true, sort: 1000, },
+                    { key: "search", id: "search", visible: true, active: true, sort: 1001, },
+                  ].map((section, idx) => {
+                    const isHidden = section.visible === false;
+                    console.log("section===>", section);
+                    const isActive = section.active;
+                    if (!isActive) {
+                      console.log("section", section);
+                      return null;
+                    }
+                    return (
+                      <div
+                        key={`section-${idx}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setActiveKey(section.key);
+                        }}
+                        className={`cursor-pointer ${isHidden ? 'relative opacity-20 blur-xl pointer-events-none' : ''}`}
+                        style={isHidden ? {
+                          filter: 'grayscale(50%) blur(5px)',
+                          opacity: 0.5,
+                          transition: 'all 0.3s ease'
+                        } : {}}
+                      >
+
+                        {renderSection({
+                          section,
+                          fetchData,
+                          landingPageData,
+                          setLandingPageData: updateLandingPageData,
+                          similarJobs,
+                          similarJobsLoading,
+                        })}
+                      </div>
+                    );
+                  })}
                 </div>
-                {[
-                  // { key: "flexaligntop" },
-                  ...(landingPageData?.menuItems ?? [])?.sort((a, b) => a.sort - b.sort),
-                  { key: "flexalign" ,id:"footer",visible:true,active:true,sort:1000,},
-                  { key: "search" ,id:"search",visible:true,active:true,sort:1001,},
-                ].map((section, idx) => {
-                  const isHidden = section.visible === false;
-                  console.log("section===>", section);
-                  const isActive = section.active;
-                  if(!isActive){
-                    console.log("section", section);
-                    return null;
-                  }
-                  return (
-                    <div
-                      key={`section-${idx}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setActiveKey(section.key);
-                      }}
-                      className={`cursor-pointer ${isHidden ? 'relative opacity-20 blur-xl pointer-events-none' : ''}`}
-                      style={isHidden ? { 
-                        filter: 'grayscale(50%) blur(5px)',
-                        opacity: 0.5,
-                        transition: 'all 0.3s ease'
-                      } : {}}
-                    >
-                    
-                      {renderSection({
-                        section,
-                        fetchData,
-                        landingPageData,
-                        setLandingPageData: updateLandingPageData,
-                        similarJobs,
-                        similarJobsLoading,
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            }
-            landingPageData={landingPageData}
-            fullscreen={fullscreen}
-            setFullscreen={setFullscreen}
-          />
-         </div>
+              }
+              landingPageData={landingPageData}
+              fullscreen={fullscreen}
+              setFullscreen={setFullscreen}
+            />
+          </div>
         </div>
       </div>
 
@@ -2170,7 +2168,7 @@ export default function LandingpageEdit({paramsId}) {
                     console.error("Error loading campaign preview:", err);
                     message.error(
                       err?.response?.data?.message ||
-                        "Failed to load campaign preview"
+                      "Failed to load campaign preview"
                     );
                     setCopySourcePreview(null);
                   } finally {
@@ -2257,11 +2255,10 @@ export default function LandingpageEdit({paramsId}) {
           {new Array(3).fill(0).map((a, i) => (
             <div
               key={i}
-              className={`flex w-full flex-col items-start gap-5 rounded-lg border px-3.5 py-4 cursor-pointer ${
-                landingPageData?.templateId === `${i + 1}`
-                  ? "border-solid border-light_blue-A700 bg-gray-100_01"
-                  : ""
-              }`}
+              className={`flex w-full flex-col items-start gap-5 rounded-lg border px-3.5 py-4 cursor-pointer ${landingPageData?.templateId === `${i + 1}`
+                ? "border-solid border-light_blue-A700 bg-gray-100_01"
+                : ""
+                }`}
               onClick={() => {
                 updateLandingPageData((d) => ({ ...d, templateId: `${i + 1}` }));
                 setTemplateMenu(false);
@@ -2283,11 +2280,10 @@ export default function LandingpageEdit({paramsId}) {
                 <Button
                   size="3xl"
                   shape="round"
-                  className={`${
-                    landingPageData?.templateId === `${i + 1}`
-                      ? "bg-[#5207CD] text-[#FFFFFF]"
-                      : "bg-[#FFFFFF] text-blue_gray-800_01 border border-solid border-blue_gray-100"
-                  } w-full font-semibold smx:px-5 whitespace-nowrap`}
+                  className={`${landingPageData?.templateId === `${i + 1}`
+                    ? "bg-[#5207CD] text-[#FFFFFF]"
+                    : "bg-[#FFFFFF] text-blue_gray-800_01 border border-solid border-blue_gray-100"
+                    } w-full font-semibold smx:px-5 whitespace-nowrap`}
                 >
                   Choose template
                 </Button>
@@ -2295,7 +2291,7 @@ export default function LandingpageEdit({paramsId}) {
             </div>
           ))}
         </div>
-        
+
       </Modal>
 
       {/* Sticky Debug Button - Only show if debug data exists */}
@@ -2305,17 +2301,17 @@ export default function LandingpageEdit({paramsId}) {
           className="flex fixed right-4 bottom-4 z-50 justify-center items-center p-3 text-white bg-orange-500 rounded-full shadow-lg transition-all duration-200 hover:bg-orange-600"
           title="Debug Vacancy Creation"
         >
-          <svg 
-            className="w-5 h-5" 
-            fill="none" 
-            stroke="currentColor" 
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
             />
           </svg>
         </button>
