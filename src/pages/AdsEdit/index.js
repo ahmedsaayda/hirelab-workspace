@@ -1054,14 +1054,22 @@ export default function AdsEdit({ paramsId }) {
   useEffect(() => {
     if (!router?.isReady) return;
     const q = router.query?.adset;
-    if (!q) return;
-    const id = Array.isArray(q) ? q[0] : q;
-    if (!id) return;
-    // Only set if different to avoid loops
-    if (activeAdSetId !== id) {
+    const id = q ? (Array.isArray(q) ? q[0] : q) : null;
+    // Sync URL to state - but only if URL has an adset param
+    // (if URL has no adset, we don't force activeAdSetId to null - that's handled by goBackToAdSets)
+    if (id && activeAdSetId !== id) {
       setActiveAdSetId(id);
     }
   }, [router?.isReady, router.query?.adset, activeAdSetId]);
+
+  // Helper to go back to ad sets table (clears activeAdSetId AND updates URL)
+  const goBackToAdSets = () => {
+    setActiveAdSetId(null);
+    // Remove ?adset from URL without full page reload
+    const url = new URL(window.location.href);
+    url.searchParams.delete("adset");
+    window.history.replaceState({}, "", url.pathname + url.search);
+  };
 
   // Save ads data
   const saveAdsData = async () => {
@@ -1301,11 +1309,12 @@ export default function AdsEdit({ paramsId }) {
 
       setPreparedOnce(true);
       setPreparedVariants(variantsToPrepare);
-      setPreparedModalOpen(true);
-      message.success("Creatives approved");
+      // Don't open modal - we're navigating away immediately
+      message.success("Creatives approved! Redirecting to launch settings...");
 
-      // Route user to Launch settings for this specific ad set (no extra confirm modal)
-      router.push(`/launch/${lpId}?adset=${encodeURIComponent(adSetId)}`);
+      // Route user to Launch settings for this specific ad set
+      // Use window.location for reliable navigation (router.push can fail with pending state updates)
+      window.location.href = `/launch/${lpId}?adset=${encodeURIComponent(adSetId)}`;
     } catch (err) {
       console.error("Error approving creatives", err);
       message.error("Failed to approve creatives");
@@ -1524,7 +1533,7 @@ export default function AdsEdit({ paramsId }) {
       <div className="flex flex-col gap-4 h-full">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => setActiveAdSetId(null)}
+            onClick={goBackToAdSets}
             className="text-sm text-[#5207CD] hover:underline"
           >
             ← Back to ad sets
@@ -1594,7 +1603,7 @@ export default function AdsEdit({ paramsId }) {
       <div className="flex flex-col gap-4 h-full">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => setActiveAdSetId(null)}
+            onClick={goBackToAdSets}
             className="text-sm text-[#5207CD] hover:underline"
           >
             ← Back to ad sets
@@ -1642,7 +1651,7 @@ export default function AdsEdit({ paramsId }) {
       return (
         <div className="flex flex-col gap-4 h-full">
           <button
-            onClick={() => setActiveAdSetId(null)}
+            onClick={goBackToAdSets}
             className="self-start text-sm text-[#5207CD] hover:underline"
           >
             ← Back to ad sets
@@ -1666,7 +1675,7 @@ export default function AdsEdit({ paramsId }) {
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between mb-4">
           <button
-            onClick={() => setActiveAdSetId(null)}
+            onClick={goBackToAdSets}
             className="text-sm text-[#5207CD] hover:underline"
           >
             ← Back to ad sets

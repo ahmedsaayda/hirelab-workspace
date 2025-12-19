@@ -59,22 +59,7 @@ export default function Launch({ paramsId }) {
     }
   }, [adSetKey, activeStep]);
 
-  // If this ad set has already been launched once, Launch should not be editable anymore.
-  // Redirect back to Ads overview where pause/resume is handled.
-  useEffect(() => {
-    if (!router?.isReady) return;
-    if (!adSetKey) return;
-    if (!summary) return;
-    const localSets = Array.isArray(summary?.editorAds?._adSets) ? summary.editorAds._adSets : [];
-    const local = localSets.find((s) => String(s?.id) === String(adSetKey)) || null;
-    const isLaunchedLocal = String(local?.state || "").toLowerCase() === "launched";
-    const isMetaAdSet = Array.isArray(summary?.adSets)
-      ? summary.adSets.some((s) => String(s?.id || s?.adset_id) === String(adSetKey))
-      : false;
-    if (isLaunchedLocal || isMetaAdSet) {
-      router.replace(`/lp-editor/${lpId}/ads?adset=${encodeURIComponent(adSetKey)}`);
-    }
-  }, [router?.isReady, adSetKey, summary, lpId, router]);
+  // No automatic redirect from Launch page
   const [launching, setLaunching] = useState(false);
   const [launchDailyBudget, setLaunchDailyBudget] = useState(null);
   const [optimizationGoal, setOptimizationGoal] = useState(null);
