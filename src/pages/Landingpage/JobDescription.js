@@ -16,7 +16,7 @@ const useJobDescriptionHover = () => {
     lastScrollToSection,
     setLastScrollToSection,
   } = useHover();
-  
+
   const jobDescriptionSectionRef = useRef(null);
   const jobDescriptionTitleRef = useRef(null);
   const jobDescriptionSubheaderRef = useRef(null);
@@ -294,7 +294,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
   };
   const getColorBrightness = (color) => {
     const rgb = color.match(/^#(\w{6})$/)?.[1];
-    if(!rgb) return 0;
+    if (!rgb) return 0;
     const r = parseInt(rgb.slice(0, 2), 16);
     const g = parseInt(rgb.slice(2, 4), 16);
     const b = parseInt(rgb.slice(4, 6), 16);
@@ -313,28 +313,28 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
   function layoutAdjustment() {
     return (<>
-                  <h2
-              className="text-[2.5rem] font-bold mb-2"
-              style={{ fontFamily: subheaderFont?.family }}
-              ref={jobDescriptionTitleRef}
-              onClick={() => handleItemClick("jobDescriptionTitle")}
-            >
-              {landingPageData?.jobDescriptionTitle?.split(" ")[0] || ""}{" "}
-              <span style={{ fontFamily: subheaderFont?.family }}>
-                {landingPageData?.jobDescriptionTitle
-                  ?.split(" ")
-                  .slice(1)
-                  .join(" ") || ""}
-              </span>
-            </h2>
-            <h3
-              className="mb-8"
-              ref={jobDescriptionSubheaderRef}
-              onClick={() => handleItemClick("jobDescriptionSubheader")}
-              style={{ fontFamily: subheaderFont?.family }}
-            >
-              {landingPageData?.jobDescriptionSubheader || ""}
-            </h3></>
+      <h2
+        className="text-[2.5rem] font-bold mb-2"
+        style={{ fontFamily: subheaderFont?.family }}
+        ref={jobDescriptionTitleRef}
+        onClick={() => handleItemClick("jobDescriptionTitle")}
+      >
+        {landingPageData?.jobDescriptionTitle?.split(" ")[0] || ""}{" "}
+        <span style={{ fontFamily: subheaderFont?.family }}>
+          {landingPageData?.jobDescriptionTitle
+            ?.split(" ")
+            .slice(1)
+            .join(" ") || ""}
+        </span>
+      </h2>
+      <h3
+        className="mb-8"
+        ref={jobDescriptionSubheaderRef}
+        onClick={() => handleItemClick("jobDescriptionSubheader")}
+        style={{ fontFamily: subheaderFont?.family }}
+      >
+        {landingPageData?.jobDescriptionSubheader || ""}
+      </h3></>
     )
   }
   return (
@@ -348,16 +348,16 @@ const Template1 = ({ landingPageData, fetchData }) => {
     >
       {/* Decorative Element--top right box , hidden on mobile */}
       <svg
-        className="hidden absolute right-0 top-2 md:block"
-        width="171"
-        height="199"
-        viewBox="0 0 171 199"
+        className="hidden absolute right-0 md:block"
+        width="199"
+        height="120"
+        viewBox="0 0 199 120"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <rect
           width="199"
-          height="199"
+          height="120"
           rx="24"
           fill={getColor("tertiary", 200)}
         />
@@ -366,33 +366,33 @@ const Template1 = ({ landingPageData, fetchData }) => {
       <div className="mx-auto mb-24 max-w-6xl md:my-8">
         <div className="grid gap-8 items-start md:grid-cols-2 md:gap-16">
           <div className="lg:hidden">
-          {layoutAdjustment()}
+            {layoutAdjustment()}
 
           </div>
 
           {/* Image Section */}
 
-        {false&&  <div
+          {false && <div
             className="overflow-hidden relative rounded-3xl"
             style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
-          >   
+          >
             <div className="overflow-hidden relative shadow-md">
               <div className="w-full h-full flex items-center justify-center relative aspect-[3/3] md:aspect-[4/4]">
                 <Img
                   src={
                     landingPageData?.jobDescriptionImage ||
-                      "/dhwise-images/placeholder.png"
+                    "/dhwise-images/placeholder.png"
                   }
                   alt="Team meeting"
                   className="w-full h-full z-1"
-                 style={{
-                          objectPosition: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectPosition
-                            ? `${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.x}% ${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.y}%`
-                            : "50% 50%",
-                          objectFit:
-                            landingPageData?.imageAdjustment?.jobDescriptionImage?.objectFit || "cover",
-                          transition: "object-position 0.3s ease-in-out",
-                        }}
+                  style={{
+                    objectPosition: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectPosition
+                      ? `${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.x}% ${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.y}%`
+                      : "50% 50%",
+                    objectFit:
+                      landingPageData?.imageAdjustment?.jobDescriptionImage?.objectFit || "cover",
+                    transition: "object-position 0.3s ease-in-out",
+                  }}
                 />
                 {/* <div className={`absolute inset-0 pointer-events-none z-10 bg-gradient-to-t from-[${secondaryColor}] from-30% to-transparent to-50%`}></div> */}
 
@@ -414,15 +414,15 @@ const Template1 = ({ landingPageData, fetchData }) => {
           <div className=" relative order-first md:order-first rounded-2xl " style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}>
             <div className="overflow-hidden relative shadow-md">
               <div className="relative aspect-[5/5] md:aspect-[4/4] w-full h-full">
-              
-              {/* Main Image */}
-              <div className="overflow-hidden absolute inset-0 rounded-3xl">
+
+                {/* Main Image */}
+                <div className="overflow-hidden absolute inset-0 rounded-3xl">
                   <Img
-                                      src={
-                                        landingPageData?.jobDescriptionImage ||
-                                          "/dhwise-images/placeholder.png"
-                                      }
-                                      alt="Team meeting"
+                    src={
+                      landingPageData?.jobDescriptionImage ||
+                      "/dhwise-images/placeholder.png"
+                    }
+                    alt="Team meeting"
                     className="object-cover w-full h-full"
                     style={{
                       objectPosition: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectPosition
@@ -434,22 +434,22 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     }}
                   />
 
-                <div
-                  className="absolute inset-0 pointer-events-none z-10 bg-gradient-to-t"
-                  style={{
-                    backgroundImage: `linear-gradient(to top, ${getColor("primary", 50)} 1%, transparent 50%)`,
-                  }}
-                ></div>
+                  <div
+                    className="absolute inset-0 pointer-events-none z-10 bg-gradient-to-t"
+                    style={{
+                      backgroundImage: `linear-gradient(to top, ${getColor("primary", 50)} 1%, transparent 50%)`,
+                    }}
+                  ></div>
+                </div>
+
+
               </div>
-
-
             </div>
-          </div>
-          {/* Left Bar Decoration */}
+            {/* Left Bar Decoration */}
             <div className="leftBar z-10 absolute top-[-1px] right-[-1px] bottom-[110px] w-[85px] bg-white rounded-b-2xl ">
-              
 
-              
+
+
               <div className="absolute bottom-[-30px] right-[-10px] ">
                 <div className="arc description-bottom-left"></div>
               </div>
@@ -508,7 +508,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
           {/* Content Section */}
           <div>
             <div className="hidden lg:block">
-          {layoutAdjustment()}
+              {layoutAdjustment()}
 
             </div>
             <div className="space-y-6">
@@ -571,13 +571,11 @@ function generateClipPath(cornerRadius, cutoutSize) {
     L ${width},${height - cornerRadius}
     Q ${width},${height} ${width - cornerRadius},${height}
     L ${width - cutoutSize + cornerRadius},${height}
-    Q ${width - cutoutSize},${height} ${width - cutoutSize},${
-    height - cornerRadius
-  }
+    Q ${width - cutoutSize},${height} ${width - cutoutSize},${height - cornerRadius
+    }
     L ${width - cutoutSize},${height - cutoutSize + cornerRadius}
-    Q ${width - cutoutSize},${height - cutoutSize} ${
-    width - cutoutSize + cornerRadius
-  },${height - cutoutSize}
+    Q ${width - cutoutSize},${height - cutoutSize} ${width - cutoutSize + cornerRadius
+    },${height - cutoutSize}
     L ${cornerRadius},${height - cutoutSize}
     Q 0,${height - cutoutSize} 0,${height - cutoutSize - cornerRadius}
     L 0,${cornerRadius}
