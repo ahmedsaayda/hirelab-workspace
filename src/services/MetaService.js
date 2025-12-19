@@ -30,6 +30,10 @@ class MetaService {
       lpId,
     });
   }
+
+  disconnect(workspaceId) {
+    return this.api.post(`/disconnect`, { workspaceId });
+  }
 }
 
 export default new MetaService(`${getBackendUrl()}/meta`);

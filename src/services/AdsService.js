@@ -32,6 +32,14 @@ class AdsService {
   toggle(lpId, adId, active) {
     return this.api.post(`/landingpage/${lpId}/ads/${adId}/toggle`, { active });
   }
+
+  /**
+   * Create a HireLab ad set AND a shallow Meta campaign + ad set.
+   * Returns { adSet, metaCampaignId, metaAdSetId }
+   */
+  createAdSet(lpId) {
+    return this.api.post(`/landingpage/${lpId}/ads/adset/create`);
+  }
 }
 
 export default new AdsService(`${getBackendUrl()}/landingPage`);

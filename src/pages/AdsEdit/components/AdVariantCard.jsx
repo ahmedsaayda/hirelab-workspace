@@ -136,11 +136,16 @@ export default function AdVariantCard({
   // Default card view
   return (
     <div
-      className={`relative bg-white rounded-xl p-4 transition-all ${
+      className={`relative bg-white rounded-xl p-4 transition-all cursor-pointer ${
         selected
           ? "border-2 border-[#0e87fe]"
           : "border border-[#eaecf0]"
       }`}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect();
+      }}
     >
       {/* Content Container */}
       <div className="flex gap-2 items-start pr-6 mb-4">
@@ -182,35 +187,13 @@ export default function AdVariantCard({
         </div>
       </div>
 
-      {/* Checkbox - Positioned absolute top right */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect();
-        }}
-        className={`absolute right-4 top-3 w-5 h-5 rounded-[10px] border-[1.25px] transition-all flex items-center justify-center ${
-          selected
-            ? "bg-[#0e87fe] border-[#0e87fe]"
-            : "bg-white border-[#d0d5dd] hover:border-[#98a2b3]"
-        }`}
-      >
-        {selected && (
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path
-              d="M10.5 3.25L4.875 8.875L2.375 6.375"
-              stroke="white"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-      </button>
+
 
       {/* Action Buttons - Connected Group */}
       <div className="flex items-center w-full">
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onReplace();
           }}
@@ -231,6 +214,7 @@ export default function AdVariantCard({
         <button
           onClick={(e) => {
             e.stopPropagation();
+            e.preventDefault();
             onEdit();
           }}
           className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-[#344054] leading-5 bg-white hover:bg-gray-50 border-t border-b border-[#d0d5dd] transition-colors"
@@ -250,6 +234,7 @@ export default function AdVariantCard({
         <button
           onClick={(e) => {
             e.stopPropagation();
+            e.preventDefault();
             onDelete();
           }}
           className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-[#d92d20] leading-5 bg-white hover:bg-red-50 border border-[#d0d5dd] rounded-r-lg transition-colors"

@@ -27,6 +27,9 @@ export default function Header({
   onOpenFormSettings,
   onOpenSettings,
   customActions,
+  hideSettings = false,
+  hideLaunchNav = false,
+  backLinkOverride = null,
   ...props
 }) {
   const router = useRouter();
@@ -245,10 +248,10 @@ export default function Header({
     >
       <div className="flex gap-5 justify-between items-center w-full mdx:flex-col">
         <div className="flex items-center justify-left mdx:w-full">
-          <Link href={isFormEditor ? `/edit-page/${lpId}` : "/dashboard/vacancies"} onClick={(e) => {
+          <Link href={backLinkOverride || (isFormEditor ? `/edit-page/${lpId}` : "/dashboard/vacancies")} onClick={(e) => {
             if (typeof onNavigateAttempt === 'function') {
               e.preventDefault();
-              onNavigateAttempt(isFormEditor ? `/edit-page/${lpId}` : "/dashboard/vacancies");
+              onNavigateAttempt(backLinkOverride || (isFormEditor ? `/edit-page/${lpId}` : "/dashboard/vacancies"));
             }
           }}>
             <Img
@@ -287,7 +290,8 @@ export default function Header({
             checked={landingPageData?.published}
             onChange={(e) => setPublished(e)}
           />
-          <Img
+          {!hideSettings &&
+            <Img
             src="/images/settings-02.svg"
             alt="settings"
             className="h-[20px] w-[20px] ml-3.5 cursor-pointer settings-icon"
@@ -301,6 +305,7 @@ export default function Header({
               }
             }}
           />
+          }
           {null}
         </div>
         <div className="flex justify-between items-center w-full mdx:flex-col mdx:gap-3">
@@ -408,22 +413,8 @@ export default function Header({
                   className: "rounded-lg",
                   disabled: false,
                 },
-                {
-                  id: "launch",
-                  label: "Launch", 
-                  link: (id) => `/launch/${id}`,
-                  bgColor: isNavItemActive("launch") ? "bg-[#5207CD]" : "bg-[#F3F0FF]",
-                  textColor: isNavItemActive("launch") ? "!text-[#FFFFFF]" : "!text-[#5207CD]",
-                  icon: (
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="8" cy="8" r="7.5" fill={isNavItemActive("launch") ? "white" : "#5207CD"} stroke={isNavItemActive("launch") ? "white" : "#5207CD"}/>
-                      <path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke={isNavItemActive("launch") ? "#5207CD" : "white"} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  ),
-                  className: "rounded-lg",
-                  disabled: false,
-                }
-              ].map((item) => (
+
+              ].filter((item) => !(hideLaunchNav && item.id === "launch")).map((item) => (
                 <li key={item.id}>
                   <div
                     className={`flex items-center gap-2 border border-solid shadow-sm ${item.bgColor} ${item.className || "rounded-lg"} px-2 py-[10px] transition-all duration-200`}

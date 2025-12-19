@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/router";
-import { message, Modal, Tooltip, Skeleton, Switch } from "antd";
+import { message, Modal, Tooltip, Skeleton, Switch, Dropdown, Input } from "antd";
+import { DownOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/auth/selectors";
 import CrudService from "../../services/CrudService";
 import LandingPageService from "../../services/landingPageService";
 import AdsService from "../../services/AdsService";
+import AdsLaunchService from "../../services/AdsLaunchService";
 import MetaService from "../../services/MetaService";
 import { toBlob } from "html-to-image";
 import UploadService from "../../services/UploadService";
@@ -24,36 +26,36 @@ import EmptyState from "./components/EmptyState";
 // Ad type icons as inline SVGs
 const AdTypeIcon = ({ type, active }) => {
   const color = active ? "#0e87fe" : "#667085";
-  
+
   const icons = {
     job: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M15 15.75V14.25C15 13.4544 14.6839 12.6913 14.1213 12.1287C13.5587 11.5661 12.7956 11.25 12 11.25H6C5.20435 11.25 4.44129 11.5661 3.87868 12.1287C3.31607 12.6913 3 13.4544 3 14.25V15.75M12 5.25C12 6.90685 10.6569 8.25 9 8.25C7.34315 8.25 6 6.90685 6 5.25C6 3.59315 7.34315 2.25 9 2.25C10.6569 2.25 12 3.59315 12 5.25Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M15 15.75V14.25C15 13.4544 14.6839 12.6913 14.1213 12.1287C13.5587 11.5661 12.7956 11.25 12 11.25H6C5.20435 11.25 4.44129 11.5661 3.87868 12.1287C3.31607 12.6913 3 13.4544 3 14.25V15.75M12 5.25C12 6.90685 10.6569 8.25 9 8.25C7.34315 8.25 6 6.90685 6 5.25C6 3.59315 7.34315 2.25 9 2.25C10.6569 2.25 12 3.59315 12 5.25Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
     "employer-brand": (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M9 11.25C11.0711 11.25 12.75 9.57107 12.75 7.5C12.75 5.42893 11.0711 3.75 9 3.75C6.92893 3.75 5.25 5.42893 5.25 7.5C5.25 9.57107 6.92893 11.25 9 11.25Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M6.17188 10.5469L5.25 15.75L9 13.5L12.75 15.75L11.8266 10.5422" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 11.25C11.0711 11.25 12.75 9.57107 12.75 7.5C12.75 5.42893 11.0711 3.75 9 3.75C6.92893 3.75 5.25 5.42893 5.25 7.5C5.25 9.57107 6.92893 11.25 9 11.25Z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M6.17188 10.5469L5.25 15.75L9 13.5L12.75 15.75L11.8266 10.5422" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
     testimonial: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M15.75 11.25L13.5 9M13.5 9L15.75 6.75M13.5 9H16.5M11.25 3.75H3C2.58579 3.75 2.25 4.08579 2.25 4.5V13.5C2.25 13.9142 2.58579 14.25 3 14.25H11.25M11.25 3.75C11.6642 3.75 12 4.08579 12 4.5V13.5C12 13.9142 11.6642 14.25 11.25 14.25M11.25 3.75V2.25M11.25 14.25V15.75M5.25 7.5H8.25M5.25 10.5H8.25" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M15.75 11.25L13.5 9M13.5 9L15.75 6.75M13.5 9H16.5M11.25 3.75H3C2.58579 3.75 2.25 4.08579 2.25 4.5V13.5C2.25 13.9142 2.58579 14.25 3 14.25H11.25M11.25 3.75C11.6642 3.75 12 4.08579 12 4.5V13.5C12 13.9142 11.6642 14.25 11.25 14.25M11.25 3.75V2.25M11.25 14.25V15.75M5.25 7.5H8.25M5.25 10.5H8.25" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
     company: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M10.5 7.5H14.25V15.75H10.5M10.5 7.5V3.75H3.75V15.75H10.5M10.5 7.5V15.75M6.75 6.75H6.7575M6.75 9.75H6.7575M6.75 12.75H6.7575" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M10.5 7.5H14.25V15.75H10.5M10.5 7.5V3.75H3.75V15.75H10.5M10.5 7.5V15.75M6.75 6.75H6.7575M6.75 9.75H6.7575M6.75 12.75H6.7575" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
     retargeting: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M14.25 7.5C14.25 10.3995 11.8995 12.75 9 12.75M14.25 7.5C14.25 4.60051 11.8995 2.25 9 2.25M14.25 7.5H15.75M9 12.75C6.10051 12.75 3.75 10.3995 3.75 7.5M9 12.75V14.25M3.75 7.5C3.75 4.60051 6.10051 2.25 9 2.25M3.75 7.5H2.25M9 2.25V0.75" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M14.25 7.5C14.25 10.3995 11.8995 12.75 9 12.75M14.25 7.5C14.25 4.60051 11.8995 2.25 9 2.25M14.25 7.5H15.75M9 12.75C6.10051 12.75 3.75 10.3995 3.75 7.5M9 12.75V14.25M3.75 7.5C3.75 4.60051 6.10051 2.25 9 2.25M3.75 7.5H2.25M9 2.25V0.75" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   };
-  
+
   return icons[type] || icons.job;
 };
 
@@ -144,6 +146,12 @@ export default function AdsEdit({ paramsId }) {
   const [prepareMessages, setPrepareMessages] = useState([]);
   const [hasUnsavedAdsChanges, setHasUnsavedAdsChanges] = useState(false);
   const [hasUnsyncedMetaAdsChanges, setHasUnsyncedMetaAdsChanges] = useState(false);
+  const [launchSummary, setLaunchSummary] = useState(null);
+  const [launchSummaryLoading, setLaunchSummaryLoading] = useState(false);
+  const [activeAdSetId, setActiveAdSetId] = useState(null);
+  const [creatingAdSet, setCreatingAdSet] = useState(false);
+  const [adSetActionLoading, setAdSetActionLoading] = useState({ id: null, action: null });
+  const [metaConfigModalOpen, setMetaConfigModalOpen] = useState(false);
 
   // Dirty tracking baselines
   const lastSavedAdsHashRef = useRef("");
@@ -183,7 +191,9 @@ export default function AdsEdit({ paramsId }) {
     setGenerating(true);
     try {
       const generatedAds = initializeAdsData(landingPageData);
-      setAdsData(generatedAds);
+      // Preserve existing meta/ad-set scaffolding stored in lp.ads (e.g. _adSets, _launch, _assets)
+      const nextAds = { ...(adsData || {}), ...generatedAds };
+      setAdsData(nextAds);
       setIsEmpty(false);
 
       // Auto-select first variant of first ad type
@@ -194,8 +204,8 @@ export default function AdsEdit({ paramsId }) {
       }
 
       // Save to backend (embedded under LandingPageData.ads)
-      await AdsService.saveAds(lpId, generatedAds);
-      const savedHash = serializeAdsData(generatedAds);
+      await AdsService.saveAds(lpId, nextAds);
+      const savedHash = serializeAdsData(nextAds);
       lastSavedAdsHashRef.current = savedHash;
 
       message.success("Ads generated successfully!");
@@ -205,7 +215,7 @@ export default function AdsEdit({ paramsId }) {
     } finally {
       setGenerating(false);
     }
-  }, [landingPageData, lpId]);
+  }, [landingPageData, lpId, adsData, serializeAdsData, detectHasMetaPublish]);
 
   // Fetch landing page data
   const fetchData = useCallback(() => {
@@ -257,6 +267,19 @@ export default function AdsEdit({ paramsId }) {
       });
   }, [lpId, serializeAdsData, detectHasMetaPublish]);
 
+  const loadLaunchSummary = useCallback(async () => {
+    if (!lpId) return;
+    setLaunchSummaryLoading(true);
+    try {
+      const res = await AdsLaunchService.getSummary(lpId, {});
+      setLaunchSummary(res?.data?.data || null);
+    } catch (e) {
+      // Ignore summary errors to keep Ads editor usable offline
+    } finally {
+      setLaunchSummaryLoading(false);
+    }
+  }, [lpId]);
+
   const hasMetaPublished = useMemo(() => detectHasMetaPublish(adsData), [adsData, detectHasMetaPublish]);
 
   // Track unsaved draft changes + "not synced to Meta" changes (once published)
@@ -275,33 +298,15 @@ export default function AdsEdit({ paramsId }) {
     }
   }, [adsData, hasMetaPublished, serializeAdsData]);
 
-  // Prompt before leaving if there are unsaved changes or Meta-unsynced edits
-  useEffect(() => {
-    const shouldBlock = hasUnsavedAdsChanges || hasUnsyncedMetaAdsChanges;
-    const onBeforeUnload = (e) => {
-      if (!shouldBlock) return;
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    const onRouteChangeStart = () => {
-      if (!shouldBlock) return;
-      const ok = window.confirm("You have unsaved changes to ads. Leave without saving?");
-      if (ok) return;
-      router.events.emit("routeChangeError");
-      // eslint-disable-next-line no-throw-literal
-      throw "routeChange aborted";
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    router.events.on("routeChangeStart", onRouteChangeStart);
-    return () => {
-      window.removeEventListener("beforeunload", onBeforeUnload);
-      router.events.off("routeChangeStart", onRouteChangeStart);
-    };
-  }, [router, hasUnsavedAdsChanges, hasUnsyncedMetaAdsChanges]);
+
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    loadLaunchSummary();
+  }, [loadLaunchSummary]);
 
   // Check for OAuth success on component mount
   useEffect(() => {
@@ -387,7 +392,7 @@ export default function AdsEdit({ paramsId }) {
       }
     }
   };
-  
+
   const refreshAssets = async () => {
     try {
       const res = await MetaService.listAssets(workspaceId || undefined);
@@ -398,6 +403,108 @@ export default function AdsEdit({ paramsId }) {
     } catch (e) {
       message.error("Failed to refresh assets");
     }
+  };
+
+  const handleCreateAdSet = async () => {
+    // Create ad set on both HireLab and Meta (shallow campaign + ad set).
+    try {
+      setCreatingAdSet(true);
+      const response = await AdsService.createAdSet(lpId);
+      const { adSet, metaCampaignId } = response?.data?.data || {};
+      if (!adSet?.id) {
+        throw new Error("Failed to create ad set");
+      }
+      // Update local state with the new ad set
+      const nextData = {
+        ...(adsData || {}),
+        _adSets: [...(Array.isArray(adsData?._adSets) ? adsData._adSets : []), adSet],
+        _publish: {
+          ...(adsData?._publish || {}),
+          campaignId: metaCampaignId,
+        },
+      };
+      setAdsData(nextData);
+      lastSavedAdsHashRef.current = serializeAdsData(nextData);
+      message.success("Ad set created on Meta");
+      // Refresh launch summary so the table updates immediately
+      await loadLaunchSummary();
+      // Immediately open the newly created ad set so the user lands in the editor flow.
+      setActiveAdSetId(adSet.id);
+    } catch (e) {
+      const errorMsg = e?.response?.data?.message || "Failed to create ad set";
+      // Check if it's a Meta credentials error
+      if (errorMsg.toLowerCase().includes("meta") &&
+        (errorMsg.toLowerCase().includes("credential") ||
+          errorMsg.toLowerCase().includes("configured") ||
+          errorMsg.toLowerCase().includes("missing"))) {
+        setMetaConfigModalOpen(true);
+      } else {
+        message.error(errorMsg);
+      }
+    } finally {
+      setCreatingAdSet(false);
+    }
+  };
+
+  const runAdSetAction = async (adSetId, action, payload) => {
+    if (!adSetId) return;
+    try {
+      setAdSetActionLoading({ id: adSetId, action });
+      await AdsLaunchService.updateAdSet(lpId, { id: adSetId, ...payload });
+      message.success(
+        action === "delete"
+          ? "Ad set deleted"
+          : action === "pause"
+            ? "Ad set paused"
+            : "Ad set resumed"
+      );
+      await loadLaunchSummary();
+    } catch (e) {
+      message.error(e?.response?.data?.message || "Failed to update ad set");
+    } finally {
+      setAdSetActionLoading({ id: null, action: null });
+    }
+  };
+
+  const pauseAdSet = (adSetId) => runAdSetAction(adSetId, "pause", { status: "PAUSED" });
+  const resumeAdSet = (adSetId) => runAdSetAction(adSetId, "resume", { status: "ACTIVE" });
+  const deleteAdSet = (adSetId) => {
+    Modal.confirm({
+      title: "Delete ad set",
+      content:
+        "This will delete the ad set in Meta as well. This action cannot be undone.",
+      okText: "Delete",
+      okType: "danger",
+      onOk: () => runAdSetAction(adSetId, "delete", { status: "DELETED" }),
+    });
+  };
+
+  const deleteHireLabAdSet = async (adSetId) => {
+    if (!adSetId) return;
+    Modal.confirm({
+      title: "Delete ad set",
+      content: "This will remove the ad set from HireLab. (Not yet launched to Meta.)",
+      okText: "Delete",
+      okType: "danger",
+      onOk: async () => {
+        try {
+          const nextData = {
+            ...(adsData || {}),
+            _adSets: (Array.isArray(adsData?._adSets) ? adsData._adSets : []).filter(
+              (s) => s.id !== adSetId
+            ),
+          };
+          setAdsData(nextData);
+          await AdsService.saveAds(lpId, nextData);
+          lastSavedAdsHashRef.current = serializeAdsData(nextData);
+          message.success("Ad set deleted");
+          // Refresh launch summary so the table updates
+          await loadLaunchSummary();
+        } catch (e) {
+          message.error("Failed to delete ad set");
+        }
+      },
+    });
   };
 
   // Set brand data
@@ -419,7 +526,7 @@ export default function AdsEdit({ paramsId }) {
   // Initialize ads data from landing page content
   const initializeAdsData = (lpData) => {
     const ads = {};
-    
+
     AD_TYPES.forEach((adType) => {
       ads[adType.id] = {
         variants: generateVariantsForAdType(adType.id, lpData),
@@ -524,7 +631,14 @@ export default function AdsEdit({ paramsId }) {
         message.warning("Select an Ad Account & Page before publishing");
         return;
       }
-      const body = { adIds: ids, budget: 0, reuseCampaign, reuseAdSet };
+      // Meta requires ad sets to have a non-zero daily budget.
+      // Prefer the saved Launch settings; backend also enforces a safe minimum if omitted.
+      const launchBudgetMajor = Number(launchSummary?.launchSettings?.budgetDaily);
+      const budgetMinor =
+        Number.isFinite(launchBudgetMajor) && launchBudgetMajor > 0
+          ? Math.floor(launchBudgetMajor * 100)
+          : 0;
+      const body = { adIds: ids, budget: budgetMinor, reuseCampaign, reuseAdSet };
       if (metaStatus?.via === "user") {
         body.adAccountId = selectedAdAccountId;
         body.pageId = selectedPageId;
@@ -599,46 +713,46 @@ export default function AdsEdit({ paramsId }) {
   // Extract images from landing page
   const extractImagesFromLandingPage = (lpData) => {
     const images = [];
-    
+
     // Extract from hero section
     if (lpData?.heroImage) {
       images.push(lpData.heroImage);
     }
-    
+
     // Extract from job description
     if (lpData?.jobDescriptionImage) {
       images.push(lpData.jobDescriptionImage);
     }
-    
+
     // Extract from about company images
     if (lpData?.aboutTheCompanyImages && lpData.aboutTheCompanyImages.length > 0) {
       images.push(...lpData.aboutTheCompanyImages);
     }
-    
+
     // Extract from photo carousel
     if (lpData?.photoImages && lpData.photoImages.length > 0) {
       images.push(...lpData.photoImages);
     }
-    
+
     // Extract from testimonials
     if (lpData?.testimonials) {
       lpData.testimonials.forEach((t) => {
         if (t.avatar) images.push(t.avatar);
       });
     }
-    
+
     // Extract from recruiters
     if (lpData?.recruiters) {
       lpData.recruiters.forEach((r) => {
         if (r.recruiterAvatar) images.push(r.recruiterAvatar);
       });
     }
-    
+
     // Extract from leader introduction
     if (lpData?.leaderIntroductionAvatar) {
       images.push(lpData.leaderIntroductionAvatar);
     }
-    
+
     // Extract from EVP mission
     if (lpData?.evpMissionAvatar) {
       images.push(lpData.evpMissionAvatar);
@@ -746,8 +860,8 @@ export default function AdsEdit({ paramsId }) {
       ],
       "employer-brand": [
         evpSentence ||
-          aboutSentence ||
-          "Showcasing our values, mission and what makes our culture unique.",
+        aboutSentence ||
+        "Showcasing our values, mission and what makes our culture unique.",
         aboutSentence || "Where innovation, collaboration and growth come together.",
         "A workplace built around purpose, development and long‑term careers.",
       ],
@@ -758,7 +872,7 @@ export default function AdsEdit({ paramsId }) {
       ],
       company: [
         aboutSentence ||
-          "More people‑focused and brand‑aligned, appealing to candidates who value culture.",
+        "More people‑focused and brand‑aligned, appealing to candidates who value culture.",
         "Learn about our commitment to excellence, innovation and client impact.",
         "Discover the benefits and opportunities that set us apart as an employer.",
       ],
@@ -776,6 +890,14 @@ export default function AdsEdit({ paramsId }) {
   const currentVariants = useMemo(() => {
     return adsData?.[selectedAdType]?.variants || [];
   }, [adsData, selectedAdType]);
+
+  const hasAnyVariants = useMemo(() => {
+    try {
+      return Object.keys(adsData || {}).some((k) => (adsData?.[k]?.variants || []).length > 0);
+    } catch {
+      return false;
+    }
+  }, [adsData]);
 
   // Sync selected variant when ad type changes or variants update
   useEffect(() => {
@@ -803,6 +925,144 @@ export default function AdsEdit({ paramsId }) {
     return currentVariants.find(v => v.selected) || currentVariants[0];
   }, [currentVariants, selectedVariant]);
 
+  const hasApprovedCreatives = useMemo(() => {
+    try {
+      return Object.keys(adsData || {}).some((adType) =>
+        (adsData?.[adType]?.variants || []).some((v) => v?.approved)
+      );
+    } catch {
+      return false;
+    }
+  }, [adsData]);
+
+  const adSetsList = useMemo(() => {
+    // Primary source: launchSummary.editorAds._adSets (contains backend-cleaned data)
+    // Secondary source: adsData._adSets (contains newly created ad sets that may not be in launchSummary yet)
+    const editorAdSets = Array.isArray(launchSummary?.editorAds?._adSets) 
+      ? launchSummary.editorAds._adSets : [];
+    const localAdSets = Array.isArray(adsData?._adSets) ? adsData._adSets : [];
+    const metaSets = Array.isArray(launchSummary?.adSets) ? launchSummary.adSets : [];
+
+    // Create a map of Meta ad sets by ID for quick lookup
+    const metaSetMap = new Map();
+    metaSets.forEach((set) => {
+      const id = set.id || set.adset_id;
+      if (id) metaSetMap.set(id, set);
+    });
+
+    // Merge both sources: prioritize localAdSets (adsData) over editorAdSets (launchSummary)
+    // because adsData contains the most recent local changes (e.g., state set to "ready" after approval)
+    // while launchSummary may be stale until refetched.
+    const localMap = new Map(localAdSets.map((s) => [s.id, s]));
+    const mergedAdSets = [
+      // For ad sets that exist in both, prefer the localAdSets version (most recent local state)
+      ...editorAdSets.map((s) => {
+        const local = localMap.get(s.id);
+        if (local) {
+          // Merge: use local state but keep other fields from editor if not in local
+          return { ...s, ...local };
+        }
+        return s;
+      }),
+      // Add any ad sets that are ONLY in localAdSets (newly created, not yet in launchSummary)
+      ...localAdSets.filter((s) => !editorAdSets.some((e) => e.id === s.id)),
+    ];
+
+    // Track which Meta ad set IDs are covered by HireLab ad sets
+    const coveredMetaIds = new Set();
+
+    // Filter out HireLab ad sets whose Meta ad set was deleted (client-side cleanup)
+    // Keep ad sets that: 1) don't have a metaAdSetId yet, or 2) have a metaAdSetId that still exists on Meta
+    // Only apply filter if we have Meta data loaded (metaSetMap not empty)
+    const validLocalSets = metaSetMap.size > 0
+      ? mergedAdSets.filter((s) => {
+          if (!s.metaAdSetId) return true; // Not yet synced to Meta
+          return metaSetMap.has(s.metaAdSetId); // Meta ad set still exists
+        })
+      : mergedAdSets;
+
+    // Map HireLab ad sets, enriching with Meta data if available
+    const mappedLocal = validLocalSets.map((s) => {
+      const metaAdSetId = s.metaAdSetId || null;
+      const metaSet = metaAdSetId ? metaSetMap.get(metaAdSetId) : null;
+
+      if (metaAdSetId) coveredMetaIds.add(metaAdSetId);
+
+      // Get budget/schedule from launchSettings or Meta
+      const ls = s.launchSettings || {};
+      const budget = ls.budgetDaily != null ? Number(ls.budgetDaily) :
+        (metaSet?.daily_budget ? Number(metaSet.daily_budget) / 100 : null);
+      const start = ls.scheduleStart || metaSet?.start_time || null;
+      const end = ls.scheduleEnd || metaSet?.end_time || null;
+
+      return {
+        id: s.id,
+        // Always prefer Meta name (correct format like "19.12.25 | Barista at Starbucks | LON-AMS")
+        name: metaSet?.name || s.name || "Ad set",
+        budget,
+        start,
+        end,
+        state: s.state || "draft",
+        source: "hirelab",
+        metaAdSetId,
+        rawStatus: metaSet?.status || null,
+        effectiveStatus: metaSet?.effective_status || null,
+      };
+    });
+
+    // Only include Meta ad sets that DON'T have a corresponding HireLab ad set
+    // (i.e., ad sets created directly in Meta or from previous system)
+    const mappedMeta = metaSets
+      .filter((set) => !coveredMetaIds.has(set.id || set.adset_id))
+      .map((set, idx) => ({
+        id: set.id || set.adset_id || `meta-${idx}`,
+        name: set.name || "Ad set",
+        budget: set.daily_budget ? Number(set.daily_budget) / 100 : null,
+        start: set.start_time || null,
+        end: set.end_time || null,
+        rawStatus: set.status || null,
+        effectiveStatus: set.effective_status || null,
+        state: "launched",
+        source: "meta",
+      }));
+
+    return [...mappedLocal, ...mappedMeta];
+  }, [adsData, launchSummary]);
+
+  const activeAdSet = useMemo(
+    () => adSetsList.find((a) => a.id === activeAdSetId) || null,
+    [adSetsList, activeAdSetId]
+  );
+
+  const activeAdSetState = activeAdSet?.state || "draft";
+
+  useEffect(() => {
+    if (activeAdSetId && !activeAdSet) {
+      setActiveAdSetId(null);
+    }
+  }, [activeAdSetId, activeAdSet]);
+
+  // If user opens an ad set that is "ready" (creatives approved but not launched yet),
+  // we always send them to the per-ad-set Launch page (no intermediate "open launch settings" view).
+  useEffect(() => {
+    if (!activeAdSetId) return;
+    if (activeAdSetState !== "ready") return;
+    router.push(`/launch/${lpId}?adset=${encodeURIComponent(activeAdSetId)}`);
+  }, [activeAdSetId, activeAdSetState, lpId, router]);
+
+  // Support deep-linking back from Launch (e.g. /lp-editor/:lpId/ads?adset=XYZ)
+  useEffect(() => {
+    if (!router?.isReady) return;
+    const q = router.query?.adset;
+    if (!q) return;
+    const id = Array.isArray(q) ? q[0] : q;
+    if (!id) return;
+    // Only set if different to avoid loops
+    if (activeAdSetId !== id) {
+      setActiveAdSetId(id);
+    }
+  }, [router?.isReady, router.query?.adset, activeAdSetId]);
+
   // Save ads data
   const saveAdsData = async () => {
     try {
@@ -818,7 +1078,7 @@ export default function AdsEdit({ paramsId }) {
   // Handle variant selection
   const handleVariantSelect = (variantId) => {
     setSelectedVariant(variantId);
-    
+
     // Update selected state in data
     const updatedVariants = currentVariants.map(v => ({
       ...v,
@@ -947,6 +1207,114 @@ export default function AdsEdit({ paramsId }) {
     }
   };
 
+  const approveCreativesForAdSet = async (adSetId) => {
+    if (!adsData) return;
+    if (!adSetId) return;
+    try {
+      setPrepareMessages(["Starting: approving creatives & generating images..."]);
+      setPreparingLaunch(true);
+
+      const updatedAds = { ...(adsData || {}) };
+
+      // Mark variants approved + collect them for image rendering
+      const variantsToPrepare = [];
+      Object.keys(updatedAds).forEach((adType) => {
+        const group = updatedAds[adType];
+        if (!group?.variants || !Array.isArray(group.variants)) return;
+        group.variants = group.variants.map((v) => {
+          const approvedVariant = { ...v, approved: true };
+          variantsToPrepare.push({ ...approvedVariant, adTypeId: adType });
+          return approvedVariant;
+        });
+      });
+
+      if (variantsToPrepare.length === 0) {
+        message.warning("No creatives found to approve");
+        return;
+      }
+
+      setAdsData(updatedAds);
+
+      // Render each approved variant via preview and upload to Cloudinary
+      const format = AD_FORMATS.find((f) => f.id === selectedFormat);
+      for (let index = 0; index < variantsToPrepare.length; index += 1) {
+        const v = variantsToPrepare[index];
+        const stepLabel = `${v.adTypeId} · ${v.title || v.id}`;
+        appendPrepareMessage(`Preparing ${index + 1}/${variantsToPrepare.length}: ${stepLabel}`);
+        setSelectedAdType(v.adTypeId);
+        setSelectedVariant(v.id);
+        // eslint-disable-next-line no-await-in-loop
+        await waitForPreviewRender(4000);
+        // eslint-disable-next-line no-await-in-loop
+        const url = await renderCurrentPreviewToCloudinary(format);
+        const group = updatedAds[v.adTypeId];
+        if (group?.variants) {
+          const idx = group.variants.findIndex((x) => x.id === v.id);
+          if (idx >= 0) {
+            group.variants[idx] = { ...group.variants[idx], publishImage: url };
+          }
+        }
+        appendPrepareMessage(`✓ Image ready for ${stepLabel}`);
+      }
+
+      // Update ad set state to "ready" and persist
+      const localSets = Array.isArray(updatedAds?._adSets) ? [...updatedAds._adSets] : [];
+      const setIdx = localSets.findIndex((s) => s.id === adSetId);
+      if (setIdx >= 0) {
+        localSets[setIdx] = {
+          ...localSets[setIdx],
+          state: "ready",
+          approvedAt: new Date().toISOString(),
+          approvedFormat: selectedFormat,
+          approvedVariantIds: variantsToPrepare.map((v) => v.id),
+        };
+      }
+      updatedAds._adSets = localSets;
+
+      appendPrepareMessage("Saving approved creatives...");
+      await AdsService.saveAds(lpId, updatedAds);
+      lastSavedAdsHashRef.current = serializeAdsData(updatedAds);
+      setAdsData(updatedAds);
+
+      // Create ads on Meta (PAUSED) - this ensures they exist under the ad set
+      appendPrepareMessage("Creating ads on Meta (paused)...");
+      try {
+        // Get ad set's launch settings for budget/schedule
+        const adSetRecord = localSets.find((s) => s.id === adSetId);
+        const ls = adSetRecord?.launchSettings || {};
+        
+        await AdsService.publish(lpId, {
+          hirelabAdSetId: adSetId,
+          budget: (ls.budgetDaily || 5) * 100, // Convert to minor units
+          start_time: ls.scheduleStart || null,
+          end_time: ls.scheduleEnd || null,
+          placements: ["facebook_feed", "instagram_story"],
+          audienceLocations: ls.audienceLocations || [],
+          launch: false, // Keep PAUSED - don't activate yet
+        });
+        appendPrepareMessage("✓ Ads created on Meta (paused)");
+      } catch (publishErr) {
+        console.error("Error creating ads on Meta:", publishErr);
+        appendPrepareMessage(`⚠ Warning: Ads not created on Meta: ${publishErr?.response?.data?.message || publishErr?.message || "Unknown error"}`);
+        // Don't throw - still allow user to proceed to launch page
+      }
+
+      setPreparedOnce(true);
+      setPreparedVariants(variantsToPrepare);
+      setPreparedModalOpen(true);
+      message.success("Creatives approved");
+
+      // Route user to Launch settings for this specific ad set (no extra confirm modal)
+      router.push(`/launch/${lpId}?adset=${encodeURIComponent(adSetId)}`);
+    } catch (err) {
+      console.error("Error approving creatives", err);
+      message.error("Failed to approve creatives");
+      appendPrepareMessage("Error: something went wrong while approving creatives.");
+    } finally {
+      setPreparingLaunch(false);
+    }
+  };
+
   // Toggle ad type
   const toggleAdType = (adTypeId) => {
     const nextData = {
@@ -967,233 +1335,386 @@ export default function AdsEdit({ paramsId }) {
       });
   };
 
-  if (loading || !landingPageData) {
+  const renderStatusBadge = (state) => {
+    const styles = {
+      draft: "bg-amber-50 text-amber-800 border-amber-200",
+      ready: "bg-blue-50 text-blue-700 border-blue-200",
+      launched: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    };
+    const label =
+      state === "launched"
+        ? "Launched"
+        : state === "ready"
+          ? "Creatives approved"
+          : "Creatives needed";
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Skeleton active />
+      <span
+        className={`text-xs px-2 py-1 rounded-full border font-semibold ${styles[state] || styles.draft}`}
+      >
+        {label}
+      </span>
+    );
+  };
+
+  const renderAdSetsTable = () => (
+    <div className="bg-white border border-[#eaecf0] rounded-xl h-full overflow-hidden flex flex-col">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#eaecf0]">
+        <div>
+          <h2 className="text-xl font-semibold text-[#101828]">Ad Sets</h2>
+          <div className="text-sm text-[#667085]">
+            Overview of campaign ad sets and their states.
+          </div>
+        </div>
+        <div className="flex gap-2 items-center">
+          {launchSummaryLoading && (
+            <span className="text-xs text-[#667085]">Refreshing…</span>
+          )}
+          <button
+            onClick={handleCreateAdSet}
+            disabled={creatingAdSet}
+            className={`px-4 py-2 text-sm font-semibold text-white rounded-md flex items-center gap-2 ${creatingAdSet
+              ? "bg-[#5207CD]/70 cursor-not-allowed"
+              : "bg-[#5207CD] hover:bg-[#4506A6]"
+              }`}
+          >
+            {creatingAdSet && (
+              <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
+            {creatingAdSet ? "Creating..." : "Create ad set"}
+          </button>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-[#eaecf0]">
+          <thead className="bg-[#f8f8f8]">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-[#475467] uppercase tracking-wider">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-[#475467] uppercase tracking-wider">
+                State
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-[#475467] uppercase tracking-wider">
+                Daily budget
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-[#475467] uppercase tracking-wider">
+                Schedule
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-semibold text-[#475467] uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-[#f2f4f7]">
+            {adSetsList.map((set) => (
+              <tr key={set.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-semibold text-[#101828]">{set.name}</div>
+                  <div className="text-xs text-[#667085]">
+                    {set.source === "meta" ? "Synced from Meta" : "HireLab"}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">{renderStatusBadge(set.state)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#475467]">
+                  {set.budget != null ? `€${Number(set.budget).toFixed(2)}` : "—"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#475467]">
+                  {set.start
+                    ? `${new Date(set.start).toLocaleDateString()} - ${set.end ? new Date(set.end).toLocaleDateString() : "Ongoing"
+                    }`
+                    : "—"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <Dropdown
+                    menu={{
+                      items: (() => {
+                        const isMeta = set.source === "meta" && !!set.id;
+                        const isHireLab = set.source === "hirelab" && !!set.id;
+                        // Meta effective_status can be "CAMPAIGN_PAUSED", "ADSET_PAUSED", etc.
+                        // For pause/resume controls we must use the raw ad set status,
+                        // otherwise the UI can get stuck showing only "Resume".
+                        const raw = String(set.rawStatus || "").toUpperCase();
+                        const isRawActive = raw === "ACTIVE";
+                        const isRawPaused = raw === "PAUSED";
+                        const isBusy =
+                          adSetActionLoading.id === set.id && !!adSetActionLoading.action;
+                        const pauseItem = {
+                          key: "pause",
+                          label: "Pause ad set",
+                          disabled: !isMeta || !isRawActive || isBusy,
+                          onClick: () => pauseAdSet(set.id),
+                        };
+                        const resumeItem = {
+                          key: "resume",
+                          label: "Resume ad set",
+                          disabled: !isMeta || !isRawPaused || isBusy,
+                          onClick: () => resumeAdSet(set.id),
+                        };
+                        const deleteItem = {
+                          key: "delete",
+                          label: "Delete ad set",
+                          danger: true,
+                          disabled: !isMeta || isBusy,
+                          onClick: () => deleteAdSet(set.id),
+                        };
+                        const deleteLocalItem = {
+                          key: "delete_local",
+                          label: "Delete ad set",
+                          danger: true,
+                          disabled: !isHireLab,
+                          onClick: () => deleteHireLabAdSet(set.id),
+                        };
+                        return [
+                          {
+                            key: "open",
+                            label: "Open ad set",
+                            onClick: () => {
+                              // Draft stays in Ads editor, Ready goes to Launch setup,
+                              // Launched stays in Ads overview (no Launch edits after first publish).
+                              if (set.state === "ready") {
+                                router.push(`/launch/${lpId}?adset=${encodeURIComponent(set.id)}`);
+                                return;
+                              }
+                              setActiveAdSetId(set.id);
+                            },
+                          },
+                          ...(isMeta ? [pauseItem, resumeItem, deleteItem] : []),
+                          ...(isHireLab ? [deleteLocalItem] : []),
+                        ];
+                      })(),
+                    }}
+                    trigger={["click"]}
+                  >
+                    <button className="px-3 py-1.5 text-sm font-semibold text-[#475467] border rounded-md hover:bg-[#f8f8f8]">
+                      Actions <DownOutlined className="align-middle text-[10px]" />
+                    </button>
+                  </Dropdown>
+                </td>
+              </tr>
+            ))}
+            {!adSetsList.length && (
+              <tr>
+                <td className="px-6 py-6 text-sm text-[#667085]" colSpan={5}>
+                  No ad sets yet. Click “Create ad set” to get started.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderLaunchReadyView = () => {
+    const approvedCount = Object.keys(adsData || {}).reduce((acc, adType) => {
+      const group = adsData?.[adType];
+      if (!group?.variants) return acc;
+      return acc + group.variants.filter((v) => v.approved).length;
+    }, 0);
+    const totalCount = Object.keys(adsData || {}).reduce((acc, adType) => {
+      const group = adsData?.[adType];
+      if (!group?.variants) return acc;
+      return acc + group.variants.length;
+    }, 0);
+
+    return (
+      <div className="flex flex-col gap-4 h-full">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setActiveAdSetId(null)}
+            className="text-sm text-[#5207CD] hover:underline"
+          >
+            ← Back to ad sets
+          </button>
+          <div className="text-xs text-[#667085]">
+            Redirecting to launch settings…
+          </div>
+        </div>
+        <div className="bg-white border border-[#eaecf0] rounded-xl p-6 flex flex-col gap-4 h-full">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-[#101828]">Launch prep</h2>
+              <div className="text-sm text-[#667085]">
+                Review settings before launching this ad set.
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-[#f8f8f8] rounded-lg border border-[#eceef5]">
+              <div className="text-xs text-[#667085] mb-1">Creatives</div>
+              <div className="text-lg font-semibold text-[#101828]">
+                {approvedCount}/{totalCount || 1} approved
+              </div>
+              <div className="text-xs text-[#667085] mt-1">
+                Approved creatives will be used for this ad set.
+              </div>
+            </div>
+            <div className="p-4 bg-[#f8f8f8] rounded-lg border border-[#eceef5]">
+              <div className="text-xs text-[#667085] mb-1">Budget</div>
+              <div className="text-lg font-semibold text-[#101828]">
+                {launchSummary?.launchSettings?.budgetDaily != null
+                  ? `€${Number(launchSummary.launchSettings.budgetDaily).toFixed(2)} / day`
+                  : "Set in launch"}
+              </div>
+              <div className="text-xs text-[#667085] mt-1">Daily budget for this ad set.</div>
+            </div>
+            <div className="p-4 bg-[#f8f8f8] rounded-lg border border-[#eceef5]">
+              <div className="text-xs text-[#667085] mb-1">Schedule</div>
+              <div className="text-lg font-semibold text-[#101828]">
+                {launchSummary?.launchSettings?.scheduleStart
+                  ? `${new Date(launchSummary.launchSettings.scheduleStart).toLocaleDateString()} - ${launchSummary.launchSettings.scheduleEnd
+                    ? new Date(launchSummary.launchSettings.scheduleEnd).toLocaleDateString()
+                    : "Ongoing"
+                  }`
+                  : "Select dates in launch step"}
+              </div>
+              <div className="text-xs text-[#667085] mt-1">
+                Start and end dates for this ad set.
+              </div>
+            </div>
+          </div>
+          <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#fdfaf6] text-sm text-[#92400e]">
+            Need a different setup? Adjust budget, schedule, and audience in the launch step
+            before publishing.
+          </div>
+        </div>
       </div>
     );
-  }
+  };
 
-  // Show empty state if no ads generated yet
-  if (isEmpty) {
+  const renderLaunchedView = () => {
+    const insight = Array.isArray(launchSummary?.insights)
+      ? launchSummary.insights[0]
+      : null;
+    const metric = (value) => (value === undefined || value === null ? "—" : value);
     return (
-      <>
-        <ApplyCustomFont landingPageData={{ ...landingPageData, ...userBrandData }} />
-        
-        <div className="flex flex-col h-screen bg-[#f8f8f8]">
-          {/* Header */}
-          <div className="bg-white px-8 py-6 border-b border-[#eaecf0] flex-shrink-0">
-            <div className="flex justify-between items-center">
-              <div className="flex gap-3 items-center">
-                <button
-                  onClick={() => router.push(`/form-editor/${lpId}`)}
-                  className="p-2 rounded-lg transition-colors hover:bg-gray-100"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                
-                <div className="flex gap-2 items-center">
-                  <div className="w-2 h-2 bg-[#98a2b3] rounded-full" />
-                  <span className="font-semibold text-base text-[#475467]">{landingPageData?.vacancyTitle}</span>
-                </div>
+      <div className="flex flex-col gap-4 h-full">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setActiveAdSetId(null)}
+            className="text-sm text-[#5207CD] hover:underline"
+          >
+            ← Back to ad sets
+          </button>
+          <div className="text-xs text-[#667085]">Live performance for this ad set.</div>
+        </div>
+        <div className="bg-white border border-[#eaecf0] rounded-xl p-6 flex flex-col gap-4 h-full">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-[#101828]">Ad set overview</h2>
+            <div className="px-3 py-1.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Running
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f9fafb]">
+              <div className="text-xs text-[#667085]">Impressions</div>
+              <div className="text-xl font-semibold text-[#101828]">
+                {metric(insight?.impressions)}
+              </div>
+            </div>
+            <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f9fafb]">
+              <div className="text-xs text-[#667085]">Clicks</div>
+              <div className="text-xl font-semibold text-[#101828]">
+                {metric(insight?.clicks || insight?.inline_link_clicks)}
+              </div>
+            </div>
+            <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f9fafb]">
+              <div className="text-xs text-[#667085]">Spend</div>
+              <div className="text-xl font-semibold text-[#101828]">
+                {insight?.spend ? `€${Number(insight.spend).toFixed(2)}` : "—"}
               </div>
             </div>
           </div>
-
-          {/* Empty State */}
-          <div className="flex-1">
-            <EmptyState onGenerate={handleGenerateAds} loading={generating} />
+          <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f8f8f8] text-sm text-[#475467]">
+            Performance data updates as Meta reports back. Use the ad set Actions menu to pause or
+            resume.
           </div>
         </div>
-      </>
+      </div>
     );
-  }
-  
+  };
 
-  return (
-    <>
-      <ApplyCustomFont landingPageData={{ ...landingPageData, ...userBrandData }} />
-      
-      <div className="flex flex-col h-screen bg-[#f8f8f8]">
-        {/* Header */}
-        <div className="px-8 py-6 bg-white border-b border-[#eaecf0] flex-shrink-0">
-          <Header
-            landingPageData={landingPageData}
-            setPublished={(val) => {
-               if (landingPageData) {
-                 const newData = { ...landingPageData, published: val };
-                 setLandingPageData(newData);
-                 CrudService.update("LandingPageData", lpId, { published: val }).then(() => {
-                    message.success(val ? "Page published" : "Page unpublished");
-                 });
-               }
-            }}
-            setLandingPageData={setLandingPageData}
-            reload={fetchData}
-            lpId={lpId}
-            isAdsEditor={true}
-            onOpenSettings={openAssetModal}
-            customActions={
-              <div className="flex gap-3 items-center">
-                <Switch
-                  checked={adsData?.[selectedAdType]?.enabled}
-                  onChange={() => toggleAdType(selectedAdType)}
-                  size="small"
-                  className="mr-2"
-                />
-                {!metaStatus?.connected ? (
-                  <button
-                    onClick={async () => {
-                      try {
-                        const currentUrl = window.location.href;
-                        const res = await MetaService.getAuthUrl(
-                          workspaceId || undefined,
-                          currentUrl
-                        );
-                        const url = res?.data?.url;
-                        if (url) window.location.href = url;
-                        else message.error("Failed to get Meta connect URL");
-                      } catch {
-                        message.error("Failed to get Meta connect URL");
-                      }
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#5207CD] hover:bg-[#3b0aa1] text-white font-semibold text-sm border border-[#5207CD] transition-colors shadow-sm"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M12 3v18m9-9H3"
-                        stroke="white"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    Connect Meta
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={handleApproveAll}
-                      disabled={preparingLaunch}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-colors shadow-sm ${
-                        preparingLaunch
-                          ? "bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-[#16A34A] hover:bg-[#15803D] text-white border-[#16A34A]"
-                        }`}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <rect
-                          width="16"
-                          height="16"
-                          rx="8"
-                          fill="white"
-                          opacity="0.2"
-                        />
-                        <path
-                          d="M11.3327 5.5L6.74935 10.0833L4.66602 8"
-                          stroke="white"
-                          strokeWidth="1.67"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      {preparingLaunch
-                        ? "Preparing..."
-                        : preparedOnce
-                        ? "Approve & Prepare again"
-                        : "Approve & Prepare"}
-                    </button>
-                    {preparedOnce && !preparingLaunch && (
-                      <span className="text-xs font-medium text-[#0a8f63]">
-                        ✓ Creatives ready for Launch
-                      </span>
-                    )}
-                    <button
-                      onClick={openPublishConfirm}
-                      disabled={
-                        (metaStatus?.via === "workspace" &&
-                          (!metaStatus?.adAccountId || !metaStatus?.pageId)) ||
-                        (metaStatus?.via === "user" &&
-                          (!selectedAdAccountId || !selectedPageId))
-                      }
-                      className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#5207CD] hover:bg-[#3b0aa1] text-white font-semibold text-sm border border-[#5207CD] transition-colors shadow-sm"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M12 3v18m9-9H3"
-                          stroke="white"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      Publish (Meta)
-                    </button>
-                  </>
-                )}
+  const renderDraftView = () => {
+    if (isEmpty || !hasAnyVariants) {
+      return (
+        <div className="flex flex-col gap-4 h-full">
+          <button
+            onClick={() => setActiveAdSetId(null)}
+            className="self-start text-sm text-[#5207CD] hover:underline"
+          >
+            ← Back to ad sets
+          </button>
+          <div className="flex-1 bg-white border border-[#eaecf0] rounded-xl flex flex-col">
+            <div className="p-6 border-b border-[#eaecf0]">
+              <h2 className="text-xl font-semibold text-[#101828]">Prepare creatives</h2>
+              <div className="text-sm text-[#667085]">
+                Generate and approve creatives for this ad set.
               </div>
-            }
-          />
-        </div>
-
-        {/* Unsaved / unsynced changes banner */}
-        {(hasUnsavedAdsChanges || (hasMetaPublished && hasUnsyncedMetaAdsChanges)) && (
-          <div className="flex justify-between items-center px-8 py-3 bg-amber-50 border-b border-amber-200">
-            <div className="text-xs text-amber-900">
-              {hasUnsavedAdsChanges
-                ? "You have unsaved ad changes."
-                : "You changed ads after publishing — changes are not synced to Meta yet."}
             </div>
-            <div className="flex gap-2">
-              {hasUnsavedAdsChanges && (
-                <button
-                  onClick={saveAdsData}
-                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#5207CD] rounded-full hover:bg-[#4506A6]"
-                >
-                  Save changes
-                </button>
-              )}
-              {hasMetaPublished && hasUnsyncedMetaAdsChanges && (
-                <button
-                  onClick={openPublishConfirm}
-                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#16A34A] rounded-full hover:bg-[#15803D]"
-                >
-                  Publish updates to Meta
-                </button>
-              )}
+            <div className="flex-1">
+              <EmptyState onGenerate={handleGenerateAds} loading={generating} />
             </div>
           </div>
-        )}
+        </div>
+      );
+    }
 
-        {/* Main Content Container */}
-        <div className="overflow-hidden flex-1 px-8 py-6">
-          <div className="bg-white border border-[#eaecf0] rounded-xl h-full overflow-hidden flex">
-            {/* Left Sidebar - Ad Types */}
-            <div className="bg-white border-r border-[#eceef5] flex flex-col items-center pt-8 pb-6 px-4 gap-6 flex-shrink-0">
-              <h2 className="text-xl font-semibold leading-5 text-black">
-                Ad Types
-              </h2>
-              
-              <div className="flex flex-col gap-2">
-                {AD_TYPES.map((adType) => (
-                  <Tooltip key={adType.id} title={adType.description} placement="right">
-                    <button
-                      onClick={() => setSelectedAdType(adType.id)}
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                        selectedAdType === adType.id
-                          ? "bg-[#eff8ff]"
-                          : "hover:bg-gray-50"
-                      }`}
-                    >
-                      <AdTypeIcon type={adType.id} active={selectedAdType === adType.id} />
-                    </button>
-                  </Tooltip>
-                ))}
-              </div>
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => setActiveAdSetId(null)}
+            className="text-sm text-[#5207CD] hover:underline"
+          >
+            ← Back to ad sets
+          </button>
+          <button
+            onClick={() => approveCreativesForAdSet(activeAdSetId)}
+            disabled={preparingLaunch}
+            className={`px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors ${preparingLaunch ? "bg-emerald-300 cursor-not-allowed" : "bg-[#16A34A] hover:bg-[#15803D]"
+              }`}
+            title="Approves creatives and generates final images. Next you’ll configure launch settings."
+          >
+            {preparingLaunch ? "Approving…" : "Approve creatives"}
+          </button>
+        </div>
+        <div className="px-6 py-3 bg-emerald-50 border border-emerald-200 rounded-lg mb-4 flex items-center justify-between">
+          <div className="text-xs text-emerald-900">
+            <span className="font-semibold">Next step:</span> Click{" "}
+            <span className="font-semibold">“Approve creatives”</span> to freeze the creatives and generate final images.
+          </div>
+          {hasUnsavedAdsChanges && (
+            <div className="text-[11px] text-emerald-800">
+              Your latest edits will be saved automatically during approval.
             </div>
+          )}
+        </div>
+        <div className="bg-white border border-[#eaecf0] rounded-xl h-full overflow-hidden flex">
+          {/* Left Sidebar - Ad Types */}
+          <div className="bg-white border-r border-[#eceef5] flex flex-col items-center pt-8 pb-6 px-4 gap-6 flex-shrink-0">
+            <h2 className="text-xl font-semibold leading-5 text-black">
+              Ad Types
+            </h2>
+
+            <div className="flex flex-col gap-2">
+              {AD_TYPES.map((adType) => (
+                <Tooltip key={adType.id} title={adType.description} placement="right">
+                  <button
+                    onClick={() => setSelectedAdType(adType.id)}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${selectedAdType === adType.id
+                      ? "bg-[#eff8ff]"
+                      : "hover:bg-gray-50"
+                      }`}
+                  >
+                    <AdTypeIcon type={adType.id} active={selectedAdType === adType.id} />
+                  </button>
+                </Tooltip>
+              ))}
+            </div>
+          </div>
 
           {/* Middle Section - Variants List */}
           <div className="w-[486px] bg-white border-r border-[#eceef5] flex flex-col h-full">
@@ -1203,7 +1724,7 @@ export default function AdsEdit({ paramsId }) {
                 <h2 className="text-xl font-semibold leading-5 text-black">
                   Variants
                 </h2>
-                
+
                 <div className="flex gap-2 items-center">
                   <div className="w-2 h-2 bg-[#0a8f63] rounded-full" />
                   <span className="font-semibold text-sm text-[#475467] leading-5">
@@ -1273,57 +1794,110 @@ export default function AdsEdit({ paramsId }) {
           {/* Right Section - Live Preview */}
           <div className="flex overflow-hidden flex-col flex-1 h-full bg-white">
             <div className="flex flex-col p-8 h-full">
-                {/* Header */}
-                <div className="flex flex-shrink-0 justify-between items-center mb-5">
-                  <div className="flex flex-col gap-1.5">
-                    <h2 className="text-xl font-semibold leading-5 text-black capitalize">
-                      Live preview
-                    </h2>
-                    
-                  
-                  </div>
+              {/* Header */}
+              <div className="flex flex-shrink-0 justify-between items-center mb-5">
+                <div className="flex flex-col gap-1.5">
+                  <h2 className="text-xl font-semibold leading-5 text-black capitalize">
+                    Live preview
+                  </h2>
 
-                  <div className="flex gap-2 items-center">
-                    {AD_FORMATS.map((format) => {
-                      const isActive = selectedFormat === format.id;
-                      return (
-                        <button
-                          key={format.id}
-                          onClick={() => setSelectedFormat(format.id)}
-                          className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors border ${
-                            isActive
-                              ? "bg-[#5207CD] text-white border-[#5207CD]"
-                              : "bg-[#F3F0FF] text-[#5207CD] border-transparent hover:bg-[#E4D9FF]"
+
+                </div>
+
+                <div className="flex gap-2 items-center">
+                  {AD_FORMATS.map((format) => {
+                    const isActive = selectedFormat === format.id;
+                    return (
+                      <button
+                        key={format.id}
+                        onClick={() => setSelectedFormat(format.id)}
+                        className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors border ${isActive
+                          ? "bg-[#5207CD] text-white border-[#5207CD]"
+                          : "bg-[#F3F0FF] text-[#5207CD] border-transparent hover:bg-[#E4D9FF]"
                           }`}
-                        >
-                          {format.label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                      >
+                        {format.label}
+                      </button>
+                    );
+                  })}
                 </div>
+              </div>
 
-                {/* Divider */}
-                <div className="h-[1px] bg-[#eaecf0] mb-8 flex-shrink-0" />
+              {/* Divider */}
+              <div className="h-[1px] bg-[#eaecf0] mb-8 flex-shrink-0" />
 
-                {/* Preview Container - Centered and Scrollable */}
-                <div className="flex overflow-y-auto flex-1 justify-center items-start min-h-0">
-                  {variantForPreview && (
-                    <AdPreview
-                      refEl={captureRef}
-                      variant={variantForPreview}
-                      format={AD_FORMATS.find(f => f.id === selectedFormat)}
-                      platform={selectedPlatform}
-                      brandData={userBrandData}
-                      landingPageData={landingPageData}
-                      adType={selectedAdType}
-                    />
-                  )}
-                </div>
+              {/* Preview Container - Centered and Scrollable */}
+              <div className="flex overflow-y-auto flex-1 justify-center items-start min-h-0">
+                {variantForPreview && (
+                  <AdPreview
+                    refEl={captureRef}
+                    variant={variantForPreview}
+                    format={AD_FORMATS.find(f => f.id === selectedFormat)}
+                    platform={selectedPlatform}
+                    brandData={userBrandData}
+                    landingPageData={landingPageData}
+                    adType={selectedAdType}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
+    );
+  };
+
+  if (loading || !landingPageData) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Skeleton active />
+      </div>
+    );
+  }
+
+  const renderActiveContent =
+    !activeAdSetId
+      ? renderAdSetsTable()
+      : activeAdSetState === "draft"
+        ? renderDraftView()
+        : activeAdSetState === "ready"
+          ? renderLaunchReadyView()
+          : renderLaunchedView();
+
+  return (
+    <>
+      <ApplyCustomFont landingPageData={{ ...landingPageData, ...userBrandData }} />
+
+      <div className="flex flex-col h-screen bg-[#f8f8f8]">
+        {/* Header */}
+        <div className="px-8 py-6 bg-white border-b border-[#eaecf0] flex-shrink-0">
+          <Header
+            landingPageData={landingPageData}
+            setPublished={(val) => {
+              if (landingPageData) {
+                const newData = { ...landingPageData, published: val };
+                setLandingPageData(newData);
+                CrudService.update("LandingPageData", lpId, { published: val }).then(() => {
+                  message.success(val ? "Page published" : "Page unpublished");
+                });
+              }
+            }}
+            setLandingPageData={setLandingPageData}
+            reload={fetchData}
+            lpId={lpId}
+            isAdsEditor={true}
+            hideSettings
+            hideLaunchNav
+            onNavigateAttempt={() => setActiveAdSetId(null)}
+            customActions={<>
+            </>}
+
+          />
+        </div>
+
+        <div className="overflow-hidden flex-1 px-8 py-6">
+          {renderActiveContent}
+        </div>
       </div>
 
       {/* Side toast for Approve & Prepare status (non-blocking, no layout shift) */}
@@ -1448,7 +2022,7 @@ export default function AdsEdit({ paramsId }) {
           </div>
         </div>
       </Modal>
-      
+
       {/* Publish Confirmation Modal */}
       <Modal
         open={confirmOpen}
@@ -1491,7 +2065,7 @@ export default function AdsEdit({ paramsId }) {
           }
         }}
         okText="Confirm & Publish"
-        title="Confirm creatives to publish"
+        title="Approved creatives"
         width={960}
       >
         <div className="mb-4 text-[#475467]">
@@ -1573,6 +2147,51 @@ export default function AdsEdit({ paramsId }) {
               )}
             </div>
           ))}
+        </div>
+      </Modal>
+
+      {/* Meta Configuration Required Modal */}
+      <Modal
+        open={metaConfigModalOpen}
+        onCancel={() => setMetaConfigModalOpen(false)}
+        footer={null}
+        centered
+        width={480}
+      >
+        <div className="text-center py-4">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-50 flex items-center justify-center">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"
+                fill="#1877F2"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Connect Meta Ads
+          </h3>
+          <p className="text-gray-500 mb-6">
+            To create ad campaigns, you need to connect your Meta Business account
+            and configure your Ad Account and Page in Integrations.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => setMetaConfigModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                setMetaConfigModalOpen(false);
+                const returnUrl = encodeURIComponent(window.location.href);
+                window.location.href = `/dashboard/integrations?returnUrl=${returnUrl}`;
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Go to Integrations
+            </button>
+          </div>
         </div>
       </Modal>
     </>

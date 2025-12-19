@@ -104,7 +104,7 @@ export const generateTailwindPalette = (baseColor) => {
   return palette;
 };
 
-const Layout = ({children}) => {
+const Layout = ({ children }) => {
   const [theme, setTheme] = useState(null);
   const [numberNewAccelerator, setNumberNewAccelerator] = useState(null);
   const [numberTickets, setNumberTickets] = useState(null);
@@ -128,7 +128,7 @@ const Layout = ({children}) => {
   const location = useRouter();
   const router = useRouter();
   const user = useSelector(selectUser);
-  console.log("user.workspaceRole :=",user?.workspaceRole,"user id :=",user?._id)
+  console.log("user.workspaceRole :=", user?.workspaceRole, "user id :=", user?._id)
 
   const handleAcceptInvitation = async (token) => {
     try {
@@ -163,15 +163,15 @@ const Layout = ({children}) => {
   useEffect(() => {
     console.log("user", user);
 
-    if(user?._id)
-    Intercom({
-      app_id: 'h6drq6b2',
-      user_id: user?._id, // IMPORTANT: Replace "user?.id" with the variable you use to capture the user's ID
-      name: `${user?.firstName} ${user?.lastName}`, // IMPORTANT: Replace "user?.name" with the variable you use to capture the user's name
-      email: user?.email, // IMPORTANT: Replace "user?.email" with the variable you use to capture the user's email
-      created_at: user?.createdAt, // IMPORTANT: Replace "user?.createdAt" with the variable you use to capture the user's sign-up date in a Unix timestamp (in seconds) e.g. 1704067200
-    });
-    
+    if (user?._id)
+      Intercom({
+        app_id: 'h6drq6b2',
+        user_id: user?._id, // IMPORTANT: Replace "user?.id" with the variable you use to capture the user's ID
+        name: `${user?.firstName} ${user?.lastName}`, // IMPORTANT: Replace "user?.name" with the variable you use to capture the user's name
+        email: user?.email, // IMPORTANT: Replace "user?.email" with the variable you use to capture the user's email
+        created_at: user?.createdAt, // IMPORTANT: Replace "user?.createdAt" with the variable you use to capture the user's sign-up date in a Unix timestamp (in seconds) e.g. 1704067200
+      });
+
   }, [user]);
 
   // Load current team role from localStorage
@@ -179,11 +179,11 @@ const Layout = ({children}) => {
     const currentTeam = TeamService.getCurrentTeam();
     if (currentTeam && currentTeam.role) {
       setCurrentTeamRole(currentTeam.role);
-      
+
       // Redirect atsOnly users to ATS page if they're not already there
-      if (currentTeam.role === 'atsOnly' && 
-          !location.pathname.includes('/ats') && 
-          location.pathname !== '/dashboard/settings') {
+      if (currentTeam.role === 'atsOnly' &&
+        !location.pathname.includes('/ats') &&
+        location.pathname !== '/dashboard/settings') {
         router.push('/dashboard/ats');
       }
     }
@@ -254,7 +254,7 @@ const Layout = ({children}) => {
     return () => document.removeEventListener("REFRESH.TICKETNUM", refresh);
   }, [location]);
 
-  
+
   const checkCalendlyEventTypes = useCallback(async () => {
     if (!partner?.calendlyclientId) return;
     CalendlyService.getNeedsToSelectEventType().then(({ data }) => {
@@ -362,7 +362,7 @@ const Layout = ({children}) => {
         //   href: "/dashboard/admin/analytics",
         //   icon: ChartPieIcon,
         // },
-      
+
       ],
     },
   ];
@@ -371,9 +371,9 @@ const Layout = ({children}) => {
   useEffect(() => {
     if (user) {
       console.log(user.email);
-  
+
       window.$crisp = window.$crisp || [];
-  
+
       // set email and name
       window.$crisp.push(["set", "user:email", user.email]);
       if (user.name) {
@@ -383,7 +383,7 @@ const Layout = ({children}) => {
   }, [user]);
 
   const isOnboardingCompleted =
-  !!user?.companyLogo && !!user?.companyUrl && !!user?.companyInfo;
+    !!user?.companyLogo && !!user?.companyUrl && !!user?.companyInfo;
 
   const isOnboardingCompleted2 = {
     "email": user?.email,
@@ -421,10 +421,10 @@ const Layout = ({children}) => {
   const hasMainAccessInCurrentTeam = user?.currentTeam ? (
     isInMainTeam || // Own team
     (user.currentTeam.permissions &&
-     !(user.currentTeam.permissions.landingPages === 'none' &&
-       user.currentTeam.permissions.mediaLibrary === 'none' &&
-       user.currentTeam.permissions.teamManagement === 'none' &&
-       user.currentTeam.permissions.ats === 'none'))
+      !(user.currentTeam.permissions.landingPages === 'none' &&
+        user.currentTeam.permissions.mediaLibrary === 'none' &&
+        user.currentTeam.permissions.teamManagement === 'none' &&
+        user.currentTeam.permissions.ats === 'none'))
   ) : true;
 
   const canManageWorkspaces = Boolean(user?.allowWorkspaces && isInMainTeam);
@@ -440,21 +440,21 @@ const Layout = ({children}) => {
       name: "Menu",
       subitems: isMainBlocked
         ? [
-            {
-              name: "Workspaces",
-              href: "/dashboard/workspaces",
-              icon: Blocks,
-            },
-          ]
+          {
+            name: "Workspaces",
+            href: "/dashboard/workspaces",
+            icon: Blocks,
+          },
+        ]
         : shouldOnlySeeATS
-        ? [
+          ? [
             {
               name: "ATS",
               href: "/dashboard/ats",
               icon: FolderIcon,
             },
           ]
-        : [
+          : [
             {
               name: "Dashboard",
               href: "/dashboard",
@@ -484,13 +484,13 @@ const Layout = ({children}) => {
             },
             ...(canManageWorkspaces
               ? [
-                  {
-                    name: "Workspaces",
-                    href: "/dashboard/workspaces",
-                    icon: Blocks,
-                    hide: isWorkspaceGuest,
-                  },
-                ]
+                {
+                  name: "Workspaces",
+                  href: "/dashboard/workspaces",
+                  icon: Blocks,
+                  hide: isWorkspaceGuest,
+                },
+              ]
               : []),
             {
               name: "Media Library",
@@ -536,9 +536,8 @@ const Layout = ({children}) => {
     },
     {
       name: "Integrations",
-      href: "/dashboard/settings",
+      href: "/dashboard/integrations",
       logo: Blocks,
-      grayout: true,
       // hide: user?.role !== "recruiter",
     },
     {
@@ -659,7 +658,7 @@ const Layout = ({children}) => {
               }}
             />
           )}
-          
+
           {!user?.isWorkspaceSession && pendingInvitations?.length > 0 && (
             <Card
               title="Pending Workspace Invitations"
@@ -669,61 +668,62 @@ const Layout = ({children}) => {
               <List
                 dataSource={pendingInvitations}
                 renderItem={(invite) => {
-                  console.log("invite :",invite)
-                  return(
-                  <List.Item
-                    actions={[
-                      <AntButton
-                        key="accept"
-                        type="primary"
-                        loading={workspaceLoading}
-                        onClick={() => handleAcceptInvitation(invite.pendingToken || invite.token)}
-                      >
-                        Accept
-                      </AntButton>,
-                      <AntButton
-                        key="decline"
-                        danger
-                        loading={workspaceLoading}
-                        onClick={() => handleDeclineInvitation(invite.pendingToken || invite.token)}
-                      >
-                        Decline
-                      </AntButton>
-                    ]}
-                  >
-<List.Item.Meta
-  avatar={
-    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-      {invite?.companyLogo?<img src={invite?.companyLogo} alt='Workspace Logo' className='w-10 h-10 rounded-full' />:<ApartmentOutlined className="w-5 h-5 text-white" />}
-    </div>
-  }
-  title={
-    <div className="font-semibold text-gray-900">
-      {invite.workspaceName || invite.name || 'Workspace Invitation'}
-    </div>
-  }
-  description={
-    <div className="space-y-1 mt-1">
-      <div className="flex items-center gap-2 text-sm text-gray-600">
-        <Tag 
-          color={invite.role === 'admin' ? 'red' : invite.role === 'editor' ? 'blue' : 'green'}
-          className="text-xs px-2 py-0.5"
-        >
-          {invite.role === 'atsOnly' ? 'ATS Only' : invite.role?.charAt(0).toUpperCase() + invite.role?.slice(1) || 'Member'}
-        </Tag>
-        <span>Invited {moment(invite.invitedAt).fromNow()}</span>
-      </div>
-      {invite.expiresAt && (
-        <div className="flex items-center gap-2 text-sm text-orange-600">
-          <ClockCircleOutlined className="w-3 h-3" />
-          <span>Expires {moment(invite.expiresAt).fromNow()}</span>
-        </div>
-      )}
-    </div>
-  }
-/>
-                  </List.Item>
-                )}}
+                  console.log("invite :", invite)
+                  return (
+                    <List.Item
+                      actions={[
+                        <AntButton
+                          key="accept"
+                          type="primary"
+                          loading={workspaceLoading}
+                          onClick={() => handleAcceptInvitation(invite.pendingToken || invite.token)}
+                        >
+                          Accept
+                        </AntButton>,
+                        <AntButton
+                          key="decline"
+                          danger
+                          loading={workspaceLoading}
+                          onClick={() => handleDeclineInvitation(invite.pendingToken || invite.token)}
+                        >
+                          Decline
+                        </AntButton>
+                      ]}
+                    >
+                      <List.Item.Meta
+                        avatar={
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            {invite?.companyLogo ? <img src={invite?.companyLogo} alt='Workspace Logo' className='w-10 h-10 rounded-full' /> : <ApartmentOutlined className="w-5 h-5 text-white" />}
+                          </div>
+                        }
+                        title={
+                          <div className="font-semibold text-gray-900">
+                            {invite.workspaceName || invite.name || 'Workspace Invitation'}
+                          </div>
+                        }
+                        description={
+                          <div className="space-y-1 mt-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Tag
+                                color={invite.role === 'admin' ? 'red' : invite.role === 'editor' ? 'blue' : 'green'}
+                                className="text-xs px-2 py-0.5"
+                              >
+                                {invite.role === 'atsOnly' ? 'ATS Only' : invite.role?.charAt(0).toUpperCase() + invite.role?.slice(1) || 'Member'}
+                              </Tag>
+                              <span>Invited {moment(invite.invitedAt).fromNow()}</span>
+                            </div>
+                            {invite.expiresAt && (
+                              <div className="flex items-center gap-2 text-sm text-orange-600">
+                                <ClockCircleOutlined className="w-3 h-3" />
+                                <span>Expires {moment(invite.expiresAt).fromNow()}</span>
+                              </div>
+                            )}
+                          </div>
+                        }
+                      />
+                    </List.Item>
+                  )
+                }}
               />
             </Card>
           )}
@@ -736,9 +736,9 @@ const Layout = ({children}) => {
                   <div className="flex items-center gap-2">
                     <Blocks className="w-4 h-4" />
                     <span>
-                      <strong>Workspace Mode:</strong> You are currently working in "{user.workspaceName || 'Workspace'}" workspace. 
+                      <strong>Workspace Mode:</strong> You are currently working in "{user.workspaceName || 'Workspace'}" workspace.
                       Your have {user.workspaceRole} access.
-                      <Tag 
+                      <Tag
                         color={user.workspaceRole === 'admin' ? 'red' : user.workspaceRole === 'editor' ? 'blue' : 'green'}
                         className="text-xs px-2 py-0.5"
                       >
@@ -758,8 +758,8 @@ const Layout = ({children}) => {
               showIcon={false}
             />
           )}
-         
-         {children}
+
+          {children}
 
           <Footer />
           {/* <SupportWidget /> */}

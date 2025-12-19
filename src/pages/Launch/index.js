@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { useSearchParams } from "next/navigation";
 import { Skeleton, message, DatePicker, InputNumber, Select, Switch, Modal, Input, Slider } from "antd";
@@ -13,24 +13,35 @@ import dayjs from "dayjs";
 export default function Launch({ paramsId }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   let lpId = paramsId || router.query.lpId;
   let isDemo = router.query.demo === 'true' || searchParams?.get('demo') === 'true';
+  // Robustly resolve ad set id from URL (router.query can be empty on first render in Next pages router)
+  const adSetKey =
+    router.query.adset ||
+    router.query.adset_id ||
+    searchParams?.get('adset') ||
+    searchParams?.get('adset_id') ||
+    (typeof window !== "undefined"
+      ? (new URLSearchParams(window.location.search).get("adset") ||
+        new URLSearchParams(window.location.search).get("adset_id"))
+      : null) ||
+    null;
   const testId = router.query.test_id || searchParams?.get('test_id');
 
   // Handle case where query param is attached directly to the ID
   // e.g. /launch/6932...&demo=true or /launch/6932...&test_id=...
   if (typeof lpId === 'string') {
-      if (lpId.includes('&demo=true') || lpId.includes('?demo=true')) {
-          isDemo = true;
-          lpId = lpId.split(/[&?]demo=true/)[0];
-      }
-      if (lpId.includes('&test_id=')) {
-          lpId = lpId.split('&test_id=')[0];
-      }
-      if (lpId.includes('?test_id=')) {
-          lpId = lpId.split('?test_id=')[0];
-      }
+    if (lpId.includes('&demo=true') || lpId.includes('?demo=true')) {
+      isDemo = true;
+      lpId = lpId.split(/[&?]demo=true/)[0];
+    }
+    if (lpId.includes('&test_id=')) {
+      lpId = lpId.split('&test_id=')[0];
+    }
+    if (lpId.includes('?test_id=')) {
+      lpId = lpId.split('?test_id=')[0];
+    }
   }
 
   const [loading, setLoading] = useState(true);
@@ -39,20 +50,62 @@ export default function Launch({ paramsId }) {
   console.log("summary", summary);
   const [datePreset, setDatePreset] = useState("last_7d");
   const [activeStep, setActiveStep] = useState("settings"); // settings | audience | creatives | overview
+
+  // In ad-set mode, we intentionally skip Overview (it’s shown per ad set after launch).
+  useEffect(() => {
+    if (!adSetKey) return;
+    if (activeStep === "overview") {
+      setActiveStep("settings");
+    }
+  }, [adSetKey, activeStep]);
+
+  // If this ad set has already been launched once, Launch should not be editable anymore.
+  // Redirect back to Ads overview where pause/resume is handled.
+  useEffect(() => {
+    if (!router?.isReady) return;
+    if (!adSetKey) return;
+    if (!summary) return;
+    const localSets = Array.isArray(summary?.editorAds?._adSets) ? summary.editorAds._adSets : [];
+    const local = localSets.find((s) => String(s?.id) === String(adSetKey)) || null;
+    const isLaunchedLocal = String(local?.state || "").toLowerCase() === "launched";
+    const isMetaAdSet = Array.isArray(summary?.adSets)
+      ? summary.adSets.some((s) => String(s?.id || s?.adset_id) === String(adSetKey))
+      : false;
+    if (isLaunchedLocal || isMetaAdSet) {
+      router.replace(`/lp-editor/${lpId}/ads?adset=${encodeURIComponent(adSetKey)}`);
+    }
+  }, [router?.isReady, adSetKey, summary, lpId, router]);
   const [launching, setLaunching] = useState(false);
   const [launchDailyBudget, setLaunchDailyBudget] = useState(null);
   const [optimizationGoal, setOptimizationGoal] = useState(null);
   const [pacingPlan, setPacingPlan] = useState(null);
   const [scheduleOverride, setScheduleOverride] = useState({ start: null, end: null });
-  const [hasUnsyncedMetaChanges, setHasUnsyncedMetaChanges] = useState(false);
+  const [touched, setTouched] = useState({
+    budget: false,
+    schedule: false,
+    audience: false,
+    optimization: false,
+    pacing: false,
+  });
+  const didInitFromSummaryRef = useRef(false);
+  const initKeyRef = useRef("");
+  const lastAutoSavePayloadRef = useRef("");
+  const hydratingRef = useRef(false);
+  // No "sync to Meta" concept: Launch immediately publishes on button click.
 
   const reload = async () => {
     if (!lpId) return;
     try {
       const params = { date_preset: datePreset };
       if (testId) params.test_id = testId;
+      if (adSetKey) params.adset_id = adSetKey;
       const res = await AdsLaunchService.getSummary(lpId, params);
-      setSummary(res?.data?.data || null);
+      const next = res?.data?.data || null;
+      setSummary(next);
+      // If backend resolved a different (valid) ad set id (stale URL case), fix the URL.
+      if (adSetKey && next?.resolvedAdSetId && String(next.resolvedAdSetId) !== String(adSetKey)) {
+        router.replace(`/launch/${lpId}?adset=${encodeURIComponent(next.resolvedAdSetId)}`);
+      }
     } catch (e) {
       message.error("Failed to load campaign summary");
     } finally {
@@ -72,7 +125,7 @@ export default function Launch({ paramsId }) {
 
   useEffect(() => {
     reload();
-  }, [lpId, datePreset]);
+  }, [lpId, datePreset, adSetKey]);
 
   // Keep format functions but don't return early yet if we want hooks to run consistently
   // The early return "if (!lpId || loading)" causes issues if other hooks come after it.
@@ -123,30 +176,30 @@ export default function Launch({ paramsId }) {
         dateRange: "23/10/2025 - 23/11/2025",
         totalBudget: "$4,300",
         channels: [
-           { name: "Facebook", daily: "$35", total: "$2,500", color: "blue", icon: <FaFacebook className="w-5 h-5 text-blue-600" /> },
-           { name: "Google", daily: "$25", total: "$1,800", color: "green", icon: <FaGoogle className="w-4 h-4 text-green-600" /> }
+          { name: "Facebook", daily: "$35", total: "$2,500", color: "blue", icon: <FaFacebook className="w-5 h-5 text-blue-600" /> },
+          { name: "Google", daily: "$25", total: "$1,800", color: "green", icon: <FaGoogle className="w-4 h-4 text-green-600" /> }
         ],
         summary: {
-           budget: "€300 over 14 days",
-           budgetNote: "(Balanced plan)",
-           targetArea: "30km radius around Rotterdam",
-           adTypes: { total: 6, jobAds: 4, employerBrand: 1, testimonial: 1 },
-           optimization: "Meta Advantage+ Audience"
+          budget: "€300 over 14 days",
+          budgetNote: "(Balanced plan)",
+          targetArea: "30km radius around Rotterdam",
+          adTypes: { total: 6, jobAds: 4, employerBrand: 1, testimonial: 1 },
+          optimization: "Meta Advantage+ Audience"
         },
         predictions: {
-           reach: "8,500",
-           reachDelta: "+15% vs benchmark",
-           ctr: "2.4%",
-           ctrNote: "Above industry avg",
-           applicants: "12-18",
-           applicantsNote: "Quality score: High",
-           cpa: "€38",
-           cpaDelta: "16% below benchmark"
+          reach: "8,500",
+          reachDelta: "+15% vs benchmark",
+          ctr: "2.4%",
+          ctrNote: "Above industry avg",
+          applicants: "12-18",
+          applicantsNote: "Quality score: High",
+          cpa: "€38",
+          cpaDelta: "16% below benchmark"
         },
         benchmarks: {
-           ctr: "2.1%",
-           cpa: "€45",
-           competition: "Medium"
+          ctr: "2.1%",
+          cpa: "€45",
+          competition: "Medium"
         },
         insights: "HireLab AI selected these settings based on your job type (Technician) and past similar campaigns.",
         optimization: {
@@ -192,9 +245,8 @@ export default function Launch({ paramsId }) {
       : settingsSchedule.end || null;
 
     const dateRange = startMoment
-      ? `${startMoment.format("DD/MM/YYYY")} - ${
-          endMoment ? endMoment.format("DD/MM/YYYY") : "Ongoing"
-        }`
+      ? `${startMoment.format("DD/MM/YYYY")} - ${endMoment ? endMoment.format("DD/MM/YYYY") : "Ongoing"
+      }`
       : "—";
 
     // Effective daily budget:
@@ -219,8 +271,8 @@ export default function Launch({ paramsId }) {
       providerDaily != null
         ? providerDaily
         : settingsDaily != null
-        ? settingsDaily
-        : 0;
+          ? settingsDaily
+          : 0;
 
     const totalBudgetLabel = formatCurrency(effectiveDaily || 0);
 
@@ -236,93 +288,98 @@ export default function Launch({ paramsId }) {
     }
 
     return {
-        year: new Date().getFullYear(),
-        months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], // dynamic?
-        role: campaignName,
-        dateRange,
-        totalBudget: totalBudgetLabel,
-        channels: channels,
-        summary: {
-           budget: totalBudgetLabel,
-           budgetNote: "",
-           targetArea,
-           adTypes: { total: 0, jobAds: 0, employerBrand: 0, testimonial: 0 },
-           optimization: summary?.campaign?.objective || "—"
-        },
-        predictions: {
-           reach: reach,
-           reachDelta: "",
-           ctr: ctr,
-           ctrNote: "",
-           applicants: "—",
-           applicantsNote: "",
-           cpa: cpc,
-           cpaDelta: ""
-        },
-        benchmarks: {
-           ctr: "—",
-           cpa: "—",
-           competition: "—"
-        },
-        insights: "AI insights will appear here once the campaign is active.",
-        optimization: {
-          title: "Optimization",
-          badge: "Standard",
-          desc: "Standard delivery"
-        }
+      year: new Date().getFullYear(),
+      months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], // dynamic?
+      role: campaignName,
+      dateRange,
+      totalBudget: totalBudgetLabel,
+      channels: channels,
+      summary: {
+        budget: totalBudgetLabel,
+        budgetNote: "",
+        targetArea,
+        adTypes: { total: 0, jobAds: 0, employerBrand: 0, testimonial: 0 },
+        optimization: summary?.campaign?.objective || "—"
+      },
+      predictions: {
+        reach: reach,
+        reachDelta: "",
+        ctr: ctr,
+        ctrNote: "",
+        applicants: "—",
+        applicantsNote: "",
+        cpa: cpc,
+        cpaDelta: ""
+      },
+      benchmarks: {
+        ctr: "—",
+        cpa: "—",
+        competition: "—"
+      },
+      insights: "AI insights will appear here once the campaign is active.",
+      optimization: {
+        title: "Optimization",
+        badge: "Standard",
+        desc: "Standard delivery"
+      }
     };
   };
 
   const getSettingsData = () => {
     if (isDemo) {
       return {
-         optimizationGoal: "Apply Now (Conversion)",
-         platforms: [
-            { name: "Facebook", icon: <FaFacebook className="text-2xl text-blue-600" />, selected: true, disabled: false },
-            { name: "Instagram", icon: <FaInstagram className="text-2xl text-pink-500" />, selected: true, disabled: false },
-            { name: "LinkedIn", icon: <FaLinkedin className="text-2xl text-blue-700" />, selected: false, disabled: true, label: "Coming soon" },
-            { name: "Google", icon: <FaGoogle className="text-2xl text-red-500" />, selected: false, disabled: true, label: "Coming soon" },
-            { name: "TikTok", icon: <FaTiktok className="text-2xl text-black" />, selected: false, disabled: true, label: "Coming soon" },
-            { name: "Snapchat", icon: <FaSnapchat className="text-2xl text-yellow-400" />, selected: false, disabled: true, label: "Coming soon" }
-         ],
-         budget: {
-            total: 300,
-            daily: 21.43,
-            split: [
-               { name: "Meta", pct: 60, color: "blue" },
-               { name: "Instagram", pct: 20, color: "pink" },
-               { name: "Others", pct: 20, color: "gray" }
+        optimizationGoal: "Apply Now (Conversion)",
+        platforms: [
+          { name: "Facebook", icon: <FaFacebook className="text-2xl text-blue-600" />, selected: true, disabled: false },
+          { name: "Instagram", icon: <FaInstagram className="text-2xl text-pink-500" />, selected: true, disabled: false },
+          { name: "LinkedIn", icon: <FaLinkedin className="text-2xl text-blue-700" />, selected: false, disabled: true, label: "Coming soon" },
+          { name: "Google", icon: <FaGoogle className="text-2xl text-red-500" />, selected: false, disabled: true, label: "Coming soon" },
+          { name: "TikTok", icon: <FaTiktok className="text-2xl text-black" />, selected: false, disabled: true, label: "Coming soon" },
+          { name: "Snapchat", icon: <FaSnapchat className="text-2xl text-yellow-400" />, selected: false, disabled: true, label: "Coming soon" }
+        ],
+        budget: {
+          total: 300,
+          daily: 21.43,
+          split: [
+            { name: "Meta", pct: 60, color: "blue" },
+            { name: "Instagram", pct: 20, color: "pink" },
+            { name: "Others", pct: 20, color: "gray" }
+          ]
+        },
+        prediction: {
+          reach: "~8,500",
+          cpa: "~€38"
+        },
+        pacing: "Balanced Plan",
+        suggestion: {
+          text: "Extend campaign by 7 days?",
+          action: "Approve"
+        },
+        schedule: {
+          start: dayjs("2025-11-10"),
+          end: dayjs("2025-11-24")
+        },
+        aiInsights: {
+          text: "HireLab AI selected these settings based on your job type (Technician) and past similar campaigns.",
+          recommendations: {
+            title: "Budget Distribution",
+            desc: "Recommended channel split for maximum applications.",
+            items: [
+              { name: "Meta", pct: "60%", icon: <FaFacebook className="text-gray-600" /> },
+              { name: "Instagram", pct: "20%", icon: <FaInstagram className="text-gray-600" /> },
+              { name: "Remarketing", pct: "20%", icon: <RefreshCw className="w-3 h-3 text-gray-600" /> }
             ]
-         },
-         prediction: {
-            reach: "~8,500",
-            cpa: "~€38"
-         },
-         pacing: "Balanced Plan",
-         suggestion: {
-            text: "Extend campaign by 7 days?",
-            action: "Approve"
-         },
-         schedule: {
-            start: dayjs("2025-11-10"),
-            end: dayjs("2025-11-24")
-         },
-         aiInsights: {
-             text: "HireLab AI selected these settings based on your job type (Technician) and past similar campaigns.",
-             recommendations: {
-                 title: "Budget Distribution",
-                 desc: "Recommended channel split for maximum applications.",
-                 items: [
-                     { name: "Meta", pct: "60%", icon: <FaFacebook className="text-gray-600" /> },
-                     { name: "Instagram", pct: "20%", icon: <FaInstagram className="text-gray-600" /> },
-                     { name: "Remarketing", pct: "20%", icon: <RefreshCw className="w-3 h-3 text-gray-600" /> }
-                 ]
-             }
-         }
+          }
+        }
       };
     }
 
-    const hasCampaign = !!summary?.campaign;
+    // In per-ad-set mode we always treat this screen as "pre-launch" draft setup.
+    // Even if there is an existing Meta campaign (from other ad sets), we should use per-ad-set draft settings here.
+    const hasCampaign = !!summary?.campaign && !adSetKey;
+    // Single source of truth from backend:
+    // - in ad-set mode: summary.launchSettings is the per-ad-set settings
+    // - otherwise: summary.launchSettings is campaign-level settings
     const draft = summary?.launchSettings || {};
 
     // Real data mapping
@@ -356,8 +413,8 @@ export default function Launch({ paramsId }) {
       providerDailyBudget != null
         ? providerDailyBudget
         : draftDaily != null
-        ? draftDaily
-        : 20;
+          ? draftDaily
+          : 20;
 
     const approxTwoWeekTotal = effectiveDailyBudget * 14;
 
@@ -371,119 +428,119 @@ export default function Launch({ paramsId }) {
       ? providerStartRaw
         ? dayjs(providerStartRaw)
         : draft.scheduleStart
-        ? dayjs(draft.scheduleStart)
-        : null
+          ? dayjs(draft.scheduleStart)
+          : null
       : draft.scheduleStart
-      ? dayjs(draft.scheduleStart)
-      : null;
+        ? dayjs(draft.scheduleStart)
+        : null;
 
     const scheduleEnd = hasCampaign
       ? providerEndRaw
         ? dayjs(providerEndRaw)
         : draft.scheduleEnd
-        ? dayjs(draft.scheduleEnd)
-        : null
+          ? dayjs(draft.scheduleEnd)
+          : null
       : draft.scheduleEnd
-      ? dayjs(draft.scheduleEnd)
-      : null;
+        ? dayjs(draft.scheduleEnd)
+        : null;
 
     return {
-        optimizationGoal: optimizationGoalValue,
-        platforms: ["Facebook", "Instagram", "LinkedIn", "Google", "TikTok", "Snapchat"].map(p => ({
-            name: p,
-            icon: p === "Facebook" ? <FaFacebook className="text-2xl text-blue-600" /> :
-                  p === "Instagram" ? <FaInstagram className="text-2xl text-pink-500" /> :
-                  p === "LinkedIn" ? <FaLinkedin className="text-2xl text-blue-700" /> :
-                  p === "Google" ? <FaGoogle className="text-2xl text-red-500" /> :
-                  p === "TikTok" ? <FaTiktok className="text-2xl text-black" /> :
+      optimizationGoal: optimizationGoalValue,
+      platforms: ["Facebook", "Instagram", "LinkedIn", "Google", "TikTok", "Snapchat"].map(p => ({
+        name: p,
+        icon: p === "Facebook" ? <FaFacebook className="text-2xl text-blue-600" /> :
+          p === "Instagram" ? <FaInstagram className="text-2xl text-pink-500" /> :
+            p === "LinkedIn" ? <FaLinkedin className="text-2xl text-blue-700" /> :
+              p === "Google" ? <FaGoogle className="text-2xl text-red-500" /> :
+                p === "TikTok" ? <FaTiktok className="text-2xl text-black" /> :
                   <FaSnapchat className="text-2xl text-yellow-400" />,
-            selected: p === "Facebook" || p === "Instagram",
-            disabled: !(p === "Facebook" || p === "Instagram"),
-            label: !(p === "Facebook" || p === "Instagram") ? "Coming soon" : undefined
-        })),
-        budget: {
-            total: approxTwoWeekTotal,
-            daily: effectiveDailyBudget,
-            split: [
-              { name: "Meta", pct: 70, color: "blue" },
-              { name: "Instagram", pct: 30, color: "pink" },
-            ]
+        selected: p === "Facebook" || p === "Instagram",
+        disabled: !(p === "Facebook" || p === "Instagram"),
+        label: !(p === "Facebook" || p === "Instagram") ? "Coming soon" : undefined
+      })),
+      budget: {
+        total: approxTwoWeekTotal,
+        daily: effectiveDailyBudget,
+        split: [
+          { name: "Meta", pct: 70, color: "blue" },
+          { name: "Instagram", pct: 30, color: "pink" },
+        ]
+      },
+      prediction: {
+        reach: reach,
+        cpa: cpc
+      },
+      pacing: hasCampaign ? "Standard" : draft.pacing || "Standard",
+      suggestion: summary?.campaign
+        ? null
+        : {
+          text: "Start with a 14-day run and review performance after the first week.",
+          action: "Apply suggestion",
         },
-        prediction: {
-            reach: reach,
-            cpa: cpc
+      schedule: {
+        start: scheduleStart,
+        end: scheduleEnd,
+      },
+      aiInsights: {
+        text: landingPageData?.vacancyTitle
+          ? `HireLab AI will optimize this campaign for “${landingPageData.vacancyTitle}” based on similar roles and markets.`
+          : "HireLab AI will optimize this campaign based on similar jobs and markets.",
+        recommendations: {
+          title: "Suggested Budget & Platforms",
+          desc: "Meta Feed + Instagram are recommended to maximize applications for this role.",
+          items: [
+            { name: "Meta", pct: "70%", icon: <FaFacebook className="text-gray-600" /> },
+            { name: "Instagram", pct: "30%", icon: <FaInstagram className="text-gray-600" /> },
+          ],
         },
-        pacing: hasCampaign ? "Standard" : draft.pacing || "Standard",
-        suggestion: summary?.campaign
-          ? null
-          : {
-              text: "Start with a 14-day run and review performance after the first week.",
-              action: "Apply suggestion",
-            },
-        schedule: {
-            start: scheduleStart,
-            end: scheduleEnd,
-        },
-        aiInsights: {
-            text: landingPageData?.vacancyTitle
-              ? `HireLab AI will optimize this campaign for “${landingPageData.vacancyTitle}” based on similar roles and markets.`
-              : "HireLab AI will optimize this campaign based on similar jobs and markets.",
-            recommendations: {
-              title: "Suggested Budget & Platforms",
-              desc: "Meta Feed + Instagram are recommended to maximize applications for this role.",
-              items: [
-                { name: "Meta", pct: "70%", icon: <FaFacebook className="text-gray-600" /> },
-                { name: "Instagram", pct: "30%", icon: <FaInstagram className="text-gray-600" /> },
-              ],
-            },
-        }
+      }
     };
   };
 
   const getAudienceData = () => {
     if (isDemo) {
-        return {
-            locations: [
-                { name: "Berlin", radius: "30 KM", map: "https://placehold.co/400x256/e2e8f0/94a3b8?text=Berlin+Map" },
-                { name: "Tokyo", radius: "30 KM", map: "https://placehold.co/400x256/e2e8f0/94a3b8?text=Tokyo+Map" },
-                { name: "Amsterdam", radius: "30 KM", map: "https://placehold.co/400x256/e2e8f0/94a3b8?text=Amsterdam+Map" }
-            ],
-            keywords: [
-                { name: "Project Management", color: "purple" },
-                { name: "Management", color: "purple" },
-                { name: "Leadership", color: "purple" },
-                { name: "Team Coordination", color: "purple" },
-                { name: "Planning & Execution", color: "purple" },
-                { name: "Stakeholder Management", color: "purple" },
-                { name: "Budget Control", color: "purple" },
-                { name: "Process Improvement", color: "purple" },
-                { name: "Cross-Functional Teams", color: "purple" }
-            ],
-            keywordsCount: "+3",
-            retargeting: {
-                active: true,
-                threshold: "1,000",
-                desc: "when reach >"
-            },
-            aiTargeting: [
-                { label: "Similar job content" },
-                { label: "Company career pages" },
-                { label: "Related professional roles" }
-            ],
-            layers: {
-                warm: "People who visited your page",
-                lookalike: "Based on past applicants",
-                cold: "New potential reach"
-            },
-            aiInsights: {
-                text: "HireLab AI selected these settings based on your job type (Technician) and past similar campaigns.",
-                recommendations: {
-                    title: "Audience Targeting",
-                    badge: "Enhanced",
-                    desc: "Meta Advantage+ with technical skills overlay"
-                }
-            }
-        };
+      return {
+        locations: [
+          { name: "Berlin", radius: "30 KM", map: "https://placehold.co/400x256/e2e8f0/94a3b8?text=Berlin+Map" },
+          { name: "Tokyo", radius: "30 KM", map: "https://placehold.co/400x256/e2e8f0/94a3b8?text=Tokyo+Map" },
+          { name: "Amsterdam", radius: "30 KM", map: "https://placehold.co/400x256/e2e8f0/94a3b8?text=Amsterdam+Map" }
+        ],
+        keywords: [
+          { name: "Project Management", color: "purple" },
+          { name: "Management", color: "purple" },
+          { name: "Leadership", color: "purple" },
+          { name: "Team Coordination", color: "purple" },
+          { name: "Planning & Execution", color: "purple" },
+          { name: "Stakeholder Management", color: "purple" },
+          { name: "Budget Control", color: "purple" },
+          { name: "Process Improvement", color: "purple" },
+          { name: "Cross-Functional Teams", color: "purple" }
+        ],
+        keywordsCount: "+3",
+        retargeting: {
+          active: true,
+          threshold: "1,000",
+          desc: "when reach >"
+        },
+        aiTargeting: [
+          { label: "Similar job content" },
+          { label: "Company career pages" },
+          { label: "Related professional roles" }
+        ],
+        layers: {
+          warm: "People who visited your page",
+          lookalike: "Based on past applicants",
+          cold: "New potential reach"
+        },
+        aiInsights: {
+          text: "HireLab AI selected these settings based on your job type (Technician) and past similar campaigns.",
+          recommendations: {
+            title: "Audience Targeting",
+            badge: "Enhanced",
+            desc: "Meta Advantage+ with technical skills overlay"
+          }
+        }
+      };
     }
 
     // Prefer LP-level saved selections (draft or last chosen) so locations "come from the page"
@@ -504,8 +561,8 @@ export default function Launch({ paramsId }) {
       const targetingObj =
         typeof t === "string"
           ? (() => {
-              try { return JSON.parse(t); } catch { return null; }
-            })()
+            try { return JSON.parse(t); } catch { return null; }
+          })()
           : t;
       const geo = targetingObj?.geo_locations;
       const customs = Array.isArray(geo?.custom_locations) ? geo.custom_locations : [];
@@ -528,52 +585,75 @@ export default function Launch({ paramsId }) {
     }
 
     return {
-        locations,
-        keywords: summary?.campaign?.targeting?.interests?.map(i => ({ name: i.name, color: "purple" })) || [],
-        keywordsCount: "",
-        retargeting: {
-            active: false,
-            threshold: "1,000",
-            desc: "when reach >"
-        },
-        aiTargeting: [],
-        layers: {
-            warm: "—",
-            lookalike: "—",
-            cold: "—"
-        },
-        aiInsights: {
-            text: "AI insights will appear here once the campaign is active.",
-            recommendations: null
-        }
+      locations,
+      keywords: summary?.campaign?.targeting?.interests?.map(i => ({ name: i.name, color: "purple" })) || [],
+      keywordsCount: "",
+      retargeting: {
+        active: false,
+        threshold: "1,000",
+        desc: "when reach >"
+      },
+      aiTargeting: [],
+      layers: {
+        warm: "—",
+        lookalike: "—",
+        cold: "—"
+      },
+      aiInsights: {
+        text: "AI insights will appear here once the campaign is active.",
+        recommendations: null
+      }
     };
   };
 
   useEffect(() => {
+    // Only hydrate audience from backend if user hasn't started editing it.
+    if (touched.audience) return;
     const data = getAudienceData();
     setAudienceLocations(data.locations);
     setAudienceKeywords(data.keywords);
-  }, [isDemo, summary]);
+  }, [isDemo, summary, touched.audience]);
 
   // Initialize / sync editable settings state from Meta or draft defaults once summary / LP data are available
   useEffect(() => {
+    if (!summary) return;
     const base = getSettingsData();
-    if (optimizationGoal === null && base.optimizationGoal) {
-      setOptimizationGoal(base.optimizationGoal);
+
+    // Only (re)initialize when the underlying summary/adset context changes.
+    // Avoid re-initializing on unrelated state changes (e.g. landingPageData updates),
+    // which was causing a second autosave to overwrite user edits (3 -> 5).
+    // Include launchSettings.updatedAt so we re-init when the persisted settings change.
+    const nextInitKey = `${lpId || ""}::${adSetKey || ""}::${summary?.campaignId || ""}::${summary?.launchSettings?.updatedAt || ""}`;
+    if (initKeyRef.current !== nextInitKey) {
+      initKeyRef.current = nextInitKey;
+      didInitFromSummaryRef.current = true;
+      hydratingRef.current = true;
+      setTouched({
+        budget: false,
+        schedule: false,
+        audience: false,
+        optimization: false,
+        pacing: false,
+      });
+      // Release hydration lock after React applies the state updates.
+      setTimeout(() => {
+        hydratingRef.current = false;
+      }, 0);
     }
-    if (pacingPlan === null && base.pacing) {
-      setPacingPlan(base.pacing);
-    }
-    // When the underlying summary changes (Meta or draft), reset schedule & budget from it
-    setScheduleOverride({
-      start: base.schedule?.start || null,
-      end: base.schedule?.end || null,
+
+    if (optimizationGoal === null && base.optimizationGoal) setOptimizationGoal(base.optimizationGoal);
+    if (pacingPlan === null && base.pacing) setPacingPlan(base.pacing);
+
+    // Only hydrate fields the user hasn't touched.
+    setScheduleOverride((prev) => {
+      if (touched.schedule) return prev;
+      return { start: base.schedule?.start || null, end: base.schedule?.end || null };
     });
-    setLaunchDailyBudget(
-      base.budget?.daily != null ? Number(base.budget.daily) : null
-    );
-    setHasUnsyncedMetaChanges(false);
-  }, [summary, isDemo, landingPageData]);
+    setLaunchDailyBudget((prev) => {
+      if (touched.budget) return prev;
+      return base.budget?.daily != null ? Number(base.budget.daily) : null;
+    });
+  }, [summary, isDemo, lpId, adSetKey, optimizationGoal, pacingPlan, touched.budget, touched.schedule]);
 
   // Keep Launch header in sync with Meta campaign status and title
   useEffect(() => {
@@ -584,35 +664,62 @@ export default function Launch({ paramsId }) {
     setLandingPageData((prev) => ({
       ...(prev || {}),
       vacancyTitle: inferredTitle,
-      published: isActive,
+      published: summary?.published,
     }));
   }, [summary]);
 
-  // Auto-save draft settings to our DB before first Meta publish (no campaign yet)
+  // Auto-save draft settings to our DB for this ad set (or campaign-level if not in ad-set mode).
   useEffect(() => {
-    if (!lpId || summary?.campaign) return; // Only draft mode (no campaign in Meta yet)
+    if (!lpId) return;
+    // Only autosave after the page has been initialized and the user has interacted.
+    if (!didInitFromSummaryRef.current) return;
+    if (
+      !touched.budget &&
+      !touched.schedule &&
+      !touched.audience &&
+      !touched.optimization &&
+      !touched.pacing
+    ) return;
+    // Only send fields the user actually changed; otherwise we accidentally overwrite stored values
+    // with null/defaults on unrelated edits.
     const payload = {
-      optimizationGoal,
-      pacing: pacingPlan,
-      budgetDaily:
-        launchDailyBudget != null
-          ? Number(launchDailyBudget)
-          : null,
-      scheduleStart: scheduleOverride.start
-        ? scheduleOverride.start.toISOString()
-        : null,
-      scheduleEnd: scheduleOverride.end
-        ? scheduleOverride.end.toISOString()
-        : null,
-      audienceLocations: (audienceLocations || []).map((loc) => ({
-        name: loc?.name,
-        radiusKm: parseInt(loc?.radius, 10) || 25,
-        lat: loc?.lat,
-        lon: loc?.lon,
-        countryCode: loc?.countryCode || null,
-      })),
+      ...(adSetKey ? { adset_id: adSetKey } : {}),
+      clientUpdatedAt: new Date().toISOString(),
+      ...(touched.optimization ? { optimizationGoal } : {}),
+      ...(touched.pacing ? { pacing: pacingPlan } : {}),
+      ...(touched.budget
+        ? {
+          budgetDaily:
+            launchDailyBudget != null ? Number(launchDailyBudget) : null,
+        }
+        : {}),
+      ...(touched.schedule
+        ? {
+          scheduleStart: scheduleOverride.start
+            ? scheduleOverride.start.toISOString()
+            : null,
+          scheduleEnd: scheduleOverride.end
+            ? scheduleOverride.end.toISOString()
+            : null,
+        }
+        : {}),
+      ...(touched.audience
+        ? {
+          audienceLocations: (audienceLocations || []).map((loc) => ({
+            name: loc?.name,
+            radiusKm: parseInt(loc?.radius, 10) || 25,
+            lat: loc?.lat,
+            lon: loc?.lon,
+            countryCode: loc?.countryCode || null,
+          })),
+        }
+        : {}),
     };
+    // Prevent duplicate / out-of-order autosaves from overwriting newer values.
+    const payloadKey = JSON.stringify(payload);
+    if (lastAutoSavePayloadRef.current === payloadKey) return;
     const timer = setTimeout(() => {
+      lastAutoSavePayloadRef.current = payloadKey;
       AdsLaunchService.saveLaunchSettings(lpId, payload).catch(() => {
         // Silent fail; user will still be able to launch using current in-memory values
       });
@@ -620,13 +727,18 @@ export default function Launch({ paramsId }) {
     return () => clearTimeout(timer);
   }, [
     lpId,
-    summary?.campaign,
+    adSetKey,
     optimizationGoal,
     pacingPlan,
     launchDailyBudget,
     scheduleOverride.start,
     scheduleOverride.end,
     audienceLocations,
+    touched.budget,
+    touched.schedule,
+    touched.audience,
+    touched.optimization,
+    touched.pacing,
   ]);
 
   if (!lpId || loading) {
@@ -660,6 +772,7 @@ export default function Launch({ paramsId }) {
 
   const handleSelectSearchLocation = (result) => {
     if (!result) return;
+    if (hydratingRef.current) return;
     const address = result.address || {};
     const city =
       address.city ||
@@ -681,9 +794,7 @@ export default function Launch({ paramsId }) {
         countryCode,
       },
     ]);
-    if (summary?.campaign) {
-      setHasUnsyncedMetaChanges(true);
-    }
+    setTouched((t) => ({ ...t, audience: true }));
     setIsLocationModalOpen(false);
     setLocationSearchTerm("");
     setLocationSearchResults([]);
@@ -698,12 +809,11 @@ export default function Launch({ paramsId }) {
   };
 
   const handleRemoveLocation = (index) => {
+    if (hydratingRef.current) return;
     const newLocs = [...audienceLocations];
     newLocs.splice(index, 1);
     setAudienceLocations(newLocs);
-    if (summary?.campaign) {
-      setHasUnsyncedMetaChanges(true);
-    }
+    setTouched((t) => ({ ...t, audience: true }));
   };
 
   const handleRemoveKeyword = (index) => {
@@ -713,12 +823,11 @@ export default function Launch({ paramsId }) {
   };
 
   const handleRadiusChange = (value, index) => {
+    if (hydratingRef.current) return;
     const newLocs = [...audienceLocations];
     newLocs[index].radius = `${value} KM`;
     setAudienceLocations(newLocs);
-    if (summary?.campaign) {
-      setHasUnsyncedMetaChanges(true);
-    }
+    setTouched((t) => ({ ...t, audience: true }));
   };
 
   const handleApplyQuickSuggestion = () => {
@@ -784,122 +893,6 @@ export default function Launch({ paramsId }) {
     }
   };
 
-  const syncMetaChanges = async () => {
-    if (!summary?.campaignId && !summary?.campaign?.id) {
-      message.info("No Meta campaign yet – settings are saved as draft in HireLab.");
-      return;
-    }
-    try {
-      const original = baseSettingsData;
-      const current = settingsData;
-
-      const updates = [];
-
-      // Budget change → update campaign daily budget
-      if (
-        Number(current.budget?.daily || 0) !==
-        Number(original.budget?.daily || 0)
-      ) {
-        updates.push(updateCampaignBudget(current.budget.daily));
-      }
-
-      // Schedule change → propagate to all ad sets (best-effort)
-      const originalStart = original.schedule?.start
-        ? original.schedule.start.toISOString()
-        : null;
-      const originalEnd = original.schedule?.end
-        ? original.schedule.end.toISOString()
-        : null;
-      const currentStart = current.schedule?.start
-        ? current.schedule.start.toISOString()
-        : null;
-      const currentEnd = current.schedule?.end
-        ? current.schedule.end.toISOString()
-        : null;
-
-      if (originalStart !== currentStart || originalEnd !== currentEnd) {
-        (summary?.adSets || []).forEach((set) => {
-          if (!set.id) return;
-          updates.push(
-            updateAdSetSchedule(set.id, current.schedule.start, current.schedule.end)
-          );
-        });
-      }
-
-      // Audience locations change → update ad set targeting (best-effort)
-      const canonicalizeLaunchLoc = (l) => {
-        if (!l) return null;
-        const lat = typeof l.lat === "number" ? l.lat : Number(l.lat);
-        const lon = typeof l.lon === "number" ? l.lon : Number(l.lon);
-        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-        const radiusKm =
-          l.radiusKm != null
-            ? Number(l.radiusKm)
-            : parseInt(String(l.radius || ""), 10) || 25;
-        const countryCode = (l.countryCode || "").toUpperCase() || null;
-        return `${lat.toFixed(6)}|${lon.toFixed(6)}|${radiusKm}|${countryCode || ""}`;
-      };
-      const originalAudience = Array.isArray(summary?.launchSettings?.audienceLocations)
-        ? summary.launchSettings.audienceLocations
-        : [];
-      const origKey = originalAudience
-        .map(canonicalizeLaunchLoc)
-        .filter(Boolean)
-        .sort()
-        .join(";");
-      const currKey = (audienceLocations || [])
-        .map(canonicalizeLaunchLoc)
-        .filter(Boolean)
-        .sort()
-        .join(";");
-
-      if (origKey !== currKey) {
-        const audiencePayload = (audienceLocations || [])
-          .map((loc) => ({
-            name: loc?.name,
-            radiusKm: parseInt(String(loc?.radius || ""), 10) || 25,
-            lat: typeof loc?.lat === "number" ? loc.lat : Number(loc?.lat),
-            lon: typeof loc?.lon === "number" ? loc.lon : Number(loc?.lon),
-            countryCode: loc?.countryCode || null,
-          }))
-          .filter((l) => Number.isFinite(l.lat) && Number.isFinite(l.lon));
-
-        (summary?.adSets || []).forEach((set) => {
-          if (!set.id) return;
-          updates.push(
-            AdsLaunchService.updateAdSet(lpId, {
-              id: set.id,
-              audienceLocations: audiencePayload,
-              // keep default placements unless we later expose per-adset placement editing
-              placements: ["facebook_feed", "instagram_story"],
-            })
-          );
-        });
-
-        // Persist the user's intended audience into our DB as well (post-publish edits)
-        updates.push(
-          AdsLaunchService.saveLaunchSettings(lpId, { audienceLocations: audiencePayload })
-        );
-      }
-
-      if (updates.length === 0) {
-        message.info("No changes to sync with Meta.");
-        setHasUnsyncedMetaChanges(false);
-        return;
-      }
-
-      await Promise.all(updates);
-      setHasUnsyncedMetaChanges(false);
-      message.success("Changes synced with Meta.");
-    } catch (e) {
-      message.error(
-        e?.response?.data?.message ||
-          e?.message ||
-          "Failed to sync changes with Meta"
-      );
-    }
-  };
-
   const toggleAd = async (adId, status) => {
     try {
       await AdsLaunchService.updateAd(lpId, { id: adId, status });
@@ -958,7 +951,7 @@ export default function Launch({ paramsId }) {
     }
   };
   const toggleCampaign = async () => {
-      const isActive = summary?.campaign?.status === "ACTIVE";
+    const isActive = summary?.campaign?.status === "ACTIVE";
     await setCampaignPublished(!isActive);
   };
 
@@ -1030,6 +1023,19 @@ export default function Launch({ paramsId }) {
         // Be explicit so backend never creates a second campaign for this LP
         reuseCampaign: true,
       };
+      if (adSetKey) {
+        payload.hirelabAdSetId = adSetKey;
+        // If this HireLab ad set already has a Meta ad set id, reuse it (retry / relaunch scenario).
+        const localSets = Array.isArray(summary?.editorAds?._adSets) ? summary.editorAds._adSets : [];
+        const local = localSets.find((s) => s?.id === adSetKey) || null;
+        if (local?.metaAdSetId) {
+          payload.reuseAdSet = true;
+          payload.existingAdSetId = local.metaAdSetId;
+        }
+        if (local?.metaCampaignId) {
+          payload.existingCampaignId = local.metaCampaignId;
+        }
+      }
       if (existingCampaignId) {
         payload.existingCampaignId = existingCampaignId;
       }
@@ -1050,8 +1056,8 @@ export default function Launch({ paramsId }) {
 
       const res = await AdsService.publish(lpId, payload);
       if (res?.data?.success) {
-        message.success("Campaign launch requested");
-      await reload();
+        message.success(adSetKey ? "Ad set launched" : "Campaign launch requested");
+        await reload();
       } else {
         message.error(res?.data?.message || "Failed to launch campaign");
       }
@@ -1068,24 +1074,21 @@ export default function Launch({ paramsId }) {
       <div className="px-8 pt-6">
         <Header
           landingPageData={landingPageData}
-          setPublished={setCampaignPublished}
-          setLandingPageData={setLandingPageData}
+          setPublished={(val) => {
+            if (landingPageData) {
+              const newData = { ...landingPageData, published: val };
+              setLandingPageData(newData);
+              CrudService.update("LandingPageData", lpId, { published: val }).then(() => {
+                message.success(val ? "Page published" : "Page unpublished");
+              });
+            }
+          }} setLandingPageData={setLandingPageData}
           reload={reload}
           lpId={lpId}
-          customActions={
-            <div className="flex gap-2 items-center">
-              <span className="text-xs text-[#667085]">Meta campaign status</span>
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  summary?.campaign?.status === "ACTIVE"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                {summary?.campaign?.status || "Not Created"}
-              </span>
-            </div>
-          }
+          backLinkOverride={`/lp-editor/${lpId}/ads`}
+          hideSettings
+          customActions={<>
+          </>}
         />
       </div>
 
@@ -1096,175 +1099,120 @@ export default function Launch({ paramsId }) {
             <div className="p-4 rounded-xl border border-gray-200 bg-white h-fit shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
               <div className="mb-4 text-lg font-semibold text-gray-800">Campaign Setup</div>
               <div className="space-y-2">
-              {["settings", "audience", "creatives", "overview"].map((step, idx) => (
-              <button
-                key={step}
-                onClick={() => setActiveStep(step)}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
-                    activeStep === step ? "bg-violet-50" : "bg-white hover:bg-gray-50"
-                }`}
-              >
-                <span
-                    className={`inline-flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold ${
-                      activeStep === step
+                {(adSetKey ? ["settings", "audience", "creatives"] : ["settings", "audience", "creatives", "overview"]).map((step, idx) => (
+                  <button
+                    key={step}
+                    onClick={() => setActiveStep(step)}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${activeStep === step ? "bg-violet-50" : "bg-white hover:bg-gray-50"
+                      }`}
+                  >
+                    <span
+                      className={`inline-flex items-center justify-center h-7 w-7 rounded-full text-xs font-semibold ${activeStep === step
                         ? "bg-[#5207CD] text-white"
                         : "bg-[#F3E8FF] text-[#6B21A8]"
-                  }`}
-                >
-                  {idx + 1}
-                </span>
-                  <span className={`font-medium ${activeStep === step ? "text-violet-700 font-semibold" : "text-gray-600"}`}>
-                {step === "overview" && "Overview"}
-                {step === "settings" && "Campaign Settings"}
-                {step === "audience" && "Audience"}
-                {step === "creatives" && "Creatives"}
-                  </span>
-              </button>
-            ))}
+                        }`}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span className={`font-medium ${activeStep === step ? "text-violet-700 font-semibold" : "text-gray-600"}`}>
+                      {step === "overview" && "Overview"}
+                      {step === "settings" && "Campaign Settings"}
+                      {step === "audience" && "Audience"}
+                      {step === "creatives" && "Creatives"}
+                    </span>
+                  </button>
+                ))}
               </div>
               <button
                 onClick={handleLaunchCampaign}
                 disabled={launching}
-                className={`flex gap-2 justify-center items-center py-3 mt-6 w-full text-base font-semibold rounded-lg transition-colors ${
-                  launching
-                    ? "text-gray-500 bg-gray-200 cursor-not-allowed"
-                    : "text-white bg-green-500 hover:bg-green-600"
-                }`}
+                className={`flex gap-2 justify-center items-center py-3 mt-6 w-full text-base font-semibold rounded-lg transition-colors ${launching
+                  ? "text-gray-500 bg-gray-200 cursor-not-allowed"
+                  : "text-white bg-green-500 hover:bg-green-600"
+                  }`}
               >
-                <span className="text-lg">🚀</span> {launching ? "Launching..." : "Launch Campaign"}
-            </button>
+                <span className="text-lg">🚀</span> {launching ? "Launching..." : adSetKey ? "Launch Ad Set" : "Launch Campaign"}
+              </button>
             </div>
 
             {activeStep === 'overview' && (
               <>
                 <div className="p-6 rounded-xl border border-gray-200 bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-                   <div className="flex gap-3 items-center mb-4">
-                      <div className="flex justify-center items-center w-8 h-8 text-violet-600 bg-violet-50 rounded-lg">
-                         <Target className="w-4 h-4" />
-                      </div>
-                      <div className="text-base font-semibold text-gray-800">AI Insights</div>
-                   </div>
-                   <div className="text-sm leading-relaxed text-gray-600">
-                      {overviewData.insights}
-                   </div>
+                  <div className="flex gap-3 items-center mb-4">
+                    <div className="flex justify-center items-center w-8 h-8 text-violet-600 bg-violet-50 rounded-lg">
+                      <Target className="w-4 h-4" />
+                    </div>
+                    <div className="text-base font-semibold text-gray-800">AI Insights</div>
+                  </div>
+                  <div className="text-sm leading-relaxed text-gray-600">
+                    {overviewData.insights}
+                  </div>
                 </div>
 
                 <div className="p-6 rounded-xl border border-gray-200 bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] relative overflow-hidden">
-                   <div className="flex relative z-10 gap-3 items-center mb-6">
-                      <div className="flex justify-center items-center w-8 h-8 text-violet-600 bg-violet-50 rounded-lg">
-                         <TrendingUp className="w-4 h-4" />
-                      </div>
-                      <div className="text-base font-semibold leading-tight text-gray-800">Optimization<br/>Recommendations</div>
-                   </div>
-                   
-                   <div className="relative z-10 space-y-4">
-                      <div className="flex justify-between items-center">
-                         <span className="text-sm font-medium text-gray-800">{overviewData.optimization.title}</span>
-                         <span className="px-2 py-0.5 text-xs font-bold text-green-600 bg-green-100 rounded-full">{overviewData.optimization.badge}</span>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                         {overviewData.optimization.desc}
-                      </div>
-                   </div>
+                  <div className="flex relative z-10 gap-3 items-center mb-6">
+                    <div className="flex justify-center items-center w-8 h-8 text-violet-600 bg-violet-50 rounded-lg">
+                      <TrendingUp className="w-4 h-4" />
+                    </div>
+                    <div className="text-base font-semibold leading-tight text-gray-800">Optimization<br />Recommendations</div>
+                  </div>
+
+                  <div className="relative z-10 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-800">{overviewData.optimization.title}</span>
+                      <span className="px-2 py-0.5 text-xs font-bold text-green-600 bg-green-100 rounded-full">{overviewData.optimization.badge}</span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {overviewData.optimization.desc}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="p-6 rounded-xl border border-gray-200 bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-                   <div className="flex gap-3 items-center mb-6">
-                      <div className="flex justify-center items-center w-8 h-8 text-violet-600 bg-violet-50 rounded-lg">
-                         <BarChart2 className="w-4 h-4" />
-                      </div>
-                      <div className="text-base font-semibold text-gray-800">Industry Benchmarks</div>
-                   </div>
-                   
-                   <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                         <span className="text-sm text-gray-600">Avg. CTR (Technical)</span>
-                         <span className="text-sm font-semibold text-gray-800">{overviewData.benchmarks.ctr}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                         <span className="text-sm text-gray-600">Avg. CPA (Rotterdam)</span>
-                         <span className="text-sm font-semibold text-gray-800">{overviewData.benchmarks.cpa}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                         <span className="text-sm text-gray-600">Competition Level</span>
-                         <span className="text-sm font-semibold text-orange-600">{overviewData.benchmarks.competition}</span>
-                      </div>
-                   </div>
+                  <div className="flex gap-3 items-center mb-6">
+                    <div className="flex justify-center items-center w-8 h-8 text-violet-600 bg-violet-50 rounded-lg">
+                      <BarChart2 className="w-4 h-4" />
+                    </div>
+                    <div className="text-base font-semibold text-gray-800">Industry Benchmarks</div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Avg. CTR (Technical)</span>
+                      <span className="text-sm font-semibold text-gray-800">{overviewData.benchmarks.ctr}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Avg. CPA (Rotterdam)</span>
+                      <span className="text-sm font-semibold text-gray-800">{overviewData.benchmarks.cpa}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Competition Level</span>
+                      <span className="text-sm font-semibold text-orange-600">{overviewData.benchmarks.competition}</span>
+                    </div>
+                  </div>
                 </div>
               </>
             )}
 
             {activeStep === 'settings' && (
               <>
-                 <div className="p-6 rounded-xl border border-gray-200 bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] relative overflow-hidden">
-                    <div className="flex absolute top-6 left-1/2 justify-center items-center w-12 h-12 bg-violet-50 rounded-full -translate-x-1/2">
-                       <Zap className="w-5 h-5 text-violet-700" />
+                <div className="p-6 rounded-xl border border-gray-200 bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] relative overflow-hidden">
+                  <div className="flex absolute top-6 left-1/2 justify-center items-center w-12 h-12 bg-violet-50 rounded-full -translate-x-1/2">
+                    <Zap className="w-5 h-5 text-violet-700" />
+                  </div>
+                  <div className="mt-12 text-center">
+                    <div className="mb-2 text-base font-semibold text-gray-700">AI Insights</div>
+                    <div className="text-sm text-gray-500 leading-relaxed max-w-[280px] mx-auto">
+                      {settingsData.aiInsights.text}
                     </div>
-                    <div className="mt-12 text-center">
-                       <div className="mb-2 text-base font-semibold text-gray-700">AI Insights</div>
-                       <div className="text-sm text-gray-500 leading-relaxed max-w-[280px] mx-auto">
-                          {settingsData.aiInsights.text}
-                       </div>
-                    </div>
-                 </div>
+                  </div>
+                </div>
 
-                 {settingsData.aiInsights.recommendations && (
-                 <div className="p-6 rounded-xl border border-gray-200 bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-                    <div className="flex gap-2 items-center mb-4">
-                       <TrendingUp className="w-4 h-4 text-violet-700" />
-                       <div className="text-base font-semibold text-gray-700">Optimization Recommendations</div>
-                    </div>
-                    
-                    <div className="mb-4">
-                       <div className="mb-1 text-sm font-semibold text-gray-600">{settingsData.aiInsights.recommendations.title}</div>
-                       <div className="text-xs leading-relaxed text-gray-400">
-                          {settingsData.aiInsights.recommendations.desc}
-                       </div>
-                    </div>
 
-                    <div className="space-y-3">
-                       {settingsData.aiInsights.recommendations.items.map((item, i) => (
-                          <div key={i} className="flex justify-between items-center">
-                             <div className="flex gap-2 items-center">
-                                <span className="flex justify-center w-4">{item.icon}</span>
-                                <span className="text-sm text-gray-600">{item.name}</span>
-                             </div>
-                             <span className="text-sm font-medium text-gray-600">{item.pct}</span>
-                          </div>
-                       ))}
-                    </div>
-                 </div>
-                 )}
 
-                 <div className="p-6 rounded-xl border border-gray-200 bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-                    <div className="mb-3 text-sm font-semibold text-gray-600">Campaign Pacing</div>
-                    <div className="flex flex-col gap-2">
-                       {['Balanced Plan', 'Aggressive Plan', 'Lite Plan'].map((plan) => (
-                          <button 
-                             key={plan}
-                             className={`w-full py-3 px-4 rounded-lg text-sm font-medium text-left transition-colors border ${
-                                settingsData.pacing === plan 
-                                ? 'bg-violet-50 border-violet-700 text-violet-800' 
-                                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                             }`}
-                          >
-                             {plan}
-                          </button>
-                       ))}
-                    </div>
-                 </div>
 
-                 {settingsData.suggestion && (
-                 <div className="p-6 rounded-xl border border-gray-200 bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-                    <div className="mb-3 text-sm font-semibold text-gray-600">Quick Suggestions</div>
-                    <div className="flex justify-between items-center">
-                       <span className="text-sm text-gray-500">{settingsData.suggestion.text}</span>
-                       <button className="px-4 py-1.5 text-sm font-semibold text-violet-700 bg-violet-50 rounded-md transition-colors hover:bg-violet-100">
-                          {settingsData.suggestion.action}
-                       </button>
-                    </div>
-                 </div>
-                 )}
+
+
               </>
             )}
           </div>
@@ -1278,7 +1226,7 @@ export default function Launch({ paramsId }) {
                 {activeStep === "audience" && "Audience"}
                 {activeStep === "creatives" && "Creatives"}
               </Heading>
-               {activeStep === "overview" && <div className="flex gap-3 items-center">
+              {activeStep === "overview" && <div className="flex gap-3 items-center">
                 <button
                   className="text-xs px-3 py-1 rounded-md border text-[#475467] hover:bg-gray-50"
                   onClick={toggleCampaign}
@@ -1309,159 +1257,159 @@ export default function Launch({ paramsId }) {
               <div className="space-y-6">
                 {/* Timeline Section */}
                 <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                   <div className="flex justify-between items-center pb-4 mb-6 border-b border-gray-100">
-                      <div className="flex gap-4 items-center">
-                        <button className="p-1 rounded hover:bg-gray-50"><ChevronRight className="w-4 h-4 text-gray-400 rotate-180" /></button>
-                        <span className="font-semibold text-gray-700">{overviewData.year}</span>
-                        <button className="p-1 rounded hover:bg-gray-50"><ChevronRight className="w-4 h-4 text-gray-400" /></button>
+                  <div className="flex justify-between items-center pb-4 mb-6 border-b border-gray-100">
+                    <div className="flex gap-4 items-center">
+                      <button className="p-1 rounded hover:bg-gray-50"><ChevronRight className="w-4 h-4 text-gray-400 rotate-180" /></button>
+                      <span className="font-semibold text-gray-700">{overviewData.year}</span>
+                      <button className="p-1 rounded hover:bg-gray-50"><ChevronRight className="w-4 h-4 text-gray-400" /></button>
+                    </div>
+                    <div className="flex gap-8 px-8">
+                      {overviewData.months.map((m) => (
+                        <div key={m} className={`w-12 text-center text-sm font-medium ${m === 'Oct' ? 'text-violet-600' : 'text-gray-400'}`}>{m}</div>
+                      ))}
+                    </div>
+                    <div className="w-20 text-sm font-semibold text-right text-gray-800">
+                      <div>Total:</div>
+                      <div>{overviewData.totalBudget}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-6">
+                    {/* Left info */}
+                    <div className="pr-6 space-y-4 w-60 border-r border-gray-100 shrink-0">
+                      <div>
+                        <div className="font-semibold text-gray-800 truncate" title={overviewData.role}>{overviewData.role}</div>
+                        <div className="mt-1 text-xs text-gray-500">{overviewData.dateRange}</div>
                       </div>
-                      <div className="flex gap-8 px-8">
-                        {overviewData.months.map((m) => (
-                          <div key={m} className={`w-12 text-center text-sm font-medium ${m === 'Oct' ? 'text-violet-600' : 'text-gray-400'}`}>{m}</div>
+
+                      <div className="space-y-3">
+                        {overviewData.channels.map((ch, i) => (
+                          <div key={i} className="flex gap-3 items-start">
+                            <div className={`w-8 h-8 rounded bg-${ch.color}-50 flex items-center justify-center shrink-0`}>
+                              {ch.icon}
+                            </div>
+                            <div>
+                              <div className="text-sm font-semibold text-gray-800">{ch.daily} <span className="font-normal text-gray-500">Daily budget</span></div>
+                              <div className="text-xs text-gray-500">{ch.total} Total budget</div>
+                            </div>
+                          </div>
                         ))}
                       </div>
-                      <div className="w-20 text-sm font-semibold text-right text-gray-800">
-                        <div>Total:</div>
-                        <div>{overviewData.totalBudget}</div>
+
+                      <button className="flex gap-2 justify-center items-center px-3 py-2 w-full text-sm text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <span className="text-lg leading-none">+</span> Add new channel
+                      </button>
+                    </div>
+
+                    {/* Right bars */}
+                    <div className="relative flex-1 pt-2">
+                      <div className="flex absolute inset-0 pointer-events-none">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                          <div key={i} className="flex-1 border-r border-gray-100 border-dashed last:border-0"></div>
+                        ))}
                       </div>
+
+                      <div className="relative z-10 mt-8 space-y-2">
+                        {overviewData.channels.map((ch, idx) => (
+                          <div key={idx}
+                            className={`flex items-center px-3 h-8 text-xs font-semibold text-white whitespace-nowrap rounded-full shadow-sm`}
+                            style={{
+                              backgroundColor: ch.color === 'blue' ? '#3b82f6' : '#22c55e',
+                              marginLeft: `${25 + idx * 5}%`,
+                              width: '40%'
+                            }}
+                            title={`${ch.name} Campaign`}
+                          >
+                            <span className="w-full truncate">{ch.name} Campaign</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                   <div className="flex gap-6">
-                      {/* Left info */}
-                      <div className="pr-6 space-y-4 w-60 border-r border-gray-100 shrink-0">
-                        <div>
-                          <div className="font-semibold text-gray-800 truncate" title={overviewData.role}>{overviewData.role}</div>
-                          <div className="mt-1 text-xs text-gray-500">{overviewData.dateRange}</div>
-                  </div>
-                        
-                        <div className="space-y-3">
-                          {overviewData.channels.map((ch, i) => (
-                              <div key={i} className="flex gap-3 items-start">
-                                <div className={`w-8 h-8 rounded bg-${ch.color}-50 flex items-center justify-center shrink-0`}>
-                                   {ch.icon}
-                  </div>
-                                <div>
-                                   <div className="text-sm font-semibold text-gray-800">{ch.daily} <span className="font-normal text-gray-500">Daily budget</span></div>
-                                   <div className="text-xs text-gray-500">{ch.total} Total budget</div>
-                  </div>
-                  </div>
-                          ))}
-                </div>
-
-                        <button className="flex gap-2 justify-center items-center px-3 py-2 w-full text-sm text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50">
-                          <span className="text-lg leading-none">+</span> Add new channel
-                        </button>
-                    </div>
-
-                      {/* Right bars */}
-                      <div className="relative flex-1 pt-2">
-                         <div className="flex absolute inset-0 pointer-events-none">
-                            {[1,2,3,4,5,6].map(i => (
-                                <div key={i} className="flex-1 border-r border-gray-100 border-dashed last:border-0"></div>
-                            ))}
-                    </div>
-                         
-                         <div className="relative z-10 mt-8 space-y-2">
-                            {overviewData.channels.map((ch, idx) => (
-                                <div key={idx} 
-                                    className={`flex items-center px-3 h-8 text-xs font-semibold text-white whitespace-nowrap rounded-full shadow-sm`}
-                                    style={{ 
-                                        backgroundColor: ch.color === 'blue' ? '#3b82f6' : '#22c55e',
-                                        marginLeft: `${25 + idx * 5}%`,
-                                        width: '40%'
-                                    }}
-                                    title={`${ch.name} Campaign`}
-                                >
-                                  <span className="w-full truncate">{ch.name} Campaign</span>
-                    </div>
-                            ))}
-                    </div>
-                  </div>
-                    </div>
-                    </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                   {/* AI Campaign Summary */}
-                   <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                      <div className="flex gap-3 items-center mb-6">
-                         <div className="flex justify-center items-center w-8 h-8 bg-violet-50 rounded-lg">
-                            <Target className="w-5 h-5 text-violet-600" />
-                    </div>
-                         <div className="text-lg font-semibold text-gray-800">AI Campaign Summary</div>
-                  </div>
-
-                      <div className="space-y-5">
-                         <div className="flex justify-between items-start">
-                            <div className="text-sm text-gray-500">Budget</div>
-                            <div className="text-sm font-semibold text-right text-gray-800">
-                              {overviewData.summary.budget} <span className="font-normal text-gray-400">{overviewData.summary.budgetNote}</span>
-                            </div>
-                         </div>
-                         <div className="flex justify-between items-start">
-                            <div className="text-sm text-gray-500">Target Area</div>
-                            <div className="text-sm font-semibold text-right text-gray-800">{overviewData.summary.targetArea}</div>
-                </div>
-
-                         <div>
-                            <div className="flex justify-between items-start mb-3">
-                                <div className="text-sm text-gray-500">Ad Types</div>
-                                <div className="text-sm font-semibold text-gray-800">{overviewData.summary.adTypes.total} variations</div>
-                    </div>
-                            <div className="flex gap-3">
-                               <div className="flex flex-col flex-1 items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                  <div className="text-lg font-bold text-violet-600">{overviewData.summary.adTypes.jobAds}</div>
-                                  <div className="mt-1 text-xs text-gray-500">Job Ads</div>
-                  </div>
-                               <div className="flex flex-col flex-1 items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                  <div className="text-lg font-bold text-violet-600">{overviewData.summary.adTypes.employerBrand}</div>
-                                  <div className="mt-1 text-xs text-center text-gray-500">Employer Brand</div>
-                    </div>
-                               <div className="flex flex-col flex-1 items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                  <div className="text-lg font-bold text-violet-600">{overviewData.summary.adTypes.testimonial}</div>
-                                  <div className="mt-1 text-xs text-gray-500">Testimonial</div>
-                    </div>
-                  </div>
-                </div>
-
-                         <div className="flex justify-between items-start pt-2">
-                            <div className="text-sm text-gray-500">Optimization</div>
-                            <div className="text-sm font-semibold text-gray-800">{overviewData.summary.optimization}</div>
-                         </div>
+                  {/* AI Campaign Summary */}
+                  <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="flex gap-3 items-center mb-6">
+                      <div className="flex justify-center items-center w-8 h-8 bg-violet-50 rounded-lg">
+                        <Target className="w-5 h-5 text-violet-600" />
                       </div>
-                   </div>
+                      <div className="text-lg font-semibold text-gray-800">AI Campaign Summary</div>
+                    </div>
 
-                   {/* AI Performance Predictions */}
-                   <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                      <div className="flex gap-3 items-center mb-6">
-                         <div className="flex justify-center items-center w-8 h-8 bg-violet-50 rounded-lg">
-                            <BarChart2 className="w-5 h-5 text-violet-600" />
-                         </div>
-                         <div className="text-lg font-semibold text-gray-800">AI Performance Predictions</div>
+                    <div className="space-y-5">
+                      <div className="flex justify-between items-start">
+                        <div className="text-sm text-gray-500">Budget</div>
+                        <div className="text-sm font-semibold text-right text-gray-800">
+                          {overviewData.summary.budget} <span className="font-normal text-gray-400">{overviewData.summary.budgetNote}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <div className="text-sm text-gray-500">Target Area</div>
+                        <div className="text-sm font-semibold text-right text-gray-800">{overviewData.summary.targetArea}</div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                         <div className="p-4 bg-purple-50 rounded-xl">
-                            <div className="text-2xl font-bold text-violet-700">{overviewData.predictions.reach}</div>
-                            <div className="mt-1 text-sm font-medium text-gray-700">Expected Reach</div>
-                            <div className="mt-1 text-xs text-green-600">{overviewData.predictions.reachDelta}</div>
-                         </div>
-                         <div className="p-4 bg-blue-50 rounded-xl">
-                            <div className="text-2xl font-bold text-blue-600">{overviewData.predictions.ctr}</div>
-                            <div className="mt-1 text-sm font-medium text-gray-700">Predicted CTR</div>
-                            <div className="mt-1 text-xs text-gray-500">{overviewData.predictions.ctrNote}</div>
-                         </div>
-                         <div className="p-4 bg-green-50 rounded-xl">
-                            <div className="text-2xl font-bold text-green-700">{overviewData.predictions.applicants}</div>
-                            <div className="mt-1 text-sm font-medium text-gray-700">Est. Applicants</div>
-                            <div className="mt-1 text-xs text-gray-500">{overviewData.predictions.applicantsNote}</div>
-                         </div>
-                         <div className="p-4 bg-orange-50 rounded-xl">
-                            <div className="text-2xl font-bold text-orange-600">{overviewData.predictions.cpa}</div>
-                            <div className="mt-1 text-sm font-medium text-gray-700">Predicted CPA</div>
-                            <div className="mt-1 text-xs text-green-600">{overviewData.predictions.cpaDelta}</div>
-                         </div>
+                      <div>
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="text-sm text-gray-500">Ad Types</div>
+                          <div className="text-sm font-semibold text-gray-800">{overviewData.summary.adTypes.total} variations</div>
+                        </div>
+                        <div className="flex gap-3">
+                          <div className="flex flex-col flex-1 items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div className="text-lg font-bold text-violet-600">{overviewData.summary.adTypes.jobAds}</div>
+                            <div className="mt-1 text-xs text-gray-500">Job Ads</div>
+                          </div>
+                          <div className="flex flex-col flex-1 items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div className="text-lg font-bold text-violet-600">{overviewData.summary.adTypes.employerBrand}</div>
+                            <div className="mt-1 text-xs text-center text-gray-500">Employer Brand</div>
+                          </div>
+                          <div className="flex flex-col flex-1 items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div className="text-lg font-bold text-violet-600">{overviewData.summary.adTypes.testimonial}</div>
+                            <div className="mt-1 text-xs text-gray-500">Testimonial</div>
+                          </div>
+                        </div>
                       </div>
-                   </div>
+
+                      <div className="flex justify-between items-start pt-2">
+                        <div className="text-sm text-gray-500">Optimization</div>
+                        <div className="text-sm font-semibold text-gray-800">{overviewData.summary.optimization}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI Performance Predictions */}
+                  <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="flex gap-3 items-center mb-6">
+                      <div className="flex justify-center items-center w-8 h-8 bg-violet-50 rounded-lg">
+                        <BarChart2 className="w-5 h-5 text-violet-600" />
+                      </div>
+                      <div className="text-lg font-semibold text-gray-800">AI Performance Predictions</div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 bg-purple-50 rounded-xl">
+                        <div className="text-2xl font-bold text-violet-700">{overviewData.predictions.reach}</div>
+                        <div className="mt-1 text-sm font-medium text-gray-700">Expected Reach</div>
+                        <div className="mt-1 text-xs text-green-600">{overviewData.predictions.reachDelta}</div>
+                      </div>
+                      <div className="p-4 bg-blue-50 rounded-xl">
+                        <div className="text-2xl font-bold text-blue-600">{overviewData.predictions.ctr}</div>
+                        <div className="mt-1 text-sm font-medium text-gray-700">Predicted CTR</div>
+                        <div className="mt-1 text-xs text-gray-500">{overviewData.predictions.ctrNote}</div>
+                      </div>
+                      <div className="p-4 bg-green-50 rounded-xl">
+                        <div className="text-2xl font-bold text-green-700">{overviewData.predictions.applicants}</div>
+                        <div className="mt-1 text-sm font-medium text-gray-700">Est. Applicants</div>
+                        <div className="mt-1 text-xs text-gray-500">{overviewData.predictions.applicantsNote}</div>
+                      </div>
+                      <div className="p-4 bg-orange-50 rounded-xl">
+                        <div className="text-2xl font-bold text-orange-600">{overviewData.predictions.cpa}</div>
+                        <div className="mt-1 text-sm font-medium text-gray-700">Predicted CPA</div>
+                        <div className="mt-1 text-xs text-green-600">{overviewData.predictions.cpaDelta}</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1469,22 +1417,6 @@ export default function Launch({ paramsId }) {
             {activeStep === "settings" && (
               <div className="space-y-6">
                 {/* Meta sync banner for live campaigns */}
-                {summary?.campaign && hasUnsyncedMetaChanges && (
-                  <div className="flex justify-between items-center px-4 py-3 text-xs text-amber-800 bg-amber-50 rounded-lg border border-amber-200">
-                    <div className="flex gap-2 items-center">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>
-                        You have unsaved changes to a live Meta campaign. These are only in HireLab until you sync.
-                      </span>
-                    </div>
-                    <button
-                      onClick={syncMetaChanges}
-                      className="px-3 py-1.5 text-xs font-semibold text-white bg-[#5207CD] rounded-full hover:bg-[#4506A6]"
-                    >
-                      Save & sync with Meta
-                    </button>
-                  </div>
-                )}
                 {/* Objectives */}
                 <div className="flex gap-6">
                   <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -1495,7 +1427,11 @@ export default function Launch({ paramsId }) {
                     <Select
                       value={settingsData.optimizationGoal}
                       className="w-full h-11"
-                      onChange={(val) => setOptimizationGoal(val)}
+                      onChange={(val) => {
+                        if (hydratingRef.current) return;
+                        setOptimizationGoal(val);
+                        setTouched((t) => ({ ...t, optimization: true }));
+                      }}
                       options={[
                         { label: "Apply Now (Conversion)", value: "Apply Now (Conversion)" },
                         { label: "Traffic", value: "OUTCOME_TRAFFIC" },
@@ -1503,440 +1439,375 @@ export default function Launch({ paramsId }) {
                       ]}
                     />
                   </div>
-                  <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex gap-3 items-center mb-4">
-                      <Target className="w-4 h-4 text-violet-700" />
-                      <div className="text-base font-semibold text-gray-700">Optimization Goal</div>
+
+                </div>
+
+                {/* Platform Allocation */}
+
+                {/* Schedule & Duration */}
+                <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex gap-3 items-center mb-6">
+                    <Calendar className="w-4 h-4 text-violet-700" />
+                    <div className="text-base font-semibold text-gray-700">Schedule & Duration</div>
+                  </div>
+
+                  <div className="flex gap-6 items-end">
+                    <div className="flex-1">
+                      <div className="mb-2 text-sm font-medium text-gray-600">Start Date</div>
+                      <div className="relative">
+                        <DatePicker
+                          className="w-full h-11"
+                          value={settingsData.schedule.start || null}
+                          onChange={(date) => {
+                            if (hydratingRef.current) return;
+                            setScheduleOverride((prev) => ({ ...prev, start: date || null }));
+                            setTouched((t) => ({ ...t, schedule: true }));
+                          }}
+                          format="DD-MM-YYYY"
+                        />
+                      </div>
                     </div>
-                    <div className="px-4 py-3 text-base text-gray-700 bg-white rounded-lg border border-gray-200">
-                      {settingsData.optimizationGoal === "OUTCOME_TRAFFIC"
-                        ? "Traffic"
-                        : settingsData.optimizationGoal === "LEADS"
-                        ? "Leads"
-                        : settingsData.optimizationGoal || "Leads"}
+                    <div className="flex-1">
+                      <div className="mb-2 text-sm font-medium text-gray-600">End Date</div>
+                      <div className="relative">
+                        <DatePicker
+                          className="w-full h-11"
+                          value={settingsData.schedule.end || null}
+                          onChange={(date) => {
+                            if (hydratingRef.current) return;
+                            setScheduleOverride((prev) => ({ ...prev, end: date || null }));
+                            setTouched((t) => ({ ...t, schedule: true }));
+                          }}
+                          format="DD-MM-YYYY"
+                        />
+                      </div>
+                    </div>
+                    <div className="pb-3 w-40">
+                      <div className="text-sm font-medium text-gray-600">Duration</div>
+                      <div className="mt-1 text-base text-gray-800">{durationLabel}</div>
                     </div>
                   </div>
                 </div>
 
-                 {/* Platform Allocation */}
-                 <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex gap-3 items-center mb-2">
-                       <Users className="w-5 h-5 text-violet-700" />
-                       <div className="text-xl font-bold text-gray-800">Platform Allocation</div>
-                      </div>
-                    <div className="mb-6 text-sm text-gray-500">
-                      Currently, only Meta platforms are supported. Other platforms are coming soon.
-                      </div>
-                    
-                    <div className="flex overflow-x-auto gap-4 pb-2">
-                       {settingsData.platforms.map((p, i) => (
-                          <div
-                            key={i}
-                            className={`shrink-0 w-[149px] h-[112px] rounded-xl p-4 flex flex-col items-center justify-center gap-2 border transition-all ${
-                              p.disabled
-                                ? "bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed"
-                                : p.selected
-                                ? "bg-violet-50 border-indigo-400 shadow-sm cursor-default"
-                                : "bg-white border-gray-200 hover:border-indigo-200 cursor-pointer"
-                            }`}
-                          >
-                             <div className="text-3xl">{p.icon}</div>
-                             <div className="text-sm font-medium text-gray-700">{p.name}</div>
-                             {p.disabled && (
-                               <div className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-500">
-                                 {p.label || "Coming soon"}
-                    </div>
-                             )}
+                {/* Budget Allocation */}
+                <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex gap-3 items-center mb-6">
+                    <DollarSign className="w-4 h-4 text-violet-700" />
+                    <div className="text-base font-semibold text-gray-700">Budget Allocation</div>
                   </div>
-                       ))}
-                  </div>
-                </div>
 
-                 {/* Budget Allocation */}
-                 <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex gap-3 items-center mb-6">
-                       <DollarSign className="w-4 h-4 text-violet-700" />
-                       <div className="text-base font-semibold text-gray-700">Budget Allocation</div>
-                    </div>
-
-                    <div className="flex gap-8">
-                       <div className="flex-1 space-y-6">
-                          <div className="grid grid-cols-2 gap-6">
-                    <div>
-                                <div className="mb-2 text-sm font-medium text-gray-600">Total Budget (approx.)</div>
-                                <div className="relative">
-                                   <input
-                                     type="text"
-                                     value={`€ ${approxTotalBudget}`}
-                                     className="px-4 w-full h-11 text-gray-900 rounded-lg border border-gray-200 focus:outline-none focus:border-violet-500"
-                                     readOnly
-                                   />
-                                </div>
-                    </div>
-                    <div>
-                                <div className="mb-2 text-sm font-medium text-gray-600">Daily Budget</div>
-                                <div className="relative">
-                                   <InputNumber
-                                      min={1}
-                                      value={
-                                        launchDailyBudget != null
-                                          ? Number(launchDailyBudget)
-                                          : Number(settingsData.budget.daily || 0)
-                                      }
-                                      onChange={(val) => {
-                                        setLaunchDailyBudget(val);
-                                        if (summary?.campaign) {
-                                          setHasUnsyncedMetaChanges(true);
-                                        }
-                                      }}
-                                      className="w-full h-11 [&_.ant-input-number-input]:h-11 [&_.ant-input-number-input]:px-4"
-                                      controls={false}
-                                    />
-                    </div>
-                             </div>
+                  <div className="flex gap-8">
+                    <div className="flex-1 space-y-6">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div>
+                          <div className="mb-2 text-sm font-medium text-gray-600">Daily Budget</div>
+                          <div className="relative">
+                            <InputNumber
+                              min={1}
+                              value={
+                                launchDailyBudget != null
+                                  ? Number(launchDailyBudget)
+                                  : Number(settingsData.budget.daily || 0)
+                              }
+                              onChange={(val) => {
+                                if (hydratingRef.current) return;
+                                setLaunchDailyBudget(val);
+                                setTouched((t) => ({ ...t, budget: true }));
+                              }}
+                              className="w-full h-11 [&_.ant-input-number-input]:h-11 [&_.ant-input-number-input]:px-4"
+                              controls={false}
+                            />
                           </div>
+                        </div>
+                        <div>
+                          <div className="mb-2 text-sm font-medium text-gray-600">Total Budget (approx.)</div>
+                          <div className="relative">
+                            <div
+                              className="px-4 w-full h-11 text-gray-900 flex items-center"
+                            >
+                              {`€ ${approxTotalBudget}`}
+                            </div>
+                          </div>
+                        </div>
 
-                    <div>
-                             <div className="mb-3 text-sm font-medium text-gray-600">Channel Split</div>
-                             <div className="flex gap-4">
-                                {settingsData.budget.split.map((s, i) => (
-                                   <div key={i} className="flex gap-2 items-center px-3 py-2 bg-white rounded-lg border border-gray-200">
-                                      {s.name === 'Meta' && <FaFacebook className="text-gray-600" />}
-                                      {s.name === 'Instagram' && <FaInstagram className="text-gray-600" />}
-                                      {s.name === 'Others' && <span className="text-gray-600">+</span>}
-                                      <span className="text-sm text-gray-600">{s.name}</span>
-                                      <span className="pl-2 ml-1 text-sm font-bold text-gray-700 border-l border-gray-200">{s.pct}%</span>
-                                   </div>
-                                ))}
+                      </div>
+
+
                     </div>
+
+
                   </div>
                 </div>
 
-                       <div className="flex flex-col justify-center items-center p-5 w-80 text-center bg-violet-50 rounded-xl">
-                          <div className="mb-1 text-sm font-medium text-violet-800">Live AI Prediction</div>
-                          <div className="mb-1 text-3xl font-bold text-violet-700">{settingsData.prediction.reach}</div>
-                          <div className="mb-2 text-sm font-medium text-violet-800">Estimated Reach</div>
-                          <div className="px-3 py-1 text-xs text-violet-600 bg-violet-100 rounded-full">
-                             CPA: {settingsData.prediction.cpa}
-                  </div>
-                       </div>
-                    </div>
-                 </div>
 
-                 {/* Schedule & Duration */}
-                 <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex gap-3 items-center mb-6">
-                       <Calendar className="w-4 h-4 text-violet-700" />
-                       <div className="text-base font-semibold text-gray-700">Schedule & Duration</div>
-                    </div>
-
-                    <div className="flex gap-6 items-end">
-                       <div className="flex-1">
-                         <div className="mb-2 text-sm font-medium text-gray-600">Start Date</div>
-                         <div className="relative">
-                             <DatePicker
-                                className="w-full h-11"
-                                value={settingsData.schedule.start || null}
-                                onChange={(date) => {
-                                  setScheduleOverride((prev) => ({ ...prev, start: date || null }));
-                                  if (summary?.campaign) {
-                                    setHasUnsyncedMetaChanges(true);
-                                  }
-                                }}
-                                format="DD-MM-YYYY"
-                             />
-                         </div>
-                       </div>
-                       <div className="flex-1">
-                         <div className="mb-2 text-sm font-medium text-gray-600">End Date</div>
-                         <div className="relative">
-                             <DatePicker
-                                className="w-full h-11"
-                                value={settingsData.schedule.end || null}
-                                onChange={(date) => {
-                                  setScheduleOverride((prev) => ({ ...prev, end: date || null }));
-                                  if (summary?.campaign) {
-                                    setHasUnsyncedMetaChanges(true);
-                                  }
-                                }}
-                                format="DD-MM-YYYY"
-                             />
-                         </div>
-                       </div>
-                       <div className="pb-3 w-40">
-                         <div className="text-sm font-medium text-gray-600">Duration</div>
-                         <div className="mt-1 text-base text-gray-800">{durationLabel}</div>
-                       </div>
-                  </div>
-                </div>
               </div>
             )}
 
             {activeStep === "audience" && (
               <div className="space-y-6">
-                 {/* Location Targeting */}
-                 <div className="space-y-4">
-                    <div className="flex justify-between items-center gap-3">
-                       <div className="flex gap-3 items-center">
-                          <MapPin className="w-5 h-5 text-gray-700" />
-                          <div className="text-xl font-bold text-gray-800">Location Targeting</div>
-                       </div>
-                       {audienceLocations?.length > 0 && (
-                         <button
-                           onClick={() => setAudienceLocations([])}
-                           className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-white rounded-full border border-red-200 hover:bg-red-50"
-                         >
-                           Remove all
-                         </button>
-                       )}
+                {/* Location Targeting */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center gap-3">
+                    <div className="flex gap-3 items-center">
+                      <MapPin className="w-5 h-5 text-gray-700" />
+                      <div className="text-xl font-bold text-gray-800">Location Targeting</div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                       {audienceLocations.map((loc, i) => (
-                          <div key={i} className="flex relative flex-col items-center p-4 w-full min-w-0 bg-white rounded-xl border border-gray-200 shadow-sm group">
-                             <button 
-                                onClick={() => handleRemoveLocation(i)}
-                                aria-label="Remove location"
-                                className="absolute top-2 right-2 z-10 p-1 text-gray-400 bg-white rounded-full shadow-sm opacity-100 transition-opacity hover:text-red-500"
-                             >
-                                <X className="w-3 h-3" />
-                             </button>
-                             <div className="overflow-hidden relative mb-3 w-full h-36 bg-gray-100 rounded-lg">
-                                {/* Map preview centered on selected city when we have coordinates */}
-                                <iframe 
-                                    width="100%" 
-                                    height="100%" 
-                                    frameBorder="0" 
-                                    scrolling="no" 
-                                    marginHeight="0" 
-                                    marginWidth="0" 
-                                    src={
-                                      typeof loc.lat === "number" && typeof loc.lon === "number"
-                                        ? `https://www.openstreetmap.org/export/embed.html?bbox=${loc.lon-0.5},${loc.lat-0.5},${loc.lon+0.5},${loc.lat+0.5}&layer=mapnik&marker=${loc.lat},${loc.lon}`
-                                        : `https://www.openstreetmap.org/export/embed.html?bbox=-180,-90,180,90&layer=mapnik`
-                                    }
-                                    style={{ pointerEvents: 'none' }} // Disable interaction to keep it as "preview"
-                                ></iframe>
-                                <div className="absolute inset-0 bg-black/5"></div>
-                             </div>
-                             <div className="mb-1 text-base font-bold text-gray-800">{loc.name}</div>
-                             <div className="px-2 mb-1 w-full">
-                                <Slider 
-                                    defaultValue={parseInt(loc.radius) || 30} 
-                                    min={10} 
-                                    max={100} 
-                                    onChange={(val) => handleRadiusChange(val, i)}
-                                    tooltip={{ open: false }}
-                                    className="m-0"
-                                />
-                             </div>
-                             <div className="text-sm font-medium text-gray-500">{loc.radius}</div>
-                          </div>
-                       ))}
-                       <div 
-                          className="flex relative flex-col items-center p-4 w-full min-w-0 bg-white rounded-xl border-2 border-gray-300 border-dashed transition-colors cursor-pointer hover:bg-gray-50"
-                          onClick={() => setIsLocationModalOpen(true)}
-                       >
-                          {/* Keep dimensions consistent with other cards */}
-                          <div className="overflow-hidden relative mb-3 w-full h-36 bg-gray-50 rounded-lg border border-gray-200">
-                            <div className="flex absolute inset-0 justify-center items-center">
-                              <div className="flex justify-center items-center w-12 h-12 bg-gray-100 rounded-full">
-                                <Plus className="w-5 h-5 text-gray-600" />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="mb-1 text-base font-bold text-gray-700">Add location</div>
-                          <div className="px-2 mb-1 w-full">
-                            <div className="h-6"></div>
-                          </div>
-                          <div className="text-sm font-medium text-gray-400">—</div>
-                       </div>
-                    </div>
-                 </div>
+                    {audienceLocations?.length > 0 && (
+                      <button
+                        onClick={() => setAudienceLocations([])}
+                        className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-white rounded-full border border-red-200 hover:bg-red-50"
+                      >
+                        Remove all
+                      </button>
+                    )}
+                  </div>
 
-                 <Modal
-                   title="Add Location"
-                   open={isLocationModalOpen}
-                   footer={null}
-                   onCancel={() => {
-                     setIsLocationModalOpen(false);
-                     setLocationSearchTerm("");
-                     setLocationSearchResults([]);
-                   }}
-                 >
-                   <Input
-                     placeholder="Search city (e.g. Amsterdam)"
-                     value={locationSearchTerm}
-                     onChange={(e) => {
-                       const val = e.target.value;
-                       setLocationSearchTerm(val);
-                       searchCities(val);
-                     }}
-                   />
-                   <div className="mt-3 max-h-64 overflow-y-auto space-y-1">
-                     {locationSearchLoading && (
-                       <div className="text-xs text-gray-500">Searching...</div>
-                     )}
-                     {!locationSearchLoading &&
-                       locationSearchResults.map((r) => {
-                         const address = r.address || {};
-                         const city =
-                           address.city ||
-                           address.town ||
-                           address.village ||
-                           (r.display_name || "").split(",")[0];
-                         const countryCode = (address.country_code || "")
-                           .toUpperCase()
-                           .trim();
-                         const label = countryCode
-                           ? `${city}, ${countryCode}`
-                           : city;
-                         return (
-                           <button
-                             key={`${r.place_id}`}
-                             type="button"
-                             className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100"
-                             onClick={() => handleSelectSearchLocation(r)}
-                           >
-                             {label}
-                           </button>
-                         );
-                       })}
-                     {!locationSearchLoading &&
-                       !locationSearchResults.length &&
-                       locationSearchTerm.trim().length >= 2 && (
-                         <div className="text-xs text-gray-400">
-                           No results found.
-                         </div>
-                       )}
-                   </div>
-                 </Modal>
-
-                 {/* Inclusive & Automated Demographics */}
-                 <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
-                    <div className="flex gap-3 items-center mb-2">
-                       <Users className="w-5 h-5 text-gray-700" />
-                       <div className="text-base font-semibold text-gray-800">Inclusive & Automated Demographics</div>
-                    </div>
-                    <div className="mb-1 text-sm text-gray-600">
-                       Employer Ads are automatically optimized for inclusive reach. Age, gender, and personal attributes are excluded to ensure fair opportunity.
-                    </div>
-                    <div className="text-xs text-gray-400">Compliance with EU Equal Opportunity Laws</div>
-                 </div>
-
-                 {/* Keywords */}
-                 <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex justify-between items-center mb-6">
-                       <div className="flex gap-2 items-center">
-                          <div className="text-base font-semibold text-gray-800">Keywords</div>
-                          <Search className="w-3 h-3 text-gray-400" />
-                       </div>
-                       <button 
-                          className="flex gap-2 items-center text-sm font-semibold text-violet-700 hover:text-violet-800"
-                          onClick={() => setIsKeywordModalOpen(true)}
-                       >
-                          <Plus className="w-3 h-3" /> Add Keyword
-                       </button>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-3">
-                       {audienceKeywords.map((k, i) => (
-                          <div key={i} className="flex gap-2 items-center px-3 py-1.5 bg-gray-100 rounded-lg group">
-                             <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                             <span className="text-sm font-medium text-gray-700">{k.name}</span>
-                             <button
-                               onClick={() => handleRemoveKeyword(i)}
-                               aria-label="Remove keyword"
-                               className="ml-1 text-gray-400 opacity-100 transition-opacity hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
-                             >
-                                <X className="w-3 h-3" />
-                             </button>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {audienceLocations.map((loc, i) => (
+                      <div key={i} className="flex relative flex-col items-center p-4 w-full min-w-0 bg-white rounded-xl border border-gray-200 shadow-sm group">
+                        <button
+                          onClick={() => handleRemoveLocation(i)}
+                          aria-label="Remove location"
+                          className="absolute top-2 right-2 z-10 p-1 text-gray-400 bg-white rounded-full shadow-sm opacity-100 transition-opacity hover:text-red-500"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        <div className="overflow-hidden relative mb-3 w-full h-36 bg-gray-100 rounded-lg">
+                          {/* Map preview centered on selected city when we have coordinates */}
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            frameBorder="0"
+                            scrolling="no"
+                            marginHeight="0"
+                            marginWidth="0"
+                            src={
+                              typeof loc.lat === "number" && typeof loc.lon === "number"
+                                ? `https://www.openstreetmap.org/export/embed.html?bbox=${loc.lon - 0.5},${loc.lat - 0.5},${loc.lon + 0.5},${loc.lat + 0.5}&layer=mapnik&marker=${loc.lat},${loc.lon}`
+                                : `https://www.openstreetmap.org/export/embed.html?bbox=-180,-90,180,90&layer=mapnik`
+                            }
+                            style={{ pointerEvents: 'none' }} // Disable interaction to keep it as "preview"
+                          ></iframe>
+                          <div className="absolute inset-0 bg-black/5"></div>
+                        </div>
+                        <div className="mb-1 text-base font-bold text-gray-800">{loc.name}</div>
+                        <div className="px-2 mb-1 w-full">
+                          <Slider
+                            defaultValue={parseInt(loc.radius) || 30}
+                            min={10}
+                            max={100}
+                            onChange={(val) => handleRadiusChange(val, i)}
+                            tooltip={{ open: false }}
+                            className="m-0"
+                          />
+                        </div>
+                        <div className="text-sm font-medium text-gray-500">{loc.radius}</div>
+                      </div>
+                    ))}
+                    <div
+                      className="flex relative flex-col items-center p-4 w-full min-w-0 bg-white rounded-xl border-2 border-gray-300 border-dashed transition-colors cursor-pointer hover:bg-gray-50"
+                      onClick={() => setIsLocationModalOpen(true)}
+                    >
+                      {/* Keep dimensions consistent with other cards */}
+                      <div className="overflow-hidden relative mb-3 w-full h-36 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex absolute inset-0 justify-center items-center">
+                          <div className="flex justify-center items-center w-12 h-12 bg-gray-100 rounded-full">
+                            <Plus className="w-5 h-5 text-gray-600" />
                           </div>
-                       ))}
-                       {audienceData.keywordsCount && (
-                          <div className="flex justify-center items-center px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-200 rounded-lg">
-                             {audienceData.keywordsCount}
-                          </div>
-                       )}
+                        </div>
+                      </div>
+                      <div className="mb-1 text-base font-bold text-gray-700">Add location</div>
+                      <div className="px-2 mb-1 w-full">
+                        <div className="h-6"></div>
+                      </div>
+                      <div className="text-sm font-medium text-gray-400">—</div>
                     </div>
-                 </div>
+                  </div>
+                </div>
 
-                 <Modal title="Add Keyword" open={isKeywordModalOpen} onOk={handleAddKeyword} onCancel={() => setIsKeywordModalOpen(false)}>
-                    <Input placeholder="Enter keyword (e.g. Leadership)" value={newKeyword} onChange={(e) => setNewKeyword(e.target.value)} onPressEnter={handleAddKeyword} />
-                 </Modal>
+                <Modal
+                  title="Add Location"
+                  open={isLocationModalOpen}
+                  footer={null}
+                  onCancel={() => {
+                    setIsLocationModalOpen(false);
+                    setLocationSearchTerm("");
+                    setLocationSearchResults([]);
+                  }}
+                >
+                  <Input
+                    placeholder="Search city (e.g. Amsterdam)"
+                    value={locationSearchTerm}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setLocationSearchTerm(val);
+                      searchCities(val);
+                    }}
+                  />
+                  <div className="mt-3 max-h-64 overflow-y-auto space-y-1">
+                    {locationSearchLoading && (
+                      <div className="text-xs text-gray-500">Searching...</div>
+                    )}
+                    {!locationSearchLoading &&
+                      locationSearchResults.map((r) => {
+                        const address = r.address || {};
+                        const city =
+                          address.city ||
+                          address.town ||
+                          address.village ||
+                          (r.display_name || "").split(",")[0];
+                        const countryCode = (address.country_code || "")
+                          .toUpperCase()
+                          .trim();
+                        const label = countryCode
+                          ? `${city}, ${countryCode}`
+                          : city;
+                        return (
+                          <button
+                            key={`${r.place_id}`}
+                            type="button"
+                            className="w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100"
+                            onClick={() => handleSelectSearchLocation(r)}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    {!locationSearchLoading &&
+                      !locationSearchResults.length &&
+                      locationSearchTerm.trim().length >= 2 && (
+                        <div className="text-xs text-gray-400">
+                          No results found.
+                        </div>
+                      )}
+                  </div>
+                </Modal>
 
-                 {/* Retargeting & AI Targeting */}
-                 <div className="flex gap-6">
-                    <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                       <div className="flex justify-between items-start mb-6">
-                          <div>
-                             <div className="flex gap-3 items-center mb-1">
-                                <RefreshCw className="w-4 h-4 text-gray-700" />
-                                <div className="text-base font-semibold text-gray-800">Retargeting Activation</div>
-                             </div>
-                             <div className="mb-1 text-sm text-gray-600">Activate Retargeting</div>
-                             <div className="text-xs text-gray-400">
-                                {audienceData.retargeting.desc} <span className="font-semibold text-gray-500">{audienceData.retargeting.threshold}</span> visitors
-                             </div>
-                          </div>
-                          <Switch defaultChecked={audienceData.retargeting.active} className="bg-emerald-500" />
-                       </div>
-                    </div>
+                {/* Inclusive & Automated Demographics */}
+                <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="flex gap-3 items-center mb-2">
+                    <Users className="w-5 h-5 text-gray-700" />
+                    <div className="text-base font-semibold text-gray-800">Inclusive & Automated Demographics</div>
+                  </div>
+                  <div className="mb-1 text-sm text-gray-600">
+                    Employer Ads are automatically optimized for inclusive reach. Age, gender, and personal attributes are excluded to ensure fair opportunity.
+                  </div>
+                  <div className="text-xs text-gray-400">Compliance with EU Equal Opportunity Laws</div>
+                </div>
 
-                    <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                       <div className="flex gap-3 items-center mb-4">
-                          <Target className="w-4 h-4 text-gray-700" />
-                          <div className="text-base font-semibold text-gray-800">AI Targeting</div>
-                       </div>
-                       <div className="mb-4 text-sm text-gray-600">Targeting includes people who recently interacted with:</div>
-                       <div className="space-y-2">
-                          {audienceData.aiTargeting.map((t, i) => (
-                             <div key={i} className="flex gap-3 items-center">
-                                <Check className="w-3 h-3 text-gray-400" />
-                                <span className="text-sm text-gray-700">{t.label}</span>
-                             </div>
-                          ))}
-                       </div>
+                {/* Keywords */}
+                <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="flex gap-2 items-center">
+                      <div className="text-base font-semibold text-gray-800">Keywords</div>
+                      <Search className="w-3 h-3 text-gray-400" />
                     </div>
-                 </div>
+                    <button
+                      className="flex gap-2 items-center text-sm font-semibold text-violet-700 hover:text-violet-800"
+                      onClick={() => setIsKeywordModalOpen(true)}
+                    >
+                      <Plus className="w-3 h-3" /> Add Keyword
+                    </button>
+                  </div>
 
-                 {/* Audience Layers */}
-                 <div className="flex gap-8 items-center p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex flex-col gap-4 items-center w-1/3">
-                       <div className="flex gap-3 items-center">
-                          <Users className="w-4 h-4 text-gray-700" />
-                          <div className="text-base font-semibold text-gray-800">Audience Layers</div>
-                       </div>
-                       <div className="relative w-48 h-48">
-                          <div className="absolute inset-0 bg-purple-100 rounded-full"></div>
-                          <div className="absolute inset-4 bg-purple-300 rounded-full"></div>
-                          <div className="absolute inset-8 bg-violet-700 rounded-full"></div>
-                       </div>
+                  <div className="flex flex-wrap gap-3">
+                    {audienceKeywords.map((k, i) => (
+                      <div key={i} className="flex gap-2 items-center px-3 py-1.5 bg-gray-100 rounded-lg group">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <span className="text-sm font-medium text-gray-700">{k.name}</span>
+                        <button
+                          onClick={() => handleRemoveKeyword(i)}
+                          aria-label="Remove keyword"
+                          className="ml-1 text-gray-400 opacity-100 transition-opacity hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {audienceData.keywordsCount && (
+                      <div className="flex justify-center items-center px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-200 rounded-lg">
+                        {audienceData.keywordsCount}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <Modal title="Add Keyword" open={isKeywordModalOpen} onOk={handleAddKeyword} onCancel={() => setIsKeywordModalOpen(false)}>
+                  <Input placeholder="Enter keyword (e.g. Leadership)" value={newKeyword} onChange={(e) => setNewKeyword(e.target.value)} onPressEnter={handleAddKeyword} />
+                </Modal>
+
+                {/* Retargeting & AI Targeting */}
+                <div className="flex gap-6">
+                  <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <div className="flex gap-3 items-center mb-1">
+                          <RefreshCw className="w-4 h-4 text-gray-700" />
+                          <div className="text-base font-semibold text-gray-800">Retargeting Activation</div>
+                        </div>
+                        <div className="mb-1 text-sm text-gray-600">Activate Retargeting</div>
+                        <div className="text-xs text-gray-400">
+                          {audienceData.retargeting.desc} <span className="font-semibold text-gray-500">{audienceData.retargeting.threshold}</span> visitors
+                        </div>
+                      </div>
+                      <Switch defaultChecked={audienceData.retargeting.active} className="bg-emerald-500" />
                     </div>
-                    <div className="flex-1 space-y-4">
-                       <div>
-                          <div className="flex gap-3 items-center mb-1">
-                             <div className="w-3 h-3 bg-violet-700 rounded-full"></div>
-                             <div className="text-sm font-semibold text-gray-800">Warm Audience</div>
-                          </div>
-                          <div className="ml-6 text-sm text-gray-500">{audienceData.layers.warm}</div>
-                       </div>
-                       <div>
-                          <div className="flex gap-3 items-center mb-1">
-                             <div className="w-3 h-3 bg-purple-300 rounded-full"></div>
-                             <div className="text-sm font-semibold text-gray-800">Lookalike Audience</div>
-                          </div>
-                          <div className="ml-6 text-sm text-gray-500">{audienceData.layers.lookalike}</div>
-                       </div>
-                       <div>
-                          <div className="flex gap-3 items-center mb-1">
-                             <div className="w-3 h-3 bg-purple-100 rounded-full"></div>
-                             <div className="text-sm font-semibold text-gray-800">Cold Audience</div>
-                          </div>
-                          <div className="ml-6 text-sm text-gray-500">{audienceData.layers.cold}</div>
-                       </div>
+                  </div>
+
+                  <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="flex gap-3 items-center mb-4">
+                      <Target className="w-4 h-4 text-gray-700" />
+                      <div className="text-base font-semibold text-gray-800">AI Targeting</div>
                     </div>
-                 </div>
+                    <div className="mb-4 text-sm text-gray-600">Targeting includes people who recently interacted with:</div>
+                    <div className="space-y-2">
+                      {audienceData.aiTargeting.map((t, i) => (
+                        <div key={i} className="flex gap-3 items-center">
+                          <Check className="w-3 h-3 text-gray-400" />
+                          <span className="text-sm text-gray-700">{t.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Audience Layers */}
+                <div className="flex gap-8 items-center p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex flex-col gap-4 items-center w-1/3">
+                    <div className="flex gap-3 items-center">
+                      <Users className="w-4 h-4 text-gray-700" />
+                      <div className="text-base font-semibold text-gray-800">Audience Layers</div>
+                    </div>
+                    <div className="relative w-48 h-48">
+                      <div className="absolute inset-0 bg-purple-100 rounded-full"></div>
+                      <div className="absolute inset-4 bg-purple-300 rounded-full"></div>
+                      <div className="absolute inset-8 bg-violet-700 rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <div className="flex gap-3 items-center mb-1">
+                        <div className="w-3 h-3 bg-violet-700 rounded-full"></div>
+                        <div className="text-sm font-semibold text-gray-800">Warm Audience</div>
+                      </div>
+                      <div className="ml-6 text-sm text-gray-500">{audienceData.layers.warm}</div>
+                    </div>
+                    <div>
+                      <div className="flex gap-3 items-center mb-1">
+                        <div className="w-3 h-3 bg-purple-300 rounded-full"></div>
+                        <div className="text-sm font-semibold text-gray-800">Lookalike Audience</div>
+                      </div>
+                      <div className="ml-6 text-sm text-gray-500">{audienceData.layers.lookalike}</div>
+                    </div>
+                    <div>
+                      <div className="flex gap-3 items-center mb-1">
+                        <div className="w-3 h-3 bg-purple-100 rounded-full"></div>
+                        <div className="text-sm font-semibold text-gray-800">Cold Audience</div>
+                      </div>
+                      <div className="ml-6 text-sm text-gray-500">{audienceData.layers.cold}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1949,6 +1820,13 @@ export default function Launch({ paramsId }) {
                     .map((adType) => (summary.editorAds[adType]?.variants || []).map((v) => {
                       const img = v.publishImage || v.image;
                       const isPublished = !!v?.publish?.adId;
+                      const isApproved = !!v?.approved && !!(v.publishImage || v.image);
+                      const badgeLabel = isPublished ? "Published" : isApproved ? "Approved" : "Needs approval";
+                      const badgeClass = isPublished
+                        ? "text-[#0a8f63] border-[#0a8f63]"
+                        : isApproved
+                          ? "text-[#5207CD] border-[#5207CD]"
+                          : "text-[#475467] border-[#98a2b3]";
                       return (
                         <div key={`${adType}-${v.id}`} className="rounded-lg border border-[#eaecf0] overflow-hidden">
                           <div className="bg-gray-50 aspect-square">
@@ -1960,13 +1838,13 @@ export default function Launch({ paramsId }) {
                           </div>
                           <div className="p-2 text-xs">
                             <div className="font-medium truncate">{v.title || v.id}</div>
-                            <div className={`inline-block mt-1 px-2 py-0.5 rounded-full border ${isPublished ? "text-[#0a8f63] border-[#0a8f63]" : "text-[#475467] border-[#98a2b3]"}`}>
-                              {isPublished ? "Published" : "Draft"}
+                            <div className={`inline-block mt-1 px-2 py-0.5 rounded-full border ${badgeClass}`}>
+                              {badgeLabel}
                             </div>
                           </div>
                         </div>
                       );
-                    })) }
+                    }))}
                 </div>
               </div>
             )}

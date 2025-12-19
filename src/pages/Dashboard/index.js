@@ -76,6 +76,7 @@ import UserManagement from "./Admin/UserManagement/index.js";
 import RoleManagement from "./Admin/RoleManagement/index.js";
 import WorkspaceManagement from "./Workspaces/index.js";
 import WorkspaceReturnButton from "../../components/WorkspaceReturnButton.js";
+import Integrations from "./Integrations.js";
 import { partner } from "../../constants.js";
 export const THEME_OPTIONS = [
   { value: 1, label: "Default" },
@@ -427,8 +428,8 @@ const Dashboard = () => {
     },
     {
       name: "Integrations",
-      href: "/dashboard/settings",
-      component: <div>Account</div>,
+      href: "/dashboard/integrations",
+      component: <Integrations />,
       logo: Blocks,
       // hide: me?.role !== "recruiter",
     },
