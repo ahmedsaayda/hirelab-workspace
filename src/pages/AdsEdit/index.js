@@ -860,7 +860,8 @@ export default function AdsEdit({ paramsId }) {
         effectiveStatus: set.effective_status || null,
         state: displayState,
         metaAdSetId: metaId,
-        // Local metadata
+        // Timestamps
+        createdAt: set.created_time || local.createdAt || null,
         approvedAt: local.approvedAt || null,
         approvedVariantIds: local.approvedVariantIds || [],
         launchedAt: local.launchedAt || null,
@@ -1104,14 +1105,13 @@ export default function AdsEdit({ paramsId }) {
         appendPrepareMessage(`✓ Image ready for ${stepLabel}`);
       }
 
-      // Update ad set metadata state to "launched" and persist
-      // Ads are created ACTIVE on Meta immediately after approval
+      // Update ad set metadata state to "ready" and persist
+      // Ads are created ACTIVE on Meta, but ad set stays PAUSED until user launches
       const localMeta = Array.isArray(updatedAds?._adSetsMeta) ? [...updatedAds._adSetsMeta] : [];
       const metaIdx = localMeta.findIndex((s) => s.id === adSetId);
       const metaUpdate = {
         id: adSetId,
-        state: "launched",
-        launchedAt: new Date().toISOString(),
+        state: "ready",
         approvedAt: new Date().toISOString(),
         approvedFormat: selectedFormat,
         approvedVariantIds: variantsToPrepare.map((v) => v.id),
@@ -1128,9 +1128,8 @@ export default function AdsEdit({ paramsId }) {
       lastSavedAdsHashRef.current = serializeAdsData(updatedAds);
       setAdsData(updatedAds);
 
-      // Create ads on Meta (ACTIVE) - ads go live immediately after approval
-      // Campaign-level publish/unpublish controls overall delivery
-      appendPrepareMessage("Publishing ads to Meta...");
+      // Create ads on Meta (ads ACTIVE, ad set PAUSED until user launches)
+      appendPrepareMessage("Creating ads on Meta...");
       try {
         // Get settings from Meta ad set data (source of truth)
         const metaAdSet = launchSummary?.adSets?.find((s) => (s.id || s.adset_id) === adSetId);
@@ -1142,20 +1141,21 @@ export default function AdsEdit({ paramsId }) {
           start_time: metaAdSet?.start_time || null,
           end_time: metaAdSet?.end_time || null,
           placements: ["facebook_feed", "instagram_story"],
+          launch: false, // Keep ad set PAUSED - user launches manually
         });
-        appendPrepareMessage("✓ Ads published to Meta");
+        appendPrepareMessage("✓ Ads created on Meta (ad set paused until launch)");
       } catch (publishErr) {
         console.error("Error creating ads on Meta:", publishErr);
         appendPrepareMessage(`⚠ Warning: Ads not created on Meta: ${publishErr?.response?.data?.message || publishErr?.message || "Unknown error"}`);
-        // Don't throw - still allow user to proceed
+        // Don't throw - still allow user to proceed to launch page
       }
 
       setPreparedOnce(true);
       setPreparedVariants(variantsToPrepare);
       // Don't open modal - we're navigating away immediately
-      message.success("Ads published! Redirecting to ad set overview...");
+      message.success("Ads ready! Redirecting to launch settings...");
 
-      // Route user to Launch/management page for this specific ad set
+      // Route user to Launch wizard to activate the ad set
       // Use window.location for reliable navigation (router.push can fail with pending state updates)
       window.location.href = `/launch/${lpId}?adset=${encodeURIComponent(adSetId)}`;
     } catch (err) {
@@ -1270,7 +1270,9 @@ export default function AdsEdit({ paramsId }) {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-semibold text-[#101828]">{set.name}</div>
                   <div className="text-xs text-[#667085]">
-                    Meta Ad Set
+                    {set.createdAt
+                      ? `Created ${new Date(set.createdAt).toLocaleDateString()} ${new Date(set.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                      : "Meta Ad Set"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{renderStatusBadge(set.state)}</td>
@@ -1649,7 +1651,7 @@ export default function AdsEdit({ paramsId }) {
             disabled={preparingLaunch}
             className={`px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors ${preparingLaunch ? "bg-emerald-300 cursor-not-allowed" : "bg-[#16A34A] hover:bg-[#15803D]"
               }`}
-            title="Approves creatives, generates final images, and publishes ads to Meta."
+            title="Approves creatives and generates final images. Then you'll launch the ad set."
           >
             {preparingLaunch ? "Approving…" : "Approve creatives"}
           </button>
