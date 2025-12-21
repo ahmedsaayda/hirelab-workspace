@@ -1494,7 +1494,8 @@ export default function AdsEdit({ paramsId }) {
                             },
                           },
                           ...(isMeta ? [pauseItem, resumeItem, deleteItem] : []),
-                          ...(isHireLab ? [deleteLocalItem] : []),
+                          // Only show local delete for HireLab ad sets NOT synced to Meta
+                          ...(isHireLab && !set.metaAdSetId ? [deleteLocalItem] : []),
                         ];
                       })(),
                     }}
