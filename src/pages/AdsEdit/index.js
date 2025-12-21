@@ -23,8 +23,6 @@ import AdEditModal from "./components/AdEditModal";
 import InlineEditor from "./components/InlineEditor";
 import EmptyState from "./components/EmptyState";
 
-import { generateVariants, extractImagesForAdType, generateCopyForAdType } from "./utils/adGenerationUtils";
-
 // Ad type icons as inline SVGs
 const AdTypeIcon = ({ type, active }) => {
   const color = active ? "#0e87fe" : "#667085";
@@ -154,7 +152,6 @@ export default function AdsEdit({ paramsId }) {
   const [creatingAdSet, setCreatingAdSet] = useState(false);
   const [adSetActionLoading, setAdSetActionLoading] = useState({ id: null, action: null });
   const [metaConfigModalOpen, setMetaConfigModalOpen] = useState(false);
-  const autoExpandedOnceRef = useRef(false);
 
   // Dirty tracking baselines
   const lastSavedAdsHashRef = useRef("");
@@ -409,20 +406,18 @@ export default function AdsEdit({ paramsId }) {
   };
 
   const handleCreateAdSet = async () => {
-    // Create ad set on Meta - Meta is the source of truth
+    // Create ad set on both HireLab and Meta (shallow campaign + ad set).
     try {
       setCreatingAdSet(true);
       const response = await AdsService.createAdSet(lpId);
-      const { adSet, metaCampaignId, metaAdSetId } = response?.data?.data || {};
-      const adSetId = metaAdSetId || adSet?.id;
-      if (!adSetId) {
+      const { adSet, metaCampaignId } = response?.data?.data || {};
+      if (!adSet?.id) {
         throw new Error("Failed to create ad set");
       }
-      // Store minimal local metadata (workflow state only)
-      const adSetMeta = { id: adSetId, state: "draft", createdAt: new Date().toISOString() };
+      // Update local state with the new ad set
       const nextData = {
         ...(adsData || {}),
-        _adSetsMeta: [...(Array.isArray(adsData?._adSetsMeta) ? adsData._adSetsMeta : []), adSetMeta],
+        _adSets: [...(Array.isArray(adsData?._adSets) ? adsData._adSets : []), adSet],
         _publish: {
           ...(adsData?._publish || {}),
           campaignId: metaCampaignId,
@@ -431,12 +426,13 @@ export default function AdsEdit({ paramsId }) {
       setAdsData(nextData);
       lastSavedAdsHashRef.current = serializeAdsData(nextData);
       message.success("Ad set created on Meta");
-      // Refresh launch summary so the table updates with Meta data
+      // Refresh launch summary so the table updates immediately
       await loadLaunchSummary();
-      // Open the newly created ad set in editor (draft state = creatives needed)
-      setActiveAdSetId(adSetId);
+      // Immediately open the newly created ad set so the user lands in the editor flow.
+      setActiveAdSetId(adSet.id);
     } catch (e) {
       const errorMsg = e?.response?.data?.message || "Failed to create ad set";
+      // Check if it's a Meta credentials error
       if (errorMsg.toLowerCase().includes("meta") &&
         (errorMsg.toLowerCase().includes("credential") ||
           errorMsg.toLowerCase().includes("configured") ||
@@ -487,22 +483,15 @@ export default function AdsEdit({ paramsId }) {
     if (!adSetId) return;
     Modal.confirm({
       title: "Delete ad set",
-      content: "This will delete the ad set on Meta and remove local data.",
+      content: "This will remove the ad set from HireLab. (Not yet launched to Meta.)",
       okText: "Delete",
       okType: "danger",
       onOk: async () => {
         try {
-          // Delete on Meta first
-          await AdsLaunchService.updateAdSet(lpId, { id: adSetId, status: "DELETED" });
-          // Remove local metadata
           const nextData = {
             ...(adsData || {}),
-            _adSetsMeta: (Array.isArray(adsData?._adSetsMeta) ? adsData._adSetsMeta : []).filter(
-              (s) => s.id !== adSetId
-            ),
-            // Also clean up old _adSets if present
             _adSets: (Array.isArray(adsData?._adSets) ? adsData._adSets : []).filter(
-              (s) => s.id !== adSetId && s.metaAdSetId !== adSetId
+              (s) => s.id !== adSetId
             ),
           };
           setAdsData(nextData);
@@ -536,7 +525,16 @@ export default function AdsEdit({ paramsId }) {
 
   // Initialize ads data from landing page content
   const initializeAdsData = (lpData) => {
-    return generateVariants(lpData);
+    const ads = {};
+
+    AD_TYPES.forEach((adType) => {
+      ads[adType.id] = {
+        variants: generateVariantsForAdType(adType.id, lpData),
+        enabled: adType.id === "job", // Job ads enabled by default
+      };
+    });
+
+    return ads;
   };
 
   // Cloudinary upload helper via shared UploadService
@@ -603,81 +601,6 @@ export default function AdsEdit({ paramsId }) {
     const url = await uploadToCloudinary(blob);
     return url;
   };
-
-  // Under-the-hood: expand variants using all available images (without overwriting existing variants)
-  useEffect(() => {
-    const run = async () => {
-      if (!landingPageData || !adsData) return;
-      if (autoExpandedOnceRef.current) return;
-
-      // Only auto-expand if ads exist (i.e. user already generated or has saved ads)
-      const hasAny = (() => {
-        try {
-          return Object.keys(adsData || {}).some((k) => Array.isArray(adsData?.[k]?.variants) && adsData[k].variants.length > 0);
-        } catch {
-          return false;
-        }
-      })();
-      if (!hasAny) return;
-
-      const MAX_VARIANTS_PER_TYPE = 20;
-      let changed = false;
-      const nextAds = { ...(adsData || {}) };
-
-      AD_TYPES.forEach((t) => {
-        const adTypeId = t.id;
-        const group = nextAds?.[adTypeId];
-        if (!group || !Array.isArray(group.variants)) return;
-
-        const images = extractImagesForAdType(adTypeId, landingPageData);
-        if (!images.length) return;
-
-        const current = group.variants;
-        const used = new Set(current.map((v) => v?.image).filter(Boolean));
-        const remainingSlots = Math.max(0, MAX_VARIANTS_PER_TYPE - current.length);
-        if (remainingSlots <= 0) return;
-
-        const unused = images.filter((img) => img && !used.has(img)).slice(0, remainingSlots);
-        if (!unused.length) return;
-
-        const newVariants = unused.map((img, idx) => {
-          const i = current.length + idx;
-          const copy = generateCopyForAdType(adTypeId, landingPageData, i);
-          const variantNumber = adTypeId === "job" ? ((i % 2) + 1) : 1; // reuse implemented templates
-          return {
-            id: `${adTypeId}-variant-${Date.now()}-${idx}`,
-            title: copy.title,
-            description: copy.description,
-            callToAction: copy.cta,
-            source: copy.source,
-            image: img,
-            template: "template-1",
-            adTypeId,
-            variantNumber,
-            selected: false,
-            approved: false,
-          };
-        });
-
-        group.variants = [...current, ...newVariants];
-        changed = true;
-      });
-
-      autoExpandedOnceRef.current = true;
-      if (!changed) return;
-
-      try {
-        setAdsData(nextAds);
-        await AdsService.saveAds(lpId, nextAds);
-        lastSavedAdsHashRef.current = serializeAdsData(nextAds);
-      } catch (e) {
-        // If save fails, keep editor usable; user can still manually save later
-      }
-    };
-
-    run();
-    // eslint-disable-next-line
-  }, [landingPageData, adsData, lpId]);
 
   // Publish to Meta (MVP)
   const publishToMeta = async () => {
@@ -762,6 +685,206 @@ export default function AdsEdit({ paramsId }) {
     setConfirmOpen(true);
   };
 
+  // Generate variants for a specific ad type
+  const generateVariantsForAdType = (adTypeId, lpData) => {
+    const variants = [];
+    const images = extractImagesFromLandingPage(lpData);
+
+    // Job ads get 2 variants, all other ad types get 1 variant
+    const variantCount = adTypeId === "job" ? 2 : 1;
+
+    for (let i = 0; i < variantCount; i++) {
+      variants.push({
+        id: `${adTypeId}-variant-${i + 1}`,
+        title: getDefaultTitle(adTypeId, i, lpData),
+        description: getDefaultDescription(adTypeId, i, lpData),
+        image: images[i % images.length],
+        template: "template-1", // We'll use template 1 for now
+        adTypeId: adTypeId, // Required for component loading
+        variantNumber: i + 1, // Required for component loading
+        selected: i === 0, // First variant selected by default
+        approved: false,
+      });
+    }
+
+    return variants;
+  };
+
+  // Extract images from landing page
+  const extractImagesFromLandingPage = (lpData) => {
+    const images = [];
+
+    // Extract from hero section
+    if (lpData?.heroImage) {
+      images.push(lpData.heroImage);
+    }
+
+    // Extract from job description
+    if (lpData?.jobDescriptionImage) {
+      images.push(lpData.jobDescriptionImage);
+    }
+
+    // Extract from about company images
+    if (lpData?.aboutTheCompanyImages && lpData.aboutTheCompanyImages.length > 0) {
+      images.push(...lpData.aboutTheCompanyImages);
+    }
+
+    // Extract from photo carousel
+    if (lpData?.photoImages && lpData.photoImages.length > 0) {
+      images.push(...lpData.photoImages);
+    }
+
+    // Extract from testimonials
+    if (lpData?.testimonials) {
+      lpData.testimonials.forEach((t) => {
+        if (t.avatar) images.push(t.avatar);
+      });
+    }
+
+    // Extract from recruiters
+    if (lpData?.recruiters) {
+      lpData.recruiters.forEach((r) => {
+        if (r.recruiterAvatar) images.push(r.recruiterAvatar);
+      });
+    }
+
+    // Extract from leader introduction
+    if (lpData?.leaderIntroductionAvatar) {
+      images.push(lpData.leaderIntroductionAvatar);
+    }
+
+    // Extract from EVP mission
+    if (lpData?.evpMissionAvatar) {
+      images.push(lpData.evpMissionAvatar);
+    }
+
+    // Fallback to company logo if no images
+    if (images.length === 0 && lpData?.companyLogo) {
+      images.push(lpData.companyLogo);
+    }
+
+    // Extract from agenda/benefits
+    if (lpData?.agenda?.items) {
+      lpData.agenda.items.forEach((item) => {
+        if (item.image) images.push(item.image);
+      });
+    }
+
+    // Use a data URL placeholder instead of a missing local file to avoid 404s during capture
+    return images.length > 0 ? images : [TRANSPARENT_PNG];
+  };
+
+  // Helper to strip placeholder boilerplate like "[Insert ...]" and "Example:"
+  const sanitizePlaceholderText = (text) => {
+    if (!text || typeof text !== "string") return "";
+    let cleaned = text;
+    if (cleaned.includes("[Insert") || cleaned.includes("Example:")) {
+      cleaned = cleaned
+        .replace(/\[.*?\]/g, " ")
+        .replace(/Example:/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+    return cleaned;
+  };
+
+  const snippetFromText = (text, maxLen = 80) => {
+    const cleaned = sanitizePlaceholderText(text);
+    if (!cleaned) return "";
+    const oneLine = cleaned.replace(/\s+/g, " ").trim();
+    if (!oneLine) return "";
+    return oneLine.length > maxLen ? `${oneLine.slice(0, maxLen - 3)}...` : oneLine;
+  };
+
+  const pickSectionSentence = (text) => {
+    if (!text || typeof text !== "string") return "";
+    const cleaned = sanitizePlaceholderText(text);
+    if (!cleaned) return "";
+    const firstSentence = cleaned.split(/[.!?]/)[0] || cleaned;
+    return firstSentence.trim();
+  };
+
+  // Get default title based on ad type, using vacancy context
+  const getDefaultTitle = (adTypeId, variantIndex, lpData) => {
+    const company = lpData?.companyName || "our company";
+    const vacancy = lpData?.vacancyTitle || "this role";
+
+    const testimonialTitles = [
+      snippetFromText(lpData?.testimonials?.[0]?.comment) || "Hear From Our Team",
+      snippetFromText(lpData?.testimonials?.[1]?.comment) || "Real Stories From Our People",
+      snippetFromText(lpData?.testimonials?.[2]?.comment) || "Employee Spotlight",
+    ];
+
+    const titles = {
+      job: [
+        lpData?.vacancyTitle || "Join Our Team",
+        `We're Hiring: ${lpData?.vacancyTitle || "Great Opportunity"}`,
+        `${lpData?.vacancyTitle || "Career Opportunity"} at ${company}`,
+      ],
+      "employer-brand": [
+        `Life at ${company}`,
+        `Our Mission at ${company}`,
+        lpData?.aboutTheCompanyTitle || "Why People Love Working Here",
+      ],
+      testimonial: testimonialTitles,
+      company: [
+        lpData?.aboutTheCompanyTitle || `Inside ${company}`,
+        `About ${company}`,
+        lpData?.companyFactsTitle || "Our Culture & Values",
+      ],
+      retargeting: [
+        `Still Interested in ${vacancy}?`,
+        `Don't Miss Out – ${vacancy}`,
+        `Join ${company} Today`,
+      ],
+    };
+
+    return titles[adTypeId]?.[variantIndex] || lpData?.vacancyTitle || "Join Our Team";
+  };
+
+  // Get default description using vacancy & company sections
+  const getDefaultDescription = (adTypeId, variantIndex, lpData) => {
+    const evpSentence = pickSectionSentence(lpData?.evpMissionDescription);
+    const aboutSentence =
+      pickSectionSentence(lpData?.aboutTheCompanyDescription || lpData?.aboutTheCompanyText) ||
+      pickSectionSentence(lpData?.companyInfo);
+    const jobSentence =
+      pickSectionSentence(lpData?.heroDescription) ||
+      pickSectionSentence(lpData?.jobDescription);
+
+    const descriptions = {
+      job: [
+        jobSentence || "Highlighting impact, growth and day‑to‑day responsibilities in this role.",
+        "Professional tone that emphasizes ownership, responsibility and influence.",
+        "Clear call-to-action for candidates who want to make a difference in this role.",
+      ],
+      "employer-brand": [
+        evpSentence ||
+        aboutSentence ||
+        "Showcasing our values, mission and what makes our culture unique.",
+        aboutSentence || "Where innovation, collaboration and growth come together.",
+        "A workplace built around purpose, development and long‑term careers.",
+      ],
+      testimonial: [
+        "Discover what our employees love about working here.",
+        "Real experiences from real team members.",
+        "See why people choose to grow their careers with us.",
+      ],
+      company: [
+        aboutSentence ||
+        "More people‑focused and brand‑aligned, appealing to candidates who value culture.",
+        "Learn about our commitment to excellence, innovation and client impact.",
+        "Discover the benefits and opportunities that set us apart as an employer.",
+      ],
+      retargeting: [
+        "The opportunity is still available – apply now and complete your application.",
+        "Come back and finish your application to move forward in the process.",
+        "Take the next step in your career journey with us.",
+      ],
+    };
+
+    return descriptions[adTypeId]?.[variantIndex] || jobSentence || lpData?.heroDescription || "";
+  };
 
   // Get current variants for selected ad type
   const currentVariants = useMemo(() => {
@@ -813,60 +936,97 @@ export default function AdsEdit({ paramsId }) {
   }, [adsData]);
 
   const adSetsList = useMemo(() => {
-    // PRIMARY SOURCE: Meta ad sets (launchSummary.adSets) - single source of truth
-    // SECONDARY: Local metadata (_adSetsMeta) for workflow state (draft/ready/launched)
+    // Primary source: launchSummary.editorAds._adSets (contains backend-cleaned data)
+    // Secondary source: adsData._adSets (contains newly created ad sets that may not be in launchSummary yet)
+    const editorAdSets = Array.isArray(launchSummary?.editorAds?._adSets) 
+      ? launchSummary.editorAds._adSets : [];
+    const localAdSets = Array.isArray(adsData?._adSets) ? adsData._adSets : [];
     const metaSets = Array.isArray(launchSummary?.adSets) ? launchSummary.adSets : [];
 
-    // Local metadata keyed by Meta ad set ID (for workflow state, approved creatives)
-    const localMeta = Array.isArray(adsData?._adSetsMeta) ? adsData._adSetsMeta : [];
-    // Also check old _adSets for backwards compatibility
-    const oldAdSets = Array.isArray(adsData?._adSets) ? adsData._adSets : [];
-    const editorAdSetsMeta = Array.isArray(launchSummary?.editorAds?._adSetsMeta)
-      ? launchSummary.editorAds._adSetsMeta : [];
-    const editorOldAdSets = Array.isArray(launchSummary?.editorAds?._adSets)
-      ? launchSummary.editorAds._adSets : [];
-
-    // Merge all local metadata sources (prefer adsData over launchSummary for freshness)
-    const metaMap = new Map();
-    [...editorAdSetsMeta, ...editorOldAdSets, ...localMeta, ...oldAdSets].forEach((m) => {
-      const id = m.metaAdSetId || m.id;
-      if (id) metaMap.set(id, { ...(metaMap.get(id) || {}), ...m });
+    // Create a map of Meta ad sets by ID for quick lookup
+    const metaSetMap = new Map();
+    metaSets.forEach((set) => {
+      const id = set.id || set.adset_id;
+      if (id) metaSetMap.set(id, set);
     });
 
-    // Map Meta ad sets, enriching with local workflow state
-    return metaSets.map((set) => {
-      const metaId = set.id || set.adset_id;
-      const local = metaMap.get(metaId) || {};
+    // Merge both sources: prioritize localAdSets (adsData) over editorAdSets (launchSummary)
+    // because adsData contains the most recent local changes (e.g., state set to "ready" after approval)
+    // while launchSummary may be stale until refetched.
+    const localMap = new Map(localAdSets.map((s) => [s.id, s]));
+    const mergedAdSets = [
+      // For ad sets that exist in both, prefer the localAdSets version (most recent local state)
+      ...editorAdSets.map((s) => {
+        const local = localMap.get(s.id);
+        if (local) {
+          // Merge: use local state but keep other fields from editor if not in local
+          return { ...s, ...local };
+        }
+        return s;
+      }),
+      // Add any ad sets that are ONLY in localAdSets (newly created, not yet in launchSummary)
+      ...localAdSets.filter((s) => !editorAdSets.some((e) => e.id === s.id)),
+    ];
 
-      // Workflow state: draft (needs creatives) -> ready (approved) -> launched/paused (on Meta)
-      const metaStatus = String(set.status || "").toUpperCase();
-      const hasBeenLaunched = !!local.launchedAt || local.state === "launched";
+    // Track which Meta ad set IDs are covered by HireLab ad sets
+    const coveredMetaIds = new Set();
 
-      let displayState = local.state || "draft";
-      // After launch, sync state from Meta status
-      if (hasBeenLaunched) {
-        if (metaStatus === "PAUSED") displayState = "paused";
-        else if (metaStatus === "ACTIVE") displayState = "launched";
-        else if (metaStatus === "DELETED" || metaStatus === "ARCHIVED") displayState = "deleted";
-      }
+    // Filter out HireLab ad sets whose Meta ad set was deleted (client-side cleanup)
+    // Keep ad sets that: 1) don't have a metaAdSetId yet, or 2) have a metaAdSetId that still exists on Meta
+    // Only apply filter if we have Meta data loaded (metaSetMap not empty)
+    const validLocalSets = metaSetMap.size > 0
+      ? mergedAdSets.filter((s) => {
+          if (!s.metaAdSetId) return true; // Not yet synced to Meta
+          return metaSetMap.has(s.metaAdSetId); // Meta ad set still exists
+        })
+      : mergedAdSets;
+
+    // Map HireLab ad sets, enriching with Meta data if available
+    const mappedLocal = validLocalSets.map((s) => {
+      const metaAdSetId = s.metaAdSetId || null;
+      const metaSet = metaAdSetId ? metaSetMap.get(metaAdSetId) : null;
+
+      if (metaAdSetId) coveredMetaIds.add(metaAdSetId);
+
+      // Get budget/schedule from launchSettings or Meta
+      const ls = s.launchSettings || {};
+      const budget = ls.budgetDaily != null ? Number(ls.budgetDaily) :
+        (metaSet?.daily_budget ? Number(metaSet.daily_budget) / 100 : null);
+      const start = ls.scheduleStart || metaSet?.start_time || null;
+      const end = ls.scheduleEnd || metaSet?.end_time || null;
 
       return {
-        id: metaId,
+        id: s.id,
+        // Always prefer Meta name (correct format like "19.12.25 | Barista at Starbucks | LON-AMS")
+        name: metaSet?.name || s.name || "Ad set",
+        budget,
+        start,
+        end,
+        state: s.state || "draft",
+        source: "hirelab",
+        metaAdSetId,
+        rawStatus: metaSet?.status || null,
+        effectiveStatus: metaSet?.effective_status || null,
+      };
+    });
+
+    // Only include Meta ad sets that DON'T have a corresponding HireLab ad set
+    // (i.e., ad sets created directly in Meta or from previous system)
+    const mappedMeta = metaSets
+      .filter((set) => !coveredMetaIds.has(set.id || set.adset_id))
+      .map((set, idx) => ({
+        id: set.id || set.adset_id || `meta-${idx}`,
         name: set.name || "Ad set",
         budget: set.daily_budget ? Number(set.daily_budget) / 100 : null,
         start: set.start_time || null,
         end: set.end_time || null,
         rawStatus: set.status || null,
         effectiveStatus: set.effective_status || null,
-        state: displayState,
-        metaAdSetId: metaId,
-        // Timestamps
-        createdAt: set.created_time || local.createdAt || null,
-        approvedAt: local.approvedAt || null,
-        approvedVariantIds: local.approvedVariantIds || [],
-        launchedAt: local.launchedAt || null,
-      };
-    });
+        state: "launched",
+        source: "meta",
+      }));
+
+    return [...mappedLocal, ...mappedMeta];
   }, [adsData, launchSummary]);
 
   const activeAdSet = useMemo(
@@ -1105,45 +1265,42 @@ export default function AdsEdit({ paramsId }) {
         appendPrepareMessage(`✓ Image ready for ${stepLabel}`);
       }
 
-      // Update ad set metadata state to "ready" and persist
-      // Ads are created ACTIVE on Meta, but ad set stays PAUSED until user launches
-      const localMeta = Array.isArray(updatedAds?._adSetsMeta) ? [...updatedAds._adSetsMeta] : [];
-      const metaIdx = localMeta.findIndex((s) => s.id === adSetId);
-      const metaUpdate = {
-        id: adSetId,
-        state: "ready",
-        approvedAt: new Date().toISOString(),
-        approvedFormat: selectedFormat,
-        approvedVariantIds: variantsToPrepare.map((v) => v.id),
-      };
-      if (metaIdx >= 0) {
-        localMeta[metaIdx] = { ...localMeta[metaIdx], ...metaUpdate };
-      } else {
-        localMeta.push(metaUpdate);
+      // Update ad set state to "ready" and persist
+      const localSets = Array.isArray(updatedAds?._adSets) ? [...updatedAds._adSets] : [];
+      const setIdx = localSets.findIndex((s) => s.id === adSetId);
+      if (setIdx >= 0) {
+        localSets[setIdx] = {
+          ...localSets[setIdx],
+          state: "ready",
+          approvedAt: new Date().toISOString(),
+          approvedFormat: selectedFormat,
+          approvedVariantIds: variantsToPrepare.map((v) => v.id),
+        };
       }
-      updatedAds._adSetsMeta = localMeta;
+      updatedAds._adSets = localSets;
 
       appendPrepareMessage("Saving approved creatives...");
       await AdsService.saveAds(lpId, updatedAds);
       lastSavedAdsHashRef.current = serializeAdsData(updatedAds);
       setAdsData(updatedAds);
 
-      // Create ads on Meta (ads ACTIVE, ad set PAUSED until user launches)
-      appendPrepareMessage("Creating ads on Meta...");
+      // Create ads on Meta (PAUSED) - this ensures they exist under the ad set
+      appendPrepareMessage("Creating ads on Meta (paused)...");
       try {
-        // Get settings from Meta ad set data (source of truth)
-        const metaAdSet = launchSummary?.adSets?.find((s) => (s.id || s.adset_id) === adSetId);
-        const budget = metaAdSet?.daily_budget ? Number(metaAdSet.daily_budget) : 500; // Already in minor units from Meta
-
+        // Get ad set's launch settings for budget/schedule
+        const adSetRecord = localSets.find((s) => s.id === adSetId);
+        const ls = adSetRecord?.launchSettings || {};
+        
         await AdsService.publish(lpId, {
           hirelabAdSetId: adSetId,
-          budget,
-          start_time: metaAdSet?.start_time || null,
-          end_time: metaAdSet?.end_time || null,
+          budget: (ls.budgetDaily || 5) * 100, // Convert to minor units
+          start_time: ls.scheduleStart || null,
+          end_time: ls.scheduleEnd || null,
           placements: ["facebook_feed", "instagram_story"],
-          launch: false, // Keep ad set PAUSED - user launches manually
+          audienceLocations: ls.audienceLocations || [],
+          launch: false, // Keep PAUSED - don't activate yet
         });
-        appendPrepareMessage("✓ Ads created on Meta (ad set paused until launch)");
+        appendPrepareMessage("✓ Ads created on Meta (paused)");
       } catch (publishErr) {
         console.error("Error creating ads on Meta:", publishErr);
         appendPrepareMessage(`⚠ Warning: Ads not created on Meta: ${publishErr?.response?.data?.message || publishErr?.message || "Unknown error"}`);
@@ -1153,9 +1310,9 @@ export default function AdsEdit({ paramsId }) {
       setPreparedOnce(true);
       setPreparedVariants(variantsToPrepare);
       // Don't open modal - we're navigating away immediately
-      message.success("Ads ready! Redirecting to launch settings...");
+      message.success("Creatives approved! Redirecting to launch settings...");
 
-      // Route user to Launch wizard to activate the ad set
+      // Route user to Launch settings for this specific ad set
       // Use window.location for reliable navigation (router.push can fail with pending state updates)
       window.location.href = `/launch/${lpId}?adset=${encodeURIComponent(adSetId)}`;
     } catch (err) {
@@ -1192,17 +1349,13 @@ export default function AdsEdit({ paramsId }) {
       draft: "bg-amber-50 text-amber-800 border-amber-200",
       ready: "bg-blue-50 text-blue-700 border-blue-200",
       launched: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      paused: "bg-gray-100 text-gray-700 border-gray-300",
-      deleted: "bg-red-50 text-red-700 border-red-200",
     };
-    const labels = {
-      launched: "Running",
-      ready: "Creatives approved",
-      draft: "Creatives needed",
-      paused: "Paused",
-      deleted: "Deleted",
-    };
-    const label = labels[state] || "Creatives needed";
+    const label =
+      state === "launched"
+        ? "Launched"
+        : state === "ready"
+          ? "Creatives approved"
+          : "Creatives needed";
     return (
       <span
         className={`text-xs px-2 py-1 rounded-full border font-semibold ${styles[state] || styles.draft}`}
@@ -1270,9 +1423,7 @@ export default function AdsEdit({ paramsId }) {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-semibold text-[#101828]">{set.name}</div>
                   <div className="text-xs text-[#667085]">
-                    {set.createdAt
-                      ? `Created ${new Date(set.createdAt).toLocaleDateString()} ${new Date(set.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                      : "Meta Ad Set"}
+                    {set.source === "meta" ? "Synced from Meta" : "HireLab"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{renderStatusBadge(set.state)}</td>
@@ -1286,95 +1437,70 @@ export default function AdsEdit({ paramsId }) {
                     : "—"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
-                  {(() => {
-                    const raw = String(set.rawStatus || "").toUpperCase();
-                    const isRawActive = raw === "ACTIVE";
-                    const isRawPaused = raw === "PAUSED";
-                    const isBusy = adSetActionLoading.id === set.id && !!adSetActionLoading.action;
-                    const adSetId = set.id;
-                    const hasBeenLaunched = !!set.launchedAt;
-
-                    // Primary action button based on state
-                    let primaryButton = null;
-                    if (hasBeenLaunched && isRawActive) {
-                      // Running - show Pause
-                      primaryButton = (
-                        <button
-                          onClick={() => pauseAdSet(adSetId)}
-                          disabled={isBusy}
-                          className="px-4 py-1.5 text-sm font-semibold text-orange-700 bg-orange-50 border border-orange-200 rounded-md hover:bg-orange-100 disabled:opacity-50"
-                        >
-                          {isBusy ? "..." : "Pause"}
-                        </button>
-                      );
-                    } else if (hasBeenLaunched && isRawPaused) {
-                      // Paused - show Launch wizard to adjust settings before resuming
-                      primaryButton = (
-                        <button
-                          onClick={() => router.push(`/launch/${lpId}?adset=${encodeURIComponent(adSetId)}`)}
-                          className="px-4 py-1.5 text-sm font-semibold text-white bg-green-500 rounded-md hover:bg-green-600"
-                        >
-                          Launch
-                        </button>
-                      );
-                    } else if (set.state === "ready") {
-                      // Creatives approved, not launched yet
-                      primaryButton = (
-                        <button
-                          onClick={() => router.push(`/launch/${lpId}?adset=${encodeURIComponent(adSetId)}`)}
-                          className="px-4 py-1.5 text-sm font-semibold text-white bg-green-500 rounded-md hover:bg-green-600"
-                        >
-                          Launch
-                        </button>
-                      );
-                    } else {
-                      // Draft - needs creatives
-                      primaryButton = (
-                        <button
-                          onClick={() => setActiveAdSetId(adSetId)}
-                          className="px-4 py-1.5 text-sm font-semibold text-[#5207CD] bg-violet-50 border border-violet-200 rounded-md hover:bg-violet-100"
-                        >
-                          Edit creatives
-                        </button>
-                      );
-                    }
-
-                    // Dropdown for secondary actions (delete, etc.)
-                    const dropdownItems = [
-                      {
-                        key: "open",
-                        label: "Open ad set",
-                        onClick: () => setActiveAdSetId(adSetId),
-                      },
-                      ...(hasBeenLaunched && isRawActive ? [{
-                        key: "pause",
-                        label: "Pause ad set",
-                        disabled: isBusy,
-                        onClick: () => pauseAdSet(adSetId),
-                      }] : []),
-                      {
-                        key: "delete",
-                        label: "Delete ad set",
-                        danger: true,
-                        disabled: isBusy,
-                        onClick: () => deleteHireLabAdSet(adSetId),
-                      },
-                    ];
-
-                    return (
-                      <div className="flex items-center gap-2 justify-end">
-                        {primaryButton}
-                        <Dropdown
-                          menu={{ items: dropdownItems }}
-                          trigger={["click"]}
-                        >
-                          <button className="p-1.5 text-[#667085] border border-gray-200 rounded-md hover:bg-gray-50">
-                            <DownOutlined className="text-[10px]" />
-                          </button>
-                        </Dropdown>
-                      </div>
-                    );
-                  })()}
+                  <Dropdown
+                    menu={{
+                      items: (() => {
+                        const isMeta = set.source === "meta" && !!set.id;
+                        const isHireLab = set.source === "hirelab" && !!set.id;
+                        // Meta effective_status can be "CAMPAIGN_PAUSED", "ADSET_PAUSED", etc.
+                        // For pause/resume controls we must use the raw ad set status,
+                        // otherwise the UI can get stuck showing only "Resume".
+                        const raw = String(set.rawStatus || "").toUpperCase();
+                        const isRawActive = raw === "ACTIVE";
+                        const isRawPaused = raw === "PAUSED";
+                        const isBusy =
+                          adSetActionLoading.id === set.id && !!adSetActionLoading.action;
+                        const pauseItem = {
+                          key: "pause",
+                          label: "Pause ad set",
+                          disabled: !isMeta || !isRawActive || isBusy,
+                          onClick: () => pauseAdSet(set.id),
+                        };
+                        const resumeItem = {
+                          key: "resume",
+                          label: "Resume ad set",
+                          disabled: !isMeta || !isRawPaused || isBusy,
+                          onClick: () => resumeAdSet(set.id),
+                        };
+                        const deleteItem = {
+                          key: "delete",
+                          label: "Delete ad set",
+                          danger: true,
+                          disabled: !isMeta || isBusy,
+                          onClick: () => deleteAdSet(set.id),
+                        };
+                        const deleteLocalItem = {
+                          key: "delete_local",
+                          label: "Delete ad set",
+                          danger: true,
+                          disabled: !isHireLab,
+                          onClick: () => deleteHireLabAdSet(set.id),
+                        };
+                        return [
+                          {
+                            key: "open",
+                            label: "Open ad set",
+                            onClick: () => {
+                              // Draft stays in Ads editor, Ready goes to Launch setup,
+                              // Launched stays in Ads overview (no Launch edits after first publish).
+                              if (set.state === "ready") {
+                                router.push(`/launch/${lpId}?adset=${encodeURIComponent(set.id)}`);
+                                return;
+                              }
+                              setActiveAdSetId(set.id);
+                            },
+                          },
+                          ...(isMeta ? [pauseItem, resumeItem, deleteItem] : []),
+                          ...(isHireLab ? [deleteLocalItem] : []),
+                        ];
+                      })(),
+                    }}
+                    trigger={["click"]}
+                  >
+                    <button className="px-3 py-1.5 text-sm font-semibold text-[#475467] border rounded-md hover:bg-[#f8f8f8]">
+                      Actions <DownOutlined className="align-middle text-[10px]" />
+                    </button>
+                  </Dropdown>
                 </td>
               </tr>
             ))}
@@ -1469,38 +1595,10 @@ export default function AdsEdit({ paramsId }) {
   };
 
   const renderLaunchedView = () => {
-    // Use ad set specific insights if available, otherwise fall back to campaign insights
-    const insight = launchSummary?.adSetInsights ||
-      (Array.isArray(launchSummary?.insights) ? launchSummary.insights[0] : null);
-
+    const insight = Array.isArray(launchSummary?.insights)
+      ? launchSummary.insights[0]
+      : null;
     const metric = (value) => (value === undefined || value === null ? "—" : value);
-    const formatNumber = (value) => {
-      if (value === undefined || value === null) return "—";
-      const num = Number(value);
-      if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-      if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-      return num.toLocaleString();
-    };
-    const formatCurrency = (value) => {
-      if (value === undefined || value === null) return "—";
-      return `€${Number(value).toFixed(2)}`;
-    };
-    const formatPercent = (value) => {
-      if (value === undefined || value === null) return "—";
-      return `${Number(value).toFixed(2)}%`;
-    };
-
-    // Get actions (conversions) - look for lead_gen or other action types
-    const actions = insight?.actions || [];
-    const leadActions = actions.find(a => a.action_type === "lead" || a.action_type === "onsite_conversion.lead_grouped");
-    const linkClicks = actions.find(a => a.action_type === "link_click");
-
-    // Determine status badge
-    const adSetData = activeAdSet;
-    const rawStatus = String(adSetData?.rawStatus || "").toUpperCase();
-    const isActive = rawStatus === "ACTIVE";
-    const isPaused = rawStatus === "PAUSED";
-
     return (
       <div className="flex flex-col gap-4 h-full">
         <div className="flex items-center justify-between">
@@ -1510,103 +1608,39 @@ export default function AdsEdit({ paramsId }) {
           >
             ← Back to ad sets
           </button>
-          <div className="text-xs text-[#667085]">
-            {insight ? "Last 7 days performance" : "Waiting for Meta to report data..."}
-          </div>
+          <div className="text-xs text-[#667085]">Live performance for this ad set.</div>
         </div>
         <div className="bg-white border border-[#eaecf0] rounded-xl p-6 flex flex-col gap-4 h-full">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-[#101828]">{activeAdSet?.name || "Ad set overview"}</h2>
-              <div className="text-sm text-[#667085] mt-1">Performance metrics from Meta</div>
-            </div>
-            <div className={`px-3 py-1.5 text-xs font-semibold rounded-full ${isActive
-              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-              : isPaused
-                ? "bg-gray-100 text-gray-700 border border-gray-300"
-                : "bg-red-50 text-red-700 border border-red-200"
-              }`}>
-              {isActive ? "Running" : isPaused ? "Paused" : "Inactive"}
+            <h2 className="text-xl font-semibold text-[#101828]">Ad set overview</h2>
+            <div className="px-3 py-1.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Running
             </div>
           </div>
-
-          {/* Primary metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f9fafb]">
-              <div className="text-xs text-[#667085]">Spend</div>
-              <div className="text-xl font-semibold text-[#101828]">
-                {formatCurrency(insight?.spend)}
-              </div>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f9fafb]">
               <div className="text-xs text-[#667085]">Impressions</div>
               <div className="text-xl font-semibold text-[#101828]">
-                {formatNumber(insight?.impressions)}
-              </div>
-            </div>
-            <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f9fafb]">
-              <div className="text-xs text-[#667085]">Reach</div>
-              <div className="text-xl font-semibold text-[#101828]">
-                {formatNumber(insight?.reach)}
+                {metric(insight?.impressions)}
               </div>
             </div>
             <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f9fafb]">
               <div className="text-xs text-[#667085]">Clicks</div>
               <div className="text-xl font-semibold text-[#101828]">
-                {formatNumber(insight?.clicks || linkClicks?.value)}
+                {metric(insight?.clicks || insight?.inline_link_clicks)}
               </div>
             </div>
             <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f9fafb]">
-              <div className="text-xs text-[#667085]">CTR</div>
+              <div className="text-xs text-[#667085]">Spend</div>
               <div className="text-xl font-semibold text-[#101828]">
-                {formatPercent(insight?.ctr)}
-              </div>
-            </div>
-            <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f9fafb]">
-              <div className="text-xs text-[#667085]">Leads</div>
-              <div className="text-xl font-semibold text-[#101828]">
-                {formatNumber(leadActions?.value)}
+                {insight?.spend ? `€${Number(insight.spend).toFixed(2)}` : "—"}
               </div>
             </div>
           </div>
-
-          {/* Secondary metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-3 rounded-lg border border-[#eaecf0] bg-white">
-              <div className="text-xs text-[#667085]">CPM</div>
-              <div className="text-lg font-semibold text-[#101828]">
-                {formatCurrency(insight?.cpm)}
-              </div>
-            </div>
-            <div className="p-3 rounded-lg border border-[#eaecf0] bg-white">
-              <div className="text-xs text-[#667085]">CPC</div>
-              <div className="text-lg font-semibold text-[#101828]">
-                {formatCurrency(insight?.cpc)}
-              </div>
-            </div>
-            <div className="p-3 rounded-lg border border-[#eaecf0] bg-white">
-              <div className="text-xs text-[#667085]">Cost per Lead</div>
-              <div className="text-lg font-semibold text-[#101828]">
-                {leadActions?.value && insight?.spend
-                  ? formatCurrency(Number(insight.spend) / Number(leadActions.value))
-                  : "—"}
-              </div>
-            </div>
-            <div className="p-3 rounded-lg border border-[#eaecf0] bg-white">
-              <div className="text-xs text-[#667085]">Frequency</div>
-              <div className="text-lg font-semibold text-[#101828]">
-                {insight?.reach && insight?.impressions
-                  ? (Number(insight.impressions) / Number(insight.reach)).toFixed(2)
-                  : "—"}
-              </div>
-            </div>
+          <div className="p-4 rounded-lg border border-[#eaecf0] bg-[#f8f8f8] text-sm text-[#475467]">
+            Performance data updates as Meta reports back. Use the ad set Actions menu to pause or
+            resume.
           </div>
-
-          {!insight && (
-            <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
-              No performance data available yet. Data typically appears within 24 hours after the ad set starts running.
-            </div>
-          )}
         </div>
       </div>
     );
@@ -1651,7 +1685,7 @@ export default function AdsEdit({ paramsId }) {
             disabled={preparingLaunch}
             className={`px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors ${preparingLaunch ? "bg-emerald-300 cursor-not-allowed" : "bg-[#16A34A] hover:bg-[#15803D]"
               }`}
-            title="Approves creatives and generates final images. Then you'll launch the ad set."
+            title="Approves creatives and generates final images. Next you’ll configure launch settings."
           >
             {preparingLaunch ? "Approving…" : "Approve creatives"}
           </button>
@@ -1830,8 +1864,6 @@ export default function AdsEdit({ paramsId }) {
     );
   }
 
-  // Draft = needs creatives, Ready = creatives approved (go to launch), 
-  // Launched/Paused = show performance overview
   const renderActiveContent =
     !activeAdSetId
       ? renderAdSetsTable()
@@ -1839,7 +1871,7 @@ export default function AdsEdit({ paramsId }) {
         ? renderDraftView()
         : activeAdSetState === "ready"
           ? renderLaunchReadyView()
-          : renderLaunchedView(); // handles "launched", "paused", "deleted"
+          : renderLaunchedView();
 
   return (
     <>
@@ -1850,21 +1882,13 @@ export default function AdsEdit({ paramsId }) {
         <div className="px-8 py-6 bg-white border-b border-[#eaecf0] flex-shrink-0">
           <Header
             landingPageData={landingPageData}
-            setPublished={async (val) => {
+            setPublished={(val) => {
               if (landingPageData) {
-                try {
-                  if (val) {
-                    await LandingPageService.publishLandingPage(lpId, "page");
-                    message.success("Page published (Meta ads enabled)");
-                  } else {
-                    await LandingPageService.unPublishLandingPage(lpId);
-                    message.success("Page unpublished (Meta ads paused)");
-                  }
-                  setLandingPageData({ ...landingPageData, published: val });
-                  fetchData();
-                } catch (e) {
-                  message.error("Failed to update publish status");
-                }
+                const newData = { ...landingPageData, published: val };
+                setLandingPageData(newData);
+                CrudService.update("LandingPageData", lpId, { published: val }).then(() => {
+                  message.success(val ? "Page published" : "Page unpublished");
+                });
               }
             }}
             setLandingPageData={setLandingPageData}

@@ -6,7 +6,6 @@ import { FaFacebook, FaGoogle, FaLinkedin, FaTiktok, FaSnapchat, FaInstagram } f
 import { Check, ChevronRight, AlertCircle, TrendingUp, Users, Target, BarChart2, RefreshCw, Calendar, Clock, DollarSign, Zap, MapPin, Search, Plus, X } from "lucide-react";
 import AdsLaunchService from "../../services/AdsLaunchService";
 import AdsService from "../../services/AdsService";
-import LandingPageService from "../../services/landingPageService";
 import Header from "../Dashboard/Vacancies/components/components/Header";
 import { Heading } from "../Dashboard/Vacancies/components/components";
 import dayjs from "dayjs";
@@ -382,18 +381,15 @@ export default function Launch({ paramsId }) {
       optimizationGoalValue = draft.optimizationGoal;
     }
 
-    // Find the specific ad set from Meta data (by adSetKey or first available)
-    const metaAdSets = Array.isArray(summary?.adSets) ? summary.adSets : [];
-    const targetAdSet = adSetKey
-      ? metaAdSets.find((s) => String(s.id || s.adset_id) === String(adSetKey)) || metaAdSets[0]
-      : metaAdSets[0];
-
-    // Derive budget: Meta ad set (source of truth) → draft → default
+    // Derive budget (campaign → ad set → saved draft → default):
     let providerDailyBudget = null;
-    if (targetAdSet?.daily_budget) {
-      providerDailyBudget = Number(targetAdSet.daily_budget) / 100;
-    } else if (summary?.campaign?.daily_budget) {
+    if (hasCampaign && summary?.campaign?.daily_budget) {
       providerDailyBudget = Number(summary.campaign.daily_budget) / 100;
+    } else if (hasCampaign && Array.isArray(summary?.adSets)) {
+      const withBudget = summary.adSets.find((s) => s.daily_budget);
+      if (withBudget?.daily_budget) {
+        providerDailyBudget = Number(withBudget.daily_budget) / 100;
+      }
     }
 
     const draftDaily = draft.budgetDaily != null ? Number(draft.budgetDaily) : null;
@@ -407,18 +403,28 @@ export default function Launch({ paramsId }) {
 
     const approxTwoWeekTotal = effectiveDailyBudget * 14;
 
-    // Schedule: Meta ad set (source of truth) → campaign → draft
-    const providerStartRaw = targetAdSet?.start_time || summary?.campaign?.start_time || null;
-    const providerEndRaw = targetAdSet?.end_time || summary?.campaign?.stop_time || null;
-    // Schedule: Meta is source of truth, fallback to draft
-    const scheduleStart = providerStartRaw
-      ? dayjs(providerStartRaw)
+    // Schedule (campaign → first ad set → saved draft):
+    const firstAdSet = Array.isArray(summary?.adSets) ? summary.adSets[0] : null;
+    const providerStartRaw =
+      summary?.campaign?.start_time || firstAdSet?.start_time || null;
+    const providerEndRaw =
+      summary?.campaign?.stop_time || firstAdSet?.end_time || null;
+    const scheduleStart = hasCampaign
+      ? providerStartRaw
+        ? dayjs(providerStartRaw)
+        : draft.scheduleStart
+          ? dayjs(draft.scheduleStart)
+          : null
       : draft.scheduleStart
         ? dayjs(draft.scheduleStart)
         : null;
 
-    const scheduleEnd = providerEndRaw
-      ? dayjs(providerEndRaw)
+    const scheduleEnd = hasCampaign
+      ? providerEndRaw
+        ? dayjs(providerEndRaw)
+        : draft.scheduleEnd
+          ? dayjs(draft.scheduleEnd)
+          : null
       : draft.scheduleEnd
         ? dayjs(draft.scheduleEnd)
         : null;
@@ -591,10 +597,6 @@ export default function Launch({ paramsId }) {
     const data = getAudienceData();
     setAudienceLocations(data.locations);
     setAudienceKeywords(data.keywords);
-    // Initialize metaSyncRef for locations so we don't immediately trigger a sync
-    metaSyncRef.current.locationsJson = JSON.stringify(
-      (data.locations || []).map((l) => ({ name: l.name, lat: l.lat, lon: l.lon, radius: l.radius, countryCode: l.countryCode }))
-    );
   }, [isDemo, summary, touched.audience]);
 
   // Initialize / sync editable settings state from Meta or draft defaults once summary / LP data are available
@@ -723,62 +725,6 @@ export default function Launch({ paramsId }) {
     touched.optimization,
     touched.pacing,
   ]);
-
-  // Sync budget/schedule/location changes to Meta (debounced) - Meta is source of truth
-  const metaSyncRef = useRef({ budget: null, start: null, end: null, locationsJson: null });
-  useEffect(() => {
-    if (!adSetKey || hydratingRef.current) return;
-
-    const budgetChanged = touched.budget && launchDailyBudget != null && metaSyncRef.current.budget !== launchDailyBudget;
-    const startChanged = touched.schedule && scheduleOverride.start && metaSyncRef.current.start !== scheduleOverride.start?.valueOf();
-    const endChanged = touched.schedule && scheduleOverride.end && metaSyncRef.current.end !== scheduleOverride.end?.valueOf();
-
-    // Location change detection (serialize for comparison)
-    const currentLocsJson = JSON.stringify(
-      (audienceLocations || []).map((l) => ({ name: l.name, lat: l.lat, lon: l.lon, radius: l.radius, countryCode: l.countryCode }))
-    );
-    const locationsChanged = touched.audience && metaSyncRef.current.locationsJson !== null && metaSyncRef.current.locationsJson !== currentLocsJson;
-
-    if (!budgetChanged && !startChanged && !endChanged && !locationsChanged) return;
-
-    const timer = setTimeout(async () => {
-      try {
-        // Sync budget to Meta
-        if (budgetChanged) {
-          const minor = Math.max(1, Math.floor(Number(launchDailyBudget) * 100));
-          await AdsLaunchService.updateAdSet(lpId, { id: adSetKey, daily_budget: String(minor) });
-          metaSyncRef.current.budget = launchDailyBudget;
-        }
-        // Sync schedule to Meta
-        if (startChanged || endChanged) {
-          await AdsLaunchService.updateAdSet(lpId, {
-            id: adSetKey,
-            ...(startChanged && scheduleOverride.start ? { start_time: scheduleOverride.start.toISOString() } : {}),
-            ...(endChanged && scheduleOverride.end ? { end_time: scheduleOverride.end.toISOString() } : {}),
-          });
-          if (startChanged) metaSyncRef.current.start = scheduleOverride.start?.valueOf();
-          if (endChanged) metaSyncRef.current.end = scheduleOverride.end?.valueOf();
-        }
-        // Sync locations to Meta
-        if (locationsChanged) {
-          const audiencePayload = (audienceLocations || []).map((loc) => ({
-            name: loc.name,
-            radiusKm: parseInt(loc.radius, 10) || 25,
-            lat: typeof loc.lat === "number" ? loc.lat : null,
-            lon: typeof loc.lon === "number" ? loc.lon : null,
-            countryCode: loc.countryCode || null,
-          }));
-          await AdsLaunchService.updateAdSet(lpId, { id: adSetKey, audienceLocations: audiencePayload });
-          metaSyncRef.current.locationsJson = currentLocsJson;
-        }
-      } catch (e) {
-        console.error("Failed to sync to Meta:", e);
-        // Silent fail - local values are still preserved
-      }
-    }, 1500); // Slightly longer debounce for Meta API calls
-
-    return () => clearTimeout(timer);
-  }, [lpId, adSetKey, launchDailyBudget, scheduleOverride.start, scheduleOverride.end, audienceLocations, touched.budget, touched.schedule, touched.audience]);
 
   if (!lpId || loading) {
     return (
@@ -1061,8 +1007,6 @@ export default function Launch({ paramsId }) {
         budget: budgetMinor,
         // Be explicit so backend never creates a second campaign for this LP
         reuseCampaign: true,
-        // launch=true tells backend to set ad set and ads to ACTIVE (not PAUSED)
-        launch: true,
       };
       if (adSetKey) {
         payload.hirelabAdSetId = adSetKey;
@@ -1097,9 +1041,8 @@ export default function Launch({ paramsId }) {
 
       const res = await AdsService.publish(lpId, payload);
       if (res?.data?.success) {
-        message.success(adSetKey ? "Ad set launched!" : "Campaign launched!");
-        // Redirect back to ads editor after successful launch
-        window.location.href = `/lp-editor/${lpId}/ads`;
+        message.success(adSetKey ? "Ad set launched" : "Campaign launch requested");
+        await reload();
       } else {
         message.error(res?.data?.message || "Failed to launch campaign");
       }
@@ -1116,21 +1059,13 @@ export default function Launch({ paramsId }) {
       <div className="px-8 pt-6">
         <Header
           landingPageData={landingPageData}
-          setPublished={async (val) => {
+          setPublished={(val) => {
             if (landingPageData) {
-              try {
-                if (val) {
-                  await LandingPageService.publishLandingPage(lpId, "page");
-                  message.success("Page published (Meta ads enabled)");
-                } else {
-                  await LandingPageService.unPublishLandingPage(lpId);
-                  message.success("Page unpublished (Meta ads paused)");
-                }
-                setLandingPageData({ ...landingPageData, published: val });
-                reload();
-              } catch (e) {
-                message.error("Failed to update publish status");
-              }
+              const newData = { ...landingPageData, published: val };
+              setLandingPageData(newData);
+              CrudService.update("LandingPageData", lpId, { published: val }).then(() => {
+                message.success(val ? "Page published" : "Page unpublished");
+              });
             }
           }} setLandingPageData={setLandingPageData}
           reload={reload}
@@ -1469,7 +1404,26 @@ export default function Launch({ paramsId }) {
                 {/* Meta sync banner for live campaigns */}
                 {/* Objectives */}
                 <div className="flex gap-6">
-
+                  <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="flex gap-3 items-center mb-4">
+                      <Target className="w-4 h-4 text-violet-700" />
+                      <div className="text-base font-semibold text-gray-700">Optimization Goal</div>
+                    </div>
+                    <Select
+                      value={settingsData.optimizationGoal}
+                      className="w-full h-11"
+                      onChange={(val) => {
+                        if (hydratingRef.current) return;
+                        setOptimizationGoal(val);
+                        setTouched((t) => ({ ...t, optimization: true }));
+                      }}
+                      options={[
+                        { label: "Apply Now (Conversion)", value: "Apply Now (Conversion)" },
+                        { label: "Traffic", value: "OUTCOME_TRAFFIC" },
+                        { label: "Leads", value: "LEADS" },
+                      ]}
+                    />
+                  </div>
 
                 </div>
 
@@ -1585,11 +1539,7 @@ export default function Launch({ paramsId }) {
                     </div>
                     {audienceLocations?.length > 0 && (
                       <button
-                        onClick={() => {
-                          if (hydratingRef.current) return;
-                          setAudienceLocations([]);
-                          setTouched((t) => ({ ...t, audience: true }));
-                        }}
+                        onClick={() => setAudienceLocations([])}
                         className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-white rounded-full border border-red-200 hover:bg-red-50"
                       >
                         Remove all

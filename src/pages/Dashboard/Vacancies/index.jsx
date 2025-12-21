@@ -91,7 +91,7 @@ const Vacancies = () => {
   const [timeframe, setTimeframe] = useState(initialTimeframe); // all | 3m | 6m
   const initialTab = new URLSearchParams(router.asPath.split('?')[1] || '').get('tab') || 'timeline';
   const [timelineTab, setTimelineTab] = useState(initialTab); // timeline | performance | settings
-  
+
   // Extract query parameters from Next.js router
   const searchParams = new URLSearchParams(router.asPath.split('?')[1] || '');
   const isNew = router.query.new || searchParams.get('new');
@@ -135,7 +135,7 @@ const Vacancies = () => {
   const [adJobCity, setAdJobCity] = useState("");
   const [AILoading, setAILoading] = useState(false);
   const [adBudget, setAdBudget] = useState(
-    localStorage?.adBudget ? parseInt(localStorage?.adBudget) : 25
+    localStorage?.adBudget ? Math.max(20, parseInt(localStorage?.adBudget)) : 20
   );
   const [pictureChangeModal, setPictureChangeModal] = useState(false);
   const [promote, setPromote] = useState(null);
@@ -352,11 +352,11 @@ const Vacancies = () => {
   }, [user, getWorkspaceFunnelUsage]);
 
   useEffect(() => {
-    if (isNew === "true" ) {
+    if (isNew === "true") {
       if (landingPages && landingPages.length > 0) {
-         setAddNewModal(false);
-         return
-      }else {
+        setAddNewModal(false);
+        return
+      } else {
 
         setAddNewModal(true);
       }
@@ -428,7 +428,7 @@ const Vacancies = () => {
                   }
                   return acc;
                 }, {})
-                console.log("formattedFilters", formattedFilters)
+              console.log("formattedFilters", formattedFilters)
               // Build filters based on workspace session
               const baseFilters = {
                 ...formattedFilters,
@@ -468,13 +468,13 @@ const Vacancies = () => {
                 // Fallback: use original data with 0 applicants
                 landingPagesWithCounts = { data: result.data.items };
               }
-              
+
               setLandingPages(
                 landingPagesWithCounts.data.map((i) => {
                   const visits = i.visits || 0;
                   const avgTimeSpentSeconds = visits > 0 ? Math.round((i.totalTimeSpent || 0) / visits) : 0;
                   const daysLive = Math.ceil((new Date() - new Date(i.createdAt)) / (1000 * 60 * 60 * 24));
-                  
+
                   return {
                     ...i,
                     position: "Position",
@@ -716,54 +716,54 @@ const Vacancies = () => {
   );
 
   const sorterMenu = (
-  <Menu>
-    {sorterOptions?.map((option, index) => {
-      const activeSorter = sorters.find((s) => s.key === option.key);
-      const isActive = activeSorter && activeSorter.direction === option.direction;
+    <Menu>
+      {sorterOptions?.map((option, index) => {
+        const activeSorter = sorters.find((s) => s.key === option.key);
+        const isActive = activeSorter && activeSorter.direction === option.direction;
 
-      const label = (option.key === 'createdAt' && option.direction === 'desc')
-        ? 'Newest'
-        : (option.key === 'createdAt' && option.direction === 'asc')
-        ? 'Oldest'
-        : (option.key === 'salary' && option.direction === 'desc')
-        ? 'Highest Salary'
-        : (option.key === 'salary' && option.direction === 'asc')
-        ? 'Lowest Salary'
-        : (option.key === 'views' && option.direction === 'desc')
-        ? 'Most Viewed'
-        : (option.key === 'views' && option.direction === 'asc')
-        ? 'Least Viewed'
-        : (option.key === 'applicants' && option.direction === 'desc')
-        ? 'Most Applicants'
-        : 'Least Applicants';
+        const label = (option.key === 'createdAt' && option.direction === 'desc')
+          ? 'Newest'
+          : (option.key === 'createdAt' && option.direction === 'asc')
+            ? 'Oldest'
+            : (option.key === 'salary' && option.direction === 'desc')
+              ? 'Highest Salary'
+              : (option.key === 'salary' && option.direction === 'asc')
+                ? 'Lowest Salary'
+                : (option.key === 'views' && option.direction === 'desc')
+                  ? 'Most Viewed'
+                  : (option.key === 'views' && option.direction === 'asc')
+                    ? 'Least Viewed'
+                    : (option.key === 'applicants' && option.direction === 'desc')
+                      ? 'Most Applicants'
+                      : 'Least Applicants';
 
-      return (
-        <Menu.Item
-          key={`${option.key}-${index}`}
-          onClick={() =>
-            handleSorterChange({
-              key: option.key,
-              direction: option.direction,  // Use the direction provided in the options
-            })
-          }
-          style={{
-            fontWeight: isActive ? 'bold' : 'normal',
-            backgroundColor: isActive ? '#e6f7ff' : 'transparent',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
-          <span>{label}</span>
-          {isActive && (
-            <span style={{ fontSize: 12, color: '#666' }}>
-              {option.direction === 'asc' ? '↑' : '↓'}
-            </span>
-          )}
-        </Menu.Item>
-      );
-    })}
-  </Menu>
-);
+        return (
+          <Menu.Item
+            key={`${option.key}-${index}`}
+            onClick={() =>
+              handleSorterChange({
+                key: option.key,
+                direction: option.direction,  // Use the direction provided in the options
+              })
+            }
+            style={{
+              fontWeight: isActive ? 'bold' : 'normal',
+              backgroundColor: isActive ? '#e6f7ff' : 'transparent',
+              display: 'flex',
+              justifyContent: 'space-between',
+            }}
+          >
+            <span>{label}</span>
+            {isActive && (
+              <span style={{ fontSize: 12, color: '#666' }}>
+                {option.direction === 'asc' ? '↑' : '↓'}
+              </span>
+            )}
+          </Menu.Item>
+        );
+      })}
+    </Menu>
+  );
 
 
 
@@ -907,7 +907,7 @@ const Vacancies = () => {
             if (socketPing.current) clearInterval(socketPing.current);
             return;
           }
-          
+
           // Re-throw other errors
           throw createError;
         }
@@ -1034,7 +1034,7 @@ Respond with json that adheres to the following jsonschema:
       console.error("Error duplicating vacancy:", error);
       antdmessage.error(
         error?.response?.data?.message ||
-          "Failed to duplicate vacancy. Please try again."
+        "Failed to duplicate vacancy. Please try again."
       );
     }
   };
@@ -1229,7 +1229,7 @@ Respond with json that adheres to the following jsonschema:
                     {tierName} Plan
                   </span>
                 </div>
-                
+
                 {/* View switch (right-aligned) */}
                 {isCampaignsRoute && (
                   <button
@@ -1251,16 +1251,15 @@ Respond with json that adheres to the following jsonschema:
                 {/* Create button */}
                 <button
                   onClick={hasReachedLimit ? () => setUpgradeModalVisible(true) : handleCreateNewVacancy}
-                  className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm ${
-                    hasReachedLimit 
-                      ? 'text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100' 
-                      : 'text-white bg-indigo-600 hover:bg-indigo-700'
-                  }`}
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm ${hasReachedLimit
+                    ? 'text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100'
+                    : 'text-white bg-indigo-600 hover:bg-indigo-700'
+                    }`}
                   title={hasReachedLimit ? `You've reached your ${maxFunnels} funnel limit. Click to upgrade.` : (isCampaignsRoute ? 'Create a new campaign' : 'Create a new vacancy')}
                 >
                   {hasReachedLimit ? (
                     <>
-                                  <CrownOutlined className="mr-2 text-yellow-500" />
+                      <CrownOutlined className="mr-2 text-yellow-500" />
 
                       Upgrade to Create More
                     </>
@@ -1313,7 +1312,7 @@ Respond with json that adheres to the following jsonschema:
                       </h3>
                       <div className="mt-1 text-sm text-orange-700">
                         <p>
-                          You've reached your limit of {maxFunnels} funnel{maxFunnels !== 1 ? 's' : ''} on the {tierName} plan. 
+                          You've reached your limit of {maxFunnels} funnel{maxFunnels !== 1 ? 's' : ''} on the {tierName} plan.
                           Upgrade your plan to create more recruitment funnels and unlock additional features.
                         </p>
                       </div>
@@ -1366,9 +1365,9 @@ Respond with json that adheres to the following jsonschema:
 
               {/* Active Sort Pills */}
               {sorters.map((sorter) => (
-                <div key={sorter.key} 
-                // className="inline-flex gap-1 items-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg border border-blue-200"
-                className="inline-flex gap-1 items-center px-3 py-2 text-sm font-medium text-blue-700 rounded-lg border border-blue-200"
+                <div key={sorter.key}
+                  // className="inline-flex gap-1 items-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg border border-blue-200"
+                  className="inline-flex gap-1 items-center px-3 py-2 text-sm font-medium text-blue-700 rounded-lg border border-blue-200"
                 >
                   <span>
                     {sorter.key === "createdAt" ? (sorter.direction === "asc" ? "Oldest" : "Newest") :
@@ -1391,11 +1390,10 @@ Respond with json that adheres to the following jsonschema:
               {/* Modern Filters Button */}
               <button
                 onClick={() => setIsFilterModalOpen(true)}
-                className={`relative inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors duration-200 ${
-                  filterCount > 0 
-                    ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' 
-                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                }`}
+                className={`relative inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors duration-200 ${filterCount > 0
+                  ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                  }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
@@ -1484,86 +1482,84 @@ Respond with json that adheres to the following jsonschema:
 
           </div>
           {viewMode === 'cards' && (
-          <div className="grid grid-cols-1 gap-3 justify-center place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:place-items-stretch">
-            {landingPages.map((d, index) => {
-              return (
-                <VacanciesCard
-                  {...d}
-                  key={"vacancies" + index}
-                  record={d}
-                  fetchData={fetchData}
-                  user={user}
-                  AILoading={AILoading}
-                  backendLoading={backendLoading}
-                  handleGenerateAt={handleGenerateAt}
-                  onDuplicate={() => onDuplicate(d)}
-                  onRename={() => onRename(d)}
-                />
-              );
-            })}
+            <div className="grid grid-cols-1 gap-3 justify-center place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:place-items-stretch">
+              {landingPages.map((d, index) => {
+                return (
+                  <VacanciesCard
+                    {...d}
+                    key={"vacancies" + index}
+                    record={d}
+                    fetchData={fetchData}
+                    user={user}
+                    AILoading={AILoading}
+                    backendLoading={backendLoading}
+                    handleGenerateAt={handleGenerateAt}
+                    onDuplicate={() => onDuplicate(d)}
+                    onRename={() => onRename(d)}
+                  />
+                );
+              })}
 
-            {loadingFetchData && (
-              <>
-                {new Array(4).fill(0)?.map((x, i) => (
-                  <div
-                    key={i}
-                    className="flex flex-col items-start w-full gap-4 px-6 py-5 sm:px-5 bg-white-A700 rounded-[12px] min-w-[254px] min-h-[241px]"
-                  >
-                    <SkeletonLoader />
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
+              {loadingFetchData && (
+                <>
+                  {new Array(4).fill(0)?.map((x, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col items-start w-full gap-4 px-6 py-5 sm:px-5 bg-white-A700 rounded-[12px] min-w-[254px] min-h-[241px]"
+                    >
+                      <SkeletonLoader />
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
           )}
           {viewMode === 'timeline' && (
             <div className="flex flex-col gap-6 w-full">
               {/* Header Container based on Figma */}
               <div className="h-[76px] relative w-full shrink-0">
-                  <div className="absolute top-1/2 -translate-y-1/2 left-0 flex flex-col gap-[10px] items-start">
-                      <h2 className="text-[30px] font-bold text-gray-900 leading-9 m-0">Campaign Timeline</h2>
-                      <div className="flex gap-[4.5px]">
-                          <button
-                              onClick={() => {
-                                  setTimelineTab('timeline');
-                                  const url = new URL(window.location.href);
-                                  url.searchParams.delete('tab');
-                                  router.push(url.pathname + url.search, undefined, { shallow: true });
-                              }}
-                              className={`px-3 py-[6px] text-base leading-6 border-b-2 transition-colors ${
-                                timelineTab === 'timeline' 
-                                  ? 'text-violet-700 border-violet-700 font-semibold' 
-                                  : 'text-gray-500 border-transparent font-medium hover:text-gray-700'
-                              }`}
-                          >
-                              Timeline
-                          </button>
-                          <button
-                              onClick={() => {
-                                  setTimelineTab('performance');
-                                  const url = new URL(window.location.href);
-                                  url.searchParams.set('tab', 'performance');
-                                  router.push(url.pathname + url.search, undefined, { shallow: true });
-                              }}
-                              className={`px-3 py-[6px] text-base leading-6 border-b-2 border-transparent transition-colors ${
-                                timelineTab === 'performance' 
-                                  ? 'text-violet-700 border-violet-700 font-semibold' 
-                                  : 'text-gray-500 font-medium hover:text-gray-700'
-                              }`}
-                          >
-                              Performance
-                          </button>
-                      </div>
+                <div className="absolute top-1/2 -translate-y-1/2 left-0 flex flex-col gap-[10px] items-start">
+                  <h2 className="text-[30px] font-bold text-gray-900 leading-9 m-0">Campaign Timeline</h2>
+                  <div className="flex gap-[4.5px]">
+                    <button
+                      onClick={() => {
+                        setTimelineTab('timeline');
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('tab');
+                        router.push(url.pathname + url.search, undefined, { shallow: true });
+                      }}
+                      className={`px-3 py-[6px] text-base leading-6 border-b-2 transition-colors ${timelineTab === 'timeline'
+                        ? 'text-violet-700 border-violet-700 font-semibold'
+                        : 'text-gray-500 border-transparent font-medium hover:text-gray-700'
+                        }`}
+                    >
+                      Timeline
+                    </button>
+                    <button
+                      onClick={() => {
+                        setTimelineTab('performance');
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('tab', 'performance');
+                        router.push(url.pathname + url.search, undefined, { shallow: true });
+                      }}
+                      className={`px-3 py-[6px] text-base leading-6 border-b-2 border-transparent transition-colors ${timelineTab === 'performance'
+                        ? 'text-violet-700 border-violet-700 font-semibold'
+                        : 'text-gray-500 font-medium hover:text-gray-700'
+                        }`}
+                    >
+                      Performance
+                    </button>
                   </div>
+                </div>
 
-                  <div className="flex absolute right-0 top-1/2 gap-2 items-center -translate-y-1/2">
-                       <div className="w-5 h-5 bg-[#0075ff] rounded-[2.5px] cursor-pointer"></div>
-                       <span className="text-sm font-medium text-gray-700">AI Dynamic Adjustment</span>
-                  </div>
+                <div className="flex absolute right-0 top-1/2 gap-2 items-center -translate-y-1/2">
+                  <div className="w-5 h-5 bg-[#0075ff] rounded-[2.5px] cursor-pointer"></div>
+                  <span className="text-sm font-medium text-gray-700">AI Dynamic Adjustment</span>
+                </div>
               </div>
 
               {timelineTab === 'timeline' && (
-                  <Timeline campaigns={landingPages} timeframe={timeframe} isDemo={isDemo} />
+                <Timeline campaigns={landingPages} timeframe={timeframe} isDemo={isDemo} />
               )}
 
               {timelineTab === 'performance' && <CampaignsPerformance campaigns={landingPages} isDemo={isDemo} />}
@@ -1645,7 +1641,7 @@ Respond with json that adheres to the following jsonschema:
                     onClick={() => setAddNewModal(false)}
                   />
                 </div>
-                
+
                 <div className="flex flex-col gap-4 items-center text-center">
                   {/* Limit reached icon */}
                   <div className="flex justify-center items-center w-16 h-16 bg-orange-100 rounded-full">
@@ -1653,19 +1649,19 @@ Respond with json that adheres to the following jsonschema:
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
-                  
+
                   {/* Main message */}
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold text-gray-800">
                       You've reached your funnel limit
                     </h3>
                     <p className="max-w-md text-gray-600">
-                      You're currently using <span className="font-medium">{currentFunnelCount} of {maxFunnels}</span> funnels 
-                      available on the <span className="font-medium">{tierName} plan</span>. 
+                      You're currently using <span className="font-medium">{currentFunnelCount} of {maxFunnels}</span> funnels
+                      available on the <span className="font-medium">{tierName} plan</span>.
                       Upgrade your plan to create more recruitment funnels and unlock additional features.
                     </p>
                   </div>
-                  
+
                   {/* Upgrade benefits */}
                   <div className="p-4 w-full max-w-md bg-gray-50 rounded-lg">
                     <h4 className="mb-2 font-medium text-gray-800">Upgrade to unlock:</h4>
@@ -1696,7 +1692,7 @@ Respond with json that adheres to the following jsonschema:
                       </li>
                     </ul>
                   </div>
-                  
+
                   {/* Action buttons */}
                   <div className="flex flex-col gap-3 pt-2 w-full max-w-md sm:flex-row">
                     <button
@@ -1746,7 +1742,7 @@ Respond with json that adheres to the following jsonschema:
                 {[
                   {
                     text: "Start from scratch",
-                    subtext:"Best used when you don't have a job description ready",
+                    subtext: "Best used when you don't have a job description ready",
                     imageIcon: "/images/img_plus.svg",
                     onClick: async () => {
                       setAddNew("scratch");
@@ -1756,7 +1752,7 @@ Respond with json that adheres to the following jsonschema:
                   },
                   {
                     text: "Paste a URL",
-                    subtext:"Best used with public job page URLs (ie. URLs from your company career site)",
+                    subtext: "Best used with public job page URLs (ie. URLs from your company career site)",
                     imageIcon: "/images/folder.svg",
                     onClick: () => {
                       setAddNewModal(false);
@@ -1766,7 +1762,7 @@ Respond with json that adheres to the following jsonschema:
                   },
                   {
                     text: "Paste existing job text",
-                    subtext:"Best used for gated or private job pages. (ie job boards like Indeed)",
+                    subtext: "Best used for gated or private job pages. (ie job boards like Indeed)",
                     imageIcon: "/images/magic-wand-01.svg",
                     onClick: () => {
                       setAddNewModal(false);
@@ -1776,7 +1772,7 @@ Respond with json that adheres to the following jsonschema:
                   },
                   {
                     text: "Import from ATS",
-                    subtext:"Used only with direct external ATS integation",
+                    subtext: "Used only with direct external ATS integation",
                     imageIcon: "/images/layout-alt-01.svg",
                     onClick: () => {
                       setAddNewModal(false);
@@ -1838,7 +1834,7 @@ Respond with json that adheres to the following jsonschema:
                 onChange={(e) => setJobTitleX(e.target.value)}
               />
               <textarea
-                {...({} )}
+                {...({})}
                 rows={6}
                 type="url"
                 className="mt-2 w-full text-xs rounded-lg border border-gray-300 dark:bg-gray-900 outline-gray-300"
@@ -1922,7 +1918,7 @@ Respond with json that adheres to the following jsonschema:
           <div className="relative rounded-lg overflow-hidden w-64 h-64 bg-[#000000] flex items-center">
             <img src={adImage} alt="ad_creative" />
             <Button
-              {...({} )}
+              {...({})}
               color="indigo"
               size="lg"
               shape="round"
@@ -2005,7 +2001,8 @@ Respond with json that adheres to the following jsonschema:
             className="mt-2 w-full dark:bg-gray-900"
             placeholder="Enter Daily Budget"
             value={adBudget}
-            onChange={(e) => setAdBudget(Number(e.target.value))}
+            min={20}
+            onChange={(e) => setAdBudget(Math.max(20, Number(e.target.value)))}
           />
         </div>
 
@@ -2044,7 +2041,7 @@ Respond with json that adheres to the following jsonschema:
         footer={[
           <div key="footer" className="flex gap-3 justify-center mt-4">
             <Button
-              {...({} )}
+              {...({})}
               key="cancel"
               onClick={() => setFilterModalVisible(false)}
               className="px-4 py-2 w-1/2 text-gray-700 rounded-md border border-gray-300 transition duration-300 hover:bg-gray-200"
@@ -2052,7 +2049,7 @@ Respond with json that adheres to the following jsonschema:
               Cancel
             </Button>
             <Button
-              {...({} )}
+              {...({})}
               key="ok"
               type="primary"
               className="w-1/2 bg-[#1677FF] hover:bg-[#125FCC] text-white transition duration-300 px-4 py-2 rounded-md"
@@ -2064,7 +2061,7 @@ Respond with json that adheres to the following jsonschema:
         ]}
       >
         <Input
-          {...({} )}
+          {...({})}
           placeholder={`Enter ${currentFilter.key} value`}
           value={currentFilter.value}
           onChange={(e) => setCurrentFilter({ ...currentFilter, value: e })}
@@ -2082,7 +2079,7 @@ Respond with json that adheres to the following jsonschema:
             style={{ display: "flex", justifyContent: "center", gap: "8px" }}
           >
             <Button
-              {...({} )}
+              {...({})}
               type="text"
               className="w-1/2 text-gray-700 rounded-lg border-gray-300"
               onClick={() => setRenameModal(false)}
@@ -2090,7 +2087,7 @@ Respond with json that adheres to the following jsonschema:
               Cancel
             </Button>
             <Button
-              {...({} )}
+              {...({})}
               className="w-1/2 rounded-lg custom-button"
               type="primary"
               onClick={handleRename}
@@ -2101,7 +2098,7 @@ Respond with json that adheres to the following jsonschema:
         }
       >
         <Input
-          {...({} )}
+          {...({})}
           placeholder="Enter new title for the vacancy"
           value={newVacancyTitle}
           onChange={(e) => setNewVacancyTitle(e)}
@@ -2111,15 +2108,15 @@ Respond with json that adheres to the following jsonschema:
       </Modal>
 
       {addNew === "scratch" && (
-        <FromScratchModal onClose={() => setAddNew(null)}  ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}} onRefresh={handleRefreshAfterVacancyCreation}/>
+        <FromScratchModal onClose={() => setAddNew(null)} ongoBack={() => { setAddNew(null); setAddNewModal(true) }} onRefresh={handleRefreshAfterVacancyCreation} />
       )}
       {addNew === "url" && (
-        queryParams?.get('debug') === 'true' 
-          ? <PasteUrlModalExperimental onClose={() => setAddNew(null)}  />
-          : <PasteUrlModal onClose={() => setAddNew(null)} ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}} onRefresh={handleRefreshAfterVacancyCreation} />
+        queryParams?.get('debug') === 'true'
+          ? <PasteUrlModalExperimental onClose={() => setAddNew(null)} />
+          : <PasteUrlModal onClose={() => setAddNew(null)} ongoBack={() => { setAddNew(null); setAddNewModal(true) }} onRefresh={handleRefreshAfterVacancyCreation} />
       )}
       {addNew === "job-description" && (
-        <JobDescriptionModal onClose={() => setAddNew(null)} ongoBack={( ) => { setAddNew(null) ; setAddNewModal(true)}} onRefresh={handleRefreshAfterVacancyCreation} />
+        <JobDescriptionModal onClose={() => setAddNew(null)} ongoBack={() => { setAddNew(null); setAddNewModal(true) }} onRefresh={handleRefreshAfterVacancyCreation} />
       )}
 
       <UpgradeModal
@@ -2552,13 +2549,13 @@ function Timeline({ campaigns, timeframe, isDemo }) {
       let widthPct = 0;
 
       if (createdAt > timeframeStart) {
-          startPct = ((createdAt.getTime() - timeframeStart.getTime()) / windowMs) * 100;
-          widthPct = ((now.getTime() - createdAt.getTime()) / windowMs) * 100;
+        startPct = ((createdAt.getTime() - timeframeStart.getTime()) / windowMs) * 100;
+        widthPct = ((now.getTime() - createdAt.getTime()) / windowMs) * 100;
       } else {
-          startPct = 0;
-          widthPct = ((now.getTime() - timeframeStart.getTime()) / windowMs) * 100;
+        startPct = 0;
+        widthPct = ((now.getTime() - timeframeStart.getTime()) / windowMs) * 100;
       }
-      
+
       // Ensure bounds
       startPct = Math.max(0, Math.min(100, startPct));
       widthPct = Math.max(0, Math.min(100 - startPct, widthPct));
@@ -2615,148 +2612,148 @@ function Timeline({ campaigns, timeframe, isDemo }) {
   };
 
   const months = React.useMemo(() => {
-     const m = [];
-     const d = new Date(timeframeStart);
-     // Move to start of month
-     d.setDate(1);
-     
-     const end = new Date(now);
-     
-     while (d <= end) {
-         m.push(d.toLocaleString('default', { month: 'short' }));
-         d.setMonth(d.getMonth() + 1);
-     }
-     // Ensure we don't have too many labels if timeframe is long
-     if (m.length > 12) {
-         return m.filter((_, i) => i % 2 === 0);
-     }
-     return m;
+    const m = [];
+    const d = new Date(timeframeStart);
+    // Move to start of month
+    d.setDate(1);
+
+    const end = new Date(now);
+
+    while (d <= end) {
+      m.push(d.toLocaleString('default', { month: 'short' }));
+      d.setMonth(d.getMonth() + 1);
+    }
+    // Ensure we don't have too many labels if timeframe is long
+    if (m.length > 12) {
+      return m.filter((_, i) => i % 2 === 0);
+    }
+    return m;
   }, [timeframeStart]);
 
   return (
     <div className="bg-white border border-gray-200 rounded-[12px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] overflow-hidden w-full flex flex-col">
       <div className="overflow-x-auto">
         <div className="min-w-[1000px]">
-            {/* Calendar Header */}
-            <div className="flex items-center border-b border-gray-200">
-                <div className="w-[343.5px] shrink-0 p-4 flex items-center justify-between sticky left-0 bg-white z-20 border-r border-gray-200">
-                    <button className="p-1 rounded hover:bg-gray-100"><ChevronLeft className="w-3 h-3 text-gray-500" /></button>
-                    <span className="text-base font-semibold text-gray-800">{now.getFullYear()}</span>
-                    <button className="p-1 rounded hover:bg-gray-100"><ChevronRight className="w-3 h-3 text-gray-500" /></button>
-                </div>
-                <div className="flex flex-1 border-l border-transparent">
-                    {months.map((m, i) => (
-                        <div key={i} className={`flex-1 py-4 flex justify-center text-base ${m === 'Oct' ? 'text-violet-700 font-semibold' : 'text-gray-500 font-medium'}`}>
-                            {m}
-                        </div>
-                    ))}
-                </div>
-                <div className="w-[150px] shrink-0"></div>
+          {/* Calendar Header */}
+          <div className="flex items-center border-b border-gray-200">
+            <div className="w-[343.5px] shrink-0 p-4 flex items-center justify-between sticky left-0 bg-white z-20 border-r border-gray-200">
+              <button className="p-1 rounded hover:bg-gray-100"><ChevronLeft className="w-3 h-3 text-gray-500" /></button>
+              <span className="text-base font-semibold text-gray-800">{now.getFullYear()}</span>
+              <button className="p-1 rounded hover:bg-gray-100"><ChevronRight className="w-3 h-3 text-gray-500" /></button>
             </div>
-
-            {/* Rows */}
-            {rows.map((row) => (
-                <div key={row.id} className="border-b border-gray-200 last:border-0">
-                    {/* Main Row */}
-                    <div className="flex min-h-[76px] relative group">
-                        {/* Left: Info - Sticky */}
-                        <div className="w-[343.5px] shrink-0 p-4 border-r border-gray-200 flex justify-between items-start bg-white z-20 sticky left-0 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
-                            <div className="flex flex-col gap-1">
-                                <div className="text-base font-bold text-gray-900">{row.title}</div>
-                                <div className="text-xs text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis max-w-[280px]">{row.location}</div>
-                            </div>
-                            <button onClick={() => toggleRow(row.id)} className="p-0.5 mt-0.5 shrink-0">
-                                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${expanded.has(row.id) ? 'rotate-180' : ''}`} />
-                            </button>
-                        </div>
-
-                        {/* Middle: Visualization */}
-                        <div className="flex-1 relative border-r border-gray-200 min-w-[500px]">
-                            {/* Background Grid */}
-                            <div className="flex absolute inset-0">
-                                {months.map((_, i) => (
-                                    <div key={i} className="flex-1 border-r border-gray-100 border-dashed last:border-0" />
-                                ))}
-                            </div>
-                            
-                            {/* Overlay Metric Bar */}
-                            <div className="absolute inset-0 p-2 pt-3">
-                                <div className="h-8 bg-[#f5f3ff]/60 rounded text-xs flex items-center justify-between px-4 lg:px-10 text-gray-600 border border-transparent mx-4 lg:mx-20 whitespace-nowrap overflow-hidden">
-                                    <span className="mr-2">Reach: {row.analytics.reach}</span>
-                                    <span className="mr-2">Visit: {row.analytics.visits}</span>
-                                    <span className="mr-2">CTR {row.analytics.ctr}</span>
-                                    <span>CPC {row.analytics.cpc}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right: Total */}
-                        <div className="w-[150px] shrink-0 p-4 flex items-center justify-end font-bold text-gray-900 text-base bg-white">
-                            Total: ${row.budgets.total.toLocaleString()}
-                        </div>
-                    </div>
-
-                    {/* Expanded Channels */}
-                    {expanded.has(row.id) && (
-                        <div className="bg-white">
-                            {row.channels.map((ch, idx) => (
-                                <div key={idx} className="flex min-h-[76px] border-t border-gray-100">
-                                    {/* Left: Channel Info - Sticky */}
-                                    <div className="w-[343.5px] shrink-0 p-4 border-r border-gray-200 flex items-center gap-3 bg-white z-20 sticky left-0 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
-                                        <div className="flex justify-center items-center w-8 h-8 shrink-0">
-                                            {ch.name === 'Meta' && <FaFacebook className="w-6 h-6 text-blue-600" />}
-                                            {ch.name === 'Google' && <FaGoogle className="w-5 h-5 text-green-500" />}
-                                            {ch.name === 'LinkedIn' && <FaLinkedin className="w-6 h-6 text-blue-700" />}
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-semibold text-gray-800">
-                                                ${ch.dailyBudget} <span className="font-normal text-gray-500">Daily budget</span>
-                                            </div>
-                                            <div className="mt-0.5 text-xs text-gray-400">
-                                                ${ch.totalBudget.toLocaleString()} Total budget
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Middle: Bar */}
-                                    <div className="flex-1 relative border-r border-gray-200 min-w-[500px]">
-                                        <div className="flex absolute inset-0">
-                                            {months.map((_, i) => <div key={i} className="flex-1 border-r border-gray-100 border-dashed last:border-0" />)}
-                                        </div>
-                                        <div className="absolute inset-0 py-5">
-                                            <div 
-                                                className="flex overflow-hidden relative justify-center items-center px-2 h-8 text-sm font-medium text-white whitespace-nowrap rounded-lg shadow-sm"
-                                                style={{ 
-                                                    backgroundColor: ch.color,
-                                                    left: `${ch.startPct}%`,
-                                                    width: `${ch.widthPct}%`
-                                                }}
-                                            >
-                                                {ch.label}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Right: Spacer */}
-                                    <div className="w-[150px] shrink-0 bg-white"></div>
-                                </div>
-                            ))}
-
-                            {/* Add Channel Button Row */}
-                            <div className="flex min-h-[76px] border-t border-gray-100">
-                                <div className="w-[343.5px] shrink-0 flex items-center justify-center border-r border-gray-200 p-4 bg-white z-20 sticky left-0 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
-                                    <button className="flex gap-2 items-center px-4 py-1.5 text-sm font-medium text-gray-500 bg-gray-100 rounded-full transition-colors hover:bg-gray-200">
-                                        <Plus className="w-3.5 h-3.5" />
-                                        Add new channel
-                                    </button>
-                                </div>
-                                <div className="flex-1 border-r border-gray-200 bg-white min-w-[500px]"></div>
-                                <div className="w-[150px] shrink-0 bg-white"></div>
-                            </div>
-                        </div>
-                    )}
+            <div className="flex flex-1 border-l border-transparent">
+              {months.map((m, i) => (
+                <div key={i} className={`flex-1 py-4 flex justify-center text-base ${m === 'Oct' ? 'text-violet-700 font-semibold' : 'text-gray-500 font-medium'}`}>
+                  {m}
                 </div>
-            ))}
+              ))}
+            </div>
+            <div className="w-[150px] shrink-0"></div>
+          </div>
+
+          {/* Rows */}
+          {rows.map((row) => (
+            <div key={row.id} className="border-b border-gray-200 last:border-0">
+              {/* Main Row */}
+              <div className="flex min-h-[76px] relative group">
+                {/* Left: Info - Sticky */}
+                <div className="w-[343.5px] shrink-0 p-4 border-r border-gray-200 flex justify-between items-start bg-white z-20 sticky left-0 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
+                  <div className="flex flex-col gap-1">
+                    <div className="text-base font-bold text-gray-900">{row.title}</div>
+                    <div className="text-xs text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis max-w-[280px]">{row.location}</div>
+                  </div>
+                  <button onClick={() => toggleRow(row.id)} className="p-0.5 mt-0.5 shrink-0">
+                    <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${expanded.has(row.id) ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+
+                {/* Middle: Visualization */}
+                <div className="flex-1 relative border-r border-gray-200 min-w-[500px]">
+                  {/* Background Grid */}
+                  <div className="flex absolute inset-0">
+                    {months.map((_, i) => (
+                      <div key={i} className="flex-1 border-r border-gray-100 border-dashed last:border-0" />
+                    ))}
+                  </div>
+
+                  {/* Overlay Metric Bar */}
+                  <div className="absolute inset-0 p-2 pt-3">
+                    <div className="h-8 bg-[#f5f3ff]/60 rounded text-xs flex items-center justify-between px-4 lg:px-10 text-gray-600 border border-transparent mx-4 lg:mx-20 whitespace-nowrap overflow-hidden">
+                      <span className="mr-2">Reach: {row.analytics.reach}</span>
+                      <span className="mr-2">Visit: {row.analytics.visits}</span>
+                      <span className="mr-2">CTR {row.analytics.ctr}</span>
+                      <span>CPC {row.analytics.cpc}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Total */}
+                <div className="w-[150px] shrink-0 p-4 flex items-center justify-end font-bold text-gray-900 text-base bg-white">
+                  Total: ${row.budgets.total.toLocaleString()}
+                </div>
+              </div>
+
+              {/* Expanded Channels */}
+              {expanded.has(row.id) && (
+                <div className="bg-white">
+                  {row.channels.map((ch, idx) => (
+                    <div key={idx} className="flex min-h-[76px] border-t border-gray-100">
+                      {/* Left: Channel Info - Sticky */}
+                      <div className="w-[343.5px] shrink-0 p-4 border-r border-gray-200 flex items-center gap-3 bg-white z-20 sticky left-0 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
+                        <div className="flex justify-center items-center w-8 h-8 shrink-0">
+                          {ch.name === 'Meta' && <FaFacebook className="w-6 h-6 text-blue-600" />}
+                          {ch.name === 'Google' && <FaGoogle className="w-5 h-5 text-green-500" />}
+                          {ch.name === 'LinkedIn' && <FaLinkedin className="w-6 h-6 text-blue-700" />}
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-gray-800">
+                            ${ch.dailyBudget} <span className="font-normal text-gray-500">Daily budget</span>
+                          </div>
+                          <div className="mt-0.5 text-xs text-gray-400">
+                            ${ch.totalBudget.toLocaleString()} Total budget
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Middle: Bar */}
+                      <div className="flex-1 relative border-r border-gray-200 min-w-[500px]">
+                        <div className="flex absolute inset-0">
+                          {months.map((_, i) => <div key={i} className="flex-1 border-r border-gray-100 border-dashed last:border-0" />)}
+                        </div>
+                        <div className="absolute inset-0 py-5">
+                          <div
+                            className="flex overflow-hidden relative justify-center items-center px-2 h-8 text-sm font-medium text-white whitespace-nowrap rounded-lg shadow-sm"
+                            style={{
+                              backgroundColor: ch.color,
+                              left: `${ch.startPct}%`,
+                              width: `${ch.widthPct}%`
+                            }}
+                          >
+                            {ch.label}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Spacer */}
+                      <div className="w-[150px] shrink-0 bg-white"></div>
+                    </div>
+                  ))}
+
+                  {/* Add Channel Button Row */}
+                  <div className="flex min-h-[76px] border-t border-gray-100">
+                    <div className="w-[343.5px] shrink-0 flex items-center justify-center border-r border-gray-200 p-4 bg-white z-20 sticky left-0 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
+                      <button className="flex gap-2 items-center px-4 py-1.5 text-sm font-medium text-gray-500 bg-gray-100 rounded-full transition-colors hover:bg-gray-200">
+                        <Plus className="w-3.5 h-3.5" />
+                        Add new channel
+                      </button>
+                    </div>
+                    <div className="flex-1 border-r border-gray-200 bg-white min-w-[500px]"></div>
+                    <div className="w-[150px] shrink-0 bg-white"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -2790,19 +2787,19 @@ function CampaignsPerformance({ campaigns, isDemo }) {
   const stats = React.useMemo(() => {
     let totalVisits = 0;
     let totalApplicants = 0;
-    
+
     dataToRender.forEach(c => {
-       totalVisits += (c.visits || 0);
-       totalApplicants += (c.applicants || 0);
+      totalVisits += (c.visits || 0);
+      totalApplicants += (c.applicants || 0);
     });
 
     // Estimates/Placeholders where data is missing
-    const totalReach = totalVisits > 0 ? totalVisits * 3 : 0; 
-    
+    const totalReach = totalVisits > 0 ? totalVisits * 3 : 0;
+
     return {
-        reach: totalReach,
-        visits: totalVisits,
-        applicants: totalApplicants,
+      reach: totalReach,
+      visits: totalVisits,
+      applicants: totalApplicants,
     };
   }, [dataToRender]);
 
@@ -2816,13 +2813,13 @@ function CampaignsPerformance({ campaigns, isDemo }) {
 
   // Channels - Only Meta for now as per requirement
   const channels = [
-    { 
-        name: 'Meta', 
-        applicants: stats.applicants, 
-        cpa: isDemo ? '€18.20' : 'N/A', 
-        ctr: isDemo ? '2.5%' : 'N/A', 
-        color: '#3b82f6', 
-        icon: <FaFacebook className="w-5 h-5 text-white" /> 
+    {
+      name: 'Meta',
+      applicants: stats.applicants,
+      cpa: isDemo ? '€18.20' : 'N/A',
+      ctr: isDemo ? '2.5%' : 'N/A',
+      color: '#3b82f6',
+      icon: <FaFacebook className="w-5 h-5 text-white" />
     },
   ];
 
@@ -2853,21 +2850,21 @@ function CampaignsPerformance({ campaigns, isDemo }) {
             {channels.map((c) => (
               <div key={c.name} className="p-5 bg-white rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex gap-3 items-center mb-4">
-                    <div className={`flex justify-center items-center w-8 h-8 rounded-lg`} style={{ backgroundColor: c.color }}>
-                        {c.icon}
-                    </div>
-                    <div className="text-base font-semibold text-gray-800">{c.name}</div>
+                  <div className={`flex justify-center items-center w-8 h-8 rounded-lg`} style={{ backgroundColor: c.color }}>
+                    {c.icon}
+                  </div>
+                  <div className="text-base font-semibold text-gray-800">{c.name}</div>
                 </div>
-                
+
                 <div className="flex justify-between items-end mb-2">
-                    <span className="text-sm text-gray-800">Applicants</span>
-                    <span className="text-sm font-semibold text-gray-800">{c.applicants.toLocaleString()}</span>
+                  <span className="text-sm text-gray-800">Applicants</span>
+                  <span className="text-sm font-semibold text-gray-800">{c.applicants.toLocaleString()}</span>
                 </div>
-                
+
                 <div className="overflow-hidden mb-4 h-2 bg-gray-100 rounded-full">
                   <div className="h-full rounded-full" style={{ width: '65%', backgroundColor: c.color }} />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-xs text-gray-500">
                   <div>CPA: {c.cpa}</div>
                   <div>CTR: {c.ctr}</div>
@@ -2880,57 +2877,57 @@ function CampaignsPerformance({ campaigns, isDemo }) {
           <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
             <div className="mb-8 text-base font-semibold text-gray-800">Campaign Funnel</div>
             <div className="flex justify-between items-start px-4 md:px-12 lg:px-24">
-                {/* Step 1: Reach */}
-                <div className="flex z-10 flex-col items-center w-24">
-                    <div className="mb-2 text-sm text-gray-500">Reach</div>
-                    <div className="text-2xl font-bold text-gray-900">{stats.reach.toLocaleString()}</div>
+              {/* Step 1: Reach */}
+              <div className="flex z-10 flex-col items-center w-24">
+                <div className="mb-2 text-sm text-gray-500">Reach</div>
+                <div className="text-2xl font-bold text-gray-900">{stats.reach.toLocaleString()}</div>
+              </div>
+
+              {/* Connector 1 */}
+              <div className="flex relative flex-col flex-1 items-center mx-4 mt-3">
+                {/* Line */}
+                <div className="w-full h-[2px] bg-gray-200 relative">
+                  {/* Optional Tick/Arrow on line */}
+                  <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-gray-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
                 </div>
 
-                {/* Connector 1 */}
-                <div className="flex relative flex-col flex-1 items-center mx-4 mt-3">
-                     {/* Line */}
-                     <div className="w-full h-[2px] bg-gray-200 relative">
-                        {/* Optional Tick/Arrow on line */}
-                        <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-gray-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                     </div>
-                     
-                     {/* Badge below line */}
-                     <div className="px-2.5 py-0.5 mt-4 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-100">
-                        {isDemo ? '3.1%' : (stats.reach > 0 ? ((stats.visits / stats.reach) * 100).toFixed(1) + '%' : '0%')}
-                     </div>
+                {/* Badge below line */}
+                <div className="px-2.5 py-0.5 mt-4 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-100">
+                  {isDemo ? '3.1%' : (stats.reach > 0 ? ((stats.visits / stats.reach) * 100).toFixed(1) + '%' : '0%')}
+                </div>
+              </div>
+
+              {/* Step 2: Visits/Clicks */}
+              <div className="flex z-10 flex-col items-center w-24">
+                <div className="mb-2 text-sm text-gray-500">Clicks</div>
+                <div className="text-2xl font-bold text-gray-900">{stats.visits.toLocaleString()}</div>
+              </div>
+
+              {/* Connector 2 */}
+              <div className="flex relative flex-col flex-1 items-center mx-4 mt-3">
+                {/* Line */}
+                <div className="w-full h-[2px] bg-gray-200 relative">
+                  <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-gray-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
                 </div>
 
-                {/* Step 2: Visits/Clicks */}
-                <div className="flex z-10 flex-col items-center w-24">
-                    <div className="mb-2 text-sm text-gray-500">Clicks</div>
-                    <div className="text-2xl font-bold text-gray-900">{stats.visits.toLocaleString()}</div>
+                {/* Badge below line */}
+                <div className="px-2.5 py-0.5 mt-4 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-100">
+                  {isDemo ? '13%' : (stats.visits > 0 ? ((stats.applicants / stats.visits) * 100).toFixed(1) + '%' : '0%')}
                 </div>
+              </div>
 
-                {/* Connector 2 */}
-                <div className="flex relative flex-col flex-1 items-center mx-4 mt-3">
-                     {/* Line */}
-                     <div className="w-full h-[2px] bg-gray-200 relative">
-                        <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-gray-300 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                     </div>
-                     
-                     {/* Badge below line */}
-                     <div className="px-2.5 py-0.5 mt-4 text-xs font-semibold text-green-700 bg-green-50 rounded-full border border-green-100">
-                        {isDemo ? '13%' : (stats.visits > 0 ? ((stats.applicants / stats.visits) * 100).toFixed(1) + '%' : '0%')}
-                     </div>
-                </div>
-
-                {/* Step 3: Applies */}
-                <div className="flex z-10 flex-col items-center w-24">
-                    <div className="mb-2 text-sm text-gray-500">Applies</div>
-                    <div className="text-2xl font-bold text-violet-700">{stats.applicants.toLocaleString()}</div>
-                </div>
+              {/* Step 3: Applies */}
+              <div className="flex z-10 flex-col items-center w-24">
+                <div className="mb-2 text-sm text-gray-500">Applies</div>
+                <div className="text-2xl font-bold text-violet-700">{stats.applicants.toLocaleString()}</div>
+              </div>
             </div>
           </div>
 
           {/* Campaigns table */}
           <div className="overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm">
             <div className="p-6 border-b border-gray-200">
-                <div className="text-base font-semibold text-gray-800">Campaigns</div>
+              <div className="text-base font-semibold text-gray-800">Campaigns</div>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm text-left">
@@ -2950,10 +2947,10 @@ function CampaignsPerformance({ campaigns, isDemo }) {
                       <td className="px-6 py-4 font-semibold text-gray-800">{r.vacancyTitle}</td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-[#8b5cf6] text-white border-transparent">
-                               <FaFacebook className="w-3 h-3" />
-                               Meta
-                           </div>
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-[#8b5cf6] text-white border-transparent">
+                            <FaFacebook className="w-3 h-3" />
+                            Meta
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-gray-600">{isDemo ? '€2,500' : 'N/A'}</td>
@@ -2961,7 +2958,7 @@ function CampaignsPerformance({ campaigns, isDemo }) {
                       <td className="px-6 py-4 text-gray-600">{isDemo ? '€18.24' : 'N/A'}</td>
                       <td className="px-6 py-4 text-right">
                         <button className="p-1 text-gray-400 rounded hover:text-gray-600 hover:bg-gray-100">
-                            <ChevronRight className="w-5 h-5" />
+                          <ChevronRight className="w-5 h-5" />
                         </button>
                       </td>
                     </tr>
