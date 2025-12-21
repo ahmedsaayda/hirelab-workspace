@@ -938,7 +938,7 @@ export default function AdsEdit({ paramsId }) {
   const adSetsList = useMemo(() => {
     // Primary source: launchSummary.editorAds._adSets (contains backend-cleaned data)
     // Secondary source: adsData._adSets (contains newly created ad sets that may not be in launchSummary yet)
-    const editorAdSets = Array.isArray(launchSummary?.editorAds?._adSets) 
+    const editorAdSets = Array.isArray(launchSummary?.editorAds?._adSets)
       ? launchSummary.editorAds._adSets : [];
     const localAdSets = Array.isArray(adsData?._adSets) ? adsData._adSets : [];
     const metaSets = Array.isArray(launchSummary?.adSets) ? launchSummary.adSets : [];
@@ -976,9 +976,9 @@ export default function AdsEdit({ paramsId }) {
     // Only apply filter if we have Meta data loaded (metaSetMap not empty)
     const validLocalSets = metaSetMap.size > 0
       ? mergedAdSets.filter((s) => {
-          if (!s.metaAdSetId) return true; // Not yet synced to Meta
-          return metaSetMap.has(s.metaAdSetId); // Meta ad set still exists
-        })
+        if (!s.metaAdSetId) return true; // Not yet synced to Meta
+        return metaSetMap.has(s.metaAdSetId); // Meta ad set still exists
+      })
       : mergedAdSets;
 
     // Map HireLab ad sets, enriching with Meta data if available
@@ -1290,7 +1290,7 @@ export default function AdsEdit({ paramsId }) {
         // Get ad set's launch settings for budget/schedule
         const adSetRecord = localSets.find((s) => s.id === adSetId);
         const ls = adSetRecord?.launchSettings || {};
-        
+
         await AdsService.publish(lpId, {
           hirelabAdSetId: adSetId,
           budget: (ls.budgetDaily || 5) * 100, // Convert to minor units
@@ -1440,7 +1440,8 @@ export default function AdsEdit({ paramsId }) {
                   <Dropdown
                     menu={{
                       items: (() => {
-                        const isMeta = set.source === "meta" && !!set.id;
+                        // Show Meta controls if it's a Meta ad set OR a HireLab ad set synced to Meta
+                        const isMeta = (set.source === "meta" && !!set.id) || (set.source === "hirelab" && !!set.metaAdSetId);
                         const isHireLab = set.source === "hirelab" && !!set.id;
                         // Meta effective_status can be "CAMPAIGN_PAUSED", "ADSET_PAUSED", etc.
                         // For pause/resume controls we must use the raw ad set status,
@@ -1450,24 +1451,26 @@ export default function AdsEdit({ paramsId }) {
                         const isRawPaused = raw === "PAUSED";
                         const isBusy =
                           adSetActionLoading.id === set.id && !!adSetActionLoading.action;
+                        // Use Meta ad set ID for API calls (for HireLab ad sets synced to Meta)
+                        const metaId = set.metaAdSetId || set.id;
                         const pauseItem = {
                           key: "pause",
                           label: "Pause ad set",
                           disabled: !isMeta || !isRawActive || isBusy,
-                          onClick: () => pauseAdSet(set.id),
+                          onClick: () => pauseAdSet(metaId),
                         };
                         const resumeItem = {
                           key: "resume",
                           label: "Resume ad set",
                           disabled: !isMeta || !isRawPaused || isBusy,
-                          onClick: () => resumeAdSet(set.id),
+                          onClick: () => resumeAdSet(metaId),
                         };
                         const deleteItem = {
                           key: "delete",
                           label: "Delete ad set",
                           danger: true,
                           disabled: !isMeta || isBusy,
-                          onClick: () => deleteAdSet(set.id),
+                          onClick: () => deleteAdSet(metaId),
                         };
                         const deleteLocalItem = {
                           key: "delete_local",
