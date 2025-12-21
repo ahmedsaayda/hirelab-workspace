@@ -413,7 +413,7 @@ export default function Launch({ paramsId }) {
       summary?.campaign?.start_time || resolvedAdSet?.start_time || null;
     const providerEndRaw =
       summary?.campaign?.stop_time || resolvedAdSet?.end_time || null;
-    
+
     // Use Meta times if available (campaign published or ad set published), otherwise fall back to draft
     const hasMetaTimes = !!providerStartRaw;
     const scheduleStart = hasMetaTimes
@@ -1008,11 +1008,16 @@ export default function Launch({ paramsId }) {
         budget: budgetMinor,
         // Be explicit so backend never creates a second campaign for this LP
         reuseCampaign: true,
+        // This is a launch request - activate the ad set
+        launch: true,
       };
       if (adSetKey) {
         payload.hirelabAdSetId = adSetKey;
         // If this HireLab ad set already has a Meta ad set id, reuse it (retry / relaunch scenario).
-        const localSets = Array.isArray(summary?.editorAds?._adSets) ? summary.editorAds._adSets : [];
+        // Check both _adSets (current) and _adSetsMeta (legacy)
+        const localSets = Array.isArray(summary?.editorAds?._adSets) && summary.editorAds._adSets.length > 0
+          ? summary.editorAds._adSets
+          : Array.isArray(summary?.editorAds?._adSetsMeta) ? summary.editorAds._adSetsMeta : [];
         const local = localSets.find((s) => s?.id === adSetKey) || null;
         if (local?.metaAdSetId) {
           payload.reuseAdSet = true;
