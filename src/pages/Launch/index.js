@@ -403,28 +403,29 @@ export default function Launch({ paramsId }) {
 
     const approxTwoWeekTotal = effectiveDailyBudget * 14;
 
-    // Schedule (campaign → first ad set → saved draft):
+    // Schedule (campaign → resolved ad set → saved draft):
+    // In ad-set mode, check the resolved ad set for times (it might already be published on Meta)
     const firstAdSet = Array.isArray(summary?.adSets) ? summary.adSets[0] : null;
+    const resolvedAdSet = adSetKey && Array.isArray(summary?.adSets)
+      ? summary.adSets.find(s => String(s?.id) === String(adSetKey)) || firstAdSet
+      : firstAdSet;
     const providerStartRaw =
-      summary?.campaign?.start_time || firstAdSet?.start_time || null;
+      summary?.campaign?.start_time || resolvedAdSet?.start_time || null;
     const providerEndRaw =
-      summary?.campaign?.stop_time || firstAdSet?.end_time || null;
-    const scheduleStart = hasCampaign
-      ? providerStartRaw
-        ? dayjs(providerStartRaw)
-        : draft.scheduleStart
-          ? dayjs(draft.scheduleStart)
-          : null
+      summary?.campaign?.stop_time || resolvedAdSet?.end_time || null;
+    
+    // Use Meta times if available (campaign published or ad set published), otherwise fall back to draft
+    const hasMetaTimes = !!providerStartRaw;
+    const scheduleStart = hasMetaTimes
+      ? dayjs(providerStartRaw)
       : draft.scheduleStart
         ? dayjs(draft.scheduleStart)
         : null;
 
-    const scheduleEnd = hasCampaign
+    const scheduleEnd = hasMetaTimes
       ? providerEndRaw
         ? dayjs(providerEndRaw)
-        : draft.scheduleEnd
-          ? dayjs(draft.scheduleEnd)
-          : null
+        : null
       : draft.scheduleEnd
         ? dayjs(draft.scheduleEnd)
         : null;
