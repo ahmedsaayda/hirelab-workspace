@@ -1047,8 +1047,9 @@ export default function Launch({ paramsId }) {
 
       const res = await AdsService.publish(lpId, payload);
       if (res?.data?.success) {
-        message.success(adSetKey ? "Ad set launched" : "Campaign launch requested");
-        await reload();
+        message.success(adSetKey ? "Ad set launched successfully!" : "Campaign launched successfully!");
+        // Redirect to overview/dashboard after successful launch
+        router.push(`/dashboard`);
       } else {
         message.error(res?.data?.message || "Failed to launch campaign");
       }
