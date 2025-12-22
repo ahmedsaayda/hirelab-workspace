@@ -77,7 +77,11 @@ export default function Header({
     
     // Check if this is the first time publishing (user has never published before)
     // BUT skip this modal if we're already in the form editor
-    if (!landingPageData?.published && !isFormEditor) {
+    // Also skip for multi-job campaigns since they don't need application forms
+    const isMultiJobCampaign = landingPageData?.campaignType === "multi" || 
+      (Array.isArray(landingPageData?.linkedCampaigns) && landingPageData.linkedCampaigns.length > 0);
+    
+    if (!landingPageData?.published && !isFormEditor && !isMultiJobCampaign) {
       setFormBuilderPopupVisible(true);
       return;
     }
@@ -414,7 +418,15 @@ export default function Header({
                   disabled: false,
                 },
 
-              ].filter((item) => !(hideLaunchNav && item.id === "launch")).map((item) => (
+              ].filter((item) => {
+                // Hide launch nav if specified
+                if (hideLaunchNav && item.id === "launch") return false;
+                // Hide Form tab for multi-job campaigns (they don't need application forms)
+                const isMultiJob = landingPageData?.campaignType === "multi" || 
+                  (Array.isArray(landingPageData?.linkedCampaigns) && landingPageData.linkedCampaigns.length > 0);
+                if (isMultiJob && item.id === "formBuilder") return false;
+                return true;
+              }).map((item) => (
                 <li key={item.id}>
                   <div
                     className={`flex items-center gap-2 border border-solid shadow-sm ${item.bgColor} ${item.className || "rounded-lg"} px-2 py-[10px] transition-all duration-200`}

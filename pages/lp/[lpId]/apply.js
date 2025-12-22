@@ -126,7 +126,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 // Custom components to match preview styling
-const MultipleChoice = ({ field, value, onChange }) => (
+const MultipleChoice = ({ field, value, onChange, brandColor }) => (
   <div className="w-full space-y-3">
     {field.options?.map((option, index) => {
       const letter = String.fromCharCode(65 + index); // A, B, C, D...
@@ -137,23 +137,21 @@ const MultipleChoice = ({ field, value, onChange }) => (
       return (
         <div 
           key={index} 
-          className={`
-            border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300`}
+          className="border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300"
           onClick={() => onChange({ target: { value: optionText } })}
+          style={isSelected ? { borderColor: brandColor } : {}}
         >
           <div className="flex items-center p-4">
-            <div className={`
-              w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0
-              ${isSelected 
-                ? 'bg-blue-500 text-white' 
-                : ' border-2 border-gray-200'
-              }
-            `}>
+            <div 
+              className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0 ${!isSelected ? 'border-2 border-gray-200' : ''}`}
+              style={isSelected ? { backgroundColor: brandColor, color: 'white' } : {}}
+            >
               {letter}
             </div>
-            <p  className={`text-sm  flex-1
-              ${isSelected ? 'text-blue-500' : 'text-gray-800'}
-            `}>
+            <p 
+              className="text-sm flex-1"
+              style={{ color: isSelected ? brandColor : '#1f2937' }}
+            >
               {optionText}
             </p>
             <CustomRadio
@@ -170,7 +168,7 @@ const MultipleChoice = ({ field, value, onChange }) => (
   </div>
 );
 
-const MultiSelectChoice = ({ field, value, onChange }) => (
+const MultiSelectChoice = ({ field, value, onChange, brandColor }) => (
   <div className="w-full space-y-3">
     {field.options?.map((option, index) => {
       const letter = String.fromCharCode(65 + index); // A, B, C, D...
@@ -181,9 +179,7 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
       return (
         <div 
           key={index} 
-          className={`
-            border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300
-          `}
+          className="border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300"
           onClick={() => {
             const newValue = value || [];
             if (isSelected) {
@@ -192,20 +188,19 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
               onChange([...newValue, optionText]);
             }
           }}
+          style={isSelected ? { borderColor: brandColor } : {}}
         >
           <div className="flex items-center p-4">
-            <div className={`
-              w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0
-              ${isSelected 
-                ? 'bg-blue-500 text-white' 
-                : ' border-2 border-gray-200'
-              }
-            `}>
+            <div 
+              className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0 ${!isSelected ? 'border-2 border-gray-200' : ''}`}
+              style={isSelected ? { backgroundColor: brandColor, color: 'white' } : {}}
+            >
               {letter}
             </div>
-            <p  className={`text-sm  flex-1
-              ${isSelected ? 'text-blue-500' : 'text-gray-800'}
-              `}>
+            <p 
+              className="text-sm flex-1"
+              style={{ color: isSelected ? brandColor : '#1f2937' }}
+            >
               {optionText}
             </p>
             <CustomCheckBox
@@ -1644,6 +1639,7 @@ const saveContactSnapshot = async () => {
             field={field}
             value={value}
             onChange={(e) => { handleInputChange(field.id, e.target.value); maybeAutoJump(e.target.value); }}
+            brandColor={primaryColor}
           />
         );
 
@@ -1662,6 +1658,7 @@ const saveContactSnapshot = async () => {
             field={field}
             value={Array.isArray(value) ? value : []}
             onChange={(selectedValues) => { handleInputChange(field.id, selectedValues); maybeAutoJump(selectedValues); }}
+            brandColor={primaryColor}
           />
         );
 

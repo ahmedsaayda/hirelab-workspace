@@ -34,6 +34,7 @@ import {
   LogOut as LogoutIcon,
   Blocks,
   PaletteIcon,
+  Puzzle,
 } from "lucide-react";
 import {
   DEVELOPMENT,
@@ -537,7 +538,7 @@ const Layout = ({ children }) => {
     {
       name: "Integrations",
       href: "/dashboard/integrations",
-      logo: Blocks,
+      logo: Puzzle,
       // hide: user?.role !== "recruiter",
     },
     {

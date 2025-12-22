@@ -479,7 +479,11 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   // if (!landingPageData?.published) return <></>;
 
   // Render multi-job landing page if this is a multi-job campaign
-  if (landingPageData?.campaignType === "multi") {
+  // Check both campaignType AND linkedCampaigns for backwards compatibility with published versions
+  const isMultiJobCampaign = landingPageData?.campaignType === "multi" ||
+    (Array.isArray(landingPageData?.linkedCampaigns) && landingPageData.linkedCampaigns.length > 0);
+
+  if (isMultiJobCampaign) {
     return (
       <MultiJobLandingPage
         landingPageData={landingPageData}
@@ -694,7 +698,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
           lpId={lpId}
           isEdit={false}
           setLandingPageData={setLandingPageData}
-          isMultiJob={landingPageData?.campaignType === "multi"}
+          isMultiJob={isMultiJobCampaign}
         />
 
         <HeroSection landingPageData={landingPageData} fetchData={fetchData} />
@@ -712,7 +716,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
           onClickApply={() => setShowFormEditor(true)}
           lpId={lpId}
           isEdit={false}
-          isMultiJob={landingPageData?.campaignType === "multi"}
+          isMultiJob={isMultiJobCampaign}
         />
 
         <Form

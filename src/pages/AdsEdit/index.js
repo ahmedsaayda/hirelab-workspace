@@ -1901,7 +1901,10 @@ export default function AdsEdit({ paramsId }) {
             isAdsEditor={true}
             hideSettings
             hideLaunchNav
-            onNavigateAttempt={() => setActiveAdSetId(null)}
+            onNavigateAttempt={(targetUrl) => {
+              setActiveAdSetId(null);
+              router.push(targetUrl || "/dashboard/vacancies");
+            }}
             customActions={<>
             </>}
 

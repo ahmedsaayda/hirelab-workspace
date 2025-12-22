@@ -62,7 +62,18 @@ const coreTranslations = {
     addJobs: "Add Jobs",
     heroSection: "Hero Section",
     jobsSection: "Jobs Section",
-    campaignSettings: "Campaign Settings"
+    campaignSettings: "Campaign Settings",
+    // Multi-job page specific
+    exploreOpportunities: "Explore Opportunities",
+    showingXofY: "Showing {count} of {total}",
+    position: "position",
+    positions: "positions",
+    readyToTakeNextStep: "Ready to take the next step in your career?",
+    exploreJobOpportunities: "Explore our exciting job opportunities and apply today!",
+    // Save/Bookmark
+    save: "Save",
+    bookmarkAdded: "Page bookmarked! Press Ctrl+D (Cmd+D on Mac) to save.",
+    bookmarkInstructions: "Press Ctrl+D (Cmd+D on Mac) to bookmark this page"
   },
   Dutch: {
     weAreHiring: " WE ZOEKEN PERSONEEL",
@@ -114,7 +125,18 @@ const coreTranslations = {
     addJobs: "Vacatures Toevoegen",
     heroSection: "Hero Sectie",
     jobsSection: "Vacatures Sectie",
-    campaignSettings: "Campagne Instellingen"
+    campaignSettings: "Campagne Instellingen",
+    // Multi-job page specific
+    exploreOpportunities: "Vacatures Ontdekken",
+    showingXofY: "Toont {count} van {total}",
+    position: "functie",
+    positions: "functies",
+    readyToTakeNextStep: "Klaar voor de volgende stap in je carrière?",
+    exploreJobOpportunities: "Ontdek onze spannende vacatures en solliciteer vandaag nog!",
+    // Save/Bookmark
+    save: "Opslaan",
+    bookmarkAdded: "Pagina opgeslagen! Druk op Ctrl+D (Cmd+D op Mac) om op te slaan.",
+    bookmarkInstructions: "Druk op Ctrl+D (Cmd+D op Mac) om deze pagina op te slaan"
   },
   German: {
     weAreHiring: " WIR STELLEN EIN",
@@ -166,7 +188,18 @@ const coreTranslations = {
     addJobs: "Stellen Hinzufügen",
     heroSection: "Hero-Bereich",
     jobsSection: "Stellen-Bereich",
-    campaignSettings: "Kampagnen-Einstellungen"
+    campaignSettings: "Kampagnen-Einstellungen",
+    // Multi-job page specific
+    exploreOpportunities: "Stellen Entdecken",
+    showingXofY: "Zeige {count} von {total}",
+    position: "Stelle",
+    positions: "Stellen",
+    readyToTakeNextStep: "Bereit für den nächsten Karriereschritt?",
+    exploreJobOpportunities: "Entdecken Sie unsere spannenden Jobangebote und bewerben Sie sich noch heute!",
+    // Save/Bookmark
+    save: "Speichern",
+    bookmarkAdded: "Seite gemerkt! Drücken Sie Strg+D (Cmd+D auf Mac) zum Speichern.",
+    bookmarkInstructions: "Drücken Sie Strg+D (Cmd+D auf Mac) um diese Seite zu speichern"
   },
   French: {
     weAreHiring: " NOUS RECRUTONS",
@@ -195,7 +228,11 @@ const coreTranslations = {
     selectDepartment: "Sélectionnez un département", language: "Langue", selectLanguage: "Sélectionnez une langue",
     pasteJobDescription: "Coller la Description de l'Emploi (Ctrl+V)",
     pasteJobTip: "Astuce : Copiez (Ctrl+C) l'offre d'emploi complète d'un site web et collez-la (Ctrl+V) ici. Notre IA extraira toutes les informations pertinentes.",
-    readMore: "Lire Plus", readLess: "Lire Moins"
+    readMore: "Lire Plus", readLess: "Lire Moins",
+    // Save/Bookmark
+    save: "Enregistrer",
+    bookmarkAdded: "Page enregistrée ! Appuyez sur Ctrl+D (Cmd+D sur Mac) pour sauvegarder.",
+    bookmarkInstructions: "Appuyez sur Ctrl+D (Cmd+D sur Mac) pour enregistrer cette page"
   },
   Spanish: {
     weAreHiring: " ESTAMOS CONTRATANDO",
@@ -224,7 +261,11 @@ const coreTranslations = {
     selectDepartment: "Seleccione un departamento", language: "Idioma", selectLanguage: "Seleccione un idioma",
     pasteJobDescription: "Pegar Descripción del Trabajo (Ctrl+V)",
     pasteJobTip: "Consejo: Copie (Ctrl+C) toda la oferta de trabajo de un sitio web y péguela (Ctrl+V) aquí. Nuestra IA extraerá toda la información relevante.",
-    readMore: "Leer Más", readLess: "Leer Menos"
+    readMore: "Leer Más", readLess: "Leer Menos",
+    // Save/Bookmark
+    save: "Guardar",
+    bookmarkAdded: "¡Página guardada! Presiona Ctrl+D (Cmd+D en Mac) para guardar.",
+    bookmarkInstructions: "Presiona Ctrl+D (Cmd+D en Mac) para guardar esta página"
   },
   Italian: {
     weAreHiring: " STIAMO ASSUMENDO",

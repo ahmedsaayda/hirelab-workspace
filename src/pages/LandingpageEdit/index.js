@@ -115,7 +115,7 @@ export const renderSection = ({
         onClickApply={() => { }}
         lpId={landingPageData?._id}
         isEdit={true}
-        isMultiJob={landingPageData?.campaignType === "multi"}
+        isMultiJob={landingPageData?.campaignType === "multi" || (Array.isArray(landingPageData?.linkedCampaigns) && landingPageData.linkedCampaigns.length > 0)}
       />;
     case "Employee Testimonials":
       return (
@@ -394,7 +394,7 @@ const multiJobCategories = [
       {
         key: "Linked Jobs",
         name: "Linked Jobs",
-        icon: <img src="/icons2/briefcase-02.svg" alt=" "></img>,
+        icon: <img src="/icons2/briefcase-01.svg" alt=" "></img>,
       },
     ],
   },
@@ -404,12 +404,12 @@ const multiJobCategories = [
       {
         key: "Recruiter Contact",
         name: "Recruiter Contact",
-        icon: <img src="/icons2/users-01.svg" alt=" "></img>,
+        icon: <img src="/icons2/message-chat-circle.svg" alt=" "></img>,
       },
       {
         key: "Employee Testimonials",
         name: "Employee Testimonials",
-        icon: <img src="/icons2/message-smile-square.svg" alt=" "></img>,
+        icon: <img src="/icons2/users-01.svg" alt=" "></img>,
       },
     ],
   },
@@ -586,6 +586,21 @@ export default function LandingpageEdit({ paramsId }) {
     // Guard on unpublished changes (post-autosave)
     hasUnpublishedChangesRef.current = hasUnpublishedChanges;
   }, [hasUnpublishedChanges]);
+
+  // Listen for switchSection events from preview clicks (multi-job landing page)
+  useEffect(() => {
+    const handleSwitchSection = ({ sectionKey }) => {
+      console.log("switchSection event received:", sectionKey);
+      if (sectionKey) {
+        setActiveKey(sectionKey);
+      }
+    };
+
+    eventEmitter.on("switchSection", handleSwitchSection);
+    return () => {
+      eventEmitter.off("switchSection", handleSwitchSection);
+    };
+  }, []);
 
   const handleExitCancel = useCallback(() => {
     pendingNavigationRef.current = null;
@@ -1938,76 +1953,90 @@ export default function LandingpageEdit({ paramsId }) {
   if (!landingPageData) return <Skeleton active />;
 
   //if full screen like the editor , render it in a full page
+  // Check if this is a multi-job campaign
+  const isMultiJobCampaign = landingPageData?.campaignType === "multi" || (Array.isArray(landingPageData?.linkedCampaigns) && landingPageData.linkedCampaigns.length > 0);
+
   if (fullscreen) {
 
     return (
       <div className="relative flex items-center justify-center min-h-[calc(100vh-50px)] ">
         <PreviewContainer
           pageComponent={
-            <>
-              <NavBar
+            // Use MultiJobLandingPage for multi-job campaigns
+            isMultiJobCampaign ? (
+              <MultiJobLandingPage
                 landingPageData={landingPageData}
-                onClickApply={() => { }}
-                fullscreen={fullscreen}
-                setFullscreen={setFullscreen}
-                showBackToEditButton={true}
-                lpId={lpId}
                 isEdit={true}
-                isMovilePreview={true}
-                isMultiJob={landingPageData?.campaignType === "multi"}
+                fullscreen={fullscreen}
+                showBackToEditButton={true}
+                setFullscreen={setFullscreen}
               />
-              <div
-                key="hero-section"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setActiveKey("flexaligntop");
-                }}
-                style={{
-                  paddingTop: 40,
-                }}
-              >
-                <HeroSection
+            ) : (
+              <>
+                <NavBar
                   landingPageData={landingPageData}
-                  fetchData={() => { }}
+                  onClickApply={() => { }}
+                  fullscreen={fullscreen}
+                  setFullscreen={setFullscreen}
+                  showBackToEditButton={true}
+                  lpId={lpId}
+                  isEdit={true}
+                  isMovilePreview={true}
+                  isMultiJob={false}
                 />
-              </div>
-              {[
-                // { key: "flexaligntop" },
-                ...(landingPageData?.menuItems ?? [])?.sort((a, b) => a?.sort - b?.sort),
-                { key: "flexalign" },
-                { key: "search" },
-              ]
-                .filter(section => {
-                  // Always show special keys like flexalign and search
-                  if (section.key === "flexalign" || section.key === "search") return true;
-                  // For menuItems, only show if active and visible
-                  return section.active && section.visible !== false;
-                })
+                <div
+                  key="hero-section"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setActiveKey("flexaligntop");
+                  }}
+                  style={{
+                    paddingTop: 40,
+                  }}
+                >
+                  <HeroSection
+                    landingPageData={landingPageData}
+                    fetchData={() => { }}
+                  />
+                </div>
+                {[
+                  // { key: "flexaligntop" },
+                  ...(landingPageData?.menuItems ?? [])?.sort((a, b) => a?.sort - b?.sort),
+                  { key: "flexalign" },
+                  { key: "search" },
+                ]
+                  .filter(section => {
+                    // Always show special keys like flexalign and search
+                    if (section.key === "flexalign" || section.key === "search") return true;
+                    // For menuItems, only show if active and visible
+                    return section.active && section.visible !== false;
+                  })
 
-                .map((section, idx) => {
-                  return (
-                    <div
-                      key={`section-${idx}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setActiveKey(section.key);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      {renderSection({
-                        section,
-                        fetchData,
-                        landingPageData,
-                        setLandingPageData: updateLandingPageData,
-                        similarJobs,
-                        similarJobsLoading,
-                      })}
-                    </div>
-                  );
-                })}
-            </>
+                  .map((section, idx) => {
+                    return (
+                      <div
+                        key={`section-${idx}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setActiveKey(section.key);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        {renderSection({
+                          section,
+                          fetchData,
+                          landingPageData,
+                          setLandingPageData: updateLandingPageData,
+                          similarJobs,
+                          similarJobsLoading,
+                        })}
+                      </div>
+                    );
+                  })}
+              </>
+            )
           }
           landingPageData={landingPageData}
           fullscreen={fullscreen}
@@ -2067,7 +2096,7 @@ export default function LandingpageEdit({ paramsId }) {
           <div className="lg:min-w-[450px] flex flex-grow flex-col border-r border-solid border-blue_gray-50  p-0 smx:self-stretch max-h-full">
             <div className="flex flex-col gap-[15px]  flex-grow lg:overflow-auto relative ">
               <div className="h-px bg-blue_gray-50" />
-              <div className="flex gap-5 justify-between items-center mx-3">
+              <div className="flex gap-5 justify-between items-center pl-3">
                 <Heading size="3xl" as="h1" className="!text-black-900_01">
                   {activeSection?.key
                     ?.replace?.("flexaligntop", "Hero")
@@ -2076,124 +2105,116 @@ export default function LandingpageEdit({ paramsId }) {
                     ?.replace?.("About Company", "About The Company")}
                 </Heading>
 
+                <AIEditModal
+                  visible={isAIModalVisible}
+                  onClose={() => setIsAIModalVisible(false)}
+                  sectionName={[
+                    { key: "flexaligntop" },
+                    ...(landingPageData?.menuItems ?? []),
+                    { key: "flexalign" },
+                    { key: "search" },
+                  ].find(s => s.key === activeKey)?.key
+                    ?.replace?.("flexaligntop", "Hero")
+                    ?.replace?.("form-editor", "Form Editor")
+                    ?.replace?.("flexalign", "Footer")
+                    ?.replace?.("About Company", "About The Company")}
+                  vacancyId={lpId}
+                  vacancyData={landingPageData}
+                  onSuccess={() => {
+                    // Refresh the data after successful save
+                    fetchData();
+                    setIsAIModalVisible(false);
+                  }}
+                />
+
                 {activeSection && (
-                  <div className="flex flex-row items-center gap-2">
+                  <div className="flex flex-row items-center justify-end gap-3">
                     {/* Auto-save indicator */}
                     {isAutoSaving && (
-                      <div className="hidden gap-2 items-center mr-2 text-sm text-blue-600">
+                      <div className="hidden gap-2 items-center text-sm text-blue-600">
                         <div className="w-4 h-4 rounded-full border-2 border-blue-600 animate-spin border-t-transparent"></div>
                         <span>Saving...</span>
                       </div>
                     )}
                     <button
                       onClick={() => setIsAIModalVisible(true)}
-                      className="flex justify-center items-center mr-2"
+                      className="flex justify-center items-center p-1.5 rounded-md border border-gray-200 hover:bg-gray-50"
+                      title="AI Edit"
                     >
                       <Img
                         src="/images2/img_magic_wand_01.svg"
                         alt="magicwandone"
-                        className="h-[20px] w-[20px] cursor-pointer"
+                        className="h-[18px] w-[18px] cursor-pointer"
                       />
                     </button>
 
                     {/* Copy section from another campaign */}
                     <button
                       onClick={() => setIsCopySectionModalVisible(true)}
-                      className="flex justify-center items-center mr-2 rounded-md border border-gray-200 px-2 py-1 hover:bg-gray-50"
+                      className="flex justify-center items-center rounded-md border border-gray-200 p-1.5 hover:bg-gray-50"
                       title="Copy this section from another campaign"
                     >
-                      <CopyIcon className="w-4 h-4 text-[#344054]" />
-                    </button>
-
-                    <AIEditModal
-                      visible={isAIModalVisible}
-                      onClose={() => setIsAIModalVisible(false)}
-                      sectionName={[
-                        { key: "flexaligntop" },
-                        ...(landingPageData?.menuItems ?? []),
-                        { key: "flexalign" },
-                        { key: "search" },
-                      ].find(s => s.key === activeKey)?.key
-                        ?.replace?.("flexaligntop", "Hero")
-                        ?.replace?.("form-editor", "Form Editor")
-                        ?.replace?.("flexalign", "Footer")
-                        ?.replace?.("About Company", "About The Company")}
-                      vacancyId={lpId}
-                      vacancyData={landingPageData}
-                      onSuccess={() => {
-                        // Refresh the data after successful save
-                        fetchData();
-                        setIsAIModalVisible(false);
-                      }}
-                    />
-                    <button
-                      onClick={() => {
-                        setIsOpen(true);
-                      }}
-                      title="Media Library"
-                    >
-
+                      <CopyIcon className="w-[18px] h-[18px] text-[#344054]" />
                     </button>
 
 
 
 
-                    <div>
-                      {isOpen && (
-                        <div className="flex fixed inset-0 z-50 justify-center items-center bg-opacity-80 bg-black-900">
-                          <div className="flex overflow-hidden flex-col w-full h-full bg-white rounded-lg shadow-lg md:w-4/5 md:h-4/5">
-                            {/* Modal Header */}
-                            <div className="flex justify-between items-center p-4 py-2 bg-gray-100 border-b border-gray-300">
-                              <div className="flex gap-4 items-center">
-                                <h2 className="text-xl font-semibold">
-                                  {`  
+
+
+
+                    {isOpen && (
+                      <div className="flex fixed inset-0 z-50 justify-center items-center bg-opacity-80 bg-black-900">
+                        <div className="flex overflow-hidden flex-col w-full h-full bg-white rounded-lg shadow-lg md:w-4/5 md:h-4/5">
+                          {/* Modal Header */}
+                          <div className="flex justify-between items-center p-4 py-2 bg-gray-100 border-b border-gray-300">
+                            <div className="flex gap-4 items-center">
+                              <h2 className="text-xl font-semibold">
+                                {`  
                                   ${activeSection?.key
-                                      ? `
+                                    ? `
                                   ${activeSection?.key
-                                        ?.replace?.("flexaligntop", "Hero")
-                                        ?.replace?.("form-editor", "Form Editor")
-                                        ?.replace?.("flexalign", "Footer")
-                                        ?.replace?.(
-                                          "About Company",
-                                          "About The Company"
-                                        )} Section`
-                                      : ""
-                                    }`}
-                                </h2>
-                              </div>
-                              <button
-                                onClick={() => setIsOpen(false)}
-                                className="text-gray-500 hover:text-gray-700"
-                              >
-                                ✖
-                              </button>
+                                      ?.replace?.("flexaligntop", "Hero")
+                                      ?.replace?.("form-editor", "Form Editor")
+                                      ?.replace?.("flexalign", "Footer")
+                                      ?.replace?.(
+                                        "About Company",
+                                        "About The Company"
+                                      )} Section`
+                                    : ""
+                                  }`}
+                              </h2>
                             </div>
+                            <button
+                              onClick={() => setIsOpen(false)}
+                              className="text-gray-500 hover:text-gray-700"
+                            >
+                              ✖
+                            </button>
+                          </div>
 
-                            {/* Modal Content */}
-                            <div className="overflow-auto flex-1 p-4">
-                              <MediaLibrary
-                                isAddSectionButtonVisible={false}
-                                getSelectedMedia={getSelectedMedia}
-                                //  setGetMediaDataFromChild={setGetMediaDataFromChild}
-                                activeSection={activeSection?.key}
-                                mediaLimits={mediaLimits}
-                                setIsMediaLiOpen={setIsOpen}
-                                landingPageData={landingPageData}
-                              />
+                          {/* Modal Content */}
+                          <div className="overflow-auto flex-1 p-4">
+                            <MediaLibrary
+                              isAddSectionButtonVisible={false}
+                              getSelectedMedia={getSelectedMedia}
+                              //  setGetMediaDataFromChild={setGetMediaDataFromChild}
+                              activeSection={activeSection?.key}
+                              mediaLimits={mediaLimits}
+                              setIsMediaLiOpen={setIsOpen}
+                              landingPageData={landingPageData}
+                            />
 
 
-                            </div>
                           </div>
                         </div>
-                      )}
-                    </div>
-                    <div>
-                      <ImageSelectionModal
-                        isOpen={isImageOpen}
-                        onClose={closeModal}
-                        onImageSelected={handleImageSelected}
-                      />
-                    </div>
+                      </div>
+                    )}
+                    <ImageSelectionModal
+                      isOpen={isImageOpen}
+                      onClose={closeModal}
+                      onImageSelected={handleImageSelected}
+                    />
                   </div>
                 )}
               </div>
@@ -2227,73 +2248,84 @@ export default function LandingpageEdit({ paramsId }) {
 
             <PreviewContainer
               pageComponent={
-                <div style={{
-                  width: "100%",
-                }}>
-                  <NavBar
+                // Use MultiJobLandingPage for multi-job campaigns to match public page
+                (landingPageData?.campaignType === "multi" || (Array.isArray(landingPageData?.linkedCampaigns) && landingPageData.linkedCampaigns.length > 0)) ? (
+                  <MultiJobLandingPage
                     landingPageData={landingPageData}
-                    onClickApply={() => { }}
+                    isEdit={true}
                     fullscreen={fullscreen}
                     showBackToEditButton={false}
-                    lpId={lpId}
-                    isEdit={true}
-                    setLandingPageData={updateLandingPageData}
-                    isMultiJob={landingPageData?.campaignType === "multi"}
+                    setFullscreen={setFullscreen}
                   />
-                  <div
-                    key="hero-section"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setActiveKey("flexaligntop");
-                    }}
-                  >
-                    <HeroSection
+                ) : (
+                  <div style={{
+                    width: "100%",
+                  }}>
+                    <NavBar
                       landingPageData={landingPageData}
-                      fetchData={() => { }}
+                      onClickApply={() => { }}
+                      fullscreen={fullscreen}
+                      showBackToEditButton={false}
+                      lpId={lpId}
+                      isEdit={true}
+                      setLandingPageData={updateLandingPageData}
+                      isMultiJob={false}
                     />
-                  </div>
-                  {[
-                    // { key: "flexaligntop" },
-                    ...(landingPageData?.menuItems ?? [])?.sort((a, b) => a.sort - b.sort),
-                    { key: "flexalign", id: "footer", visible: true, active: true, sort: 1000, },
-                    { key: "search", id: "search", visible: true, active: true, sort: 1001, },
-                  ].map((section, idx) => {
-                    const isHidden = section.visible === false;
-                    console.log("section===>", section);
-                    const isActive = section.active;
-                    if (!isActive) {
-                      console.log("section", section);
-                      return null;
-                    }
-                    return (
-                      <div
-                        key={`section-${idx}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setActiveKey(section.key);
-                        }}
-                        className={`cursor-pointer ${isHidden ? 'relative opacity-20 blur-xl pointer-events-none' : ''}`}
-                        style={isHidden ? {
-                          filter: 'grayscale(50%) blur(5px)',
-                          opacity: 0.5,
-                          transition: 'all 0.3s ease'
-                        } : {}}
-                      >
+                    <div
+                      key="hero-section"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setActiveKey("flexaligntop");
+                      }}
+                    >
+                      <HeroSection
+                        landingPageData={landingPageData}
+                        fetchData={() => { }}
+                      />
+                    </div>
+                    {[
+                      // { key: "flexaligntop" },
+                      ...(landingPageData?.menuItems ?? [])?.sort((a, b) => a.sort - b.sort),
+                      { key: "flexalign", id: "footer", visible: true, active: true, sort: 1000, },
+                      { key: "search", id: "search", visible: true, active: true, sort: 1001, },
+                    ].map((section, idx) => {
+                      const isHidden = section.visible === false;
+                      console.log("section===>", section);
+                      const isActive = section.active;
+                      if (!isActive) {
+                        console.log("section", section);
+                        return null;
+                      }
+                      return (
+                        <div
+                          key={`section-${idx}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setActiveKey(section.key);
+                          }}
+                          className={`cursor-pointer ${isHidden ? 'relative opacity-20 blur-xl pointer-events-none' : ''}`}
+                          style={isHidden ? {
+                            filter: 'grayscale(50%) blur(5px)',
+                            opacity: 0.5,
+                            transition: 'all 0.3s ease'
+                          } : {}}
+                        >
 
-                        {renderSection({
-                          section,
-                          fetchData,
-                          landingPageData,
-                          setLandingPageData: updateLandingPageData,
-                          similarJobs,
-                          similarJobsLoading,
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
+                          {renderSection({
+                            section,
+                            fetchData,
+                            landingPageData,
+                            setLandingPageData: updateLandingPageData,
+                            similarJobs,
+                            similarJobsLoading,
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
               }
               landingPageData={landingPageData}
               fullscreen={fullscreen}

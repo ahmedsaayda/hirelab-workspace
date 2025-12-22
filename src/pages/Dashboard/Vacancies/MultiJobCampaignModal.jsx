@@ -11,6 +11,150 @@ import { refreshUserData } from "../../../utils/userRefresh.js";
 const { TextArea } = Input;
 const { Option } = Select;
 
+// Language-specific default content for multi-job campaigns
+const getMultiJobTranslations = (language, companyName) => {
+    const translations = {
+        English: {
+            ourOpenPositions: "Our Open Positions",
+            meetTheTeam: "Meet the Team",
+            aboutUs: "About Us",
+            whyJoinUs: "Why Join Us",
+            whatOurTeamSays: "What Our Team Says",
+            exploreOpenPositions: "Explore Open Positions",
+            findTheRole: "Find the role that matches your skills and ambitions.",
+            reachOutToUs: "Reach out to us!",
+            haveQuestions: `Have questions about opportunities at ${companyName}? Our talent team is ready to help you find your perfect role.`,
+            discover: `Discover ${companyName}`,
+            buildingSomethingSpecial: `At ${companyName}, we're building something special. Our team is driven by a shared passion for excellence and a commitment to creating value for our customers and communities.`,
+            greatWorkHappens: `We believe that great work happens when talented people are given the freedom to innovate, collaborate, and grow. At ${companyName}, you'll find a supportive environment where your ideas matter and your contributions make a real difference.`,
+            joinTeamDescription: `Join ${companyName} and be part of a team that values innovation, collaboration, and personal growth. We offer competitive benefits, flexible work arrangements, and the opportunity to make a real impact.`,
+            footerTitle: "Ready to take the next step in your career?",
+            footerDescription: "Explore our exciting job opportunities and apply today!",
+        },
+        German: {
+            ourOpenPositions: "Unsere Offenen Stellen",
+            meetTheTeam: "Lernen Sie das Team kennen",
+            aboutUs: "Über Uns",
+            whyJoinUs: "Warum zu uns",
+            whatOurTeamSays: "Was unser Team sagt",
+            exploreOpenPositions: "Entdecken Sie offene Stellen",
+            findTheRole: "Finden Sie die Rolle, die zu Ihren Fähigkeiten und Ambitionen passt.",
+            reachOutToUs: "Kontaktieren Sie uns!",
+            haveQuestions: `Haben Sie Fragen zu Karrieremöglichkeiten bei ${companyName}? Unser Recruiting-Team hilft Ihnen gerne, die perfekte Position zu finden.`,
+            discover: `Entdecken Sie ${companyName}`,
+            buildingSomethingSpecial: `Bei ${companyName} bauen wir etwas Besonderes auf. Unser Team wird von einer gemeinsamen Leidenschaft für Exzellenz und dem Engagement angetrieben, Mehrwert für unsere Kunden und Gemeinschaften zu schaffen.`,
+            greatWorkHappens: `Wir glauben, dass großartige Arbeit entsteht, wenn talentierte Menschen die Freiheit haben, zu innovieren, zusammenzuarbeiten und zu wachsen. Bei ${companyName} finden Sie ein unterstützendes Umfeld, in dem Ihre Ideen zählen und Ihre Beiträge einen echten Unterschied machen.`,
+            joinTeamDescription: `Werden Sie Teil von ${companyName} und einem Team, das Innovation, Zusammenarbeit und persönliches Wachstum schätzt. Wir bieten wettbewerbsfähige Vorteile, flexible Arbeitsregelungen und die Möglichkeit, echte Wirkung zu erzielen.`,
+            footerTitle: "Bereit für den nächsten Karriereschritt?",
+            footerDescription: "Entdecken Sie unsere spannenden Jobangebote und bewerben Sie sich noch heute!",
+        },
+        Dutch: {
+            ourOpenPositions: "Onze Openstaande Vacatures",
+            meetTheTeam: "Ontmoet het Team",
+            aboutUs: "Over Ons",
+            whyJoinUs: "Waarom bij ons werken",
+            whatOurTeamSays: "Wat ons team zegt",
+            exploreOpenPositions: "Ontdek openstaande posities",
+            findTheRole: "Vind de rol die past bij jouw vaardigheden en ambities.",
+            reachOutToUs: "Neem contact met ons op!",
+            haveQuestions: `Heb je vragen over mogelijkheden bij ${companyName}? Ons talent team staat klaar om je te helpen de perfecte functie te vinden.`,
+            discover: `Ontdek ${companyName}`,
+            buildingSomethingSpecial: `Bij ${companyName} bouwen we iets bijzonders. Ons team wordt gedreven door een gedeelde passie voor excellentie en een toewijding om waarde te creëren voor onze klanten en gemeenschappen.`,
+            greatWorkHappens: `Wij geloven dat geweldig werk ontstaat wanneer getalenteerde mensen de vrijheid krijgen om te innoveren, samen te werken en te groeien. Bij ${companyName} vind je een ondersteunende omgeving waar jouw ideeën ertoe doen en jouw bijdragen echt verschil maken.`,
+            joinTeamDescription: `Word onderdeel van ${companyName} en een team dat innovatie, samenwerking en persoonlijke groei waardeert. Wij bieden competitieve voordelen, flexibele werkregelingen en de kans om echt impact te maken.`,
+            footerTitle: "Klaar voor de volgende stap in je carrière?",
+            footerDescription: "Ontdek onze spannende vacatures en solliciteer vandaag nog!",
+        },
+        French: {
+            ourOpenPositions: "Nos Postes Ouverts",
+            meetTheTeam: "Rencontrez l'Équipe",
+            aboutUs: "À Propos de Nous",
+            whyJoinUs: "Pourquoi nous rejoindre",
+            whatOurTeamSays: "Ce que notre équipe dit",
+            exploreOpenPositions: "Découvrez nos postes ouverts",
+            findTheRole: "Trouvez le poste qui correspond à vos compétences et ambitions.",
+            reachOutToUs: "Contactez-nous !",
+            haveQuestions: `Des questions sur les opportunités chez ${companyName} ? Notre équipe de recrutement est prête à vous aider à trouver le poste idéal.`,
+            discover: `Découvrez ${companyName}`,
+            buildingSomethingSpecial: `Chez ${companyName}, nous construisons quelque chose de spécial. Notre équipe est animée par une passion partagée pour l'excellence et un engagement à créer de la valeur pour nos clients et nos communautés.`,
+            greatWorkHappens: `Nous croyons que le travail exceptionnel se produit lorsque les personnes talentueuses ont la liberté d'innover, de collaborer et de grandir. Chez ${companyName}, vous trouverez un environnement favorable où vos idées comptent et vos contributions font vraiment la différence.`,
+            joinTeamDescription: `Rejoignez ${companyName} et faites partie d'une équipe qui valorise l'innovation, la collaboration et la croissance personnelle. Nous offrons des avantages compétitifs, des arrangements de travail flexibles et l'opportunité de faire un vrai impact.`,
+            footerTitle: "Prêt à franchir la prochaine étape de votre carrière ?",
+            footerDescription: "Découvrez nos offres d'emploi passionnantes et postulez dès aujourd'hui !",
+        },
+        Spanish: {
+            ourOpenPositions: "Nuestras Posiciones Abiertas",
+            meetTheTeam: "Conoce al Equipo",
+            aboutUs: "Sobre Nosotros",
+            whyJoinUs: "Por qué unirse a nosotros",
+            whatOurTeamSays: "Lo que dice nuestro equipo",
+            exploreOpenPositions: "Explora las posiciones abiertas",
+            findTheRole: "Encuentra el puesto que coincide con tus habilidades y ambiciones.",
+            reachOutToUs: "¡Contáctanos!",
+            haveQuestions: `¿Tienes preguntas sobre oportunidades en ${companyName}? Nuestro equipo de talento está listo para ayudarte a encontrar tu puesto perfecto.`,
+            discover: `Descubre ${companyName}`,
+            buildingSomethingSpecial: `En ${companyName}, estamos construyendo algo especial. Nuestro equipo está impulsado por una pasión compartida por la excelencia y un compromiso de crear valor para nuestros clientes y comunidades.`,
+            greatWorkHappens: `Creemos que el gran trabajo sucede cuando las personas talentosas tienen la libertad de innovar, colaborar y crecer. En ${companyName}, encontrarás un ambiente de apoyo donde tus ideas importan y tus contribuciones hacen una diferencia real.`,
+            joinTeamDescription: `Únete a ${companyName} y sé parte de un equipo que valora la innovación, la colaboración y el crecimiento personal. Ofrecemos beneficios competitivos, arreglos de trabajo flexibles y la oportunidad de hacer un impacto real.`,
+            footerTitle: "¿Listo para dar el siguiente paso en tu carrera?",
+            footerDescription: "¡Descubre nuestras emocionantes oportunidades de trabajo y aplica hoy!",
+        },
+        Italian: {
+            ourOpenPositions: "Le Nostre Posizioni Aperte",
+            meetTheTeam: "Conosci il Team",
+            aboutUs: "Chi Siamo",
+            whyJoinUs: "Perché unirsi a noi",
+            whatOurTeamSays: "Cosa dice il nostro team",
+            exploreOpenPositions: "Esplora le posizioni aperte",
+            findTheRole: "Trova il ruolo che corrisponde alle tue competenze e ambizioni.",
+            reachOutToUs: "Contattaci!",
+            haveQuestions: `Hai domande sulle opportunità in ${companyName}? Il nostro team di recruiting è pronto ad aiutarti a trovare la posizione perfetta.`,
+            discover: `Scopri ${companyName}`,
+            buildingSomethingSpecial: `In ${companyName}, stiamo costruendo qualcosa di speciale. Il nostro team è guidato da una passione condivisa per l'eccellenza e un impegno a creare valore per i nostri clienti e le nostre comunità.`,
+            greatWorkHappens: `Crediamo che il grande lavoro avvenga quando le persone di talento hanno la libertà di innovare, collaborare e crescere. In ${companyName}, troverai un ambiente di supporto dove le tue idee contano e i tuoi contributi fanno davvero la differenza.`,
+            joinTeamDescription: `Unisciti a ${companyName} e fai parte di un team che valorizza l'innovazione, la collaborazione e la crescita personale. Offriamo benefit competitivi, flessibilità lavorativa e l'opportunità di fare un impatto reale.`,
+            footerTitle: "Pronto a fare il prossimo passo nella tua carriera?",
+            footerDescription: "Scopri le nostre entusiasmanti opportunità di lavoro e candidati oggi!",
+        },
+        Portuguese: {
+            ourOpenPositions: "Nossas Vagas Abertas",
+            meetTheTeam: "Conheça a Equipe",
+            aboutUs: "Sobre Nós",
+            whyJoinUs: "Por que se juntar a nós",
+            whatOurTeamSays: "O que nossa equipe diz",
+            exploreOpenPositions: "Explore as vagas abertas",
+            findTheRole: "Encontre a função que combina com suas habilidades e ambições.",
+            reachOutToUs: "Entre em contato!",
+            haveQuestions: `Tem dúvidas sobre oportunidades na ${companyName}? Nossa equipe de talentos está pronta para ajudá-lo a encontrar a posição perfeita.`,
+            discover: `Descubra a ${companyName}`,
+            buildingSomethingSpecial: `Na ${companyName}, estamos construindo algo especial. Nossa equipe é movida por uma paixão compartilhada pela excelência e um compromisso em criar valor para nossos clientes e comunidades.`,
+            greatWorkHappens: `Acreditamos que o grande trabalho acontece quando pessoas talentosas têm a liberdade de inovar, colaborar e crescer. Na ${companyName}, você encontrará um ambiente de apoio onde suas ideias importam e suas contribuições fazem uma diferença real.`,
+            joinTeamDescription: `Junte-se à ${companyName} e faça parte de uma equipe que valoriza inovação, colaboração e crescimento pessoal. Oferecemos benefícios competitivos, arranjos de trabalho flexíveis e a oportunidade de causar um impacto real.`,
+            footerTitle: "Pronto para dar o próximo passo na sua carreira?",
+            footerDescription: "Descubra nossas oportunidades de emprego e candidate-se hoje!",
+        },
+        Polish: {
+            ourOpenPositions: "Nasze Otwarte Stanowiska",
+            meetTheTeam: "Poznaj Zespół",
+            aboutUs: "O Nas",
+            whyJoinUs: "Dlaczego warto do nas dołączyć",
+            whatOurTeamSays: "Co mówi nasz zespół",
+            exploreOpenPositions: "Przeglądaj otwarte stanowiska",
+            findTheRole: "Znajdź stanowisko, które pasuje do Twoich umiejętności i ambicji.",
+            reachOutToUs: "Skontaktuj się z nami!",
+            haveQuestions: `Masz pytania dotyczące możliwości w ${companyName}? Nasz zespół rekrutacyjny jest gotowy pomóc Ci znaleźć idealną pozycję.`,
+            discover: `Odkryj ${companyName}`,
+            buildingSomethingSpecial: `W ${companyName} budujemy coś wyjątkowego. Nasz zespół kieruje się wspólną pasją do doskonałości i zaangażowaniem w tworzenie wartości dla naszych klientów i społeczności.`,
+            greatWorkHappens: `Wierzymy, że świetna praca powstaje, gdy utalentowani ludzie mają wolność do innowacji, współpracy i rozwoju. W ${companyName} znajdziesz wspierające środowisko, w którym Twoje pomysły się liczą, a Twój wkład naprawdę robi różnicę.`,
+            joinTeamDescription: `Dołącz do ${companyName} i stań się częścią zespołu, który ceni innowacje, współpracę i rozwój osobisty. Oferujemy konkurencyjne benefity, elastyczne warunki pracy i możliwość realnego wpływu.`,
+            footerTitle: "Gotowy na następny krok w karierze?",
+            footerDescription: "Odkryj nasze ekscytujące oferty pracy i aplikuj już dziś!",
+        },
+    };
+
+    return translations[language] || translations["English"];
+};
+
 /**
  * MultiJobCampaignModal - Modern, minimalistic wizard for creating multi-job campaigns
  */
@@ -31,7 +175,7 @@ const MultiJobCampaignModal = ({
     const [campaignTitle, setCampaignTitle] = useState("");
     const [heroTitle, setHeroTitle] = useState("");
     const [heroDescription, setHeroDescription] = useState("");
-    const [jobsSectionTitle, setJobsSectionTitle] = useState("Our Open Positions");
+    const [jobsSectionTitle, setJobsSectionTitle] = useState("");
     const [jobsSectionDescription, setJobsSectionDescription] = useState("");
     const [selectedLanguage, setSelectedLanguage] = useState("English");
     const [selectedTemplate, setSelectedTemplate] = useState("1");
@@ -120,22 +264,38 @@ const MultiJobCampaignModal = ({
         try {
             const selectedJobTitles = selectedCampaignObjects.map(c => c.vacancyTitle).join(", ");
             const departments = [...new Set(selectedCampaignObjects.map(c => c.department).filter(Boolean))].join(", ");
+            const companyName = brandingDetails?.companyName || user?.companyName || "the company";
+            const jobCategory = departments || "various roles";
 
             const prompt = `Generate employer brand content for a multi-job career page.
 
+CRITICAL LANGUAGE REQUIREMENT:
+- ALL content MUST be written in ${selectedLanguage}
+- Do NOT mix languages - every word must be in ${selectedLanguage}
+- If the language is German, write everything in German
+- If the language is Dutch, write everything in Dutch
+- etc.
+
+CRITICAL RULES:
+- NEVER use placeholder text like "[Insert X here]", "[Company name]", "Example:", etc.
+- NEVER use template language or generic filler text
+- Generate REAL, SPECIFIC, READY-TO-PUBLISH content
+- Write as if you are the company's marketing team
+- Make it compelling and professional
+
 User's description: ${aiPrompt}
-
-Company: ${brandingDetails?.companyName || user?.companyName || "Company"}
+Company Name: ${companyName}
+Job Category/Department Focus: ${jobCategory}
 ${selectedJobTitles ? `Open Positions: ${selectedJobTitles}` : ""}
-${departments ? `Departments: ${departments}` : ""}
+Output Language: ${selectedLanguage} (IMPORTANT: ALL output must be in this language!)
 
-Generate the following in ${selectedLanguage}:
-1. heroTitle: An inspiring headline for the career page (max 60 chars)
-2. heroDescription: A compelling paragraph about why candidates should join (150-200 words)
-3. jobsSectionTitle: A title for the jobs listing section (max 40 chars)
-4. jobsSectionDescription: Brief intro text for the jobs section (1-2 sentences)
+Generate the following content entirely in ${selectedLanguage}:
+1. heroTitle: An inspiring, specific headline for ${jobCategory} careers at ${companyName} (max 60 chars). Written in ${selectedLanguage}.
+2. heroDescription: A compelling paragraph in ${selectedLanguage} about why ${jobCategory} professionals should join ${companyName}. Include specifics about culture, growth, and what makes this company special. Write complete sentences. (150-200 words)
+3. jobsSectionTitle: A title for the jobs listing section in ${selectedLanguage} (max 40 chars).
+4. jobsSectionDescription: Brief intro text in ${selectedLanguage} for the jobs section (1-2 complete sentences)
 
-Respond in JSON format only:
+Respond in JSON format only (but the content values must be in ${selectedLanguage}):
 {
   "heroTitle": "...",
   "heroDescription": "...",
@@ -196,13 +356,18 @@ Respond in JSON format only:
 
         setIsLoading(true);
         try {
-            // Multi-job campaign default sections:
+            const companyName = brandingDetails?.companyName || user?.companyName || "Our Company";
+
+            // Get translations for the selected language
+            const t = getMultiJobTranslations(selectedLanguage, companyName);
+
+            // Multi-job campaign default sections with localized labels:
             // Hero (Flexible) → Jobs Recommendation → Recruiter Contacts → About the Company → Company Facts → Testimonials
             const multiJobMenuItems = [
                 {
                     id: "linked-jobs",
                     key: "Linked Jobs",
-                    label: "Our Open Positions",
+                    label: t.ourOpenPositions,
                     active: true,
                     visible: true,
                     sort: 1
@@ -210,7 +375,7 @@ Respond in JSON format only:
                 {
                     id: "recruiter-contact",
                     key: "Recruiter Contact",
-                    label: "Meet the Team",
+                    label: t.meetTheTeam,
                     active: true,
                     visible: true,
                     sort: 2
@@ -218,7 +383,7 @@ Respond in JSON format only:
                 {
                     id: "about-company",
                     key: "About The Company",
-                    label: "About Us",
+                    label: t.aboutUs,
                     active: true,
                     visible: true,
                     sort: 3
@@ -226,7 +391,7 @@ Respond in JSON format only:
                 {
                     id: "company-facts",
                     key: "Company Facts",
-                    label: "Why Join Us",
+                    label: t.whyJoinUs,
                     active: true,
                     visible: true,
                     sort: 4
@@ -234,7 +399,7 @@ Respond in JSON format only:
                 {
                     id: "testimonials",
                     key: "Employee Testimonials",
-                    label: "What Our Team Says",
+                    label: t.whatOurTeamSays,
                     active: true,
                     visible: true,
                     sort: 5
@@ -243,41 +408,68 @@ Respond in JSON format only:
 
             // Fetch hero image from Unsplash based on campaign/company context
             let heroImage = "";
+            let aboutTheCompanyImages = [];
+
             try {
-                const companyName = brandingDetails?.companyName || user?.companyName || "";
-                const searchQuery = `${campaignTitle} ${companyName} careers team office`.trim();
-                console.log(`MultiJobCampaignModal: Searching Unsplash with query: "${searchQuery}"`);
+                // Search for hero image
+                const heroSearchQuery = `${campaignTitle} ${companyName} careers team office professional`.trim();
+                console.log(`MultiJobCampaignModal: Searching Unsplash for hero with query: "${heroSearchQuery}"`);
 
-                const imageResponse = await AiService.searchUnsplash(searchQuery, 3);
+                const heroImageResponse = await AiService.searchUnsplash(heroSearchQuery, 3);
 
-                if (imageResponse?.data?.success && imageResponse.data.data?.length > 0) {
-                    // Get a random image from the results for variety
-                    const randomIndex = Math.floor(Math.random() * imageResponse.data.data.length);
-                    const selectedImage = imageResponse.data.data[randomIndex];
+                if (heroImageResponse?.data?.success && heroImageResponse.data.data?.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * heroImageResponse.data.data.length);
+                    const selectedImage = heroImageResponse.data.data[randomIndex];
 
-                    // Upload to Cloudinary
-                    console.log("MultiJobCampaignModal: Uploading Unsplash image to Cloudinary...");
+                    console.log("MultiJobCampaignModal: Uploading hero image to Cloudinary...");
                     const uploadRes = await UploadService.upload(selectedImage.url, 10);
                     if (uploadRes?.data?.secure_url) {
                         heroImage = uploadRes.data.secure_url;
-                        console.log("MultiJobCampaignModal: Image uploaded successfully:", heroImage);
+                        console.log("MultiJobCampaignModal: Hero image uploaded:", heroImage);
                     }
                 }
             } catch (imgError) {
                 console.error("MultiJobCampaignModal: Failed to fetch/upload hero image:", imgError);
-                // Continue without hero image - user can add one later
             }
 
-            const companyName = brandingDetails?.companyName || user?.companyName || "Our Company";
+            // Fetch "About Company" section images from Unsplash
+            try {
+                const aboutSearchQuery = `${companyName} modern office workplace team collaboration`.trim();
+                console.log(`MultiJobCampaignModal: Searching Unsplash for About section with query: "${aboutSearchQuery}"`);
+
+                const aboutImageResponse = await AiService.searchUnsplash(aboutSearchQuery, 6);
+
+                if (aboutImageResponse?.data?.success && aboutImageResponse.data.data?.length > 0) {
+                    const images = aboutImageResponse.data.data.slice(0, 4); // Get up to 4 images
+
+                    // Upload each image to Cloudinary
+                    console.log(`MultiJobCampaignModal: Uploading ${images.length} About section images...`);
+                    const uploadPromises = images.map(async (img) => {
+                        try {
+                            const uploadRes = await UploadService.upload(img.url, 10);
+                            return uploadRes?.data?.secure_url || null;
+                        } catch (e) {
+                            console.error("Failed to upload about image:", e);
+                            return null;
+                        }
+                    });
+
+                    const uploadedUrls = await Promise.all(uploadPromises);
+                    aboutTheCompanyImages = uploadedUrls.filter(Boolean);
+                    console.log(`MultiJobCampaignModal: Uploaded ${aboutTheCompanyImages.length} About section images`);
+                }
+            } catch (imgError) {
+                console.error("MultiJobCampaignModal: Failed to fetch/upload About section images:", imgError);
+            }
 
             const campaignData = {
                 campaignType: "multi",
                 vacancyTitle: campaignTitle,
                 multiJobHeroTitle: heroTitle || campaignTitle,
-                heroDescription: heroDescription || `Explore exciting career opportunities at ${companyName}`,
+                heroDescription: heroDescription || t.joinTeamDescription,
                 heroImage, // Dynamic Unsplash image
-                jobsSectionTitle,
-                jobsSectionDescription,
+                jobsSectionTitle: jobsSectionTitle || t.exploreOpenPositions,
+                jobsSectionDescription: jobsSectionDescription || t.findTheRole,
                 linkedCampaigns: selectedCampaigns,
                 lang: selectedLanguage,
                 language: selectedLanguage,
@@ -301,9 +493,9 @@ Respond in JSON format only:
                 // No form needed for multi-job career pages
                 form: { title: "", fields: [] },
 
-                // Default Recruiter Contact section
-                recruiterContactTitle: "Meet the Team",
-                recruiterContactText: "Have questions? Our talent team is here to help you find your perfect role.",
+                // Default Recruiter Contact section (language-aware)
+                recruiterContactTitle: t.reachOutToUs,
+                recruiterContactText: t.haveQuestions,
                 recruiters: user?.fullName || user?.name ? [
                     {
                         recruiterFullname: user?.fullName || user?.name || "",
@@ -314,20 +506,24 @@ Respond in JSON format only:
                     }
                 ] : [],
 
-                // Default About Company section
-                aboutTheCompanyTitle: "About Us",
-                aboutTheCompanyDescription: `At ${companyName}, we believe in empowering our team members to do their best work. We're committed to creating an inclusive environment where everyone can thrive and grow their careers.`,
+                // Default About Company section with Unsplash images (language-aware)
+                aboutTheCompanyTitle: t.discover,
+                aboutTheCompanyText: t.buildingSomethingSpecial,
+                aboutTheCompanyDescription: t.greatWorkHappens,
+                aboutTheCompanyImages: aboutTheCompanyImages, // Dynamic Unsplash images
 
-                // Default Company Facts section
-                facts: [
-                    { emoji: "🌍", title: "Global Team", description: "Work with talented people from around the world" },
-                    { emoji: "📈", title: "Growth", description: "Continuous learning and career development opportunities" },
-                    { emoji: "⚖️", title: "Work-Life Balance", description: "Flexible working arrangements" },
-                    { emoji: "💡", title: "Innovation", description: "Be part of cutting-edge projects" },
-                ],
+                // Company Facts section - empty by default (user fills in manually)
+                // This section is NOT auto-generated by AI
+                facts: [],
+                companyFactsTitle: t.whyJoinUs,
+                companyFactsDescription: "",
 
                 // Default Testimonials section (empty - to be filled)
                 testimonials: [],
+
+                // Footer section (language-aware)
+                footerTitle: t.footerTitle,
+                footerDescription: t.footerDescription,
             };
 
             // Use CrudService.create directly to ensure menuItems is not overwritten

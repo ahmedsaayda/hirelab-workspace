@@ -1622,6 +1622,14 @@ const LinkedJobsEdit = (props) => {
     job.department?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const fontWeightOptions = [
+    { value: "normal", label: "Normal" },
+    { value: "medium", label: "Medium" },
+    { value: "semibold", label: "Semibold" },
+    { value: "bold", label: "Bold" },
+    { value: "extrabold", label: "Extra Bold" },
+  ];
+
   return (
     <>
       <EditorRender
@@ -1634,12 +1642,25 @@ const LinkedJobsEdit = (props) => {
           },
           {
             key: "jobsSectionDescription",
-            label: "Section Description",
+            label: "Section Description (optional)",
             max: 200,
             textarea: true,
           },
         ]}
       />
+      
+      {/* Font Weight Selector */}
+      <div className="px-4 pb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Title Font Weight
+        </label>
+        <Select
+          value={landingPageData?.jobsSectionTitleWeight || "bold"}
+          onChange={(value) => setLandingPageData(prev => ({ ...prev, jobsSectionTitleWeight: value }))}
+          className="w-full"
+          options={fontWeightOptions}
+        />
+      </div>
 
       {/* Linked Jobs Manager */}
       <div className="mt-6 pt-4 border-t border-gray-100">

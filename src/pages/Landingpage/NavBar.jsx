@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../Landing/Button.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import { useHover } from "../../contexts/HoverContext.js";
-import { Share2 } from "lucide-react";
+import { Share2, Bookmark } from "lucide-react";
 import { calculateTextColor } from "./utils.js";
 import { getFonts } from "./getFonts.js";
 import ApplyCustomFont from "./ApplyCustomFont.jsx";
@@ -525,6 +525,28 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
     setModalVisible(true); // Show the modal
   };
 
+  const handleBookmarkClick = () => {
+    // Try to trigger the browser's bookmark dialog
+    const pageTitle = landingPageData?.vacancyTitle || landingPageData?.multiJobHeroTitle || document.title;
+    const pageUrl = window.location.href;
+    
+    // Check if we can use the sidebar API (Firefox)
+    if (window.sidebar && window.sidebar.addPanel) {
+      window.sidebar.addPanel(pageTitle, pageUrl, '');
+    } 
+    // Check for IE
+    else if (window.external && 'AddFavorite' in window.external) {
+      window.external.AddFavorite(pageUrl, pageTitle);
+    } 
+    // For other browsers, show instruction message
+    else {
+      // Detect Mac vs Windows/Linux
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const shortcut = isMac ? 'Cmd+D' : 'Ctrl+D';
+      message.info(getTranslation(landingPageData?.lang, 'bookmarkInstructions') || `Press ${shortcut} to bookmark this page`);
+    }
+  };
+
 
 const handlemediaLink = (platform) => {
   const url = link; 
@@ -668,6 +690,7 @@ const handlemediaLink = (platform) => {
     
     let targetDocument;
     let targetWindow;
+    let scrollableContainer = null;
     
     if (isEdit || isEditPage) {
       // In edit mode, we need to find the iframe and access its document
@@ -684,6 +707,21 @@ const handlemediaLink = (platform) => {
         targetDocument = window.document;
         targetWindow = window;
         console.log('No iframe found, using window document');
+        
+        // In edit mode without iframe, find the scrollable preview container
+        // The preview container has overflow-y-auto and contains the page content
+        scrollableContainer = document.querySelector('[class*="overflow-y-auto"]');
+        if (!scrollableContainer) {
+          // Try to find by looking for the parent with overflow
+          const previewContainers = document.querySelectorAll('.overflow-scroll, .overflow-auto');
+          for (const container of previewContainers) {
+            if (container.scrollHeight > container.clientHeight) {
+              scrollableContainer = container;
+              break;
+            }
+          }
+        }
+        console.log('Found scrollable container:', scrollableContainer);
       }
     } else {
       // In public view, use the current window
@@ -707,29 +745,51 @@ const handlemediaLink = (platform) => {
 
     if (element) {
       const navbarHeight = 128;
-      const elementRect = element.getBoundingClientRect();
-      const currentScrollTop = targetWindow.pageYOffset || targetWindow.scrollY || 0;
-      const offsetPosition = Math.max(0, elementRect.top + currentScrollTop - navbarHeight);
       
-      console.log('Element rect top:', elementRect.top);
-      console.log('Current scroll top:', currentScrollTop);
-      console.log('Calculated offset position:', offsetPosition);
+      if (scrollableContainer) {
+        // Scroll within the container (preview mode)
+        const containerRect = scrollableContainer.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+        const currentScrollTop = scrollableContainer.scrollTop;
+        const offsetPosition = Math.max(0, elementRect.top - containerRect.top + currentScrollTop - navbarHeight);
+        
+        console.log('Container scroll - Element rect top:', elementRect.top);
+        console.log('Container scroll - Container rect top:', containerRect.top);
+        console.log('Container scroll - Current scroll top:', currentScrollTop);
+        console.log('Container scroll - Calculated offset position:', offsetPosition);
+        
+        scrollableContainer.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      } else {
+        // Scroll the window
+        const elementRect = element.getBoundingClientRect();
+        const currentScrollTop = targetWindow.pageYOffset || targetWindow.scrollY || 0;
+        const offsetPosition = Math.max(0, elementRect.top + currentScrollTop - navbarHeight);
+        
+        console.log('Window scroll - Element rect top:', elementRect.top);
+        console.log('Window scroll - Current scroll top:', currentScrollTop);
+        console.log('Window scroll - Calculated offset position:', offsetPosition);
+        
+        targetWindow.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
       
-      targetWindow.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-      
-      // Update URL hash if possible
-      try {
-        if (targetWindow.history && targetWindow.history.pushState) {
-          targetWindow.history.pushState(null, null, `#${id}`);
-        } else {
-          targetWindow.location.hash = `#${id}`;
+      // Update URL hash if possible (only for non-edit mode)
+      if (!isEdit && !isEditPage) {
+        try {
+          if (targetWindow.history && targetWindow.history.pushState) {
+            targetWindow.history.pushState(null, null, `#${id}`);
+          } else {
+            targetWindow.location.hash = `#${id}`;
+          }
+        } catch (e) {
+          // Silently fail if we can't update the URL (cross-origin iframe restrictions)
+          console.log('Could not update URL hash:', e);
         }
-      } catch (e) {
-        // Silently fail if we can't update the URL (cross-origin iframe restrictions)
-        console.log('Could not update URL hash:', e);
       }
     } else {
       console.log(`Element with id "${id}" not found`);
@@ -941,6 +1001,25 @@ const handlemediaLink = (platform) => {
           </div>
           <div className="flex gap-3 justify-end w-full flex-wrap">
            
+            {/* Save/Bookmark Button */}
+            <button
+              style={{
+                color: getColor("primary", 800),
+                borderColor: getColor("primary", 800),
+                border:"1px solid",
+                height: "45px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px"
+              }}
+              className="px-6 text-xs md:text-base whitespace-nowrap rounded-md border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
+              onClick={handleBookmarkClick}
+            >
+              {getTranslation(landingPageData?.lang, 'save')} <Bookmark size={20} />
+            </button>
+
+            {/* Share Button */}
             <button
               style={{
                 color: getColor("primary", 800),
@@ -1196,7 +1275,7 @@ const handlemediaLink = (platform) => {
 
         <div
           ref={scrollRef}
-          className="flex items-center overflow-x-auto scrollbar-hide flex-1"
+          className="flex items-center justify-center overflow-x-auto scrollbar-hide flex-1"
           style={{
             scrollBehavior: "smooth",
             minWidth: 0,  // Allow flex item to shrink below its content size
