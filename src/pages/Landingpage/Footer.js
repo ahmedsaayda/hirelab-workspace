@@ -91,6 +91,7 @@ export const Template2 = React.memo(({
   onClickApply,
   lpId,
   isEdit,
+  isMultiJob = false,
 }) => {
   const {
     sectionRef,
@@ -126,19 +127,21 @@ export const Template2 = React.memo(({
                   {landingPageData?.footerDescription}
                 </p>
               </div>
-              <div className="flex">
-                <Button
-                  color="light_blue_A700"
-                  href={landingPageData?.ctaFooterLink}
-                  size="2xl"
-                  shape="round"
-                  className="min-w-[252px] rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5"
-                  onClick={() => handleItemClick("ctaFooterTitle")}
-                  ref={ctaFooterTitleRef}
-                >
-                  {landingPageData?.ctaFooterTitle}
-                </Button>
-              </div>
+              {!isMultiJob && (
+                <div className="flex">
+                  <Button
+                    color="light_blue_A700"
+                    href={landingPageData?.ctaFooterLink}
+                    size="2xl"
+                    shape="round"
+                    className="min-w-[252px] rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5"
+                    onClick={() => handleItemClick("ctaFooterTitle")}
+                    ref={ctaFooterTitleRef}
+                  >
+                    {landingPageData?.ctaFooterTitle}
+                  </Button>
+                </div>
+              )}
             </div>
             <Img
               onClick={() => handleItemClick("similarJobsTitle")}
@@ -244,7 +247,7 @@ export const Template2 = React.memo(({
 });
 // });
 
-const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings, onClickApply, lpId, isEdit }) => {
+const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings, onClickApply, lpId, isEdit, isMultiJob = false }) => {
   const {
     sectionRef,
     titleRef,
@@ -283,17 +286,19 @@ const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings, o
                   {landingPageData?.footerDescription}
                 </p>
               </div>
-              <div className="flex">
-                <Button
-                  color="light_blue_A700"
-                  href={landingPageData?.ctaFooterLink}
-                  size="2xl"
-                  shape="round"
-                  className="min-w-[252px] rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5"
-                >
-                  {landingPageData?.ctaFooterTitle}
-                </Button>
-              </div>
+              {!isMultiJob && (
+                <div className="flex">
+                  <Button
+                    color="light_blue_A700"
+                    href={landingPageData?.ctaFooterLink}
+                    size="2xl"
+                    shape="round"
+                    className="min-w-[252px] rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5"
+                  >
+                    {landingPageData?.ctaFooterTitle}
+                  </Button>
+                </div>
+              )}
             </div>
             <Img
               src="/images3/img_horizontal_container.svg"
@@ -400,7 +405,7 @@ const Template3 = React.memo(({ landingPageData, jobPostingsList, jobListings, o
   );
 });
 
-const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, similarJobs: propSimilarJobs, similarJobsLoading: propSimilarJobsLoading, onClickApply, lpId, isEdit }) => {
+const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, similarJobs: propSimilarJobs, similarJobsLoading: propSimilarJobsLoading, onClickApply, lpId, isEdit, isMultiJob = false }) => {
 
 
   const {
@@ -876,21 +881,23 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
               {landingPageData?.footerDescription ||
                 "Explore our exciting job opportunities and apply today!"}
             </p>
-            <button
-              onClick={() => {
-                handleItemClick("ctaFooterTitle");
-                handleApplyClick();
-              }}
-              ref={ctaFooterTitleRef}
-              className="inline-block px-8 py-3 font-medium rounded-full transition-colors"
-              style={{
-                backgroundColor: getColor("primary", 600),
-                color: textColor,
-                fontFamily: bodyFont?.family,
-              }}
-            >
-              {landingPageData?.ctaFooterTitle || "Apply Now"}
-            </button>
+            {!isMultiJob && (
+              <button
+                onClick={() => {
+                  handleItemClick("ctaFooterTitle");
+                  handleApplyClick();
+                }}
+                ref={ctaFooterTitleRef}
+                className="inline-block px-8 py-3 font-medium rounded-full transition-colors"
+                style={{
+                  backgroundColor: getColor("primary", 600),
+                  color: textColor,
+                  fontFamily: bodyFont?.family,
+                }}
+              >
+                {landingPageData?.ctaFooterTitle || "Apply Now"}
+              </button>
+            )}
           </div>
         </div>
       </div>

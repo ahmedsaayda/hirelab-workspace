@@ -1,5 +1,6 @@
 import React from "react";
 import HeroSection from "../Landingpage/HeroSection.js";
+import MultiJobHero from "../Landingpage/MultiJobHero.js";
 import FormE from "../Landingpage/Form.js";
 import Footer from "../Landingpage/Footer.js";
 import EmployerTestimonial from "../Landingpage/EmployerTestimonial.js";
@@ -16,6 +17,7 @@ import CandidateProcess from "../Landingpage/CandidateProcess.js";
 import GrowthPath from "../Landingpage/GrowthPath.js";
 import Video from "../Landingpage/Video.js";
 import TextBox from "../Landingpage/TextBox.js";
+import LinkedJobs from "../Landingpage/LinkedJobs.js";
 import { defaultLandingPageData } from "../onboarding/components/brand-style-form.jsx";
 
 export const renderSection = ({
@@ -46,6 +48,7 @@ export const renderSection = ({
     "Image Carousel": "image-carousel",
     "Video": "video",
     "Text Box": "text-box",
+    "Linked Jobs": "linked-jobs",
   };
   
   const sectionId = sectionKeyToIdMap[section?.key];
@@ -54,13 +57,25 @@ export const renderSection = ({
   let sectionContent;
   switch (section?.key) {
     case "flexaligntop":
-      sectionContent = (
-        <HeroSection
-          key={key}
-          fetchData={fetchData}
-          landingPageData={landingPageData}
-        />
-      );
+      // Use MultiJobHero for multi-job campaigns, regular HeroSection for single jobs
+      if (landingPageData?.campaignType === "multi") {
+        sectionContent = (
+          <MultiJobHero
+            key={key}
+            fetchData={fetchData}
+            landingPageData={landingPageData}
+            isEdit={false}
+          />
+        );
+      } else {
+        sectionContent = (
+          <HeroSection
+            key={key}
+            fetchData={fetchData}
+            landingPageData={landingPageData}
+          />
+        );
+      }
       break;
     case "form-editor":
       sectionContent = (
@@ -197,6 +212,11 @@ export const renderSection = ({
     case "Text Box":
       sectionContent = (
         <TextBox key={key} fetchData={fetchData} landingPageData={landingPageData} />
+      );
+      break;
+    case "Linked Jobs":
+      sectionContent = (
+        <LinkedJobs key={key} landingPageData={landingPageData} isEdit={false} />
       );
       break;
 

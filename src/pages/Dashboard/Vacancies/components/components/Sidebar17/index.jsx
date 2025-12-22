@@ -80,6 +80,7 @@ export const menuItems = {
   "Meet CEO": "/images/lets-icons_lamp.svg",
   "Candidate Process": "/icons2/list.svg",
   "EVP / Mission": "/images/lets-icons_lamp.svg",
+  "Linked Jobs": "/images/img_briefcase_01.svg",
 };
 
 // Map section keys to display names
@@ -106,6 +107,7 @@ export const sectionMap = {
   "Text Box": "text-box",
   "Meet CEO": "meet-ceo",
   "Image Carousel": "image-carousel",
+  "Linked Jobs": "linked-jobs",
 };
 
 export default function Sidebar17({

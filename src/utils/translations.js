@@ -15,9 +15,9 @@ const coreTranslations = {
     weAreHiring: "WE'RE HIRING",
     hours: "Hours", hour: "Hour", year: "Year", month: "Month", week: "Week", day: "Day",
     daily: "Daily", weekly: "Weekly", monthly: "Monthly", yearly: "Yearly",
-    remote: "Remote",Hybrid:"Hybrid", hybrid: "Hybrid", summary: "Summary", contacts: "Contacts",
+    remote: "Remote", Hybrid: "Hybrid", hybrid: "Hybrid", summary: "Summary", contacts: "Contacts",
     description: "Description", agenda: "Agenda", aboutUs: "About Us", companyFacts: "Company Facts",
-    textBox: "Text Box", video: "Video", images: "Images", evpMission: "EVP / Mission", leaderIntro: "Leader Intro", 
+    textBox: "Text Box", video: "Video", images: "Images", evpMission: "EVP / Mission", leaderIntro: "Leader Intro",
     testimonials: "Testimonials", growthPath: "Growth Path", applicationProcess: "Application Process",
     applyNow: "Apply Now", share: "Share", locations: "Locations",
     pagePublished: "Page Published", letsShareWithTheWorld: "Let's Share with the World!",
@@ -26,7 +26,7 @@ const coreTranslations = {
     applyButtonUrl: "Apply Button URL", thisUrlWillBeUsed: "This should be your application form or job posting URL",
     cancel: "Cancel", saveUrl: "Save URL", beforePublishing: "Before publishing your landing page, please set the URL where candidates will be directed when they click the Apply button.",
     // Form field translations
-    firstName: "First Name", lastName: "Last Name", email: "Email", phone: "Phone Number", 
+    firstName: "First Name", lastName: "Last Name", email: "Email", phone: "Phone Number",
     contactInformation: "Contact Information", fieldLabel: "Field Label", placeholder: "Placeholder",
     required: "Required", visible: "Visible", previous: "Previous", next: "Next", submit: "Submit",
     startApplication: "Start Application", formFields: "Form Fields", addField: "Add Field",
@@ -37,9 +37,32 @@ const coreTranslations = {
     // Modal translations
     pasteJobText: "Paste Job Text", enterJobTitle: "Enter Job Title", department: "Department",
     selectDepartment: "Select a department", language: "Language", selectLanguage: "Select a language",
-    pasteJobDescription: "Paste Job Description (Ctrl+V)", 
+    pasteJobDescription: "Paste Job Description (Ctrl+V)",
     pasteJobTip: "Tip: Copy (Ctrl+C) the entire job posting from a website and paste (Ctrl+V) it here. Our AI will extract all relevant information.",
-    readMore: "Read More", readLess: "Read Less"
+    readMore: "Read More", readLess: "Read Less",
+    // Multi-job campaign translations
+    whatWouldYouLikeToCreate: "What would you like to create?",
+    singleJobCampaign: "Single Job Campaign",
+    multiJobCampaign: "Multi-Job Campaign",
+    singleJobDescription: "Create a landing page for one specific job position with detailed descriptions, benefits, and application form.",
+    multiJobDescription: "Create a career page showcasing multiple job positions. Link existing campaigns to display all your open positions in one place.",
+    mostPopular: "Most Popular",
+    whichShouldIChoose: "Which should I choose?",
+    singleJobTip: "Best for recruiting for a specific position with a dedicated landing page.",
+    multiJobTip: "Ideal for showcasing your employer brand with multiple open positions, like a career page. You can link existing single job campaigns.",
+    ourOpenPositions: "Our Open Positions",
+    openPositions: "Open Positions",
+    departments: "Departments",
+    viewPosition: "View Position",
+    searchPositions: "Search positions...",
+    allDepartments: "All Departments",
+    noPositionsLinked: "No job positions have been linked to this campaign yet",
+    noPositionsMatch: "No positions match your search criteria",
+    linkedJobs: "Linked Jobs",
+    addJobs: "Add Jobs",
+    heroSection: "Hero Section",
+    jobsSection: "Jobs Section",
+    campaignSettings: "Campaign Settings"
   },
   Dutch: {
     weAreHiring: " WE ZOEKEN PERSONEEL",
@@ -55,7 +78,7 @@ const coreTranslations = {
     applyButtonUrl: "Solliciteer Button URL", thisUrlWillBeUsed: "Dit moet je sollicitatieformulier of vacature URL zijn",
     cancel: "Annuleren", saveUrl: "URL Opslaan", beforePublishing: "Voordat je je landingspagina publiceert, stel je de URL in waar kandidaten naartoe worden geleid wanneer ze op de solliciteer knop klikken.",
     // Form field translations
-    firstName: "Voornaam", lastName: "Achternaam", email: "E-mail", phone: "Telefoonnummer", 
+    firstName: "Voornaam", lastName: "Achternaam", email: "E-mail", phone: "Telefoonnummer",
     contactInformation: "Contactgegevens", fieldLabel: "Veldlabel", placeholder: "Tijdelijke aanduiding",
     required: "Verplicht", visible: "Zichtbaar", previous: "Vorige", next: "Volgende", submit: "Versturen",
     startApplication: "Start Sollicitatie", formFields: "Formuliervelden", addField: "Veld Toevoegen",
@@ -68,13 +91,36 @@ const coreTranslations = {
     selectDepartment: "Selecteer een afdeling", language: "Taal", selectLanguage: "Selecteer een taal",
     pasteJobDescription: "Plak Vacaturebeschrijving (Ctrl+V)",
     pasteJobTip: "Tip: Kopieer (Ctrl+C) de hele vacature van een website en plak (Ctrl+V) deze hier. Onze AI haalt alle relevante informatie eruit.",
-    readMore: "Lees Meer", readLess: "Lees Minder"
+    readMore: "Lees Meer", readLess: "Lees Minder",
+    // Multi-job campaign translations
+    whatWouldYouLikeToCreate: "Wat wilt u aanmaken?",
+    singleJobCampaign: "Enkele Vacature Campagne",
+    multiJobCampaign: "Multi-Vacature Campagne",
+    singleJobDescription: "Maak een landingspagina voor één specifieke functie met gedetailleerde beschrijvingen, voordelen en sollicitatieformulier.",
+    multiJobDescription: "Maak een carrièrepagina met meerdere functies. Koppel bestaande campagnes om al uw openstaande functies op één plek te tonen.",
+    mostPopular: "Meest Populair",
+    whichShouldIChoose: "Welke moet ik kiezen?",
+    singleJobTip: "Ideaal voor het werven voor een specifieke functie met een speciale landingspagina.",
+    multiJobTip: "Ideaal om uw werkgeversmerk te presenteren met meerdere openstaande functies, zoals een carrièrepagina.",
+    ourOpenPositions: "Onze Openstaande Functies",
+    openPositions: "Openstaande Functies",
+    departments: "Afdelingen",
+    viewPosition: "Bekijk Functie",
+    searchPositions: "Zoek functies...",
+    allDepartments: "Alle Afdelingen",
+    noPositionsLinked: "Er zijn nog geen functies gekoppeld aan deze campagne",
+    noPositionsMatch: "Geen functies komen overeen met uw zoekcriteria",
+    linkedJobs: "Gekoppelde Vacatures",
+    addJobs: "Vacatures Toevoegen",
+    heroSection: "Hero Sectie",
+    jobsSection: "Vacatures Sectie",
+    campaignSettings: "Campagne Instellingen"
   },
   German: {
     weAreHiring: " WIR STELLEN EIN",
     hours: "Stunden", hour: "Stunde", year: "Jahr", month: "Monat", week: "Woche", day: "Tag",
     daily: "Täglich", weekly: "Wöchentlich", monthly: "Monatlich", yearly: "Jährlich",
-    remote: "Remote",Hybrid:"Hybrid!!", hybrid: "Hybrid", summary: "Zusammenfassung", contacts: "Kontakte",
+    remote: "Remote", Hybrid: "Hybrid!!", hybrid: "Hybrid", summary: "Zusammenfassung", contacts: "Kontakte",
     description: "Beschreibung", agenda: "Agenda", aboutUs: "Über Uns", companyFacts: "Unternehmensfakten",
     leaderIntro: "Führungskraft Intro", testimonials: "Testimonials", applicationProcess: "Bewerbungsprozess",
     growthPath: "Wachstumspfad", applyNow: "Jetzt Bewerben", share: "Teilen", locations: "Standorte",
@@ -84,7 +130,7 @@ const coreTranslations = {
     applyButtonUrl: "Bewerbung Button URL", thisUrlWillBeUsed: "Das sollte dein Bewerbungsformular oder Stellenanzeige URL sein",
     cancel: "Abbrechen", saveUrl: "URL Speichern", beforePublishing: "Bevor du deine Landingpage veröffentlichst, stelle die URL ein, wohin Kandidaten geleitet werden, wenn sie auf den Bewerbungsbutton klicken.",
     // Form field translations
-    firstName: "Vorname", lastName: "Nachname", email: "E-Mail", phone: "Telefonnummer", 
+    firstName: "Vorname", lastName: "Nachname", email: "E-Mail", phone: "Telefonnummer",
     contactInformation: "Kontaktinformationen", fieldLabel: "Feldbezeichnung", placeholder: "Platzhalter",
     required: "Erforderlich", visible: "Sichtbar", previous: "Zurück", next: "Weiter", submit: "Absenden",
     startApplication: "Bewerbung Starten", formFields: "Formularfelder", addField: "Feld Hinzufügen",
@@ -97,7 +143,30 @@ const coreTranslations = {
     selectDepartment: "Wählen Sie eine Abteilung", language: "Sprache", selectLanguage: "Wählen Sie eine Sprache",
     pasteJobDescription: "Stellenbeschreibung Einfügen (Strg+V)",
     pasteJobTip: "Tipp: Kopieren Sie (Strg+C) die gesamte Stellenausschreibung von einer Website und fügen Sie sie (Strg+V) hier ein. Unsere KI extrahiert alle relevanten Informationen.",
-    readMore: "Mehr Lesen", readLess: "Weniger Lesen"
+    readMore: "Mehr Lesen", readLess: "Weniger Lesen",
+    // Multi-job campaign translations
+    whatWouldYouLikeToCreate: "Was möchten Sie erstellen?",
+    singleJobCampaign: "Einzelne Stellenkampagne",
+    multiJobCampaign: "Multi-Stellen-Kampagne",
+    singleJobDescription: "Erstellen Sie eine Landingpage für eine bestimmte Stelle mit detaillierten Beschreibungen, Vorteilen und Bewerbungsformular.",
+    multiJobDescription: "Erstellen Sie eine Karriereseite mit mehreren Stellenangeboten. Verknüpfen Sie bestehende Kampagnen, um alle offenen Stellen an einem Ort anzuzeigen.",
+    mostPopular: "Am Beliebtesten",
+    whichShouldIChoose: "Welche sollte ich wählen?",
+    singleJobTip: "Ideal für die Rekrutierung für eine bestimmte Position mit einer eigenen Landingpage.",
+    multiJobTip: "Ideal für die Präsentation Ihrer Arbeitgebermarke mit mehreren offenen Stellen, wie eine Karriereseite.",
+    ourOpenPositions: "Unsere Offenen Stellen",
+    openPositions: "Offene Stellen",
+    departments: "Abteilungen",
+    viewPosition: "Stelle Ansehen",
+    searchPositions: "Stellen suchen...",
+    allDepartments: "Alle Abteilungen",
+    noPositionsLinked: "Es wurden noch keine Stellen mit dieser Kampagne verknüpft",
+    noPositionsMatch: "Keine Stellen entsprechen Ihren Suchkriterien",
+    linkedJobs: "Verknüpfte Stellen",
+    addJobs: "Stellen Hinzufügen",
+    heroSection: "Hero-Bereich",
+    jobsSection: "Stellen-Bereich",
+    campaignSettings: "Kampagnen-Einstellungen"
   },
   French: {
     weAreHiring: " NOUS RECRUTONS",
@@ -113,7 +182,7 @@ const coreTranslations = {
     applyButtonUrl: "URL du Bouton de Candidature", thisUrlWillBeUsed: "Cela devrait être votre formulaire de candidature ou URL d'offre d'emploi",
     cancel: "Annuler", saveUrl: "Enregistrer l'URL", beforePublishing: "Avant de publier votre page de destination, veuillez définir l'URL vers laquelle les candidats seront dirigés lorsqu'ils cliqueront sur le bouton de candidature.",
     // Form field translations
-    firstName: "Prénom", lastName: "Nom de famille", email: "E-mail", phone: "Téléphone", 
+    firstName: "Prénom", lastName: "Nom de famille", email: "E-mail", phone: "Téléphone",
     contactInformation: "Informations de Contact", fieldLabel: "Étiquette du Champ", placeholder: "Texte d'exemple",
     required: "Obligatoire", visible: "Visible", previous: "Précédent", next: "Suivant", submit: "Soumettre",
     startApplication: "Commencer la Candidature", formFields: "Champs du Formulaire", addField: "Ajouter un Champ",
@@ -142,7 +211,7 @@ const coreTranslations = {
     applyButtonUrl: "URL del Botón de Solicitud", thisUrlWillBeUsed: "Esta debería ser tu formulario de solicitud o URL de oferta de trabajo",
     cancel: "Cancelar", saveUrl: "Guardar URL", beforePublishing: "Antes de publicar tu página de destino, establece la URL a la que serán dirigidos los candidatos cuando hagan clic en el botón de solicitud.",
     // Form field translations
-    firstName: "Nombre", lastName: "Apellido", email: "Correo electrónico", phone: "Teléfono", 
+    firstName: "Nombre", lastName: "Apellido", email: "Correo electrónico", phone: "Teléfono",
     contactInformation: "Información de Contacto", fieldLabel: "Etiqueta del Campo", placeholder: "Marcador de posición",
     required: "Obligatorio", visible: "Visible", previous: "Anterior", next: "Siguiente", submit: "Enviar",
     startApplication: "Iniciar Solicitud", formFields: "Campos del Formulario", addField: "Agregar Campo",
@@ -171,7 +240,7 @@ const coreTranslations = {
     applyButtonUrl: "URL Pulsante Candidatura", thisUrlWillBeUsed: "Questo dovrebbe essere il tuo modulo di candidatura o URL dell'offerta di lavoro",
     cancel: "Annulla", saveUrl: "Salva URL", beforePublishing: "Prima di pubblicare la tua landing page, imposta l'URL verso cui i candidati saranno diretti quando cliccano sul pulsante di candidatura.",
     // Form field translations
-    firstName: "Nome", lastName: "Cognome", email: "Email", phone: "Telefono", 
+    firstName: "Nome", lastName: "Cognome", email: "Email", phone: "Telefono",
     contactInformation: "Informazioni di Contatto", fieldLabel: "Etichetta Campo", placeholder: "Segnaposto",
     required: "Obbligatorio", visible: "Visibile", previous: "Precedente", next: "Successivo", submit: "Invia",
     startApplication: "Inizia Candidatura", formFields: "Campi Modulo", addField: "Aggiungi Campo",
@@ -200,7 +269,7 @@ const coreTranslations = {
     applyButtonUrl: "URL do Botão de Candidatura", thisUrlWillBeUsed: "Este deve ser seu formulário de candidatura ou URL da vaga",
     cancel: "Cancelar", saveUrl: "Salvar URL", beforePublishing: "Antes de publicar sua landing page, defina a URL para onde os candidatos serão direcionados ao clicar no botão de candidatura.",
     // Form field translations
-    firstName: "Nome", lastName: "Sobrenome", email: "E-mail", phone: "Telefone", 
+    firstName: "Nome", lastName: "Sobrenome", email: "E-mail", phone: "Telefone",
     contactInformation: "Informações de Contato", fieldLabel: "Rótulo do Campo", placeholder: "Texto de exemplo",
     required: "Obrigatório", visible: "Visível", previous: "Anterior", next: "Próximo", submit: "Enviar",
     startApplication: "Iniciar Candidatura", formFields: "Campos do Formulário", addField: "Adicionar Campo",
@@ -229,7 +298,7 @@ const coreTranslations = {
     applyButtonUrl: "Søknad Knapp URL", thisUrlWillBeUsed: "Dette bør være ditt søknadsskjema eller jobbutlysning URL",
     cancel: "Avbryt", saveUrl: "Lagre URL", beforePublishing: "Før du publiserer landingssiden din, sett URL-en hvor kandidater vil bli dirigert når de klikker på søknadsknappen.",
     // Form field translations
-    firstName: "Fornavn", lastName: "Etternavn", email: "E-post", phone: "Telefon", 
+    firstName: "Fornavn", lastName: "Etternavn", email: "E-post", phone: "Telefon",
     contactInformation: "Kontaktinformasjon", fieldLabel: "Feltetikett", placeholder: "Plassholder",
     required: "Påkrevd", visible: "Synlig", previous: "Forrige", next: "Neste", submit: "Send inn",
     startApplication: "Start Søknad", formFields: "Skjemafelt", addField: "Legg til Felt",
@@ -258,7 +327,7 @@ const coreTranslations = {
     applyButtonUrl: "URL кнопки подачи заявки", thisUrlWillBeUsed: "Это должна быть ваша форма заявки или URL вакансии",
     cancel: "Отмена", saveUrl: "Сохранить URL", beforePublishing: "Перед публикацией целевой страницы установите URL, на который будут перенаправлены кандидаты при нажатии кнопки подачи заявки.",
     // Form field translations
-    firstName: "Имя", lastName: "Фамилия", email: "Электронная почта", phone: "Телефон", 
+    firstName: "Имя", lastName: "Фамилия", email: "Электронная почта", phone: "Телефон",
     contactInformation: "Контактная информация", fieldLabel: "Метка поля", placeholder: "Заполнитель",
     required: "Обязательно", visible: "Видимый", previous: "Предыдущий", next: "Следующий", submit: "Отправить",
     startApplication: "Начать заявку", formFields: "Поля формы", addField: "Добавить поле",
@@ -286,7 +355,7 @@ const coreTranslations = {
     applyButtonUrl: "申请按钮URL", thisUrlWillBeUsed: "这应该是您的申请表或职位发布URL",
     cancel: "取消", saveUrl: "保存URL", beforePublishing: "在发布您的着陆页之前，请设置候选人点击申请按钮时将被引导到的URL。",
     // Form field translations
-    firstName: "名字", lastName: "姓氏", email: "电子邮件", phone: "电话", 
+    firstName: "名字", lastName: "姓氏", email: "电子邮件", phone: "电话",
     contactInformation: "联系信息", fieldLabel: "字段标签", placeholder: "占位符",
     required: "必填", visible: "可见", previous: "上一个", next: "下一个", submit: "提交",
     startApplication: "开始申请", formFields: "表单字段", addField: "添加字段",
@@ -314,7 +383,7 @@ const coreTranslations = {
     applyButtonUrl: "رابط زر التقديم", thisUrlWillBeUsed: "يجب أن يكون هذا نموذج التقديم أو رابط الوظيفة",
     cancel: "إلغاء", saveUrl: "حفظ الرابط", beforePublishing: "قبل نشر صفحتك المقصودة، يرجى تعيين الرابط الذي سيتم توجيه المرشحين إليه عند النقر على زر التقديم.",
     // Form field translations
-    firstName: "الاسم الأول", lastName: "اسم العائلة", email: "البريد الإلكتروني", phone: "الهاتف", 
+    firstName: "الاسم الأول", lastName: "اسم العائلة", email: "البريد الإلكتروني", phone: "الهاتف",
     contactInformation: "معلومات الاتصال", fieldLabel: "تسمية الحقل", placeholder: "نص تجريبي",
     required: "مطلوب", visible: "مرئي", previous: "السابق", next: "التالي", submit: "إرسال",
     startApplication: "بدء التقديم", formFields: "حقول النموذج", addField: "إضافة حقل",
@@ -342,7 +411,7 @@ const coreTranslations = {
     applyButtonUrl: "आवेदन बटन URL", thisUrlWillBeUsed: "यह आपका आवेदन फॉर्म या नौकरी पोस्टिंग URL होना चाहिए",
     cancel: "रद्द करें", saveUrl: "URL सेव करें", beforePublishing: "अपना लैंडिंग पेज प्रकाशित करने से पहले, कृपया वह URL सेट करें जहाँ उम्मीदवारों को आवेदन बटन पर क्लिक करने पर भेजा जाएगा।",
     // Form field translations
-    firstName: "पहला नाम", lastName: "अंतिम नाम", email: "ईमेल", phone: "फोन", 
+    firstName: "पहला नाम", lastName: "अंतिम नाम", email: "ईमेल", phone: "फोन",
     contactInformation: "संपर्क जानकारी", fieldLabel: "फील्ड लेबल", placeholder: "प्लेसहोल्डर",
     required: "आवश्यक", visible: "दृश्यमान", previous: "पिछला", next: "अगला", submit: "जमा करें",
     startApplication: "आवेदन शुरू करें", formFields: "फॉर्म फील्ड", addField: "फील्ड जोड़ें",
@@ -370,7 +439,7 @@ const coreTranslations = {
     applyButtonUrl: "応募ボタンURL", thisUrlWillBeUsed: "これは応募フォームまたは求人投稿のURLである必要があります",
     cancel: "キャンセル", saveUrl: "URLを保存", beforePublishing: "ランディングページを公開する前に、候補者が応募ボタンをクリックしたときに誘導されるURLを設定してください。",
     // Form field translations
-    firstName: "名", lastName: "姓", email: "メール", phone: "電話番号", 
+    firstName: "名", lastName: "姓", email: "メール", phone: "電話番号",
     contactInformation: "連絡先情報", fieldLabel: "フィールドラベル", placeholder: "プレースホルダー",
     required: "必須", visible: "表示", previous: "前へ", next: "次へ", submit: "送信",
     startApplication: "応募開始", formFields: "フォームフィールド", addField: "フィールド追加",
@@ -399,7 +468,7 @@ const coreTranslations = {
     applyButtonUrl: "Başvuru Düğmesi URL'si", thisUrlWillBeUsed: "Bu, başvuru formunuz veya iş ilanı URL'niz olmalıdır",
     cancel: "İptal", saveUrl: "URL'yi Kaydet", beforePublishing: "Açılış sayfanızı yayınlamadan önce, adayların başvuru düğmesine tıkladıklarında yönlendirilecekleri URL'yi ayarlayın.",
     // Form field translations
-    firstName: "Ad", lastName: "Soyad", email: "E-posta", phone: "Telefon", 
+    firstName: "Ad", lastName: "Soyad", email: "E-posta", phone: "Telefon",
     contactInformation: "İletişim Bilgileri", fieldLabel: "Alan Etiketi", placeholder: "Yer Tutucu",
     required: "Gerekli", visible: "Görünür", previous: "Önceki", next: "Sonraki", submit: "Gönder",
     startApplication: "Başvuruya Başla", formFields: "Form Alanları", addField: "Alan Ekle",
@@ -427,7 +496,7 @@ const coreTranslations = {
     applyButtonUrl: "URL Przycisku Aplikacji", thisUrlWillBeUsed: "To powinien być URL formularza aplikacji lub ogłoszenia o pracę",
     cancel: "Anuluj", saveUrl: "Zapisz URL", beforePublishing: "Przed opublikowaniem strony docelowej ustaw URL, na który kandydaci będą przekierowani po kliknięciu przycisku aplikacji.",
     // Form field translations
-    firstName: "Imię", lastName: "Nazwisko", email: "E-mail", phone: "Telefon", 
+    firstName: "Imię", lastName: "Nazwisko", email: "E-mail", phone: "Telefon",
     contactInformation: "Informacje Kontaktowe", fieldLabel: "Etykieta Pola", placeholder: "Symbol Zastępczy",
     required: "Wymagane", visible: "Widoczne", previous: "Poprzedni", next: "Następny", submit: "Wyślij",
     startApplication: "Rozpocznij Aplikację", formFields: "Pola Formularza", addField: "Dodaj Pole",
@@ -455,7 +524,7 @@ const coreTranslations = {
     applyButtonUrl: "Ansökningsknapp URL", thisUrlWillBeUsed: "Detta bör vara din ansökningsformulär eller jobbannonss URL",
     cancel: "Avbryt", saveUrl: "Spara URL", beforePublishing: "Innan du publicerar din landningssida, ställ in URL:en där kandidater kommer att dirigeras när de klickar på ansökningsknappen.",
     // Form field translations
-    firstName: "Förnamn", lastName: "Efternamn", email: "E-post", phone: "Telefon", 
+    firstName: "Förnamn", lastName: "Efternamn", email: "E-post", phone: "Telefon",
     contactInformation: "Kontaktinformation", fieldLabel: "Fältetikett", placeholder: "Platshållare",
     required: "Obligatorisk", visible: "Synlig", previous: "Föregående", next: "Nästa", submit: "Skicka",
     startApplication: "Starta Ansökan", formFields: "Formulärfält", addField: "Lägg Till Fält",
@@ -483,7 +552,7 @@ const coreTranslations = {
     applyButtonUrl: "지원 버튼 URL", thisUrlWillBeUsed: "이것은 지원서 양식이나 채용 공고 URL이어야 합니다",
     cancel: "취소", saveUrl: "URL 저장", beforePublishing: "랜딩 페이지를 게시하기 전에 후보자가 지원 버튼을 클릭했을 때 이동할 URL을 설정하세요.",
     // Form field translations
-    firstName: "이름", lastName: "성", email: "이메일", phone: "전화번호", 
+    firstName: "이름", lastName: "성", email: "이메일", phone: "전화번호",
     contactInformation: "연락처 정보", fieldLabel: "필드 라벨", placeholder: "플레이스홀더",
     required: "필수", visible: "표시", previous: "이전", next: "다음", submit: "제출",
     startApplication: "지원 시작", formFields: "양식 필드", addField: "필드 추가",
@@ -511,7 +580,7 @@ const coreTranslations = {
     applyButtonUrl: "Hakupainikkeen URL", thisUrlWillBeUsed: "Tämän tulisi olla hakulomakkeesi tai työpaikkailmoituksen URL",
     cancel: "Peruuta", saveUrl: "Tallenna URL", beforePublishing: "Ennen kuin julkaiset laskeutumissivusi, aseta URL johon hakijat ohjataan kun he klikkaavat hakupainiketta.",
     // Form field translations
-    firstName: "Etunimi", lastName: "Sukunimi", email: "Sähköposti", phone: "Puhelin", 
+    firstName: "Etunimi", lastName: "Sukunimi", email: "Sähköposti", phone: "Puhelin",
     contactInformation: "Yhteystiedot", fieldLabel: "Kentän Otsikko", placeholder: "Paikkamerkki",
     required: "Pakollinen", visible: "Näkyvä", previous: "Edellinen", next: "Seuraava", submit: "Lähetä",
     startApplication: "Aloita Hakemus", formFields: "Lomakekentät", addField: "Lisää Kenttä",
@@ -539,7 +608,7 @@ const coreTranslations = {
     applyButtonUrl: "URL ปุ่มสมัครงาน", thisUrlWillBeUsed: "นี่ควรเป็น URL แบบฟอร์มสมัครงานหรือประกาศรับสมัครงานของคุณ",
     cancel: "ยกเลิก", saveUrl: "บันทึก URL", beforePublishing: "ก่อนเผยแพร่หน้าเว็บของคุณ โปรดตั้งค่า URL ที่ผู้สมัครจะถูกนำทางไปเมื่อคลิกปุ่มสมัครงาน",
     // Form field translations
-    firstName: "ชื่อ", lastName: "นามสกุล", email: "อีเมล", phone: "เบอร์โทรศัพท์", 
+    firstName: "ชื่อ", lastName: "นามสกุล", email: "อีเมล", phone: "เบอร์โทรศัพท์",
     contactInformation: "ข้อมูลติดต่อ", fieldLabel: "ป้ายฟิลด์", placeholder: "ตัวอย่าง",
     required: "จำเป็น", visible: "มองเห็นได้", previous: "ก่อนหน้า", next: "ถัดไป", submit: "ส่ง",
     startApplication: "เริ่มสมัครงาน", formFields: "ฟิลด์แบบฟอร์ม", addField: "เพิ่มฟิลด์",
@@ -567,7 +636,7 @@ const coreTranslations = {
     applyButtonUrl: "URL Nút Ứng Tuyển", thisUrlWillBeUsed: "Đây nên là URL biểu mẫu ứng tuyển hoặc tin tuyển dụng của bạn",
     cancel: "Hủy", saveUrl: "Lưu URL", beforePublishing: "Trước khi xuất bản trang đích của bạn, hãy đặt URL mà ứng viên sẽ được chuyển hướng đến khi họ nhấp vào nút ứng tuyển.",
     // Form field translations
-    firstName: "Tên", lastName: "Họ", email: "Email", phone: "Điện thoại", 
+    firstName: "Tên", lastName: "Họ", email: "Email", phone: "Điện thoại",
     contactInformation: "Thông Tin Liên Hệ", fieldLabel: "Nhãn Trường", placeholder: "Trình Giữ Chỗ",
     required: "Bắt buộc", visible: "Hiển thị", previous: "Trước", next: "Tiếp", submit: "Gửi",
     startApplication: "Bắt Đầu Ứng Tuyển", formFields: "Các Trường Biểu Mẫu", addField: "Thêm Trường",
@@ -596,7 +665,7 @@ const coreTranslations = {
     applyButtonUrl: "URL Tombol Lamar", thisUrlWillBeUsed: "Ini harus berupa formulir aplikasi atau URL posting pekerjaan Anda",
     cancel: "Batal", saveUrl: "Simpan URL", beforePublishing: "Sebelum menerbitkan halaman landing Anda, atur URL tempat kandidat akan diarahkan saat mereka mengklik tombol lamar.",
     // Form field translations
-    firstName: "Nama Depan", lastName: "Nama Belakang", email: "Email", phone: "Telepon", 
+    firstName: "Nama Depan", lastName: "Nama Belakang", email: "Email", phone: "Telepon",
     contactInformation: "Informasi Kontak", fieldLabel: "Label Bidang", placeholder: "Placeholder",
     required: "Wajib", visible: "Terlihat", previous: "Sebelumnya", next: "Selanjutnya", submit: "Kirim",
     startApplication: "Mulai Aplikasi", formFields: "Bidang Formulir", addField: "Tambah Bidang",
@@ -624,7 +693,7 @@ const coreTranslations = {
     applyButtonUrl: "আবেদন বোতাম URL", thisUrlWillBeUsed: "এটি আপনার আবেদন ফর্ম বা চাকরির পোস্টিং URL হতে হবে",
     cancel: "বাতিল", saveUrl: "URL সংরক্ষণ", beforePublishing: "আপনার ল্যান্ডিং পেজ প্রকাশ করার আগে, প্রার্থীরা আবেদন বোতামে ক্লিক করলে কোথায় যাবেন তার URL সেট করুন।",
     // Form field translations
-    firstName: "প্রথম নাম", lastName: "শেষ নাম", email: "ইমেইল", phone: "ফোন", 
+    firstName: "প্রথম নাম", lastName: "শেষ নাম", email: "ইমেইল", phone: "ফোন",
     contactInformation: "যোগাযোগের তথ্য", fieldLabel: "ফিল্ড লেবেল", placeholder: "প্লেসহোল্ডার",
     required: "প্রয়োজনীয়", visible: "দৃশ্যমান", previous: "পূর্ববর্তী", next: "পরবর্তী", submit: "জমা দিন",
     startApplication: "আবেদন শুরু করুন", formFields: "ফর্ম ফিল্ড", addField: "ফিল্ড যোগ করুন",
@@ -652,7 +721,7 @@ const coreTranslations = {
     applyButtonUrl: "URL кнопки подачі заявки", thisUrlWillBeUsed: "Це має бути ваша форма заявки або URL вакансії",
     cancel: "Скасувати", saveUrl: "Зберегти URL", beforePublishing: "Перед публікацією цільової сторінки встановіть URL, на який будуть переспрямовані кандидати при натисканні кнопки подачі заявки.",
     // Form field translations
-    firstName: "Ім'я", lastName: "Прізвище", email: "Електронна пошта", phone: "Телефон", 
+    firstName: "Ім'я", lastName: "Прізвище", email: "Електронна пошта", phone: "Телефон",
     contactInformation: "Контактна інформація", fieldLabel: "Мітка поля", placeholder: "Заповнювач",
     required: "Обов'язково", visible: "Видимий", previous: "Попередній", next: "Наступний", submit: "Відправити",
     startApplication: "Почати заявку", formFields: "Поля форми", addField: "Додати поле",
@@ -680,7 +749,7 @@ const coreTranslations = {
     applyButtonUrl: "URL Κουμπιού Αίτησης", thisUrlWillBeUsed: "Αυτό πρέπει να είναι η φόρμα αίτησής σας ή το URL της αγγελίας εργασίας",
     cancel: "Ακύρωση", saveUrl: "Αποθήκευση URL", beforePublishing: "Πριν δημοσιεύσετε τη σελίδα προορισμού σας, ορίστε το URL όπου οι υποψήφιοι θα κατευθυνθούν όταν κάνουν κλικ στο κουμπί αίτησης.",
     // Form field translations
-    firstName: "Όνομα", lastName: "Επώνυμο", email: "Email", phone: "Τηλέφωνο", 
+    firstName: "Όνομα", lastName: "Επώνυμο", email: "Email", phone: "Τηλέφωνο",
     contactInformation: "Στοιχεία Επικοινωνίας", fieldLabel: "Ετικέτα Πεδίου", placeholder: "Κράτηση θέσης",
     required: "Απαιτείται", visible: "Ορατό", previous: "Προηγούμενο", next: "Επόμενο", submit: "Υποβολή",
     startApplication: "Έναρξη Αίτησης", formFields: "Πεδία Φόρμας", addField: "Προσθήκη Πεδίου",
@@ -893,7 +962,7 @@ let translationCache = {};
 export const getTranslation = (language, key) => {
   console.log("language", language);
   console.log("key", key);
-  
+
   // If no language specified, use English
   if (!language) {
     return coreTranslations.English[key] || key;
@@ -924,7 +993,7 @@ export const getTranslation = (language, key) => {
 export const getTimeUnitTranslation = (language, unit) => {
   const unitMap = {
     Days: 'day',
-    Week: 'week', 
+    Week: 'week',
     Month: 'month',
     daily: 'daily',
     weekly: 'weekly',
@@ -932,7 +1001,7 @@ export const getTimeUnitTranslation = (language, unit) => {
     yearly: 'yearly',
     Year: 'year'
   };
-  
+
   const translationKey = unitMap[unit] || 'day';
   return getTranslation(language, translationKey);
 };
@@ -945,7 +1014,7 @@ export const getSalaryTimeTranslation = (language, time) => {
     Week: 'week',
     Day: 'day'
   };
-  
+
   const translationKey = timeMap[time] || 'year';
   return getTranslation(language, translationKey);
 };
@@ -954,16 +1023,16 @@ export const getSalaryTimeTranslation = (language, time) => {
 // This can be called when we need UI translations for unsupported languages
 export const getAITranslation = async (text, targetLanguage) => {
   console.log(`AI Translation needed: "${text}" → ${targetLanguage}`);
-  
+
   // In production, this would call your AI translation service
   // For now, return the fallback translation
   const fallbackLanguage = languageFamilies[targetLanguage] || 'English';
   const fallbackTranslation = coreTranslations[fallbackLanguage];
-  
+
   if (fallbackTranslation && fallbackTranslation[text]) {
     return fallbackTranslation[text];
   }
-  
+
   return text; // Return original text if no translation found
 };
 
@@ -971,11 +1040,11 @@ export const getAITranslation = async (text, targetLanguage) => {
 export const generateLanguageTranslationSet = async (languageName) => {
   const fallbackLanguage = languageFamilies[languageName] || 'English';
   const baseTranslations = coreTranslations[fallbackLanguage] || coreTranslations.English;
-  
+
   // For production: Replace this with actual AI translation service
   // This would translate all keys from English to the target language
   console.log(`Generating translation set for ${languageName} using ${fallbackLanguage} as base`);
-  
+
   return {
     ...baseTranslations,
     // Mark as dynamically generated
@@ -990,9 +1059,9 @@ export const generateAllMissingTranslations = async () => {
   const missingLanguages = Object.values(languageFamilies).filter(
     lang => !coreTranslations[lang]
   );
-  
+
   const generatedTranslations = {};
-  
+
   for (const language of missingLanguages) {
     try {
       generatedTranslations[language] = await generateLanguageTranslationSet(language);
@@ -1001,7 +1070,7 @@ export const generateAllMissingTranslations = async () => {
       console.warn(`Failed to generate translations for ${language}:`, error);
     }
   }
-  
+
   return generatedTranslations;
 };
 
@@ -1009,7 +1078,7 @@ export const generateAllMissingTranslations = async () => {
 export const getTranslationWithGeneration = async (language, key) => {
   // First try standard translation
   const standardTranslation = getTranslation(language, key);
-  
+
   // If we get a fallback or the key itself, try generating
   if (standardTranslation === key || standardTranslation === coreTranslations.English[key]) {
     try {
@@ -1020,7 +1089,7 @@ export const getTranslationWithGeneration = async (language, key) => {
       return standardTranslation;
     }
   }
-  
+
   return standardTranslation;
 };
 
@@ -1039,7 +1108,7 @@ export const getLanguageCoverageInfo = () => {
   const coreLanguagesList = Object.keys(coreTranslations);
   const allLanguagesFromLangJson = Object.values(languageFamilies);
   const uniqueAllLanguages = [...new Set(allLanguagesFromLangJson)];
-  
+
   return {
     totalLanguagesSupported: 187, // All languages from lang.json
     coreLanguagesCount: coreLanguagesList.length,
@@ -1052,7 +1121,7 @@ export const getLanguageCoverageInfo = () => {
     },
     usage: {
       basic: "getTranslation(language, key)",
-      withGeneration: "getTranslationWithGeneration(language, key)", 
+      withGeneration: "getTranslationWithGeneration(language, key)",
       bulkGeneration: "generateAllMissingTranslations()",
       languageSupport: "isLanguageFullySupported(language)"
     }
@@ -1072,7 +1141,7 @@ export const exportLanguageTranslations = async (languageName) => {
       totalKeys: Object.keys(translationSet).filter(key => !key.startsWith('_')).length
     }
   };
-  
+
   return JSON.stringify(exportData, null, 2);
 };
 
@@ -1080,7 +1149,7 @@ export const exportLanguageTranslations = async (languageName) => {
 export const validateLanguageCompleteness = (languageName) => {
   const requiredKeys = Object.keys(coreTranslations.English);
   const languageTranslations = coreTranslations[languageName];
-  
+
   if (!languageTranslations) {
     return {
       isComplete: false,
@@ -1089,10 +1158,10 @@ export const validateLanguageCompleteness = (languageName) => {
       fallbackLanguage: languageFamilies[languageName] || 'English'
     };
   }
-  
+
   const missingKeys = requiredKeys.filter(key => !languageTranslations[key]);
   const completeness = Math.round(((requiredKeys.length - missingKeys.length) / requiredKeys.length) * 100);
-  
+
   return {
     isComplete: missingKeys.length === 0,
     missingKeys,

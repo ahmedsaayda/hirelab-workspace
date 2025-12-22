@@ -120,7 +120,7 @@ const useHeroHover = () => {
   };
 };
 
-const Template3 = ({ landingPageData, onClickApply }) => {
+const Template3 = ({ landingPageData, onClickApply, isMultiJob=false }) => {
   const [showApplyButton, setShowApplyButton] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
@@ -147,25 +147,27 @@ const Template3 = ({ landingPageData, onClickApply }) => {
         <div>
           <nav>
             <ul className="flex items-center space-x-6">
-              <div
-                className={`transition-all duration-300 ease-in-out ${
-                  showApplyButton
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 -translate-y-4"
-                }`}
-              >
-                <Button
-                  {...({} )}
-                  color="light_blue_A700"
-                  size="lg"
-                  className="w-full rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
-                  onClick={() => {
-                    onClickApply();
-                  }} // Open form editor when "Apply now" is clicked
+              {!isMultiJob && (
+                <div
+                  className={`transition-all duration-300 ease-in-out ${
+                    showApplyButton
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 -translate-y-4"
+                  }`}
                 >
-                  {landingPageData?.ctaApply}
-                </Button>
-              </div>
+                  <Button
+                    {...({} )}
+                    color="light_blue_A700"
+                    size="lg"
+                    className="w-full rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
+                    onClick={() => {
+                      onClickApply();
+                    }} // Open form editor when "Apply now" is clicked
+                  >
+                    {landingPageData?.ctaApply}
+                  </Button>
+                </div>
+              )}
             </ul>
           </nav>
         </div>
@@ -174,7 +176,7 @@ const Template3 = ({ landingPageData, onClickApply }) => {
   );
 };
 
-const Template2 = ({ landingPageData, onClickApply }) => {
+const Template2 = ({ landingPageData, onClickApply, isMultiJob=false }) => {
   const [showApplyButton, setShowApplyButton] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
@@ -201,23 +203,25 @@ const Template2 = ({ landingPageData, onClickApply }) => {
         <div>
           <nav>
             <ul className="flex items-center space-x-6">
-              <div
-                className={`transition-all duration-300 ease-in-out ${
-                  showApplyButton
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 -translate-y-4"
-                }`}
-              >
-                <Button
-                  {...({} )}
-                  color="light_blue_A700"
-                  size="lg"
-                  className="w-full  rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
-                  onClick={() => { onClickApply && onClickApply(); }} // Open form editor when "Apply now" is clicked
+              {!isMultiJob && (
+                <div
+                  className={`transition-all duration-300 ease-in-out ${
+                    showApplyButton
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 -translate-y-4"
+                  }`}
                 >
-                  {landingPageData?.ctaApply}
-                </Button>
-              </div>
+                  <Button
+                    {...({} )}
+                    color="light_blue_A700"
+                    size="lg"
+                    className="w-full  rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
+                    onClick={() => { onClickApply && onClickApply(); }} // Open form editor when "Apply now" is clicked
+                  >
+                    {landingPageData?.ctaApply}
+                  </Button>
+                </div>
+              )}
             </ul>
           </nav>
         </div>
@@ -227,7 +231,7 @@ const Template2 = ({ landingPageData, onClickApply }) => {
 };
 
 
-const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview=false }) => {
+const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview=false, isMultiJob=false }) => {
   console.log("lpId",lpId);
   // Get device from global variable set by PreviewContainer
   const [device, setDevice] = useState((window ).__previewDevice || "desktop");
@@ -955,22 +959,24 @@ const handlemediaLink = (platform) => {
             </button>
 
 
-            <button
-              className="px-6  text-xs md:text-base whitespace-nowrap  font-medium rounded-md transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 "
-              style={{
-                backgroundColor: getColor("primary", 500),
-                color: textColor,
-                
-                height: "45px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px"
-              }}
-              onClick={handleApplyClick}
-            >
-              {getTranslation(landingPageData?.lang, 'applyNow')}
-            </button>
+            {!isMultiJob && (
+              <button
+                className="px-6  text-xs md:text-base whitespace-nowrap  font-medium rounded-md transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 "
+                style={{
+                  backgroundColor: getColor("primary", 500),
+                  color: textColor,
+                  
+                  height: "45px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px"
+                }}
+                onClick={handleApplyClick}
+              >
+                {getTranslation(landingPageData?.lang, 'applyNow')}
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -1254,12 +1260,13 @@ const handlemediaLink = (platform) => {
   );
 };
 
-const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview=false }) => {
+const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview=false, isMultiJob=false }) => {
   if (landingPageData?.templateId?.toLowerCase() === "3")
     return (
       <Template3
         landingPageData={landingPageData}
         onClickApply={onClickApply}
+        isMultiJob={isMultiJob}
       />
     );
   if (landingPageData?.templateId === "2")
@@ -1267,6 +1274,7 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
       <Template2
         landingPageData={landingPageData}
         onClickApply={onClickApply}
+        isMultiJob={isMultiJob}
       />
     );
   if (landingPageData?.templateId === "1")
@@ -1281,6 +1289,7 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
         isEdit={isEdit}
         setLandingPageData={setLandingPageData}
         isMovilePreview={isMovilePreview}
+        isMultiJob={isMultiJob}
       />
     );
   return (
@@ -1293,6 +1302,7 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
       lpId={lpId}
       isEdit={isEdit}
       setLandingPageData={setLandingPageData}
+      isMultiJob={isMultiJob}
     />
   );
 };

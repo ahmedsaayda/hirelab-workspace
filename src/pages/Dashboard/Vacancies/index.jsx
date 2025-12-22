@@ -62,6 +62,8 @@ import PasteUrlModalExperimental from "./PasteUrlModalExperimental.jsx";
 import PasteUrlModal from "./PasteUrlModal.jsx";
 import JobDescriptionModal from "./JobDescriptionModal.jsx";
 import UpgradeModal from "./components/UpgradeModal.jsx";
+import CampaignTypeSelector from "./CampaignTypeSelector.jsx";
+import MultiJobCampaignModal from "./MultiJobCampaignModal.jsx";
 import { partner } from "../../../constants.js";
 import { useSearchParams } from "next/navigation";
 
@@ -127,6 +129,8 @@ const Vacancies = () => {
   });
   console.log("addNew", addNew);
   const [addNewModal, setAddNewModal] = useState(false);
+  const [campaignTypeSelectorOpen, setCampaignTypeSelectorOpen] = useState(false);
+  const [multiJobModalOpen, setMultiJobModalOpen] = useState(false);
   const [jobTitleX, setJobTitleX] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [adHeadline, setAdHeadline] = useState("");
@@ -1123,7 +1127,19 @@ Respond with json that adheres to the following jsonschema:
     }
 
     console.log('✅ ALLOWING: User can create new vacancy');
+    // Show campaign type selector first
+    setCampaignTypeSelectorOpen(true);
+  };
+
+  // Handle campaign type selection
+  const handleSelectSingleJob = () => {
+    setCampaignTypeSelectorOpen(false);
     setAddNewModal(true);
+  };
+
+  const handleSelectMultiJob = () => {
+    setCampaignTypeSelectorOpen(false);
+    setMultiJobModalOpen(true);
   };
 
   const handleRefreshAfterVacancyCreation = async () => {
@@ -1596,12 +1612,24 @@ Respond with json that adheres to the following jsonschema:
         onCancel={() => {
           setAddNewModal(false);
         }}
-        okButtonProps={{ style: { display: "none" } }}
-        cancelButtonProps={{ style: { display: "none" } }}
+        footer={null}
         wrapClassName={`${darkMode ? "dark" : ""}`}
         destroyOnClose
-        closable={false}
-        maskClosable={false}
+        closable={true}
+        maskClosable={true}
+        centered
+        width={640}
+        styles={{
+          content: {
+            padding: 0,
+            borderRadius: 24,
+            overflow: 'hidden'
+          },
+          mask: {
+            backdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.4)'
+          }
+        }}
       >
         {(() => {
           // Use workspace-specific funnel usage when in workspace session
@@ -1623,166 +1651,225 @@ Respond with json that adheres to the following jsonschema:
           const hasReachedLimit = maxFunnels !== null && currentFunnelCount >= maxFunnels;
 
           if (hasReachedLimit) {
-            // Show upgrade prompt instead of creation options
+            // Show upgrade prompt instead of creation options - Modern Design
             return (
-              <div className="flex flex-col gap-6 rounded-[12px] bg-white-A700 py-6 px-6 sm:p-5">
-                <div className="flex gap-5 justify-center items-center w-full">
-                  <Heading
-                    size="7xl"
-                    as="h1"
-                    className="!text-black-900_01 w-full text-center"
-                  >
-                    Upgrade Required
-                  </Heading>
-                  <Img
-                    src="/images/img_arrow_right_blue_gray_400.svg"
-                    alt="arrowright"
-                    className="h-[24px] w-[24px] self-start cursor-pointer"
-                    onClick={() => setAddNewModal(false)}
-                  />
-                </div>
+              <div className="p-8">
+                {/* Header with gradient background */}
+                <div className="relative -mx-8 -mt-8 px-8 pt-12 pb-8 mb-8 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 overflow-hidden">
+                  {/* Decorative elements */}
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-amber-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-200/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
-                <div className="flex flex-col gap-4 items-center text-center">
-                  {/* Limit reached icon */}
-                  <div className="flex justify-center items-center w-16 h-16 bg-orange-100 rounded-full">
-                    <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </div>
+                  <div className="relative text-center">
+                    {/* Icon */}
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl mb-5 shadow-lg shadow-amber-200">
+                      <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                    </div>
 
-                  {/* Main message */}
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      You've reached your funnel limit
-                    </h3>
-                    <p className="max-w-md text-gray-600">
-                      You're currently using <span className="font-medium">{currentFunnelCount} of {maxFunnels}</span> funnels
-                      available on the <span className="font-medium">{tierName} plan</span>.
-                      Upgrade your plan to create more recruitment funnels and unlock additional features.
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                      Campaign Limit Reached
+                    </h1>
+                    <p className="text-gray-600 max-w-sm mx-auto">
+                      You're using <span className="font-semibold text-amber-600">{currentFunnelCount} of {maxFunnels}</span> campaigns on the <span className="font-semibold">{tierName}</span> plan
                     </p>
                   </div>
+                </div>
 
-                  {/* Upgrade benefits */}
-                  <div className="p-4 w-full max-w-md bg-gray-50 rounded-lg">
-                    <h4 className="mb-2 font-medium text-gray-800">Upgrade to unlock:</h4>
-                    <ul className="space-y-1 text-sm text-gray-600">
-                      <li className="flex gap-2 items-center">
-                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        More recruitment funnels
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Advanced customization options
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Priority support
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Analytics and insights
-                      </li>
-                    </ul>
+                {/* Benefits Grid */}
+                <div className="mb-8">
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4 text-center">
+                    Unlock with Pro
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { icon: "M12 6v12m6-6H6", text: "Unlimited campaigns" },
+                      { icon: "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z", text: "AI-powered tools" },
+                      { icon: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75z M9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625z M16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z", text: "Advanced analytics" },
+                      { icon: "M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.746 3.746 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z", text: "Priority support" },
+                    ].map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100"
+                      >
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                          </svg>
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">{item.text}</span>
+                      </div>
+                    ))}
                   </div>
+                </div>
 
-                  {/* Action buttons */}
-                  <div className="flex flex-col gap-3 pt-2 w-full max-w-md sm:flex-row">
-                    <button
-                      onClick={() => {
-                        setAddNewModal(false);
-                        setUpgradeModalVisible(true);
-                      }}
-                      className="flex flex-1 gap-2 justify-center items-center px-4 py-3 font-medium text-white bg-indigo-600 rounded-lg transition-colors duration-200 hover:bg-indigo-700"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                      </svg>
-                      Upgrade Now
-                    </button>
-                    <button
-                      onClick={() => setAddNewModal(false)}
-                      className="flex-1 px-4 py-3 font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors duration-200 hover:bg-gray-200"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => {
+                      setAddNewModal(false);
+                      setUpgradeModalVisible(true);
+                    }}
+                    className="w-full py-3.5 px-6 bg-violet-500 text-white font-semibold rounded-xl transition-all duration-200 hover:bg-violet-600 hover:shadow-lg hover:shadow-violet-100 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                    </svg>
+                    Upgrade to Pro
+                  </button>
+                  <button
+                    onClick={() => setAddNewModal(false)}
+                    className="w-full py-3 px-6 text-gray-600 font-medium rounded-xl transition-all duration-200 hover:bg-violet-50"
+                  >
+                    Maybe later
+                  </button>
                 </div>
               </div>
             );
           }
 
-          // Show normal creation options if under limit
+          // Show normal creation options if under limit - Modern Design
           return (
-            <div className="flex flex-col gap-[29px] rounded-[12px] bg-white-A700 py-1 pl-6 pr-[23px] sm:p-5">
-              <div className="flex gap-5 justify-center items-center w-full md:pl-5">
-                <Heading
-                  size="7xl"
-                  as="h1"
-                  className="!text-black-900_01 w-full text-center"
-                >
-                  Create a new vacancy
-                </Heading>
-
-                <Img
-                  src="/images/img_arrow_right_blue_gray_400.svg"
-                  alt="arrowright"
-                  className="h-[24px] w-[24px] self-start cursor-pointer"
-                  onClick={() => setAddNewModal(false)}
-                />
+            <div className="p-8">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                  Create a new job
+                </h1>
+                <p className="text-gray-500 text-sm">
+                  Choose how you'd like to get started
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-6 justify-center smx:grid-cols-1">
-                {[
-                  {
-                    text: "Start from scratch",
-                    subtext: "Best used when you don't have a job description ready",
-                    imageIcon: "/images/img_plus.svg",
-                    onClick: async () => {
-                      setAddNew("scratch");
-                      setAddNewModal(false);
-                    },
-                    locked: false,
-                  },
-                  {
-                    text: "Paste a URL",
-                    subtext: "Best used with public job page URLs (ie. URLs from your company career site)",
-                    imageIcon: "/images/folder.svg",
-                    onClick: () => {
-                      setAddNewModal(false);
-                      setAddNew("url");
-                    },
-                    locked: false,
-                  },
-                  {
-                    text: "Paste existing job text",
-                    subtext: "Best used for gated or private job pages. (ie job boards like Indeed)",
-                    imageIcon: "/images/magic-wand-01.svg",
-                    onClick: () => {
-                      setAddNewModal(false);
-                      setAddNew("job-description");
-                    },
-                    locked: false,
-                  },
-                  {
-                    text: "Import from ATS",
-                    subtext: "Used only with direct external ATS integation",
-                    imageIcon: "/images/layout-alt-01.svg",
-                    onClick: () => {
-                      setAddNewModal(false);
-                      setAddNew("import-ats");
-                    },
-                    locked: true,
-                  },
-                ]?.map((d, index) => (
-                  <CreateANewVacancyInput {...d} key={"gridplusone" + index} />
-                ))}
+
+              {/* Options Grid */}
+              <div className="grid grid-cols-2 gap-4 smx:grid-cols-1">
+                {/* Start from scratch */}
+                <button
+                  onClick={() => {
+                    setAddNew("scratch");
+                    setAddNewModal(false);
+                  }}
+                  className="group relative text-left"
+                >
+                  <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 transition-all duration-300 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-50 hover:-translate-y-0.5">
+                    {/* Icon */}
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 flex items-center justify-center mb-4 group-hover:from-violet-100 group-hover:to-purple-100 transition-colors">
+                      <svg className="w-6 h-6 text-violet-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                    </div>
+
+                    <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-violet-600 transition-colors">
+                      Start from scratch
+                    </h3>
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      Build your job page step by step with our guided wizard
+                    </p>
+
+                    {/* Recommended badge */}
+                    <div className="absolute top-3 right-3 bg-emerald-50 text-emerald-600 text-[10px] font-semibold px-2 py-1 rounded-full">
+                      Recommended
+                    </div>
+                  </div>
+                </button>
+
+                {/* Paste a URL */}
+                <button
+                  onClick={() => {
+                    setAddNewModal(false);
+                    setAddNew("url");
+                  }}
+                  className="group relative text-left"
+                >
+                  <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 transition-all duration-300 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-50 hover:-translate-y-0.5">
+                    {/* Icon */}
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-50 to-pink-50 flex items-center justify-center mb-4 group-hover:from-fuchsia-100 group-hover:to-pink-100 transition-colors">
+                      <svg className="w-6 h-6 text-fuchsia-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                      </svg>
+                    </div>
+
+                    <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-fuchsia-600 transition-colors">
+                      Paste a URL
+                    </h3>
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      Import from your career site or any public job posting
+                    </p>
+
+                    {/* AI badge */}
+                    <div className="absolute top-3 right-3 bg-violet-50 text-violet-600 text-[10px] font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                      </svg>
+                      AI-powered
+                    </div>
+                  </div>
+                </button>
+
+                {/* Paste job text */}
+                <button
+                  onClick={() => {
+                    setAddNewModal(false);
+                    setAddNew("job-description");
+                  }}
+                  className="group relative text-left"
+                >
+                  <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 transition-all duration-300 hover:border-amber-200 hover:shadow-lg hover:shadow-amber-50 hover:-translate-y-0.5">
+                    {/* Icon */}
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center mb-4 group-hover:from-amber-100 group-hover:to-orange-100 transition-colors">
+                      <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                      </svg>
+                    </div>
+
+                    <h3 className="text-base font-semibold text-gray-900 mb-1 group-hover:text-amber-600 transition-colors">
+                      Paste job text
+                    </h3>
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      Copy & paste from Indeed, LinkedIn, or any job board
+                    </p>
+                  </div>
+                </button>
+
+                {/* Import from ATS - Locked */}
+                <div className="group relative">
+                  <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/50 p-5 opacity-60 cursor-not-allowed">
+                    {/* Icon */}
+                    <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-4">
+                      <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                      </svg>
+                    </div>
+
+                    <h3 className="text-base font-semibold text-gray-500 mb-1">
+                      Import from ATS
+                    </h3>
+                    <p className="text-sm text-gray-400 leading-relaxed">
+                      Direct integration with your applicant tracking system
+                    </p>
+
+                    {/* Premium badge */}
+                    <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-[10px] font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                      </svg>
+                      Coming Soon
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tip */}
+              <div className="mt-6 flex items-start gap-3 p-4 rounded-xl bg-violet-50/50 border border-violet-100/60">
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center">
+                  <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+                  </svg>
+                </div>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium text-violet-700">Pro tip:</span> Using <span className="font-medium">Paste a URL</span> lets our AI extract all job details automatically — saves you time!
+                </p>
               </div>
             </div>
           );
@@ -2118,6 +2205,28 @@ Respond with json that adheres to the following jsonschema:
       {addNew === "job-description" && (
         <JobDescriptionModal onClose={() => setAddNew(null)} ongoBack={() => { setAddNew(null); setAddNewModal(true) }} onRefresh={handleRefreshAfterVacancyCreation} />
       )}
+
+      {/* Campaign Type Selector Modal */}
+      <CampaignTypeSelector
+        isOpen={campaignTypeSelectorOpen}
+        onClose={() => setCampaignTypeSelectorOpen(false)}
+        onSelectSingle={handleSelectSingleJob}
+        onSelectMulti={handleSelectMultiJob}
+        darkMode={darkMode}
+      />
+
+      {/* Multi-Job Campaign Modal */}
+      <MultiJobCampaignModal
+        isOpen={multiJobModalOpen}
+        onClose={() => setMultiJobModalOpen(false)}
+        onGoBack={() => {
+          setMultiJobModalOpen(false);
+          setCampaignTypeSelectorOpen(true);
+        }}
+        onRefresh={handleRefreshAfterVacancyCreation}
+        darkMode={darkMode}
+        brandingDetails={brandingDetails}
+      />
 
       <UpgradeModal
         open={upgradeModalVisible}

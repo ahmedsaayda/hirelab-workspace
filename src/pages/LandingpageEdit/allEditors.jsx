@@ -1562,6 +1562,172 @@ const TextBoxEdit = (props) => {
   );
 };
 
+const LinkedJobsEdit = (props) => {
+  const { landingPageData, setLandingPageData } = props;
+  const user = useSelector(selectUser);
+  const [availableJobs, setAvailableJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch available single-job campaigns
+  useEffect(() => {
+    const fetchJobs = async () => {
+      setLoading(true);
+      try {
+        const CrudService = (await import("../../services/CrudService.js")).default;
+        const filters = {
+          campaignType: { $ne: "multi" },
+        };
+
+        if (user?.isWorkspaceSession && user?.workspaceId) {
+          filters.workspace = user.workspaceId;
+        } else {
+          filters.user_id = user?._id;
+        }
+
+        const response = await CrudService.search("LandingPageData", 100, 1, {
+          filters,
+          sorters: [{ key: "createdAt", direction: "desc" }]
+        });
+
+        setAvailableJobs(response.data.items || []);
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [user]);
+
+  const linkedCampaigns = landingPageData?.linkedCampaigns || [];
+
+  const toggleJob = (jobId) => {
+    const current = [...linkedCampaigns];
+    const index = current.indexOf(jobId);
+    
+    if (index > -1) {
+      current.splice(index, 1);
+    } else {
+      current.push(jobId);
+    }
+    
+    setLandingPageData(prev => ({ ...prev, linkedCampaigns: current }));
+  };
+
+  const filteredJobs = availableJobs.filter(job =>
+    !searchQuery.trim() ||
+    job.vacancyTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    job.department?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <>
+      <EditorRender
+        {...props}
+        items={[
+          {
+            key: "jobsSectionTitle",
+            label: "Section Title",
+            max: 60,
+          },
+          {
+            key: "jobsSectionDescription",
+            label: "Section Description",
+            max: 200,
+            textarea: true,
+          },
+        ]}
+      />
+
+      {/* Linked Jobs Manager */}
+      <div className="mt-6 pt-4 border-t border-gray-100">
+        <Heading size="lg" className="text-gray-900 mb-3">
+          Linked Positions ({linkedCampaigns.length})
+        </Heading>
+
+        {/* Search */}
+        <div className="mb-4">
+          <Input
+            placeholder="Search positions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="!rounded-lg"
+          />
+        </div>
+
+        {/* Jobs list */}
+        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+          {loading ? (
+            <div className="flex justify-center py-4">
+              <Spin size="small" />
+            </div>
+          ) : filteredJobs.length === 0 ? (
+            <Text className="text-gray-500 text-sm text-center py-4">
+              No single-job campaigns found
+            </Text>
+          ) : (
+            filteredJobs.map(job => {
+              const isLinked = linkedCampaigns.includes(job._id);
+              return (
+                <div
+                  key={job._id}
+                  onClick={() => toggleJob(job._id)}
+                  className={`
+                    flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all
+                    ${isLinked 
+                      ? 'bg-violet-50 border-2 border-violet-200' 
+                      : 'bg-white border border-gray-100 hover:border-violet-100'
+                    }
+                  `}
+                >
+                  {/* Thumbnail */}
+                  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                    {job.heroImage ? (
+                      <img src={job.heroImage} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <Text className={`font-medium truncate block ${isLinked ? 'text-violet-900' : 'text-gray-900'}`}>
+                      {job.vacancyTitle || "Untitled"}
+                    </Text>
+                    {job.department && (
+                      <Text className={`text-xs truncate block ${isLinked ? 'text-violet-600' : 'text-gray-500'}`}>
+                        {job.department}
+                      </Text>
+                    )}
+                  </div>
+
+                  {/* Checkbox */}
+                  <div className={`
+                    w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0
+                    ${isLinked ? 'bg-violet-500 border-violet-500' : 'border-gray-300'}
+                  `}>
+                    {isLinked && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
 export {
   AboutCompanyEdit,
   LeaderIntroductionEdit,
@@ -1579,4 +1745,5 @@ export {
   PhotosEdit,
   RecruiterContactEdit,
   TextBoxEdit,
+  LinkedJobsEdit,
 };

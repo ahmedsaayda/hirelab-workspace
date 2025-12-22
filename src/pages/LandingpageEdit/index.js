@@ -55,8 +55,14 @@ import {
   PhotosEdit,
   RecruiterContactEdit,
   TextBoxEdit,
+  LinkedJobsEdit,
 } from "./allEditors.jsx";
+import LinkedJobs from "../Landingpage/LinkedJobs.js";
+import MultiJobHero from "../Landingpage/MultiJobHero.js";
 import LandingpagePage from "../Landingpage/index.js";
+import MultiJobLandingPage from "../Landingpage/MultiJobLandingPage.js";
+import MultiJobEditor from "./MultiJobEditor.jsx";
+import MultiJobHeroEdit from "./MultiJobHeroEdit.jsx";
 import AIEditModal from "../Dashboard/Vacancies/AIEditModal.jsx";
 import { useHover } from "../../contexts/HoverContext.js";
 import NavBar from "../Landingpage/NavBar.jsx";
@@ -81,6 +87,12 @@ export const renderSection = ({
   // This function should render the corresponding section based on its key.
   switch (section?.key) {
     case "flexaligntop":
+      // Use MultiJobHero for multi-job campaigns
+      if (landingPageData?.campaignType === "multi") {
+        return (
+          <MultiJobHero key={key} fetchData={fetchData} landingPageData={landingPageData} isEdit={true} />
+        );
+      }
       return (
         <HeroSection key={key} fetchData={fetchData} landingPageData={landingPageData} />
       );
@@ -103,6 +115,7 @@ export const renderSection = ({
         onClickApply={() => { }}
         lpId={landingPageData?._id}
         isEdit={true}
+        isMultiJob={landingPageData?.campaignType === "multi"}
       />;
     case "Employee Testimonials":
       return (
@@ -180,6 +193,12 @@ export const renderSection = ({
       return (
         <TextBox key={key} fetchData={fetchData} landingPageData={landingPageData} />
       );
+    case "Linked Jobs":
+      // Use linkedCampaigns in the key to force re-render when jobs change
+      const linkedKey = `${key}-${(landingPageData?.linkedCampaigns || []).length}`;
+      return (
+        <LinkedJobs key={linkedKey} landingPageData={landingPageData} isEdit={true} />
+      );
 
     default:
       return <></>;
@@ -206,6 +225,10 @@ export const renderEditor = ({
   console.log("render Editor the section is", section)
   switch (section?.key) {
     case "flexaligntop":
+      // Use MultiJobHeroEdit for multi-job campaigns
+      if (landingPageData?.campaignType === "multi") {
+        return <MultiJobHeroEdit {...props} />;
+      }
       return <HeroSectionEdit {...props} />;
     case "form-editor":
       return <FormEditor {...props} />;
@@ -239,6 +262,8 @@ export const renderEditor = ({
       return <VideoEdit {...props} />;
     case "Text Box":
       return <TextBoxEdit {...props} />;
+    case "Linked Jobs":
+      return <LinkedJobsEdit {...props} />;
 
     default:
       return <></>;
@@ -361,6 +386,70 @@ const categories = [
   },
 ];
 
+// Simplified categories for multi-job career pages
+const multiJobCategories = [
+  {
+    title: "JOBS",
+    items: [
+      {
+        key: "Linked Jobs",
+        name: "Linked Jobs",
+        icon: <img src="/icons2/briefcase-02.svg" alt=" "></img>,
+      },
+    ],
+  },
+  {
+    title: "PEOPLE",
+    items: [
+      {
+        key: "Recruiter Contact",
+        name: "Recruiter Contact",
+        icon: <img src="/icons2/users-01.svg" alt=" "></img>,
+      },
+      {
+        key: "Employee Testimonials",
+        name: "Employee Testimonials",
+        icon: <img src="/icons2/message-smile-square.svg" alt=" "></img>,
+      },
+    ],
+  },
+  {
+    title: "COMPANY",
+    items: [
+      {
+        key: "About The Company",
+        name: "About The Company",
+        icon: <img src="/icons2/intersect-circle.svg" alt=" "></img>,
+      },
+      {
+        key: "Company Facts",
+        name: "Company Facts",
+        icon: <img src="/icons2/zap.svg" alt=" "></img>,
+      },
+    ],
+  },
+  {
+    title: "CONTENT",
+    items: [
+      {
+        key: "Image Carousel",
+        name: "Image Carousel",
+        icon: <img src="/icons2/image-01.svg" alt=" "></img>,
+      },
+      {
+        key: "Video",
+        name: "Video",
+        icon: <img src="/images/video-recorder.svg" alt=" "></img>,
+      },
+      {
+        key: "Text Box",
+        name: "Text Box",
+        icon: <img src="/icons2/type-square.svg" alt=" "></img>,
+      },
+    ],
+  },
+];
+
 const Category = ({ title, items, onClick, existingItems }) => (
   <div className="mb-6 cursor-pointer">
     <h2 className="mb-2 text-[##475467] text-md ">{title}</h2>
@@ -452,6 +541,7 @@ export default function LandingpageEdit({ paramsId }) {
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [hasImmediateUnsavedChanges, setHasImmediateUnsavedChanges] = useState(false);
+  const linkedJobsInitializedRef = useRef(false);
 
 
   const combinedSections = [
@@ -1716,6 +1806,107 @@ export default function LandingpageEdit({ paramsId }) {
     sendRedux()
   }, [activeKey, activeSection])
 
+  // For multi-job campaigns, ensure all required sections are present
+  // Multi-job default sections: Linked Jobs → Recruiter Contact → About Company → Company Facts → Testimonials
+  useEffect(() => {
+    if (landingPageData?.campaignType === "multi" && !linkedJobsInitializedRef.current) {
+      const multiJobMenuItems = [
+        {
+          id: "linked-jobs",
+          key: "Linked Jobs",
+          label: "Our Open Positions",
+          active: true,
+          visible: true,
+          sort: 1
+        },
+        {
+          id: "recruiter-contact",
+          key: "Recruiter Contact",
+          label: "Meet the Team",
+          active: true,
+          visible: true,
+          sort: 2
+        },
+        {
+          id: "about-company",
+          key: "About The Company",
+          label: "About Us",
+          active: true,
+          visible: true,
+          sort: 3
+        },
+        {
+          id: "company-facts",
+          key: "Company Facts",
+          label: "Why Join Us",
+          active: true,
+          visible: true,
+          sort: 4
+        },
+        {
+          id: "testimonials",
+          key: "Employee Testimonials",
+          label: "What Our Team Says",
+          active: true,
+          visible: true,
+          sort: 5
+        },
+      ];
+
+      // Check if we need to update menuItems (missing sections or only has linked jobs)
+      const currentActiveKeys = (landingPageData.menuItems || []).filter(item => item.active).map(item => item.key);
+      const requiredKeys = multiJobMenuItems.map(item => item.key);
+      const hasAllSections = requiredKeys.every(key => currentActiveKeys.includes(key));
+
+      if (!hasAllSections) {
+        const companyName = landingPageData?.companyName || user?.companyName || "Our Company";
+
+        // Build update with default data for empty sections
+        const updates = {
+          menuItems: multiJobMenuItems,
+        };
+
+        // Add default data for sections that don't exist
+        if (!landingPageData?.aboutTheCompanyDescription && !landingPageData?.companyInfo) {
+          updates.aboutTheCompanyTitle = "About Us";
+          updates.aboutTheCompanyDescription = `At ${companyName}, we believe in empowering our team members to do their best work. We're committed to creating an inclusive environment where everyone can thrive and grow their careers.`;
+        }
+
+        if (!landingPageData?.recruiters || landingPageData.recruiters.length === 0) {
+          updates.recruiterContactTitle = "Meet the Team";
+          updates.recruiterContactText = "Have questions? Our talent team is here to help you find your perfect role.";
+          updates.recruiters = user?.name || user?.fullName ? [
+            {
+              recruiterFullname: user?.fullName || user?.name || "",
+              recruiterRole: "Talent Acquisition",
+              recruiterEmail: user?.email || "",
+              recruiterPhone: "",
+              recruiterImage: user?.avatar || "",
+            }
+          ] : [];
+        }
+
+        if (!landingPageData?.facts || landingPageData.facts.length === 0) {
+          updates.facts = [
+            { emoji: "🌍", title: "Global Team", description: "Work with talented people from around the world" },
+            { emoji: "📈", title: "Growth", description: "Continuous learning and career development opportunities" },
+            { emoji: "⚖️", title: "Work-Life Balance", description: "Flexible working arrangements" },
+            { emoji: "💡", title: "Innovation", description: "Be part of cutting-edge projects" },
+          ];
+        }
+
+        if (!landingPageData?.testimonials) {
+          updates.testimonials = [];
+        }
+
+        setLandingPageData(prev => ({
+          ...prev,
+          ...updates
+        }));
+      }
+      linkedJobsInitializedRef.current = true;
+    }
+  }, [landingPageData?.campaignType]);
 
   // 🔥 NEW: Proper publish handler for PAGE scope
   const handlePublish = async () => {
@@ -1763,6 +1954,7 @@ export default function LandingpageEdit({ paramsId }) {
                 lpId={lpId}
                 isEdit={true}
                 isMovilePreview={true}
+                isMultiJob={landingPageData?.campaignType === "multi"}
               />
               <div
                 key="hero-section"
@@ -2046,6 +2238,7 @@ export default function LandingpageEdit({ paramsId }) {
                     lpId={lpId}
                     isEdit={true}
                     setLandingPageData={updateLandingPageData}
+                    isMultiJob={landingPageData?.campaignType === "multi"}
                   />
                   <div
                     key="hero-section"
@@ -2229,7 +2422,8 @@ export default function LandingpageEdit({ paramsId }) {
             className="w-full gap-2 !text-blue_gray-500 smx:pr-5 mb-8 "
           />
 
-          {categories.map((category, index) => (
+          {/* Use simplified categories for multi-job campaigns */}
+          {(landingPageData?.campaignType === "multi" ? multiJobCategories : categories).map((category, index) => (
             <Category
               key={index}
               title={category.title}

@@ -13,6 +13,7 @@ import HeroSection from "./HeroSection.js";
 import NavBar from "./NavBar.jsx";
 import ApplyCustomFont from "./ApplyCustomFont.jsx";
 import MetaPixel from "./MetaPixel.jsx";
+import MultiJobLandingPage from "./MultiJobLandingPage.js";
 import { useFocus } from "../../contexts/FocusContext.js";
 import { useHover } from "../../contexts/HoverContext.js";
 import CrudService from "../../services/CrudService.js";
@@ -20,7 +21,7 @@ import CrudService from "../../services/CrudService.js";
 // Helper function to ensure pixel is ready before firing events
 const waitForPixel = (callback, maxRetries = 10, retryDelay = 500) => {
   let retries = 0;
-  
+
   const checkAndFire = () => {
     if (window.fbq && typeof window.fbq === 'function') {
       console.log('✅ PIXEL-READY: fbq is available, firing event');
@@ -33,7 +34,7 @@ const waitForPixel = (callback, maxRetries = 10, retryDelay = 500) => {
       console.error('❌ PIXEL-TIMEOUT: fbq not available after max retries');
     }
   };
-  
+
   checkAndFire();
 };
 
@@ -65,22 +66,22 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   const [debugLogs, setDebugLogs] = useState([]);
   const [debugExpanded, setDebugExpanded] = useState(false);
   const debugLogsRef = useRef([]);
-  
+
   // Check for debug parameter in URL
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
-  
+
   useEffect(() => {
     // Check for debug parameter in URL (?debug=hirelab2024 or ?hldbg=true)
     const urlParams = new URLSearchParams(window.location.search);
     const debugParam = urlParams.get('debug');
     const hldbgParam = urlParams.get('hldbg');
-    
-    const isDebugMode = process.env.NODE_ENV === 'development' || 
-                       debugParam === 'hirelab2024' || debugParam ==="true"||
-                       hldbgParam === 'true';
-    
+
+    const isDebugMode = process.env.NODE_ENV === 'development' ||
+      debugParam === 'hirelab2024' || debugParam === "true" ||
+      hldbgParam === 'true';
+
     setIsDebugEnabled(isDebugMode);
-    
+
     if (isDebugMode && process.env.NODE_ENV !== 'development') {
       console.log('🔧 Hirelab Analytics Debug Mode Enabled');
     }
@@ -115,7 +116,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
         const data = await response.json();
         console.log("Visit tracked for landing page:", lpId, data);
         // Persist that we've tracked this visit for this lpId
-        try { window.localStorage?.setItem(visitKey, '1'); } catch (_) {}
+        try { window.localStorage?.setItem(visitKey, '1'); } catch (_) { }
       } else {
         throw new Error('Failed to track visit');
       }
@@ -128,22 +129,22 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   // Debug logging function
   const addDebugLog = useCallback((message, type = 'info') => {
     if (!isDebugEnabled) return; // Only log when debug is enabled
-    
+
     const timestamp = new Date().toLocaleTimeString();
     const now = Date.now();
     const isInteracting = (now - lastActivityRef.current) <= ACTIVITY_BURST_WINDOW;
-    const newLog = { 
-      id: Date.now(), 
-      timestamp, 
-      message, 
+    const newLog = {
+      id: Date.now(),
+      timestamp,
+      message,
       type,
       activeTime: Math.round(activeTimeRef.current / 1000),
       isActive: isInteracting && !sessionEndedRef.current
     };
-    
+
     debugLogsRef.current = [newLog, ...debugLogsRef.current.slice(0, 49)]; // Keep last 50 logs
     setDebugLogs([...debugLogsRef.current]);
-    
+
     // Also log to console
     const icon = type === 'activity' ? '🎯' : type === 'timer' ? '⏱️' : type === 'warning' ? '⚠️' : 'ℹ️';
     console.log(`${icon} DEBUG: ${message}`);
@@ -179,10 +180,10 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   // Send time update to backend (only active time)
   const sendTimeUpdate = useCallback(async (timeInSeconds) => {
     if (!lpId || timeInSeconds < 1) return;
-    
+
     try {
       addDebugLog(`Sending ${timeInSeconds}s to backend...`, 'timer');
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/analytics/track-time/${lpId}`, {
         method: 'POST',
         headers: {
@@ -190,7 +191,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
         },
         body: JSON.stringify({ timeSpent: timeInSeconds }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         addDebugLog(`✅ Sent ${timeInSeconds}s successfully (Total: ${data.totalTimeSpent}s)`, 'timer');
@@ -261,7 +262,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
       isActiveRef.current = false;
       sessionEndedRef.current = false;
       sessionEndedAtRef.current = null;
-      
+
       addDebugLog('🚀 Analytics tracking initialized (no idle time counted; 2min ends session)', 'activity');
     }
   }, [landingPageData, trackVisit, addDebugLog]);
@@ -322,7 +323,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     let activityTimeout;
     const throttledRecordActivity = () => {
       if (activityTimeout) return;
-      
+
       activityTimeout = setTimeout(() => {
         recordActivity();
         activityTimeout = null;
@@ -339,7 +340,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
       activityEvents.forEach(event => {
         document.removeEventListener(event, throttledRecordActivity, true);
       });
-      
+
       if (activityTimeout) {
         clearTimeout(activityTimeout);
       }
@@ -351,7 +352,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     const navbarHeight = 128;
     document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`);
     document.documentElement.style.setProperty('scroll-padding-top', `${navbarHeight}px`);
-    
+
     // Add styles for scroll behavior
     const style = document.createElement('style');
     style.textContent = `
@@ -375,9 +376,9 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
       PublicService.getLP(lpId).then((res) => {
         if (res.data?.lp) setLandingPageData(res.data.lp);
       })
-      .catch((err) => {
-        console.log("error fetching data",err)
-      })
+        .catch((err) => {
+          console.log("error fetching data", err)
+        })
     }
   }, [lpId, defaultLandingPageData, landingPageData]);
 
@@ -408,7 +409,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     if (!landingPageData?.metaPixelId || !lpId) return;
 
     const fireLandingPageView = () => {
-      
+
       waitForPixel(() => {
         console.log('🎯 LANDING: Starting to fire PageView event');
         try {
@@ -442,7 +443,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
                 company: landingPageData?.companyName || '',
                 job_category: landingPageData?.department || ''
               });
-              try { sessionStorage.setItem(`metaLeadFired_${lpId}`, '1'); } catch (_) {}
+              try { sessionStorage.setItem(`metaLeadFired_${lpId}`, '1'); } catch (_) { }
               console.log('✅ LANDING: Hirelab.FormView event fired successfully');
             } catch (e) {
               console.error('❌ LANDING: Hirelab.FormView event failed:', e);
@@ -451,7 +452,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
         } else {
           console.warn('⚠️ LANDING: No pixel ID provided');
         }
-      } catch (e) { 
+      } catch (e) {
         console.error('❌ LANDING: Hirelab.FormView event failed:', e);
       }
       setShowFormEditor(true);
@@ -477,12 +478,25 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   if (!landingPageData) return <Skeleton active />;
   // if (!landingPageData?.published) return <></>;
 
+  // Render multi-job landing page if this is a multi-job campaign
+  if (landingPageData?.campaignType === "multi") {
+    return (
+      <MultiJobLandingPage
+        landingPageData={landingPageData}
+        isEdit={false}
+        fullscreen={fullscreen}
+        showBackToEditButton={showBackToEditButton}
+        setFullscreen={setFullscreen}
+      />
+    );
+  }
+
   return (
     <div className="w-full">
       <ApplyCustomFont landingPageData={landingPageData} />
       <MetaPixel metaPixelId={landingPageData?.metaPixelId} />
 
-      
+
       {/* Debug Panel - show in development or with secret parameter */}
       {isDebugEnabled && (
         <div className="fixed top-40 right-4 bg-gray-900 bg-opacity-95 text-white rounded-lg shadow-lg z-50 max-w-md">
@@ -494,14 +508,14 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
                 <span className="ml-2 text-xs bg-orange-500 px-1 rounded">PROD</span>
               )}
             </h3>
-            <button 
+            <button
               onClick={() => setDebugExpanded(!debugExpanded)}
               className="text-xs bg-blue-500 hover:bg-blue-400 px-2 py-1 rounded"
             >
               {debugExpanded ? 'Collapse' : 'Expand'}
             </button>
           </div>
-          
+
           {/* Always visible stats */}
           <div className="p-3 text-xs space-y-1">
             <div className="flex justify-between">
@@ -537,7 +551,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
               <div className="px-3 pb-3 border-t border-gray-700 pt-3">
                 <div className="text-xs font-semibold mb-2 text-blue-300">🧪 Test Scenarios:</div>
                 <div className="grid grid-cols-2 gap-2">
-                  <button 
+                  <button
                     onClick={() => {
                       // Simulate 2+ minutes of inactivity
                       const oldActivity = lastActivityRef.current;
@@ -549,7 +563,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
                   >
                     Simulate Inactivity
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       recordActivity();
                       addDebugLog('🧪 Simulated user activity', 'activity');
@@ -558,7 +572,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
                   >
                     Simulate Activity
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       const testTime = 10;
                       sendTimeUpdate(testTime);
@@ -568,7 +582,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
                   >
                     Test Backend Send
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       debugLogsRef.current = [];
                       setDebugLogs([]);
@@ -579,11 +593,11 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
                     Clear Logs
                   </button>
                 </div>
-                
+
                 {/* Disable Debug Button for Production */}
                 {process.env.NODE_ENV !== 'development' && (
                   <div className="mt-2">
-                    <button 
+                    <button
                       onClick={() => {
                         setIsDebugEnabled(false);
                         console.log('🔧 Debug mode disabled');
@@ -603,20 +617,18 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
                 </div>
                 <div className="max-h-48 overflow-y-auto text-xs">
                   {debugLogs.slice(0, 10).map((log) => (
-                    <div 
-                      key={log.id} 
-                      className={`px-3 py-1 border-b border-gray-800 ${
-                        log.type === 'warning' ? 'bg-orange-900 bg-opacity-30' :
+                    <div
+                      key={log.id}
+                      className={`px-3 py-1 border-b border-gray-800 ${log.type === 'warning' ? 'bg-orange-900 bg-opacity-30' :
                         log.type === 'activity' ? 'bg-green-900 bg-opacity-30' :
-                        log.type === 'timer' ? 'bg-blue-900 bg-opacity-30' :
-                        'bg-gray-800 bg-opacity-30'
-                      }`}
+                          log.type === 'timer' ? 'bg-blue-900 bg-opacity-30' :
+                            'bg-gray-800 bg-opacity-30'
+                        }`}
                     >
                       <div className="flex justify-between items-start">
                         <span className="text-gray-300 text-xs">{log.timestamp}</span>
-                        <span className={`text-xs px-1 rounded ${
-                          log.isActive ? 'bg-green-600' : 'bg-red-600'
-                        }`}>
+                        <span className={`text-xs px-1 rounded ${log.isActive ? 'bg-green-600' : 'bg-red-600'
+                          }`}>
                           {log.isActive ? 'A' : 'I'}
                         </span>
                       </div>
@@ -671,7 +683,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
               } else {
                 console.warn('⚠️ NAVBAR: No pixel ID provided');
               }
-            } catch (e) { 
+            } catch (e) {
               console.error('❌ NAVBAR: Hirelab.FormView event failed:', e);
             }
             setShowFormEditor(true);
@@ -682,6 +694,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
           lpId={lpId}
           isEdit={false}
           setLandingPageData={setLandingPageData}
+          isMultiJob={landingPageData?.campaignType === "multi"}
         />
 
         <HeroSection landingPageData={landingPageData} fetchData={fetchData} />
@@ -693,12 +706,13 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
             renderSection({ section, landingPageData, fetchData, key: idx })
           )}
 
-        <Footer 
-          landingPageData={landingPageData} 
+        <Footer
+          landingPageData={landingPageData}
           fetchData={fetchData}
           onClickApply={() => setShowFormEditor(true)}
           lpId={lpId}
           isEdit={false}
+          isMultiJob={landingPageData?.campaignType === "multi"}
         />
 
         <Form
