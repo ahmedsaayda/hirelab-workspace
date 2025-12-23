@@ -93,7 +93,7 @@ const resolveJumpTarget = (field, formData) => {
 // Helper function to ensure pixel is ready before firing events
 const waitForPixel = (callback, maxRetries = 10, retryDelay = 500) => {
   let retries = 0;
-  
+
   const checkAndFire = () => {
     if (window.fbq && typeof window.fbq === 'function') {
       console.log('✅ PIXEL-READY: fbq is available, firing event');
@@ -106,7 +106,7 @@ const waitForPixel = (callback, maxRetries = 10, retryDelay = 500) => {
       console.error('❌ PIXEL-TIMEOUT: fbq not available after max retries');
     }
   };
-  
+
   checkAndFire();
 };
 // Import custom styled components
@@ -133,22 +133,22 @@ const MultipleChoice = ({ field, value, onChange, brandColor }) => (
       // Handle both string format ["HTML", "CSS"] and object format [{text: "HTML", isNegative: false}]
       const optionText = typeof option === 'string' ? option : option.text;
       const isSelected = value === optionText;
-      
+
       return (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className="border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300"
           onClick={() => onChange({ target: { value: optionText } })}
           style={isSelected ? { borderColor: brandColor } : {}}
         >
           <div className="flex items-center p-4">
-            <div 
+            <div
               className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0 ${!isSelected ? 'border-2 border-gray-200' : ''}`}
               style={isSelected ? { backgroundColor: brandColor, color: 'white' } : {}}
             >
               {letter}
             </div>
-            <p 
+            <p
               className="text-sm flex-1"
               style={{ color: isSelected ? brandColor : '#1f2937' }}
             >
@@ -175,10 +175,10 @@ const MultiSelectChoice = ({ field, value, onChange, brandColor }) => (
       // Handle both string format ["HTML", "CSS"] and object format [{text: "HTML", isNegative: false}]
       const optionText = typeof option === 'string' ? option : option.text;
       const isSelected = value?.includes(optionText);
-      
+
       return (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className="border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300"
           onClick={() => {
             const newValue = value || [];
@@ -191,13 +191,13 @@ const MultiSelectChoice = ({ field, value, onChange, brandColor }) => (
           style={isSelected ? { borderColor: brandColor } : {}}
         >
           <div className="flex items-center p-4">
-            <div 
+            <div
               className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0 ${!isSelected ? 'border-2 border-gray-200' : ''}`}
               style={isSelected ? { backgroundColor: brandColor, color: 'white' } : {}}
             >
               {letter}
             </div>
-            <p 
+            <p
               className="text-sm flex-1"
               style={{ color: isSelected ? brandColor : '#1f2937' }}
             >
@@ -256,20 +256,18 @@ const YesNoQuestion = ({ field, value, onChange }) => {
           onClick={() => onChange('yes')}
           className={`
             relative flex items-center justify-center px-6 py-4 rounded-xl border-2 transition-all duration-200 font-medium text-sm
-            ${
-              value === 'yes'
-                ? 'border-green-500 bg-green-50 text-green-700 shadow-md'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-25 hover:text-green-600'
+            ${value === 'yes'
+              ? 'border-green-500 bg-green-50 text-green-700 shadow-md'
+              : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-25 hover:text-green-600'
             }
           `}
         >
           <div className="flex items-center space-x-2">
             <div className={`
               w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
-              ${
-                value === 'yes'
-                  ? 'border-green-500 bg-green-500'
-                  : 'border-gray-300'
+              ${value === 'yes'
+                ? 'border-green-500 bg-green-500'
+                : 'border-gray-300'
               }
             `}>
               {value === 'yes' && (
@@ -281,26 +279,24 @@ const YesNoQuestion = ({ field, value, onChange }) => {
             <span>{yesLabel}</span>
           </div>
         </button>
-        
+
         <button
           type="button"
           onClick={() => onChange('no')}
           className={`
             relative flex items-center justify-center px-6 py-4 rounded-xl border-2 transition-all duration-200 font-medium text-sm
-            ${
-              value === 'no'
-                ? 'border-red-500 bg-red-50 text-red-700 shadow-md'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-red-300 hover:bg-red-25 hover:text-red-600'
+            ${value === 'no'
+              ? 'border-red-500 bg-red-50 text-red-700 shadow-md'
+              : 'border-gray-200 bg-white text-gray-600 hover:border-red-300 hover:bg-red-25 hover:text-red-600'
             }
           `}
         >
           <div className="flex items-center space-x-2">
             <div className={`
               w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
-              ${
-                value === 'no'
-                  ? 'border-red-500 bg-red-500'
-                  : 'border-gray-300'
+              ${value === 'no'
+                ? 'border-red-500 bg-red-500'
+                : 'border-gray-300'
               }
             `}>
               {value === 'no' && (
@@ -355,36 +351,36 @@ const FileUpload = ({ value, onChange, placeholder, videoOnly = false }) => {
       '.zip', '.rar', '.7z', '.tar', '.gz',
       '.xls', '.xlsx', '.csv', '.ppt', '.pptx'
     ];
-  const allowedTypes = videoOnly ? VIDEO_EXTS : [...VIDEO_EXTS, ...NON_VIDEO_EXTS];
-  const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-  const isVideo = VIDEO_EXTS.includes(fileExtension);
-  
-  if (!allowedTypes.includes(fileExtension)) {
-    message.error(
-      videoOnly
-        ? 'Please upload a video file (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)'
-        : 'Please select a valid file type (Documents, Images, Videos, Audio, Archives, etc.)'
-    );
-    return;
-  }
+    const allowedTypes = videoOnly ? VIDEO_EXTS : [...VIDEO_EXTS, ...NON_VIDEO_EXTS];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    const isVideo = VIDEO_EXTS.includes(fileExtension);
 
-  const MAX_BYTES = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
-  if (file.size > MAX_BYTES) {
-    message.error(isVideo ? 'Video size must be ≤ 100MB' : 'File size must be ≤ 10MB');
-    return;
-  }
+    if (!allowedTypes.includes(fileExtension)) {
+      message.error(
+        videoOnly
+          ? 'Please upload a video file (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)'
+          : 'Please select a valid file type (Documents, Images, Videos, Audio, Archives, etc.)'
+      );
+      return;
+    }
+
+    const MAX_BYTES = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > MAX_BYTES) {
+      message.error(isVideo ? 'Video size must be ≤ 100MB' : 'File size must be ≤ 10MB');
+      return;
+    }
 
     setUploading(true);
     try {
       console.log('📄 Uploading file:', file.name);
-      
-    // Upload file using UploadService (100MB limit for videos, 10MB for others)
-    const response = await UploadService.upload(file, isVideo ? 100 : 10);
-      
+
+      // Upload file using UploadService (100MB limit for videos, 10MB for others)
+      const response = await UploadService.upload(file, isVideo ? 100 : 10);
+
       if (response && response.data && response.data.secure_url) {
         const uploadedUrl = response.data.secure_url;
         console.log('✅ File upload successful:', uploadedUrl);
-        
+
         setFileName(file.name);
         // Store both URL and filename as an object with additional metadata
         onChange({
@@ -425,11 +421,11 @@ const FileUpload = ({ value, onChange, placeholder, videoOnly = false }) => {
           ) : (
             <>
               <p className="text-lg font-medium text-blue-600">Click to upload or drag and drop</p>
-        <p className="text-sm text-gray-500 mt-1">
-          {videoOnly
-            ? 'Videos up to 100MB (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)'
-            : 'Videos up to 100MB; other files up to 10MB'}
-        </p>
+              <p className="text-sm text-gray-500 mt-1">
+                {videoOnly
+                  ? 'Videos up to 100MB (MP4, WEBM, OGG, AVI, MOV, WMV, FLV)'
+                  : 'Videos up to 100MB; other files up to 10MB'}
+              </p>
             </>
           )}
           {fileName && !uploading && <p className="text-sm text-green-600 mt-2">✓ {fileName}</p>}
@@ -452,15 +448,15 @@ const FileUpload = ({ value, onChange, placeholder, videoOnly = false }) => {
 export default function ApplyPage({ defaultLandingPageData = null }) {
   const router = useRouter();
   const { lpId } = router.query;
-  
+
   const [landingPageData, setLandingPageData] = useState(defaultLandingPageData);
   const settings = landingPageData?.form?.settings || {};
-  console.log("settings?.redirectToUrl",settings?.redirectToUrl)
+  console.log("settings?.redirectToUrl", settings?.redirectToUrl)
   const [formData, setFormData] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-const [hasSavedContact, setHasSavedContact] = useState(false);
+  const [hasSavedContact, setHasSavedContact] = useState(false);
   const [formFields, setFormFields] = useState([]);
   const [optInAccepted, setOptInAccepted] = useState(false);
   // Removed detectedCountry since we're using regular Input instead of PhoneInput
@@ -469,28 +465,28 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
   const [stableColors, setStableColors] = useState({
     primary: landingPageData?.primaryColor || null  // NO hardcoded colors!
   });
-  
+
   // Update colors when landing page data changes
   useEffect(() => {
     if (landingPageData?.primaryColor) {
       const realPrimary = landingPageData.primaryColor;
-      
+
       console.log("🎨 APPLY: USING REAL USER COLOR:", {
         realPrimary,
         landingPageData: !!landingPageData
       });
-      
+
       setStableColors({
         primary: realPrimary
       });
     }
   }, [landingPageData]);
-  
+
   // Use real user colors - NO defaults if not loaded yet
   const primaryColor = stableColors.primary || landingPageData?.primaryColor;
   const secondaryColor = primaryColor; // SAME as primary!
   const tertiaryColor = primaryColor;
-  
+
   // 🎨 ENHANCED DEBUG: Log all color sources in apply page
   console.log("🎨 APPLY PAGE REAL COLORS FROM DATABASE:", {
     "FINAL_USED": { primaryColor, secondaryColor, tertiaryColor },
@@ -505,7 +501,7 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
     "isUsingCorrectColors": primaryColor === "#11dade" && secondaryColor === "#e0237e",
     "hasColors": !!(landingPageData?.primaryColor)
   });
-  
+
   // 🔥 APPLY COLORS ONLY WHEN WE HAVE REAL USER COLORS
   useEffect(() => {
     // ONLY apply if we have real user colors - NO defaults!
@@ -513,12 +509,12 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
       console.log("⏳ APPLY: Waiting for real user colors...");
       return;
     }
-    
+
     console.log("🔥 APPLY: APPLYING REAL USER COLOR:", {
       primaryColor,
       timestamp: new Date().toISOString()
     });
-    
+
     // Function to apply ONLY real user primary color
     const applyRealUserColor = () => {
       const applyContainer = document.querySelector('.apply-form-container');
@@ -526,14 +522,14 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
         console.log('❌ Apply container not found');
         return;
       }
-      
+
       const allButtons = applyContainer.querySelectorAll('button, .ant-btn, [class*="ant-btn"]');
       console.log(`🎯 APPLY: FOUND ${allButtons.length} BUTTONS - APPLYING REAL COLOR: ${primaryColor}`);
-      
+
       allButtons.forEach((btn, i) => {
         const text = btn.textContent?.trim() || '';
         console.log(`🔥 APPLY: REAL COLOR on "${text}": ${primaryColor}`);
-        
+
         // Force ONLY real user color
         btn.style.setProperty('background', primaryColor, 'important');
         btn.style.setProperty('background-color', primaryColor, 'important');
@@ -542,26 +538,26 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
         btn.style.setProperty('color', 'white', 'important');
         btn.style.setProperty('background-image', 'none', 'important');
         btn.style.setProperty('box-shadow', 'none', 'important');
-        
+
         // NO hover effects
         btn.onmouseenter = null;
         btn.onmouseleave = null;
       });
     };
-    
+
     // Apply immediately and with delays
     applyRealUserColor();
     setTimeout(applyRealUserColor, 100);
     setTimeout(applyRealUserColor, 500);
     setTimeout(applyRealUserColor, 1000);
-    
+
   }, [primaryColor, landingPageData, currentStep]);
-  
+
   // Template palette hook for consistent color application
   const { getColor, getPrimary } = useTemplatePalette(
     {
       primaryColor: "#5207CD",
-      secondaryColor: "#0C7CE6", 
+      secondaryColor: "#0C7CE6",
       tertiaryColor: "#6B46C1",
     },
     {
@@ -594,7 +590,7 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
           setOptInAccepted(!!parsed.optInAccepted);
         }
       }
-    } catch (_) {}
+    } catch (_) { }
   }, [lpId, settings?.collectPartialAnswers]);
 
   useEffect(() => {
@@ -602,7 +598,7 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
     try {
       const payload = JSON.stringify({ formData, currentStep, optInAccepted });
       localStorage.setItem(`lp:${lpId}:formDraft`, payload);
-    } catch (_) {}
+    } catch (_) { }
   }, [formData, currentStep, optInAccepted, lpId, settings?.collectPartialAnswers]);
 
   // If SSR provided data, hydrate form fields immediately
@@ -626,7 +622,7 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
 
     const fireApplyPageEvents = () => {
       console.log('🎯 APPLY: Starting to fire events');
-      
+
       // HireLab PageView on load
       waitForPixel(() => {
         try {
@@ -642,7 +638,7 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
         }
       });
 
-      
+
     };
 
     // Fire events
@@ -657,11 +653,11 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
       const res = await PublicService.getLP(lpId);
       if (res.data) {
         console.log('Apply page data loaded:', res.data?.lp);
-        
+
         // 🎨 ENHANCED: Populate landing page data with user brand data
         const landingPage = res.data?.lp;
-        
-        if (true ||!landingPage.primaryColor && landingPage.user_id) {
+
+        if (true || !landingPage.primaryColor && landingPage.user_id) {
           try {
             // Fetch public-side recruiter brand data
             const userRes = await PublicService.getRecruiterData(landingPage.user_id, "");
@@ -682,18 +678,18 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
             console.log('Could not fetch user brand data (public):', error);
           }
         }
-        
+
         setLandingPageData(landingPage);
         // Filter visible fields (treat undefined as visible for backwards compatibility)
         console.log("all fieldsss", res.data?.lp?.form?.fields);
         const visibleFields = ((landingPage?.form?.fields) || (res.data?.lp?.form?.fields) || []).filter(field => field.visible !== false);
         console.log('Visible fieldsss:', visibleFields);
-        
+
         // Check for AI-generated contact field first
         const contactField = visibleFields.find(field => field.type === 'contact');
         const leadCaptureFields = visibleFields.filter(field => field.isLeadCapture && field.type !== 'contact');
         const otherFields = visibleFields.filter(field => !field.isLeadCapture && field.type !== 'contact');
-        
+
         if (contactField) {
           // Use AI-generated contact field directly - no need for wrapper
           console.log("✅ Found AI-generated contact field:", contactField);
@@ -704,22 +700,22 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
           ]);
         } else {
           // Check for separate email/phone fields as fallback
-          const separateContactFields = visibleFields.filter(field => 
+          const separateContactFields = visibleFields.filter(field =>
             field.type === 'email' || field.type === 'phone'
           );
-          const nonContactFields = visibleFields.filter(field => 
+          const nonContactFields = visibleFields.filter(field =>
             field.type !== 'email' && field.type !== 'phone'
           );
-          
+
           if (separateContactFields.length > 0) {
             // Use existing separate contact fields in a group
             setFormFields([
-              { 
-                id: 'lead-capture-step', 
-                type: 'lead-capture-group', 
-                label: getTranslation(landingPageData?.lang || 'en', 'contactInformation') || 'Contact Information', 
+              {
+                id: 'lead-capture-step',
+                type: 'lead-capture-group',
+                label: getTranslation(landingPageData?.lang || 'en', 'contactInformation') || 'Contact Information',
                 fields: separateContactFields,
-                required: true 
+                required: true
               },
               ...nonContactFields
             ]);
@@ -733,32 +729,32 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
               required: true,
               visible: true,
               isLeadCapture: true,
-              firstName: { 
+              firstName: {
                 visible: true,
-                required: true, 
+                required: true,
                 label: getTranslation(landingPageData?.lang || 'en', 'firstName') || 'First Name',
                 placeholder: getTranslation(landingPageData?.lang || 'en', 'firstNamePlaceholder') || 'Enter your first name'
               },
-              lastName: { 
+              lastName: {
                 visible: true,
-                required: true, 
+                required: true,
                 label: getTranslation(landingPageData?.lang || 'en', 'lastName') || 'Last Name',
                 placeholder: getTranslation(landingPageData?.lang || 'en', 'lastNamePlaceholder') || 'Enter your last name'
               },
-              email: { 
+              email: {
                 visible: true,
-                required: true, 
+                required: true,
                 label: getTranslation(landingPageData?.lang || 'en', 'email') || 'Email',
                 placeholder: getTranslation(landingPageData?.lang || 'en', 'emailPlaceholder') || 'Enter your email address'
               },
-              phone: { 
+              phone: {
                 visible: true,
-                required: false, 
+                required: false,
                 label: getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone',
                 placeholder: getTranslation(landingPageData?.lang || 'en', 'phonePlaceholder') || 'Enter your phone number'
               }
             };
-            
+
             setFormFields([
               defaultContactField,
               ...visibleFields
@@ -778,10 +774,10 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
       ...prev,
       [fieldId]: value
     }));
-  // If email changes, allow another early save attempt
-  if (String(fieldId).toLowerCase().includes('email')) {
-    setHasSavedContact(false);
-  }
+    // If email changes, allow another early save attempt
+    if (String(fieldId).toLowerCase().includes('email')) {
+      setHasSavedContact(false);
+    }
   };
 
   // Auto-jump utility when setting is enabled (choice-like fields)
@@ -791,134 +787,134 @@ const [hasSavedContact, setHasSavedContact] = useState(false);
     }
   };
 
-const isContactStep = (field) => {
-  if (!field) return false;
-  if (field.type === 'contact') return true;
-  if (field.type === 'lead-capture-group' && Array.isArray(field.fields)) {
-    return field.fields.some((f) => f.type === 'contact');
-  }
-  return false;
-};
-
-const buildProcessedFormData = () => {
-  const processedFormData = { ...formData };
-  
-  // Process form fields to match the expected format
-  formFields.forEach(field => {
-    if (field.type === 'lead-capture-group') {
-      // Process each field in the lead capture group
-      field.fields.forEach(subField => {
-        if (subField.type === 'contact') {
-          processedFormData[`firstname`] = formData[`${subField.id}_firstName`] || "";
-          processedFormData[`lastname`] = formData[`${subField.id}_lastName`] || "";
-          // Some builders embed email inside the contact field (id_email)
-          if (!processedFormData[`email`]) {
-            processedFormData[`email`] = formData[`${subField.id}_email`] || "";
-          }
-        } else if (subField.type === 'email') {
-          processedFormData[`email`] = formData[subField.id] || "";
-        } else if (subField.type === 'phone') {
-          processedFormData[`phone`] = formData[subField.id] || "";
-        }
-      });
-    } else if (field.type === 'address') {
-      processedFormData[`line1`] = formData[`${field.id}_line1`] || "";
-      processedFormData[`line2`] = formData[`${field.id}_line2`] || "";
-      processedFormData[`city`] = formData[`${field.id}_city`] || "";
-      processedFormData[`state`] = formData[`${field.id}_state`] || "";
-      processedFormData[`zip`] = formData[`${field.id}_zip`] || "";
-      processedFormData[`country`] = formData[`${field.id}_country`] || "";
-    } else if (field.type === 'contact') {
-      processedFormData[`firstname`] = formData[`${field.id}_firstName`] || "";
-      processedFormData[`lastname`] = formData[`${field.id}_lastName`] || "";
-      if (!processedFormData[`email`]) {
-        processedFormData[`email`] = formData[`${field.id}_email`] || "";
-      }
-    } else if (field.type === 'email') {
-      processedFormData[`email`] = formData[field.id] || "";
-    } else if (field.type === 'phone') {
-      processedFormData[`phone`] = formData[field.id] || "";
-    } else if (field.type === 'date') {
-      // Handle single DatePicker value (stored as 'YYYY-MM-DD' format)
-      const dateValue = formData[field.id] || "";
-      
-      if (dateValue) {
-        // Convert from 'YYYY-MM-DD' to the desired format
-        const dateFormat = field.dateFormat || "MMDDYYYY";
-        const dateSeparator = field.dateSeparator || "/";
-        
-        try {
-          const date = dayjs(dateValue);
-          if (date.isValid()) {
-            let formattedDate = "";
-            if (dateFormat === 'MMDDYYYY') {
-              formattedDate = date.format(`MM${dateSeparator}DD${dateSeparator}YYYY`);
-            } else if (dateFormat === 'DDMMYYYY') {
-              formattedDate = date.format(`DD${dateSeparator}MM${dateSeparator}YYYY`);
-            } else if (dateFormat === 'YYYYMMDD') {
-              formattedDate = date.format(`YYYY${dateSeparator}MM${dateSeparator}DD`);
-            } else {
-              // Default to ISO format if format is not recognized
-              formattedDate = date.format('YYYY-MM-DD');
-            }
-            processedFormData[field.id] = formattedDate;
-          } else {
-            processedFormData[field.id] = "";
-          }
-        } catch (error) {
-          console.error('Error formatting date:', error);
-          processedFormData[field.id] = dateValue; // Fallback to original value
-        }
-      } else {
-        processedFormData[field.id] = "";
-      }
-    } else if (field.type === 'file') {
-      // Handle file fields - store complete object for better handling
-      const fileData = formData[field.id];
-      if (fileData) {
-        if (typeof fileData === 'object' && fileData.url) {
-          // New format: store the complete object
-          processedFormData[field.id] = fileData;
-        } else if (typeof fileData === 'string') {
-          // Legacy format: URL string - convert to object format
-          processedFormData[field.id] = {
-            url: fileData,
-            filename: fileData.split('/').pop().split('_').pop() || 'download'
-          };
-        }
-      } else {
-        processedFormData[field.id] = "";
-      }
-    } else {
-      // Handle other field types
-      processedFormData[field.id] = formData[field.id] || "";
+  const isContactStep = (field) => {
+    if (!field) return false;
+    if (field.type === 'contact') return true;
+    if (field.type === 'lead-capture-group' && Array.isArray(field.fields)) {
+      return field.fields.some((f) => f.type === 'contact');
     }
-  });
+    return false;
+  };
 
-  return processedFormData;
-};
+  const buildProcessedFormData = () => {
+    const processedFormData = { ...formData };
 
-const saveContactSnapshot = async () => {
-  // Respect setting: if disabled, skip early storage
-  if (settings?.storeCandidateInfoBeforeApplied === false) return;
-  if (hasSavedContact) return;
-  try {
-    const processedFormData = buildProcessedFormData();
-    const applicationData = {
-      LandingPageDataId: lpId,
-      formData: processedFormData,
-      form: landingPageData?.form,
-      searchIndex: `${processedFormData.firstname || ''} ${processedFormData.lastname || ''} ${processedFormData.email || ''}`.trim(),
-      formSettings: landingPageData?.form?.settings || {},
-      optInAccepted: !!optInAccepted,
-      partial: true, // mark as early contact save
-    };
-    await PublicService.createVacancySubmission(applicationData);
-    setHasSavedContact(true);
-  } catch (err) {
-    console.warn('Unable to save contact snapshot early:', err?.message || err);
-  }
-};
+    // Process form fields to match the expected format
+    formFields.forEach(field => {
+      if (field.type === 'lead-capture-group') {
+        // Process each field in the lead capture group
+        field.fields.forEach(subField => {
+          if (subField.type === 'contact') {
+            processedFormData[`firstname`] = formData[`${subField.id}_firstName`] || "";
+            processedFormData[`lastname`] = formData[`${subField.id}_lastName`] || "";
+            // Some builders embed email inside the contact field (id_email)
+            if (!processedFormData[`email`]) {
+              processedFormData[`email`] = formData[`${subField.id}_email`] || "";
+            }
+          } else if (subField.type === 'email') {
+            processedFormData[`email`] = formData[subField.id] || "";
+          } else if (subField.type === 'phone') {
+            processedFormData[`phone`] = formData[subField.id] || "";
+          }
+        });
+      } else if (field.type === 'address') {
+        processedFormData[`line1`] = formData[`${field.id}_line1`] || "";
+        processedFormData[`line2`] = formData[`${field.id}_line2`] || "";
+        processedFormData[`city`] = formData[`${field.id}_city`] || "";
+        processedFormData[`state`] = formData[`${field.id}_state`] || "";
+        processedFormData[`zip`] = formData[`${field.id}_zip`] || "";
+        processedFormData[`country`] = formData[`${field.id}_country`] || "";
+      } else if (field.type === 'contact') {
+        processedFormData[`firstname`] = formData[`${field.id}_firstName`] || "";
+        processedFormData[`lastname`] = formData[`${field.id}_lastName`] || "";
+        if (!processedFormData[`email`]) {
+          processedFormData[`email`] = formData[`${field.id}_email`] || "";
+        }
+      } else if (field.type === 'email') {
+        processedFormData[`email`] = formData[field.id] || "";
+      } else if (field.type === 'phone') {
+        processedFormData[`phone`] = formData[field.id] || "";
+      } else if (field.type === 'date') {
+        // Handle single DatePicker value (stored as 'YYYY-MM-DD' format)
+        const dateValue = formData[field.id] || "";
+
+        if (dateValue) {
+          // Convert from 'YYYY-MM-DD' to the desired format
+          const dateFormat = field.dateFormat || "MMDDYYYY";
+          const dateSeparator = field.dateSeparator || "/";
+
+          try {
+            const date = dayjs(dateValue);
+            if (date.isValid()) {
+              let formattedDate = "";
+              if (dateFormat === 'MMDDYYYY') {
+                formattedDate = date.format(`MM${dateSeparator}DD${dateSeparator}YYYY`);
+              } else if (dateFormat === 'DDMMYYYY') {
+                formattedDate = date.format(`DD${dateSeparator}MM${dateSeparator}YYYY`);
+              } else if (dateFormat === 'YYYYMMDD') {
+                formattedDate = date.format(`YYYY${dateSeparator}MM${dateSeparator}DD`);
+              } else {
+                // Default to ISO format if format is not recognized
+                formattedDate = date.format('YYYY-MM-DD');
+              }
+              processedFormData[field.id] = formattedDate;
+            } else {
+              processedFormData[field.id] = "";
+            }
+          } catch (error) {
+            console.error('Error formatting date:', error);
+            processedFormData[field.id] = dateValue; // Fallback to original value
+          }
+        } else {
+          processedFormData[field.id] = "";
+        }
+      } else if (field.type === 'file') {
+        // Handle file fields - store complete object for better handling
+        const fileData = formData[field.id];
+        if (fileData) {
+          if (typeof fileData === 'object' && fileData.url) {
+            // New format: store the complete object
+            processedFormData[field.id] = fileData;
+          } else if (typeof fileData === 'string') {
+            // Legacy format: URL string - convert to object format
+            processedFormData[field.id] = {
+              url: fileData,
+              filename: fileData.split('/').pop().split('_').pop() || 'download'
+            };
+          }
+        } else {
+          processedFormData[field.id] = "";
+        }
+      } else {
+        // Handle other field types
+        processedFormData[field.id] = formData[field.id] || "";
+      }
+    });
+
+    return processedFormData;
+  };
+
+  const saveContactSnapshot = async () => {
+    // Respect setting: if disabled, skip early storage
+    if (settings?.storeCandidateInfoBeforeApplied === false) return;
+    if (hasSavedContact) return;
+    try {
+      const processedFormData = buildProcessedFormData();
+      const applicationData = {
+        LandingPageDataId: lpId,
+        formData: processedFormData,
+        form: landingPageData?.form,
+        searchIndex: `${processedFormData.firstname || ''} ${processedFormData.lastname || ''} ${processedFormData.email || ''}`.trim(),
+        formSettings: landingPageData?.form?.settings || {},
+        optInAccepted: !!optInAccepted,
+        partial: true, // mark as early contact save
+      };
+      await PublicService.createVacancySubmission(applicationData);
+      setHasSavedContact(true);
+    } catch (err) {
+      console.warn('Unable to save contact snapshot early:', err?.message || err);
+    }
+  };
 
   const handleNext = (providedFieldValue) => {
     // Guard: if fields are not yet loaded, don't proceed or submit
@@ -940,12 +936,12 @@ const saveContactSnapshot = async () => {
       if (currentField.type === 'lead-capture-group') {
         let hasError = false;
         let errorMessage = '';
-        
+
         currentField.fields.forEach(field => {
           if (field.type === 'contact') {
             const firstNameValue = formData[`${field.id}_firstName`];
             const lastNameValue = formData[`${field.id}_lastName`];
-            
+
             if (field.firstName?.required && !firstNameValue?.trim()) {
               hasError = true;
               errorMessage = 'First name is required';
@@ -959,7 +955,7 @@ const saveContactSnapshot = async () => {
             errorMessage = `${field.label || field.type} is required`;
           }
         });
-        
+
         if (hasError) {
           message.warning(errorMessage);
           return;
@@ -969,7 +965,7 @@ const saveContactSnapshot = async () => {
         const lastNameValue = formData[`${currentField.id}_lastName`];
         const emailValue = formData[`${currentField.id}_email`];
         const phoneValue = formData[`${currentField.id}_phone`];
-        
+
         if (currentField.firstName?.required && !firstNameValue?.trim()) {
           message.warning(currentField.firstName?.label ? `${currentField.firstName.label} is required` : 'First name is required');
           return;
@@ -1039,12 +1035,12 @@ const saveContactSnapshot = async () => {
       } else if (currentField.type === 'date') {
         // Enhanced date field validation
         const dateValue = formData[currentField.id];
-        
+
         if (!dateValue?.trim()) {
           message.warning('Please select a date');
           return;
         }
-        
+
         // Validate the date format and value
         const date = dayjs(dateValue);
         if (!date.isValid()) {
@@ -1058,7 +1054,7 @@ const saveContactSnapshot = async () => {
           message.warning('Email is required');
           return;
         }
-        
+
         // Basic email format validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email.trim())) {
@@ -1072,7 +1068,7 @@ const saveContactSnapshot = async () => {
           message.warning('Phone number is required');
           return;
         }
-        
+
         // Basic phone format validation (at least 10 digits)
         const phoneDigits = phone.replace(/\D/g, '');
         if (phoneDigits.length < 3) {
@@ -1131,7 +1127,7 @@ const saveContactSnapshot = async () => {
                 brand: landingPageData?.companyName || '',
                 job_category: landingPageData?.department || ''
               });
-              try { sessionStorage.setItem(leadKey, '1'); } catch (_) {}
+              try { sessionStorage.setItem(leadKey, '1'); } catch (_) { }
             } catch (e) {
               console.error('❌ APPLY-STEP: Lead event failed:', e);
             }
@@ -1148,19 +1144,19 @@ const saveContactSnapshot = async () => {
         const currentField = flowFields[currentStep - 1]; // the step we just completed
         const isContactGroup = currentField?.type === 'lead-capture-group';
         const isContactComposite = currentField?.type === 'contact';
-        
+
         if (isContactGroup || isContactComposite) {
           // Check for actual contact data with dynamic field IDs
-          const hasContactInfo = Object.keys(formData).some(key => 
-            (key.includes('firstName') || key.includes('lastName') || 
-             key.includes('email') || key.includes('phone')) && 
+          const hasContactInfo = Object.keys(formData).some(key =>
+            (key.includes('firstName') || key.includes('lastName') ||
+              key.includes('email') || key.includes('phone')) &&
             formData[key]?.trim()
           );
-          
+
           if (hasContactInfo) {
             const contactKey = `metaContactFired_${lpId}`;
             const already = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(contactKey) === '1';
-            
+
             if (!already) {
               waitForPixel(() => {
                 try {
@@ -1170,7 +1166,7 @@ const saveContactSnapshot = async () => {
                     company: landingPageData?.companyName || '',
                     job_category: landingPageData?.department || ''
                   });
-                  try { sessionStorage.setItem(contactKey, '1'); } catch (_) {}
+                  try { sessionStorage.setItem(contactKey, '1'); } catch (_) { }
                 } catch (fbqError) {
                   console.error('❌ CONTACT: Contact Info event failed:', fbqError);
                 }
@@ -1179,7 +1175,7 @@ const saveContactSnapshot = async () => {
           }
         }
       }
-    } catch (e) { 
+    } catch (e) {
       console.error('❌ CONTACT: Contact event logic failed:', e);
     }
 
@@ -1230,6 +1226,7 @@ const saveContactSnapshot = async () => {
         searchIndex: `${processedFormData.firstname || ''} ${processedFormData.lastname || ''} ${processedFormData.email || ''}`.trim(),
         formSettings: landingPageData?.form?.settings || {},
         optInAccepted: !!optInAccepted,
+        partial: false, // This is the final/complete submission
       };
 
       // If respondent email configured, pass it explicitly so BE can send
@@ -1243,8 +1240,8 @@ const saveContactSnapshot = async () => {
       await PublicService.createVacancySubmission(applicationData);
 
       // Clear draft once submitted
-      try { if (settings?.collectPartialAnswers && lpId) localStorage.removeItem(`lp:${lpId}:formDraft`); } catch (_) {}
-      
+      try { if (settings?.collectPartialAnswers && lpId) localStorage.removeItem(`lp:${lpId}:formDraft`); } catch (_) { }
+
       message.success('Application submitted successfully!');
       // Redirect: either external redirectToUrl or fallback to thank-you
       if ((settings?.redirectToUrl || '').trim()) {
@@ -1306,7 +1303,7 @@ const saveContactSnapshot = async () => {
                 </div>
               )}
             </div>
-            
+
             {/* Email field */}
             {field.email?.visible !== false && (
               <div>
@@ -1324,7 +1321,7 @@ const saveContactSnapshot = async () => {
                 />
               </div>
             )}
-            
+
             {/* Phone field */}
             {field.phone?.visible !== false && (
               <div>
@@ -1416,30 +1413,30 @@ const saveContactSnapshot = async () => {
       case 'lead-capture-group':
         return (
           <div className="space-y-6">
-                         {field.fields.map((subField) => {
-               // Find contact field to get proper label configuration
-               const contactField = field.fields.find(f => f.type === 'contact');
-               let displayLabel = subField.customLabel || subField.label;
-               
-               // Use appropriate labels for contact fields
-               if (subField.type === 'email') {
-                 displayLabel = contactField?.email?.label || subField.customLabel || subField.label || getTranslation(landingPageData?.lang || 'en', 'email') || 'Email';
-               } else if (subField.type === 'phone') {
-                 displayLabel = contactField?.phone?.label || subField.customLabel || subField.label || getTranslation(landingPageData?.lang || 'en', 'phoneNumber') || 'Phone Number';
-               } else if (subField.type === 'contact') {
-                 displayLabel = subField.customLabel || subField.label || getTranslation(landingPageData?.lang || 'en', 'fullName') || 'Full Name';
-               }
-               
-               return (
-                 <div key={subField.id}>
-                   <label className="block mb-2 font-semibold text-sm">
-                     {displayLabel}
-                     {subField.required && <span className="ml-1 text-red-500">*</span>}
-                   </label>
-                   {renderSingleField(subField)}
-                 </div>
-               );
-             })}
+            {field.fields.map((subField) => {
+              // Find contact field to get proper label configuration
+              const contactField = field.fields.find(f => f.type === 'contact');
+              let displayLabel = subField.customLabel || subField.label;
+
+              // Use appropriate labels for contact fields
+              if (subField.type === 'email') {
+                displayLabel = contactField?.email?.label || subField.customLabel || subField.label || getTranslation(landingPageData?.lang || 'en', 'email') || 'Email';
+              } else if (subField.type === 'phone') {
+                displayLabel = contactField?.phone?.label || subField.customLabel || subField.label || getTranslation(landingPageData?.lang || 'en', 'phoneNumber') || 'Phone Number';
+              } else if (subField.type === 'contact') {
+                displayLabel = subField.customLabel || subField.label || getTranslation(landingPageData?.lang || 'en', 'fullName') || 'Full Name';
+              }
+
+              return (
+                <div key={subField.id}>
+                  <label className="block mb-2 font-semibold text-sm">
+                    {displayLabel}
+                    {subField.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  {renderSingleField(subField)}
+                </div>
+              );
+            })}
           </div>
         );
       case 'contact':
@@ -1484,7 +1481,7 @@ const saveContactSnapshot = async () => {
                 </div>
               )}
             </div>
-            
+
             {/* Email field */}
             {field.email?.visible !== false && (
               <div>
@@ -1504,7 +1501,7 @@ const saveContactSnapshot = async () => {
                 </div>
               </div>
             )}
-            
+
             {/* Phone field */}
             {field.phone?.visible !== false && (
               <div>
@@ -1779,7 +1776,7 @@ const saveContactSnapshot = async () => {
 
       case 'date':
         const dateValue = formData[field.id] ? dayjs(formData[field.id]) : null;
-        
+
         return (
           <DatePicker
             value={dateValue}
@@ -1794,7 +1791,7 @@ const saveContactSnapshot = async () => {
             disabledDate={(current) => {
               // Disable dates more than 100 years ago or 10 years in the future
               return current && (
-                current < dayjs().subtract(100, 'years') || 
+                current < dayjs().subtract(100, 'years') ||
                 current > dayjs().add(10, 'years')
               );
             }}
@@ -1849,15 +1846,15 @@ const saveContactSnapshot = async () => {
     );
   }
 
-  
+
   const flowFields = getVisibleFieldsForFlow(formFields, formData);
   const totalSteps = flowFields.length;
   const progressPercentage = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0;
 
-  const seoTitle = landingPageData?.vacancyTitle 
+  const seoTitle = landingPageData?.vacancyTitle
     ? `Apply for ${landingPageData.vacancyTitle} - ${landingPageData?.companyName || 'Hirelab'}`
     : 'Job Application - Hirelab';
-  const seoDescription = landingPageData?.heroDescription 
+  const seoDescription = landingPageData?.heroDescription
     ? (landingPageData.heroDescription.substring(0, 160) + (landingPageData.heroDescription.length > 160 ? '...' : ''))
     : `Apply for this opportunity at ${landingPageData?.companyName || 'our company'}. Start your application now.`;
   const canonicalUrl = `${process.env.NEXT_PUBLIC_LIVE_URL || 'https://hirelab.com'}/lp/${lpId}/apply`;
@@ -1938,9 +1935,9 @@ const saveContactSnapshot = async () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {landingPageData.companyLogo && (
-                <img 
-                  src={landingPageData.companyLogo} 
-                  alt="Company Logo" 
+                <img
+                  src={landingPageData.companyLogo}
+                  alt="Company Logo"
                   className="h-8 w-auto"
                 />
               )}
@@ -1953,20 +1950,20 @@ const saveContactSnapshot = async () => {
                 </p>
               </div>
             </div>
-            <Button 
-              type="text" 
+            <Button
+              type="text"
               onClick={() => router.back()}
               className="text-gray-500 hover:text-gray-700"
             >
               ✕
             </Button>
           </div>
-          
+
           {/* Progress Bar */}
           {settings.showProgressBar !== false && (
             <div className="mt-4">
-              <Progress 
-                percent={progressPercentage} 
+              <Progress
+                percent={progressPercentage}
                 showInfo={false}
                 strokeColor={primaryColor}
                 className="mb-2"
@@ -2002,7 +1999,7 @@ const saveContactSnapshot = async () => {
                     <span className="text-red-500 ml-1">*</span>
                   )}
                 </h2>
-                
+
                 <div className="mb-8">
                   {renderField(flowFields[currentStep - 1])}
                 </div>
@@ -2025,7 +2022,7 @@ const saveContactSnapshot = async () => {
           {/* Navigation */}
           {flowFields.length > 0 && (
             <div className="flex justify-between items-center pt-6 border-t">
-              <Button 
+              <Button
                 onClick={handlePrevious}
                 className="flex items-center space-x-2"
                 disabled={currentStep <= 1}
@@ -2034,7 +2031,7 @@ const saveContactSnapshot = async () => {
                 <span>{landingPageData.form?.previousText || getTranslation(landingPageData?.lang, 'previous')}</span>
               </Button>
 
-              <Button 
+              <Button
                 type="primary"
                 onClick={handleNext}
                 loading={submitting}
@@ -2043,12 +2040,12 @@ const saveContactSnapshot = async () => {
                   backgroundColor: primaryColor,
                   borderColor: primaryColor,
                   color: 'white',
-                  background: primaryColor, 
+                  background: primaryColor,
                   border: `1px solid ${primaryColor}`
                 }}
               >
                 <span>
-                  {currentStep === flowFields.length 
+                  {currentStep === flowFields.length
                     ? (landingPageData.form?.submitText || getTranslation(landingPageData?.lang, 'submit'))
                     : (landingPageData.form?.nextText || getTranslation(landingPageData?.lang, 'next'))}
                 </span>
