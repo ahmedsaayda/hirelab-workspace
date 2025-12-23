@@ -267,41 +267,56 @@ const MultiJobCampaignModal = ({
             const companyName = brandingDetails?.companyName || user?.companyName || "the company";
             const jobCategory = departments || "various roles";
 
-            const prompt = `Generate employer brand content for a multi-job career page.
+            // Map language name to language code for clearer AI instructions
+            const languageMap = {
+                "English": "English (EN)",
+                "German": "Deutsch (DE)",
+                "Dutch": "Nederlands (NL)",
+                "French": "Français (FR)",
+                "Spanish": "Español (ES)",
+                "Italian": "Italiano (IT)",
+                "Portuguese": "Português (PT)",
+                "Polish": "Polski (PL)"
+            };
+            const targetLanguage = languageMap[selectedLanguage] || selectedLanguage;
 
-CRITICAL LANGUAGE REQUIREMENT:
-- ALL content MUST be written in ${selectedLanguage}
-- Do NOT mix languages - every word must be in ${selectedLanguage}
-- If the language is German, write everything in German
-- If the language is Dutch, write everything in Dutch
-- etc.
+            const prompt = `You are a professional copywriter. Generate employer brand content for a multi-job career page.
 
-CRITICAL RULES:
-- NEVER use placeholder text like "[Insert X here]", "[Company name]", "Example:", etc.
-- NEVER use template language or generic filler text
+⚠️ MANDATORY LANGUAGE: ${targetLanguage}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You MUST write ALL content in ${selectedLanguage}. This is non-negotiable.
+- If ${selectedLanguage} is English → Write in English only
+- If ${selectedLanguage} is German → Write in German only (Schreiben Sie auf Deutsch)
+- If ${selectedLanguage} is Dutch → Write in Dutch only (Schrijf in het Nederlands)
+- Do NOT use any other language. Every single word must be in ${selectedLanguage}.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONTENT RULES:
+- NEVER use placeholder text like "[Insert X here]", "[Company name]", "Example:"
 - Generate REAL, SPECIFIC, READY-TO-PUBLISH content
-- Write as if you are the company's marketing team
-- Make it compelling and professional
+- Write as the company's marketing team would
 
-User's description: ${aiPrompt}
-Company Name: ${companyName}
-Job Category/Department Focus: ${jobCategory}
-${selectedJobTitles ? `Open Positions: ${selectedJobTitles}` : ""}
-Output Language: ${selectedLanguage} (IMPORTANT: ALL output must be in this language!)
+CONTEXT:
+- Company: ${companyName}
+- User's description: ${aiPrompt}
+- Job focus: ${jobCategory}
+${selectedJobTitles ? `- Open positions: ${selectedJobTitles}` : ""}
 
-Generate the following content entirely in ${selectedLanguage}:
-1. heroTitle: An inspiring, specific headline for ${jobCategory} careers at ${companyName} (max 60 chars). Written in ${selectedLanguage}.
-2. heroDescription: A compelling paragraph in ${selectedLanguage} about why ${jobCategory} professionals should join ${companyName}. Include specifics about culture, growth, and what makes this company special. Write complete sentences. (150-200 words)
-3. jobsSectionTitle: A title for the jobs listing section in ${selectedLanguage} (max 40 chars).
-4. jobsSectionDescription: Brief intro text in ${selectedLanguage} for the jobs section (1-2 complete sentences)
+GENERATE (in ${selectedLanguage}):
+1. heroTitle: Inspiring headline for ${jobCategory} careers at ${companyName} (max 60 chars)
+2. heroDescription: Compelling paragraph about why professionals should join (150-200 words)
+3. jobsSectionTitle: Title for jobs listing section (max 40 chars)
+4. jobsSectionDescription: Brief intro for jobs section (1-2 sentences)
 
-Respond in JSON format only (but the content values must be in ${selectedLanguage}):
+RESPOND IN JSON ONLY:
 {
-  "heroTitle": "...",
-  "heroDescription": "...",
-  "jobsSectionTitle": "...",
-  "jobsSectionDescription": "..."
-}`;
+  "heroTitle": "[${selectedLanguage} text here]",
+  "heroDescription": "[${selectedLanguage} text here]",
+  "jobsSectionTitle": "[${selectedLanguage} text here]",
+  "jobsSectionDescription": "[${selectedLanguage} text here]"
+}
+
+REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
 
             const response = await AiService.generateSectionContent({
                 sectionName: "multiJobHero",

@@ -212,42 +212,66 @@ const MultiJobEditor = ({
 
             const companyName = landingPageData?.companyName || user?.companyName || "the company";
 
-            const prompt = `Generate employer brand content for a multi-job career page.
+            // Map language name to language code for clearer AI instructions
+            const languageMap = {
+                "English": "English (EN)",
+                "German": "Deutsch (DE)",
+                "Dutch": "Nederlands (NL)",
+                "French": "Français (FR)",
+                "Spanish": "Español (ES)",
+                "Italian": "Italiano (IT)",
+                "Portuguese": "Português (PT)",
+                "Polish": "Polski (PL)"
+            };
+            const selectedLanguage = landingPageData?.lang || "English";
+            const targetLanguage = languageMap[selectedLanguage] || selectedLanguage;
 
-CRITICAL RULES - YOU MUST FOLLOW:
-- NEVER use placeholder text like "[Insert X here]", "[Company name]", "Example:", "[Your text here]", etc.
-- NEVER use template language or bracketed instructions
+            const prompt = `You are a professional copywriter. Generate employer brand content for a multi-job career page.
+
+⚠️ MANDATORY LANGUAGE: ${targetLanguage}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You MUST write ALL content in ${selectedLanguage}. This is non-negotiable.
+- If ${selectedLanguage} is English → Write in English only
+- If ${selectedLanguage} is German → Write in German only (Schreiben Sie auf Deutsch)
+- If ${selectedLanguage} is Dutch → Write in Dutch only (Schrijf in het Nederlands)
+- Do NOT use any other language. Every single word must be in ${selectedLanguage}.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONTENT RULES:
+- NEVER use placeholder text like "[Insert X here]", "[Company name]", "Example:"
 - Generate REAL, SPECIFIC, READY-TO-PUBLISH content
-- Write as if you are ${companyName}'s marketing team
-- Use the actual company name "${companyName}" in the content where appropriate
+- Write as ${companyName}'s marketing team
 
-This is a MULTI-JOB CAMPAIGN page. Focus on the JOB GROUP/CATEGORY (${jobCategory}), not individual job titles.
-- If it's sales roles: Write about what ${companyName} does for SALES people (commission, bonuses, competitions, training)
-- If it's tech roles: Write about engineering culture, tech stack, innovation
-- If it's customer service: Write about customer success culture, growth paths
-- The "About the Company" content should be specifically written for THIS job category's audience
+MULTI-JOB CAMPAIGN FOCUS:
+This is for a JOB GROUP/CATEGORY (${jobCategory}), not individual jobs.
+- Sales roles → Commission, bonuses, training for salespeople
+- Tech roles → Engineering culture, tech stack, innovation
+- Customer service → Success culture, growth paths
+- Write "About Company" content for THIS job category's audience
 
-User request: ${aiPrompt}
+CONTEXT:
+- Company: ${companyName}
+- User request: ${aiPrompt}
+- Job focus: ${jobCategory}
+${linkedJobTitles ? `- Example positions: ${linkedJobTitles}` : ""}
 
-Company Name: ${companyName}
-Job Category/Department Focus: ${jobCategory}
-${linkedJobTitles ? `Example positions in this category: ${linkedJobTitles}` : ""}
+GENERATE (in ${selectedLanguage}):
+1. heroTitle: Inspiring headline for ${jobCategory} careers at ${companyName} (max 60 chars)
+2. heroDescription: Why ${jobCategory} professionals should join (150-200 words)
+3. jobsSectionTitle: Jobs listing section title (max 40 chars)
+4. jobsSectionDescription: Brief intro for jobs section (1-2 sentences)
+5. companyInfo: About company for ${jobCategory} candidates (100-150 words)
 
-Generate branded, category-specific content in ${landingPageData?.lang || "English"}:
-1. heroTitle: An inspiring headline for ${jobCategory} careers at ${companyName} (max 60 chars). Write the actual headline, not a template.
-2. heroDescription: Why ${jobCategory} professionals should join ${companyName} - what does the company DO for these people? Include specifics like training, growth, culture, perks relevant to this job category. Write complete, polished sentences. (150-200 words)
-3. jobsSectionTitle: A title for the jobs listing section (max 40 chars). Write the actual title.
-4. jobsSectionDescription: Brief intro text for the jobs section (1-2 complete sentences)
-5. companyInfo: About the company section written specifically for ${jobCategory} candidates - what makes ${companyName} great for them? Write complete, professional paragraphs. (100-150 words)
-
-Respond in JSON format only:
+RESPOND IN JSON ONLY:
 {
-  "heroTitle": "...",
-  "heroDescription": "...",
-  "jobsSectionTitle": "...",
-  "jobsSectionDescription": "...",
-  "companyInfo": "..."
-}`;
+  "heroTitle": "[${selectedLanguage} text]",
+  "heroDescription": "[${selectedLanguage} text]",
+  "jobsSectionTitle": "[${selectedLanguage} text]",
+  "jobsSectionDescription": "[${selectedLanguage} text]",
+  "companyInfo": "[${selectedLanguage} text]"
+}
+
+REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
 
             const response = await AiService.generateSectionContent({
                 sectionName: "multiJobHero",
