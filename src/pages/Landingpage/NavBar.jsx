@@ -1001,7 +1001,7 @@ const handlemediaLink = (platform) => {
           </div>
           <div className="flex gap-3 justify-end w-full flex-wrap">
            
-            {/* Save/Bookmark Button */}
+            {/* Save/Bookmark Button - Icon only on mobile */}
             <button
               style={{
                 color: getColor("primary", 800),
@@ -1013,13 +1013,14 @@ const handlemediaLink = (platform) => {
                 justifyContent: "center",
                 gap: "8px"
               }}
-              className="px-6 text-xs md:text-base whitespace-nowrap rounded-md border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
+              className="px-3 md:px-6 text-xs md:text-base whitespace-nowrap rounded-md border transition hover:opacity-50 flex items-center gap-2"
               onClick={handleBookmarkClick}
             >
-              {getTranslation(landingPageData?.lang, 'save')} <Bookmark size={20} />
+              <span className="hidden md:inline">{getTranslation(landingPageData?.lang, 'save')}</span>
+              <Bookmark size={20} />
             </button>
 
-            {/* Share Button */}
+            {/* Share Button - Icon only on mobile */}
             <button
               style={{
                 color: getColor("primary", 800),
@@ -1031,10 +1032,11 @@ const handlemediaLink = (platform) => {
                 justifyContent: "center",
                 gap: "8px"
               }}
-              className="px-6  text-xs md:text-base whitespace-nowrap  rounded-md border transition hover:opacity-50 smx:px-3 smx:py-0.5 smx:text-xs flex items-center gap-2"
+              className="px-3 md:px-6 text-xs md:text-base whitespace-nowrap rounded-md border transition hover:opacity-50 flex items-center gap-2"
               onClick={handleShareClick}
             >
-              {getTranslation(landingPageData?.lang, 'share')} {shareIcon}
+              <span className="hidden md:inline">{getTranslation(landingPageData?.lang, 'share')}</span>
+              {shareIcon}
             </button>
 
 
