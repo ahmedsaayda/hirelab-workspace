@@ -18,7 +18,7 @@ const TransferModal = ({
     if (!user?._id) return;
     setLoading(true);
     try {
-      const response = await AdminLandingPageService .listTransferableLandingPages({
+      const response = await AdminLandingPageService.listTransferableLandingPages({
         toUserId: user._id,
         q: searchText,
         limit: 100,
@@ -65,7 +65,7 @@ const TransferModal = ({
 
     setLoading(true);
     try {
-      await AdminLandingPageService.transferBulk({
+      await AdminLandingPageService.transferLandingPagesBulk({
         toUserId: user._id,
         landingPageIds: selectedPages,
       });
