@@ -35,7 +35,7 @@ const TransferModal = ({
       );
       // Filter out pages that already belong to the target user
       const allPages = response.data.items || [];
-      const filteredPages = allPages.filter(page => page.user_id !== user._id && page.user_id?._id !== user._id);
+      const filteredPages = allPages
       setLandingPages(filteredPages);
     } catch (error) {
       console.error("Error fetching landing pages:", error);
