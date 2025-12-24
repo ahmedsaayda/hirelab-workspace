@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Modal, Select, Button, message, Checkbox, Input } from "antd";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Modal, Button, message, Checkbox, Input } from "antd";
 import debounce from "lodash/debounce";
-import CrudService from "../../../../services/CrudService";
-import ATSService from "../../../../services/ATSService";
+import AdminService from "../../../../services/AdminService";
 
 const TransferModal = ({
   visible,
@@ -16,27 +15,17 @@ const TransferModal = ({
   const [searchTerm, setSearchTerm] = useState("");
 
   const fetchLandingPages = async (searchText = "") => {
+    if (!user?._id) return;
     setLoading(true);
     try {
-      const data = {
-        // Remove user filter to get ALL landing pages
-        sort: { createdAt: -1 },
-        populate: "user_id", // Populate user info to show current owner
-      };
-      if (searchText) {
-        data.text = searchText;
-      }
-      
-      const response = await CrudService.search(
-        "LandingPageData",
-        100,
-        1,
-        data
-      );
-      // Filter out pages that already belong to the target user
-      const allPages = response.data.items || [];
-      const filteredPages = allPages
-      setLandingPages(filteredPages);
+      const response = await AdminService.listTransferableLandingPages({
+        toUserId: user._id,
+        q: searchText,
+        limit: 100,
+        page: 1,
+      });
+      const items = response?.data?.items || [];
+      setLandingPages(items);
     } catch (error) {
       console.error("Error fetching landing pages:", error);
       message.error("Failed to fetch landing pages");
@@ -45,16 +34,24 @@ const TransferModal = ({
     }
   };
 
-  const debouncedFetchLandingPages = useCallback(
-    debounce(fetchLandingPages, 500),
-    [user]
+  const debouncedFetchLandingPages = useMemo(
+    () => debounce(fetchLandingPages, 400),
+    [user?._id]
   );
 
   useEffect(() => {
     if (visible && user) {
       debouncedFetchLandingPages(searchTerm);
     }
-  }, [visible, searchTerm, user]);
+    return () => {
+      debouncedFetchLandingPages.cancel?.();
+    };
+  }, [visible, searchTerm, user, debouncedFetchLandingPages]);
+
+  useEffect(() => {
+    const visibleIds = new Set((landingPages || []).map((p) => p._id));
+    setSelectedPages((prev) => prev.filter((id) => visibleIds.has(id)));
+  }, [landingPages]);
 
   const handleTransfer = async () => {
     if (selectedPages.length === 0) {
@@ -68,14 +65,15 @@ const TransferModal = ({
 
     setLoading(true);
     try {
-      for (const landingPageId of selectedPages) {
-        await ATSService.transferLandingPage(landingPageId, user._id);
-      }
-      message.success("Landing pages transferred successfully");
+      await AdminService.transferLandingPagesBulk({
+        toUserId: user._id,
+        landingPageIds: selectedPages,
+      });
+      message.success(`Transferred ${selectedPages.length} landing page(s)`);
       onTransferSuccess();
       onClose();
     } catch (error) {
-        console.log(error);
+      console.log(error);
       message.error("Failed to transfer landing pages");
     } finally {
       setLoading(false);
@@ -118,11 +116,11 @@ const TransferModal = ({
         
         <h4>Select Landing Pages to Transfer:</h4>
         <Input
-          placeholder="Search by name or ID"
+          placeholder="Search by title/name or paste full ID"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ marginBottom: 10 }}
-          loading={loading}
+          allowClear
         />
         {!loading && landingPages.length > 0 && (
           <>
@@ -173,7 +171,7 @@ const TransferModal = ({
                       ID: {page._id}
                     </div>
                     <div style={{ fontSize: "12px", color: "#007bff", marginTop: "2px" }}>
-                      Current owner: {page.user_id?.email || page.user_id || "Unknown"}
+                      Current owner: {page.owner?.email || page.user_id?.email || page.user_id || "Unknown"}
                     </div>
                     {page.description && (
                       <div style={{ fontSize: "12px", color: "#888", marginTop: "2px" }}>
