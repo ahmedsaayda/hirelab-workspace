@@ -18,6 +18,14 @@ class LandingPageService {
     unPublishLandingPage(lpId, scope) {
         return this.api.post("/unPublish", {lpId, scope});
     }
+
+    /**
+     * Apply brand settings to all main-account landing pages (excludes workspace funnels).
+     * Backend enforces the non-workspace filter.
+     */
+    applyBrandingToMainPages(brandingData) {
+        return this.api.post("/applyBranding", brandingData);
+    }
 }
 
 export default new LandingPageService(`${getBackendUrl()}/landingPage`);

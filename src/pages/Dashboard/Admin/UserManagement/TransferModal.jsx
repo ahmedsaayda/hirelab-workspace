@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Modal, Button, message, Checkbox, Input } from "antd";
 import debounce from "lodash/debounce";
-import AdminService from "../../../../services/AdminService";
+import AdminLandingPageService from "../../../../services/AdminLandingPageService";
 
 const TransferModal = ({
   visible,
@@ -18,7 +18,7 @@ const TransferModal = ({
     if (!user?._id) return;
     setLoading(true);
     try {
-      const response = await AdminService.listTransferableLandingPages({
+      const response = await AdminLandingPageService.listTransferable({
         toUserId: user._id,
         q: searchText,
         limit: 100,
@@ -65,7 +65,7 @@ const TransferModal = ({
 
     setLoading(true);
     try {
-      await AdminService.transferLandingPagesBulk({
+      await AdminLandingPageService.transferBulk({
         toUserId: user._id,
         landingPageIds: selectedPages,
       });
