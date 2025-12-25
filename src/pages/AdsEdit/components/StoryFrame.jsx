@@ -22,7 +22,7 @@ export default function StoryOverlay({ children, brandData }) {
       {/* Story UI Overlay (NOT part of the ad) */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Top Section */}
-        <div className="relative z-10 px-3 pt-14">
+        <div className="relative z-10 px-3 pt-10">
           {/* Progress Bar */}
           <div className="flex gap-1 mb-3">
             {/* Active progress bar - showing current story */}

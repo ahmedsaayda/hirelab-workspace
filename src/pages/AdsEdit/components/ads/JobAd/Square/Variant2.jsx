@@ -25,6 +25,11 @@ export default function Variant2({ variant, brandData, landingPageData }) {
   const hoursUnit = landingPageData?.hoursUnit || "daily";
 
   const heroImage = variant?.image || landingPageData?.heroImage || imgHeroDefault;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const [videoFailed, setVideoFailed] = React.useState(false);
   const heroImageAdjustment =
     variant?.imageAdjustment?.heroImage ||
     landingPageData?.imageAdjustment?.jobDescriptionImage ||
@@ -111,6 +116,27 @@ export default function Variant2({ variant, brandData, landingPageData }) {
               transition: "object-position 0.3s ease-in-out",
             }}
           />
+          {!isCapture && isVideo && !videoFailed && (
+            <video
+              src={videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={heroImage}
+              onError={() => setVideoFailed(true)}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "120%",
+                height: "120%",
+                objectFit: heroObjectFit,
+                objectPosition: heroObjectPosition,
+                transition: "object-position 0.3s ease-in-out",
+              }}
+            />
+          )}
           <div
             style={{
               position: "absolute",

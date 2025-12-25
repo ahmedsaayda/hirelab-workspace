@@ -11,11 +11,17 @@ export default function Variant1({ variant, brandData, landingPageData }) {
     "Forward-thinking Technology Company";
   const tag = landingPageData?.aboutCompanyTag || "WE ARE HIRELAB";
   const heroImage = variant?.image || landingPageData?.heroImage || HERO_FALLBACK;
-  const heroAdj = landingPageData?.imageAdjustment?.heroImage;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const [videoFailed, setVideoFailed] = React.useState(false);
+  const heroAdj = variant?.imageAdjustment?.heroImage || landingPageData?.imageAdjustment?.heroImage;
   const heroObjectFit = heroAdj?.objectFit || "cover";
   const heroObjectPosition = heroAdj?.objectPosition
     ? `${heroAdj.objectPosition.x}% ${heroAdj.objectPosition.y}%`
     : "50% 40%";
+  const heroMirror = Boolean(heroAdj?.mirror);
 
   const brandName = brandData?.companyName || brandData?.name || "hirelab";
 
@@ -124,8 +130,30 @@ export default function Variant1({ variant, brandData, landingPageData }) {
             height: "120%",
             objectFit: heroObjectFit,
             objectPosition: heroObjectPosition,
+            transform: heroMirror ? "scaleX(-1)" : "none",
           }}
         />
+        {!isCapture && isVideo && !videoFailed && (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={heroImage}
+            onError={() => setVideoFailed(true)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "120%",
+              height: "120%",
+              objectFit: heroObjectFit,
+              objectPosition: heroObjectPosition,
+                transform: heroMirror ? "scaleX(-1)" : "none",
+            }}
+          />
+        )}
         <div
           style={{
             position: "absolute",

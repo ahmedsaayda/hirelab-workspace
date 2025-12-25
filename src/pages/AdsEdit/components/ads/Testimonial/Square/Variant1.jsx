@@ -33,8 +33,13 @@ export default function Variant1({ variant, brandData, landingPageData }) {
   const author = variant?.author || landingPageData?.testimonialAuthor || "Alison Medis";
   const role = variant?.role || landingPageData?.testimonialRole || "Project Manager";
   const avatar = variant?.image || landingPageData?.testimonialAvatar || AVATAR_FALLBACK;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const [videoFailed, setVideoFailed] = React.useState(false);
 
-  const { getPrimary } = useAdPalette({ landingPageData, brandData });
+  const { getPrimary, getContrastColor } = useAdPalette({ landingPageData, brandData });
   const tileLine = colord(getPrimary(300)).alpha(0.12).toRgbString();
   const tileFill = colord(getPrimary(400)).alpha(0.08).toRgbString();
   const gridMainColor = colord(getPrimary(300)).alpha(0.5).toRgbString();
@@ -42,6 +47,22 @@ export default function Variant1({ variant, brandData, landingPageData }) {
   const brandName = brandData?.companyName || brandData?.name || "hirelab";
   const brandLogo = brandData?.companyLogo || brandData?.logo || null;
   const [logoFailed, setLogoFailed] = React.useState(false);
+
+  // Calculate contrast for the quote card
+  const quoteCardColor = getPrimary(600); // Check contrast against the lighter top part of the gradient
+  const cardTextColor = getContrastColor(quoteCardColor);
+  
+  // If card text is dark (light bg), use dark colors for text and lighter opacity for secondary
+  const isCardLight = cardTextColor === "#000000";
+  const quoteColor = isCardLight ? "#101828" : "#ffffff";
+  const authorColor = isCardLight ? "#101828" : "#ffffff";
+  const roleColor = isCardLight ? "#475467" : "rgba(255,255,255,0.85)";
+  const dividerColor = isCardLight ? "rgba(16, 24, 40, 0.2)" : "rgba(255,255,255,0.6)";
+  const quoteIconColor = isCardLight ? "rgba(16, 24, 40, 0.1)" : "rgba(255,255,255,0.25)";
+
+  const mainBgColor = getPrimary(900);
+  const mainTextColor = getContrastColor(mainBgColor);
+  const brandColor = mainTextColor === "#000000" ? "#101828" : "#ffffff";
 
   return (
     <div
@@ -88,7 +109,7 @@ export default function Variant1({ variant, brandData, landingPageData }) {
             onError={() => setLogoFailed(true)}
           />
         ) : (
-          <span style={{ fontWeight: 700, fontSize: 64, color: "#ffffff" }}>{brandName}</span>
+          <span style={{ fontWeight: 700, fontSize: 64, color: brandColor }}>{brandName}</span>
         )}
       </div>
 
@@ -109,6 +130,19 @@ export default function Variant1({ variant, brandData, landingPageData }) {
           alt={author}
           style={{ position: "absolute", inset: 0, width: "120%", height: "120%", objectFit: "cover", objectPosition: "50% 50%" }}
         />
+        {!isCapture && isVideo && !videoFailed && (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={avatar}
+            onError={() => setVideoFailed(true)}
+            style={{ position: "absolute", inset: 0, width: "120%", height: "120%", objectFit: "cover", objectPosition: "50% 50%" }}
+          />
+        )}
         {/* bottom vignette */}
         <div
           style={{
@@ -135,15 +169,15 @@ export default function Variant1({ variant, brandData, landingPageData }) {
         }}
       >
         <div style={{ position: "absolute", left: 48, top: 41 }}>
-          <QuoteMarksIcon size={88} />
+          <QuoteMarksIcon color={quoteIconColor} size={88} />
         </div>
         <div style={{ padding: "120px 80px 40px 80px", boxSizing: "border-box" }}>
           <div style={{ maxWidth: 592 }}>
-            <p style={{ margin: 0, fontSize: 32, lineHeight: "40px", color: "#fff" }}>{quote}</p>
-            <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.6)", marginTop: 28 }} />
+            <p style={{ margin: 0, fontSize: 32, lineHeight: "40px", color: quoteColor }}>{quote}</p>
+            <div style={{ width: "100%", height: 1, background: dividerColor, marginTop: 28 }} />
             <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 22, fontWeight: 600, color: "#fff" }}>{author}</div>
-              <div style={{ fontSize: 18, color: "rgba(255,255,255,0.85)" }}>{role}</div>
+              <div style={{ fontSize: 22, fontWeight: 600, color: authorColor }}>{author}</div>
+              <div style={{ fontSize: 18, color: roleColor }}>{role}</div>
             </div>
           </div>
         </div> 

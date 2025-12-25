@@ -39,16 +39,39 @@ export default function Variant1({ variant, brandData, landingPageData }) {
   const hoursUnit = landingPageData?.hoursUnit || "daily";
 
   const heroImage = variant?.image || landingPageData?.heroImage || imgImage37;
-  const heroAdj = landingPageData?.imageAdjustment?.heroImage;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const [videoFailed, setVideoFailed] = React.useState(false);
+  const heroAdj = variant?.imageAdjustment?.heroImage || landingPageData?.imageAdjustment?.heroImage;
   const heroObjectFit = heroAdj?.objectFit || "cover";
   const heroObjectPosition = heroAdj?.objectPosition
     ? `${heroAdj.objectPosition.x}% ${heroAdj.objectPosition.y}%`
     : "50% 50%";
+  const heroMirror = Boolean(heroAdj?.mirror);
 
   const { primaryColor, getGradient, getPrimary, getContrastColor } = useAdPalette({
     landingPageData,
     brandData
   });
+
+  // Calculate text contrast against the card background (approx Primary 800)
+  const cardBgColor = getPrimary(800);
+  const contrastColor = getContrastColor(cardBgColor);
+  const isDarkBg = contrastColor === "#FFFFFF";
+
+  const titleGradient = isDarkBg 
+    ? "linear-gradient(90deg, #B9ACFC 0%, #EEECFE 100%)"
+    : "none";
+  const titleColor = isDarkBg ? "transparent" : "#101828";
+  const subtitleColor = isDarkBg ? "rgba(219, 213, 254, 0.92)" : "#475467";
+
+  // CTA Text Contrast
+  // The button uses a gradient from primary 400 to 700. We check against 500 (midpoint).
+  const ctaBgColor = getPrimary(500);
+  const ctaTextColor = getContrastColor(ctaBgColor);
+
   const brandName = brandData?.companyName || brandData?.name || "hirelab";
   const brandLogo = brandData?.companyLogo || brandData?.logo || null;
   const timePosted = "14h";
@@ -136,9 +159,30 @@ export default function Variant1({ variant, brandData, landingPageData }) {
             height: "100%",
             objectFit: heroObjectFit,
             objectPosition: heroObjectPosition,
-            transform: "rotate(180deg) scaleY(-1)"
+            transform: heroMirror ? "scaleX(-1)" : "none",
           }}
         />
+        {!isCapture && isVideo && !videoFailed && (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={heroImage}
+            onError={() => setVideoFailed(true)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: heroObjectFit,
+              objectPosition: heroObjectPosition,
+              transform: heroMirror ? "scaleX(-1)" : "none",
+            }}
+          />
+        )}
       </div>
 
       {/* Vertical gradient overlay (derives from primary palette instead of fixed purple) */}
@@ -249,7 +293,7 @@ export default function Variant1({ variant, brandData, landingPageData }) {
                 fontSize: "32px",
                 fontWeight: 500,
                 lineHeight: "44px",
-                color: "rgba(219, 213, 254, 0.92)",
+                color: subtitleColor,
                 letterSpacing: "0.32px",
                 textTransform: "uppercase",
                 textAlign: "center"
@@ -268,10 +312,11 @@ export default function Variant1({ variant, brandData, landingPageData }) {
               fontWeight: 600,
               lineHeight: "88px",
               letterSpacing: "-1.6px",
-              background: "linear-gradient(90deg, #B9ACFC 0%, #EEECFE 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              background: titleGradient,
+              WebkitBackgroundClip: isDarkBg ? "text" : "border-box",
+              WebkitTextFillColor: isDarkBg ? "transparent" : titleColor,
+              backgroundClip: isDarkBg ? "text" : "border-box",
+              color: titleColor,
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "clip",
@@ -353,8 +398,9 @@ export default function Variant1({ variant, brandData, landingPageData }) {
         <button
           style={{
             position: "absolute",
-            left: "50%",
-            bottom: "72px",
+            // This card is 917px wide inside a 1080px canvas. Center CTA on the full canvas.
+            left: "540px",
+            bottom: "120px",
             transform: "translateX(-50%)",
             padding: "28px 64px",
             borderRadius: "120px",
@@ -370,10 +416,11 @@ export default function Variant1({ variant, brandData, landingPageData }) {
           <span
             style={{
               fontFamily: "'Inter', sans-serif",
-              fontSize: "40px",
+              fontSize: ctaText?.length > 9 ? "34px" : "40px",
               fontWeight: 700,
-              color: "#FFFFFF",
-              letterSpacing: "-0.48px"
+              color: ctaTextColor,
+              letterSpacing: "-0.48px",
+              whiteSpace: "nowrap",
             }}
           >
             {ctaText}

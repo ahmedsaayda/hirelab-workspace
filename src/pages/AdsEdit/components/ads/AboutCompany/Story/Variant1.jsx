@@ -33,24 +33,30 @@ const MenuDotsIcon = ({ color = "#fff" }) => (
   </svg>
 );
 
-export default function Variant1({ variant, brandData, landingPageData }) {
+export default function Variant1({ variant, brandData, landingPageData, showStoryChrome = true }) {
   const titleRaw =
     variant?.title ||
     landingPageData?.aboutCompanyTitle ||
     "Forward-thinking Technology Company";
   const tag = landingPageData?.aboutCompanyTag || "WE ARE HIRELAB";
   const heroImage = variant?.image || landingPageData?.heroImage || HERO_FALLBACK;
-  const heroAdj = landingPageData?.imageAdjustment?.heroImage;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const [videoFailed, setVideoFailed] = React.useState(false);
+  const heroAdj = variant?.imageAdjustment?.heroImage || landingPageData?.imageAdjustment?.heroImage;
   const heroObjectFit = heroAdj?.objectFit || "cover";
   const heroObjectPosition = heroAdj?.objectPosition
     ? `${heroAdj.objectPosition.x}% ${heroAdj.objectPosition.y}%`
     : "50% 30%";
+  const heroMirror = Boolean(heroAdj?.mirror);
 
   const brandName = brandData?.companyName || brandData?.name || "hirelab";
   const brandLogo = brandData?.companyLogo || brandData?.logo || null;
   const timePosted = variant?.timeStamp || "14h";
 
-  const { primaryColor, heroBackgroundColor, getPrimary } = useAdPalette({
+  const { primaryColor, heroBackgroundColor, getPrimary, getContrastColor } = useAdPalette({
     landingPageData,
     brandData,
   });
@@ -58,6 +64,9 @@ export default function Variant1({ variant, brandData, landingPageData }) {
 
   const chromeIconBg = "rgba(255,255,255,0.14)";
   const bottomPanelColor = getPrimary(900);
+  const textColor = getContrastColor(bottomPanelColor);
+  const isLight = textColor === "#000000" || textColor === "#101828";
+  
   const tileLine = colord(getPrimary(300)).alpha(0.12).toRgbString();
   const tileFill = colord(getPrimary(400)).alpha(0.08).toRgbString();
   const PANEL_RADIUS = 80;
@@ -129,90 +138,92 @@ export default function Variant1({ variant, brandData, landingPageData }) {
         height: "1920px",
         background: heroBackgroundColor || getPrimary(600),
         overflow: "hidden",
-        color: "#ffffff",
+        color: textColor,
         fontFamily: "'Inter', 'DM Sans', sans-serif",
       }}
     >
-      {/* Top story chrome */}
-      <div
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "45px",
-          width: "972px",
-          transform: "translateX(-50%)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-          zIndex: 3,
-        }}
-      >
+      {/* Top story chrome (preview-only; use shared StoryFrame in Ads editor) */}
+      {showStoryChrome && (
         <div
           style={{
-            width: "100%",
-            height: "6px",
-            backgroundColor: "rgba(255,255,255,0.2)",
-            borderRadius: "5px",
-            overflow: "hidden",
+            position: "absolute",
+            left: "50%",
+            top: "45px",
+            width: "972px",
+            transform: "translateX(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "24px",
+            zIndex: 3,
           }}
         >
-          <div style={{ width: "88%", height: "100%", backgroundColor: "#ffffff", borderRadius: "5px" }} />
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-            <div
-              style={{
-                width: "88px",
-                height: "88px",
-                borderRadius: "102px",
-                backgroundColor: "rgba(255,255,255,0.12)",
-                overflow: "hidden",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "2px solid rgba(255,255,255,0.25)",
-              }}
-            >
-              {brandLogo && !logoFailed ? (
-                <img
-                  src={brandLogo}
-                  alt={brandName}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  onError={() => setLogoFailed(true)}
-                />
-              ) : (
-                <span style={{ fontWeight: 600, fontSize: "40px", color: primaryColor || "#fff" }}>
-                  {brandName?.charAt(0)?.toUpperCase()}
-                </span>
-              )}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <span style={{ fontWeight: 600, fontSize: "40px", lineHeight: 1 }}>{brandName}</span>
-              <span style={{ fontWeight: 400, fontSize: "40px", color: "rgba(255,255,255,0.74)", lineHeight: 1 }}>
-                {timePosted}
-              </span>
-            </div>
+          <div
+            style={{
+              width: "100%",
+              height: "6px",
+              backgroundColor: "rgba(255,255,255,0.2)",
+              borderRadius: "5px",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ width: "88%", height: "100%", backgroundColor: "#ffffff", borderRadius: "5px" }} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-            {[PauseIcon, SpeakerMuteIcon, MenuDotsIcon].map((Icon, index) => (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
               <div
-                key={index}
                 style={{
-                  width: "56px",
-                  height: "56px",
+                  width: "88px",
+                  height: "88px",
+                  borderRadius: "102px",
+                  backgroundColor: "rgba(255,255,255,0.12)",
+                  overflow: "hidden",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  borderRadius: "50%",
-                  backgroundColor: chromeIconBg,
+                  border: "2px solid rgba(255,255,255,0.25)",
                 }}
               >
-                <Icon />
+                {brandLogo && !logoFailed ? (
+                  <img
+                    src={brandLogo}
+                    alt={brandName}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    onError={() => setLogoFailed(true)}
+                  />
+                ) : (
+                  <span style={{ fontWeight: 600, fontSize: "40px", color: primaryColor || textColor }}>
+                    {brandName?.charAt(0)?.toUpperCase()}
+                  </span>
+                )}
               </div>
-            ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <span style={{ fontWeight: 600, fontSize: "40px", lineHeight: 1 }}>{brandName}</span>
+                <span style={{ fontWeight: 400, fontSize: "40px", color: colord(textColor).alpha(0.74).toRgbString(), lineHeight: 1 }}>
+                  {timePosted}
+                </span>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+              {[PauseIcon, SpeakerMuteIcon, MenuDotsIcon].map((Icon, index) => (
+                <div
+                  key={index}
+                  style={{
+                    width: "56px",
+                    height: "56px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "50%",
+                    backgroundColor: chromeIconBg,
+                  }}
+                >
+                  <Icon />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Hero image */}
       <div style={{ position: "absolute", left: 0, top: 0, width: "1080px", height: "1480px", overflow: "hidden" }}>
@@ -226,8 +237,30 @@ export default function Variant1({ variant, brandData, landingPageData }) {
             height: "120%",
             objectFit: heroObjectFit,
             objectPosition: heroObjectPosition,
+            transform: heroMirror ? "scaleX(-1)" : "none",
           }}
         />
+        {!isCapture && isVideo && !videoFailed && (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={heroImage}
+            onError={() => setVideoFailed(true)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "120%",
+              height: "120%",
+              objectFit: heroObjectFit,
+              objectPosition: heroObjectPosition,
+                transform: heroMirror ? "scaleX(-1)" : "none",
+            }}
+          />
+        )}
         {/* bottom fade for readability */}
         <div
           style={{
@@ -320,7 +353,7 @@ export default function Variant1({ variant, brandData, landingPageData }) {
             position: "absolute",
             left: 100,
             top: 187,
-            color: "#fff",
+            color: textColor,
             fontSize: 24,
             letterSpacing: "0.2px",
             fontWeight: 600,
@@ -330,7 +363,7 @@ export default function Variant1({ variant, brandData, landingPageData }) {
           {tag}
         </div>
         {/* Divider */}
-        <div style={{ position: "absolute", left: 100, top: 274, right: 100, height: 1, backgroundColor: "rgba(255,255,255,0.6)" }} />
+        <div style={{ position: "absolute", left: 100, top: 274, right: 100, height: 1, backgroundColor: colord(textColor).alpha(0.6).toRgbString() }} />
         {/* Headline */}
         <h1
           style={{
@@ -343,7 +376,7 @@ export default function Variant1({ variant, brandData, landingPageData }) {
             fontWeight: 700,
             lineHeight: `${Math.round(titleSize * 1.1)}px`,
             letterSpacing: "-1.6px",
-            color: "#fff",
+            color: textColor,
             display: "-webkit-box",
             WebkitBoxOrient: "vertical",
             WebkitLineClamp: 2,

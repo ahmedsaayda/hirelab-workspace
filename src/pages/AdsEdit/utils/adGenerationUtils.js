@@ -44,6 +44,43 @@ const stripWrappingQuotes = (s) => {
   return t.replace(/^"+/, "").replace(/"+$/, "").trim();
 };
 
+// If a Cloudinary video URL is provided, derive a thumbnail/poster image URL.
+// Example:
+// https://res.cloudinary.com/<cloud>/video/upload/v123/abc.mp4
+// ->     https://res.cloudinary.com/<cloud>/video/upload/so_0/v123/abc.jpg
+const cloudinaryVideoToPoster = (url, seconds = 0) => {
+  const u = String(url || "");
+  if (!u.includes("res.cloudinary.com") || !u.includes("/video/upload/")) return "";
+  const sec = Number.isFinite(seconds) ? seconds : 0;
+  const withTransform = u.replace("/video/upload/", `/video/upload/so_${sec}/`);
+  return withTransform.replace(/\.(mp4|mov|webm|mkv)(\?.*)?$/i, ".jpg$2");
+};
+
+const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+
+const shuffle = (arr) => {
+  const a = Array.isArray(arr) ? [...arr] : [];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+const getVideoUrlFromLp = (lpData) =>
+  lpData?.myVideo || lpData?.video?.url || lpData?.videoUrl || "";
+
+const isLikelyVideoUrl = (u) => /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(String(u || ""));
+
+const truncateByWords = (text, maxLen) => {
+  const s = String(text || "").trim();
+  if (!s) return "";
+  if (s.length <= maxLen) return s;
+  const cut = s.slice(0, maxLen);
+  const trimmed = cut.replace(/\s+\S*$/, "").trim();
+  return (trimmed || cut).slice(0, maxLen - 1).trimEnd() + "…";
+};
+
 /**
  * Extract images specifically for a given ad type
  */
@@ -59,8 +96,7 @@ export const extractImagesForAdType = (adType, lpData) => {
 
   switch (adType) {
     case 'job':
-      // Job Ads: use as many relevant images as possible (people/role images preferred).
-      // Constraint: Exclude Leader Intro / EVP Mission images (we simply don't include those fields here).
+      // Job Ads: Images from hero from all sections - except Leader Intro / EVP Mission
       addImage(lpData?.heroImage);
       addImage(lpData?.jobDescriptionImage);
       addImage(lpData?.textBoxImage);
@@ -73,35 +109,58 @@ export const extractImagesForAdType = (adType, lpData) => {
       break;
 
     case 'employer-brand':
-      // Brand Ads: Prioritize EVP and Leader avatars
+      // Brand Ads: Specifically focused -> Intro / EVP Mission + videos
       addImage(lpData?.evpMissionAvatar);
       addImage(lpData?.leaderIntroductionAvatar);
-      addImage(lpData?.heroImage);
-      addImage(lpData?.textBoxImage);
-      if (Array.isArray(lpData?.aboutTheCompanyImages)) {
-        lpData.aboutTheCompanyImages.forEach(addImage);
+      if (lpData?.myVideo) {
+         const poster = cloudinaryVideoToPoster(lpData.myVideo);
+         addImage(poster || lpData.myVideo);
       }
-      // Fallback to high quality photo images
-      if (Array.isArray(lpData?.photoImages)) {
+      // Explicitly check for video section video (sometimes under a different key like 'videoUrl' or from 'video' object)
+      if (lpData?.video?.url) {
+         const poster = cloudinaryVideoToPoster(lpData.video.url);
+         addImage(poster || lpData.video.url);
+      } else if (lpData?.videoUrl) {
+         const poster = cloudinaryVideoToPoster(lpData.videoUrl);
+         addImage(poster || lpData.videoUrl);
+      }
+
+      // Fallback: Use photo images
+      if (images.length === 0 && Array.isArray(lpData?.photoImages)) {
         lpData.photoImages.forEach(addImage);
       }
-      // Fallback to company logo
-      if (images.length === 0) {
-        addImage(lpData?.companyLogo);
+      // Fallback: Use hero image
+      if (images.length === 0 && lpData?.heroImage) {
+        addImage(lpData.heroImage);
+      }
+      // Last resort: Fallback to company logo
+      if (images.length === 0 && lpData?.companyLogo) {
+        addImage(lpData.companyLogo);
       }
       break;
 
     case 'company':
-      // Company Ads: Prioritize About Company images
+      // Company Ads: Images from hero from all sections - but ‘about company is prioritized + videos
       if (Array.isArray(lpData?.aboutTheCompanyImages)) {
         lpData.aboutTheCompanyImages.forEach(addImage);
       }
-      // Fallback to photo images or hero
+      {
+        const videoUrl = getVideoUrlFromLp(lpData);
+        if (videoUrl) {
+          const poster = cloudinaryVideoToPoster(videoUrl);
+          addImage(poster || videoUrl);
+        }
+      }
+      addImage(lpData?.heroImage);
+      addImage(lpData?.jobDescriptionImage);
+      addImage(lpData?.textBoxImage);
       if (Array.isArray(lpData?.photoImages)) {
         lpData.photoImages.forEach(addImage);
       }
-      addImage(lpData?.textBoxImage);
-      addImage(lpData?.heroImage);
+      // Fallback: Use company logo if absolutely nothing else
+      if (images.length === 0 && lpData?.companyLogo) {
+        addImage(lpData.companyLogo);
+      }
       break;
 
     case 'testimonial':
@@ -127,6 +186,10 @@ export const extractImagesForAdType = (adType, lpData) => {
       }
       if (Array.isArray(lpData?.photoImages)) {
         lpData.photoImages.forEach(addImage);
+      }
+      // Fallback: Use company logo
+      if (images.length === 0 && lpData?.companyLogo) {
+        addImage(lpData.companyLogo);
       }
       break;
 
@@ -162,16 +225,21 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
   switch (adType) {
     case 'job':
       // Headline: Role Title or "We're Hiring: {Role}"
-      title = variantIndex === 0 
-        ? vacancy 
-        : `We're Hiring: ${vacancy}`;
-      
-      // Primary: Short, punchy hook
-      // "Join {Company} in {Location}."
       const jobHook = pickSectionSentence(lpData?.heroDescription) || pickSectionSentence(lpData?.jobDescription);
-      description = variantIndex === 0
-        ? `Join ${company}${locationStr}. ${jobHook}`
-        : jobHook || `Advance your career as a ${vacancy} at ${company}.`;
+      
+      if (variantIndex === 0) {
+        title = vacancy;
+        description = `Join ${company}${locationStr}. ${jobHook}`;
+      } else if (variantIndex === 1) {
+        title = `We're Hiring: ${vacancy}`;
+        description = jobHook || `Advance your career as a ${vacancy} at ${company}.`;
+      } else if (variantIndex === 2) {
+        title = `Career Opportunity`;
+        description = `Are you the ${vacancy} we are looking for? Apply now at ${company}.`;
+      } else {
+        title = `${company} is Hiring`;
+        description = `We are looking for a talented ${vacancy} to join our team${locationStr}.`;
+      }
       source = "Vacancy & Job Description";
       break;
 
@@ -179,12 +247,14 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
       // Source: EVP or Leader
       const evp = pickSectionSentence(lpData?.evpMissionDescription);
       const leader = pickSectionSentence(lpData?.leaderIntroductionDescription);
-      const mission = evp || leader || `Our mission at ${company} is to empower every employee to thrive.`;
+      const videoDesc = pickSectionSentence(lpData?.videoDescription);
       
-      title = variantIndex === 0 ? `Life at ${company}` : `Our Mission`;
+      const mission = evp || leader || videoDesc || `Our mission at ${company} is to empower every employee to thrive.`;
+      
+      title = variantIndex === 0 ? `Life at ${company}` : (variantIndex === 1 ? "Our Mission" : `Meet ${company}`);
       description = mission;
       cta = "Learn More";
-      source = evp ? "EVP / Mission" : (leader ? "Leader Intro" : "Brand Defaults");
+      source = evp ? "EVP / Mission" : (leader ? "Leader Intro" : (videoDesc ? "Video Section" : "Brand Defaults"));
       break;
 
     case 'company':
@@ -231,8 +301,11 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
 
   // Truncate Headline if absolutely necessary (though we prefer to warn)
   // Meta headline soft limit ~40 chars
-  
-  return { title, description, cta, source };
+  const finalTitle = truncateByWords(title, MAX_HEADLINE_LENGTH);
+  // Primary text can be long, but keep it within Meta limits
+  const finalDescription = String(description || "").slice(0, 2200);
+  const finalCta = (cta === "Learn More" || cta === "Apply Now") ? cta : "Learn More";
+  return { title: finalTitle, description: finalDescription, cta: finalCta, source };
 };
 
 /**
@@ -240,54 +313,188 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
  */
 export const generateVariants = (lpData) => {
   const ads = {};
-  
-  const adTypes = ['job', 'employer-brand', 'company', 'testimonial', 'retargeting'];
 
-  adTypes.forEach(adType => {
-    const variants = [];
-    const images = extractImagesForAdType(adType, lpData);
-    
-    // Determine count based on available unique images
-    // We want "as many variants as we can" (based on images), but capped reasonably.
-    let count = images.length;
+  // Target total variants (UI-friendly), but keep minimums guaranteed
+  const totalTarget = clamp(15 + Math.floor(Math.random() * 6), 7, 20); // 15–20
 
-    // For Job ads, we enforce a minimum of 2 to showcase copy variation (A/B)
-    if (adType === 'job') {
-      count = Math.max(count, 2);
-    }
+  const MIN = {
+    job: 4,
+    company: 1,
+    testimonial: 1,
+    retargeting: 1,
+    "employer-brand": 3, // EVP, Leader, Video
+  };
+  const CAP = {
+    job: 12,
+    company: 6,
+    testimonial: 4,
+    retargeting: 3,
+    "employer-brand": 3,
+  };
 
-    // Cap to avoid UI clutter (but allow plenty)
-    count = Math.min(count, 20);
-    
-    // Ensure at least 1 variant is always generated
-    count = Math.max(count, 1);
+  const jobImages = shuffle(extractImagesForAdType("job", lpData));
+  const companyImages = shuffle(extractImagesForAdType("company", lpData));
+  const testimonialImages = shuffle(extractImagesForAdType("testimonial", lpData));
+  const retargetingImages = shuffle(extractImagesForAdType("retargeting", lpData));
 
-    for (let i = 0; i < count; i++) {
-      const copy = generateCopyForAdType(adType, lpData, i);
-      // Cycle through available images
-      const image = images[i % images.length];
-      const variantNumber = adType === "job" ? ((i % 2) + 1) : 1; // reuse existing designs
+  const counts = {
+    job: MIN.job,
+    company: MIN.company,
+    testimonial: MIN.testimonial,
+    retargeting: MIN.retargeting,
+    "employer-brand": MIN["employer-brand"],
+  };
 
-      variants.push({
-        id: `${adType}-variant-${uuidv4().slice(0, 8)}`, // Use UUID or simpler unique ID
-        title: copy.title,
-        description: copy.description,
-        callToAction: copy.cta,
-        source: copy.source,
-        image: image,
-        template: "template-1", // Default template
-        adTypeId: adType,
-        variantNumber,
-        selected: i === 0, // Select first by default
-        approved: false,
-      });
-    }
+  const baseTotal =
+    counts.job +
+    counts.company +
+    counts.testimonial +
+    counts.retargeting +
+    counts["employer-brand"];
+  let remaining = Math.max(totalTarget - baseTotal, 0);
 
-    ads[adType] = {
-      variants,
-      enabled: adType === 'job', // Only job enabled by default
+  const canGrow = (type) => counts[type] < CAP[type];
+  const mediaLen = {
+    job: jobImages.length,
+    company: companyImages.length,
+    testimonial: testimonialImages.length,
+    retargeting: retargetingImages.length,
+  };
+
+  // Prefer allocating extra variants to types that have extra unique imagery available.
+  while (remaining > 0) {
+    const candidates = ["company", "testimonial", "job", "retargeting"].filter(canGrow);
+    if (candidates.length === 0) break;
+
+    candidates.sort((a, b) => {
+      const aHasNew = counts[a] < (mediaLen[a] || 0) ? 1 : 0;
+      const bHasNew = counts[b] < (mediaLen[b] || 0) ? 1 : 0;
+      if (aHasNew !== bHasNew) return bHasNew - aHasNew;
+      // Job is usually most valuable A/B coverage once others are satisfied
+      const priority = { company: 3, testimonial: 2, job: 1, retargeting: 0 };
+      return (priority[b] || 0) - (priority[a] || 0);
+    });
+
+    // Add one to the best candidate (with a tiny random tie-breaker to avoid identical sets)
+    const top = candidates[0];
+    counts[top] += 1;
+    remaining -= 1;
+  }
+
+  const createVariant = (adType, i, image, extra = {}) => {
+    const copy = generateCopyForAdType(adType, lpData, i);
+    const variantNumber = adType === "job" ? ((i % 2) + 1) : 1;
+    return {
+      id: `${adType}-variant-${uuidv4().slice(0, 8)}`,
+      title: copy.title,
+      description: copy.description,
+      callToAction: copy.cta,
+      source: copy.source,
+      image,
+      template: "template-1",
+      adTypeId: adType,
+      variantNumber,
+      selected: i === 0,
+      approved: false,
+      ...extra,
     };
-  });
+  };
+
+  // JOB (images from hero + sections, excluding Leader/EVP)
+  {
+    const variants = [];
+    const imgs = jobImages.length ? jobImages : [TRANSPARENT_PNG];
+    for (let i = 0; i < counts.job; i++) {
+      variants.push(createVariant("job", i, imgs[i % imgs.length]));
+    }
+    ads.job = { variants, enabled: true };
+  }
+
+  // COMPANY (About Company prioritized + video)
+  {
+    const variants = [];
+    const imgs = companyImages.length ? companyImages : [TRANSPARENT_PNG];
+    const videoUrl = getVideoUrlFromLp(lpData);
+    const videoPoster = videoUrl ? (cloudinaryVideoToPoster(videoUrl) || "") : "";
+    for (let i = 0; i < counts.company; i++) {
+      const image = imgs[i % imgs.length];
+      const withVideo = videoUrl && videoPoster && image === videoPoster;
+      variants.push(createVariant("company", i, image, withVideo ? { videoUrl } : {}));
+    }
+    ads.company = { variants, enabled: false };
+  }
+
+  // EMPLOYER BRAND (EVP, Leader, Video)
+  {
+    const variants = [];
+    const evp = lpData?.evpMissionAvatar || "";
+    const leader = lpData?.leaderIntroductionAvatar || "";
+    const videoUrl = getVideoUrlFromLp(lpData);
+    const videoPoster = videoUrl ? (cloudinaryVideoToPoster(videoUrl) || "") : "";
+
+    variants.push(
+      createVariant(
+        "employer-brand",
+        0,
+        evp || leader || videoPoster || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
+        { mediaKind: evp ? "image" : "fallback", mediaSource: evp ? "evpMissionAvatar" : "fallback" }
+      )
+    );
+    variants.push(
+      createVariant(
+        "employer-brand",
+        1,
+        leader || evp || videoPoster || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
+        { mediaKind: leader ? "image" : "fallback", mediaSource: leader ? "leaderIntroductionAvatar" : "fallback" }
+      )
+    );
+    variants.push(
+      createVariant(
+        "employer-brand",
+        2,
+        videoPoster || evp || leader || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
+        { mediaKind: videoUrl ? "video" : "fallback", mediaSource: videoUrl ? "myVideo" : "fallback", videoUrl: videoUrl || "" }
+      )
+    );
+
+    ads["employer-brand"] = { variants, enabled: false };
+  }
+
+  // TESTIMONIAL (from testimonials; fallback to images if no avatars)
+  {
+    const variants = [];
+    const imgs = testimonialImages.length ? testimonialImages : [TRANSPARENT_PNG];
+    const testimonials = Array.isArray(lpData?.testimonials) ? lpData.testimonials : [];
+    for (let i = 0; i < counts.testimonial; i++) {
+      const image = imgs[i % imgs.length];
+      const t = testimonials.length ? testimonials[i % testimonials.length] : null;
+      const quote = stripWrappingQuotes(snippetFromText(t?.comment, 140)) || "Working here has been an incredible experience.";
+      const author = stripWrappingQuotes(t?.fullname) || "";
+      const role = stripWrappingQuotes(t?.role) || "";
+      variants.push(
+        createVariant("testimonial", i, image, {
+          // Match template expected fields
+          quote,
+          author,
+          role,
+          // For feed context too
+          description: `"${quote}"${author ? ` - ${author}` : ""}`,
+        })
+      );
+    }
+    ads.testimonial = { variants, enabled: false };
+  }
+
+  // RETARGETING (messaging-driven)
+  {
+    const variants = [];
+    const imgs = retargetingImages.length ? retargetingImages : [TRANSPARENT_PNG];
+    const videoUrl = ""; // can be enabled later if needed
+    for (let i = 0; i < counts.retargeting; i++) {
+      variants.push(createVariant("retargeting", i, imgs[i % imgs.length], videoUrl ? { videoUrl } : {}));
+    }
+    ads.retargeting = { variants, enabled: false };
+  }
 
   return ads;
 };

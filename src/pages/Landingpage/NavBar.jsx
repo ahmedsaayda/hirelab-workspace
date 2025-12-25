@@ -520,7 +520,9 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   };
 
   const handleShareClick = () => {
-    const generatedLink = `${process.env.NEXT_PUBLIC_LIVE_URL}/lp/${lpId}`;
+    // const generatedLink = `${process.env.NEXT_PUBLIC_LIVE_URL}/lp/${lpId}`;
+    const generatedLink = window.location.host.includes('localhost') ? `http://${window.location.host}/lp/${lpId}` : `https://${window.location.host}/lp/${lpId}`;
+
     setLink(generatedLink); // Save the generated link
     setModalVisible(true); // Show the modal
   };

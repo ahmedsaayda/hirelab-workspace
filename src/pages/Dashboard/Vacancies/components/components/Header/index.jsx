@@ -1,4 +1,4 @@
-import { Modal, Switch, Input, Spin } from "antd";
+import { Modal, Drawer, Switch, Input, Spin, Select } from "antd";
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -11,6 +11,13 @@ import CrudService from "../../../../../../services/CrudService";
 import { message } from "antd";
 import LandingPageService from "../../../../../../services/landingPageService";
 import { Button } from "../../../../../Landing/Button";
+import AiService from "../../../../../../services/AiService";
+import languages from "../../../lang.json";
+
+// Convert the language object to array of options and remove duplicates (same as FromScratchModal)
+const languageOptions = Array.from(new Set(Object.values(languages)))
+  .map((name) => ({ value: name, label: name }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 export default function Header({
   landingPageData,
@@ -33,7 +40,6 @@ export default function Header({
   ...props
 }) {
   const router = useRouter();
-  const [templateMenu, setTemplateMenu] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
   const [previewMode, setPreviewMode] = useState("desktop");
@@ -44,6 +50,13 @@ export default function Header({
   const [isPublishing, setIsPublishing] = useState(false);
   const [applyLinkModalVisible, setApplyLinkModalVisible] = useState(false);
   const [formBuilderPopupVisible, setFormBuilderPopupVisible] = useState(false);
+  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+
+  // 🌍 Language translation states
+  const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const [pendingLanguage, setPendingLanguage] = useState(null);
+  const [languageConfirmVisible, setLanguageConfirmVisible] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Initialize CTA link from landingPageData
   useEffect(() => {
@@ -52,6 +65,12 @@ export default function Header({
       setInitialCtaLink(landingPageData.cta2Link || '#apply');
     }
   }, [landingPageData]);
+
+  // Initialize language from landingPageData
+  useEffect(() => {
+    const lang = landingPageData?.lang || landingPageData?.language || "English";
+    setSelectedLanguage(lang);
+  }, [landingPageData?.lang, landingPageData?.language]);
 
   const handleSave = async () => {
     console.log("landingPageData", landingPageData?.companyLogo);
@@ -152,7 +171,50 @@ export default function Header({
   const handleTemplateOpen = () => {
     setCtaLink(landingPageData.cta2Link || '');
     setInitialCtaLink(landingPageData.cta2Link || '');
-    setTemplateMenu(true);
+    setSettingsDrawerOpen(true);
+  };
+
+  const handleLanguageChangeAttempt = (nextLang) => {
+    const currentLang = landingPageData?.lang || landingPageData?.language || "English";
+    if (!nextLang || nextLang === currentLang) {
+      setSelectedLanguage(currentLang);
+      return;
+    }
+    setPendingLanguage(nextLang);
+    setLanguageConfirmVisible(true);
+  };
+
+  const handleConfirmLanguageChange = async () => {
+    const nextLang = pendingLanguage;
+    if (!nextLang || !lpId) {
+      setLanguageConfirmVisible(false);
+      setPendingLanguage(null);
+      return;
+    }
+
+    try {
+      setIsTranslating(true);
+      const res = await AiService.translateVacancy({ lpId, language: nextLang });
+      const updated = res?.data?.data?.landingPageData;
+      if (updated) {
+        setLandingPageData(updated);
+      }
+      message.success(`Translated page to ${nextLang}`);
+      setSelectedLanguage(nextLang);
+      setLanguageConfirmVisible(false);
+      setPendingLanguage(null);
+      // Reload to ensure all parts of the editor pick up the latest DB state
+      setTimeout(() => reload(), 300);
+    } catch (err) {
+      message.error("Failed to translate: " + (err?.message || "Unknown error"));
+      // Revert visual selection
+      const currentLang = landingPageData?.lang || landingPageData?.language || "English";
+      setSelectedLanguage(currentLang);
+      setLanguageConfirmVisible(false);
+      setPendingLanguage(null);
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const handleSaveCtaLink = () => {
@@ -217,7 +279,7 @@ export default function Header({
   };
 
   const handleCopyLink = () => {
-    const generatedLink = `${process.env.NEXT_PUBLIC_LIVE_URL}/lp/${lpId}`;
+    const generatedLink = window.location.host.includes('localhost') ? `http://${window.location.host}/lp/${lpId}` : `https://${window.location.host}/lp/${lpId}`;
     navigator.clipboard.writeText(generatedLink).then(() => {
       message.success('Link copied to clipboard!');
     }).catch(() => {
@@ -475,109 +537,153 @@ export default function Header({
           </div>
         </div>
       </div>
-      <Modal
-        open={templateMenu && !isFormEditor}
-        onCancel={() => setTemplateMenu(false)}
-        okButtonProps={{ style: { display: "none" } }}
-        cancelButtonProps={{ style: { display: "none" } }}
-        destroyOnClose
-        title="Landing Page Settings"
-        width={800}
+      <Drawer
+        open={settingsDrawerOpen && !isFormEditor}
+        onClose={() => setSettingsDrawerOpen(false)}
+        width={690}
+        title={<span className="text-lg font-semibold text-gray-900">Landing Page Settings</span>}
+        bodyStyle={{ padding: 24 }}
       >
-        <div className="py-4">
-          {/* Meta Pixel Configuration Section */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Analytics & Tracking</h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Meta Pixel ID (Facebook Pixel)
-                </label>
-                <Input
-                  value={landingPageData?.metaPixelId || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setLandingPageData((d) => ({ ...d, metaPixelId: value }));
-                    CrudService.update("LandingPageData", lpId, {
-                      metaPixelId: value,
-                    });
-                  }}
-                  placeholder="Enter your Meta Pixel ID (e.g., 1234567890123456)"
-                  className="w-full"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Add your Meta Pixel ID to track conversions and optimize your ads. You can find this in your Facebook Ads Manager.
-                </p>
-              </div>
-            </div>
+        <div className="divide-y divide-gray-200">
+          {/* 🌍 Language & Translation */}
+          <div className="py-4">
+            <h3 className="text-lg font-semibold mb-2 text-gray-800">Language</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Changing language will translate the landing page content with AI. We’ll keep structure, links, and values intact.
+            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Page language
+            </label>
+            <Select
+              className="w-full"
+              value={selectedLanguage}
+              onChange={handleLanguageChangeAttempt}
+              options={languageOptions}
+              showSearch
+              disabled={isTranslating}
+              filterOption={(input, option) =>
+                (option?.label || "").toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </div>
 
+          {/* Meta Pixel Configuration Section */}
           {/* Template Selection Section */}
-          <div>
+          <div className="py-4">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Choose Template</h3>
             <div className="grid grid-cols-3 gap-6 justify-center mdx:grid-cols-2">
-          {new Array(3).fill(0).map((a, i) => (
-            <div
-              key={i}
-              className={`flex w-full flex-col items-start gap-5 rounded-lg border px-3.5 py-4 cursor-pointer ${landingPageData?.templateId === `${i + 1}`
-                  ? "border-solid border-light_blue-A700 bg-gray-100_01"
-                  : ""
-              }`}
-            >
-              <div className="relative w-full group">
-                <div className="overflow-hidden rounded-md">
-                  <Img
-                    src={`/images/template-thumbnails/TemplateHero${i + 1}.png`}
-                    alt={`Template Hero ${i + 1}`}
-                    className="h-[125px] w-full object-cover mdx:h-auto transition-all duration-300 group-hover:brightness-50 group-hover:scale-105"
-                  />
-                </div>
+              {new Array(3).fill(0).map((a, i) => (
                 <div
-                  className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                  key={i}
+                  className={`flex w-full flex-col items-start gap-5 rounded-lg border px-3.5 py-4 cursor-pointer ${landingPageData?.templateId === `${i + 1}`
+                    ? "border-solid border-light_blue-A700 bg-gray-100_01"
+                    : ""
+                    }`}
                 >
-                  <div className="p-2 rounded-full bg-white bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300">
-                    <EyeOutlined className="text-transparent group-hover:text-white text-3xl transition-all duration-300" />
+                  <div className="relative w-full group">
+                    <div className="overflow-hidden rounded-md">
+                      <Img
+                        src={`/images/template-thumbnails/TemplateHero${i + 1}.png`}
+                        alt={`Template Hero ${i + 1}`}
+                        className="h-[125px] w-full object-cover mdx:h-auto transition-all duration-300 group-hover:brightness-50 group-hover:scale-105"
+                      />
+                    </div>
+                    <div
+                      className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                    >
+                      <div className="p-2 rounded-full bg-white bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300">
+                        <EyeOutlined className="text-transparent group-hover:text-white text-3xl transition-all duration-300" />
+                      </div>
+                    </div>
+                  </div>
+                  <Heading
+                    size="4xl"
+                    as="h2"
+                    className="!text-gray-900 whitespace-nowrap"
+                  >
+                    Template {i + 1}
+                  </Heading>
+                  <div className="flex flex-col gap-3 self-stretch">
+                    <Button
+                      onClick={() => {
+                        if (i !== 0) {
+                          return;
+                        }
+                        setLandingPageData((d) => ({
+                          ...d,
+                          templateId: `${i + 1}`,
+                        }));
+                        CrudService.update("LandingPageData", lpId, {
+                          templateId: `${i + 1}`,
+                        });
+                        setSettingsDrawerOpen(false);
+                        reload();
+                      }}
+                      disabled={i !== 0}
+                      shape="round"
+                      className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${i === 0
+                        ? landingPageData?.templateId === `${i + 1}`
+                          ? "bg-blue-500 text-[#FFFFFF]"
+                          : "bg-[#FFFFFF] text-blue_gray-800_01 border rounded-full border-solid border-blue_gray-100"
+                        : "bg-gray-200  cursor-not-allowed"
+                        }`}
+                    >
+                      {i === 0 ? "Choose Template" : "Coming Soon"}
+                    </Button>
                   </div>
                 </div>
-              </div>
-              <Heading
-                size="4xl"
-                as="h2"
-                className="!text-gray-900 whitespace-nowrap"
-              >
-                Template {i + 1}
-              </Heading>
-              <div className="flex flex-col gap-3 self-stretch">
-                <Button
-                  onClick={() => {
-                    if(i !== 0) {
-                      return;
-                    }
-                    setLandingPageData((d) => ({
-                      ...d,
-                      templateId: `${i + 1}`,
-                    }));
-                    CrudService.update("LandingPageData", lpId, {
-                      templateId: `${i + 1}`,
-                    });
-                    setTemplateMenu(false);
-                    reload();
-                  }}
-                  disabled={i !== 0}
-                  shape="round"
-                  className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${i === 0
-                      ? landingPageData?.templateId === `${i + 1}`
-                        ? "bg-blue-500 text-[#FFFFFF]"
-                        : "bg-[#FFFFFF] text-blue_gray-800_01 border rounded-full border-solid border-blue_gray-100"
-                      : "bg-gray-200  cursor-not-allowed"
-                  }`}
-                >
-                  {i === 0 ? "Choose Template" : "Coming Soon"}
-                </Button>
-              </div>
+              ))}
             </div>
-          ))}
-            </div>
+          </div>
+        </div>
+      </Drawer>
+
+      {/* Language Change Confirmation */}
+      <Modal
+        title="Confirm language change"
+        open={languageConfirmVisible}
+        onCancel={() => {
+          setLanguageConfirmVisible(false);
+          setPendingLanguage(null);
+          const currentLang = landingPageData?.lang || landingPageData?.language || "English";
+          setSelectedLanguage(currentLang);
+        }}
+        footer={null}
+        destroyOnClose
+      >
+        <div className="py-2">
+          <p className="text-gray-700 mb-4">
+            Changing the language will translate the landing page content using AI. Links, emails, phones, icons, and structure will stay the same.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button
+              onClick={() => {
+                setLanguageConfirmVisible(false);
+                setPendingLanguage(null);
+                const currentLang = landingPageData?.lang || landingPageData?.language || "English";
+                setSelectedLanguage(currentLang);
+              }}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmLanguageChange}
+              disabled={isTranslating}
+              className={`px-4 py-2 rounded-md ${isTranslating
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-[#5207CD] text-white hover:bg-[#0C7CE6]'
+                }`}
+            >
+              {isTranslating ? (
+                <>
+                  <Spin size="small" className="mr-2" />
+                  Translating...
+                </>
+              ) : (
+                'Translate & Apply'
+              )}
+            </Button>
           </div>
         </div>
       </Modal>

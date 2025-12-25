@@ -55,7 +55,7 @@ const QuoteMarksIcon = ({ color = "rgba(255,255,255,0.25)", size = 100 }) => (
   </svg>
 );
 
-export default function Variant1({ variant, brandData, landingPageData }) {
+export default function Variant1({ variant, brandData, landingPageData, showStoryChrome = true }) {
   const quote =
     variant?.quote ||
     landingPageData?.testimonialQuote ||
@@ -63,15 +63,42 @@ export default function Variant1({ variant, brandData, landingPageData }) {
   const author = variant?.author || landingPageData?.testimonialAuthor || "Alison Medis";
   const role = variant?.role || landingPageData?.testimonialRole || "Project Manager";
   const avatar = variant?.image || landingPageData?.testimonialAvatar || AVATAR_FALLBACK;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const [videoFailed, setVideoFailed] = React.useState(false);
   const brandName = brandData?.companyName || brandData?.name || "hirelab";
   const brandLogo = brandData?.companyLogo || brandData?.logo || null;
   const timePosted = "14h";
 
-  const { primaryColor, heroBackgroundColor, getPrimary } = useAdPalette({
+  const { primaryColor, heroBackgroundColor, getPrimary, getContrastColor } = useAdPalette({
     landingPageData,
     brandData,
   });
   const [logoFailed, setLogoFailed] = React.useState(false);
+
+  // Calculate contrast for the main background and the quote card
+  const mainBgColor = getPrimary(900);
+  const quoteCardColor = getPrimary(600); // Check contrast against the lighter top part of the gradient
+  
+  const mainTextColor = getContrastColor(mainBgColor);
+  
+  // Use getContrastColor for the card text
+  const cardTextColor = getContrastColor(quoteCardColor);
+  const isCardLight = cardTextColor === "#000000"; // If text should be black, card is light
+
+  const quoteColor = isCardLight ? "#101828" : "#ffffff";
+  const authorColor = isCardLight ? "#101828" : "#ffffff";
+  const roleColor = isCardLight ? "#475467" : "rgba(255,255,255,0.85)";
+  const dividerColor = isCardLight ? "rgba(16, 24, 40, 0.2)" : "rgba(255,255,255,0.6)";
+  const quoteIconColor = isCardLight ? "rgba(16, 24, 40, 0.1)" : "rgba(255,255,255,0.25)";
+
+  // Prevent quote overflow inside the fixed-height card.
+  const quoteLen = String(quote || "").length;
+  const quoteFontSize = quoteLen > 240 ? 28 : quoteLen > 170 ? 32 : 36;
+  const quoteLineHeight = quoteFontSize >= 36 ? "44px" : quoteFontSize >= 32 ? "40px" : "36px";
+  const quoteClampLines = quoteLen > 240 ? 6 : 5;
 
   const tileLine = colord(getPrimary(300)).alpha(0.12).toRgbString();
   const tileFill = colord(getPrimary(400)).alpha(0.08).toRgbString();
@@ -101,20 +128,21 @@ export default function Variant1({ variant, brandData, landingPageData }) {
           style={{ opacity: 0.35 }}
         />
       </div>
-      {/* Top story chrome */}
-      <div
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "45px",
-          width: "972px",
-          transform: "translateX(-50%)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-          zIndex: 3,
-        }}
-      >
+      {/* Top story chrome (preview-only; use shared StoryFrame in Ads editor) */}
+      {showStoryChrome && (
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "45px",
+            width: "972px",
+            transform: "translateX(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "24px",
+            zIndex: 3,
+          }}
+        >
         <div style={{ width: "100%", height: "6px", backgroundColor: "rgba(255,255,255,0.2)", borderRadius: "5px", overflow: "hidden" }}>
           <div style={{ width: "88%", height: "100%", backgroundColor: "#ffffff", borderRadius: "5px" }} />
         </div>
@@ -170,7 +198,8 @@ export default function Variant1({ variant, brandData, landingPageData }) {
             ))}
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Avatar image card */}
       <div
@@ -192,6 +221,19 @@ export default function Variant1({ variant, brandData, landingPageData }) {
           alt={author}
           style={{ position: "absolute", inset: 0, width: "120%", height: "120%", objectFit: "cover", objectPosition: "50% 50%" }}
         />
+        {!isCapture && isVideo && !videoFailed && (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={avatar}
+            onError={() => setVideoFailed(true)}
+            style={{ position: "absolute", inset: 0, width: "120%", height: "120%", objectFit: "cover", objectPosition: "50% 50%" }}
+          />
+        )}
         {/* purple vignette bottom-left like Figma */}
         <div
           style={{
@@ -234,16 +276,32 @@ export default function Variant1({ variant, brandData, landingPageData }) {
       >
         {/* Quote glyph */}
         <div style={{ position: "absolute", left: 64, top: 70 }}>
-          <QuoteMarksIcon color="rgba(255,255,255,0.25)" size={110} />
+          <QuoteMarksIcon color={quoteIconColor} size={110} />
         </div>
 
         {/* Copy */}
         <div style={{ position: "absolute", left: 100, top: 160, width: 527 }}>
-          <p style={{ margin: 0, fontSize: 36, lineHeight: "44px", color: "#fff" }}>{quote}</p>
-          <div style={{ width: 527, height: 1, background: "rgba(255,255,255,0.6)", marginTop: 28 }} />
+          <p
+            style={{
+              margin: 0,
+              fontSize: quoteFontSize,
+              lineHeight: quoteLineHeight,
+              color: quoteColor,
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: quoteClampLines,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              overflowWrap: "anywhere",
+              wordBreak: "break-word",
+            }}
+          >
+            {quote}
+          </p>
+          <div style={{ width: 527, height: 1, background: dividerColor, marginTop: 28 }} />
           <div style={{ marginTop: 24 }}>
-            <div style={{ fontSize: 22, fontWeight: 600, color: "#fff" }}>{author}</div>
-            <div style={{ fontSize: 18, color: "rgba(255,255,255,0.85)" }}>{role}</div>
+            <div style={{ fontSize: 22, fontWeight: 600, color: authorColor }}>{author}</div>
+            <div style={{ fontSize: 18, color: roleColor }}>{role}</div>
           </div>
         </div>
       </div>

@@ -22,6 +22,7 @@ const ColorPickerButton = ({
   label,
   color,
   setColor,
+  getPopupContainer,
 }) => {
   // Ensure color is a valid hex string
   const hexColor = typeof color === 'string' ? color : color?.toHexString() || "#0066CC";
@@ -37,6 +38,7 @@ const ColorPickerButton = ({
         onChange={(color) => setColor(color?.toHexString())}
         disabledAlpha={true}
         format="hex"
+        getPopupContainer={getPopupContainer}
       >
         <div className="border rounded-full">
           <div

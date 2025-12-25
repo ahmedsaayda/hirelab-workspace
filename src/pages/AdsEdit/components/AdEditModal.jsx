@@ -7,9 +7,15 @@ const { Option } = Select;
 
 export default function AdEditModal({ open, onClose, variant, onSave, landingPageData }) {
   const [formData, setFormData] = useState({
-    title: "",
+    // Meta fields:
+    // - description: Primary Text (2200, hook 125)
+    // - title: Headline (40)
+    // - linkDescription: Description (30)
     description: "",
+    title: "",
+    linkDescription: "",
     image: "",
+    videoUrl: "",
     callToAction: "Apply Now",
   });
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
@@ -17,9 +23,11 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
   useEffect(() => {
     if (variant) {
       setFormData({
-        title: variant.title || "",
         description: variant.description || "",
+        title: variant.title || "",
+        linkDescription: variant.linkDescription || "",
         image: variant.image || "",
+        videoUrl: variant.videoUrl || "",
         callToAction: variant.callToAction || "Apply Now",
       });
     }
@@ -41,11 +49,13 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
 
   // Unified media picker—no direct upload input here
 
-  const handleImageSelect = (imageUrl) => {
-    setFormData({
-      ...formData,
-      image: imageUrl,
-    });
+  const isLikelyVideoUrl = (u) => /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(String(u || ""));
+  const cloudinaryVideoToPoster = (url, seconds = 0) => {
+    const u = String(url || "");
+    if (!u.includes("res.cloudinary.com") || !u.includes("/video/upload/")) return "";
+    const sec = Number.isFinite(seconds) ? seconds : 0;
+    const withTransform = u.replace("/video/upload/", `/video/upload/so_${sec}/`);
+    return withTransform.replace(/\.(mp4|mov|webm|mkv)(\?.*)?$/i, ".jpg$2");
   };
 
   // Extract available images from landing page
@@ -94,33 +104,53 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
       }
     >
       <div className="space-y-5">
-        {/* Title */}
+        {/* Primary Text */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Ad Title
+            Primary Text (appears above the media in Feed)
           </label>
           <Input
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            placeholder="Enter ad title..."
-            maxLength={100}
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Primary Text (hook is first 125 chars)..."
+            maxLength={2200}
             showCount
             size="large"
           />
+          {formData.description.length > 125 && (
+            <div className="mt-1 text-xs text-gray-500">
+              ℹ️ First 125 chars are visible before “See more”.
+            </div>
+          )}
         </div>
 
-        {/* Description */}
+        {/* Headline */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Description
+            Headline (appears below the media in Feed)
           </label>
           <TextArea
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="Enter ad description..."
-            rows={4}
-            maxLength={250}
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            placeholder="Headline (max 40 characters)..."
+            rows={2}
+            maxLength={40}
             showCount
+          />
+        </div>
+
+        {/* Description (Meta) */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Description (appears under the headline on some placements)
+          </label>
+          <Input
+            value={formData.linkDescription}
+            onChange={(e) => setFormData({ ...formData, linkDescription: e.target.value })}
+            placeholder="Short description..."
+            maxLength={30}
+            showCount
+            size="large"
           />
         </div>
 
@@ -137,17 +167,13 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
           >
             <Option value="Apply Now">Apply Now</Option>
             <Option value="Learn More">Learn More</Option>
-            <Option value="Join Us">Join Us</Option>
-            <Option value="Get Started">Get Started</Option>
-            <Option value="See Opportunities">See Opportunities</Option>
-            <Option value="View Job">View Job</Option>
           </Select>
         </div>
 
-        {/* Image Selection - unified single field opens media library (choose or upload) */}
+        {/* Media Selection - unified single field opens media library (choose or upload) */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Ad Image
+            Ad Media (image or video)
           </label>
 
           <button
@@ -167,7 +193,7 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
               </div>
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-900">
-                  {formData.image ? "Change image" : "Click to choose or upload"}
+                  {formData.image ? "Change media" : "Click to choose or upload"}
                 </div>
                 <div className="text-xs text-gray-500">Opens media library. You can upload new or pick existing.</div>
               </div>
@@ -199,20 +225,22 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
     <ImageSelectionModal
       isOpen={isImagePickerOpen}
       onClose={() => setIsImagePickerOpen(false)}
-      type="image"
-      accept="image/*"
+      type="all"
+      accept="image/*,video/*"
       multiple={false}
       existingFiles={formData?.image ? [formData.image] : []}
       onImageSelected={(files = []) => {
         const first = files?.[0];
-        const url =
-          first?.thumbnail ||
-          first?.url ||
-          first?.secure_url ||
-          (typeof first === "string" ? first : "");
+        const url = (typeof first === "string" ? first : (first?.url || first?.secure_url || first?.thumbnail || ""));
         if (url) {
-          setFormData((prev) => ({ ...prev, image: url }));
-          message.success("Image selected from library");
+          if (isLikelyVideoUrl(url) || String(url).includes("/video/upload/")) {
+            const poster = cloudinaryVideoToPoster(url);
+            setFormData((prev) => ({ ...prev, videoUrl: url, image: poster || prev.image || "" }));
+            message.success("Video selected from library");
+          } else {
+            setFormData((prev) => ({ ...prev, image: url, videoUrl: "" }));
+            message.success("Image selected from library");
+          }
         }
         setIsImagePickerOpen(false);
       }}

@@ -76,6 +76,17 @@ class AiService {
   generateSectionContent(data) {
     return this.api.post("/generate-section-content", data);
   }
+
+  // Translate an existing vacancy/landing page to another language (AI)
+  translateVacancy({ lpId, language }) {
+    return this.api.post("/translate-vacancy", { lpId, language });
+  }
+
+  // Generate ad copy for a generated variants list (AI)
+  // variants: [{ id, adTypeId, variantNumber?, source? }]
+  generateAdsCopy({ lpId, variants = [], language }) {
+    return this.api.post("/generate-ads-copy", { lpId, variants, language });
+  }
 }
 
 export default new AiService(`${getBackendUrl()}/ai`);

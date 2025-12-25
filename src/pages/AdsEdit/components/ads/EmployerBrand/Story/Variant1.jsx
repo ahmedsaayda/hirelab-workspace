@@ -34,25 +34,34 @@ const MenuDotsIcon = ({ color = "#fff" }) => (
   </svg>
 );
 
-export default function Variant1({ variant, brandData, landingPageData }) {
+export default function Variant1({ variant, brandData, landingPageData, showStoryChrome = true }) {
   const headlineRaw = variant?.title || landingPageData?.employerBrandTitle || "We Have Been Recognized";
   const heroImage = variant?.image || landingPageData?.heroImage || HERO_FALLBACK;
-  const heroAdj = landingPageData?.imageAdjustment?.heroImage;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const heroAdj = variant?.imageAdjustment?.heroImage || landingPageData?.imageAdjustment?.heroImage;
   const heroObjectFit = heroAdj?.objectFit || "cover";
   const heroObjectPosition = heroAdj?.objectPosition
     ? `${heroAdj.objectPosition.x}% ${heroAdj.objectPosition.y}%`
     : "50% 50%";
+  const heroMirror = Boolean(heroAdj?.mirror);
   const brandName = brandData?.companyName || brandData?.name || "hirelab";
   const brandLogo = brandData?.companyLogo || brandData?.logo || null;
   const timePosted = variant?.timeStamp || "14h";
 
-  const { primaryColor, heroBackgroundColor, getPrimary } = useAdPalette({ landingPageData, brandData });
+  const { primaryColor, heroBackgroundColor, getPrimary, getContrastColor } = useAdPalette({ landingPageData, brandData });
   const [logoFailed, setLogoFailed] = React.useState(false);
   const gridMainColor = colord(getPrimary(300)).alpha(0.5).toRgbString();
   const gridLineColor = colord(getPrimary(300)).alpha(0.12).toRgbString();
   const BORDER_WIDTH = 8;
   const CARD_RADIUS = 80; // equals 5rem at 16px base
   const borderGradient = `linear-gradient(180deg, ${getPrimary(500)} 0%, ${getPrimary(950)} 100%)`;
+  
+  // Calculate text contrast against the background
+  // Background is a gradient, so we check against the primary color which dominates
+  const textColor = getContrastColor(getPrimary(800));
 
   // Two-line preferred headline behavior (balanced split with clamp to 2)
   const MAX_HEADLINE_CHARS = 60;
@@ -117,6 +126,7 @@ export default function Variant1({ variant, brandData, landingPageData }) {
     900
   )} 100%)`;
   const chromeIconBg = "rgba(255,255,255,0.14)";
+  const [videoFailed, setVideoFailed] = React.useState(false);
 
   return (
     <div
@@ -126,7 +136,7 @@ export default function Variant1({ variant, brandData, landingPageData }) {
         height: "1920px",
         background: backgroundGradient,
         overflow: "hidden",
-        color: "#ffffff",
+        color: textColor,
         fontFamily: "'Inter', 'DM Sans', sans-serif",
       }}
     >
@@ -149,76 +159,78 @@ export default function Variant1({ variant, brandData, landingPageData }) {
         }}
       />
 
-      {/* Top story chrome */}
-      <div
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "45px",
-          width: "972px",
-          transform: "translateX(-50%)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-          zIndex: 3,
-        }}
-      >
-        <div style={{ width: "100%", height: "6px", backgroundColor: "rgba(255,255,255,0.2)", borderRadius: "5px", overflow: "hidden" }}>
-          <div style={{ width: "82%", height: "100%", backgroundColor: "#ffffff", borderRadius: "5px" }} />
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-            <div
-              style={{
-                width: "88px",
-                height: "88px",
-                borderRadius: "102px",
-                backgroundColor: "rgba(255,255,255,0.12)",
-                overflow: "hidden",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "2px solid rgba(255,255,255,0.25)",
-              }}
-            >
-              {brandLogo && !logoFailed ? (
-                <img
-                  src={brandLogo}
-                  alt={brandName}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  onError={() => setLogoFailed(true)}
-                />
-              ) : (
-                <span style={{ fontWeight: 600, fontSize: "40px", color: primaryColor || "#fff" }}>
-                  {brandName?.charAt(0)?.toUpperCase()}
-                </span>
-              )}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <span style={{ fontWeight: 600, fontSize: "40px", lineHeight: 1 }}>{brandName}</span>
-              <span style={{ fontWeight: 400, fontSize: "40px", color: "rgba(255,255,255,0.74)", lineHeight: 1 }}>{timePosted}</span>
-            </div>
+      {/* Top story chrome (preview-only; use shared StoryFrame in Ads editor) */}
+      {showStoryChrome && (
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "45px",
+            width: "972px",
+            transform: "translateX(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "24px",
+            zIndex: 3,
+          }}
+        >
+          <div style={{ width: "100%", height: "6px", backgroundColor: "rgba(255,255,255,0.2)", borderRadius: "5px", overflow: "hidden" }}>
+            <div style={{ width: "82%", height: "100%", backgroundColor: "#ffffff", borderRadius: "5px" }} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-            {[PauseIcon, SpeakerMuteIcon, MenuDotsIcon].map((Icon, index) => (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
               <div
-                key={index}
                 style={{
-                  width: "56px",
-                  height: "56px",
+                  width: "88px",
+                  height: "88px",
+                  borderRadius: "102px",
+                  backgroundColor: "rgba(255,255,255,0.12)",
+                  overflow: "hidden",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  borderRadius: "50%",
-                  backgroundColor: chromeIconBg,
+                  border: "2px solid rgba(255,255,255,0.25)",
                 }}
               >
-                <Icon />
+                {brandLogo && !logoFailed ? (
+                  <img
+                    src={brandLogo}
+                    alt={brandName}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    onError={() => setLogoFailed(true)}
+                  />
+                ) : (
+                  <span style={{ fontWeight: 600, fontSize: "40px", color: primaryColor || textColor }}>
+                    {brandName?.charAt(0)?.toUpperCase()}
+                  </span>
+                )}
               </div>
-            ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <span style={{ fontWeight: 600, fontSize: "40px", lineHeight: 1 }}>{brandName}</span>
+                <span style={{ fontWeight: 400, fontSize: "40px", color: colord(textColor).alpha(0.74).toRgbString(), lineHeight: 1 }}>{timePosted}</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+              {[PauseIcon, SpeakerMuteIcon, MenuDotsIcon].map((Icon, index) => (
+                <div
+                  key={index}
+                  style={{
+                    width: "56px",
+                    height: "56px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "50%",
+                    backgroundColor: chromeIconBg,
+                  }}
+                >
+                  <Icon />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Headline (2-line preferred) */}
       <div style={{ position: "absolute", left: "164px", top: "272px", width: "752px", zIndex: 2 }}>
@@ -284,8 +296,30 @@ export default function Variant1({ variant, brandData, landingPageData }) {
               height: "100%",
               objectFit: heroObjectFit,
               objectPosition: heroObjectPosition,
+              transform: heroMirror ? "scaleX(-1)" : "none",
             }}
           />
+          {!isCapture && isVideo && !videoFailed && (
+            <video
+              src={videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={heroImage}
+              onError={() => setVideoFailed(true)}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: heroObjectFit,
+                objectPosition: heroObjectPosition,
+                transform: heroMirror ? "scaleX(-1)" : "none",
+              }}
+            />
+          )}
           {/* Subtle brand-colored bottom shadow (~20% height fade) */}
           <div
             style={{

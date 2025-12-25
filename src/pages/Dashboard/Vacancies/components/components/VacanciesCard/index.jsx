@@ -46,7 +46,8 @@ export default function VacanciesCard({
   const [isSwitchLoading, setIsSwitchLoading] = useState(false);
   const handleCopyLink = () => {
     const id = record?._id || props?._id;
-    const generatedLink = `${process.env.NEXT_PUBLIC_LIVE_URL}/lp/${id}`;
+    const generatedLink = window.location.host.includes('localhost') ? `http://${window.location.host}/lp/${id}` : `https://${window.location.host}/lp/${id}`;
+
     navigator.clipboard
       .writeText(generatedLink)
       .then(() => message.success("Link copied to clipboard!"))

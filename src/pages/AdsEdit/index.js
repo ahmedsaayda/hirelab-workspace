@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/router";
-import { message, Modal, Tooltip, Skeleton, Switch, Dropdown, Input } from "antd";
+import { message, Modal, Tooltip, Skeleton, Switch, Dropdown, Input, Drawer } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/auth/selectors";
@@ -18,10 +18,13 @@ import { Button, Heading, Text } from "../Dashboard/Vacancies/components/compone
 import ApplyCustomFont from "../Landingpage/ApplyCustomFont";
 import AdVariantCard from "./components/AdVariantCard";
 import AdPreview from "./components/AdPreview";
-import AdLibraryModal from "./components/AdLibraryModal";
 import AdEditModal from "./components/AdEditModal";
 import InlineEditor from "./components/InlineEditor";
 import EmptyState from "./components/EmptyState";
+import { generateVariants } from "./utils/adGenerationUtils";
+import ImageSelectionModal from "../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
+import AiService from "../../services/AiService";
+import DevBrandControls from "./components/DevBrandControls.jsx";
 
 // Ad type icons as inline SVGs
 const AdTypeIcon = ({ type, active }) => {
@@ -121,7 +124,6 @@ export default function AdsEdit({ paramsId }) {
   const [selectedPlatform, setSelectedPlatform] = useState("facebook");
   const [selectedFormat, setSelectedFormat] = useState("story");
   const [selectedVariant, setSelectedVariant] = useState(null);
-  const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -152,6 +154,14 @@ export default function AdsEdit({ paramsId }) {
   const [creatingAdSet, setCreatingAdSet] = useState(false);
   const [adSetActionLoading, setAdSetActionLoading] = useState({ id: null, action: null });
   const [metaConfigModalOpen, setMetaConfigModalOpen] = useState(false);
+  const [adsSettingsDrawerOpen, setAdsSettingsDrawerOpen] = useState(false);
+  // Media picker (Replace) - use the real media library instead of the placeholder template modal
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [mediaPickerVariantId, setMediaPickerVariantId] = useState(null);
+
+  // 🔥 Required setup: Meta Pixel ID before creating ad sets
+  const [metaPixelDraft, setMetaPixelDraft] = useState("");
+  const [metaPixelSaving, setMetaPixelSaving] = useState(false);
 
   // Dirty tracking baselines
   const lastSavedAdsHashRef = useRef("");
@@ -183,6 +193,10 @@ export default function AdsEdit({ paramsId }) {
   const primaryColor = userBrandData?.primaryColor || user?.primaryColor || "#5207CD";
   const secondaryColor = userBrandData?.secondaryColor || user?.secondaryColor || "#0C7CE6";
   const tertiaryColor = userBrandData?.tertiaryColor || user?.tertiaryColor || "#6B46C1";
+  const isDev = process.env.NODE_ENV === "development";
+  const previewLandingPageData = isDev
+    ? { ...(landingPageData || {}), ...(userBrandData || {}) }
+    : landingPageData;
 
   // Generate ads from landing page content
   const handleGenerateAds = useCallback(async () => {
@@ -192,7 +206,58 @@ export default function AdsEdit({ paramsId }) {
     try {
       const generatedAds = initializeAdsData(landingPageData);
       // Preserve existing meta/ad-set scaffolding stored in lp.ads (e.g. _adSets, _launch, _assets)
-      const nextAds = { ...(adsData || {}), ...generatedAds };
+      let nextAds = { ...(adsData || {}), ...generatedAds };
+
+      // AI: fill copy for all generated variants (after list is decided)
+      try {
+        const allVariants = [];
+        Object.keys(generatedAds || {}).forEach((adTypeId) => {
+          const vars = generatedAds?.[adTypeId]?.variants || [];
+          vars.forEach((v) => {
+            allVariants.push({
+              id: v?.id,
+              adTypeId: v?.adTypeId || adTypeId,
+              variantNumber: v?.variantNumber,
+              source: v?.source,
+            });
+          });
+        });
+
+        if (allVariants.length) {
+          message.loading({
+            key: "ai-ads-copy",
+            content: "Generating ad copy with AI…",
+            duration: 0,
+          });
+          const lang = landingPageData?.language || landingPageData?.lang;
+          const resp = await AiService.generateAdsCopy({ lpId, variants: allVariants, language: lang });
+          const filled = resp?.data?.data?.variants || [];
+          const filledById = new Map(filled.map((v) => [String(v?.id || ""), v]));
+
+          // Merge AI copy back into ads payload
+          const merged = { ...nextAds };
+          Object.keys(generatedAds || {}).forEach((adTypeId) => {
+            const group = merged?.[adTypeId];
+            if (!group?.variants) return;
+            group.variants = group.variants.map((v) => {
+              const ai = filledById.get(String(v?.id || ""));
+              if (!ai) return v;
+              return {
+                ...v,
+                title: ai.title ?? v.title,
+                description: ai.description ?? v.description,
+                linkDescription: ai.linkDescription ?? v.linkDescription,
+                callToAction: ai.callToAction ?? v.callToAction,
+              };
+            });
+          });
+          nextAds = merged;
+        }
+      } catch (e) {
+        console.warn("AI ad copy generation failed, using local defaults.", e);
+      } finally {
+        message.destroy("ai-ads-copy");
+      }
       setAdsData(nextAds);
       setIsEmpty(false);
 
@@ -231,6 +296,7 @@ export default function AdsEdit({ paramsId }) {
       .then(([lpRes, adsRes]) => {
         if (lpRes?.data) {
           setLandingPageData(lpRes.data);
+          setMetaPixelDraft(lpRes.data?.metaPixelId || "");
           // Capture workspace for Meta connect state
           if (lpRes.data?.workspace) setWorkspaceId(lpRes.data.workspace);
         }
@@ -266,6 +332,29 @@ export default function AdsEdit({ paramsId }) {
         setLoading(false);
       });
   }, [lpId, serializeAdsData, detectHasMetaPublish]);
+
+  const saveMetaPixelId = useCallback(async () => {
+    const value = (metaPixelDraft || "").trim();
+    if (!value) {
+      message.error("Meta Pixel ID is required");
+      return;
+    }
+    if (!/^\d{6,20}$/.test(value)) {
+      message.error("Meta Pixel ID should be a numeric ID (e.g., 1234567890123456)");
+      return;
+    }
+    if (!lpId) return;
+    try {
+      setMetaPixelSaving(true);
+      await CrudService.update("LandingPageData", lpId, { metaPixelId: value });
+      setLandingPageData((prev) => ({ ...(prev || {}), metaPixelId: value }));
+      message.success("Meta Pixel ID saved");
+    } catch (e) {
+      message.error("Failed to save Meta Pixel ID");
+    } finally {
+      setMetaPixelSaving(false);
+    }
+  }, [metaPixelDraft, lpId]);
 
   const loadLaunchSummary = useCallback(async () => {
     if (!lpId) return;
@@ -408,6 +497,11 @@ export default function AdsEdit({ paramsId }) {
   const handleCreateAdSet = async () => {
     // Create ad set on both HireLab and Meta (shallow campaign + ad set).
     try {
+      if (!landingPageData?.metaPixelId) {
+        setAdsSettingsDrawerOpen(true);
+        message.warning("Add your Meta Pixel ID in Ads settings before creating an ad set");
+        return;
+      }
       setCreatingAdSet(true);
       const response = await AdsService.createAdSet(lpId);
       const { adSet, metaCampaignId } = response?.data?.data || {};
@@ -525,16 +619,7 @@ export default function AdsEdit({ paramsId }) {
 
   // Initialize ads data from landing page content
   const initializeAdsData = (lpData) => {
-    const ads = {};
-
-    AD_TYPES.forEach((adType) => {
-      ads[adType.id] = {
-        variants: generateVariantsForAdType(adType.id, lpData),
-        enabled: adType.id === "job", // Job ads enabled by default
-      };
-    });
-
-    return ads;
+    return generateVariants(lpData);
   };
 
   // Cloudinary upload helper via shared UploadService
@@ -553,6 +638,15 @@ export default function AdsEdit({ paramsId }) {
     !/(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)/i.test(
       String(u || "")
     );
+
+  const isLikelyVideoUrl = (u) => /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(String(u || ""));
+  const cloudinaryVideoToPoster = (url, seconds = 0) => {
+    const u = String(url || "");
+    if (!u.includes("res.cloudinary.com") || !u.includes("/video/upload/")) return "";
+    const sec = Number.isFinite(seconds) ? seconds : 0;
+    const withTransform = u.replace("/video/upload/", `/video/upload/so_${sec}/`);
+    return withTransform.replace(/\.(mp4|mov|webm|mkv)(\?.*)?$/i, ".jpg$2");
+  };
 
   // Append a short status line to the Approve & Prepare activity log
   const appendPrepareMessage = useCallback((msg) => {
@@ -581,6 +675,14 @@ export default function AdsEdit({ paramsId }) {
   const renderCurrentPreviewToCloudinary = async (format) => {
     const node = captureRef.current;
     if (!node) throw new Error("Preview not mounted");
+
+    // Let templates know we're rendering for export (html-to-image can't reliably capture <video>).
+    // Templates should render static poster images in this mode.
+    try {
+      window.__HL_ADS_CAPTURE__ = true;
+    } catch {
+      // ignore
+    }
     const blob = await toBlob(node, {
       width: format?.width,
       height: format?.height,
@@ -597,6 +699,11 @@ export default function AdsEdit({ paramsId }) {
         credentials: "omit",
       },
     });
+    try {
+      window.__HL_ADS_CAPTURE__ = false;
+    } catch {
+      // ignore
+    }
     if (!blob) throw new Error("Failed to render preview");
     const url = await uploadToCloudinary(blob);
     return url;
@@ -683,207 +790,6 @@ export default function AdsEdit({ paramsId }) {
     }
     setConfirmVariants(selectedList);
     setConfirmOpen(true);
-  };
-
-  // Generate variants for a specific ad type
-  const generateVariantsForAdType = (adTypeId, lpData) => {
-    const variants = [];
-    const images = extractImagesFromLandingPage(lpData);
-
-    // Job ads get 2 variants, all other ad types get 1 variant
-    const variantCount = adTypeId === "job" ? 2 : 1;
-
-    for (let i = 0; i < variantCount; i++) {
-      variants.push({
-        id: `${adTypeId}-variant-${i + 1}`,
-        title: getDefaultTitle(adTypeId, i, lpData),
-        description: getDefaultDescription(adTypeId, i, lpData),
-        image: images[i % images.length],
-        template: "template-1", // We'll use template 1 for now
-        adTypeId: adTypeId, // Required for component loading
-        variantNumber: i + 1, // Required for component loading
-        selected: i === 0, // First variant selected by default
-        approved: false,
-      });
-    }
-
-    return variants;
-  };
-
-  // Extract images from landing page
-  const extractImagesFromLandingPage = (lpData) => {
-    const images = [];
-
-    // Extract from hero section
-    if (lpData?.heroImage) {
-      images.push(lpData.heroImage);
-    }
-
-    // Extract from job description
-    if (lpData?.jobDescriptionImage) {
-      images.push(lpData.jobDescriptionImage);
-    }
-
-    // Extract from about company images
-    if (lpData?.aboutTheCompanyImages && lpData.aboutTheCompanyImages.length > 0) {
-      images.push(...lpData.aboutTheCompanyImages);
-    }
-
-    // Extract from photo carousel
-    if (lpData?.photoImages && lpData.photoImages.length > 0) {
-      images.push(...lpData.photoImages);
-    }
-
-    // Extract from testimonials
-    if (lpData?.testimonials) {
-      lpData.testimonials.forEach((t) => {
-        if (t.avatar) images.push(t.avatar);
-      });
-    }
-
-    // Extract from recruiters
-    if (lpData?.recruiters) {
-      lpData.recruiters.forEach((r) => {
-        if (r.recruiterAvatar) images.push(r.recruiterAvatar);
-      });
-    }
-
-    // Extract from leader introduction
-    if (lpData?.leaderIntroductionAvatar) {
-      images.push(lpData.leaderIntroductionAvatar);
-    }
-
-    // Extract from EVP mission
-    if (lpData?.evpMissionAvatar) {
-      images.push(lpData.evpMissionAvatar);
-    }
-
-    // Fallback to company logo if no images
-    if (images.length === 0 && lpData?.companyLogo) {
-      images.push(lpData.companyLogo);
-    }
-
-    // Extract from agenda/benefits
-    if (lpData?.agenda?.items) {
-      lpData.agenda.items.forEach((item) => {
-        if (item.image) images.push(item.image);
-      });
-    }
-
-    // Use a data URL placeholder instead of a missing local file to avoid 404s during capture
-    return images.length > 0 ? images : [TRANSPARENT_PNG];
-  };
-
-  // Helper to strip placeholder boilerplate like "[Insert ...]" and "Example:"
-  const sanitizePlaceholderText = (text) => {
-    if (!text || typeof text !== "string") return "";
-    let cleaned = text;
-    if (cleaned.includes("[Insert") || cleaned.includes("Example:")) {
-      cleaned = cleaned
-        .replace(/\[.*?\]/g, " ")
-        .replace(/Example:/gi, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-    return cleaned;
-  };
-
-  const snippetFromText = (text, maxLen = 80) => {
-    const cleaned = sanitizePlaceholderText(text);
-    if (!cleaned) return "";
-    const oneLine = cleaned.replace(/\s+/g, " ").trim();
-    if (!oneLine) return "";
-    return oneLine.length > maxLen ? `${oneLine.slice(0, maxLen - 3)}...` : oneLine;
-  };
-
-  const pickSectionSentence = (text) => {
-    if (!text || typeof text !== "string") return "";
-    const cleaned = sanitizePlaceholderText(text);
-    if (!cleaned) return "";
-    const firstSentence = cleaned.split(/[.!?]/)[0] || cleaned;
-    return firstSentence.trim();
-  };
-
-  // Get default title based on ad type, using vacancy context
-  const getDefaultTitle = (adTypeId, variantIndex, lpData) => {
-    const company = lpData?.companyName || "our company";
-    const vacancy = lpData?.vacancyTitle || "this role";
-
-    const testimonialTitles = [
-      snippetFromText(lpData?.testimonials?.[0]?.comment) || "Hear From Our Team",
-      snippetFromText(lpData?.testimonials?.[1]?.comment) || "Real Stories From Our People",
-      snippetFromText(lpData?.testimonials?.[2]?.comment) || "Employee Spotlight",
-    ];
-
-    const titles = {
-      job: [
-        lpData?.vacancyTitle || "Join Our Team",
-        `We're Hiring: ${lpData?.vacancyTitle || "Great Opportunity"}`,
-        `${lpData?.vacancyTitle || "Career Opportunity"} at ${company}`,
-      ],
-      "employer-brand": [
-        `Life at ${company}`,
-        `Our Mission at ${company}`,
-        lpData?.aboutTheCompanyTitle || "Why People Love Working Here",
-      ],
-      testimonial: testimonialTitles,
-      company: [
-        lpData?.aboutTheCompanyTitle || `Inside ${company}`,
-        `About ${company}`,
-        lpData?.companyFactsTitle || "Our Culture & Values",
-      ],
-      retargeting: [
-        `Still Interested in ${vacancy}?`,
-        `Don't Miss Out – ${vacancy}`,
-        `Join ${company} Today`,
-      ],
-    };
-
-    return titles[adTypeId]?.[variantIndex] || lpData?.vacancyTitle || "Join Our Team";
-  };
-
-  // Get default description using vacancy & company sections
-  const getDefaultDescription = (adTypeId, variantIndex, lpData) => {
-    const evpSentence = pickSectionSentence(lpData?.evpMissionDescription);
-    const aboutSentence =
-      pickSectionSentence(lpData?.aboutTheCompanyDescription || lpData?.aboutTheCompanyText) ||
-      pickSectionSentence(lpData?.companyInfo);
-    const jobSentence =
-      pickSectionSentence(lpData?.heroDescription) ||
-      pickSectionSentence(lpData?.jobDescription);
-
-    const descriptions = {
-      job: [
-        jobSentence || "Highlighting impact, growth and day‑to‑day responsibilities in this role.",
-        "Professional tone that emphasizes ownership, responsibility and influence.",
-        "Clear call-to-action for candidates who want to make a difference in this role.",
-      ],
-      "employer-brand": [
-        evpSentence ||
-        aboutSentence ||
-        "Showcasing our values, mission and what makes our culture unique.",
-        aboutSentence || "Where innovation, collaboration and growth come together.",
-        "A workplace built around purpose, development and long‑term careers.",
-      ],
-      testimonial: [
-        "Discover what our employees love about working here.",
-        "Real experiences from real team members.",
-        "See why people choose to grow their careers with us.",
-      ],
-      company: [
-        aboutSentence ||
-        "More people‑focused and brand‑aligned, appealing to candidates who value culture.",
-        "Learn about our commitment to excellence, innovation and client impact.",
-        "Discover the benefits and opportunities that set us apart as an employer.",
-      ],
-      retargeting: [
-        "The opportunity is still available – apply now and complete your application.",
-        "Come back and finish your application to move forward in the process.",
-        "Take the next step in your career journey with us.",
-      ],
-    };
-
-    return descriptions[adTypeId]?.[variantIndex] || jobSentence || lpData?.heroDescription || "";
   };
 
   // Get current variants for selected ad type
@@ -1133,7 +1039,36 @@ export default function AdsEdit({ paramsId }) {
   // Handle variant replace (open library)
   const handleVariantReplace = (variantId) => {
     setSelectedVariant(variantId);
-    setIsLibraryModalOpen(true);
+    setMediaPickerVariantId(variantId);
+    setMediaPickerOpen(true);
+  };
+
+  // Add Variant: scalable default is to duplicate current variant (new ID)
+  const handleAddVariant = () => {
+    if (!adsData) return;
+    const base = variantForPreview || currentVariants[0];
+    if (!base) return;
+    const newId = `${selectedAdType}-variant-${Date.now().toString(36)}`;
+    const cloned = {
+      ...base,
+      id: newId,
+      selected: true,
+      approved: false,
+    };
+    const updatedVariants = [
+      ...currentVariants.map((v) => ({ ...v, selected: false })),
+      cloned,
+    ];
+    const nextData = {
+      ...adsData,
+      [selectedAdType]: {
+        ...adsData[selectedAdType],
+        variants: updatedVariants,
+      },
+    };
+    setAdsData(nextData);
+    setSelectedVariant(newId);
+    setEditingVariant(cloned);
   };
 
   // Handle approve all – now also prepares Cloudinary images for launch (but does NOT publish)
@@ -1396,6 +1331,27 @@ export default function AdsEdit({ paramsId }) {
           </button>
         </div>
       </div>
+      {!landingPageData?.metaPixelId && (
+        <div className="px-6 py-4 border-b border-[#eaecf0] bg-amber-50">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-amber-900">
+                Meta Pixel ID required
+              </div>
+              <div className="text-xs text-amber-800 mt-1">
+                Add your Meta Pixel ID before creating ad sets so we can optimize for conversions
+                (hirelab.FormSubmitted).
+              </div>
+            </div>
+            <button
+              onClick={() => setAdsSettingsDrawerOpen(true)}
+              className="px-4 py-2 text-sm font-semibold rounded-md border border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
+            >
+              Add Pixel ID
+            </button>
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-[#eaecf0]">
           <thead className="bg-[#f8f8f8]">
@@ -1785,6 +1741,19 @@ export default function AdsEdit({ paramsId }) {
                         message.error("Failed to save variant");
                       }
                     }}
+                    onDraftChange={(draftVariant) => {
+                      // Local-only update for realtime preview. Persist happens on explicit save.
+                      const updatedVariants = currentVariants.map((v) =>
+                        v.id === draftVariant.id ? { ...v, ...draftVariant } : v
+                      );
+                      setAdsData({
+                        ...adsData,
+                        [selectedAdType]: {
+                          ...adsData[selectedAdType],
+                          variants: updatedVariants,
+                        },
+                      });
+                    }}
                     onDelete={() => handleVariantDelete(variant.id)}
                     onReplace={() => handleVariantReplace(variant.id)}
                     landingPageData={landingPageData}
@@ -1792,7 +1761,7 @@ export default function AdsEdit({ paramsId }) {
                 ))}
 
                 <button
-                  onClick={() => setIsLibraryModalOpen(true)}
+                  onClick={handleAddVariant}
                   className="w-full p-4 border-2 border-dashed border-[#d0d5dd] rounded-xl hover:border-[#0e87fe] hover:bg-[#eff8ff] transition-colors flex items-center justify-center gap-2 text-[#475467] hover:text-[#0e87fe] font-semibold text-sm"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1848,7 +1817,7 @@ export default function AdsEdit({ paramsId }) {
                     format={AD_FORMATS.find(f => f.id === selectedFormat)}
                     platform={selectedPlatform}
                     brandData={userBrandData}
-                    landingPageData={landingPageData}
+                    landingPageData={previewLandingPageData}
                     adType={selectedAdType}
                   />
                 )}
@@ -1880,6 +1849,25 @@ export default function AdsEdit({ paramsId }) {
   return (
     <>
       <ApplyCustomFont landingPageData={{ ...landingPageData, ...userBrandData }} />
+      {isDev && (
+        <DevBrandControls
+          brandData={userBrandData || {}}
+          onChange={(next) => setUserBrandData(next)}
+          onReset={() => {
+            if (!user) return;
+            setUserBrandData({
+              primaryColor: user.primaryColor,
+              secondaryColor: user.secondaryColor,
+              tertiaryColor: user.tertiaryColor,
+              titleFont: user.titleFont,
+              bodyFont: user.bodyFont,
+              subheaderFont: user.subheaderFont,
+              companyLogo: user.companyLogo,
+              companyName: user.companyName,
+            });
+          }}
+        />
+      )}
 
       <div className="flex flex-col h-screen bg-[#f8f8f8]">
         {/* Header */}
@@ -1899,8 +1887,9 @@ export default function AdsEdit({ paramsId }) {
             reload={fetchData}
             lpId={lpId}
             isAdsEditor={true}
-            hideSettings
+            hideSettings={false}
             hideLaunchNav
+            onOpenSettings={() => setAdsSettingsDrawerOpen(true)}
             onNavigateAttempt={(targetUrl) => {
               setActiveAdSetId(null);
               router.push(targetUrl || "/dashboard/vacancies");
@@ -1930,18 +1919,45 @@ export default function AdsEdit({ paramsId }) {
         </div>
       )}
 
-      {/* Ad Library Modal */}
-      <AdLibraryModal
-        open={isLibraryModalOpen}
-        onClose={() => setIsLibraryModalOpen(false)}
-        onSelect={(template) => {
-          // Handle template selection
-          setIsLibraryModalOpen(false);
-          message.success("Template applied");
+      {/* Replace Media Modal (real media library) */}
+      <ImageSelectionModal
+        isOpen={mediaPickerOpen}
+        onClose={() => {
+          setMediaPickerOpen(false);
+          setMediaPickerVariantId(null);
         }}
-        platform={selectedPlatform}
-        format={selectedFormat}
-        adType={selectedAdType}
+        type="all"
+        accept="image/*,video/*"
+        multiple={false}
+        existingFiles={[]}
+        onImageSelected={(files = []) => {
+          const first = files?.[0];
+          const url = (typeof first === "string" ? first : (first?.url || first?.secure_url || first?.thumbnail || ""));
+          if (!url || !mediaPickerVariantId) {
+            setMediaPickerOpen(false);
+            setMediaPickerVariantId(null);
+            return;
+          }
+          const updatedVariants = currentVariants.map((v) => {
+            if (v.id !== mediaPickerVariantId) return v;
+            if (isLikelyVideoUrl(url) || String(url).includes("/video/upload/")) {
+              const poster = cloudinaryVideoToPoster(url);
+              return { ...v, videoUrl: url, image: poster || v.image || "" };
+            }
+            return { ...v, image: url, videoUrl: "" };
+          });
+          const nextData = {
+            ...adsData,
+            [selectedAdType]: {
+              ...adsData[selectedAdType],
+              variants: updatedVariants,
+            },
+          };
+          setAdsData(nextData);
+          setMediaPickerOpen(false);
+          setMediaPickerVariantId(null);
+          message.success("Media replaced");
+        }}
       />
 
       {/* Ad Edit Modal */}
@@ -2210,6 +2226,63 @@ export default function AdsEdit({ paramsId }) {
           </div>
         </div>
       </Modal>
+
+      {/* Ads Settings Drawer (Meta Pixel and other ads settings) */}
+      <Drawer
+        open={adsSettingsDrawerOpen}
+        onClose={() => setAdsSettingsDrawerOpen(false)}
+        width={690}
+        title={<span className="text-lg font-semibold text-gray-900">Ads Settings</span>}
+        bodyStyle={{ padding: 24 }}
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setAdsSettingsDrawerOpen(false)}
+              className="px-4 py-2 text-sm font-semibold rounded-md border border-[#d0d5dd] text-[#344054] hover:bg-gray-50"
+              disabled={metaPixelSaving}
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={saveMetaPixelId}
+              className={`px-4 py-2 text-sm font-semibold rounded-md text-white ${
+                metaPixelSaving ? "bg-[#5207CD]/70 cursor-not-allowed" : "bg-[#5207CD] hover:bg-[#4506A6]"
+              }`}
+              disabled={metaPixelSaving}
+            >
+              {metaPixelSaving ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        }
+      >
+        <div className="divide-y divide-gray-200">
+          <div className="py-4">
+            <h3 className="text-lg font-semibold mb-2 text-gray-800">Meta Pixel</h3>
+            {!landingPageData?.metaPixelId && (
+              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                Meta Pixel ID is required before creating ad sets.
+              </div>
+            )}
+            <div className="text-xs text-gray-500 mb-3">
+              Used to track and optimize conversions for your ads (hirelab.FormSubmitted).
+            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Meta Pixel ID (Facebook Pixel)
+            </label>
+            <Input
+              value={metaPixelDraft}
+              onChange={(e) => setMetaPixelDraft(e.target.value)}
+              placeholder="e.g., 1234567890123456"
+              inputMode="numeric"
+            />
+            <div className="text-xs text-gray-500 mt-2">
+              Find this in Meta Ads Manager → Events Manager → Pixels.
+            </div>
+          </div>
+        </div>
+      </Drawer>
     </>
   );
 }

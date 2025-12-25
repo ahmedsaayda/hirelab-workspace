@@ -36,11 +36,17 @@ export default function Variant1({ variant, brandData, landingPageData }) {
   const hoursUnit = landingPageData?.hoursUnit || "daily";
 
   const heroImage = variant?.image || landingPageData?.heroImage || imgImage37;
-  const heroAdj = landingPageData?.imageAdjustment?.heroImage;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const [videoFailed, setVideoFailed] = React.useState(false);
+  const heroAdj = variant?.imageAdjustment?.heroImage || landingPageData?.imageAdjustment?.heroImage;
   const heroObjectFit = heroAdj?.objectFit || "cover";
   const heroObjectPosition = heroAdj?.objectPosition
     ? `${heroAdj.objectPosition.x}% ${heroAdj.objectPosition.y}%`
     : "50% 50%";
+  const heroMirror = Boolean(heroAdj?.mirror);
 
   const { primaryColor, getGradient, getPrimary, getContrastColor } = useAdPalette({
     landingPageData,
@@ -206,9 +212,30 @@ export default function Variant1({ variant, brandData, landingPageData }) {
             height: "100%",
             objectFit: heroObjectFit,
             objectPosition: heroObjectPosition,
-            transform: "rotate(180deg) scaleY(-1)",
+            transform: heroMirror ? "scaleX(-1)" : "none",
           }}
         />
+        {!isCapture && isVideo && !videoFailed && (
+          <video
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={heroImage}
+            onError={() => setVideoFailed(true)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: heroObjectFit,
+              objectPosition: heroObjectPosition,
+              transform: heroMirror ? "scaleX(-1)" : "none",
+            }}
+          />
+        )}
       </div>
 
       {/* Vertical gradient overlay */}

@@ -7,16 +7,24 @@ const imgHeroDefault = "/dhwise-images/placeholder.png";
 export default function Variant1({ variant, brandData, landingPageData }) {
   const headline = variant?.title || landingPageData?.employerBrandTitle || "We Have Been Recognized";
   const heroImage = variant?.image || landingPageData?.heroImage || imgHeroDefault;
-  const heroAdj = landingPageData?.imageAdjustment?.heroImage;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const heroAdj = variant?.imageAdjustment?.heroImage || landingPageData?.imageAdjustment?.heroImage;
   const heroObjectFit = heroAdj?.objectFit || "cover";
   const heroObjectPosition = heroAdj?.objectPosition
     ? `${heroAdj.objectPosition.x}% ${heroAdj.objectPosition.y}%`
     : "50% 100%";
+  const heroMirror = Boolean(heroAdj?.mirror);
   const brandName = brandData?.companyName || brandData?.name || "hirelab";
-  const { getPrimary, primaryColor } = useAdPalette({ landingPageData, brandData });
+  const { getPrimary, primaryColor, getContrastColor } = useAdPalette({ landingPageData, brandData });
   const BORDER_WIDTH = 8;
   const CARD_RADIUS = 80; // 5rem equivalent
   const borderGradient = `linear-gradient(180deg, ${getPrimary(500)} 0%, ${getPrimary(950)} 100%)`;
+  const [videoFailed, setVideoFailed] = React.useState(false);
+  
+  const textColor = getContrastColor(getPrimary(500));
 
   return (
     <div className="relative" style={{ width: "1080px", height: "1350px", backgroundColor: getPrimary(500), overflow: "hidden" }}>
@@ -72,8 +80,30 @@ export default function Variant1({ variant, brandData, landingPageData }) {
               height: "100%",
               objectFit: heroObjectFit,
               objectPosition: heroObjectPosition,
+              transform: heroMirror ? "scaleX(-1)" : "none",
             }}
           />
+          {!isCapture && isVideo && !videoFailed && (
+            <video
+              src={videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={heroImage}
+              onError={() => setVideoFailed(true)}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: heroObjectFit,
+                objectPosition: heroObjectPosition,
+                transform: heroMirror ? "scaleX(-1)" : "none",
+              }}
+            />
+          )}
           {/* 20px brand-colored bottom shadow across full width */}
           <div
             style={{

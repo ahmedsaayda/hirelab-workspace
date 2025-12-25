@@ -69,42 +69,45 @@ export default function AdPreview({ variant, format, platform, brandData, landin
   const normalizedFormatId = (format?.id === 'portrait' ? 'landscape' : format?.id);
 
   React.useEffect(() => {
-    // Load component if we have the required data (removed template check)
-    if (normalizedAdTypeId && normalizedFormatId) {
-      setIsLoading(true);
-      const loadComponent = async () => {
-        try {
-          const variantNumber = variant?.variantNumber || 1; // Default to variant 1
-          const componentLoader = getComponentLoader(normalizedAdTypeId, variantNumber, normalizedFormatId);
-          if (componentLoader) {
-            const component = await componentLoader();
-            setTemplateComponent(() => component);
-          } else {
-            console.warn(`No component found for: ${normalizedAdTypeId}/${normalizedFormatId}/${variantNumber}`);
-            setTemplateComponent(null);
-          }
-        } catch (error) {
-          console.error('Error loading template component:', error, {
-            adTypeId: normalizedAdTypeId,
-            formatId: normalizedFormatId,
-            variantNumber: variant?.variantNumber
-          });
-          setTemplateComponent(null);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      loadComponent();
-    } else {
-      console.warn('Missing required data:', { 
-        adTypeId: normalizedAdTypeId, 
-        formatId: normalizedFormatId,
-        variant: variant 
-      });
+    // IMPORTANT: don't reload the template component on every variant edit (e.g. dragging focal point).
+    // Only reload when the template identity changes: adType + format + variantNumber.
+    if (!normalizedAdTypeId || !normalizedFormatId) {
       setTemplateComponent(null);
       setIsLoading(false);
+      return;
     }
-  }, [variant, format, normalizedAdTypeId, normalizedFormatId]);
+
+    const variantNumber = variant?.variantNumber || 1; // Default to variant 1
+    const componentLoader = getComponentLoader(normalizedAdTypeId, variantNumber, normalizedFormatId);
+    if (!componentLoader) {
+      console.warn(`No component found for: ${normalizedAdTypeId}/${normalizedFormatId}/${variantNumber}`);
+      setTemplateComponent(null);
+      setIsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoading(true);
+    (async () => {
+      try {
+        const component = await componentLoader();
+        if (!cancelled) setTemplateComponent(() => component);
+      } catch (error) {
+        console.error('Error loading template component:', error, {
+          adTypeId: normalizedAdTypeId,
+          formatId: normalizedFormatId,
+          variantNumber,
+        });
+        if (!cancelled) setTemplateComponent(null);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [normalizedAdTypeId, normalizedFormatId, variant?.variantNumber]);
 
   // Get component loader for specific ad type, variant, and format
   const getComponentLoader = (adTypeId, variantNumber, formatId) => {
@@ -245,7 +248,17 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       );
     } else if (TemplateComponent && typeof TemplateComponent === 'function') {
       // Check if we have a loaded custom template component
-      content = <TemplateComponent variant={variant} brandData={brandData} landingPageData={landingPageData} />;
+      const isStoryFormat = format?.id === 'story' || format?.aspectRatio === '9:16';
+      content = (
+        <TemplateComponent
+          variant={variant}
+          brandData={brandData}
+          landingPageData={landingPageData}
+          // We render shared StoryFrame chrome in preview for story formats.
+          // Individual templates should hide any built-in chrome when this is false.
+          showStoryChrome={!isStoryFormat}
+        />
+      );
     } else {
       // Show clean placeholder for all unimplemented variants
       content = (
@@ -287,13 +300,13 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       return (
         <StoryOverlay brandData={brandData}>
           <div className="w-full h-full flex items-center justify-center bg-black">
-            <div 
-               style={{ 
-                 width: `${width}px`, 
-                 height: `${height}px`,
-                 transform: `scale(${contentScale})`,
-                 transformOrigin: 'center center',
-               }}
+            <div
+              style={{
+                width: `${width}px`,
+                height: `${height}px`,
+                transform: `scale(${contentScale})`,
+                transformOrigin: "center center",
+              }}
             >
               <div ref={refEl} className="w-full h-full">
                 {content}
@@ -306,9 +319,14 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       return (
         <FeedContext 
           brandData={brandData} 
+          // Primary Text (above media)
           text={variant?.description || landingPageData?.heroDescription}
+          // Headline (below media)
           title={variant?.title || landingPageData?.vacancyTitle}
-          ctaText="Learn More"
+          // Description (below headline)
+          description={variant?.linkDescription || ""}
+          // CTA button
+          ctaText={variant?.callToAction || "Learn More"}
         >
           {/* 
              We need to ensure the ad content (1080x1080 or 1080x1350) scales to fit 

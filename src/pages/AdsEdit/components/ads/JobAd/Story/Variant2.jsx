@@ -19,7 +19,7 @@ const imgClock = "/images3/img_search.svg"; // clock fallback
 // Story controls (glyph fallbacks so they always render)
 const ICONS_FALLBACK = ["⏸", "🔇", "⋯"];
 
-export default function Variant2({ variant, brandData, landingPageData }) {
+export default function Variant2({ variant, brandData, landingPageData, showStoryChrome = true }) {
   // Dynamic fields
   const rawJobTitle = variant?.title || landingPageData?.vacancyTitle || "Project Manager";
   const weAreHiring = landingPageData?.weAreHiring || "WE’RE HIRING";
@@ -39,6 +39,11 @@ export default function Variant2({ variant, brandData, landingPageData }) {
   const hoursUnit = landingPageData?.hoursUnit || "daily";
 
   const heroImage = variant?.image || landingPageData?.heroImage || imgHeroDefault;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const [videoFailed, setVideoFailed] = React.useState(false);
   const heroObjectPosition = variant?.heroImagePosition || landingPageData?.heroImagePosition;
   const heroImageAdjustment =
     variant?.imageAdjustment?.heroImage ||
@@ -49,12 +54,47 @@ export default function Variant2({ variant, brandData, landingPageData }) {
     ? `${heroImageAdjustment.objectPosition.x}% ${heroImageAdjustment.objectPosition.y}%`
     : "50% 50%";
   const heroObjectFit = heroImageAdjustment?.objectFit || "cover";
+  const heroMirror = Boolean(heroImageAdjustment?.mirror);
 
   const brandName = brandData?.companyName || brandData?.name || "hirelab";
   const brandLogo = brandData?.companyLogo || brandData?.logo || null;
 
   const { primaryColor, getPrimary, getContrastColor } = useAdPalette({ landingPageData, brandData });
   const primary500 = getPrimary(500);
+  
+  // Determine text visibility based on background contrast
+  const contrastColor = getContrastColor(primary500);
+  const isDarkBg = contrastColor === "#FFFFFF";
+
+  const titleGradient = isDarkBg 
+    ? "linear-gradient(90deg, #B9ACFC 0%, #EEECFE 100%)"
+    : "none";
+  
+  const titleColor = isDarkBg ? "transparent" : "#101828";
+  const subtitleColor = isDarkBg ? "#dbd5fe" : "#475467";
+
+  // Badge styles
+  const badgeCircleBg = isDarkBg ? "#FFFFFF" : "#101828";
+  const badgeIconFilter = isDarkBg 
+    ? "none" // Icon uses original color (usually colored), but we need to tint it to primary if it's an SVG mask? 
+             // Actually images are SVGs. We might need to filter them to Primary color if circle is White.
+    : "invert(1) brightness(2)"; // Make icon white if circle is dark
+
+  // Wait, the icons are loaded as <img> tags src={icon}. They are white by default or colored?
+  // imgCoinsStacked etc are usually colored SVGs or white?
+  // Checking imports: /images3/img_coins_stacked_03.svg. Usually these are white strokes or colored.
+  // If they are white strokes:
+  // White Circle + White Icon = Invisible.
+  // We need Dark/Colored Icon on White Circle.
+  // We can use filter to colorize.
+  
+  const badgeTextColor = isDarkBg ? "#FFFFFF" : "#101828";
+  
+  // CTA Contrast + fit (keep single line)
+  // Use getContrastColor against primary500 (button background) to decide text color
+  const ctaTextColor = getContrastColor(primary500);
+  const ctaFontSize = ctaText?.length > 9 ? 34 : 40;
+
   // Lighten the bottom overlay so the cropping effect remains visible
   const overlayGradient = `linear-gradient(180deg, ${colord(primary500).alpha(0).toRgbString()} 0%, ${colord(primary500).alpha(0.35).toRgbString()} 74%, ${colord(primary500).alpha(0.6).toRgbString()} 100%)`;
 
@@ -107,7 +147,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
   });
 
   // Colors for badge icon and text to ensure readability against primary
-  const badgeTextColor = getContrastColor(primaryColor);
+  // Removed duplicate definition
   const shouldInvertIcon = badgeTextColor === "#ffffff";
 
   // Cutout geometry exported directly from Figma (job-ad-story-2)
@@ -144,10 +184,11 @@ export default function Variant2({ variant, brandData, landingPageData }) {
         }}
       />
 
-      {/* Top story chrome */}
-      <div
-        style={{ position: "absolute", left: "50%", top: "45px", width: "972px", transform: "translateX(-50%)", display: "flex", flexDirection: "column", gap: "24px", zIndex: 3 }}
-      >
+      {/* Top story chrome (preview-only; use shared StoryFrame in Ads editor) */}
+      {showStoryChrome && (
+        <div
+          style={{ position: "absolute", left: "50%", top: "45px", width: "972px", transform: "translateX(-50%)", display: "flex", flexDirection: "column", gap: "24px", zIndex: 3 }}
+        >
         <div style={{ width: "100%", height: "6px", backgroundColor: "#d9d9d9", borderRadius: "5px", overflow: "hidden" }}>
           <div style={{ width: "65%", height: "100%", backgroundColor: "#ffffff", borderRadius: "5px" }} />
         </div>
@@ -173,13 +214,14 @@ export default function Variant2({ variant, brandData, landingPageData }) {
             ))}
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Typography + badges */}
       <div style={{ position: "absolute", top: "260px", left: "50%", transform: "translateX(-50%)", width: "711px", display: "flex", flexDirection: "column", alignItems: "center", gap: "40px", zIndex: 2 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <span aria-hidden style={{ fontSize: "40px", lineHeight: 1 }}>👋</span>
-          <p style={{ margin: 0, fontFamily: "'Inter', sans-serif", fontSize: "36px", fontWeight: 400, lineHeight: "48px", color: "#dbd5fe", letterSpacing: "-0.72px", textTransform: "uppercase" }}>{weAreHiring}</p>
+          <p style={{ margin: 0, fontFamily: "'Inter', sans-serif", fontSize: "36px", fontWeight: 400, lineHeight: "48px", color: subtitleColor, letterSpacing: "-0.72px", textTransform: "uppercase" }}>{weAreHiring}</p>
         </div>
         <h1
           ref={titleRef}
@@ -192,10 +234,11 @@ export default function Variant2({ variant, brandData, landingPageData }) {
             fontWeight: 600,
             lineHeight: "96px",
             letterSpacing: "-3.52px",
-            background: "linear-gradient(90deg, #B9ACFC 0%, #EEECFE 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
+            background: titleGradient,
+            WebkitBackgroundClip: isDarkBg ? "text" : "border-box",
+            WebkitTextFillColor: isDarkBg ? "transparent" : titleColor,
+            backgroundClip: isDarkBg ? "text" : "border-box",
+            color: titleColor,
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "clip",
@@ -227,8 +270,21 @@ export default function Variant2({ variant, brandData, landingPageData }) {
                 WebkitBackdropFilter: "blur(24px)",
               }}
             >
-              <div style={{ width: "44px", height: "44px", borderRadius: "22px", backgroundColor: primaryColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img src={icon} alt="badge icon" style={{ width: "20px", height: "20px", filter: shouldInvertIcon ? "brightness(0) invert(1)" : "none" }} />
+              <div style={{ width: "44px", height: "44px", borderRadius: "22px", backgroundColor: badgeCircleBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <img 
+                  src={icon} 
+                  alt="badge icon" 
+                  style={{ 
+                    width: "20px", 
+                    height: "20px", 
+                    // Assuming input icons are White/Light.
+                    // If isDarkBg=true (Dark Background), we use White Circle. We need Dark Icon.
+                    // If isDarkBg=false (Light Background), we use Dark Circle. We need White Icon.
+                    filter: isDarkBg 
+                      ? "invert(1) brightness(0)" // Force black icon on white circle
+                      : "brightness(0) invert(1)" // Force white icon on dark circle
+                  }} 
+                />
               </div>
               <p style={{ margin: 0, fontFamily: "'Inter', sans-serif", fontSize: "28px", fontWeight: 600, lineHeight: "32px", letterSpacing: "-0.24px", color: badgeTextColor, whiteSpace: "nowrap" }}>{text}</p>
             </div>
@@ -257,7 +313,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
             position: "relative",
             width: `${CLUSTER_SIZE}px`,
             height: `${CLUSTER_SIZE}px`,
-            transform: "scaleX(-1)",
+            transform: heroMirror ? "scaleX(-1)" : "none",
             transformOrigin: "center",
             marginRight: "-170px",
           }}
@@ -279,7 +335,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
               style={{
                 position: "absolute",
                 inset: 0,
-                transform: "scaleX(-1)",
+                transform: heroMirror ? "scaleX(-1)" : "none",
                 transformOrigin: "center",
               }}
             >
@@ -296,6 +352,27 @@ export default function Variant2({ variant, brandData, landingPageData }) {
                   transition: "object-position 0.3s ease-in-out",
                 }}
               />
+              {!isCapture && isVideo && !videoFailed && (
+                <video
+                  src={videoUrl}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  poster={heroImage}
+                  onError={() => setVideoFailed(true)}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: heroObjectFit,
+                    objectPosition: heroObjectPosition || fallbackObjectPosition,
+                    transition: "object-position 0.3s ease-in-out",
+                  }}
+                />
+              )}
               <div
                 style={{
                   position: "absolute",
@@ -320,8 +397,8 @@ export default function Variant2({ variant, brandData, landingPageData }) {
       </div>
 
       {/* CTA */}
-      <button style={{ position: "absolute", top: "1755px", left: "50%", transform: "translateX(-50%)", padding: "32px 64px", width: "331px", height: "93px", border: "none", borderRadius: "100px", backgroundColor: primaryColor, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0px 24px 48px rgba(25, 2, 76, 0.3)", zIndex: 20 }}>
-        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "40px", fontWeight: 600, lineHeight: "52px", letterSpacing: "-0.8px", color: "#ffffff" }}>{ctaText}</span>
+      <button style={{ position: "absolute", bottom: "90px", left: "50%", transform: "translateX(-50%)", padding: "32px 64px", width: "331px", height: "93px", border: "none", borderRadius: "100px", backgroundColor: primaryColor, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0px 24px 48px rgba(25, 2, 76, 0.3)", zIndex: 20 }}>
+        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: `${ctaFontSize}px`, fontWeight: 600, lineHeight: "52px", letterSpacing: "-0.8px", color: ctaTextColor, whiteSpace: "nowrap" }}>{ctaText}</span>
       </button>
     </div>
   );

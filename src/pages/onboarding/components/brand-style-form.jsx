@@ -70,6 +70,7 @@ import { generateColorPalette } from "../../../utils/colors-util.js";
 import { ScrapingModal } from "./ScrapingAnimation/ScrapingModal.jsx";
 import { Content } from "antd/es/layout/layout";
 import { PreviewContainer } from "../../Dashboard/Vacancies/components/preview-container.jsx";
+import landingPageService from "../../../services/landingPageService.js";
 
 const cloudname = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
@@ -1245,14 +1246,16 @@ const handleContinue = () => {
   //   }
   // }, [companyName, companyUrl, companyInfo]);
 
-  const handleApplyThemeToLandingPage = () => {
+  const handleApplyThemeToLandingPage = async () => {
     // Only apply branding to main account vacancies (exclude workspace vacancies)
+    const isWorkspaceSession = user?.isWorkspaceSession && user?.workspaceId;
+    if (isWorkspaceSession) return;
+
     const brandingData = {
-      updateAll: true,
-      primaryColor: primaryColor,
-      secondaryColor: secondaryColor,
-      tertiaryColor: tertiaryColor,
-      yiqThreshold: yiqThreshold,
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+      yiqThreshold,
       selectedFont: {
         family: selectedFont,
         src: fonts.find((font) => font.family === selectedFont)?.src,
@@ -1269,32 +1272,15 @@ const handleContinue = () => {
         family: bodyFont,
         src: fonts.find((font) => font.family === bodyFont)?.src,
       },
-      companyLogo: companyLogo,
-      // Also update published versions so changes reflect on live pages
-      "publishedVersion.primaryColor": primaryColor,
-      "publishedVersion.secondaryColor": secondaryColor,
-      "publishedVersion.tertiaryColor": tertiaryColor,
-      "publishedVersion.yiqThreshold": yiqThreshold,
-      "publishedVersion.selectedFont": {
-        family: selectedFont,
-        src: fonts.find((font) => font.family === selectedFont)?.src,
-      },
-      "publishedVersion.titleFont": {
-        family: titleFont,
-        src: fonts.find((font) => font.family === titleFont)?.src,
-      },
-      "publishedVersion.subheaderFont": {
-        family: subheaderFont,
-        src: fonts.find((font) => font.family === subheaderFont)?.src,
-      },
-      "publishedVersion.bodyFont": {
-        family: bodyFont,
-        src: fonts.find((font) => font.family === bodyFont)?.src,
-      },
-      "publishedVersion.companyLogo": companyLogo
+      companyLogo,
     };
 
-    // Removed bulk update of existing vacancies - branding is applied when vacancies are displayed
+    try {
+      await landingPageService.applyBrandingToMainPages(brandingData);
+    } catch (e) {
+      // Non-blocking: onboarding save should not fail if bulk update fails
+      console.error("Failed to apply branding to main landing pages:", e);
+    }
   };
 
   useEffect(() => {
@@ -1510,6 +1496,11 @@ const handleContinue = () => {
 
         await AuthService.updateMe(userUpdateData);
         console.log('✅ User branding saved to main account');
+      }
+
+      // Apply branding to existing MAIN-account landing pages only (exclude workspace funnels)
+      if (!isWorkspaceSession) {
+        await handleApplyThemeToLandingPage();
       }
 
       // Refresh user data in Redux store
@@ -2606,7 +2597,6 @@ const handleLogoUpload = async (url) => {
                       disabled={!companyName?.trim() || !companyUrl?.trim()}
                       onClick={() => {
                         handleSaveAndNext();
-                        handleApplyThemeToLandingPage();
                       }}
                     >
                       Save & Publish

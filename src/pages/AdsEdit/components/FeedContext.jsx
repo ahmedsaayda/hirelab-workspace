@@ -5,7 +5,7 @@ import React from "react";
  * 
  * Wraps ad content with a Facebook/Instagram Feed style UI.
  */
-export default function FeedContext({ children, brandData, text, title, ctaText }) {
+export default function FeedContext({ children, brandData, text, title, description, ctaText }) {
   const brandName = brandData?.companyName || "Company Name";
   const brandLogo = brandData?.companyLogo || brandData?.logo;
   
@@ -75,6 +75,9 @@ export default function FeedContext({ children, brandData, text, title, ctaText 
             <div className="font-semibold text-[16px] text-gray-900 truncate">
               {title || "Join Our Team"}
             </div>
+            <div className="text-[13px] text-gray-600 truncate">
+              {description || ""}
+            </div>
           </div>
           <button className="bg-[#EBF5FF] text-[#0064D1] px-4 py-2 rounded-[6px] text-[15px] font-semibold whitespace-nowrap">
             {ctaText || "Learn More"}
@@ -116,6 +119,7 @@ export default function FeedContext({ children, brandData, text, title, ctaText 
     </div>
   );
 }
+
 
 
 

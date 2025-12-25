@@ -373,6 +373,8 @@ const Layout = ({ children }) => {
     if (user) {
       console.log(user.email);
 
+      // Only run Crisp user-identification when Crisp is actually enabled/loaded
+      if (!window.CRISP_WEBSITE_ID) return;
       window.$crisp = window.$crisp || [];
 
       // set email and name

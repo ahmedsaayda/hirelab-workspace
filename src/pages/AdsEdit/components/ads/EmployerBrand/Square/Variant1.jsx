@@ -8,23 +8,33 @@ const HERO_FALLBACK = "/dhwise-images/placeholder.png";
 export default function Variant1({ variant, brandData, landingPageData }) {
   const headline = variant?.title || landingPageData?.employerBrandTitle || "We Have Been Recognized";
   const heroImage = variant?.image || landingPageData?.heroImage || HERO_FALLBACK;
-  const heroAdj = landingPageData?.imageAdjustment?.heroImage;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const heroAdj = variant?.imageAdjustment?.heroImage || landingPageData?.imageAdjustment?.heroImage;
   const heroObjectFit = heroAdj?.objectFit || "cover";
   const heroObjectPosition = heroAdj?.objectPosition
     ? `${heroAdj.objectPosition.x}% ${heroAdj.objectPosition.y}%`
     : "50% 50%";
+  const heroMirror = Boolean(heroAdj?.mirror);
   const brandName = brandData?.companyName || brandData?.name || "hirelab";
   const brandLogo = brandData?.companyLogo || brandData?.logo || null;
 
-  const { primaryColor, heroBackgroundColor, getPrimary } = useAdPalette({ landingPageData, brandData });
+  const { primaryColor, heroBackgroundColor, getPrimary, getContrastColor } = useAdPalette({ landingPageData, brandData });
   const [logoFailed, setLogoFailed] = React.useState(false);
 
   const backgroundGradient = `linear-gradient(160deg, ${heroBackgroundColor || "#140035"} 0%, ${getPrimary(700)} 40%, ${getPrimary(900)} 100%)`;
+  // Check contrast against the darker bottom part of the gradient or primary
+  const textColor = getContrastColor(getPrimary(900));
+  const isLight = textColor === "#000000" || textColor === "#101828";
+
   const gridMainColor = colord(getPrimary(300)).alpha(0.75).toRgbString();
   const gridLineColor = colord(getPrimary(300)).alpha(0.12).toRgbString();
   const BORDER_WIDTH = 8;
   const CARD_RADIUS = 80; // equals 5rem at 16px base
   const borderGradient = `linear-gradient(180deg, ${getPrimary(500)} 0%, ${getPrimary(950)} 100%)`;
+  const [videoFailed, setVideoFailed] = React.useState(false);
 
   return (
     <div
@@ -34,7 +44,7 @@ export default function Variant1({ variant, brandData, landingPageData }) {
         height: "1080px",
         background: backgroundGradient,
         overflow: "hidden",
-        color: "#ffffff",
+        color: textColor,
         fontFamily: "'Inter', 'DM Sans', sans-serif",
       }}
     >
@@ -92,7 +102,7 @@ export default function Variant1({ variant, brandData, landingPageData }) {
                   onError={() => setLogoFailed(true)}
                 />
               ) : (
-                <span style={{ fontWeight: 600, fontSize: "34px", color: primaryColor || "#fff" }}>
+                <span style={{ fontWeight: 600, fontSize: "34px", color: primaryColor || textColor }}>
                   {brandName?.charAt(0)?.toUpperCase()}
                 </span>
               )}
@@ -148,8 +158,30 @@ export default function Variant1({ variant, brandData, landingPageData }) {
                 height: "100%",
                 objectFit: heroObjectFit,
                 objectPosition: heroObjectPosition,
+                transform: heroMirror ? "scaleX(-1)" : "none",
               }}
             />
+            {!isCapture && isVideo && !videoFailed && (
+              <video
+                src={videoUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                poster={heroImage}
+                onError={() => setVideoFailed(true)}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: heroObjectFit,
+                  objectPosition: heroObjectPosition,
+                transform: heroMirror ? "scaleX(-1)" : "none",
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

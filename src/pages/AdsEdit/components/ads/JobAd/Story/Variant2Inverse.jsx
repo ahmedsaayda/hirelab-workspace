@@ -19,7 +19,7 @@ const imgClock = "/images3/img_search.svg"; // clock fallback
 // Story controls (glyph fallbacks so they always render)
 const ICONS_FALLBACK = ["⏸", "🔇", "⋯"];
 
-export default function Variant2({ variant, brandData, landingPageData }) {
+export default function Variant2({ variant, brandData, landingPageData, showStoryChrome = true }) {
   // Dynamic fields
   const rawJobTitle = variant?.title || landingPageData?.vacancyTitle || "Project Manager";
   const weAreHiring = landingPageData?.weAreHiring || "WE’RE HIRING";
@@ -39,6 +39,11 @@ export default function Variant2({ variant, brandData, landingPageData }) {
   const hoursUnit = landingPageData?.hoursUnit || "daily";
 
   const heroImage = variant?.image || landingPageData?.heroImage || imgHeroDefault;
+  const videoUrl = variant?.videoUrl || "";
+  const isCapture =
+    typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
+  const isVideo = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+  const [videoFailed, setVideoFailed] = React.useState(false);
   const heroImageAdjustment =
     variant?.imageAdjustment?.heroImage ||
     landingPageData?.imageAdjustment?.jobDescriptionImage ||
@@ -53,6 +58,11 @@ export default function Variant2({ variant, brandData, landingPageData }) {
 
   const { primaryColor, getPrimary, getContrastColor } = useAdPalette({ landingPageData, brandData });
   const primary500 = getPrimary(500);
+  
+  // CTA Contrast
+  const ctaTextColor = getContrastColor(primary500);
+  const ctaFontSize = ctaText?.length > 9 ? 34 : 40;
+
   // Lighten the bottom overlay so the cropping effect remains visible
   const overlayGradient = `linear-gradient(180deg, ${colord(primary500).alpha(0).toRgbString()} 0%, ${colord(primary500).alpha(0.35).toRgbString()} 74%, ${colord(primary500).alpha(0.6).toRgbString()} 100%)`;
 
@@ -139,10 +149,11 @@ export default function Variant2({ variant, brandData, landingPageData }) {
         }}
       />
 
-      {/* Top story chrome */}
-      <div
-        style={{ position: "absolute", left: "50%", top: "45px", width: "972px", transform: "translateX(-50%)", display: "flex", flexDirection: "column", gap: "24px", zIndex: 3 }}
-      >
+      {/* Top story chrome (preview-only; use shared StoryFrame in Ads editor) */}
+      {showStoryChrome && (
+        <div
+          style={{ position: "absolute", left: "50%", top: "45px", width: "972px", transform: "translateX(-50%)", display: "flex", flexDirection: "column", gap: "24px", zIndex: 3 }}
+        >
         <div style={{ width: "100%", height: "6px", backgroundColor: "#d9d9d9", borderRadius: "5px", overflow: "hidden" }}>
           <div style={{ width: "65%", height: "100%", backgroundColor: "#ffffff", borderRadius: "5px" }} />
         </div>
@@ -168,7 +179,8 @@ export default function Variant2({ variant, brandData, landingPageData }) {
             ))}
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Typography + badges */}
       <div style={{ position: "absolute", top: "260px", left: "50%", transform: "translateX(-50%)", width: "711px", display: "flex", flexDirection: "column", alignItems: "center", gap: "40px", zIndex: 2 }}>
@@ -270,6 +282,27 @@ export default function Variant2({ variant, brandData, landingPageData }) {
               transition: "object-position 0.3s ease-in-out",
             }}
           />
+          {!isCapture && isVideo && !videoFailed && (
+            <video
+              src={videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={heroImage}
+              onError={() => setVideoFailed(true)}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: heroObjectFit,
+                objectPosition: heroObjectPosition,
+                transition: "object-position 0.3s ease-in-out",
+              }}
+            />
+          )}
           <div
             style={{
               position: "absolute",
@@ -291,9 +324,9 @@ export default function Variant2({ variant, brandData, landingPageData }) {
         </div>
       </div>
 
-      {/* CTA */}
-      <button style={{ position: "absolute", top: "1755px", left: "50%", transform: "translateX(-50%)", padding: "32px 64px", width: "331px", height: "93px", border: "none", borderRadius: "100px", backgroundColor: primaryColor, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0px 24px 48px rgba(25, 2, 76, 0.3)", zIndex: 20 }}>
-        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "40px", fontWeight: 600, lineHeight: "52px", letterSpacing: "-0.8px", color: "#ffffff" }}>{ctaText}</span>
+      {/* CTA (Meta Story safe-zone) */}
+      <button style={{ position: "absolute", bottom: "90px", left: "50%", transform: "translateX(-50%)", padding: "32px 64px", width: "331px", height: "93px", border: "none", borderRadius: "100px", backgroundColor: primaryColor, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0px 24px 48px rgba(25, 2, 76, 0.3)", zIndex: 20 }}>
+        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: `${ctaFontSize}px`, fontWeight: 600, lineHeight: "52px", letterSpacing: "-0.8px", color: ctaTextColor, whiteSpace: "nowrap" }}>{ctaText}</span>
       </button>
     </div>
   );

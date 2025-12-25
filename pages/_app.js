@@ -1,4 +1,7 @@
 import Head from 'next/head'
+import Script from 'next/script';
+import { useRouter } from 'next/router';
+import React, { useMemo } from 'react';
 import "./index.css";
 import "./style/index.scss";
 import "react-phone-input-2/lib/style.css";
@@ -25,6 +28,14 @@ import { FocusProvider } from '../src/contexts/FocusContext';
 import AdminReturnButton from "../src/components/AdminReturnButton";
 
 export default function App({Component, pageProps}) {
+  const router = useRouter();
+
+  // Disable Crisp on public landing pages (lp + lp subpages like apply/thank-you)
+  const isPublicLandingPage = useMemo(() => {
+    // For dynamic routes, Next.js exposes `router.pathname` like: "/lp/[lpId]" or "/lp/[lpId]/apply"
+    return typeof router?.pathname === 'string' && router.pathname.startsWith('/lp/[lpId]');
+  }, [router?.pathname]);
+
   return (
     <div>
       <Head>
@@ -33,6 +44,16 @@ export default function App({Component, pageProps}) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
+      {!isPublicLandingPage && (
+        <Script
+          id="crisp-chat"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html:
+              'window.$crisp=window.$crisp||[];window.CRISP_WEBSITE_ID="cb79e205-2211-45f2-abe2-5ef37c50359e";(function(){var d=document;var s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();',
+          }}
+        />
+      )}
 
       <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
