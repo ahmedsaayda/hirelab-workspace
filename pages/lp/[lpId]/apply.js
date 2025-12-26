@@ -1444,7 +1444,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
         return (
           <div className="space-y-4">
             {/* First Name and Last Name in a row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:gap-4 gap-1">
               {field.firstName?.visible !== false && (
                 <div>
                   <label className="block mb-1 font-semibold text-sm">
