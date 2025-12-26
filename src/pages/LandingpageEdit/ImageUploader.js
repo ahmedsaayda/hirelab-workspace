@@ -35,8 +35,8 @@ const ImageUploader = ({
   autosave = false,
   type = "all",
   isLogo = false,
-  currentSectionLimits={},
-  allowedTabs =["all","image","video","section-template"]
+  currentSectionLimits = {},
+  allowedTabs = ["all", "image", "video", "section-template"]
 }) => {
   console.log("multiple", multiple);
   const isVideo = accept.includes("video");
@@ -67,8 +67,8 @@ const ImageUploader = ({
   const uploadsLeft = multiple
     ? maxFiles - multipleFiles.length
     : previewUrl
-    ? 0
-    : 1;
+      ? 0
+      : 1;
   const limitReached = uploadsLeft === 0;
 
   const openModal = () => {
@@ -143,7 +143,7 @@ const ImageUploader = ({
     try {
       setIsUploading(true);
       const newFiles = Array.from(files);
-      
+
       if (newFiles.length + multipleFiles.length > maxFiles) {
         message.error(`You can only upload up to ${maxFiles} files`);
         return;
@@ -193,7 +193,7 @@ const ImageUploader = ({
     console.log("Modal open state:", isImageOpen);
   }, [isImageOpen]);
 
-  const fetchFileSize = async (url="") => {
+  const fetchFileSize = async (url = "") => {
     try {
       console.log("fetchFileSize", url);
       const response = await fetch(url, { method: "HEAD" });
@@ -238,7 +238,7 @@ const ImageUploader = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
- 
+
   console.log("uploadingFiles", uploadingFiles);
   const handleUpload = useCallback(
     async (event) => {
@@ -384,7 +384,9 @@ const ImageUploader = ({
       setSelectedImage(null);
     } else {
       setSelectedImage(url);
-      const currentAdjustments = imageAdjustments[fieldKey] || {
+      // Get adjustments for this specific image URL
+      const fieldAdjustments = imageAdjustments[fieldKey] || {};
+      const currentAdjustments = fieldAdjustments[url] || {
         objectPosition: { x: 50, y: 50 },
         objectFit: "cover",
       };
@@ -396,7 +398,7 @@ const ImageUploader = ({
   const handleSettingsChange = (newSettings) => {
     setImageSettings(newSettings);
     if (selectedImage && onImageAdjustmentChange) {
-      onImageAdjustmentChange(fieldKey, newSettings);
+      onImageAdjustmentChange(fieldKey, newSettings, selectedImage);
     }
   };
 
@@ -411,8 +413,8 @@ const ImageUploader = ({
       y: e.clientY,
     });
     setLastPosition({
-      x: imageSettings.objectPosition.x,
-      y: imageSettings.objectPosition.y,
+      x: imageSettings?.objectPosition?.x ?? 50,
+      y: imageSettings?.objectPosition?.y ?? 50,
     });
   };
 
@@ -439,10 +441,12 @@ const ImageUploader = ({
     setIsDraggingImage(false);
   };
 
-  const renderPreview = (url, index, details,isLogo=false) => {
+  const renderPreview = (url, index, details, isLogo = false) => {
     console.log("isLogo", isLogo);
     const isUploadingFile = uploadingFiles[fileMetadata[url]?.name];
-    const adjustments = imageAdjustments[fieldKey] || {};
+    // Get adjustments for this specific image URL
+    const fieldAdjustments = imageAdjustments[fieldKey] || {};
+    const adjustments = fieldAdjustments[url] || {};
     const isSelected = selectedImage === url;
     const isMaxFilesReached = multiple && multipleFiles.length >= maxFiles;
 
@@ -452,7 +456,7 @@ const ImageUploader = ({
 
     return (
       <div key={url}>
-        <div 
+        <div
           className="flex gap-4 items-center p-4 mb-2 w-full rounded-lg border cursor-pointer"
           onClick={(e) => {
             // Prevent click if clicking on settings or delete buttons
@@ -487,7 +491,7 @@ const ImageUploader = ({
                   objectPosition: positionString,
                   objectFit: isLogo ? "fill" : adjustments.objectFit || "cover",
                   height: isLogo ? "auto" : "100%",
-                  
+
                 }}
               />
             )}
@@ -523,41 +527,38 @@ const ImageUploader = ({
               </div>
             )}
           </div>
-       {!isSettingDisabled && (
-        <div className="flex gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSettingsClick(url);
-              }}
-              className={`p-2 rounded-full hover:bg-gray-100 flex items-center justify-center settings-button ${
-                isSelected ? "bg-gray-100" : ""
+          {!isSettingDisabled && (
+            <div className="flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSettingsClick(url);
+                }}
+                className={`p-2 rounded-full hover:bg-gray-100 flex items-center justify-center settings-button ${isSelected ? "bg-gray-100" : ""
+                  }`}
+                title="Adjust Image"
+              >
+                <SlidersHorizontal className="text-blue_gray-500 text-lg" />
+              </button>
+            </div>
+          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(url, index);
+            }}
+            className={`p-2 rounded-full hover:bg-gray-100 delete-button ${isMaxFilesReached ? "animate-pulse bg-red-50 hover:bg-red-100" : ""
               }`}
-              title="Adjust Image"
-            >
-              <SlidersHorizontal className="text-blue_gray-500 text-lg" />
-            </button>
-          </div>
-       )}
-         <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(url, index);
-              }}
-              className={`p-2 rounded-full hover:bg-gray-100 delete-button ${
-                isMaxFilesReached ? "animate-pulse bg-red-50 hover:bg-red-100" : ""
-              }`}
-              title={isMaxFilesReached ? "Delete to upload more" : "Delete"}
-            >
-              <Img
-                src="/images2/img_trash_01.svg"
-                alt="trash-01"
-                className={`h-[20px] w-[20px] cursor-pointer ml-auto ${
-                  isMaxFilesReached ? "text-red-500" : ""
+            title={isMaxFilesReached ? "Delete to upload more" : "Delete"}
+          >
+            <Img
+              src="/images2/img_trash_01.svg"
+              alt="trash-01"
+              className={`h-[20px] w-[20px] cursor-pointer ml-auto ${isMaxFilesReached ? "text-red-500" : ""
                 }`}
-              />
-            </button>
-          
+            />
+          </button>
+
         </div>
 
         {isSelected && (
@@ -585,30 +586,39 @@ const ImageUploader = ({
                 </svg>
               </button>
             </div>
-            <div className="rounded-l-2xl p-4">
-              <div className="flex items-center justify-center">
-                <div
-                  className="w-56 h-56 bg-slate-400 overflow-hidden rounded-xl border relative cursor-move"
-                  onMouseDown={handleDragStart}
-                  onMouseMove={handleDragMove}
-                  onMouseUp={handleImageDragEnd}
-                  onMouseLeave={handleImageDragEnd}
-                >
-                  <img
-                    src={url}
-                    alt="Preview"
-                    className="w-full h-full"
-                    style={{
-                      objectPosition: positionString,
-                      objectFit: imageSettings.objectFit,
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Move className="text-white opacity-50" size={24} />
-                  </div>
+            <p className="text-xs text-gray-500 mb-2 text-center">Drag image to adjust visible area</p>
+            <div className="p-4 flex justify-center">
+              <div
+                className="w-48 h-64 bg-slate-200 overflow-hidden rounded-xl border-2 border-purple-500 cursor-move relative select-none"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleDragStart(e);
+                }}
+                onMouseMove={(e) => {
+                  e.preventDefault();
+                  handleDragMove(e);
+                }}
+                onMouseUp={handleImageDragEnd}
+                onMouseLeave={handleImageDragEnd}
+              >
+                <img
+                  src={url}
+                  alt="Preview"
+                  className="w-full h-full pointer-events-none"
+                  draggable={false}
+                  style={{
+                    objectPosition: `${imageSettings.objectPosition?.x ?? 50}% ${imageSettings.objectPosition?.y ?? 50}%`,
+                    objectFit: imageSettings.objectFit || "cover",
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <Move className="text-white opacity-70 drop-shadow-lg" size={28} />
                 </div>
               </div>
             </div>
+            <p className="text-xs text-gray-500 text-center">
+              Position: {Math.round(imageSettings.objectPosition?.x ?? 50)}% x {Math.round(imageSettings.objectPosition?.y ?? 50)}%
+            </p>
           </div>
         )}
       </div>
@@ -637,7 +647,7 @@ const ImageUploader = ({
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
                   >
-                    {renderPreview(url, index, fileDetails[url],isLogo)}
+                    {renderPreview(url, index, fileDetails[url], isLogo)}
                   </div>
                 )}
               </Draggable>
@@ -740,7 +750,7 @@ const ImageUploader = ({
 
       {!multiple && previewUrl && (
         <div className="mt-4 overflow-y-auto">
-          {renderPreview(previewUrl, 0, fileDetails[previewUrl],isLogo)}
+          {renderPreview(previewUrl, 0, fileDetails[previewUrl], isLogo)}
         </div>
       )}
 

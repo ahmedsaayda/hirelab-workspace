@@ -658,7 +658,7 @@ const ImageSelectionModal = ({
                         accept={type === "video" ? "video/*" : type === "image" ? "image/*" : accept}
                       />
                       <div className="flex flex-col mt-4 w-full">
-                        <h4 className="mb-2 text-sm font-medium">Selected Files</h4>
+                        <h4 className="mb-2 text-sm font-medium">Selected Files {maxFiles && maxFiles < Infinity ? `(max ${maxFiles})` : ''}</h4>
                         <div className="overflow-y-auto flex-1 pb-16 min-h-0">
                           {files.map(renderPreview)}
                         </div>
@@ -810,7 +810,7 @@ const ImageSelectionModal = ({
                 <div className="lg:w-[35%] w-full">
                   <div className="flex overflow-y-scroll relative flex-col p-2 pb-24 h-full bg-gray-50 rounded-lg border-2 border-gray-300 lg:p-4">
                     <div className="flex flex-col mt-2 w-full">
-                      <h4 className="mb-2 text-sm font-medium">Selected Files</h4>
+                      <h4 className="mb-2 text-sm font-medium">Selected Files {maxFiles && maxFiles < Infinity ? `(max ${maxFiles})` : ''}</h4>
                       <div className="overflow-y-auto flex-1 pb-16 min-h-0">
                         {files.length === 0 ? (
                           <div className="py-8 text-sm text-center text-gray-400">

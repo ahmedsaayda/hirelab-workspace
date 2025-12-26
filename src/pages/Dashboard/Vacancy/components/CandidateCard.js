@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Avatar, Rate, Dropdown, Button, Tooltip } from 'antd';
-import { 
-  UserOutlined, 
+import {
+  UserOutlined,
   MoreOutlined,
   MailOutlined,
   PhoneOutlined,
@@ -108,13 +108,13 @@ const getStatusPhaseColor = (phase) => {
   return colors[phase] || 'bg-gray-100 text-gray-700';
 };
 
-const CandidateCard = ({ 
-  candidate, 
-  isDragging = false, 
-  onView, 
-  onEdit, 
-  onEmail, 
-  onPhone, 
+const CandidateCard = ({
+  candidate,
+  isDragging = false,
+  onView,
+  onEdit,
+  onEmail,
+  onPhone,
   onChat,
   onDelete,
   onRatingUpdate,
@@ -124,22 +124,22 @@ const CandidateCard = ({
   onConductInterview,
   onScheduleInterview,
   onShowReviewBreakdown,
-  showVacancyInfo = false 
+  showVacancyInfo = false
 }) => {
   const [isUpdatingRating, setIsUpdatingRating] = useState(false);
   const [recentlyUpdated, setRecentlyUpdated] = useState(false);
 
   const handleRatingChange = async (value) => {
     if (!onRatingUpdate) return;
-    
+
     setIsUpdatingRating(true);
     try {
       await onRatingUpdate(candidate.id, value);
-      
+
       // Show brief success feedback
       setRecentlyUpdated(true);
       setTimeout(() => setRecentlyUpdated(false), 1000);
-      
+
     } catch (error) {
       console.error('Failed to update rating:', error);
     } finally {
@@ -151,14 +151,14 @@ const CandidateCard = ({
     if (candidate.avatar && candidate.avatar.trim()) {
       return <Avatar size={40} src={candidate.avatar} />;
     }
-    
+
     const name = candidate.fullname?.trim() ? candidate.fullname : candidate.email;
     const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    
+
     return (
-      <Avatar 
-        size={40} 
-        style={{ 
+      <Avatar
+        size={40}
+        style={{
           backgroundColor: '#6366f1',
           fontSize: '14px',
           fontWeight: 600
@@ -175,7 +175,7 @@ const CandidateCard = ({
     const diff = now.diff(appliedAt);
 
     const duration = moment.duration(diff);
-    
+
     if (duration.asMonths() >= 1) {
       return `${Math.floor(duration.asMonths())}mo`;
     } else if (duration.asWeeks() >= 1) {
@@ -201,54 +201,54 @@ const CandidateCard = ({
         onView && onView();
       },
     },
-            {
-          key: 'edit',
-          label: 'Edit',
-          icon: <EditOutlined />,
-          onClick: (e) => {
-            e?.domEvent?.stopPropagation();
-            onEdit && onEdit();
-          },
-        },
-        {
-          key: 'assign',
-          label: candidate.assignedTo ? 'Reassign' : 'Assign Team Member',
-          icon: <UserOutlined />,
-          onClick: (e) => {
-            e?.domEvent?.stopPropagation();
-            onAssign && onAssign();
-          },
-        },
-        {
-          key: 'review',
-          label: 'Review Stage',
-          icon: <MessageOutlined />,
-          onClick: (e) => {
-            e?.domEvent?.stopPropagation();
-            onReview && onReview();
-          },
-        },
-        {
-          key: 'status',
-          label: 'Change Status',
-          icon: <ClockCircleOutlined />,
-          onClick: (e) => {
-            e?.domEvent?.stopPropagation();
-            onStatusChange && onStatusChange();
-          },
-        },
-        {
-          key: 'interview',
-          label: 'Conduct Interview',
-          icon: <UserOutlined />,
-          onClick: (e) => {
-            e?.domEvent?.stopPropagation();
-            onConductInterview && onConductInterview();
-          },
-        },
-        {
-          type: 'divider',
-        },
+    {
+      key: 'edit',
+      label: 'Edit',
+      icon: <EditOutlined />,
+      onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        onEdit && onEdit();
+      },
+    },
+    {
+      key: 'assign',
+      label: candidate.assignedTo ? 'Reassign' : 'Assign Team Member',
+      icon: <UserOutlined />,
+      onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        onAssign && onAssign();
+      },
+    },
+    {
+      key: 'review',
+      label: 'Review Stage',
+      icon: <MessageOutlined />,
+      onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        onReview && onReview();
+      },
+    },
+    {
+      key: 'status',
+      label: 'Change Status',
+      icon: <ClockCircleOutlined />,
+      onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        onStatusChange && onStatusChange();
+      },
+    },
+    {
+      key: 'interview',
+      label: 'Conduct Interview',
+      icon: <UserOutlined />,
+      onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        onConductInterview && onConductInterview();
+      },
+    },
+    {
+      type: 'divider',
+    },
     {
       key: 'email',
       label: 'Send Email',
@@ -323,7 +323,7 @@ const CandidateCard = ({
             </p>
           </div>
         </div>
-        
+
         {/* Actions Menu */}
         <Dropdown
           menu={{ items: menuItems }}
@@ -341,7 +341,7 @@ const CandidateCard = ({
       </div>
 
       {/* Contact Info */}
- 
+
 
       {/* Status Phase Info */}
       {candidate.statusPhase && candidate.statusPhase !== 'new' && (
@@ -383,21 +383,21 @@ const CandidateCard = ({
             <span className="text-xs font-medium text-green-800">Assigned to:</span>
           </div>
           <div className="flex items-center">
-            <Tooltip 
+            <Tooltip
               title={`${candidate.assignedTo.firstName} ${candidate.assignedTo.lastName}`}
               placement="top"
             >
-              <Avatar 
-                src={candidate.assignedTo.avatar} 
+              <Avatar
+                src={candidate.assignedTo.avatar}
                 size={24}
                 className="border-2 border-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                style={{ 
+                style={{
                   backgroundColor: candidate.assignedTo.avatar ? 'transparent' : '#6366f1',
                   fontSize: '10px',
                   fontWeight: 600
                 }}
               >
-                {!candidate.assignedTo.avatar && 
+                {!candidate.assignedTo.avatar &&
                   `${candidate.assignedTo.firstName?.[0] || ''}${candidate.assignedTo.lastName?.[0] || ''}`
                 }
               </Avatar>
@@ -420,17 +420,16 @@ const CandidateCard = ({
       {/* Footer with Rating and Time */}
       <div className="flex items-center justify-between">
         {/* Rating */}
-        <div 
-          className={`flex items-center gap-2 px-1 py-0.5 rounded transition-all duration-300 ${
-            recentlyUpdated ? 'bg-green-50 scale-105' : ''
-          }`}
+        <div
+          className={`flex items-center gap-2 px-1 py-0.5 rounded transition-all duration-300 ${recentlyUpdated ? 'bg-green-50 scale-105' : ''
+            }`}
           onClick={(e) => e.stopPropagation()}
         >
           <Tooltip title="Aggregated rating from stage reviews. Click the question mark to see breakdown by stage.">
             <div className="flex items-center gap-1">
-              <Rate 
-                value={candidate.stars || 0} 
-                style={{ 
+              <Rate
+                value={candidate.stars || 0}
+                style={{
                   fontSize: '14px',
                   opacity: 0.8,
                   pointerEvents: 'none'
@@ -465,7 +464,7 @@ const CandidateCard = ({
         </div>
 
         {/* Time Applied */}
-    {/*     <div className="flex items-center gap-1 text-gray-400">
+        {/*     <div className="flex items-center gap-1 text-gray-400">
           <ClockCircleOutlined className="text-xs" />
           <span className="text-xs font-medium">{getTimeAgo()}</span>
         </div> */}

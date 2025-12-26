@@ -711,12 +711,15 @@ const EditorRender = React.memo(({
                       handleChanged();
 
                     }}
-                    onImageAdjustmentChange={(fieldKey, adjustments) => {
+                    onImageAdjustmentChange={(fieldKey, adjustments, imageUrl) => {
                       setLandingPageData((d) => ({
                         ...d,
                         imageAdjustment: {
                           ...(d.imageAdjustment || {}),
-                          [fieldKey]: adjustments,
+                          [fieldKey]: {
+                            ...((d.imageAdjustment || {})[fieldKey] || {}),
+                            [imageUrl]: adjustments,
+                          },
                         },
                       }));
                       handleChanged();

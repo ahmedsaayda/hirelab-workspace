@@ -57,6 +57,19 @@ const Template3 = ({ landingPageData, fetchData }) => {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = landingPageData?.photoImages || [];
+  
+  // Get image adjustments for photoImages field (per-image adjustments)
+  const fieldAdjustments = landingPageData?.imageAdjustment?.photoImages || {};
+  
+  // Helper function to get adjustments for a specific image
+  const getImageAdjustments = (imageUrl) => {
+    const adjustments = fieldAdjustments[imageUrl] || {};
+    const objectPosition = adjustments.objectPosition
+      ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
+      : "50% 50%";
+    const objectFit = adjustments.objectFit || "cover";
+    return { objectPosition, objectFit };
+  };
 
   const handlePrevious = () => {
     setCurrentImageIndex((prevIndex) => Math.max(prevIndex - 1, 0));
@@ -74,22 +87,30 @@ const Template3 = ({ landingPageData, fetchData }) => {
     <div className="w-full bg-white" ref={sectionRef} id="image-carousel">
       <div className="flex justify-center bg-[#ffffff] py-24 mdx:py-5">
         <div className="container flex gap-5 justify-between px-8 mdx:flex-col mdx:px-5">
-          <motion.div
-            key={currentImageIndex}
-            initial={{ opacity: 0, x: -100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            transition={{ duration: 0.5 }}
-            className="h-[326px] w-[42%] rounded object-contain mdx:w-full"
-          >
-            <Img
-              src={
-                images[currentImageIndex] ?? "/dhwise-images/placeholder.png"
-              }
-              alt={`Company Image ${currentImageIndex + 1}`}
-              className="object-contain w-full h-full rounded"
-            />
-          </motion.div>
+          {(() => {
+            const currentImage = images[currentImageIndex] ?? "/dhwise-images/placeholder.png";
+            const { objectPosition, objectFit } = getImageAdjustments(currentImage);
+            return (
+              <motion.div
+                key={currentImageIndex}
+                initial={{ opacity: 0, x: -100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 100 }}
+                transition={{ duration: 0.5 }}
+                className="h-[326px] w-[42%] rounded overflow-hidden mdx:w-full"
+              >
+                <Img
+                  src={currentImage}
+                  alt={`Company Image ${currentImageIndex + 1}`}
+                  className="w-full h-full rounded"
+                  style={{
+                    objectFit: objectFit,
+                    objectPosition: objectPosition,
+                  }}
+                />
+              </motion.div>
+            );
+          })()}
           <div className="flex w-[44%] flex-col gap-[30px] mdx:w-full">
             <div className="relative content-center">
               <div className="mx-auto flex flex-1 flex-col items-start gap-[22px]">
@@ -167,6 +188,19 @@ const Template2 = ({ landingPageData, fetchData }) => {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = landingPageData?.photoImages || [];
+  
+  // Get image adjustments for photoImages field (per-image adjustments)
+  const fieldAdjustments = landingPageData?.imageAdjustment?.photoImages || {};
+  
+  // Helper function to get adjustments for a specific image
+  const getImageAdjustments = (imageUrl) => {
+    const adjustments = fieldAdjustments[imageUrl] || {};
+    const objectPosition = adjustments.objectPosition
+      ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
+      : "50% 50%";
+    const objectFit = adjustments.objectFit || "cover";
+    return { objectPosition, objectFit };
+  };
 
   const handlePrevious = () => {
     setCurrentImageIndex((prevIndex) => Math.max(prevIndex - 1, 0));
@@ -183,22 +217,30 @@ const Template2 = ({ landingPageData, fetchData }) => {
     <div className="w-full bg-white" ref={sectionRef} id="image-carousel">
       <div className="flex justify-center bg-[#ffffff] py-24 mdx:py-5">
         <div className="container flex gap-5 justify-between px-8 mdx:flex-col mdx:px-5">
-          <motion.div
-            key={currentImageIndex}
-            initial={{ opacity: 0, x: -100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            transition={{ duration: 0.5 }}
-            className="h-[326px] w-[42%] rounded object-contain mdx:w-full"
-          >
-            <Img
-              src={
-                images[currentImageIndex] ?? "/dhwise-images/placeholder.png"
-              }
-              alt={`Company Image ${currentImageIndex + 1}`}
-              className="object-contain w-full h-full rounded"
-            />
-          </motion.div>
+          {(() => {
+            const currentImage = images[currentImageIndex] ?? "/dhwise-images/placeholder.png";
+            const { objectPosition, objectFit } = getImageAdjustments(currentImage);
+            return (
+              <motion.div
+                key={currentImageIndex}
+                initial={{ opacity: 0, x: -100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 100 }}
+                transition={{ duration: 0.5 }}
+                className="h-[326px] w-[42%] rounded overflow-hidden mdx:w-full"
+              >
+                <Img
+                  src={currentImage}
+                  alt={`Company Image ${currentImageIndex + 1}`}
+                  className="w-full h-full rounded"
+                  style={{
+                    objectFit: objectFit,
+                    objectPosition: objectPosition,
+                  }}
+                />
+              </motion.div>
+            );
+          })()}
           <div className="flex w-[44%] flex-col gap-[30px] mdx:w-full">
             <div className="relative content-center">
               <div className="mx-auto flex flex-1 flex-col items-start gap-[22px]">
@@ -277,6 +319,19 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = landingPageData?.photoImages || [];
+  
+  // Get image adjustments for photoImages field (per-image adjustments)
+  const fieldAdjustments = landingPageData?.imageAdjustment?.photoImages || {};
+  
+  // Helper function to get adjustments for a specific image
+  const getImageAdjustments = (imageUrl) => {
+    const adjustments = fieldAdjustments[imageUrl] || {};
+    const objectPosition = adjustments.objectPosition
+      ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
+      : "50% 50%";
+    const objectFit = adjustments.objectFit || "cover";
+    return { objectPosition, objectFit };
+  };
 
   // Extract colors for dependency tracking
   const primaryColor = landingPageData?.primaryColor || "#26B0C6";
@@ -479,11 +534,13 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 // More square-like dimensions to match Figma design
                 const imageHeight = isLargeImage ? "320px" : "240px";
                 const imageWidth = isLargeImage ? "320px" : "240px";
+                const imageUrl = img ?? "/dhwise-images/placeholder.png";
+                const { objectPosition, objectFit } = getImageAdjustments(imageUrl);
                 
                 return (
                   <div
                     key={index}
-                    className="flex-shrink-0 px-2 snap-start flex justify-center items-center"
+                    className="flex-shrink-0 px-2 snap-start flex justify-center items-center overflow-hidden"
                     style={{
                       scrollSnapAlign: "start",
                       width: isMd ? "100%" : "100%",
@@ -491,12 +548,14 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     }}
                   >
                     <Img
-                      src={img ?? "/dhwise-images/placeholder.png"}
+                      src={imageUrl}
                       alt={`Company Image ${index + 1}`}
-                      className="object-cover rounded"
+                      className="rounded"
                       style={{
                         width: imageWidth,
                         height: imageHeight,
+                        objectFit: objectFit,
+                        objectPosition: objectPosition,
                       }}
                     />
                   </div>

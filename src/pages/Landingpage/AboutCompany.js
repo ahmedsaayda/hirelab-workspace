@@ -86,6 +86,19 @@ const Template3 = ({ landingPageData, fetchData }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = landingPageData?.aboutTheCompanyImages || [];
   const refs = useAboutCompanyHover();
+  
+  // Get image adjustments for aboutTheCompanyImages field (per-image adjustments)
+  const fieldAdjustments = landingPageData?.imageAdjustment?.aboutTheCompanyImages || {};
+  
+  // Helper function to get adjustments for a specific image
+  const getImageAdjustments = (imageUrl) => {
+    const adjustments = fieldAdjustments[imageUrl] || {};
+    const objectPosition = adjustments.objectPosition
+      ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
+      : "50% 50%";
+    const objectFit = adjustments.objectFit || "cover";
+    return { objectPosition, objectFit };
+  };
 
   const handlePrevious = () => {
     setCurrentImageIndex((prevIndex) => Math.max(prevIndex - 1, 0));
@@ -102,14 +115,22 @@ const Template3 = ({ landingPageData, fetchData }) => {
       <div ref={refs.sectionRef}>
         <div className="flex justify-center bg-[#ffffff] py-24 mdx:py-5">
           <div className="container flex gap-5 justify-between px-8 mdx:flex-col mdx:px-5">
-            <div ref={refs.imagesRef} className="w-[42%] mdx:w-full">
-              <Img
-                src={
-                  images[currentImageIndex] ?? "/dhwise-images/placeholder.png"
-                }
-                alt={`Company Image ${currentImageIndex + 1}`}
-                className="h-[326px] w-full rounded object-contain"
-              />
+            <div ref={refs.imagesRef} className="w-[42%] mdx:w-full overflow-hidden">
+              {(() => {
+                const currentImage = images[currentImageIndex] ?? "/dhwise-images/placeholder.png";
+                const { objectPosition, objectFit } = getImageAdjustments(currentImage);
+                return (
+                  <Img
+                    src={currentImage}
+                    alt={`Company Image ${currentImageIndex + 1}`}
+                    className="h-[326px] w-full rounded"
+                    style={{
+                      objectFit: objectFit,
+                      objectPosition: objectPosition,
+                    }}
+                  />
+                );
+              })()}
             </div>
             <div className="flex w-[44%] flex-col gap-[30px] mdx:w-full">
               <div className="relative content-center">
@@ -206,6 +227,19 @@ const Template2 = ({ landingPageData, fetchData }) => {
       : actualImages;
 
   const refs = useAboutCompanyHover();
+  
+  // Get image adjustments for aboutTheCompanyImages field (per-image adjustments)
+  const fieldAdjustments = landingPageData?.imageAdjustment?.aboutTheCompanyImages || {};
+  
+  // Helper function to get adjustments for a specific image
+  const getImageAdjustments = (imageUrl) => {
+    const adjustments = fieldAdjustments[imageUrl] || {};
+    const objectPosition = adjustments.objectPosition
+      ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
+      : "50% 50%";
+    const objectFit = adjustments.objectFit || "cover";
+    return { objectPosition, objectFit };
+  };
 
 
   return (
@@ -245,21 +279,28 @@ const Template2 = ({ landingPageData, fetchData }) => {
             ref={refs.imagesRef}
             className="relative w-[60%] h-[400px] mdx:w-full mdx:h-[500px]"
           >
-            {finalImages.map((image, index) => (
-              <div
-                key={index}
-                className={`overflow-hidden absolute rounded-lg shadow-lg ${getImagePosition(
-                  index
-                )}`}
-              >
-                <img
-                  src={image}
-                  alt={`Team member ${index + 1}`}
-                  className="object-cover w-full h-full"
-                  onError={(e) => (e.target.src = defaultImageUrl)}
-                />
-              </div>
-            ))}
+            {finalImages.map((image, index) => {
+              const { objectPosition, objectFit } = getImageAdjustments(image);
+              return (
+                <div
+                  key={index}
+                  className={`overflow-hidden absolute rounded-lg shadow-lg ${getImagePosition(
+                    index
+                  )}`}
+                >
+                  <img
+                    src={image}
+                    alt={`Team member ${index + 1}`}
+                    className="w-full h-full"
+                    style={{
+                      objectFit: objectFit,
+                      objectPosition: objectPosition,
+                    }}
+                    onError={(e) => (e.target.src = defaultImageUrl)}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -273,6 +314,19 @@ const Template1 = ({ landingPageData, fetchData }) => {
   const scrollRef = useRef(null);
   const refs = useAboutCompanyHover();
   const { handleItemClick } = useFocusContext();
+  
+  // Get image adjustments for aboutTheCompanyImages field (per-image adjustments)
+  const fieldAdjustments = landingPageData?.imageAdjustment?.aboutTheCompanyImages || {};
+  
+  // Helper function to get adjustments for a specific image
+  const getImageAdjustments = (imageUrl) => {
+    const adjustments = fieldAdjustments[imageUrl] || {};
+    const objectPosition = adjustments.objectPosition
+      ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
+      : "50% 50%";
+    const objectFit = adjustments.objectFit || "cover";
+    return { objectPosition, objectFit };
+  };
 
   // Extract colors for dependency tracking
   const primaryColor = landingPageData?.primaryColor || "#26B0C6";
@@ -454,6 +508,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
         <div ref={refs.imagesRef} className="hidden gap-4 md:flex">
           {images.map((image, index) => {
             const isOdd = index % 2 === 0;
+            const { objectPosition, objectFit } = getImageAdjustments(image.src);
             return (
               <div
                 key={index}
@@ -464,11 +519,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 <img
                   src={image.src}
                   alt={image.alt}
-                  className={`object-cover w-full h-full rounded-2xl ${isOdd ? "h-64" : "h-48 m-auto"
+                  className={`w-full h-full rounded-2xl ${isOdd ? "h-64" : "h-48 m-auto"
                     }`}
                   style={{
-                    objectPosition: "50% 50%",
-                    objectFit: "cover",
+                    objectPosition: objectPosition,
+                    objectFit: objectFit,
                     transition: "object-position 0.3s ease-in-out",
                   }}
                   onError={(e) => (e.target.src = "/dhwise-images/placeholder.png")}
@@ -490,23 +545,30 @@ const Template1 = ({ landingPageData, fetchData }) => {
               
             }}
           >
-            {images.map((image, index) => (
-              <div
-                key={index}
-                className="flex-shrink-0 px-2 w-full snap-center m-auto"
-              >
-                <div className="overflow-hidden rounded-2xl ">
-                  <img
-                    src={image.src}
-                    alt={image.alt}
-                    className="object-contain w-full aspect-auto object-center"
-                    onError={(e) =>
-                      (e.target.src = "/dhwise-images/placeholder.png")
-                    }
-                  />
+            {images.map((image, index) => {
+              const { objectPosition, objectFit } = getImageAdjustments(image.src);
+              return (
+                <div
+                  key={index}
+                  className="flex-shrink-0 px-2 w-full snap-center m-auto"
+                >
+                  <div className="overflow-hidden rounded-2xl ">
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      className="w-full aspect-auto"
+                      style={{
+                        objectFit: objectFit,
+                        objectPosition: objectPosition,
+                      }}
+                      onError={(e) =>
+                        (e.target.src = "/dhwise-images/placeholder.png")
+                      }
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Carousel Indicator - Only Progress Bar, No Bullets */}
