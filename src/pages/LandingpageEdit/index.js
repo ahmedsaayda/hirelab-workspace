@@ -542,6 +542,7 @@ export default function LandingpageEdit({ paramsId }) {
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [hasImmediateUnsavedChanges, setHasImmediateUnsavedChanges] = useState(false);
   const linkedJobsInitializedRef = useRef(false);
+  const justPublishedRef = useRef(false); // Track if we just published to skip comparison
 
 
   const combinedSections = [
@@ -571,7 +572,81 @@ export default function LandingpageEdit({ paramsId }) {
             setLandingPageData(landingPageDataWithBranding);
 
             // 🔥 Check for unpublished changes after loading data
-            checkForUnpublishedChanges(landingPageDataWithBranding);
+            // Skip comparison if we just published (trust the publish response)
+            if (justPublishedRef.current) {
+              console.log("🔍 PAGE Change Detection: Skipped (just published)");
+              setHasUnpublishedChanges(false);
+              hasUnpublishedChangesRef.current = false;
+            } else if (res.data?.published && res.data?.publishedVersion) {
+              try {
+                const excludeFields = new Set([
+                  '_id', '__v', 'updatedAt', 'createdAt', 'publishedAt', 'unpublishedAt',
+                  'publishedVersion', 'showHirelabBranding', 'debugData', 'form', 'published',
+                  'sort', 'id', 'yiqThreshold' // Also exclude metadata/system fields that may differ
+                ]);
+
+                const deepSanitize = (obj) => {
+                  if (obj === null || obj === undefined) return obj;
+                  if (Array.isArray(obj)) return obj.map(item => deepSanitize(item));
+                  if (typeof obj === 'object') {
+                    const result = {};
+                    for (const [key, value] of Object.entries(obj)) {
+                      if (!excludeFields.has(key)) result[key] = deepSanitize(value);
+                    }
+                    return result;
+                  }
+                  return obj;
+                };
+
+                const stableStringify = (obj) => JSON.stringify(obj, (key, value) => {
+                  if (value && typeof value === 'object' && !Array.isArray(value)) {
+                    return Object.keys(value).sort().reduce((sorted, k) => {
+                      sorted[k] = value[k];
+                      return sorted;
+                    }, {});
+                  }
+                  return value;
+                });
+
+                const currentPageData = deepSanitize(res.data);
+                const publishedPageData = deepSanitize(res.data.publishedVersion);
+                const currentStr = stableStringify(currentPageData);
+                const publishedStr = stableStringify(publishedPageData);
+                const hasChanges = currentStr !== publishedStr;
+
+                // Detailed debug logging
+                if (hasChanges) {
+                  console.log("🔍 PAGE Change Detection (fetchData) - DIFFERENCES:");
+                  const allKeys = new Set([...Object.keys(currentPageData), ...Object.keys(publishedPageData)]);
+                  allKeys.forEach(key => {
+                    const curVal = stableStringify(currentPageData[key]);
+                    const pubVal = stableStringify(publishedPageData[key]);
+                    if (curVal !== pubVal) {
+                      console.log(`  ❌ DIFF "${key}":`, {
+                        current: currentPageData[key],
+                        published: publishedPageData[key]
+                      });
+                    }
+                  });
+                } else {
+                  console.log("🔍 PAGE Change Detection (fetchData): ✅ No changes");
+                }
+
+                setHasUnpublishedChanges(hasChanges);
+                hasUnpublishedChangesRef.current = hasChanges;
+              } catch (e) {
+                console.warn('Error checking changes:', e);
+                setHasUnpublishedChanges(false);
+                hasUnpublishedChangesRef.current = false;
+              }
+            } else {
+              console.log("🔍 PAGE Change Detection: Not published or no publishedVersion", {
+                published: res.data?.published,
+                hasPublishedVersion: !!res.data?.publishedVersion
+              });
+              setHasUnpublishedChanges(false);
+              hasUnpublishedChangesRef.current = false;
+            }
           }
         }, "landing page id");
 
@@ -747,31 +822,68 @@ export default function LandingpageEdit({ paramsId }) {
     }
 
     try {
-      // Compare current page data (excluding form) with published page data
-      const sanitize = (obj) => {
-        if (!obj || typeof obj !== 'object') return obj;
-        const { _id, __v, updatedAt, createdAt, publishedAt, unpublishedAt, publishedVersion, showHirelabBranding, debugData, ...rest } = obj;
-        return rest;
+      // Fields to exclude from comparison (metadata, system fields, etc.)
+      const excludeFields = new Set([
+        '_id', '__v', 'updatedAt', 'createdAt', 'publishedAt', 'unpublishedAt',
+        'publishedVersion', 'showHirelabBranding', 'debugData', 'form', 'published',
+        'sort', 'id', 'yiqThreshold' // Also exclude metadata/system fields that may differ
+      ]);
+
+      // Deep sanitize function that recursively removes excluded fields
+      const deepSanitize = (obj) => {
+        if (obj === null || obj === undefined) return obj;
+        if (Array.isArray(obj)) {
+          return obj.map(item => deepSanitize(item));
+        }
+        if (typeof obj === 'object') {
+          const result = {};
+          for (const [key, value] of Object.entries(obj)) {
+            if (!excludeFields.has(key)) {
+              result[key] = deepSanitize(value);
+            }
+          }
+          return result;
+        }
+        return obj;
       };
 
-      // PAGE SCOPE: Compare everything except form
-      const stripForm = (obj) => {
-        const { form, ...rest } = sanitize(obj || {});
-        return rest;
+      // Stable stringify that sorts object keys for consistent comparison
+      const stableStringify = (obj) => {
+        return JSON.stringify(obj, (key, value) => {
+          if (value && typeof value === 'object' && !Array.isArray(value)) {
+            return Object.keys(value).sort().reduce((sorted, k) => {
+              sorted[k] = value[k];
+              return sorted;
+            }, {});
+          }
+          return value;
+        });
       };
 
-      const currentPageData = stripForm(currentData);
-      const publishedPageData = stripForm(currentData.publishedVersion);
+      const currentPageData = deepSanitize(currentData);
+      const publishedPageData = deepSanitize(currentData.publishedVersion);
 
-      // Quick comparison using JSON.stringify
-      const hasChanges = JSON.stringify(currentPageData) !== JSON.stringify(publishedPageData);
+      // Stable comparison using sorted keys
+      const currentStr = stableStringify(currentPageData);
+      const publishedStr = stableStringify(publishedPageData);
+      const hasChanges = currentStr !== publishedStr;
 
-      console.log("🔍 PAGE Change Detection:", {
-        hasChanges,
-        currentDataKeys: Object.keys(currentPageData).length,
-        publishedDataKeys: Object.keys(publishedPageData).length,
-        published: currentData.published
-      });
+      // Debug: find what's different
+      if (hasChanges) {
+        console.log("🔍 PAGE Change Detection - DIFFERENCES FOUND:");
+        const currentKeys = Object.keys(currentPageData);
+        const publishedKeys = Object.keys(publishedPageData);
+        const allKeys = new Set([...currentKeys, ...publishedKeys]);
+        allKeys.forEach(key => {
+          const currentVal = stableStringify(currentPageData[key]);
+          const publishedVal = stableStringify(publishedPageData[key]);
+          if (currentVal !== publishedVal) {
+            console.log(`  Diff in "${key}":`, { current: currentPageData[key], published: publishedPageData[key] });
+          }
+        });
+      } else {
+        console.log("🔍 PAGE Change Detection: No changes detected");
+      }
 
       setHasUnpublishedChanges(hasChanges);
       return hasChanges;
@@ -1938,9 +2050,20 @@ export default function LandingpageEdit({ paramsId }) {
       message.destroy();
       message.success("Page published successfully!");
 
+      // 🔥 IMPORTANT: Immediately reset unpublished changes state
+      // This ensures the UI updates right away while we fetch fresh data
+      setHasUnpublishedChanges(false);
+      hasUnpublishedChangesRef.current = false;
+      sessionHasChangesRef.current = false;
+      justPublishedRef.current = true; // Skip comparison on next fetch
+
       // Refresh data to get latest publishedVersion
       setTimeout(() => {
         fetchData();
+        // Reset the flag after a delay to re-enable comparison for future changes
+        setTimeout(() => {
+          justPublishedRef.current = false;
+        }, 1000);
       }, 500);
 
     } catch (err) {
