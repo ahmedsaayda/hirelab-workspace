@@ -13,16 +13,16 @@ const languageOptions = Array.from(new Set(Object.values(languages)))
   .map((name) => ({ value: name, label: name }))
   .sort((a, b) => a.label.localeCompare(b.label));
 
-const AIFormGeneratorModal = ({ 
-  visible, 
-  onCancel, 
-  onFormGenerated, 
+const AIFormGeneratorModal = ({
+  visible,
+  onCancel,
+  onFormGenerated,
   initialData = null,
   defaultLanguage
 }) => {
   const [inputType, setInputType] = useState("text");
   const [loading, setLoading] = useState(false);
-  
+
   // Form inputs
   const [url, setUrl] = useState("");
   const [jobTitle, setJobTitle] = useState(initialData?.jobTitle || "");
@@ -48,7 +48,7 @@ const AIFormGeneratorModal = ({
       setLanguageChanged(true);
     }
   }, [language, generatedForm, defaultLanguage]);
-  
+
   // Chatbot state
   const [chatbotStep, setChatbotStep] = useState(0);
   const [chatbotResponses, setChatbotResponses] = useState({});
@@ -60,18 +60,18 @@ const AIFormGeneratorModal = ({
     }
 
     const fields = formData.form.fields;
-    
+
     // Find existing contact field
-    const contactFieldIndex = fields.findIndex(field => 
-      field.type === 'contact' || 
-      field.type === 'email' || 
+    const contactFieldIndex = fields.findIndex(field =>
+      field.type === 'contact' ||
+      field.type === 'email' ||
       (field.label && field.label.toLowerCase().includes('contact'))
     );
 
     if (contactFieldIndex === -1) {
       // No contact field exists, create one with proper language support
       console.log("⚠️ No contact section found in AI-generated form - creating one with translations");
-      
+
       const contactField = {
         id: `contact_${Date.now()}`,
         type: 'contact',
@@ -80,32 +80,32 @@ const AIFormGeneratorModal = ({
         required: true,
         visible: true,
         isLeadCapture: true,
-        firstName: { 
-          visible: true, 
+        firstName: {
+          visible: true,
           required: true,
           label: getTranslation(language, 'firstName') || 'First Name',
-          placeholder: getTranslation(language, 'firstNamePlaceholder') || 'Enter your first name'
+          placeholder: getTranslation(language, 'firstNamePlaceholder') || 'Enter firstname'
         },
-        lastName: { 
-          visible: true, 
+        lastName: {
+          visible: true,
           required: true,
           label: getTranslation(language, 'lastName') || 'Last Name',
-          placeholder: getTranslation(language, 'lastNamePlaceholder') || 'Enter your last name'
+          placeholder: getTranslation(language, 'lastNamePlaceholder') || 'Enter lastname'
         },
-        email: { 
-          visible: true, 
+        email: {
+          visible: true,
           required: true,
           label: getTranslation(language, 'email') || 'Email',
           placeholder: getTranslation(language, 'emailPlaceholder') || 'Enter your email address'
         },
-        phone: { 
-          visible: true, 
+        phone: {
+          visible: true,
           required: false,
           label: getTranslation(language, 'phone') || 'Phone',
           placeholder: getTranslation(language, 'phonePlaceholder') || 'Enter your phone number'
         }
       };
-      
+
       return {
         ...formData,
         form: {
@@ -116,10 +116,10 @@ const AIFormGeneratorModal = ({
     } else if (contactFieldIndex !== 0) {
       // Contact field exists but not first, move it to first position and update translations
       console.log("✅ Contact section exists but not first - moving to top and updating translations");
-      
+
       const contactField = fields[contactFieldIndex];
       const otherFields = fields.filter((_, index) => index !== contactFieldIndex);
-      
+
       // Update contact field with proper translations
       const updatedContactField = {
         ...contactField,
@@ -127,12 +127,12 @@ const AIFormGeneratorModal = ({
         firstName: {
           ...contactField.firstName,
           label: getTranslation(language, 'firstName') || contactField.firstName?.label || 'First Name',
-          placeholder: getTranslation(language, 'firstNamePlaceholder') || contactField.firstName?.placeholder || 'Enter your first name'
+          placeholder: getTranslation(language, 'firstNamePlaceholder') || contactField.firstName?.placeholder || 'Enter firstname'
         },
         lastName: {
           ...contactField.lastName,
           label: getTranslation(language, 'lastName') || contactField.lastName?.label || 'Last Name',
-          placeholder: getTranslation(language, 'lastNamePlaceholder') || contactField.lastName?.placeholder || 'Enter your last name'
+          placeholder: getTranslation(language, 'lastNamePlaceholder') || contactField.lastName?.placeholder || 'Enter lastname'
         },
         email: {
           ...contactField.email,
@@ -145,7 +145,7 @@ const AIFormGeneratorModal = ({
           placeholder: getTranslation(language, 'phonePlaceholder') || contactField.phone?.placeholder || 'Enter your phone number'
         }
       };
-      
+
       return {
         ...formData,
         form: {
@@ -156,7 +156,7 @@ const AIFormGeneratorModal = ({
     } else {
       // Contact field is already first, just update translations
       console.log("✅ Contact section exists and is first - updating translations");
-      
+
       const contactField = fields[0];
       const updatedContactField = {
         ...contactField,
@@ -164,12 +164,12 @@ const AIFormGeneratorModal = ({
         firstName: {
           ...contactField.firstName,
           label: getTranslation(language, 'firstName') || contactField.firstName?.label || 'First Name',
-          placeholder: getTranslation(language, 'firstNamePlaceholder') || contactField.firstName?.placeholder || 'Enter your first name'
+          placeholder: getTranslation(language, 'firstNamePlaceholder') || contactField.firstName?.placeholder || 'Enter firstname'
         },
         lastName: {
           ...contactField.lastName,
           label: getTranslation(language, 'lastName') || contactField.lastName?.label || 'Last Name',
-          placeholder: getTranslation(language, 'lastNamePlaceholder') || contactField.lastName?.placeholder || 'Enter your last name'
+          placeholder: getTranslation(language, 'lastNamePlaceholder') || contactField.lastName?.placeholder || 'Enter lastname'
         },
         email: {
           ...contactField.email,
@@ -182,7 +182,7 @@ const AIFormGeneratorModal = ({
           placeholder: getTranslation(language, 'phonePlaceholder') || contactField.phone?.placeholder || 'Enter your phone number'
         }
       };
-      
+
       return {
         ...formData,
         form: {
@@ -281,11 +281,11 @@ const AIFormGeneratorModal = ({
         // 🔥 ENSURE CONTACT SECTION: Double-check that contact info is included
         const generatedFormData = response.data.data;
         let ensuredForm = ensureContactSection(generatedFormData);
-        
+
         // 🚨 FINAL VALIDATION: Check if contact field is properly structured
         if (!ensuredForm?.form?.fields?.[0] || ensuredForm.form.fields[0].type !== 'contact') {
           console.error('⚠️ AI Form Generator: Contact field validation failed, applying comprehensive fallback');
-          
+
           // Create a complete fallback form structure
           const fallbackForm = {
             form: {
@@ -301,26 +301,26 @@ const AIFormGeneratorModal = ({
                   required: true,
                   visible: true,
                   isLeadCapture: true,
-                  firstName: { 
-                    visible: true, 
+                  firstName: {
+                    visible: true,
                     required: true,
                     label: getTranslation(language, 'firstName') || 'First Name',
-                    placeholder: getTranslation(language, 'firstNamePlaceholder') || 'Enter your first name'
+                    placeholder: getTranslation(language, 'firstNamePlaceholder') || 'Enter firstname'
                   },
-                  lastName: { 
-                    visible: true, 
+                  lastName: {
+                    visible: true,
                     required: true,
                     label: getTranslation(language, 'lastName') || 'Last Name',
-                    placeholder: getTranslation(language, 'lastNamePlaceholder') || 'Enter your last name'
+                    placeholder: getTranslation(language, 'lastNamePlaceholder') || 'Enter lastname'
                   },
-                  email: { 
-                    visible: true, 
+                  email: {
+                    visible: true,
                     required: true,
                     label: getTranslation(language, 'email') || 'Email',
                     placeholder: getTranslation(language, 'emailPlaceholder') || 'Enter your email address'
                   },
-                  phone: { 
-                    visible: true, 
+                  phone: {
+                    visible: true,
                     required: false,
                     label: getTranslation(language, 'phone') || 'Phone',
                     placeholder: getTranslation(language, 'phonePlaceholder') || 'Enter your phone number'
@@ -340,14 +340,14 @@ const AIFormGeneratorModal = ({
               fallbackApplied: true
             }
           };
-          
+
           ensuredForm = fallbackForm;
         }
-        
+
         // Store the generated form and mark language as synchronized
         setGeneratedForm(ensuredForm);
         setLanguageChanged(false);
-        
+
         message.success("Application form generated successfully!");
         onFormGenerated(ensuredForm);
         resetForm();
@@ -368,7 +368,7 @@ const AIFormGeneratorModal = ({
       message.warning("Please enter a valid URL");
       return false;
     }
-    
+
     if (inputType === "text" && (!jobTitle.trim() || !jobDescription.trim())) {
       message.warning("Please provide both job title and description");
       return false;
@@ -398,7 +398,7 @@ const AIFormGeneratorModal = ({
   const handleChatbotNext = () => {
     const currentQuestion = chatbotQuestions[chatbotStep];
     const response = chatbotResponses[currentQuestion.key];
-    
+
     if (!response || (typeof response === 'string' && !response.trim())) {
       message.warning("Please answer the current question before proceeding");
       return;
@@ -457,7 +457,7 @@ const AIFormGeneratorModal = ({
               placeholder="e.g., Senior Software Engineer"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Job Description *
@@ -509,7 +509,7 @@ const AIFormGeneratorModal = ({
               <span>{Math.round(progress)}% Complete</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
@@ -566,7 +566,7 @@ const AIFormGeneratorModal = ({
             >
               Previous
             </Button>
-            
+
             <Button
               type="primary"
               onClick={handleChatbotNext}
@@ -610,9 +610,9 @@ const AIFormGeneratorModal = ({
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             How would you like to create your application form?
           </h3>
-          
-          <Radio.Group 
-            value={inputType} 
+
+          <Radio.Group
+            value={inputType}
             onChange={(e) => setInputType(e.target.value)}
             className="w-full"
           >
@@ -628,7 +628,7 @@ const AIFormGeneratorModal = ({
                   </div>
                 </div>
               </Radio>
-              
+
               <Radio value="text" className="flex items-start">
                 <div className="ml-2">
                   <div className="flex items-center gap-2">
@@ -640,7 +640,7 @@ const AIFormGeneratorModal = ({
                   </div>
                 </div>
               </Radio>
-              
+
               <Radio value="chatbot" className="flex items-start">
                 <div className="ml-2">
                   <div className="flex items-center gap-2">
@@ -727,13 +727,13 @@ const AIFormGeneratorModal = ({
           <Button onClick={resetForm}>
             Cancel
           </Button>
-          
+
           <Button
             type="primary"
             onClick={handleGenerateForm}
             loading={loading}
             disabled={
-              inputType === "chatbot" && 
+              inputType === "chatbot" &&
               chatbotStep < chatbotQuestions.length - 1
             }
             icon={<RobotOutlined />}

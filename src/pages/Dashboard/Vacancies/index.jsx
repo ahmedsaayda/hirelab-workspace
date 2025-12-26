@@ -465,8 +465,11 @@ const Vacancies = () => {
               // Try to get applicant counts, but don't let it break the main functionality
               let landingPagesWithCounts;
               try {
+                console.log('📊 Sending items to countApplicants:', result.data.items?.length, 'items');
+                console.log('📊 Sample item IDs:', result.data.items?.slice(0, 3).map(i => i._id));
                 landingPagesWithCounts = await ATSService.countApplicants(result.data.items);
-                console.log('✅ Successfully fetched applicant counts');
+                console.log('✅ Successfully fetched applicant counts:', landingPagesWithCounts.data?.length, 'items');
+                console.log('📊 Sample counts:', landingPagesWithCounts.data?.slice(0, 3).map(i => ({ id: i._id, count: i.numberApplicants })));
               } catch (countError) {
                 console.warn('⚠️ Failed to fetch applicant counts, using fallback:', countError.message);
                 // Fallback: use original data with 0 applicants

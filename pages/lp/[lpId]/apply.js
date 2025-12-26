@@ -119,6 +119,7 @@ import {
   Radio as CustomRadio,
   CheckBox as CustomCheckBox,
 } from '../../../src/pages/Dashboard/Vacancies/components/components';
+import { CloseOutlined } from '@ant-design/icons';
 
 // Removed country detection since we're using regular Input instead of PhoneInput
 
@@ -137,7 +138,7 @@ const MultipleChoice = ({ field, value, onChange, brandColor }) => (
       return (
         <div
           key={index}
-          className="border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300"
+          className="border-2 rounded-[15px] cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300"
           onClick={() => onChange({ target: { value: optionText } })}
           style={isSelected ? { borderColor: brandColor } : {}}
         >
@@ -179,7 +180,7 @@ const MultiSelectChoice = ({ field, value, onChange, brandColor }) => (
       return (
         <div
           key={index}
-          className="border-2 rounded-xl cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300"
+          className="border-2 rounded-[15px] cursor-pointer transition-all duration-200 border-gray-200 hover:border-gray-300"
           onClick={() => {
             const newValue = value || [];
             if (isSelected) {
@@ -404,7 +405,7 @@ const FileUpload = ({ value, onChange, placeholder, videoOnly = false }) => {
   };
 
   return (
-    <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+    <div className="relative border-2 border-dashed border-gray-300 rounded-[15px] p-8 text-center hover:border-gray-400 transition-colors">
       <div className="space-y-4">
         <div className="text-blue-500">
           {uploading ? (
@@ -733,13 +734,13 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                 visible: true,
                 required: true,
                 label: getTranslation(landingPageData?.lang || 'en', 'firstName') || 'First Name',
-                placeholder: getTranslation(landingPageData?.lang || 'en', 'firstNamePlaceholder') || 'Enter your first name'
+                placeholder: getTranslation(landingPageData?.lang || 'en', 'firstNamePlaceholder') || 'Enter firstname'
               },
               lastName: {
                 visible: true,
                 required: true,
                 label: getTranslation(landingPageData?.lang || 'en', 'lastName') || 'Last Name',
-                placeholder: getTranslation(landingPageData?.lang || 'en', 'lastNamePlaceholder') || 'Enter your last name'
+                placeholder: getTranslation(landingPageData?.lang || 'en', 'lastNamePlaceholder') || 'Enter lastname'
               },
               email: {
                 visible: true,
@@ -1086,21 +1087,21 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
         // Choice field validation - use provided value for auto-jump
         const value = providedFieldValue !== undefined ? providedFieldValue : formData[currentField.id];
         if (!value || (typeof value === 'string' && !value.trim())) {
-          message.warning(`${currentField.label || 'This field'} is required`);
+          message.warning(`This step is required`);
           return;
         }
       } else if (currentField.type === 'yesno' || currentField.type === 'boolean') {
         // Yes/No field validation - use provided value for auto-jump
         const value = providedFieldValue !== undefined ? providedFieldValue : formData[currentField.id];
         if (value === undefined || value === null || value === '') {
-          message.warning(`${currentField.label || 'This field'} is required`);
+          message.warning(`This step is required`);
           return;
         }
       } else {
         // General field validation
         const value = formData[currentField.id];
         if (!value || (typeof value === 'string' && !value.trim()) || (Array.isArray(value) && value.length === 0)) {
-          message.warning(`${currentField.label || 'This field'} is required`);
+          message.warning(`This step is required`);
           return;
         }
       }
@@ -1348,7 +1349,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                     {field[additionalField.key]?.label || additionalField.label}
                     {field[additionalField.key]?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                  <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_${additionalField.key}`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_${additionalField.key}`, value)}
@@ -1365,7 +1366,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
       case 'email':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               type="email"
               value={value}
@@ -1379,7 +1380,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
       case 'phone':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               type="tel"
               value={value}
@@ -1393,7 +1394,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
       default:
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
@@ -1450,7 +1451,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                     {field.firstName?.label || getTranslation(landingPageData?.lang || 'en', 'firstName') || 'First Name'}
                     {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                  <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_firstName`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_firstName`, value)}
@@ -1468,7 +1469,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                     {field.lastName?.label || getTranslation(landingPageData?.lang || 'en', 'lastName') || 'Last Name'}
                     {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                  <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_lastName`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_lastName`, value)}
@@ -1489,7 +1490,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                   {field.email?.label || getTranslation(landingPageData?.lang || 'en', 'email') || 'Email'}
                   {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
-                <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                   <CustomInput
                     type="email"
                     value={formData[`${field.id}_email`] || ''}
@@ -1509,7 +1510,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                   {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
                   {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
-                <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                   <CustomInput
                     type="tel"
                     value={formData[`${field.id}_phone`] || ''}
@@ -1530,7 +1531,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                     {field[additionalField.key]?.label || additionalField.label}
                     {field[additionalField.key]?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                  <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_${additionalField.key}`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_${additionalField.key}`, value)}
@@ -1547,7 +1548,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
       case 'email':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               type="email"
               value={value}
@@ -1561,7 +1562,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
       case 'phone':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               type="tel"
               value={value}
@@ -1575,7 +1576,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
       case 'text':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
@@ -1588,7 +1589,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
       case 'longtext':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
@@ -1602,7 +1603,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
       case 'motivation':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
@@ -1616,7 +1617,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
       case 'number':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               type="number"
               value={value}
@@ -1810,7 +1811,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
       default:
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
@@ -1954,8 +1955,8 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
               type="text"
               onClick={() => router.back()}
               className="text-gray-500 hover:text-gray-700"
+              icon={<CloseOutlined />}
             >
-              ✕
             </Button>
           </div>
 
@@ -2033,7 +2034,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
               <Button
                 type="primary"
-                onClick={handleNext}
+                onClick={() => handleNext()}
                 loading={submitting}
                 className="brand-button flex items-center space-x-2 !border-0"
                 style={{

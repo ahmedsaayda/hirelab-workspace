@@ -47,7 +47,7 @@ export default function InlineEditor({ variant, onChange, landingPageData, onClo
           title="Close Editor"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M15 5L5 15M5 5L15 15" stroke="#667085" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 5L5 15M5 5L15 15" stroke="#667085" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>
@@ -71,7 +71,7 @@ export default function InlineEditor({ variant, onChange, landingPageData, onClo
             />
             <button className="absolute right-2 bottom-2 p-1 hover:bg-gray-100 rounded">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M7 3.33334H4.00004C3.26666 3.33334 2.66671 3.93329 2.66671 4.66667V12C2.66671 12.7334 3.26666 13.3333 4.00004 13.3333H11.3334C12.0668 13.3333 12.6667 12.7334 12.6667 12V9M11.7239 2.39053C12.1997 1.91473 12.9671 1.91473 13.4429 2.39053C13.9187 2.86632 13.9187 3.63373 13.4429 4.10953L7.60948 9.94299L5.33337 10.6667L6.05709 8.39055L11.7239 2.39053Z" stroke="#344054" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 3.33334H4.00004C3.26666 3.33334 2.66671 3.93329 2.66671 4.66667V12C2.66671 12.7334 3.26666 13.3333 4.00004 13.3333H11.3334C12.0668 13.3333 12.6667 12.7334 12.6667 12V9M11.7239 2.39053C12.1997 1.91473 12.9671 1.91473 13.4429 2.39053C13.9187 2.86632 13.9187 3.63373 13.4429 4.10953L7.60948 9.94299L5.33337 10.6667L6.05709 8.39055L11.7239 2.39053Z" stroke="#344054" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
           </div>
@@ -109,7 +109,7 @@ export default function InlineEditor({ variant, onChange, landingPageData, onClo
             />
             <button className="absolute right-2 bottom-2 p-1 hover:bg-gray-100 rounded">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M7 3.33334H4.00004C3.26666 3.33334 2.66671 3.93329 2.66671 4.66667V12C2.66671 12.7334 3.26666 13.3333 4.00004 13.3333H11.3334C12.0668 13.3333 12.6667 12.7334 12.6667 12V9M11.7239 2.39053C12.1997 1.91473 12.9671 1.91473 13.4429 2.39053C13.9187 2.86632 13.9187 3.63373 13.4429 4.10953L7.60948 9.94299L5.33337 10.6667L6.05709 8.39055L11.7239 2.39053Z" stroke="#344054" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 3.33334H4.00004C3.26666 3.33334 2.66671 3.93329 2.66671 4.66667V12C2.66671 12.7334 3.26666 13.3333 4.00004 13.3333H11.3334C12.0668 13.3333 12.6667 12.7334 12.6667 12V9M11.7239 2.39053C12.1997 1.91473 12.9671 1.91473 13.4429 2.39053C13.9187 2.86632 13.9187 3.63373 13.4429 4.10953L7.60948 9.94299L5.33337 10.6667L6.05709 8.39055L11.7239 2.39053Z" stroke="#344054" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
           </div>
@@ -127,7 +127,7 @@ export default function InlineEditor({ variant, onChange, landingPageData, onClo
                   className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md hover:bg-red-50"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M12 4L4 12M4 4L12 12" stroke="#d92d20" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M12 4L4 12M4 4L12 12" stroke="#d92d20" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                 </button>
               </div>
@@ -149,11 +149,10 @@ export default function InlineEditor({ variant, onChange, landingPageData, onClo
                   <button
                     key={idx}
                     onClick={() => handleChange("image", img)}
-                    className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
-                      localData.image === img
+                    className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${localData.image === img
                         ? "border-[#0e87fe] ring-2 ring-[#0e87fe] ring-opacity-20"
                         : "border-[#e4e7ec] hover:border-[#98a2b3]"
-                    }`}
+                      }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -177,9 +176,9 @@ export default function InlineEditor({ variant, onChange, landingPageData, onClo
 
         {/* AI Enhance Button */}
         <div className="pt-4 border-t border-[#eaecf0]">
-          <button className="w-full px-4 py-2.5 bg-white border border-[#d0d5dd] text-[#344054] font-semibold text-sm rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+          <button className="w-full px-4 py-2.5 bg-white border border-[#d0d5dd] text-[#344054] font-semibold text-sm rounded-[15px] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2V14M14 8H2M11.5 4.5L4.5 11.5M4.5 4.5L11.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M8 2V14M14 8H2M11.5 4.5L4.5 11.5M4.5 4.5L11.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             Enhance with AI
           </button>

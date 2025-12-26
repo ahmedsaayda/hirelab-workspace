@@ -120,13 +120,13 @@ export const steps = [
   //       fieldName: "firstName",
   //       label: "First Name",
   //       type: "input",
-  //       placeholder: "Enter your first name",
+  //       placeholder: "Enter firstname",
   //     },
   //     {
   //       fieldName: "lastName",
   //       label: "Last Name",
   //       type: "input",
-  //       placeholder: "Enter your last name",
+  //       placeholder: "Enter lastname",
   //     },
   //     {
   //       fieldName: "age",

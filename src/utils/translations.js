@@ -32,7 +32,7 @@ const coreTranslations = {
     startApplication: "Start Application", formFields: "Form Fields", addField: "Add Field",
     configureField: "Configure Field", clickToConfigure: "Click to configure",
     // Placeholder translations
-    firstNamePlaceholder: "Enter your first name", lastNamePlaceholder: "Enter your last name",
+    firstNamePlaceholder: "Enter firstname", lastNamePlaceholder: "Enter lastname",
     emailPlaceholder: "Enter your email address", phonePlaceholder: "Enter your phone number",
     // Modal translations
     pasteJobText: "Paste Job Text", enterJobTitle: "Enter Job Title", department: "Department",

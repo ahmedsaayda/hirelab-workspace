@@ -22,7 +22,7 @@ const languageOptions = Array.from(
   label: name,
 })).sort((a, b) => a.label.localeCompare(b.label));
 
-function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
+function JobDescriptionModal({ onClose, ongoBack, onRefresh }) {
   const user = useSelector(selectUser);
   const { branding: brandingDetails } = useWorkspaceBranding();
   const router = useRouter();;
@@ -174,7 +174,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
   const isButtonDisabled =
     step === 0
       ? !jobTitle || !department || !language || !jobDescription || jobDescription.length < 1 || isLoading
-      : selectedTemplate === -1||selectedTemplate !== 1;
+      : selectedTemplate === -1 || selectedTemplate !== 1;
 
   const renderButton = () => {
     if (step === 0) {
@@ -188,9 +188,8 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
           </button>
           <button
             onClick={() => setStep(1)}
-            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${
-              isButtonDisabled ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${isButtonDisabled ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             disabled={isButtonDisabled}
           >
             {isLoading ? (
@@ -217,9 +216,8 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
           </button>
           <button
             onClick={handleCreateVacancy}
-            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${
-              isButtonDisabled ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${isButtonDisabled ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             disabled={isButtonDisabled}
           >
             Create Vacancy
@@ -297,7 +295,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         try {
           const imagesToUpload = imageResponse.data.data;
           console.log(`JobDescriptionModal: Found ${imagesToUpload.length} images. Uploading them...`);
-          
+
           const uploadPromises = imagesToUpload.map(async (img) => {
             try {
               const res = await UploadService.upload(img.url, 10);
@@ -314,12 +312,12 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
           const results = await Promise.all(uploadPromises);
           uploadedImages = results.filter(url => url !== null);
           console.log(`JobDescriptionModal: Successfully uploaded ${uploadedImages.length} images.`);
-          
+
         } catch (uploadError) {
           console.error("JobDescriptionModal: Failed to upload Unsplash images:", uploadError);
         }
       } else {
-          console.log("JobDescriptionModal: No images found from Unsplash search or search failed.");
+        console.log("JobDescriptionModal: No images found from Unsplash search or search failed.");
       }
 
       console.log("AI processing completed successfully", aiResponse);
@@ -341,8 +339,8 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         name: "AI Result Retrieved",
         timestamp: new Date(),
         status: "success",
-        data: { 
-          method: "combined", 
+        data: {
+          method: "combined",
           rawResult: aiResponse?.data?.data?.content,
           resultType: typeof aiResult
         }
@@ -366,7 +364,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
           cleanResponse = JSON.parse(cleanResponse);
         } catch (initialParseError) {
           console.log("Initial parse failed, attempting cleanup...", initialParseError);
-          
+
           try {
             // Remove markdown code blocks if present
             cleanResponse = cleanResponse
@@ -414,7 +412,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
           ...spec,
           enabled: true
         }));
-        
+
         debugData.steps.push({
           step: 5,
           name: "Specifications Enabled",
@@ -465,7 +463,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
       console.log("vacancyPayload", vacancyPayload)
       const res = await AiService.createVacancy(vacancyPayload);
       console.log("Vacancy created successfully");
-      
+
       debugData.steps.push({
         step: 6,
         name: "Vacancy Creation Completed",
@@ -493,7 +491,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
         stack: error.stack
       });
       debugData.endTime = new Date();
-      
+
       antdMessage.error(
         "Failed to create vacancy: " + (error.message || "Unknown error")
       );
@@ -546,7 +544,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
               <div className="flex flex-col gap-4">
                 <input
                   type="text"
-                  className="p-2 w-full text-sm rounded-lg border border-gray-300 dark:bg-gray-900 outline-gray-300"
+                  className="p-2 w-full text-sm rounded-[15px] border border-gray-300 dark:bg-gray-900 outline-gray-300"
                   placeholder={getTranslation(language, 'enterJobTitle')}
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
@@ -576,7 +574,7 @@ function JobDescriptionModal({ onClose ,ongoBack ,onRefresh}) {
                   />
                 </div>
                 <textarea
-                  className="p-2 w-full h-64 text-sm rounded-lg border border-gray-300 dark:bg-gray-900 outline-gray-300"
+                  className="p-2 w-full h-64 text-sm rounded-[15px] border border-gray-300 dark:bg-gray-900 outline-gray-300"
                   placeholder={getTranslation(language, 'pasteJobDescription')}
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}

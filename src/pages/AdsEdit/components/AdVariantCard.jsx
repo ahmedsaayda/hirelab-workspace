@@ -70,7 +70,7 @@ export default function AdVariantCard({
             className="p-1 rounded transition-colors hover:bg-gray-100"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M12 4L4 12M4 4L12 12" stroke="#667085" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M12 4L4 12M4 4L12 12" stroke="#667085" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </button>
         </div>
@@ -157,11 +157,10 @@ export default function AdVariantCard({
                     setEditData(next);
                     emitDraft(next);
                   }}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
-                    active
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${active
                       ? "bg-[#0e87fe] text-white border-[#0e87fe]"
                       : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   {cta}
                 </button>
@@ -216,11 +215,10 @@ export default function AdVariantCard({
                 dragRef.current.dragging = false;
                 dragRef.current.pointerId = null;
               }}
-              className={`relative w-full h-28 rounded-lg overflow-hidden border select-none ${
-                (editData.image || editData.videoUrl)
+              className={`relative w-full h-28 rounded-lg overflow-hidden border select-none ${(editData.image || editData.videoUrl)
                   ? `border-[#e4e7ec] hover:border-[#98a2b3] ${dragRef.current.dragging ? "cursor-grabbing" : "cursor-grab"}`
                   : "border-[#eaecf0] cursor-not-allowed"
-              }`}
+                }`}
               style={{ touchAction: "none" }}
               title={(editData.image || editData.videoUrl) ? "Drag to position" : "Select media first"}
             >
@@ -239,9 +237,8 @@ export default function AdVariantCard({
                         width: "100%",
                         height: "100%",
                         objectFit: editData?.imageAdjustment?.heroImage?.objectFit || "cover",
-                        objectPosition: `${
-                          editData?.imageAdjustment?.heroImage?.objectPosition?.x ?? 50
-                        }% ${editData?.imageAdjustment?.heroImage?.objectPosition?.y ?? 50}%`,
+                        objectPosition: `${editData?.imageAdjustment?.heroImage?.objectPosition?.x ?? 50
+                          }% ${editData?.imageAdjustment?.heroImage?.objectPosition?.y ?? 50}%`,
                         transform: editData?.imageAdjustment?.heroImage?.mirror ? "scaleX(-1)" : "none",
                         pointerEvents: "none",
                       }}
@@ -253,9 +250,8 @@ export default function AdVariantCard({
                       className="w-full h-full"
                       style={{
                         objectFit: editData?.imageAdjustment?.heroImage?.objectFit || "cover",
-                        objectPosition: `${
-                          editData?.imageAdjustment?.heroImage?.objectPosition?.x ?? 50
-                        }% ${editData?.imageAdjustment?.heroImage?.objectPosition?.y ?? 50}%`,
+                        objectPosition: `${editData?.imageAdjustment?.heroImage?.objectPosition?.x ?? 50
+                          }% ${editData?.imageAdjustment?.heroImage?.objectPosition?.y ?? 50}%`,
                         transform: editData?.imageAdjustment?.heroImage?.mirror ? "scaleX(-1)" : "none",
                       }}
                     />
@@ -306,11 +302,10 @@ export default function AdVariantCard({
                     setEditData(next);
                     emitDraft(next);
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                    active
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${active
                       ? "bg-[#0e87fe] text-white border-[#0e87fe]"
                       : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   {fit}
                 </button>
@@ -365,13 +360,12 @@ export default function AdVariantCard({
                 emitDraft(next);
               }}
               disabled={!editData.image || isLikelyVideoUrl(editData.image)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                (!editData.image || isLikelyVideoUrl(editData.image))
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${(!editData.image || isLikelyVideoUrl(editData.image))
                   ? "bg-gray-50 text-[#98a2b3] border-[#eaecf0] cursor-not-allowed"
                   : (editData?.imageAdjustment?.heroImage?.bgRemoved
                     ? "bg-[#101828] text-white border-[#101828]"
                     : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50")
-              }`}
+                }`}
               title={isCloudinaryImageUrl(editData.image) ? "Cloudinary background removal (MVP)" : "Requires Cloudinary image URL"}
             >
               {editData?.imageAdjustment?.heroImage?.bgRemoved ? "Restore BG" : "Remove BG"}
@@ -417,11 +411,10 @@ export default function AdVariantCard({
                 setEditData(next);
                 emitDraft(next);
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                editData?.imageAdjustment?.heroImage?.mirror
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${editData?.imageAdjustment?.heroImage?.mirror
                   ? "bg-[#101828] text-white border-[#101828]"
                   : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
-              }`}
+                }`}
             >
               {editData?.imageAdjustment?.heroImage?.mirror ? "On" : "Off"}
             </button>
@@ -467,7 +460,7 @@ export default function AdVariantCard({
             onSave?.({ ...variant, ...editData });
             onEdit(null);
           }}
-          className="w-full px-4 py-2 bg-[#0e87fe] hover:bg-[#0c76e5] text-white font-semibold text-sm rounded-lg transition-colors"
+          className="w-full px-4 py-2 bg-[#0e87fe] hover:bg-[#0c76e5] text-white font-semibold text-sm rounded-[15px] transition-colors"
         >
           Save Changes
         </button>
@@ -514,11 +507,10 @@ export default function AdVariantCard({
   // Default card view
   return (
     <div
-      className={`relative bg-white rounded-xl p-4 transition-all cursor-pointer ${
-        selected
+      className={`relative bg-white rounded-xl p-4 transition-all cursor-pointer ${selected
           ? "border-2 border-[#0e87fe]"
           : "border border-[#eaecf0]"
-      }`}
+        }`}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -568,14 +560,14 @@ export default function AdVariantCard({
           <h4 className="font-semibold text-base leading-6 text-[#101828]">
             {variant.title}
           </h4>
-        <p className="text-sm leading-5 text-[#475467]">
+          <p className="text-sm leading-5 text-[#475467]">
             {variant.description}
           </p>
-        {variant.linkDescription ? (
-          <p className="text-xs leading-4 text-[#667085] truncate">
-            {variant.linkDescription}
-          </p>
-        ) : null}
+          {variant.linkDescription ? (
+            <p className="text-xs leading-4 text-[#667085] truncate">
+              {variant.linkDescription}
+            </p>
+          ) : null}
         </div>
       </div>
 

@@ -47,37 +47,37 @@ const steps = [
   {
     name: "Create Funnel",
     active: true,
-    href: "/dashboard/vacancies",
+    href: "/dashboard/campaigns",
   },
 ];
 
 const totalSummary = [
-/*   {
-    name: "Awareness",
-    color: "rgba(14, 135, 254, 1)",
-    iconBackground: "#EFF8FF",
-    icon: (
-      <svg
-        width={16}
-        height={17}
-        viewBox="0 0 16 17"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g id="briefcase-01">
-          <path
-            id="Icon"
-            d="M10.6663 4.86686C10.6663 4.24688 10.6663 3.93689 10.5982 3.68256C10.4133 2.99237 9.87416 2.45328 9.18398 2.26834C8.92965 2.2002 8.61966 2.2002 7.99967 2.2002C7.37969 2.2002 7.0697 2.2002 6.81537 2.26834C6.12519 2.45328 5.58609 2.99237 5.40116 3.68256C5.33301 3.93689 5.33301 4.24688 5.33301 4.86686M3.46634 14.2002H12.533C13.2797 14.2002 13.6531 14.2002 13.9383 14.0549C14.1892 13.927 14.3932 13.7231 14.521 13.4722C14.6663 13.187 14.6663 12.8136 14.6663 12.0669V7.0002C14.6663 6.25346 14.6663 5.88009 14.521 5.59487C14.3932 5.34399 14.1892 5.14002 13.9383 5.01219C13.6531 4.86686 13.2797 4.86686 12.533 4.86686H3.46634C2.7196 4.86686 2.34624 4.86686 2.06102 5.01219C1.81014 5.14002 1.60616 5.34399 1.47833 5.59487C1.33301 5.88009 1.33301 6.25346 1.33301 7.0002V12.0669C1.33301 12.8136 1.33301 13.187 1.47833 13.4722C1.60616 13.7231 1.81014 13.927 2.06102 14.0549C2.34624 14.2002 2.7196 14.2002 3.46634 14.2002Z"
-            stroke="#5207CD"
-            strokeWidth="1.33333"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </g>
-      </svg>
-    ),
-    metrics: [{ title: "Reach", value: 25 }],
-  }, */
+  /*   {
+      name: "Awareness",
+      color: "rgba(14, 135, 254, 1)",
+      iconBackground: "#EFF8FF",
+      icon: (
+        <svg
+          width={16}
+          height={17}
+          viewBox="0 0 16 17"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g id="briefcase-01">
+            <path
+              id="Icon"
+              d="M10.6663 4.86686C10.6663 4.24688 10.6663 3.93689 10.5982 3.68256C10.4133 2.99237 9.87416 2.45328 9.18398 2.26834C8.92965 2.2002 8.61966 2.2002 7.99967 2.2002C7.37969 2.2002 7.0697 2.2002 6.81537 2.26834C6.12519 2.45328 5.58609 2.99237 5.40116 3.68256C5.33301 3.93689 5.33301 4.24688 5.33301 4.86686M3.46634 14.2002H12.533C13.2797 14.2002 13.6531 14.2002 13.9383 14.0549C14.1892 13.927 14.3932 13.7231 14.521 13.4722C14.6663 13.187 14.6663 12.8136 14.6663 12.0669V7.0002C14.6663 6.25346 14.6663 5.88009 14.521 5.59487C14.3932 5.34399 14.1892 5.14002 13.9383 5.01219C13.6531 4.86686 13.2797 4.86686 12.533 4.86686H3.46634C2.7196 4.86686 2.34624 4.86686 2.06102 5.01219C1.81014 5.14002 1.60616 5.34399 1.47833 5.59487C1.33301 5.88009 1.33301 6.25346 1.33301 7.0002V12.0669C1.33301 12.8136 1.33301 13.187 1.47833 13.4722C1.60616 13.7231 1.81014 13.927 2.06102 14.0549C2.34624 14.2002 2.7196 14.2002 3.46634 14.2002Z"
+              stroke="#5207CD"
+              strokeWidth="1.33333"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        </svg>
+      ),
+      metrics: [{ title: "Reach", value: 25 }],
+    }, */
   {
     name: "Consideration",
     color: "rgba(247, 86, 86, 1)",
@@ -213,7 +213,7 @@ const Overview = () => {
   });
 
   console.log('analyticsData ', analyticsData);
-  
+
   // Filter states
   const [filterVacancy, setFilterVacancy] = useState('all');
   const [filterTimeFrame, setFilterTimeFrame] = useState('all'); // 'all', '30days', '7days'
@@ -224,7 +224,7 @@ const Overview = () => {
   const getData = async () => {
     try {
       setLoadingVacancy(true);
-      
+
       // Fetch all dashboard data from the backend with server-side filtering
       // Check if user is in workspace session
       const isWorkspaceSession = user?.isWorkspaceSession && user?.workspaceId;
@@ -233,18 +233,18 @@ const Overview = () => {
         filterTimeFrame,
         isWorkspaceSession ? user.workspaceId : null
       );
-      const { 
-        analyticsData, 
-        activeVacancies, 
-        unpublishedVacancies, 
-        availableVacancies 
+      const {
+        analyticsData,
+        activeVacancies,
+        unpublishedVacancies,
+        availableVacancies
       } = response.data;
 
       setShowAllActive(false);
       // Set all the state with the data from backend
       setAnalyticsData(analyticsData);
       setAvailableVacancies(availableVacancies);
-      
+
       // Combine active and unpublished vacancies for the main list
       const allVacancies = [...activeVacancies, ...unpublishedVacancies];
       setLandingPages(allVacancies);
@@ -270,7 +270,7 @@ const Overview = () => {
     } finally {
       setLoadingVacancy(false);
     }
-  
+
 
   }
 
@@ -281,7 +281,7 @@ const Overview = () => {
   const activeVacancies = landingPages.filter((d) => d.published);
   const unpublishedVacancies = landingPages.filter((d) => !d.published);
 
-  
+
   console.log('activeVacancies ', activeVacancies);
   console.log('unpublishedVacancies ', unpublishedVacancies);
 
@@ -332,18 +332,18 @@ const Overview = () => {
       console.error("Error duplicating vacancy from overview:", error);
       antdmessage.error(
         error?.response?.data?.message ||
-          "Failed to duplicate vacancy. Please try again."
+        "Failed to duplicate vacancy. Please try again."
       );
     }
   };
   const handlePublishedClick = () => {
-    router.push('/dashboard/vacancies?status=published');
+    router.push('/dashboard/campaigns?status=published');
   };
-  
+
   const handleUnpublishedClick = () => {
-    router.push('/dashboard/vacancies?status=unpublished');
+    router.push('/dashboard/campaigns?status=unpublished');
   };
-  
+
   return (
     <div className="flex flex-col gap-[24px]">
       <div>
@@ -390,7 +390,7 @@ const Overview = () => {
               </div>
             )}
           </div>
-          
+
           {/* Compact Filter Controls */}
           <div className="flex gap-3 items-center">
             <div className="flex gap-2 items-center">
@@ -410,7 +410,7 @@ const Overview = () => {
                 ))}
               </Select>
             </div>
-            
+
             <div className="flex gap-2 items-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">Period:</span>
               <Select
@@ -431,7 +431,7 @@ const Overview = () => {
           {totalSummary.map((step, i) => {
             // Determine if this card should show "coming soon"
             const isComingSoon = step.name === "Awareness"; // Only Awareness is coming soon now
-            
+
             // Get dynamic values based on card type
             let dynamicValue = step.metrics[0].value;
             if (!isComingSoon) {
@@ -453,8 +453,7 @@ const Overview = () => {
             return (
               <div
                 key={i}
-                className={`bg-white gmx:flex-1 gmx:min-w-[180px] dark:bg-black cursor-default px-[12px] py-[20px] rounded-lg w-auto shadow-lg ${
-                  isComingSoon ? "opacity-60" : ""}`}
+                className={`bg-white gmx:flex-1 gmx:min-w-[180px] dark:bg-black cursor-default px-[12px] py-[20px] rounded-lg w-auto shadow-lg ${isComingSoon ? "opacity-60" : ""}`}
               >
                 <div className="flex flex-col gap-[12px] ">
                   <div
@@ -714,7 +713,7 @@ const Overview = () => {
             ))}
             {loadingVacancy && (
               <>
-                {new Array(3 ).fill(0).map((x, i) => (
+                {new Array(3).fill(0).map((x, i) => (
                   <div
                     key={i}
                     className="flex flex-col items-start w-full gap-4 px-6 py-5 sm:px-5 bg-white-A700 rounded-[12px] min-w-[350px] min-h-[341px]"
@@ -735,7 +734,7 @@ const Overview = () => {
               </Heading>
               <span
                 className="text-blue-400 underline cursor-pointer"
-                onClick={() =>{ 
+                onClick={() => {
                   handleUnpublishedClick()
                   setShowAllUnpublished(true)
                 }}
@@ -756,9 +755,9 @@ const Overview = () => {
 
               />
             ))}
-            { loadingVacancy && (
+            {loadingVacancy && (
               <>
-                {new Array(3 ).fill(0).map((x, i) => (
+                {new Array(3).fill(0).map((x, i) => (
                   <div
                     key={i}
                     className="flex flex-col items-start w-full gap-4 px-6 py-5 sm:px-5 bg-white-A700 rounded-[12px] min-w-[350px] min-h-[241px]"
@@ -789,7 +788,7 @@ const Overview = () => {
           value={newVacancyTitle}
           onChange={(e) => setNewVacancyTitle(e.target.value)}
           className="mt-4 rounded-lg"
-          style={{ borderColor: '#D0D5DD', borderWidth: '1px' }} 
+          style={{ borderColor: '#D0D5DD', borderWidth: '1px' }}
         />
       </Modal>
 

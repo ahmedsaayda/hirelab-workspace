@@ -119,13 +119,13 @@ export const defaultLandingPageData = {
           "visible": true,
           "required": true,
           "label": "First Name",
-          "placeholder": "Enter your first name"
+          "placeholder": "Enter firstname"
         },
         "lastName": {
           "visible": true,
           "required": true,
           "label": "Last Name",
-          "placeholder": "Enter your last name"
+          "placeholder": "Enter lastname"
         },
         "email": {
           "visible": true,
@@ -1118,7 +1118,7 @@ export default function BrandStyleForm() {
   const [isLoadingFonts, setIsLoadingFonts] = useState(false);
   const [fontCategories, setFontCategories] = useState({});
   console.log("fontCategories", fontCategories);
-    const [vacancyLenth, setVacancyLenth] = useState(0)
+  const [vacancyLenth, setVacancyLenth] = useState(0)
   const [fullscreen, setFullscreen] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
@@ -1161,7 +1161,7 @@ export default function BrandStyleForm() {
     setCurrentStep((prev) => Math.min(prev + 1, 3));
   };
 
-  
+
 
   // const handleBack = () => {
   //   if (currentStep === 1) {
@@ -1171,7 +1171,7 @@ export default function BrandStyleForm() {
   //   }
   // };
 
-   const handleBack = () => {
+  const handleBack = () => {
     if (currentStep === 1) {
       setShowModal(true);
     } else {
@@ -1179,7 +1179,7 @@ export default function BrandStyleForm() {
     }
   };
 
-   const handleSkip = async () => {
+  const handleSkip = async () => {
     try {
       setShowModal(false);
       await AuthService.updateMe({
@@ -1196,7 +1196,7 @@ export default function BrandStyleForm() {
       router.push("/dashboard");
     }
   };
-const handleContinue = () => {
+  const handleContinue = () => {
     setShowModal(false);
     // Continue onboarding (stay at step 1 or whatever you want)
     setCurrentStep(1);
@@ -1284,7 +1284,7 @@ const handleContinue = () => {
   };
 
   useEffect(() => {
-    if (user&&!hasLoadedAndSetup) {
+    if (user && !hasLoadedAndSetup) {
       setCompanyName(user.companyName);
       setCompanyUrl(user.companyUrl);
       setCompanyInfo(user.companyInfo);
@@ -1293,7 +1293,7 @@ const handleContinue = () => {
       setPrimaryColor(user.primaryColor || "");
       setSecondaryColor(user.secondaryColor || "");
       setTertiaryColor(user.tertiaryColor || "");
-   
+
       setYiqThreshold(user.yiqThreshold || 128);
 
       // Only set font values if they exist in user data
@@ -1309,7 +1309,7 @@ const handleContinue = () => {
         secondaryColor: user.secondaryColor || "",
         tertiaryColor: user.tertiaryColor || "",
         yiqThreshold: user.yiqThreshold || 128,
-        companyLogo: user.companyLogo ,
+        companyLogo: user.companyLogo,
         selectedFont: user?.selectedFont || { family: "", src: "" },
         titleFont: user?.titleFont || { family: "", src: "" },
         subheaderFont: user?.subheaderFont || { family: "", src: "" },
@@ -1327,35 +1327,35 @@ const handleContinue = () => {
         // dispatch(setTextColors({ heading: user.primaryColor, subHeading: user.primaryColor }));
       }
       setHasLoadedAndSetup(true);
-      }
+    }
   }, [user]);
 
 
-    const fetchAllDataByUser = async () => {
-      try {
-        // setLoading(true);
-        const result = await CrudService.search("LandingPageData", 999999, 1, {
-          text: "",
-          filters: {
-            user_id: user._id,
-          },
-          sort: {},
-        });
-        console.log("resultttt", result.data.items.length);
+  const fetchAllDataByUser = async () => {
+    try {
+      // setLoading(true);
+      const result = await CrudService.search("LandingPageData", 999999, 1, {
+        text: "",
+        filters: {
+          user_id: user._id,
+        },
+        sort: {},
+      });
+      console.log("resultttt", result.data.items.length);
 
-        setVacancyLenth(result.data.items.length)
+      setVacancyLenth(result.data.items.length)
 
-      } catch (error) {
-        console.error("Error fetching vacancies:", error);
+    } catch (error) {
+      console.error("Error fetching vacancies:", error);
 
-      } 
-    };
+    }
+  };
 
-      useEffect(() => {
-        fetchAllDataByUser();
-      },[user])
+  useEffect(() => {
+    fetchAllDataByUser();
+  }, [user])
 
-      console.log("vacancyLenth", vacancyLenth)
+  console.log("vacancyLenth", vacancyLenth)
 
   const handleColorSelect = (color) => {
     setBrandColors((colors) =>
@@ -1402,7 +1402,7 @@ const handleContinue = () => {
       message.error("Please select a tertiary color");
       return false;
     }
-  
+
     if (!selectedFont && !titleFont) {
       message.error("Please upload or select a font for titles (H1)");
       return false;
@@ -1539,9 +1539,9 @@ const handleContinue = () => {
       }, 2000);
 
       console.log("vacancyLenth", vacancyLenth)
-      if (vacancyLenth === 0){
+      if (vacancyLenth === 0) {
         router.push("/dashboard/vacancies?new=true");
-      } else{
+      } else {
         router.push("/dashboard/vacancies");
       }
 
@@ -1639,7 +1639,7 @@ const handleContinue = () => {
         );
         setCompanyName(
           domain.split(".")[0].charAt(0).toUpperCase() +
-            domain.split(".")[0].slice(1)
+          domain.split(".")[0].slice(1)
         );
       }
 
@@ -1679,50 +1679,50 @@ const handleContinue = () => {
     } finally {
       setTimeout(() => {
         setScraping(false);
-        setShowCompanyInfoSkeleton(false); 
-      }, 2000); 
+        setShowCompanyInfoSkeleton(false);
+      }, 2000);
     }
   };
 
- const handleOpenModal = () => {
- setIsModalOpen(true);
- setScraping(true);
- setShowCompanyInfoSkeleton(true); // Show skeleton when scan starts
- handleScrape(companyUrl);
-};
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    setScraping(true);
+    setShowCompanyInfoSkeleton(true); // Show skeleton when scan starts
+    handleScrape(companyUrl);
+  };
 
-const handleCancel = () => {
-  setIsModalOpen(false);
-  setScraping(false);
-};
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    setScraping(false);
+  };
 
-const handleLogoUpload = async (url) => {
-  try {
-    console.log("url", url)
-    // Update local state
-    setCompanyLogo(url);
-    setLandingPageData((prevData) => ({
-      ...prevData,
-      companyLogo: url,
-    }));
+  const handleLogoUpload = async (url) => {
+    try {
+      console.log("url", url)
+      // Update local state
+      setCompanyLogo(url);
+      setLandingPageData((prevData) => ({
+        ...prevData,
+        companyLogo: url,
+      }));
 
-    // Save to backend
-    await AuthService.updateMe({
-      companyLogo: url,
-    });
+      // Save to backend
+      await AuthService.updateMe({
+        companyLogo: url,
+      });
 
-    // Refresh user data in Redux store
-    const me = await AuthService.me();
-    if (me?.data?.me) {
-      store.dispatch(login(me.data.me));
+      // Refresh user data in Redux store
+      const me = await AuthService.me();
+      if (me?.data?.me) {
+        store.dispatch(login(me.data.me));
+      }
+
+      message.success("Logo uploaded successfully.");
+    } catch (error) {
+      console.error("Error saving logo:", error);
+      message.error("Failed to save logo. Please try again.");
     }
-
-    message.success("Logo uploaded successfully.");
-  } catch (error) {
-    console.error("Error saving logo:", error);
-    message.error("Failed to save logo. Please try again.");
-  }
-};
+  };
 
 
   const addNewColor = () => {
@@ -1762,7 +1762,7 @@ const handleLogoUpload = async (url) => {
     // const colorScheme = generateColorScheme(color);
     const colorScheme = generateColorPalette(color);
     setPrimaryColor(colorScheme.primary);
-   
+
 
     setLandingPageData((prevData) => ({
       ...prevData,
@@ -1778,21 +1778,21 @@ const handleLogoUpload = async (url) => {
   // Fetch Google Fonts
   useEffect(() => {
     setIsLoadingFonts(true);
-    
+
     // This is using a proxy to avoid needing an API key. For production, use a proper API key from Google.
     fetch('https://www.googleapis.com/webfonts/v1/webfonts?sort=popularity&key=AIzaSyAOES8EmKhuJEnsn9kS1XKBpxxp-TgN8Jc')
       .then(response => response.json())
       .then(data => {
         // Get the top 100 popular fonts
         const popularFonts = data.items.slice(0, 100);
-        
+
         // Transform the response into the format needed
         const fontList = popularFonts.map(font => ({
           family: font.family,
           src: `https://fonts.googleapis.com/css2?family=${font.family.replace(/ /g, '+')}:wght@400;700&display=swap`,
           category: font.category
         }));
-        
+
         // Group fonts by category
         const categories = {};
         fontList.forEach(font => {
@@ -1801,16 +1801,16 @@ const handleLogoUpload = async (url) => {
           }
           categories[font.category].push(font);
         });
-        
+
         setFontCategories(categories);
         setGoogleFonts(fontList);
-        
+
         // Load web fonts for preview
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = `https://fonts.googleapis.com/css2?${popularFonts.map(f => `family=${f.family.replace(/ /g, '+')}:wght@400;700`).join('&')}&display=swap`;
         document.head.appendChild(link);
-        
+
         // Merge with any existing custom fonts
         setFonts(prev => {
           const customFonts = prev.filter(f => f.family && f.src);
@@ -1829,8 +1829,8 @@ const handleLogoUpload = async (url) => {
     return (
       <div className="relative h-screen  bg-white">
         {/* Floating Back Button */}
-      
-        
+
+
         <div className="w-full h-full ">
           <Preview logo={companyLogo} landingPageData={landingPageData} fullscreen={fullscreen} setFullscreen={setFullscreen} />
         </div>
@@ -1886,7 +1886,7 @@ const handleLogoUpload = async (url) => {
             </Button>
           </div>
         }
-       
+
         className="flex flex-col items-center justify-center  w-[700px] "
       >
         <div className="max-w-[600px] text-center">
@@ -1925,58 +1925,58 @@ const handleLogoUpload = async (url) => {
         }
       `}</style>
       <div className="flex flex-col lg:h-screen min-h-[600px] overflow-hidden bg-white px-4 sm:px-6 md:px-16 w-full py-4 sm:py-6">
-      <div>
-        <Img
+        <div>
+          <Img
             src="/images/img_arrow_right_blue_gray_400.svg"
             alt="arrowright"
             className="h-[24px] w-[24px] top-1 right-0 cursor-pointer"
             onClick={() => setShowModal(true)}
           />
-        <div className="md:flex items-center justify-center w-full hidden">
-         
-          <div className="flex gap-4">
-            {steps.map((step, index) => {
-              const isActive = currentStep === index + 1;
-              return (
-                <div
-                  key={step.title}
-                  onClick={() => setCurrentStep(index + 1)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer group
+          <div className="md:flex items-center justify-center w-full hidden">
+
+            <div className="flex gap-4">
+              {steps.map((step, index) => {
+                const isActive = currentStep === index + 1;
+                return (
+                  <div
+                    key={step.title}
+                    onClick={() => setCurrentStep(index + 1)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer group
                       ${isActive ? "shadow-sm" : ""}
                     `}
-                >
-                  {/* Icon container */}
-                  <span
-                    className={`flex-shrink-0 p-1 rounded-full
+                  >
+                    {/* Icon container */}
+                    <span
+                      className={`flex-shrink-0 p-1 rounded-full
                       ${isActive ? "bg-blue-600 text-white" : "text-gray-400"}
                       group-hover:bg-blue-100 group-hover:text-blue-500
                     `}
-                  >
-                    {step.icon}
-                  </span>
+                    >
+                      {step.icon}
+                    </span>
 
-                  {/* Step title */}
-                  <span
-                    className={`text-sm font-medium
+                    {/* Step title */}
+                    <span
+                      className={`text-sm font-medium
                       ${isActive ? "text-blue-600" : "text-gray-500"}
                       group-hover:text-blue-500
                     `}
-                  >
-                    {step.title}
-                  </span>
+                    >
+                      {step.title}
+                    </span>
 
-                  {/* Completed checkmark */}
-                  {currentStep > index + 1 && (
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  )}
-                </div>
-              );
-            })}
+                    {/* Completed checkmark */}
+                    {currentStep > index + 1 && (
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white flex-1 flex flex-col overflow-hidden">
+        <div className="bg-white flex-1 flex flex-col overflow-hidden">
           {/* Step indicator */}
           <div className="px-6 py-4 border-b border-gray-200 flex md:hidden w-full">
             <div className="w-full">
@@ -1994,11 +1994,10 @@ const handleLogoUpload = async (url) => {
                     >
                       <span
                         className={`flex-shrink-0 p-1 rounded-full
-                            ${
-                              isActive
-                                ? "bg-blue-600 text-white"
-                                : "text-gray-400"
-                            }
+                            ${isActive
+                            ? "bg-blue-600 text-white"
+                            : "text-gray-400"
+                          }
                             group-hover:bg-blue-100 group-hover:text-blue-500
                           `}
                       >
@@ -2024,102 +2023,102 @@ const handleLogoUpload = async (url) => {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6 py-4 lg:py-6 xl:py-8 h-full">
-              {/* Left Column - Form Steps */}
-              <div className="space-y-6 w-full lg:w-[35%] xl:w-[35%]">
-                {/* Step 1 Content (Company Info) */}
-                {currentStep === 3 && (
-                  <div className="space-y-4">
-                    {/* Step 1 Content (Company Info) */}
-                    <div>
-                      <Typography.Text className="mb-1.5 block text-sm text-gray-700">
-                        Company Name
-                      </Typography.Text>
-                      <Input
-                        value={companyName}
-                        onChange={(e) => {
-                          setCompanyName(e.target.value?.slice?.(0,100))
-                        }}
-                        placeholder="Enter the name"
-                        className="rounded-md border-gray-300"
-                        suffix={
-                          <span className="text-sm text-gray-400">{companyName?.length}/100</span>
+            {/* Left Column - Form Steps */}
+            <div className="space-y-6 w-full lg:w-[35%] xl:w-[35%]">
+              {/* Step 1 Content (Company Info) */}
+              {currentStep === 3 && (
+                <div className="space-y-4">
+                  {/* Step 1 Content (Company Info) */}
+                  <div>
+                    <Typography.Text className="mb-1.5 block text-sm text-gray-700">
+                      Company Name
+                    </Typography.Text>
+                    <Input
+                      value={companyName}
+                      onChange={(e) => {
+                        setCompanyName(e.target.value?.slice?.(0, 100))
+                      }}
+                      placeholder="Enter the name"
+                      className="rounded-md border-gray-300"
+                      suffix={
+                        <span className="text-sm text-gray-400">{companyName?.length}/100</span>
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Typography.Text className="mb-1.5 block text-sm text-gray-00">
+                      Company URL
+                    </Typography.Text>
+                    <Input
+                      value={companyUrl}
+                      onChange={(e) => {
+                        let value = e.target.value;
+                        // Remove https:// if user pastes it
+                        if (value.startsWith('https://')) {
+                          value = value.substring(8);
+                        } else if (value.startsWith('http://')) {
+                          value = value.substring(7);
                         }
-                      />
-                    </div>
-                    <div>
-                      <Typography.Text className="mb-1.5 block text-sm text-gray-00">
-                        Company URL
-                      </Typography.Text>
-                      <Input
-                        value={companyUrl}
-                        onChange={(e) => {
-                          let value = e.target.value;
-                          // Remove https:// if user pastes it
-                          if (value.startsWith('https://')) {
-                            value = value.substring(8);
-                          } else if (value.startsWith('http://')) {
-                            value = value.substring(7);
-                          }
-                          setCompanyUrl(value);
-                        }}
-                        addonBefore="https://"
-                        placeholder="www.company.com"
-                        className="rounded-md custom-container"
-                      />
-                      <Button
-                        type="primary"
-                        onClick={handleOpenModal}
-                        className="mt-3 border-gray-300 "
-                      
-                      >
-                       Scan Website.
-                        <WandSparkles size={16} />
-                      </Button>
+                        setCompanyUrl(value);
+                      }}
+                      addonBefore="https://"
+                      placeholder="www.company.com"
+                      className="rounded-md custom-container"
+                    />
+                    <Button
+                      type="primary"
+                      onClick={handleOpenModal}
+                      className="mt-3 border-gray-300 "
 
-                      {isModalOpen && (
+                    >
+                      Scan Website.
+                      <WandSparkles size={16} />
+                    </Button>
+
+                    {isModalOpen && (
+                      <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1,
+                      }}>
                         <div style={{
-                          position: 'fixed',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          height: '100%',
-                          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          zIndex: 1,
+                          backgroundColor: '#fff',
+                          padding: '20px',
+                          borderRadius: '10px',
+                          boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+                          width: '500px',
+                          maxWidth: '90%',
+                          zIndex: 2,
                         }}>
-                          <div style={{
-                            backgroundColor: '#fff',
-                            padding: '20px',
-                            borderRadius: '10px',
-                            boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
-                            width: '500px',
-                            maxWidth: '90%',
-                            zIndex: 2,
-                          }}>
-                            <ScrapingModal
-                              isOpen={isModalOpen}
-                              onCancel={handleCancel}
-                              messages={messages}
-                              progress={progress}
-                            />
-                            {/* {progress === 100 && handleCancel()}                         */}
-                          </div>
+                          <ScrapingModal
+                            isOpen={isModalOpen}
+                            onCancel={handleCancel}
+                            messages={messages}
+                            progress={progress}
+                          />
+                          {/* {progress === 100 && handleCancel()}                         */}
                         </div>
-                      )}
-                    </div>
-                    <div>
-                    
-                      {showCompanyInfoSkeleton ? (
-                    <div style={{ padding: '12px 0' }}>
-                      <Skeleton active paragraph={{ rows: 4 }} />
-                    </div>
-                      ):!showCompanyInfoSkeleton&&!!companyInfo?  (
-                        <>
-                          <Typography.Text className="mb-1.5 block text-sm text-gray-700">
-                        Company Information
-                      </Typography.Text>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+
+                    {showCompanyInfoSkeleton ? (
+                      <div style={{ padding: '12px 0' }}>
+                        <Skeleton active paragraph={{ rows: 4 }} />
+                      </div>
+                    ) : !showCompanyInfoSkeleton && !!companyInfo ? (
+                      <>
+                        <Typography.Text className="mb-1.5 block text-sm text-gray-700">
+                          Company Information
+                        </Typography.Text>
                         <TextArea
                           readOnly
                           value={companyInfo}
@@ -2139,22 +2138,22 @@ const handleLogoUpload = async (url) => {
                           showCount={{
                             formatter: () => `${countWords(companyInfo)}/200 words`,
                           }}
-                          />
-                          </>
-                      ):null}
-                    </div>
-                    {/* ... other step 1 fields ... */}
+                        />
+                      </>
+                    ) : null}
                   </div>
-                )}
-                {/* Step 2 Content (Brand Assets) */}
-                {currentStep === 1 && (
-                  <div className="space-y-4">
-                    {/* Step 2 Content (Brand Assets) */}
-                    <Typography.Text className="mb-1.5 block text-sm text-gray-700">
-                      Upload your logo. Horizontally oriented logos display best. We recommend avoiding logos with too much white space.
-                    </Typography.Text>
-                    <div>
-                      {/* <Upload.Dragger
+                  {/* ... other step 1 fields ... */}
+                </div>
+              )}
+              {/* Step 2 Content (Brand Assets) */}
+              {currentStep === 1 && (
+                <div className="space-y-4">
+                  {/* Step 2 Content (Brand Assets) */}
+                  <Typography.Text className="mb-1.5 block text-sm text-gray-700">
+                    Upload your logo. Horizontally oriented logos display best. We recommend avoiding logos with too much white space.
+                  </Typography.Text>
+                  <div>
+                    {/* <Upload.Dragger
                         className="bg-white rounded-md border-gray-300 border-dashed"
                         accept=".svg,.png,.jpg,.gif,.webp"
                         maxCount={1}
@@ -2182,217 +2181,213 @@ const handleLogoUpload = async (url) => {
                           </>
                         )}
                       </Upload.Dragger> */}
-                      <ImageUploader
-                        maxFiles={1}
-                        multiple={false}
-                        defaultImage={companyLogo}
-                        imageAdjustments={{}}
-                        fieldKey="companyLogo"
-                        onImageUpload={handleLogoUpload}
-                        isSettingDisabled={false}
-                        type="image"
-                        accept="image/*"
-                        isLogo={true}
-                        currentSectionLimits={{
-                          images: 1,
-                          videos: 0,
-                          mediaType: "image",
-                        }}
-                        allowedTabs={["image"]}
-                        onImageAdjustmentChange={(fieldKey, adjustments) => {
-                          // You can handle image adjustments here if needed
-                        }}
-                      />
-                    </div>
-
+                    <ImageUploader
+                      maxFiles={1}
+                      multiple={false}
+                      defaultImage={companyLogo}
+                      imageAdjustments={{}}
+                      fieldKey="companyLogo"
+                      onImageUpload={handleLogoUpload}
+                      isSettingDisabled={false}
+                      type="image"
+                      accept="image/*"
+                      isLogo={true}
+                      currentSectionLimits={{
+                        images: 1,
+                        videos: 0,
+                        mediaType: "image",
+                      }}
+                      allowedTabs={["image"]}
+                      onImageAdjustmentChange={(fieldKey, adjustments) => {
+                        // You can handle image adjustments here if needed
+                      }}
+                    />
                   </div>
-                )}
-                {/* Step 3 Content (Style Guide) */}
-                {currentStep === 2 && (
-                  <div className="space-y-4">
-                    {/* Step 3 Content (Style Guide) */}
-                    <div>
-                      <Typography.Text strong className="mb-1.5 block text-md text-gray-700">
-                        Text Style
-                      </Typography.Text>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3  lg:grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
-                        {/* Title Font Card */}
-                        <div
-                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                            selectedFontStyle === "h1"
-                              ? "border-blue-600"
-                              : "border-gray-200 hover:border-blue-300"
-                          }`}
-                          onClick={() => setSelectedFontStyle("h1")}
-                        >
-                          <div className="flex items-start gap-2">
-                            <Radio
-                              checked={selectedFontStyle === "h1"}
-                              className="mr-2 mt-0.5"
-                            />
-                            <div>
-                              <Typography.Text strong className="text-gray-700">
-                                Title Style
-                              </Typography.Text>
-                              <Typography.Text className="block text-xs text-gray-500">
-                                {titleFont ? titleFont : "No font selected"}
-                              </Typography.Text>
-                            </div>
-                          </div>
-                        </div>
+                </div>
+              )}
+              {/* Step 3 Content (Style Guide) */}
+              {currentStep === 2 && (
+                <div className="space-y-4">
+                  {/* Step 3 Content (Style Guide) */}
+                  <div>
+                    <Typography.Text strong className="mb-1.5 block text-md text-gray-700">
+                      Text Style
+                    </Typography.Text>
 
-                        {/* Subheader Font Card */}
-                        <div
-                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                            selectedFontStyle === "h2"
-                              ? "border-blue-600"
-                              : "border-gray-200 hover:border-blue-300"
+                    <div className="grid grid-cols-1 sm:grid-cols-3  lg:grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
+                      {/* Title Font Card */}
+                      <div
+                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${selectedFontStyle === "h1"
+                          ? "border-blue-600"
+                          : "border-gray-200 hover:border-blue-300"
                           }`}
-                          onClick={() => setSelectedFontStyle("h2")}
-                        >
-                          <div className="flex items-start gap-2">
-                            <Radio
-                              checked={selectedFontStyle === "h2"}
-                              className="mt-0.5"
-                            />
-                            <div>
-                              <Typography.Text strong className="text-gray-700">
-                                H2, H3 Style
-                              </Typography.Text>
-                              <Typography.Text className="block text-xs text-gray-500">
-                                {subheaderFont ? subheaderFont : "No font selected"}
-                              </Typography.Text>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Body Font Card */}
-                        <div
-                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                            selectedFontStyle === "h3"
-                              ? "border-blue-600"
-                              : "border-gray-200 hover:border-blue-300"
-                          }`}
-                          onClick={() => setSelectedFontStyle("h3")}
-                        >
-                          <div className="flex items-start gap-2">
-                            <Radio
-                              checked={selectedFontStyle === "h3"}
-                              className="mt-0.5"
-                            />
-                            <div>
-                              <Typography.Text strong className="text-gray-700">
-                                Body Style
-                              </Typography.Text>
-                              <Typography.Text className="block text-xs text-gray-500">
-                                {bodyFont ? bodyFont : "No font selected"}
-                              </Typography.Text>
-                            </div>
+                        onClick={() => setSelectedFontStyle("h1")}
+                      >
+                        <div className="flex items-start gap-2">
+                          <Radio
+                            checked={selectedFontStyle === "h1"}
+                            className="mr-2 mt-0.5"
+                          />
+                          <div>
+                            <Typography.Text strong className="text-gray-700">
+                              Title Style
+                            </Typography.Text>
+                            <Typography.Text className="block text-xs text-gray-500">
+                              {titleFont ? titleFont : "No font selected"}
+                            </Typography.Text>
                           </div>
                         </div>
                       </div>
 
-                      {/* Font Selection Dropdown */}
-                      <div className="mb-6">
-                        {isLoadingFonts ? (
-                          <div className="flex justify-center items-center py-4">
-                            <Spin size="small" />
-                            <span className="ml-2 text-sm text-gray-500">Loading fonts...</span>
-                          </div>
-                        ) : (
+                      {/* Subheader Font Card */}
+                      <div
+                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${selectedFontStyle === "h2"
+                          ? "border-blue-600"
+                          : "border-gray-200 hover:border-blue-300"
+                          }`}
+                        onClick={() => setSelectedFontStyle("h2")}
+                      >
+                        <div className="flex items-start gap-2">
+                          <Radio
+                            checked={selectedFontStyle === "h2"}
+                            className="mt-0.5"
+                          />
                           <div>
-                            <div className="flex mb-2">
-                              <Typography.Text strong className="text-md text-gray-700">
-                                Select a font for {selectedFontStyle === "h1" ? "titles" : 
-                                                  selectedFontStyle === "h2" ? "subheaders" : "body text"}
-                              </Typography.Text>
-                            </div>
-                            
-                            <Select
-                              showSearch
-                              value={
-                                selectedFontStyle === "h1"
-                                  ? titleFont
-                                  : selectedFontStyle === "h2"
+                            <Typography.Text strong className="text-gray-700">
+                              H2, H3 Style
+                            </Typography.Text>
+                            <Typography.Text className="block text-xs text-gray-500">
+                              {subheaderFont ? subheaderFont : "No font selected"}
+                            </Typography.Text>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Body Font Card */}
+                      <div
+                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${selectedFontStyle === "h3"
+                          ? "border-blue-600"
+                          : "border-gray-200 hover:border-blue-300"
+                          }`}
+                        onClick={() => setSelectedFontStyle("h3")}
+                      >
+                        <div className="flex items-start gap-2">
+                          <Radio
+                            checked={selectedFontStyle === "h3"}
+                            className="mt-0.5"
+                          />
+                          <div>
+                            <Typography.Text strong className="text-gray-700">
+                              Body Style
+                            </Typography.Text>
+                            <Typography.Text className="block text-xs text-gray-500">
+                              {bodyFont ? bodyFont : "No font selected"}
+                            </Typography.Text>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Font Selection Dropdown */}
+                    <div className="mb-6">
+                      {isLoadingFonts ? (
+                        <div className="flex justify-center items-center py-4">
+                          <Spin size="small" />
+                          <span className="ml-2 text-sm text-gray-500">Loading fonts...</span>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="flex mb-2">
+                            <Typography.Text strong className="text-md text-gray-700">
+                              Select a font for {selectedFontStyle === "h1" ? "titles" :
+                                selectedFontStyle === "h2" ? "subheaders" : "body text"}
+                            </Typography.Text>
+                          </div>
+
+                          <Select
+                            showSearch
+                            value={
+                              selectedFontStyle === "h1"
+                                ? titleFont
+                                : selectedFontStyle === "h2"
                                   ? subheaderFont
                                   : bodyFont
+                            }
+                            onChange={(value) => {
+                              const selectedFont = googleFonts.find(f => f.family === value) ||
+                                fonts.find(f => f.family === value);
+
+                              if (selectedFontStyle === "h1") {
+                                setTitleFont(value);
+                                setSelectedFont(value);
+                                setLandingPageData((prevData) => ({
+                                  ...prevData,
+                                  titleFont: {
+                                    family: value,
+                                    src: selectedFont?.src || "",
+                                  },
+                                  selectedFont: {
+                                    family: value,
+                                    src: selectedFont?.src || "",
+                                  },
+                                }));
+                              } else if (selectedFontStyle === "h2") {
+                                setSubheaderFont(value);
+                                setLandingPageData((prevData) => ({
+                                  ...prevData,
+                                  subheaderFont: {
+                                    family: value,
+                                    src: selectedFont?.src || "",
+                                  },
+                                }));
+                              } else {
+                                setBodyFont(value);
+                                setLandingPageData((prevData) => ({
+                                  ...prevData,
+                                  bodyFont: {
+                                    family: value,
+                                    src: selectedFont?.src || "",
+                                  },
+                                }));
                               }
-                              onChange={(value) => {
-                                const selectedFont = googleFonts.find(f => f.family === value) || 
-                                                    fonts.find(f => f.family === value);
-                                                    
-                                if (selectedFontStyle === "h1") {
-                                  setTitleFont(value);
-                                  setSelectedFont(value);
-                                  setLandingPageData((prevData) => ({
-                                    ...prevData,
-                                    titleFont: {
-                                      family: value,
-                                      src: selectedFont?.src || "",
-                                    },
-                                    selectedFont: {
-                                      family: value,
-                                      src: selectedFont?.src || "",
-                                    },
-                                  }));
-                                } else if (selectedFontStyle === "h2") {
-                                  setSubheaderFont(value);
-                                  setLandingPageData((prevData) => ({
-                                    ...prevData,
-                                    subheaderFont: {
-                                      family: value,
-                                      src: selectedFont?.src || "",
-                                    },
-                                  }));
-                                } else {
-                                  setBodyFont(value);
-                                  setLandingPageData((prevData) => ({
-                                    ...prevData,
-                                    bodyFont: {
-                                      family: value,
-                                      src: selectedFont?.src || "",
-                                    },
-                                  }));
-                                }
-                              }}
-                              className="w-full"
-                              placeholder={`Select a font for ${
-                                selectedFontStyle === "h1"
-                                  ? "titles"
-                                  : selectedFontStyle === "h2"
-                                  ? "subheaders"
-                                  : "body text"
+                            }}
+                            className="w-full"
+                            placeholder={`Select a font for ${selectedFontStyle === "h1"
+                              ? "titles"
+                              : selectedFontStyle === "h2"
+                                ? "subheaders"
+                                : "body text"
                               }`}
-                              optionLabelProp="label"
-                              optionFilterProp="children"
-                              filterOption={(input, option) =>
-                                (option?.label)
-                                  .toLowerCase()
-                                  .includes(input.toLowerCase())
-                              }
-                            >
-                              {Object.keys(fontCategories).map(category => (
-                                <Select.OptGroup key={category} label={category.charAt(0).toUpperCase() + category.slice(1)}>
-                                  {fontCategories[category].map(font => (
-                                    <Select.Option 
-                                      key={font.family} 
-                                      value={font.family}
-                                      label={font.family}
-                                    >
-                                      <div style={{ fontFamily: font.family }}>
-                                        {font.family}
-                                      </div>
-                                    </Select.Option>
-                                  ))}
-                                </Select.OptGroup>
-                              ))}
-                              
-                              {fonts.filter((f) => 
-                                !googleFonts.some((gf) => gf.family === f.family)).length > 0 && (
+                            optionLabelProp="label"
+                            optionFilterProp="children"
+                            filterOption={(input, option) =>
+                              (option?.label)
+                                .toLowerCase()
+                                .includes(input.toLowerCase())
+                            }
+                          >
+                            {Object.keys(fontCategories).map(category => (
+                              <Select.OptGroup key={category} label={category.charAt(0).toUpperCase() + category.slice(1)}>
+                                {fontCategories[category].map(font => (
+                                  <Select.Option
+                                    key={font.family}
+                                    value={font.family}
+                                    label={font.family}
+                                  >
+                                    <div style={{ fontFamily: font.family }}>
+                                      {font.family}
+                                    </div>
+                                  </Select.Option>
+                                ))}
+                              </Select.OptGroup>
+                            ))}
+
+                            {fonts.filter((f) =>
+                              !googleFonts.some((gf) => gf.family === f.family)).length > 0 && (
                                 <Select.OptGroup label="Custom Fonts">
                                   {fonts
-                                    .filter((f) => 
+                                    .filter((f) =>
                                       !googleFonts.some((gf) => gf.family === f.family))
                                     .map((font) => (
                                       <Select.Option key={font.family} value={font.family} label={font.family}>
@@ -2401,89 +2396,89 @@ const handleLogoUpload = async (url) => {
                                     ))}
                                 </Select.OptGroup>
                               )}
-                            </Select>
-                          </div>
-                        )}
+                          </Select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="py-4 space-y-4">
+                    <div></div>
+                  </div>
+
+                  <div className="">
+                    <Typography.Text strong className="mb-2 block text-md text-gray-700">
+                      Color Palette
+                    </Typography.Text>
+                    <div className="flex flex-wrap gap-4 justify-start items-start">
+                      {/* Main color section */}
+
+                      <div className="flex gap-2 justify-center items-center">
+                        <ColorPickerButton
+                          label="Main"
+                          color={primaryColor}
+                          setColor={(color) => {
+                            console.log("color", color);
+                            handlePrimaryColorChange(color);
+                          }}
+                        />
+                        <div>
+                          <Typography.Text className="block text-sm text-gray-700">
+                            Primary Color
+                          </Typography.Text>
+                          <Typography.Text className="block text-sm text-gray-700">
+                            {primaryColor}
+                          </Typography.Text>
+                        </div>
+                      </div>
+                      {/* Secondary color section - manually editable */}
+                      <div className="flex gap-2 justify-center items-center">
+                        <ColorPickerButton
+                          label="Secondary"
+                          color={secondaryColor}
+                          setColor={(color) => {
+                            setSecondaryColor(color);
+                            setLandingPageData((prevData) => ({
+                              ...prevData,
+                              secondaryColor: color,
+                            }));
+                          }}
+                        />
+                        <div>
+                          <Typography.Text className="block text-sm text-gray-700">
+                            Secondary Color
+                          </Typography.Text>
+                          <Typography.Text className="block text-sm text-gray-700">
+                            {secondaryColor}
+                          </Typography.Text>
+                        </div>
+                      </div>
+                      {/* Tertiary color section - manually editable */}
+                      <div className="flex gap-2 justify-center items-center">
+                        <ColorPickerButton
+                          label="Tertiary"
+                          color={tertiaryColor}
+                          setColor={(color) => {
+                            setTertiaryColor(color);
+                            setLandingPageData((prevData) => ({
+                              ...prevData,
+                              tertiaryColor: color,
+                            }));
+                          }}
+                        />
+                        <div>
+                          <Typography.Text className="block text-sm text-gray-700">
+                            Tertiary Color
+                          </Typography.Text>
+                          <Typography.Text className="block text-sm text-gray-700">
+                            {tertiaryColor}
+                          </Typography.Text>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="py-4 space-y-4">
-                      <div></div>
-                    </div>
-
-                    <div className="">
-                      <Typography.Text strong className="mb-2 block text-md text-gray-700">
-                        Color Palette 
-                      </Typography.Text>
-                      <div className="flex flex-wrap gap-4 justify-start items-start">
-                        {/* Main color section */}
-                        
-                        <div className="flex gap-2 justify-center items-center">
-                          <ColorPickerButton
-                            label="Main"
-                            color={primaryColor}
-                            setColor={(color) => {
-                              console.log("color", color);
-                              handlePrimaryColorChange(color);
-                            }}
-                          />
-                          <div>
-                            <Typography.Text className="block text-sm text-gray-700">
-                              Primary Color
-                            </Typography.Text>
-                            <Typography.Text className="block text-sm text-gray-700">
-                              {primaryColor}
-                            </Typography.Text>
-                          </div>
-                        </div>
-                        {/* Secondary color section - manually editable */}
-                        <div className="flex gap-2 justify-center items-center">
-                          <ColorPickerButton
-                            label="Secondary"
-                            color={secondaryColor}
-                            setColor={(color) => {
-                              setSecondaryColor(color);
-                              setLandingPageData((prevData) => ({
-                                ...prevData,
-                                secondaryColor: color,
-                              }));
-                            }}
-                          />
-                          <div>
-                            <Typography.Text className="block text-sm text-gray-700">
-                              Secondary Color
-                            </Typography.Text>
-                            <Typography.Text className="block text-sm text-gray-700">
-                              {secondaryColor}
-                            </Typography.Text>
-                          </div>
-                        </div>
-                        {/* Tertiary color section - manually editable */}
-                        <div className="flex gap-2 justify-center items-center">
-                          <ColorPickerButton
-                            label="Tertiary"
-                            color={tertiaryColor}
-                            setColor={(color) => {
-                              setTertiaryColor(color);
-                              setLandingPageData((prevData) => ({
-                                ...prevData,
-                                tertiaryColor: color,
-                              }));
-                            }}
-                          />
-                          <div>
-                            <Typography.Text className="block text-sm text-gray-700">
-                              Tertiary Color
-                            </Typography.Text>
-                            <Typography.Text className="block text-sm text-gray-700">
-                              {tertiaryColor}
-                            </Typography.Text>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* YIQ Threshold Controller */}
-                      {/* <div className="mt-6">
+                    {/* YIQ Threshold Controller */}
+                    {/* <div className="mt-6">
                         <Typography.Text strong className="mb-2 block text-md text-gray-700">
                           Text Contrast Sensitivity
                         </Typography.Text>
@@ -2531,92 +2526,92 @@ const handleLogoUpload = async (url) => {
                           Controls when text switches from white to black on colored backgrounds
                         </Typography.Text>
                       </div> */}
-                    </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Navigation Buttons */}
-                <div className="flex gap-6 justify-between pt-6 border-t border-gray-200">
+              {/* Navigation Buttons */}
+              <div className="flex gap-6 justify-between pt-6 border-t border-gray-200">
+                <Button
+                  type="text"
+                  className="w-1/2 text-gray-700 border-gray-300"
+                  onClick={handleBack}
+                >
+                  {currentStep === 1 ? "Back to Dashboard" : "Back"}
+                </Button>
+                {/* Popup Modal */}
+                <Modal
+                  title="Complete Onboarding"
+                  className="justify-center"
+                  visible={showModal}
+                  onCancel={() => setShowModal(false)}
+                  footer={
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                      <Button
+                        key="continue"
+                        type="primary"
+                        onClick={handleContinue}
+                      >
+                        Continue
+                      </Button>
+                      <Button
+                        key="Exit"
+                        onClick={handleSkip}
+                        className="bg-white border border-gray-300 text-gray-700 hover:bg-red-300"
+                      >
+                        Exit
+                      </Button>
+                    </div>
+                  }
+
+                >
+                  <p>Please Complete Onboarding Steps first.</p>
+                </Modal>
+
+                {currentStep < 3 ? (
                   <Button
-                    type="text"
-                    className="w-1/2 text-gray-700 border-gray-300"
-                    onClick={handleBack}
+                    type={currentStep === 1 && !companyLogo ? "default" : "primary"}
+                    className={
+                      currentStep === 1 && !companyLogo
+                        ? 'w-1/2 !bg-gray-300 !border-gray-300 !text-gray-500 cursor-not-allowed hover:!bg-gray-300 hover:!border-gray-300 hover:!text-gray-500'
+                        : 'w-1/2 custom-button'
+                    }
+                    disabled={currentStep === 1 && !companyLogo}
+                    onClick={handleNext}
                   >
-                    {currentStep === 1 ? "Back to Dashboard" : "Back"}
+                    Next Step
                   </Button>
-                  {/* Popup Modal */}
-                  <Modal
-                    title="Complete Onboarding"
-                    className="justify-center"
-                    visible={showModal}
-                    onCancel={() => setShowModal(false)}
-                    footer={
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                        <Button
-                          key="continue"
-                          type="primary"
-                          onClick={handleContinue}
-                        >
-                          Continue
-                        </Button>
-                        <Button
-                          key="Exit"
-                          onClick={handleSkip}
-                          className="bg-white border border-gray-300 text-gray-700 hover:bg-red-300"
-                        >
-                          Exit
-                        </Button>
-                      </div>
-                    }                       
-
+                ) : (
+                  <Button
+                    type={!companyName?.trim() || !companyUrl?.trim() ? "default" : "primary"}
+                    className={
+                      !companyName?.trim() || !companyUrl?.trim()
+                        ? 'w-1/2 !bg-gray-300 !border-gray-300 !text-gray-500 cursor-not-allowed hover:!bg-gray-300 hover:!border-gray-300 hover:!text-gray-500'
+                        : 'w-1/2 custom-button'
+                    }
+                    disabled={!companyName?.trim() || !companyUrl?.trim()}
+                    onClick={() => {
+                      handleSaveAndNext();
+                    }}
                   >
-                    <p>Please Complete Onboarding Steps first.</p>
-                  </Modal>
+                    Save & Publish
+                  </Button>
+                )}
+              </div>
+            </div>
 
-                                    {currentStep < 3 ? (
-                    <Button
-                      type={currentStep === 1 && !companyLogo ? "default" : "primary"}
-                      className={
-                        currentStep === 1 && !companyLogo 
-                          ? 'w-1/2 !bg-gray-300 !border-gray-300 !text-gray-500 cursor-not-allowed hover:!bg-gray-300 hover:!border-gray-300 hover:!text-gray-500' 
-                          : 'w-1/2 custom-button'
-                      }
-                      disabled={currentStep === 1 && !companyLogo}
-                      onClick={handleNext}
-                    >
-                      Next Step
-                    </Button>
-                  ) : (
-                    <Button
-                      type={!companyName?.trim() || !companyUrl?.trim() ? "default" : "primary"}
-                      className={
-                        !companyName?.trim() || !companyUrl?.trim() 
-                          ? 'w-1/2 !bg-gray-300 !border-gray-300 !text-gray-500 cursor-not-allowed hover:!bg-gray-300 hover:!border-gray-300 hover:!text-gray-500' 
-                          : 'w-1/2 custom-button'
-                      }
-                      disabled={!companyName?.trim() || !companyUrl?.trim()}
-                      onClick={() => {
-                        handleSaveAndNext();
-                      }}
-                    >
-                      Save & Publish
-                    </Button>
-                  )}
+
+            {currentStep >= 1 && currentStep <= 3 && (
+              <div className="w-full lg:w-[65%] xl:w-[65%] flex justify-center">
+                <div className="w-full max-w-[1600px] h-[550px] sm:h-[650px] md:h-[750px] lg:h-[calc(100vh-150px)]  min-h-[550px] max-h-[1100px] overflow-visible text-sm text-center text-gray-400 border border-blue-600 rounded-lg onboarding-preview-container">
+                  <Preview logo={companyLogo} landingPageData={landingPageData} fullscreen={fullscreen} setFullscreen={setFullscreen} />
                 </div>
               </div>
+            )}
 
-       
-              {currentStep >= 1 && currentStep <= 3 && (
-                  <div className="w-full lg:w-[65%] xl:w-[65%] flex justify-center">
-                    <div className="w-full max-w-[1600px] h-[550px] sm:h-[650px] md:h-[750px] lg:h-[calc(100vh-150px)]  min-h-[550px] max-h-[1100px] overflow-visible text-sm text-center text-gray-400 border border-blue-600 rounded-lg onboarding-preview-container">
-                      <Preview logo={companyLogo} landingPageData={landingPageData} fullscreen={fullscreen} setFullscreen={setFullscreen} />
-                    </div>
-                  </div>
-              )}
-                    
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
 }
@@ -2676,36 +2671,36 @@ const Preview = ({ logo, landingPageData, fullscreen, setFullscreen }) => {
   }, [landingPageData]);
 
   return (
-      <PreviewContainer
-        landingPageData={landingPageData}
-        fullscreen={fullscreen}
-        setFullscreen={setFullscreen}
-        pageComponent={
-          <div className=" w-full h-full">
-            <NavBar landingPageData={landingPageData} showBackToEditButton={false} onClickApply={() => {}} fullscreen={fullscreen} setFullscreen={setFullscreen} isEdit={true} />
-              <div style={{
-                paddingTop:fullscreen ? 10 : 0,
-              }}>
+    <PreviewContainer
+      landingPageData={landingPageData}
+      fullscreen={fullscreen}
+      setFullscreen={setFullscreen}
+      pageComponent={
+        <div className=" w-full h-full">
+          <NavBar landingPageData={landingPageData} showBackToEditButton={false} onClickApply={() => { }} fullscreen={fullscreen} setFullscreen={setFullscreen} isEdit={true} />
+          <div style={{
+            paddingTop: fullscreen ? 10 : 0,
+          }}>
 
-                     <HeroSection landingPageData={landingPageData} />
-              </div>
-            {(landingPageData?.menuItems ?? [])?.map((section, index) => {
-              return (
-                <div key={index}>
-                  {renderSection({
-                    section,
-                    landingPageData: landingPageData,
-                    fetchData: () => {},
-                    setLandingPageData: () => {},
-                  })}
-                </div>
-              );
-            })}
-            <Footer landingPageData={landingPageData} fetchData={() => {}} />
+            <HeroSection landingPageData={landingPageData} />
           </div>
-        }
-        // height={700}
-      />
-    
+          {(landingPageData?.menuItems ?? [])?.map((section, index) => {
+            return (
+              <div key={index}>
+                {renderSection({
+                  section,
+                  landingPageData: landingPageData,
+                  fetchData: () => { },
+                  setLandingPageData: () => { },
+                })}
+              </div>
+            );
+          })}
+          <Footer landingPageData={landingPageData} fetchData={() => { }} />
+        </div>
+      }
+    // height={700}
+    />
+
   );
 };

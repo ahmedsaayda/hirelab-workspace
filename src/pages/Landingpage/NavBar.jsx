@@ -416,13 +416,13 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
                 visible: true, 
                 required: true,
                 label: getTranslation(landingPageData?.lang, 'firstName') || 'First Name',
-                placeholder: getTranslation(landingPageData?.lang, 'firstNamePlaceholder') || 'Enter your first name'
+                placeholder: getTranslation(landingPageData?.lang, 'firstNamePlaceholder') || 'Enter firstname'
               },
               lastName: { 
                 visible: true, 
                 required: true,
                 label: getTranslation(landingPageData?.lang, 'lastName') || 'Last Name',
-                placeholder: getTranslation(landingPageData?.lang, 'lastNamePlaceholder') || 'Enter your last name'
+                placeholder: getTranslation(landingPageData?.lang, 'lastNamePlaceholder') || 'Enter lastname'
               },
               email: { 
                 visible: true, 
@@ -453,12 +453,12 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
               firstName: {
                 ...contactField.firstName,
                 label: getTranslation(landingPageData?.lang, 'firstName') || contactField.firstName?.label || 'First Name',
-                placeholder: getTranslation(landingPageData?.lang, 'firstNamePlaceholder') || contactField.firstName?.placeholder || 'Enter your first name'
+                placeholder: getTranslation(landingPageData?.lang, 'firstNamePlaceholder') || contactField.firstName?.placeholder || 'Enter firstname'
               },
               lastName: {
                 ...contactField.lastName,
                 label: getTranslation(landingPageData?.lang, 'lastName') || contactField.lastName?.label || 'Last Name',
-                placeholder: getTranslation(landingPageData?.lang, 'lastNamePlaceholder') || contactField.lastName?.placeholder || 'Enter your last name'
+                placeholder: getTranslation(landingPageData?.lang, 'lastNamePlaceholder') || contactField.lastName?.placeholder || 'Enter lastname'
               },
               email: {
                 ...contactField.email,

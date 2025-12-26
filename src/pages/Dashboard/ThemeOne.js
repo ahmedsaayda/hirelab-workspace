@@ -47,20 +47,20 @@ import NotificationDropdown from "../../components/NotificationDropdown.jsx";
 import WorkspaceService from "../../services/WorkspaceService.js";
 import { useWorkspace } from "../../contexts/WorkspaceContext";
 
-import { 
-  User, 
-  CreditCard, 
-  Plug, 
-  Users, 
-  ArrowUpCircle, 
-  Settings, 
-  ToggleRight, 
-  LogOut ,
+import {
+  User,
+  CreditCard,
+  Plug,
+  Users,
+  ArrowUpCircle,
+  Settings,
+  ToggleRight,
+  LogOut,
   UserPlus,
   ExternalLink
 } from "lucide-react";
 
-import  {InviteModal}  from "../onboarding/components/invite-modal.jsx";
+import { InviteModal } from "../onboarding/components/invite-modal.jsx";
 import useWindowDimensions from "../../../pages/hook/useWindowDimensions.js";
 import {
   getPartner,
@@ -91,7 +91,7 @@ export default function Example({
   const user = useSelector(selectUser);
   const loading = useSelector(selectLoading);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  
+
   // Team management state
   const [userTeams, setUserTeams] = useState([]);
   const [currentTeam, setCurrentTeam] = useState(null);
@@ -111,7 +111,7 @@ export default function Example({
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [hasMainAccessInCurrentTeam, setHasMainAccessInCurrentTeam] = useState(true);
   const [mainAccessResolved, setMainAccessResolved] = useState(false);
-  console.log("[theme one logs]hasMainAccessInCurrentTeam",hasMainAccessInCurrentTeam)
+  console.log("[theme one logs]hasMainAccessInCurrentTeam", hasMainAccessInCurrentTeam)
   const router = useRouter();
   const prevAllowRef = useRef(user?.allowWorkspaces);
   const autoRoutedRef = useRef(false);
@@ -125,9 +125,9 @@ export default function Example({
 
   const { width } = useWindowDimensions();
 
-  console.log('useruseruseruser',{user , navigation});
+  console.log('useruseruseruser', { user, navigation });
 
-  
+
   // Derive own team vs invited team and block state for main account access
   const isOwnTeamContext = Boolean(currentTeam?._id) && Boolean(user?.defaultTeam) && (String(currentTeam._id) === String(user.defaultTeam));
   const isMainBlocked = Boolean(!workspaceSession && mainAccessResolved && !isOwnTeamContext && !hasMainAccessInCurrentTeam);
@@ -179,7 +179,7 @@ export default function Example({
             },
             sort: { createdAt: "desc" },
           });
-          
+
           setSearchResults(result.data.items || []);
         } catch (error) {
           console.error("Search error:", error);
@@ -195,7 +195,7 @@ export default function Example({
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
-    
+
     if (value.trim()) {
       setShowSearchDropdown(true);
       debouncedSearch(value);
@@ -241,7 +241,7 @@ export default function Example({
       if (!currentTeam) {
         await loadUserTeams();
       }
-      
+
       // Open modal if we have a current team
       if (currentTeam) {
         console.log("[theme one logs]Opening modal for team:", currentTeam.name);
@@ -258,17 +258,17 @@ export default function Example({
   // Team management functions
   const loadUserTeams = async () => {
     if (!user) return;
-    
+
     try {
       setLoadingTeams(true);
       const response = await TeamService.getUserTeams();
       const userTeams = response.teams || [];
       setUserTeams(userTeams);
-      
+
       // Clear any existing team references
       setCurrentTeam(null);
       setCurrentUserRole("viewer");
-      
+
       // Validate and set current team
       // First check if user has currentTeam set in Redux (from backend updates)
       let teamToSet = null;
@@ -297,7 +297,7 @@ export default function Example({
           teamToSet = userTeams[0];
         }
       }
-      
+
       // Set the validated team
       if (teamToSet) {
         setCurrentTeam(teamToSet);
@@ -310,14 +310,14 @@ export default function Example({
         console.log("[theme one logs]No teams available for user, creating one automatically");
         try {
           const createResponse = await TeamService.createTeamForUser();
-          
+
           if (createResponse.success) {
             const newTeam = createResponse.team;
             setCurrentTeam(newTeam);
             setCurrentUserRole("owner");
             TeamService.setCurrentTeam(newTeam);
             setUserTeams([newTeam]); // Update the userTeams state
-            
+
             console.log('✅ Team created automatically:', newTeam.name);
             message.success(`Welcome! Your team "${newTeam.name}" has been created.`);
           } else {
@@ -350,19 +350,19 @@ export default function Example({
     try {
       console.log(`🔄 Frontend: Switching to team ${team.name} (${team._id})`);
       console.log(`🔄 Current user role in this team: ${team.role}`);
-      
+
       await TeamService.switchTeam(team._id);
       setCurrentTeam(team);
       setCurrentUserRole(team.role || "viewer");
       TeamService.setCurrentTeam(team);
-      
+
       // Clear any stale localStorage data
       console.log(`🔄 Clearing localStorage and reloading...`);
       localStorage.removeItem("pendingInvitation");
       localStorage.removeItem("teamMemberState");
       // Mark that we just switched teams so we can optionally auto-route into a workspace on load
-      try { localStorage.setItem('autoRouteOnLoad', '1'); } catch(e) {}
-      
+      try { localStorage.setItem('autoRouteOnLoad', '1'); } catch (e) { }
+
       // Add cache busting to force clean reload
       window.location.href = window.location.pathname + "?t=" + Date.now();
     } catch (error) {
@@ -476,7 +476,7 @@ export default function Example({
       try {
         setWorkspaceMenuVisible(false);
         refreshAccessibleWorkspaces?.();
-      } catch (e) {}
+      } catch (e) { }
     }
     prevAllowRef.current = curr;
   }, [user?.allowWorkspaces, refreshAccessibleWorkspaces]);
@@ -500,24 +500,24 @@ export default function Example({
 
     const mainAccountItem = (workspaceSession || Boolean(user?.allowWorkspaces)) && hasMainAccessInCurrentTeam
       ? [{
-          key: 'workspace-main-account',
-          label: (
-            <div className="font-medium">Main Account</div>
-          ),
-          onSelect: async () => {
-            setWorkspaceMenuVisible(false);
-            if (workspaceSession) {
-              try {
-                await returnFromWorkspace({ redirectTo: '/dashboard', skipRedirect: false });
-              } catch (error) {
-                console.error('Error returning to main account:', error);
-                message.error(error?.response?.data?.message || 'Failed to return to main account');
-              }
-            } else {
-              router.push('/dashboard');
+        key: 'workspace-main-account',
+        label: (
+          <div className="font-medium">Main Account</div>
+        ),
+        onSelect: async () => {
+          setWorkspaceMenuVisible(false);
+          if (workspaceSession) {
+            try {
+              await returnFromWorkspace({ redirectTo: '/dashboard', skipRedirect: false });
+            } catch (error) {
+              console.error('Error returning to main account:', error);
+              message.error(error?.response?.data?.message || 'Failed to return to main account');
             }
-          },
-        }]
+          } else {
+            router.push('/dashboard');
+          }
+        },
+      }]
       : [];
 
     const pendingItems = filteredPending.map((invite) => ({
@@ -591,7 +591,7 @@ export default function Example({
   // Auto-route only immediately after explicit team switches (one-time), to avoid landing on invited team main account
   useEffect(() => {
     if (workspaceSession) return;
-    const flag = (() => { try { return localStorage.getItem('autoRouteOnLoad'); } catch(e) { return null; } })();
+    const flag = (() => { try { return localStorage.getItem('autoRouteOnLoad'); } catch (e) { return null; } })();
     if (flag !== '1') return;
     // Wait until access is resolved before making a decision and clearing the flag
     if (!mainAccessResolved) return;
@@ -599,13 +599,13 @@ export default function Example({
     const entries = workspaceSwitcherEntries();
     const currentOwnerId = currentTeam?.owner?._id || currentTeam?.owner || null;
     const isOwnTeam = Boolean(currentTeam?._id) && Boolean(user?.defaultTeam) && (String(currentTeam._id) === String(user.defaultTeam));
-    if (isOwnTeam) { try { localStorage.removeItem('autoRouteOnLoad'); } catch(e) {} return; }
-    if (hasMainAccessInCurrentTeam) { try { localStorage.removeItem('autoRouteOnLoad'); } catch(e) {} return; } // only auto-route when main-account access is false
+    if (isOwnTeam) { try { localStorage.removeItem('autoRouteOnLoad'); } catch (e) { } return; }
+    if (hasMainAccessInCurrentTeam) { try { localStorage.removeItem('autoRouteOnLoad'); } catch (e) { } return; } // only auto-route when main-account access is false
     const filteredActive = (entries.active || []).filter((e) => !currentOwnerId || e.ownerId === currentOwnerId);
     if (filteredActive.length > 0) {
-      switchToWorkspace(filteredActive[0].id, { skipRedirect: false }).catch(() => {});
+      switchToWorkspace(filteredActive[0].id, { skipRedirect: false }).catch(() => { });
     }
-    try { localStorage.removeItem('autoRouteOnLoad'); } catch(e) {}
+    try { localStorage.removeItem('autoRouteOnLoad'); } catch (e) { }
   }, [workspaceSession, currentTeam?._id, currentTeam?.owner?._id, currentTeam?.owner, user?.defaultTeam, workspaceSwitcherEntries, switchToWorkspace, hasMainAccessInCurrentTeam, mainAccessResolved]);
 
   // Reset auto-route guard when team context or permissions change
@@ -613,7 +613,7 @@ export default function Example({
     autoRoutedRef.current = false;
   }, [currentTeam?._id, user?.allowWorkspaces]);
 
-  useEffect(() => {}, [workspaceSession]);
+  useEffect(() => { }, [workspaceSession]);
 
   return (
     <div>
@@ -694,11 +694,10 @@ export default function Example({
                             {navigation.map((category, i) => (
                               <div key={i}>
                                 <h1
-                                  className={`submenu-category-title dark:text-gray-900 ${
-                                    collapsed
-                                      ? "w-[68px] text-center !mx-0"
-                                      : ""
-                                  }`}
+                                  className={`submenu-category-title dark:text-gray-900 ${collapsed
+                                    ? "w-[68px] text-center !mx-0"
+                                    : ""
+                                    }`}
                                 >
                                   {category.name}
                                 </h1>
@@ -708,8 +707,7 @@ export default function Example({
                                       key={item.name}
                                       className={classNames(
                                         "opacity-50 cursor-not-allowed",
-                                        `submenu-item-box transition-all duration-200 ${
-                                          collapsed ? "flex justify-center" : ""
+                                        `submenu-item-box transition-all duration-200 ${collapsed ? "flex justify-center" : ""
                                         }`
                                       )}
                                     >
@@ -730,8 +728,7 @@ export default function Example({
                                         item.current
                                           ? "bg-indigo-500 text-white current dark:bg-gray-600 dark:text-gray-400"
                                           : "hover:text-white hover:bg-indigo-500 dark:hover:bg-gray-600",
-                                        `submenu-item-box transition-all duration-200 ${
-                                          collapsed ? "flex justify-center" : ""
+                                        `submenu-item-box transition-all duration-200 ${collapsed ? "flex justify-center" : ""
                                         }`
                                       )}
                                     >
@@ -747,7 +744,7 @@ export default function Example({
                                         />
                                         {!collapsed && item.name}
 
-                                        { item?.isOnboardingCompleted === false &&(
+                                        {item?.isOnboardingCompleted === false && (
 
                                           <span className="relative flex items-center">
                                             {item.name === "Brand Kit" && (
@@ -816,7 +813,7 @@ export default function Example({
 
           <div
             style={{
-              width: (collapsed ? 80 : 200) ,
+              width: (collapsed ? 80 : 200),
               position: "fixed",
               background: "#f8f8f8",
               marginLeft: -80,
@@ -845,9 +842,8 @@ export default function Example({
                     {navigation.map((category, i) => (
                       <div key={i}>
                         <h1
-                          className={`submenu-category-title dark:text-gray-900 ${
-                            collapsed ? "w-[68px] text-center !mx-0" : ""
-                          }`}
+                          className={`submenu-category-title dark:text-gray-900 ${collapsed ? "w-[68px] text-center !mx-0" : ""
+                            }`}
                         >
                           {category.name}
                         </h1>
@@ -857,8 +853,7 @@ export default function Example({
                               key={item.name}
                               className={classNames(
                                 "opacity-50 cursor-not-allowed",
-                                `submenu-item-box transition-all duration-200 ${
-                                  collapsed ? "flex justify-center" : ""
+                                `submenu-item-box transition-all duration-200 ${collapsed ? "flex justify-center" : ""
                                 }`
                               )}
                             >
@@ -879,8 +874,7 @@ export default function Example({
                                 item.current
                                   ? "bg-indigo-500 text-white current dark:bg-gray-600 dark:text-gray-400"
                                   : "hover:text-white hover:bg-indigo-500 dark:hover:bg-gray-600",
-                                `submenu-item-box transition-all duration-200 ${
-                                  collapsed ? "flex justify-center" : ""
+                                `submenu-item-box transition-all duration-200 ${collapsed ? "flex justify-center" : ""
                                 }`
                               )}
                             >
@@ -895,19 +889,19 @@ export default function Example({
                                   aria-hidden="true"
                                 />
                                 {!collapsed && item.name}
-                                       { item?.isOnboardingCompleted === false &&(
+                                {item?.isOnboardingCompleted === false && (
 
-                                          <span className="relative flex items-center">
-                                            {item.name === "Brand Kit" && (
-                                              <div className="relative flex items-center justify-center">
-                                                <span className=" inline-flex h-4 w-4 rounded-full bg-red-400 opacity-50 animate-ping">
-                                                </span>
-                                                <span className="absolute  inline-flex h-[8px] w-[7.9px] rounded-full bg-red-600">
-                                                </span>
-                                              </div>
-                                            )}
-                                          </span>
-                                        )}
+                                  <span className="relative flex items-center">
+                                    {item.name === "Brand Kit" && (
+                                      <div className="relative flex items-center justify-center">
+                                        <span className=" inline-flex h-4 w-4 rounded-full bg-red-400 opacity-50 animate-ping">
+                                        </span>
+                                        <span className="absolute  inline-flex h-[8px] w-[7.9px] rounded-full bg-red-600">
+                                        </span>
+                                      </div>
+                                    )}
+                                  </span>
+                                )}
                               </div>
                             </Link>
                           )
@@ -979,7 +973,7 @@ export default function Example({
                     <SearchrIcon />
                     <input
                       id="search-field"
-                      className="block w-full h-full py-0 pl-0 pr-0 bg-transparent border-0 border-transparent focus:border-0 focus:outline-none focus:ring-0"
+                      className="block w-full h-full  bg-transparent !border-0 !bg-transparent border-transparent focus:border-0 focus:outline-none focus:ring-0 outline-none ring-0"
                       placeholder="Search vacancies..."
                       type="text"
                       value={searchQuery}
@@ -988,7 +982,7 @@ export default function Example({
                       onBlur={handleSearchBlur}
                       style={{ height: "145%" }}
                     />
-                    
+
                     {/* Search Dropdown */}
                     {showSearchDropdown && (searchResults.length > 0 || searchLoading || searchQuery.trim()) && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-80 overflow-y-auto">
@@ -998,27 +992,27 @@ export default function Example({
                             <span className="ml-2 text-sm text-gray-500">Searching...</span>
                           </div>
                         )}
-                        
+
                         {!searchLoading && searchResults.length === 0 && searchQuery.trim() && (
                           <div className="px-4 py-3 text-center text-sm text-gray-500">
                             No vacancies found for "{searchQuery}"
                           </div>
                         )}
-                        
+
                         {!searchLoading && searchResults.length > 0 && (
                           <>
                             <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
                               Vacancies ({searchResults.length})
                             </div>
-                                                         {searchResults.map((vacancy) => (
-                               <Link
-                                 key={vacancy._id}
-                                 href={`/edit-page/${vacancy._id}`}
-                                 onClick={() => {
-                                   clearSearch();
-                                 }}
-                                 className="flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
-                               >
+                            {searchResults.map((vacancy) => (
+                              <Link
+                                key={vacancy._id}
+                                href={`/edit-page/${vacancy._id}`}
+                                onClick={() => {
+                                  clearSearch();
+                                }}
+                                className="flex items-start px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                              >
                                 <div className="flex-1 min-w-0">
                                   <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
                                     {vacancy.vacancyTitle || "Untitled Vacancy"}
@@ -1100,13 +1094,11 @@ export default function Example({
                             handleOpenModal();
                             setSelectedTopRightOption("invite");
                           }}
-                          className={`top-right-inner-circle ${
-                            selectedTopRightOption === "invite"
-                              ? "active"
-                              : ""
-                          } cursor-pointer flex items-center h-full ${
-                            loadingTeams ? "opacity-50" : ""
-                          }`}
+                          className={`top-right-inner-circle ${selectedTopRightOption === "invite"
+                            ? "active"
+                            : ""
+                            } cursor-pointer flex items-center h-full ${loadingTeams ? "opacity-50" : ""
+                            }`}
                         >
                           {loadingTeams ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-transparent"></div>
@@ -1128,13 +1120,12 @@ export default function Example({
                         />
                       )}
                       <div
-                        className={`top-right-inner-circle ${
-                          selectedTopRightOption === "notifications"
-                            ? "active"
-                            : ""
-                        } flex items-center h-full`}
+                        className={`top-right-inner-circle ${selectedTopRightOption === "notifications"
+                          ? "active"
+                          : ""
+                          } flex items-center h-full`}
                       >
-                        <NotificationDropdown 
+                        <NotificationDropdown
                           onToggle={(isOpen) => {
                             setSelectedTopRightOption(isOpen ? "notifications" : "");
                           }}
@@ -1144,9 +1135,8 @@ export default function Example({
                         onClick={() => {
                           router.push('/dashboard/candidate-chat');
                         }}
-                        className={`top-right-inner-circle ${
-                          selectedTopRightOption === "chat" ? "active" : ""
-                        } cursor-pointer flex items-center h-full`}
+                        className={`top-right-inner-circle ${selectedTopRightOption === "chat" ? "active" : ""
+                          } cursor-pointer flex items-center h-full`}
                       >
                         <MessagerIcon />
                       </div>
@@ -1183,8 +1173,8 @@ export default function Example({
                     >
 
                       <Menu.Items className="absolute z-40 mt-2.5 w-48 origin-top-right rounded-md bg-white dark:bg-gray-600 py-2 shadow-lg dark:shadow-gray-400/50 hover:shadow-gray-600/50  ring-1 ring-gray-900/5 focus:outline-none" style={{ top: '100%', right: '0px', left: 'auto', transform: 'translateX(-5px)' }}>
-                          {/*  */}
-                          <div className="flex items-center gap-3 p-2 pt-0">
+                        {/*  */}
+                        <div className="flex items-center gap-3 p-2 pt-0">
                           {user?.avatar && (
                             <img
                               className="w-10 h-10 rounded-full bg-gray-50 object-cover"
@@ -1214,11 +1204,10 @@ export default function Example({
                                 <button
                                   key={team._id}
                                   onClick={() => handleSwitchTeam(team)}
-                                  className={`w-full flex items-center gap-2 px-2 py-1 text-sm rounded-md transition-colors ${
-                                    currentTeam?._id === team._id
-                                      ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
-                                      : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                  }`}
+                                  className={`w-full flex items-center gap-2 px-2 py-1 text-sm rounded-md transition-colors ${currentTeam?._id === team._id
+                                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
+                                    : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                    }`}
                                 >
                                   <div className="w-6 h-6 rounded bg-indigo-500 flex items-center justify-center text-white text-xs font-medium">
                                     {team.name.charAt(0).toUpperCase()}
@@ -1226,10 +1215,10 @@ export default function Example({
                                   <div className="flex-1 text-left">
                                     <div className="font-medium">{team.name}</div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      {team.role === 'owner' ? 'Owner' : 
-                                       team.role === 'admin' ? 'Admin' : 
-                                       team.role === 'editor' ? 'Editor' : 
-                                       team.role === 'atsOnly' ? 'ATS Only' : 'Viewer'}
+                                      {team.role === 'owner' ? 'Owner' :
+                                        team.role === 'admin' ? 'Admin' :
+                                          team.role === 'editor' ? 'Editor' :
+                                            team.role === 'atsOnly' ? 'ATS Only' : 'Viewer'}
                                     </div>
                                   </div>
                                   {currentTeam?._id === team._id && (
@@ -1241,32 +1230,32 @@ export default function Example({
                           </div>
                         )}
 
-                          {userNavigation.map((item) => (
+                        {userNavigation.map((item) => (
                           <Menu.Item key={item.name}>
                             {({ active }) => {
 
-                              console.log("[theme one logs]item.logo",item.logo )
+                              console.log("[theme one logs]item.logo", item.logo)
                               return (
                                 <div className={classNames(
-                                  item.grayout ? "opacity-50 cursor-not-allowed" : 
-                                  active ? "bg-gray-50 dark:bg-gray-700  px-4 transition-all duration-300" : `${item.name === "Sign out" ? "text-red-500 dark:text-red-500" : ""}`,
+                                  item.grayout ? "opacity-50 cursor-not-allowed" :
+                                    active ? "bg-gray-50 dark:bg-gray-700  px-4 transition-all duration-300" : `${item.name === "Sign out" ? "text-red-500 dark:text-red-500" : ""}`,
                                   `flex items-center gap-x-2  px-3 py-1 text-sm leading-6 text-gray-900 dark:text-gray-400 `
                                 )}
                                 >
-                                {item.logo && <item.logo className={classNames("w-4 h-4", item.grayout ? "text-gray-400" : "")} />}
-                                {item.grayout ? (
-                                  <span className="text-gray-400">{item.name}</span>
-                                ) : (
-                                  <Link
-                                    href={item.href}
-                                    target={item?.target}
-                                    onClick={item.onClick}
-                                    
-                                  >
-                                    {item.name}
-                                  </Link>
-                                )}
-                                </div>                                
+                                  {item.logo && <item.logo className={classNames("w-4 h-4", item.grayout ? "text-gray-400" : "")} />}
+                                  {item.grayout ? (
+                                    <span className="text-gray-400">{item.name}</span>
+                                  ) : (
+                                    <Link
+                                      href={item.href}
+                                      target={item?.target}
+                                      onClick={item.onClick}
+
+                                    >
+                                      {item.name}
+                                    </Link>
+                                  )}
+                                </div>
                               )
 
 
@@ -1283,9 +1272,8 @@ export default function Example({
 
           <main className="w-full py-0 bg-[#F8F8F8]">
             <div
-              className={`px-2 sm:px-6 lg:px-4 transition-all duration-200 ${
-                width < 1024 ? "" : collapsed ? "ml-[80px]" : "ml-[204px]"
-              }`}
+              className={`px-2 sm:px-6 lg:px-4 transition-all duration-200 ${width < 1024 ? "" : collapsed ? "ml-[80px]" : "ml-[204px]"
+                }`}
             >
               {children}
             </div>

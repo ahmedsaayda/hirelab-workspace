@@ -14,7 +14,7 @@ import { useSelector } from "react-redux";
 import { selectUser } from "../../../../../../redux/auth/selectors.js";
 import { Img } from "../../../../../../dhwise-components/index.jsx";
 import { MediaCard } from "../components/media-card.jsx";
-import { Skeleton ,Box } from '@mui/material';
+import { Skeleton, Box } from '@mui/material';
 import HeroForm from "../components/modals/sectionTemplateForms/hero-form.jsx";
 import TestimonialsForm from "../components/modals/sectionTemplateForms/testimonials-form.jsx";
 import EditMediaModal from "./EditMediaModal.jsx";
@@ -32,9 +32,9 @@ const ImageSelectionModal = ({
   accept = "image/*",
   type = "all",
   autosave = false,
-  currentSectionLimits=Infinity,
-  isLogo=false,
-  allowedTabs =["all","image","video"] // Removed "section-template"
+  currentSectionLimits = Infinity,
+  isLogo = false,
+  allowedTabs = ["all", "image", "video"] // Removed "section-template"
 }) => {
   const user = useSelector(selectUser);
   const [activeOption, setActiveOption] = useState("upload");
@@ -72,7 +72,7 @@ const ImageSelectionModal = ({
     return mediaType.toLowerCase() === type.toLowerCase();
   };
 
-  console.log("recentMedia",recentMedia)
+  console.log("recentMedia", recentMedia)
 
   // Filter media based on type and selectedTab
   const filteredMedia = recentMedia.filter(media => {
@@ -118,11 +118,11 @@ const ImageSelectionModal = ({
       return unique;
     });
     setIsUploading(true);
-  
+
     try {
       const uploadPromises = newEntries.map(async (entry) => {
         if (!entry.file) return null;
-  
+
         const result = await UploadService.upload(entry.file, (progress) => {
           setFiles((prev) =>
             prev.map((f) =>
@@ -133,7 +133,7 @@ const ImageSelectionModal = ({
         // @ts-ignore
         const cloudinaryData = result.data;
         if (!cloudinaryData?.secure_url) throw new Error("Invalid response");
-  
+
         const mediaData = {
           user_id: user?._id,
           title: cloudinaryData.original_filename?.slice(0, 40) || "Untitled",
@@ -147,17 +147,17 @@ const ImageSelectionModal = ({
             : "",
           tags: [],
         };
-  
+
         await CrudService.create("MediaLibrary", mediaData);
-  
+
         return {
           originalUrl: entry.url,
           uploadedUrl: cloudinaryData.secure_url,
         };
       });
-  
+
       const results = (await Promise.all(uploadPromises)).filter(Boolean);
-  
+
       setFiles((prev) =>
         prev.map((f) => {
           const match = results.find((r) => r.originalUrl === f.url);
@@ -211,8 +211,8 @@ const ImageSelectionModal = ({
     await CrudService.create("MediaLibrary", mediaData);
     return cloudinaryData.secure_url;
   };
-  
-  
+
+
 
 
 
@@ -243,7 +243,7 @@ const ImageSelectionModal = ({
   };
 
   useEffect(() => {
-    if(addingFromStockImage){
+    if (addingFromStockImage) {
       const urls = files.map((f) => f.url).filter((u) => u.startsWith("http"));
       onImageSelected(urls);
       onClose();
@@ -469,19 +469,19 @@ const ImageSelectionModal = ({
       message.error(`You can only select up to ${maxFiles} ${maxFiles === 1 ? 'file' : 'files'}. Please remove some ${maxFiles === 1 ? 'file' : 'files'} first.`);
       return;
     }
-    
+
     setFiles(prev => {
       const newFilesArr = multiple ? [...prev, { url: media.thumbnail }] : [{ url: media.thumbnail }];
       // Remove duplicates by url
       const unique = Array.from(new Map(newFilesArr.map(f => [f.url, f])).values());
-      
+
       // If autosave is enabled, automatically save after selection
       if (autosave) {
         const urls = unique.map(f => f.url);
         onImageSelected(urls);
         onClose();
       }
-      
+
       return unique;
     });
   };
@@ -491,7 +491,7 @@ const ImageSelectionModal = ({
   const handleRemoveFile = (url) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file.url !== url));
   };
-  
+
 
   const renderPreview = (file) => (
     <div key={file.url} className="flex items-center p-2 mb-2 bg-white rounded border">
@@ -556,7 +556,7 @@ const ImageSelectionModal = ({
     if (!editingMedia) return;
     try {
       await CrudService.update("MediaLibrary", editingMedia._id, updatedData);
-      setRecentMedia((prev) => prev.map((m) => 
+      setRecentMedia((prev) => prev.map((m) =>
         m._id === editingMedia._id ? { ...m, ...updatedData } : m
       ));
       setIsEditModalOpen(false);
@@ -642,42 +642,42 @@ const ImageSelectionModal = ({
           <div className="overflow-hidden flex-1 p-2 lg:p-4">
             {activeOption === "upload" && (
               <div className="flex flex-col gap-4 w-full h-full lg:flex-row"
-             
+
               >
                 {/* Left: DropZone and controls */}
                 <div
-                
-                  className="lg:w-[35%] w-full ">
-                    <div className="flex overflow-y-scroll relative flex-col p-2 pb-24 h-full bg-gray-50 rounded-lg border-2 border-gray-300 lg:p-4">
-                    <div className="h-full"
-                      
-                      >
-                        <DropZone
-                          onFilesSelected={handleFilesSelected}
-                          multiple={multiple}
-                          accept={type === "video" ? "video/*" : type === "image" ? "image/*" : accept}
-                        />
-                        <div className="flex flex-col mt-4 w-full">
-                          <h4 className="mb-2 text-sm font-medium">Selected Files</h4>
-                          <div className="overflow-y-auto flex-1 pb-16 min-h-0">
-                            {files.map(renderPreview)}
-                          </div>
-                        </div>
 
-                      </div>
-                    </div>
-                      {!autosave && (
-                        <div className="flex sticky bottom-0 z-10 justify-end px-4 py-3 bg-gray-50 border-t border-gray-200">
-                          <button
-                            onClick={handleDone}
-                            disabled={isUploading||files.length===0}
-                            className="flex-shrink-0 px-4 py-2 w-full text-white bg-blue-500 rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 lg:w-auto"
-                          >
-                            {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : "Video"}`}
-                          </button>
+                  className="lg:w-[35%] w-full ">
+                  <div className="flex overflow-y-scroll relative flex-col p-2 pb-24 h-full bg-gray-50 rounded-lg border-2 border-gray-300 lg:p-4">
+                    <div className="h-full"
+
+                    >
+                      <DropZone
+                        onFilesSelected={handleFilesSelected}
+                        multiple={multiple}
+                        accept={type === "video" ? "video/*" : type === "image" ? "image/*" : accept}
+                      />
+                      <div className="flex flex-col mt-4 w-full">
+                        <h4 className="mb-2 text-sm font-medium">Selected Files</h4>
+                        <div className="overflow-y-auto flex-1 pb-16 min-h-0">
+                          {files.map(renderPreview)}
                         </div>
-                      )}
-                    
+                      </div>
+
+                    </div>
+                  </div>
+                  {!autosave && (
+                    <div className="flex sticky bottom-0 z-10 justify-end px-4 py-3 bg-gray-50 border-t border-gray-200">
+                      <button
+                        onClick={handleDone}
+                        disabled={isUploading || files.length === 0}
+                        className="flex-shrink-0 px-4 py-2 w-full text-white bg-blue-500 rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 lg:w-auto"
+                      >
+                        {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : "Video"}`}
+                      </button>
+                    </div>
+                  )}
+
                 </div>
 
                 {/* Right: Recent uploads */}
@@ -693,16 +693,16 @@ const ImageSelectionModal = ({
                           value={searchValue}
                           onChange={(e) => setSearchValue(e.target.value)}
                           placeholder="Search your media library..."
-                          className="py-2 pr-3 pl-10 w-full text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="py-2 pr-3 pl-10 w-full text-sm rounded-[15px] border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                     </div>
                     {/* Only show tabs if type is "all" */}
                     <Tabs activeKey={selectedTab} onChange={setSelectedTab} type="line" className="mb-2 w-full">
-                        <TabPane tab="All" key="all" disabled={type !== "all"} />
-                        <TabPane tab="Images" key="images" disabled={type !== "image" && type !== "all"}  />
-                        <TabPane tab="Videos" key="videos" disabled={type !== "video" && type !== "all"} />
-                      </Tabs>
+                      <TabPane tab="All" key="all" disabled={type !== "all"} />
+                      <TabPane tab="Images" key="images" disabled={type !== "image" && type !== "all"} />
+                      <TabPane tab="Videos" key="videos" disabled={type !== "video" && type !== "all"} />
+                    </Tabs>
                     {/* {type === "all" ? (
                       <Tabs activeKey={selectedTab} onChange={setSelectedTab} type="line" className="mb-2 w-full">
                         <TabPane tab="All" key="all" />
@@ -775,7 +775,7 @@ const ImageSelectionModal = ({
                   onChange={(e) => setLinkValue(e.target.value)}
                   value={linkValue}
                 />
-                <button 
+                <button
                   className="px-4 py-2 w-full text-white bg-blue-500 rounded hover:bg-blue-600 sm:w-auto"
                   onClick={handleLinkAdd}
                 >
@@ -849,7 +849,7 @@ const ImageSelectionModal = ({
                           value={unsplashQuery}
                           onChange={(e) => setUnsplashQuery(e.target.value)}
                           placeholder="Search stock images (e.g., Software Engineer office)..."
-                          className="py-2 pr-3 pl-10 w-full text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="py-2 pr-3 pl-10 w-full text-sm rounded-[15px] border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div className="mt-1 text-xs text-gray-500">
@@ -969,11 +969,11 @@ const ImageSelectionModal = ({
           initialValues={
             editingMedia
               ? {
-                  fileName: editingMedia.title,
-                  description: editingMedia.description,
-                  tags: editingMedia.tags || [],
-                  image: editingMedia.thumbnail,
-                }
+                fileName: editingMedia.title,
+                description: editingMedia.description,
+                tags: editingMedia.tags || [],
+                image: editingMedia.thumbnail,
+              }
               : undefined
           }
           mediaItem={editingMedia}

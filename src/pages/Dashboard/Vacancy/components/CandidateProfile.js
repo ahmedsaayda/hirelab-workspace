@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Drawer, 
-  Tabs, 
-  Avatar, 
-  Button, 
-  Tag, 
-  Rate, 
+import {
+  Drawer,
+  Tabs,
+  Avatar,
+  Button,
+  Tag,
+  Rate,
   Divider,
   Space,
   Typography,
@@ -20,10 +20,10 @@ import {
   Modal,
   Mentions
 } from 'antd';
-import { 
-  UserOutlined, 
-  MailOutlined, 
-  PhoneOutlined, 
+import {
+  UserOutlined,
+  MailOutlined,
+  PhoneOutlined,
   EnvironmentOutlined,
   CalendarOutlined,
   LeftOutlined,
@@ -391,10 +391,10 @@ const getStatusPhaseColor = (phase) => {
 const { TextArea } = Input;
 const { Option: MentionsOption } = Mentions;
 
-const CandidateProfile = ({ 
-  candidateId, 
-  onClose, 
-  onUpdate, 
+const CandidateProfile = ({
+  candidateId,
+  onClose,
+  onUpdate,
   stages = [],
   allCandidateIds = [],
   onEmail,
@@ -426,7 +426,7 @@ const CandidateProfile = ({
   // Load interview history for candidate
   const loadInterviewHistory = async () => {
     if (!candidateId) return;
-    
+
     setLoadingInterviews(true);
     try {
       const response = await CrudService.search('InterviewResponse', 100, 1, {
@@ -456,10 +456,10 @@ const CandidateProfile = ({
     try {
       // Start a new chat with the candidate
       const response = await CandidateChatService.startChat(candidateId);
-      
+
       if (response.data.chatId) {
         message.success('Chat started! Redirecting to chat interface...');
-        
+
         // Close the modal and redirect to chat interface
         onClose();
         router.push(`/dashboard/candidate-chat?chatId=${response.data.chatId}`);
@@ -494,7 +494,7 @@ const CandidateProfile = ({
       document.body.classList.add('drawer-open');
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      
+
       // Also lock any potential page containers
       const nextRoot = document.getElementById('__next');
       if (nextRoot) {
@@ -505,19 +505,19 @@ const CandidateProfile = ({
       document.body.classList.remove('drawer-open');
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      
+
       const nextRoot = document.getElementById('__next');
       if (nextRoot) {
         nextRoot.style.overflow = '';
       }
     }
-    
+
     // Cleanup on unmount
     return () => {
       document.body.classList.remove('drawer-open');
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      
+
       const nextRoot = document.getElementById('__next');
       if (nextRoot) {
         nextRoot.style.overflow = '';
@@ -538,7 +538,7 @@ const CandidateProfile = ({
       if (doc) {
         // Transform VacancySubmission data to match expected candidate structure
         const formData = doc.formData || {};
-        
+
         // Extract name using same logic as NewATS.js
         let fullname = '';
         if (formData.fullname) {
@@ -557,14 +557,14 @@ const CandidateProfile = ({
             }
           }
         }
-        
+
         // Extract email
         let email = formData.email || '';
         if (!email) {
           const emailField = Object.keys(formData).find(key => key.includes('email'));
           if (emailField) email = formData[emailField];
         }
-        
+
         // Extract phone
         let phone = formData.phone || '';
         if (!phone) {
@@ -578,7 +578,7 @@ const CandidateProfile = ({
           avatar = formData.avatar;
         } else {
           // Check for image upload field
-          const imageField = Object.keys(formData).find(key => 
+          const imageField = Object.keys(formData).find(key =>
             key.includes('image') || key.includes('photo') || key.includes('avatar')
           );
           if (imageField && formData[imageField] && formData[imageField].trim()) {
@@ -588,7 +588,7 @@ const CandidateProfile = ({
 
         console.log('👤 Avatar extraction:', {
           formDataAvatar: formData.avatar,
-          foundImageField: Object.keys(formData).find(key => 
+          foundImageField: Object.keys(formData).find(key =>
             key.includes('image') || key.includes('photo') || key.includes('avatar')
           ),
           finalAvatar: avatar
@@ -604,16 +604,16 @@ const CandidateProfile = ({
           stage: stages.find(stage => stage.id === doc.stageId)?.title || 'Applied'
         };
         setCandidate(transformedCandidate);
-        
+
         // Set last communication date
-        const communicationDate = doc.lastCommunication 
-          ? moment(doc.lastCommunication) 
+        const communicationDate = doc.lastCommunication
+          ? moment(doc.lastCommunication)
           : null;
         setLastCommunication(communicationDate);
-        
+
         // Debug resume URL loading
         let resumeUrlFromResponse = doc.resumeUrl || formData.resumeUrl || null;
-        
+
         // Also check for file uploads in formData with form field structure
         if (!resumeUrlFromResponse && formData && doc.form?.fields) {
           // Look for file type fields in the form structure
@@ -621,14 +621,14 @@ const CandidateProfile = ({
           for (const fileField of fileFields) {
             const fileData = formData[fileField.id];
             let fileUrl = null;
-            
+
             // Handle both new object format and legacy URL string
             if (typeof fileData === 'object' && fileData.url) {
               fileUrl = fileData.url;
             } else if (typeof fileData === 'string' && fileData.startsWith('http')) {
               fileUrl = fileData;
             }
-            
+
             if (fileUrl) {
               resumeUrlFromResponse = fileUrl;
               console.log('📄 Found resume in form field:', fileField.label, '→', fileUrl);
@@ -636,7 +636,7 @@ const CandidateProfile = ({
             }
           }
         }
-        
+
         console.log('📄 Loading resume URL:', {
           fromResponse: response.data.resumeUrl,
           fromFormData: formData.resumeUrl,
@@ -644,7 +644,7 @@ const CandidateProfile = ({
           current: resumeUrl,
           final: resumeUrlFromResponse
         });
-        
+
         // Only update resumeUrl if we found one, or if we don't have one currently
         if (resumeUrlFromResponse || !resumeUrl) {
           setResumeUrl(resumeUrlFromResponse);
@@ -677,12 +677,12 @@ const CandidateProfile = ({
         populate: 'loggedBy'
       });
       console.log('📝 Notes response:', response);
-      
+
       // Sort notes by creation date - newest first
       const sortedNotes = (response.data?.items || []).sort((a, b) => {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
-      
+
       setNotes(sortedNotes);
     } catch (error) {
       console.error('Error loading notes:', error);
@@ -715,7 +715,7 @@ const CandidateProfile = ({
       await CrudService.update('VacancySubmission', candidateId, { stars: rating });
       setCandidate(prev => ({ ...prev, stars: rating }));
       message.success('Rating updated');
-      
+
       // Notify parent component to refresh data
       if (onUpdate) {
         onUpdate();
@@ -758,8 +758,8 @@ const CandidateProfile = ({
     }
 
     // Find the current stage index
-    const currentStageIndex = stages.findIndex(stage => 
-      stage.id === candidate.stageId || 
+    const currentStageIndex = stages.findIndex(stage =>
+      stage.id === candidate.stageId ||
       stage.title === candidate.stage ||
       stage.name === candidate.stage
     );
@@ -771,7 +771,7 @@ const CandidateProfile = ({
 
     // Calculate progress: (current stage position + 1) / total stages * 100
     const progress = Math.round(((currentStageIndex + 1) / stages.length) * 100);
-    
+
     console.log('📊 Stage progress calculation:', {
       candidateStage: candidate.stage,
       candidateStageId: candidate.stageId,
@@ -788,8 +788,8 @@ const CandidateProfile = ({
       return 1;
     }
 
-    const currentStageIndex = stages.findIndex(stage => 
-      stage.id === candidate.stageId || 
+    const currentStageIndex = stages.findIndex(stage =>
+      stage.id === candidate.stageId ||
       stage.title === candidate.stage ||
       stage.name === candidate.stage
     );
@@ -799,7 +799,7 @@ const CandidateProfile = ({
 
   const getProgressColor = () => {
     const progress = calculateStageProgress();
-    
+
     if (progress <= 25) {
       return '#ef4444'; // red-500 - just started
     } else if (progress <= 50) {
@@ -817,25 +817,25 @@ const CandidateProfile = ({
     setUploadingResume(true);
     try {
       console.log('📄 Uploading resume using UploadService...');
-      
+
       // Use the existing UploadService
       const response = await UploadService.upload(file, 5); // 5MB max for documents
-      
+
       if (response && response.data && response.data.secure_url) {
         const uploadedUrl = response.data.secure_url;
         console.log('✅ Resume upload successful:', uploadedUrl);
-        
+
         // Update the candidate in database first
-        await CrudService.update('VacancySubmission', candidateId, { 
-          resumeUrl: uploadedUrl 
+        await CrudService.update('VacancySubmission', candidateId, {
+          resumeUrl: uploadedUrl
         });
         console.log('✅ Database updated with resume URL');
-        
+
         // Then update local state
         setResumeUrl(uploadedUrl);
-        
+
         message.success('Resume uploaded successfully');
-        
+
         // Reload candidate data to get the updated resume URL from database
         setTimeout(async () => {
           await loadCandidateData();
@@ -866,22 +866,22 @@ const CandidateProfile = ({
     setUpdatingCommunication(true);
     try {
       const dateToSave = date ? date.toISOString() : null;
-      
+
       console.log('🔄 Updating last communication:', {
         candidateId,
         date: date ? date.format('YYYY-MM-DD') : null,
         dateToSave
       });
-      
-      const response = await CrudService.update('VacancySubmission', candidateId, { 
-        lastCommunication: dateToSave 
+
+      const response = await CrudService.update('VacancySubmission', candidateId, {
+        lastCommunication: dateToSave
       });
-      
+
       console.log('✅ Last communication update response:', response);
-      
+
       setLastCommunication(date);
       message.success('Last communication date updated');
-      
+
       // Notify parent component to refresh data
       if (onUpdate) {
         onUpdate();
@@ -902,23 +902,23 @@ const CandidateProfile = ({
   const renderHeader = () => (
     <div className="candidate-header relative">
       {/* Close Button */}
-      <Button 
-        type="text" 
-        icon={<CloseOutlined />} 
+      <Button
+        type="text"
+        icon={<CloseOutlined />}
         onClick={onClose}
         className="candidate-close-btn"
         size="small"
       />
-      
+
       {/* Compact Header Content */}
       <div className="flex items-center gap-4">
-        <Avatar 
-          size={56} 
-          src={candidate?.avatar} 
+        <Avatar
+          size={56}
+          src={candidate?.avatar}
           icon={<UserOutlined />}
           className="border-2 border-white/30 shadow-md"
         />
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
             <Title level={4} className="text-white m-0 font-semibold text-lg">
@@ -928,60 +928,60 @@ const CandidateProfile = ({
               {candidate?.stage || 'Applied'}
             </Tag>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <Text className="text-white/90 text-sm">
               {candidate?.position || 'des'}
             </Text>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Tooltip title="Aggregated rating from stage reviews. Click the question mark to see breakdown by stage.">
-                    <Rate 
-                      value={candidate?.stars || 0}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Tooltip title="Aggregated rating from stage reviews. Click the question mark to see breakdown by stage.">
+                  <Rate
+                    value={candidate?.stars || 0}
+                    size="small"
+                    className="text-yellow-400"
+                    disabled={true}
+                    style={{ pointerEvents: 'none' }}
+                  />
+                </Tooltip>
+                {onShowReviewBreakdown && (
+                  <Tooltip title="View rating breakdown by stage">
+                    <Button
+                      type="text"
                       size="small"
-                      className="text-yellow-400"
-                      disabled={true}
-                      style={{ pointerEvents: 'none' }}
+                      icon={<QuestionCircleOutlined />}
+                      onClick={() => onShowReviewBreakdown()}
+                      className="text-white/60 hover:text-white/80 p-0 h-auto w-auto"
+                      style={{ fontSize: '12px' }}
                     />
                   </Tooltip>
-                  {onShowReviewBreakdown && (
-                    <Tooltip title="View rating breakdown by stage">
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<QuestionCircleOutlined />}
-                        onClick={() => onShowReviewBreakdown()}
-                        className="text-white/60 hover:text-white/80 p-0 h-auto w-auto"
-                        style={{ fontSize: '12px' }}
-                      />
-                    </Tooltip>
-                  )}
-                </div>
-                {/* Status Display */}
-                {candidate?.statusPhase && candidate.statusPhase !== 'new' && (
-                  <div className="flex items-center gap-2">
-                    <div className={`
+                )}
+              </div>
+              {/* Status Display */}
+              {candidate?.statusPhase && candidate.statusPhase !== 'new' && (
+                <div className="flex items-center gap-2">
+                  <div className={`
                       px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1
                       ${getStatusPhaseColor(candidate.statusPhase)}
                     `}>
-                      <div className="w-2 h-2 rounded-full bg-current opacity-60"></div>
-                      {getStatusPhaseLabel(candidate.statusPhase)}
-                    </div>
+                    <div className="w-2 h-2 rounded-full bg-current opacity-60"></div>
+                    {getStatusPhaseLabel(candidate.statusPhase)}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Compact Action Buttons */}
       <div className="candidate-actions flex items-center gap-2 mt-4">
-        <Button 
+        <Button
           icon={<MailOutlined />}
           className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40 hover:text-white"
           onClick={() => {
             // Debug log for diagnosing modal open issue
-      
+
             if (candidate?.email) {
               if (onEmail) {
                 onEmail(candidate._id);
@@ -994,8 +994,8 @@ const CandidateProfile = ({
         >
           Send Email
         </Button>
-        
-        <Button 
+
+        <Button
           icon={<PhoneOutlined />}
           onClick={() => {
             if (candidate?.phone) {
@@ -1009,7 +1009,7 @@ const CandidateProfile = ({
         >
           Call
         </Button>
-        
+
         {/* 
         start chat button hidden as requested by Ralph (2025-10-29) , a feature to work on later.
         <Button 
@@ -1020,8 +1020,8 @@ const CandidateProfile = ({
         >
           Start Chat
         </Button> */}
-        
-        <Button 
+
+        <Button
           icon={<ClockCircleOutlined />}
           onClick={() => onStatusChange && onStatusChange(candidate)}
           size="small"
@@ -1029,15 +1029,8 @@ const CandidateProfile = ({
         >
           Status
         </Button>
-        
-        <Button 
-          icon={<QuestionCircleOutlined />}
-          onClick={() => setInterviewFormVisible(true)}
-          size="small"
-          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40 hover:text-white"
-        >
-          Interview
-        </Button>
+
+
 
       </div>
     </div>
@@ -1055,20 +1048,20 @@ const CandidateProfile = ({
 
     const formData = candidate.formData;
     const formFields = candidate.form?.fields || [];
-    
+
     console.log('📝 Form data loaded:', {
       formData,
       formFields,
       formTitle: candidate.form?.title
     });
-    
+
     // Parse form answers
     const formAnswers = [];
-    
+
     formFields.forEach(field => {
       let answer = null;
       let label = field.label;
-      
+
       // Provide better default labels instead of showing field IDs
       if (!label || label === field.id) {
         // Generate a human-readable label from field type or ID
@@ -1121,12 +1114,12 @@ const CandidateProfile = ({
           const lastNameKey = `${field.id}_lastName`;
           const emailKey = `${field.id}_email`;
           const phoneKey = `${field.id}_phone`;
-          
+
           const firstName = formData[firstNameKey];
           const lastName = formData[lastNameKey];
           const email = formData[emailKey];
           const phone = formData[phoneKey];
-          
+
           // Add individual contact components instead of the contact field itself
           if (firstName) {
             formAnswers.push({
@@ -1136,16 +1129,16 @@ const CandidateProfile = ({
               required: field.firstName?.required || false
             });
           }
-          
+
           if (lastName) {
             formAnswers.push({
-              label: field.lastName?.label || 'Last Name', 
+              label: field.lastName?.label || 'Last Name',
               answer: lastName,
               type: 'text',
               required: field.lastName?.required || false
             });
           }
-          
+
           if (email) {
             formAnswers.push({
               label: field.email?.label || 'Email',
@@ -1154,7 +1147,7 @@ const CandidateProfile = ({
               required: field.email?.required || false
             });
           }
-          
+
           if (phone) {
             formAnswers.push({
               label: field.phone?.label || 'Phone',
@@ -1163,23 +1156,23 @@ const CandidateProfile = ({
               required: field.phone?.required || false
             });
           }
-          
+
           // Skip adding the contact field itself to avoid showing the ID
           return;
           break;
-          
+
         case 'email':
         case 'phone':
           answer = formData[field.id];
           break;
-          
+
         case 'text':
         case 'textarea':
         case 'longtext':
         case 'motivation':
           answer = formData[field.id];
           break;
-          
+
         case 'file':
           const fileData = formData[field.id];
           if (fileData) {
@@ -1197,15 +1190,15 @@ const CandidateProfile = ({
             }
           }
           break;
-          
+
         case 'boolean':
         case 'yesno':
           const boolValue = formData[field.id];
-          answer = boolValue === 'yes' || boolValue === true ? 'Yes' : 
-                   boolValue === 'no' || boolValue === false ? 'No' : 
-                   boolValue || 'Not answered';
+          answer = boolValue === 'yes' || boolValue === true ? 'Yes' :
+            boolValue === 'no' || boolValue === false ? 'No' :
+              boolValue || 'Not answered';
           break;
-          
+
         case 'multichoice':
         case 'dropdown':
         case 'multiselect':
@@ -1213,14 +1206,14 @@ const CandidateProfile = ({
         case 'radio':
           answer = formData[field.id];
           break;
-          
+
         case 'number':
         case 'date':
         case 'website':
         case 'address':
           answer = formData[field.id];
           break;
-          
+
         default:
           answer = formData[field.id];
       }
@@ -1292,10 +1285,10 @@ const CandidateProfile = ({
             </Text>
           </div>
         )}
-        
+
         <div className="space-y-4">
           {formAnswers.map((item, index) => (
-            <div 
+            <div
               key={index}
               className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all duration-200"
             >
@@ -1322,7 +1315,7 @@ const CandidateProfile = ({
                   <EditOutlined className="text-indigo-600 text-sm" />
                 )}
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <Text className="text-sm font-medium text-gray-700">
@@ -1334,12 +1327,12 @@ const CandidateProfile = ({
                 </div>
                 {item.type === 'file' && formData[item.fieldId] ? (
                   <div className="flex items-center gap-2">
-                    <button 
+                    <button
                       onClick={() => {
                         const fileData = formData[item.fieldId];
                         const fileUrl = extractFileUrl(fileData) || extractFileUrl(formData[item.fieldId]);
                         const fileName = extractFileName(fileData) || extractFileName(formData[`${item.fieldId}_filename`]);
-                        
+
                         handleViewFile(fileUrl, fileName, item.label || 'File');
                       }}
                       className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0"
@@ -1348,23 +1341,23 @@ const CandidateProfile = ({
                       {(() => {
                         const fileData = formData[item.fieldId];
                         const fileName = extractFileName(fileData) || extractFileName(formData[`${item.fieldId}_filename`]) || 'View File';
-                        
+
                         // Truncate long filenames
                         return fileName.length > 30 ? fileName.substring(0, 30) + '...' : fileName;
                       })()}
                     </button>
                   </div>
                 ) : item.type === 'website' && item.answer && item.answer.startsWith('http') ? (
-                  <a 
-                    href={item.answer} 
-                    target="_blank" 
+                  <a
+                    href={item.answer}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 font-medium break-words"
                   >
                     {item.answer}
                   </a>
                 ) : (
-                  (['text','longtext','motivation','textarea'].includes(item.type) && item.answer) ? (
+                  (['text', 'longtext', 'motivation', 'textarea'].includes(item.type) && item.answer) ? (
                     <Text className="text-gray-900 font-medium break-words">
                       {renderTextWithLinks(item.answer)}
                     </Text>
@@ -1375,13 +1368,13 @@ const CandidateProfile = ({
                   )
                 )}
               </div>
-              
+
               {(item.type === 'email' || item.type === 'phone') && (
                 <div className="flex gap-1">
                   {item.type === 'email' && (
-                    <Button 
-                      size="small" 
-                      type="text" 
+                    <Button
+                      size="small"
+                      type="text"
                       icon={<MailOutlined />}
                       onClick={() => window.open(`mailto:${item.answer}`, '_blank')}
                       className="hover:bg-indigo-100 hover:text-indigo-600"
@@ -1389,9 +1382,9 @@ const CandidateProfile = ({
                     />
                   )}
                   {item.type === 'phone' && (
-                    <Button 
-                      size="small" 
-                      type="text" 
+                    <Button
+                      size="small"
+                      type="text"
                       icon={<PhoneOutlined />}
                       onClick={() => window.open(`tel:${item.answer}`, '_blank')}
                       className="hover:bg-indigo-100 hover:text-indigo-600"
@@ -1421,7 +1414,7 @@ const CandidateProfile = ({
 
       {/* Stage Progress Card */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
               <StarOutlined className="text-white text-sm" />
@@ -1433,97 +1426,97 @@ const CandidateProfile = ({
               </Text>
             </div>
           </div>
-            <div className="flex items-center gap-3">
-              <Select
-                size="small"
-                value={candidate?.stageId || stages.find(s => s.title === candidate?.stage || s.name === candidate?.stage)?.id}
-                style={{ minWidth: 180 }}
-                loading={updatingStage}
-                disabled={updatingStage}
-                onChange={async (targetStageId) => {
-                  if (updatingStage) return; // Prevent multiple simultaneous updates
+          <div className="flex items-center gap-3">
+            <Select
+              size="small"
+              value={candidate?.stageId || stages.find(s => s.title === candidate?.stage || s.name === candidate?.stage)?.id}
+              style={{ minWidth: 180 }}
+              loading={updatingStage}
+              disabled={updatingStage}
+              onChange={async (targetStageId) => {
+                if (updatingStage) return; // Prevent multiple simultaneous updates
 
-                  const previousStageId = candidate?.stageId;
-                  const newStage = stages.find(s => s.id === targetStageId);
-                  const newStageName = newStage?.title || newStage?.name || 'Unknown';
+                const previousStageId = candidate?.stageId;
+                const newStage = stages.find(s => s.id === targetStageId);
+                const newStageName = newStage?.title || newStage?.name || 'Unknown';
 
-                  setUpdatingStage(true);
+                setUpdatingStage(true);
 
-                  try {
-                    // Optimistic update - immediately update local state
-                    const updatedCandidate = {
-                      ...candidate,
-                      stageId: targetStageId,
-                      stage: newStageName
-                    };
-                    setCandidate(updatedCandidate);
+                try {
+                  // Optimistic update - immediately update local state
+                  const updatedCandidate = {
+                    ...candidate,
+                    stageId: targetStageId,
+                    stage: newStageName
+                  };
+                  setCandidate(updatedCandidate);
 
-                    // Call parent with immediate update for optimistic UI
-                    if (onUpdate) {
-                      onUpdate(candidateId, targetStageId);
-                    }
-
-                    // Then sync with server in background
-                    await ATSService.moveCandidate({
-                      targetStage: targetStageId,
-                      candidateId: candidateId,
-                      destinationCol: [String(candidateId)],
-                    });
-
-                    message.success(`Moved to ${newStageName}`);
-
-                    // Final refresh to ensure consistency (shorter delay for better UX)
-                    setTimeout(() => {
-                      loadCandidateData();
-                      if (onUpdate) {
-                        onUpdate();
-                      }
-                    }, 100);
-
-                  } catch (e) {
-                    console.error('Stage update failed:', e);
-                    message.error('Failed to update stage');
-
-                    // Revert optimistic update on error
-                    setCandidate({
-                      ...candidate,
-                      stageId: previousStageId,
-                      stage: stages.find(s => s.id === previousStageId)?.title || 'Applied'
-                    });
-                  } finally {
-                    setUpdatingStage(false);
+                  // Call parent with immediate update for optimistic UI
+                  if (onUpdate) {
+                    onUpdate(candidateId, targetStageId);
                   }
-                }}
-                options={stages.map(s => ({ label: s.title || s.name, value: s.id }))}
-              />
-              <div className="flex items-center gap-2">
-                <Text className="text-lg font-bold" style={{ color: getProgressColor() }}>
-                  {updatingStage ? (
-                    <span className="opacity-60">Updating...</span>
-                  ) : (
-                    `${calculateStageProgress()}%`
-                  )}
-                </Text>
-                {updatingStage && (
-                  <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+
+                  // Then sync with server in background
+                  await ATSService.moveCandidate({
+                    targetStage: targetStageId,
+                    candidateId: candidateId,
+                    destinationCol: [String(candidateId)],
+                  });
+
+                  message.success(`Moved to ${newStageName}`);
+
+                  // Final refresh to ensure consistency (shorter delay for better UX)
+                  setTimeout(() => {
+                    loadCandidateData();
+                    if (onUpdate) {
+                      onUpdate();
+                    }
+                  }, 100);
+
+                } catch (e) {
+                  console.error('Stage update failed:', e);
+                  message.error('Failed to update stage');
+
+                  // Revert optimistic update on error
+                  setCandidate({
+                    ...candidate,
+                    stageId: previousStageId,
+                    stage: stages.find(s => s.id === previousStageId)?.title || 'Applied'
+                  });
+                } finally {
+                  setUpdatingStage(false);
+                }
+              }}
+              options={stages.map(s => ({ label: s.title || s.name, value: s.id }))}
+            />
+            <div className="flex items-center gap-2">
+              <Text className="text-lg font-bold" style={{ color: getProgressColor() }}>
+                {updatingStage ? (
+                  <span className="opacity-60">Updating...</span>
+                ) : (
+                  `${calculateStageProgress()}%`
                 )}
-              </div>
+              </Text>
+              {updatingStage && (
+                <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+              )}
             </div>
+          </div>
         </div>
-        
+
         <div className="space-y-3">
-          <Progress 
-            percent={calculateStageProgress()} 
+          <Progress
+            percent={calculateStageProgress()}
             strokeColor={getProgressColor()}
             strokeWidth={6}
             showInfo={false}
             size="small"
           />
-          
+
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center gap-2">
-              <div 
-                className="w-2 h-2 rounded-full" 
+              <div
+                className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: getProgressColor() }}
               ></div>
               <Text className="text-sm font-medium text-gray-700">
@@ -1545,7 +1538,7 @@ const CandidateProfile = ({
           </div>
           <Text className="text-sm font-medium text-gray-900">Contact Information</Text>
         </div>
-        
+
         <div className="space-y-2">
           <div className="flex items-center gap-3 p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
             <MailOutlined className="text-blue-500 text-sm" />
@@ -1554,16 +1547,16 @@ const CandidateProfile = ({
               <Text className="text-sm font-medium text-gray-900 truncate">{candidate?.email || 'Not provided'}</Text>
             </div>
             {candidate?.email && (
-              <Button 
-                size="small" 
-                type="text" 
+              <Button
+                size="small"
+                type="text"
                 icon={<MailOutlined />}
                 onClick={() => window.open(`mailto:${candidate.email}`, '_blank')}
                 className="w-6 h-6 p-0 hover:bg-blue-100 hover:text-blue-600"
               />
             )}
           </div>
-          
+
           {candidate?.phone && (
             <div className="flex items-center gap-3 p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
               <PhoneOutlined className="text-green-500 text-sm" />
@@ -1571,16 +1564,16 @@ const CandidateProfile = ({
                 <div className='min-w-[100px] flex flex-1'><Text className="text-xs text-gray-500 ">Phone</Text></div>
                 <Text className="text-sm font-medium text-gray-900">{candidate.phone}</Text>
               </div>
-              <Button 
-                size="small" 
-                type="text" 
+              <Button
+                size="small"
+                type="text"
                 icon={<PhoneOutlined />}
                 onClick={() => window.open(`tel:${candidate.phone}`, '_blank')}
                 className="w-6 h-6 p-0 hover:bg-green-100 hover:text-green-600"
               />
             </div>
           )}
-          
+
           {/* Last Communication Field */}
           <div className="flex items-center gap-3 p-2 bg-orange-50 rounded hover:bg-orange-100 transition-colors border border-orange-200">
             <ClockCircleOutlined className="text-orange-500 text-sm" />
@@ -1618,9 +1611,9 @@ const CandidateProfile = ({
               </div>
             </div>
             <div className="flex gap-1">
-              <Button 
-                size="small" 
-                type="text" 
+              <Button
+                size="small"
+                type="text"
                 icon={<CalendarOutlined />}
                 onClick={() => {
                   // Quick action to set today's date
@@ -1630,9 +1623,9 @@ const CandidateProfile = ({
                 title="Mark as contacted today"
               />
               {lastCommunication && (
-                <Button 
-                  size="small" 
-                  type="text" 
+                <Button
+                  size="small"
+                  type="text"
                   icon={<CloseOutlined />}
                   onClick={() => {
                     updateLastCommunication(null);
@@ -1643,14 +1636,85 @@ const CandidateProfile = ({
               )}
             </div>
           </div>
-         
+
         </div>
       </div>
+
+      {/* Scheduled Interview Card */}
+      {candidate?.interviewMeetingTimestamp && (
+        <div className="bg-white rounded-lg border border-purple-200 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 bg-purple-500 rounded flex items-center justify-center">
+              <CalendarOutlined className="text-white text-xs" />
+            </div>
+            <Text className="text-sm font-medium text-gray-900">Scheduled Interview</Text>
+          </div>
+
+          <div className="p-3 bg-purple-50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <CalendarOutlined className="text-purple-600 text-sm" />
+                  <Text className="text-sm font-medium text-purple-800">
+                    {moment(candidate.interviewMeetingTimestamp).format('dddd, MMMM D, YYYY')}
+                  </Text>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ClockCircleOutlined className="text-purple-600 text-sm" />
+                  <Text className="text-sm text-purple-700">
+                    {moment(candidate.interviewMeetingTimestamp).format('h:mm A')}
+                    {candidate.interviewMeetingTimestampEnd && (
+                      <> - {moment(candidate.interviewMeetingTimestampEnd).format('h:mm A')}</>
+                    )}
+                  </Text>
+                </div>
+                {candidate.interviewMeetingLink && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <GlobalOutlined className="text-purple-600 text-sm" />
+                    <a
+                      href={candidate.interviewMeetingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-purple-600 hover:text-purple-800 underline"
+                    >
+                      Join Meeting
+                    </a>
+                  </div>
+                )}
+              </div>
+              {(candidate.calendly_cancel_url || candidate.calendly_reschedule_url) && (
+                <div className="flex flex-col gap-1">
+                  {candidate.calendly_reschedule_url && (
+                    <a
+                      href={candidate.calendly_reschedule_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-purple-600 hover:text-purple-800"
+                    >
+                      Reschedule
+                    </a>
+                  )}
+                  {candidate.calendly_cancel_url && (
+                    <a
+                      href={candidate.calendly_cancel_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-red-500 hover:text-red-700"
+                    >
+                      Cancel
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Application Form Answers Card */}
       {renderApplicationFormCard()}
 
-   
+
     </div>
   );
 
@@ -1671,8 +1735,8 @@ const CandidateProfile = ({
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   size="small"
                   onClick={() => {
                     // Extract filename from URL if possible
@@ -1689,7 +1753,7 @@ const CandidateProfile = ({
                 >
                   View
                 </Button>
-                <Button 
+                <Button
                   size="small"
                   icon={<DownloadOutlined />}
                   onClick={async () => {
@@ -1703,7 +1767,7 @@ const CandidateProfile = ({
                         const decodedPart = decodeURIComponent(lastPart);
                         fileName = decodedPart.split('_').pop() || 'resume';
                       }
-                      
+
                       await downloadFile(resumeUrl, fileName);
                       message.success('Download started');
                     } catch (error) {
@@ -1718,7 +1782,7 @@ const CandidateProfile = ({
               </div>
             </div>
           </div>
-          
+
           <div className="text-center">
             <Upload
               accept=".pdf,.doc,.docx"
@@ -1734,7 +1798,7 @@ const CandidateProfile = ({
                 return true;
               }}
             >
-              <Button  type="default" loading={uploadingResume}>
+              <Button type="default" loading={uploadingResume}>
                 Replace Resume
               </Button>
             </Upload>
@@ -1778,8 +1842,8 @@ const CandidateProfile = ({
             {interviewHistory.length} interview{interviewHistory.length !== 1 ? 's' : ''} conducted
           </Typography.Text>
         </div>
-        <Button 
-          type="primary" 
+        <Button
+          type="primary"
           icon={<QuestionCircleOutlined />}
           onClick={() => setInterviewFormVisible(true)}
           className="hover:!text-white"
@@ -1799,8 +1863,8 @@ const CandidateProfile = ({
           <Typography.Text type="secondary" className="block mb-4">
             Start conducting interviews to track candidate progress
           </Typography.Text>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<QuestionCircleOutlined />}
             onClick={() => setInterviewFormVisible(true)}
             className="hover:!text-white"
@@ -1828,8 +1892,8 @@ const CandidateProfile = ({
                     </Tooltip>
                   </div>
                   <Typography.Text type="secondary" className="text-sm block">
-                    Conducted by {interview.interviewedBy?.name || 
-                      (interview.interviewedBy?.firstName && interview.interviewedBy?.lastName 
+                    Conducted by {interview.interviewedBy?.name ||
+                      (interview.interviewedBy?.firstName && interview.interviewedBy?.lastName
                         ? `${interview.interviewedBy.firstName} ${interview.interviewedBy.lastName}`.trim()
                         : interview.interviewedBy?.email?.split('@')[0] || 'Unknown')
                     } • {moment(interview.interviewDate).format('MMM DD, YYYY HH:mm')}
@@ -1857,7 +1921,7 @@ const CandidateProfile = ({
                 </div>
                 <div className="text-center p-2 bg-gray-50 rounded">
                   <div className="font-semibold text-purple-600">
-                    {interview.skillScores?.length > 0 
+                    {interview.skillScores?.length > 0
                       ? Math.round(interview.skillScores.reduce((sum, skill) => sum + skill.score, 0) / interview.skillScores.length * 10) / 10
                       : 'N/A'
                     }
@@ -1878,8 +1942,8 @@ const CandidateProfile = ({
 
               {/* Action Buttons */}
               <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
-                <Button 
-                  size="small" 
+                <Button
+                  size="small"
                   type="text"
                   onClick={() => {
                     // Show interview details in a modal
@@ -1894,8 +1958,8 @@ const CandidateProfile = ({
                             <strong>Stage:</strong> {interview.stageName}
                           </div>
                           <div>
-                            <strong>Conducted by:</strong> {interview.interviewedBy?.name || 
-                              (interview.interviewedBy?.firstName && interview.interviewedBy?.lastName 
+                            <strong>Conducted by:</strong> {interview.interviewedBy?.name ||
+                              (interview.interviewedBy?.firstName && interview.interviewedBy?.lastName
                                 ? `${interview.interviewedBy.firstName} ${interview.interviewedBy.lastName}`.trim()
                                 : interview.interviewedBy?.email?.split('@')[0] || 'Unknown')
                             }
@@ -1924,7 +1988,7 @@ const CandidateProfile = ({
                                   // Find the actual question from template
                                   const question = interview.templateId?.questions?.find(q => q.id === response.questionId);
                                   const questionText = question?.question || response.questionId;
-                                  
+
                                   return (
                                     <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
                                       <div className="font-medium">Q{idx + 1}: {questionText}</div>
@@ -1947,7 +2011,7 @@ const CandidateProfile = ({
                                   const skillTemplate = interview.templateId?.skills?.find(s => s.id === skill.skillId);
                                   const skillName = skillTemplate?.name || skill.skillId;
                                   const maxScore = skillTemplate?.maxScore || 10;
-                                  
+
                                   return (
                                     <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
                                       <div className="flex justify-between items-center">
@@ -1976,8 +2040,8 @@ const CandidateProfile = ({
                   View Details
                 </Button>
                 {interview.status === 'draft' && (
-                  <Button 
-                    size="small" 
+                  <Button
+                    size="small"
                     type="primary"
                     onClick={() => {
                       // TODO: Open interview form with existing data
@@ -2053,18 +2117,18 @@ const CandidateProfile = ({
               {teamMembers
                 .filter(u => (u.email || '').toLowerCase() !== (currentUser?.email || '').toLowerCase())
                 .map((u) => {
-                const name = `${u.firstName || ''} ${u.lastName || ''}`.trim();
-                return (
-                  <MentionsOption key={u._id} value={u.email}>
-                    {name ? `${name} (${u.email})` : u.email}
-                  </MentionsOption>
-                );
-              })}
+                  const name = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+                  return (
+                    <MentionsOption key={u._id} value={u.email}>
+                      {name ? `${name} (${u.email})` : u.email}
+                    </MentionsOption>
+                  );
+                })}
             </Mentions>
           </div>
           <div className="flex justify-end">
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               onClick={addNote}
               disabled={!newNote.trim()}
               size="small"
@@ -2100,7 +2164,7 @@ const CandidateProfile = ({
               </div>
             </List.Item>
           )}
-          locale={{ 
+          locale={{
             emptyText: (
               <div className="text-center py-8">
                 <Text className="text-gray-500">No notes yet</Text>
@@ -2157,16 +2221,16 @@ const CandidateProfile = ({
                       {item.direction === 'in'
                         ? `From: ${item.from || 'Candidate'}`
                         : (() => {
-                            const u = item.user_id;
-                            if (u && typeof u === 'object') {
-                              const name = `${u.firstName || ''} ${u.lastName || ''}`.trim();
-                              const email = u.email || '';
-                              if (name && email) return `From: ${name} <${email}>`;
-                              if (name) return `From: ${name}`;
-                              if (email) return `From: ${email}`;
-                            }
-                            return `From: ${u || 'Recruiter'}`;
-                          })()}
+                          const u = item.user_id;
+                          if (u && typeof u === 'object') {
+                            const name = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+                            const email = u.email || '';
+                            if (name && email) return `From: ${name} <${email}>`;
+                            if (name) return `From: ${name}`;
+                            if (email) return `From: ${email}`;
+                          }
+                          return `From: ${u || 'Recruiter'}`;
+                        })()}
                     </Text>
                   </div>
                   <Paragraph className="m-0 mt-2 text-gray-700 whitespace-pre-wrap">
@@ -2191,7 +2255,7 @@ const CandidateProfile = ({
   const renderNavigation = () => (
     <div className="bg-white border-t border-gray-200 px-4 py-3">
       <div className="flex items-center justify-between">
-        <Button 
+        <Button
           icon={<LeftOutlined />}
           disabled={currentIndex === 0 || allCandidates.length <= 1}
           onClick={goToPrevious}
@@ -2200,7 +2264,7 @@ const CandidateProfile = ({
         >
           Previous Candidate
         </Button>
-        
+
         <div className="flex items-center gap-3">
           <div className="text-center">
             <Text className="text-xs text-gray-500">Viewing</Text>
@@ -2208,18 +2272,17 @@ const CandidateProfile = ({
               {currentIndex + 1} of {allCandidates.length}
             </Text>
           </div>
-          
+
           <div className="flex items-center gap-1">
             {Array.from({ length: Math.min(allCandidates.length, 5) }, (_, index) => (
               <div
                 key={index}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                  index === currentIndex
-                    ? 'bg-blue-500 w-4'
-                    : index < currentIndex
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${index === currentIndex
+                  ? 'bg-blue-500 w-4'
+                  : index < currentIndex
                     ? 'bg-green-400'
                     : 'bg-gray-300'
-                }`}
+                  }`}
               />
             ))}
             {allCandidates.length > 5 && (
@@ -2229,8 +2292,8 @@ const CandidateProfile = ({
             )}
           </div>
         </div>
-        
-        <Button 
+
+        <Button
           icon={<RightOutlined />}
           disabled={currentIndex === allCandidates.length - 1 || allCandidates.length <= 1}
           onClick={goToNext}
@@ -2253,8 +2316,8 @@ const CandidateProfile = ({
       open={!!candidateId}
       width={750}
       className="candidate-profile-drawer"
-      bodyStyle={{ 
-        padding: 0, 
+      bodyStyle={{
+        padding: 0,
         backgroundColor: '#ffffff',
         overflow: 'hidden'
       }}
@@ -2267,8 +2330,8 @@ const CandidateProfile = ({
       {renderHeader()}
 
       {/* Tabs Content */}
-      <Tabs 
-        activeKey={activeTab} 
+      <Tabs
+        activeKey={activeTab}
         onChange={setActiveTab}
         size="small"
         items={[
@@ -2314,23 +2377,7 @@ const CandidateProfile = ({
               </div>
             ),
           },
-          {
-            key: 'interviews',
-            label: (
-              <div className="flex items-center gap-2">
-                <QuestionCircleOutlined />
-                <span>Interviews</span>
-                {interviewHistory.length > 0 && (
-                  <Tag size="small" color="blue">{interviewHistory.length}</Tag>
-                )}
-              </div>
-            ),
-            children: (
-              <div className="interviews-tab-content">
-                {renderInterviewHistoryTab()}
-              </div>
-            ),
-          },
+
           {
             key: 'notes',
             label: (
@@ -2350,7 +2397,7 @@ const CandidateProfile = ({
 
       {/* Navigation Footer */}
       {renderNavigation()}
-      
+
       {/* File Viewer Modal */}
       <FileViewer
         visible={fileViewerVisible}
@@ -2359,7 +2406,7 @@ const CandidateProfile = ({
         fileName={viewingFile.fileName}
         title={viewingFile.title}
       />
-      
+
       {/* Interview Form Modal */}
       <InterviewFormModal
         visible={interviewFormVisible}

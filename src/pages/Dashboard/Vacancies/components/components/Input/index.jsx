@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import React from "react";
 
 const shapes = {
-  round: "rounded-lg",
+  round: "rounded-[15px]",
 };
 const variants = {
   fill: {
@@ -49,11 +49,9 @@ const Input = React.forwardRef(
     return (
       <>
         <label
-          className={`${className} p-0 flex border border-[#D0D5DD] items-center justify-center cursor-text bg-white text-sm ${
-            (shape && shapes[shape]) || ""
-          } ${variants[variant]?.[color] || variants[variant] || ""} ${
-            sizes[size] || ""
-          }`}
+          className={`${className} p-0 flex border border-[#D0D5DD] items-center justify-center cursor-text bg-white text-sm ${(shape && shapes[shape]) || ""
+            } ${variants[variant]?.[color] || variants[variant] || ""} ${sizes[size] || ""
+            }`}
           style={textarea ? { height: "auto" } : {}}
         >
           {!!label && label}
@@ -64,7 +62,7 @@ const Input = React.forwardRef(
               name={name}
               onChange={handleChange}
               placeholder={placeholder}
-              className="flex-1 h-full bg-transparent border-none rounded-lg outline-none focus:ring-0 text-sm"
+              className="flex-1 h-full bg-transparent border-none rounded-[15px] outline-none focus:ring-0 text-sm"
               rows={4}
               {...restProps}
             />
@@ -75,7 +73,7 @@ const Input = React.forwardRef(
               name={name}
               onChange={handleChange}
               placeholder={placeholder}
-              className="flex-1 h-full bg-transparent border-none rounded-lg outline-none focus:ring-0 text-sm placeholder:text-xs"
+              className="flex-1 h-full bg-transparent border-none rounded-[15px] outline-none focus:ring-0 text-sm placeholder:text-xs"
               {...restProps}
             />
           )}

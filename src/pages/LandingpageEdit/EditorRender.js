@@ -56,7 +56,7 @@ const RecommendedJobsSelector = React.memo(({
 
   // Memoize user ID to prevent unnecessary re-fetches
   const userId = useMemo(() => user?._id, [user?._id]);
-  
+
   // Memoize excludeCurrentJobId to prevent unnecessary re-fetches
   const excludeId = useMemo(() => excludeCurrentJobId, [excludeCurrentJobId]);
 
@@ -69,8 +69,8 @@ const RecommendedJobsSelector = React.memo(({
     if (!shouldFetchLocally || !userId) return;
 
     // Check if we should skip this fetch (same as last time)
-    if (lastFetchedUserId.current === userId && 
-        lastFetchedExcludeId.current === excludeId) {
+    if (lastFetchedUserId.current === userId &&
+      lastFetchedExcludeId.current === excludeId) {
       return;
     }
 
@@ -78,7 +78,7 @@ const RecommendedJobsSelector = React.memo(({
     const timeoutId = setTimeout(async () => {
       setLocalLoading(true);
       try {
-        
+
         const result = await CrudService.search(
           "LandingPageData",
           999, // Get a large number of results
@@ -107,11 +107,11 @@ const RecommendedJobsSelector = React.memo(({
         }));
 
         setLocalJobs(options);
-        
+
         // Update the last fetched values
         lastFetchedUserId.current = userId;
         lastFetchedExcludeId.current = excludeId;
-        
+
       } catch (error) {
         console.error("Error fetching jobs:", error);
         message.error("Failed to load jobs");
@@ -190,7 +190,7 @@ const RecommendedJobsSelector = React.memo(({
                 {getJobTitles[index]}
               </Text>
             </div>
-            <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+            <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
               <Select
                 style={selectStyle}
                 placeholder="Select a job"
@@ -234,11 +234,11 @@ const EditorRender = React.memo(({
   jobsLoading,
   lpId
 }) => {
-  console.log("editor render",lpId)
+  console.log("editor render", lpId)
   const router = useRouter();
   const { lpId: routerLpId } = router.query;
-  if(!lpId) lpId = routerLpId;
-  console.log("editor render",lpId)
+  if (!lpId) lpId = routerLpId;
+  console.log("editor render", lpId)
   const [changed, setChanged] = useState(false);
   const { setFocusRef } = useFocusContext();
   const [activeKeys, setActiveKeys] = useState([]); // Change to plural to indicate array
@@ -253,7 +253,7 @@ const EditorRender = React.memo(({
 
   const debouncedAutoSave = useCallback(() => {
     if (autoSaveTimeout.current) {
-        clearTimeout(autoSaveTimeout.current);
+      clearTimeout(autoSaveTimeout.current);
     }
     autoSaveTimeout.current = setTimeout(async () => {
       if (changed && lpId) {
@@ -262,7 +262,7 @@ const EditorRender = React.memo(({
           await CrudService.update("LandingPageData", lpId, {
             ...landingPageData,
             _id: undefined,
-          },"editor render -- auto save");
+          }, "editor render -- auto save");
           setChanged(false);
           console.log("Auto-saved form data");
         } catch (error) {
@@ -285,7 +285,7 @@ const EditorRender = React.memo(({
     await CrudService.update("LandingPageData", lpId, {
       ...landingPageData,
       _id: undefined,
-    },"editor render -- handle save").then(() => {
+    }, "editor render -- handle save").then(() => {
       message.success("Data saved successfully");
     });
     setChanged(false);
@@ -327,14 +327,14 @@ const EditorRender = React.memo(({
     setChanged(true);
     debouncedAutoSave();
   };
-  
+
   useEffect(() => {
     document.addEventListener("HANDLE.CHANGED", handleChanged);
     return () => document.removeEventListener("HANDLE.CHANGED", handleChanged);
   }, [handleChanged]);
 
   const bulletListItems = items.filter((item) => item.type === "bulletList");
-  
+
   const handleCheckboxChange = (checkedValues, parentKey) => {
     const updatedData = { ...landingPageData };
     updatedData[parentKey] = updatedData[parentKey].map((item, index) => ({
@@ -374,18 +374,18 @@ const EditorRender = React.memo(({
     const start = element.selectionStart;
     const end = element.selectionEnd;
     const currentText = landingPageData?.[key] || "";
-    const newText = 
-      currentText.substring(0, start) + 
-      cleanText + 
+    const newText =
+      currentText.substring(0, start) +
+      cleanText +
       currentText.substring(end);
     const finalText = max ? newText.slice(0, max) : newText;
-    
+
     setLandingPageData((d) => ({
       ...d,
       [key]: finalText,
     }));
     handleChanged();
-    
+
     // Update cursor position after paste
     setTimeout(() => {
       const newCursorPosition = start + cleanText.length;
@@ -417,7 +417,7 @@ const EditorRender = React.memo(({
   return (
     <div className="flex relative flex-col flex-grow text-sm">
       <div className="px-2">
-      {bulletListItems.map((parentItem, index) => (
+        {bulletListItems.map((parentItem, index) => (
           <Checkbox.Group
             className="flex flex-wrap gap-1 justify-between"
             key={index}
@@ -445,7 +445,7 @@ const EditorRender = React.memo(({
             await CrudService.update("LandingPageData", lpId, {
               ...landingPageData,
               _id: undefined,
-            },"editor render -- blur bullet list");
+            }, "editor render -- blur bullet list");
             setChanged(false);
           }
         }}
@@ -489,11 +489,10 @@ const EditorRender = React.memo(({
                               viewBox="0 0 24 24"
                               strokeWidth={1.5}
                               stroke="currentColor"
-                              className={`size-3 transition-transform duration-200 ${
-                                activeKeys.includes(idx.toString())
-                                  ? "rotate-180"
-                                  : ""
-                              }`}
+                              className={`size-3 transition-transform duration-200 ${activeKeys.includes(idx.toString())
+                                ? "rotate-180"
+                                : ""
+                                }`}
                             >
                               <path
                                 strokeLinecap="round"
@@ -592,12 +591,11 @@ const EditorRender = React.memo(({
               {!a.diabledListChange &&
                 landingPageData[a.key].length < (a.maxArrayLength || 10000) && (
                   <button
-                    className={`flex items-center !px-2 mt-2 ${
-                      a.key === "growthPath" &&
+                    className={`flex items-center !px-2 mt-2 ${a.key === "growthPath" &&
                       landingPageData?.growthPath?.length >= 6
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
-                    }`}
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                      }`}
                     disabled={
                       a.key === "growthPath" &&
                       landingPageData?.growthPath?.length >= 6
@@ -681,9 +679,8 @@ const EditorRender = React.memo(({
                     className="!text-blue_gray-700 font-medium text-sm"
                   >
                     {a?.type === "image" && a?.multiple
-                      ? `up to (${
-                          a.maxFiles - (landingPageData?.[a.key]?.length || 0)
-                        } images)`
+                      ? `up to (${a.maxFiles - (landingPageData?.[a.key]?.length || 0)
+                      } images)`
                       : a.label}
                   </Text>
                 </div>

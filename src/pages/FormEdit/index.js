@@ -118,6 +118,7 @@ export default function FormEdit({ paramsId }) {
   const [formSections, setFormSections] = useState([]);
   const [selectedSection, setSelectedSection] = useState(null);
   const [isEditingForm, setIsEditingForm] = useState(true);
+  const [isEditingButtonSettings, setIsEditingButtonSettings] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [device, setDevice] = useState("desktop");
   
@@ -323,7 +324,7 @@ export default function FormEdit({ paramsId }) {
   }, [landingPageData]);
 
   // 🎯 SINGLE SOURCE OF TRUTH: Current step state
-  const [currentStep, setCurrentStep] = useState(0); // 0 = intro, 1+ = form fields
+  const [currentStep, setCurrentStep] = useState(1); // 1 = contact info (first step), 2+ = other form fields
 
   const [forceUpdate, setForceUpdate] = useState(0); // Force re-render key
   const [aiFormModalVisible, setAiFormModalVisible] = useState(false);
@@ -816,6 +817,15 @@ export default function FormEdit({ paramsId }) {
             // Set both states in correct order
             setLandingPageData(res.data);
             setFormSections(fields);
+
+            // 🔥 Auto-select the first field (Contact Information) on load
+            if (fields.length > 0) {
+              const firstField = fields[0];
+              setSelectedSection(firstField);
+              setIsEditingForm(false);
+              setCurrentStep(1);
+              console.log("🎯 Auto-selected first field on load:", firstField?.type);
+            }
 
             // 🔥 Check for unpublished form changes after loading data
             setTimeout(() => {
@@ -1373,8 +1383,8 @@ export default function FormEdit({ paramsId }) {
   // 🎯 SYNC STEP WITH SELECTION: Update currentStep when selectedSection changes
   useEffect(() => {
     if (isEditingForm || !selectedSection) {
-      // Intro step when editing form or no selection
-      setCurrentStep(0);
+      // Default to first field step when editing form or no selection
+      setCurrentStep(1);
     } else {
       // Find the step for the selected field
       const fieldIndex = formSections.findIndex(
@@ -1385,8 +1395,8 @@ export default function FormEdit({ paramsId }) {
         setCurrentStep(step);
         console.log("🎯 Step sync: Selected field leads to step", step);
       } else {
-        setCurrentStep(0); // Fallback to intro
-        console.log("🎯 Step sync: Field not found, defaulting to intro step");
+        setCurrentStep(1); // Fallback to first field
+        console.log("🎯 Step sync: Field not found, defaulting to first field step");
       }
     }
   }, [selectedSection, isEditingForm, formSections]);
@@ -1394,25 +1404,22 @@ export default function FormEdit({ paramsId }) {
   // 🎯 SYNC SELECTION WITH STEP: Update selectedSection when currentStep changes externally
   const handleStepChange = (newStep) => {
     console.log("🎯 Step change requested:", newStep);
-    setCurrentStep(newStep);
+    // Ensure step is at least 1 (no intro step)
+    const step = Math.max(1, newStep);
+    setCurrentStep(step);
+    setIsEditingButtonSettings(false); // Always clear button settings when changing steps
 
-    if (newStep === 0) {
-      // Step 0 = intro, clear selection
+    // Step 1+ = field selection
+    const fieldIndex = step - 1;
+    const targetField = formSections[fieldIndex];
+    if (targetField) {
+      setSelectedSection(targetField);
+      setIsEditingForm(false);
+    } else {
+      // Field not found, fallback to form editing
+      setCurrentStep(1);
       setSelectedSection(null);
       setIsEditingForm(true);
-    } else {
-      // Step 1+ = field selection
-      const fieldIndex = newStep - 1;
-      const targetField = formSections[fieldIndex];
-      if (targetField) {
-        setSelectedSection(targetField);
-        setIsEditingForm(false);
-      } else {
-        // Field not found, fallback to intro
-        setCurrentStep(0);
-        setSelectedSection(null);
-        setIsEditingForm(true);
-      }
     }
   };
 
@@ -3044,53 +3051,7 @@ export default function FormEdit({ paramsId }) {
                                   flexShrink: 0,
                                 }}
                               >
-                                {/* Header (not draggable) */}
-                                <div
-                                  className="flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group hover:bg-[#eff8ff]"
-                                  style={{
-                                    minWidth: 0,
-                                    flexShrink: 0,
-                                    width: "100%",
-                                  }}
-                                  onClick={() => {
-                                    console.log(
-                                      "🖱️ Sidebar click: Header section (intro)"
-                                    );
-                                    handleStepChange(0); // Go to intro step
-                                  }}
-                                >
-                                  <div
-                                    className="flex flex-1 justify-start items-center transition-all"
-                                    style={{ minWidth: 0, flexShrink: 0 }}
-                                  >
-                                    <div
-                                      className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
-                                      style={
-                                        currentStep === 0
-                                          ? {
-                                              background: brandColor,
-                                              opacity: 0.6,
-                                            }
-                                          : {}
-                                      }
-                                    >
-                                      <img
-                                        src="/images/img_flex_align_top.svg"
-                                        alt="flexaligntop"
-                                        className="h-[16px] w-[16px] transition-all"
-                                        style={
-                                          currentStep === 0
-                                            ? {
-                                                filter:
-                                                  "brightness(0) invert(1)",
-                                              }
-                                            : {}
-                                        }
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                                {/* Lead Capture Group - Consistent with other items */}
+                                {/* Lead Capture Group - Contact Information (first item) */}
                                 {formSections.some((s) => s.isLeadCapture) && (
                                   <Tooltip
                                     title="Contact Information - Essential lead capture fields (Name, Email, Phone)"
@@ -3525,6 +3486,67 @@ export default function FormEdit({ paramsId }) {
                                   ))}
                                 {provided.placeholder}
 
+                                {/* Button Settings - Consistent with other items */}
+                                <Tooltip
+                                  title="Button Settings - Customize Previous, Next, and Submit button texts"
+                                  placement="right"
+                                  mouseEnterDelay={0.3}
+                                >
+                                  <div
+                                    className={`flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group ${
+                                      isEditingButtonSettings
+                                        ? "bg-[#eff8ff]"
+                                        : "hover:bg-[#eff8ff]"
+                                    }`}
+                                    style={{
+                                      minWidth: 0,
+                                      flexShrink: 0,
+                                      width: "100%",
+                                    }}
+                                    onClick={() => {
+                                      setIsEditingButtonSettings(true);
+                                      setIsEditingForm(false);
+                                      setSelectedSection(null);
+                                    }}
+                                  >
+                                    <div
+                                      className="flex flex-1 justify-start items-center transition-all"
+                                      style={{ minWidth: 0, flexShrink: 0 }}
+                                    >
+                                      <div
+                                        className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
+                                        style={
+                                          isEditingButtonSettings
+                                            ? {
+                                                background: brandColor,
+                                                opacity: 0.6,
+                                              }
+                                            : {}
+                                        }
+                                      >
+                                        <svg
+                                          className="h-[16px] w-[16px]"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                          style={
+                                            isEditingButtonSettings
+                                              ? { filter: "brightness(0) invert(1)" }
+                                              : { color: "#4B5563" }
+                                          }
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M4 6h16M4 12h16m-7 6h7"
+                                          />
+                                        </svg>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </Tooltip>
+
                                 {/* Add Button - Consistent with other items */}
                                 <Tooltip
                                   title="Add new field"
@@ -3596,212 +3618,32 @@ export default function FormEdit({ paramsId }) {
                           </div>
                         </div>
 
+                        {/* Always visible action buttons */}
+                        <div className="flex gap-2 mb-6">
+                          <button
+                            onClick={() => setQuestionModal(true)}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 transition-colors hover:bg-gray-50"
+                          >
+                            ➕ Add Field
+                          </button>
+                          <button
+                            onClick={() => setAiFormModalVisible(true)}
+                            className="px-4 py-2 text-sm font-medium text-white rounded-lg shadow-md transition-transform hover:scale-105"
+                            style={{
+                              background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+                            }}
+                          >
+                            ⚡{" "}
+                            {formSections.length > 0
+                              ? "Regenerate with AI"
+                              : "Generate with AI"}
+                          </button>
+                        </div>
+
                         {isEditingForm ? (
                           <>
-                            {/* Form Title and Description with Custom Autosave */}
-                            <div className="mb-6 space-y-4">
-                              <div>
-                                <label className="block mb-2 text-sm font-medium text-gray-700">
-                                  Form Title
-                                </label>
-                                <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                                  <CustomInput
-                                    value={landingPageData?.form?.title || ""}
-                                    onChange={(value) => {
-                                      setHasImmediateUnsavedChanges(true);
-                                        sessionHasChangesRef.current = true;
-                                      const updatedData = {
-                                        ...landingPageData,
-                                        form: {
-                                          ...landingPageData?.form,
-                                          title: value.slice(0, 100),
-                                        },
-                                      };
-                                      setLandingPageData(updatedData);
-                                        checkForUnpublishedFormChanges(updatedData);
-                                      debouncedSave(updatedData);
-                                    }}
-                                    placeholder="e.g., Let's get started"
-                                    maxLength={100}
-                                    className="text-sm border-none focus:ring-0"
-                                    shape="round"
-                                  />
-                                </div>
-                                <div className="mt-1 text-xs text-gray-500">
-                                  {(landingPageData?.form?.title || "").length}
-                                  /100
-                                </div>
-                              </div>
-                              <div>
-                                <label className="block mb-2 text-sm font-medium text-gray-700">
-                                  Form Description
-                                </label>
-                                <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                                  <CustomInput
-                                    value={
-                                      landingPageData?.form?.description || ""
-                                    }
-                                    onChange={(value) => {
-                                      setHasImmediateUnsavedChanges(true);
-                                        sessionHasChangesRef.current = true;
-                                      const updatedData = {
-                                        ...landingPageData,
-                                        form: {
-                                          ...landingPageData?.form,
-                                          description: value.slice(0, 150),
-                                        },
-                                      };
-                                      setLandingPageData(updatedData);
-                                        checkForUnpublishedFormChanges(updatedData);
-                                      debouncedSave(updatedData);
-                                    }}
-                                    placeholder="e.g., We'll ask you a few questions to learn more about you."
-                                    maxLength={500}
-                                    textarea={true}
-                                    className="text-sm border-none focus:ring-0"
-                                    shape="round"
-                                  />
-                                </div>
-                                <div className="mt-1 text-xs text-gray-500">
-                                  {
-                                    (landingPageData?.form?.description || "")
-                                      .length
-                                  }
-                                  /500
-                                </div>
-                              </div>
-                              {/* Form Buttons Texts */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                                    Start Button Text
-                                  </label>
-                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                                    <CustomInput
-                                      value={landingPageData?.form?.startApplicationText || "Start Application"}
-                                      onChange={(value) => {
-                                        setHasImmediateUnsavedChanges(true);
-                                        sessionHasChangesRef.current = true;
-                                        const updatedData = {
-                                          ...landingPageData,
-                                          form: {
-                                            ...landingPageData?.form,
-                                            startApplicationText: value,
-                                          },
-                                        };
-                                        setLandingPageData(updatedData);
-                                        checkForUnpublishedFormChanges(updatedData);
-                                        debouncedSave(updatedData);
-                                      }}
-                                      className="text-sm border-none focus:ring-0"
-                                      shape="round"
-                                    />
-                                  </div>
-                                </div>
-                                <div>
-                                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                                    Submit Button Text
-                                  </label>
-                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                                    <CustomInput
-                                      value={landingPageData?.form?.submitText || "Submit"}
-                                      onChange={(value) => {
-                                        setHasImmediateUnsavedChanges(true);
-                                        sessionHasChangesRef.current = true;
-                                        const updatedData = {
-                                          ...landingPageData,
-                                          form: {
-                                            ...landingPageData?.form,
-                                            submitText: value,
-                                          },
-                                        };
-                                        setLandingPageData(updatedData);
-                                        checkForUnpublishedFormChanges(updatedData);
-                                        debouncedSave(updatedData);
-                                      }}
-                                      className="text-sm border-none focus:ring-0"
-                                      shape="round"
-                                    />
-                                  </div>
-                                </div>
-                                <div>
-                                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                                    Previous Button Text
-                                  </label>
-                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                                    <CustomInput
-                                      value={landingPageData?.form?.previousText || "Previous"}
-                                      onChange={(value) => {
-                                        setHasImmediateUnsavedChanges(true);
-                                        sessionHasChangesRef.current = true;
-                                        const updatedData = {
-                                          ...landingPageData,
-                                          form: {
-                                            ...landingPageData?.form,
-                                            previousText: value,
-                                          },
-                                        };
-                                        setLandingPageData(updatedData);
-                                        checkForUnpublishedFormChanges(updatedData);
-                                        debouncedSave(updatedData);
-                                      }}
-                                      className="text-sm border-none focus:ring-0"
-                                      shape="round"
-                                    />
-                                  </div>
-                                </div>
-                                <div>
-                                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                                    Next Button Text
-                                  </label>
-                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                                    <CustomInput
-                                      value={landingPageData?.form?.nextText || "Next"}
-                                      onChange={(value) => {
-                                        setHasImmediateUnsavedChanges(true);
-                                        sessionHasChangesRef.current = true;
-                                        const updatedData = {
-                                          ...landingPageData,
-                                          form: {
-                                            ...landingPageData?.form,
-                                            nextText: value,
-                                          },
-                                        };
-                                        setLandingPageData(updatedData);
-                                        checkForUnpublishedFormChanges(updatedData);
-                                        debouncedSave(updatedData);
-                                      }}
-                                      className="text-sm border-none focus:ring-0"
-                                      shape="round"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
                             {/* Form Fields */}
                             <div className="mt-6">
-                              <div className="flex justify-between items-center mb-4">
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => setQuestionModal(true)}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 transition-colors hover:bg-gray-50"
-                                  >
-                                    ➕ Add Field
-                                  </button>
-                                  <button
-                                    onClick={() => setAiFormModalVisible(true)}
-                                    className="px-4 py-2 text-sm font-medium text-white rounded-lg shadow-md transition-transform hover:scale-105"
-                                    style={{
-                                      background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                                    }}
-                                  >
-                                    ⚡{" "}
-                                    {formSections.length > 0
-                                      ? "Regenerate with AI"
-                                      : "Generate with AI"}
-                                  </button>
-                                </div>
-                              </div>
 
                               {/* Simplified Form Creation - No AI options */}
                               {formSections.length === 0 && (
@@ -3879,6 +3721,119 @@ export default function FormEdit({ paramsId }) {
                                   </div>
                                 </div>
                               )}
+                            </div>
+                          </>
+                        ) : isEditingButtonSettings ? (
+                          <>
+                            {/* Button Settings Editor */}
+                            <div className="space-y-6">
+                              <div>
+                                <Heading
+                                  size="4xl"
+                                  as="h5"
+                                  className="!text-gray-800 mb-4"
+                                >
+                                  Button Settings
+                                </Heading>
+                                <p className="text-sm text-gray-600 mb-6">
+                                  Customize the text displayed on navigation and submit buttons throughout your form.
+                                </p>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 gap-4">
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Previous Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.previousText || "Previous"}
+                                      onChange={(value) => {
+                                        setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            previousText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      placeholder="e.g., Previous, Back, Go Back"
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
+                                  <p className="mt-1 text-xs text-gray-500">
+                                    Shown on multi-step forms to go back to previous step
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Next Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.nextText || "Next"}
+                                      onChange={(value) => {
+                                        setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            nextText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      placeholder="e.g., Next, Continue, Proceed"
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
+                                  <p className="mt-1 text-xs text-gray-500">
+                                    Shown on multi-step forms to proceed to next step
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Submit Button Text
+                                  </label>
+                                  <div className="overflow-hidden w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                                    <CustomInput
+                                      value={landingPageData?.form?.submitText || "Submit Application"}
+                                      onChange={(value) => {
+                                        setHasImmediateUnsavedChanges(true);
+                                        sessionHasChangesRef.current = true;
+                                        const updatedData = {
+                                          ...landingPageData,
+                                          form: {
+                                            ...landingPageData?.form,
+                                            submitText: value,
+                                          },
+                                        };
+                                        setLandingPageData(updatedData);
+                                        checkForUnpublishedFormChanges(updatedData);
+                                        debouncedSave(updatedData);
+                                      }}
+                                      placeholder="e.g., Submit, Submit Application, Apply Now"
+                                      className="text-sm border-none focus:ring-0"
+                                      shape="round"
+                                    />
+                                  </div>
+                                  <p className="mt-1 text-xs text-gray-500">
+                                    Shown on the final step to submit the application
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                           </>
                         ) : (

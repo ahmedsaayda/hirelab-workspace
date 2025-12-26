@@ -107,10 +107,10 @@ const MultipleChoice = ({ field, value, onChange }) => (
       // Handle both string format ["HTML", "CSS"] and object format [{text: "HTML", isNegative: false}]
       const optionText = typeof option === 'string' ? option : option.text;
       const isSelected = value === optionText;
-      
+
       return (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className={`
             border-2 rounded-xl cursor-pointer transition-all duration-200
            
@@ -120,15 +120,15 @@ const MultipleChoice = ({ field, value, onChange }) => (
           <div className="flex items-center p-4">
             <div className={`
               w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0
-              ${isSelected 
-                ? 'bg-blue-500 text-white' 
+              ${isSelected
+                ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 text-gray-600'
               }
             `}>
               {letter}
             </div>
-            <p 
-             className={`text-sm  flex-1
+            <p
+              className={`text-sm  flex-1
               ${isSelected ? 'text-blue-500' : 'text-gray-800'}
             `}>
               {optionText}
@@ -154,10 +154,10 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
       // Handle both string format ["HTML", "CSS"] and object format [{text: "HTML", isNegative: false}]
       const optionText = typeof option === 'string' ? option : option.text;
       const isSelected = value?.includes(optionText);
-      
+
       return (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className={`
             border-2 rounded-xl cursor-pointer transition-all duration-200
           
@@ -174,14 +174,14 @@ const MultiSelectChoice = ({ field, value, onChange }) => (
           <div className="flex items-center p-4">
             <div className={`
               w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0
-              ${isSelected 
-                ? 'bg-blue-500 text-white' 
+              ${isSelected
+                ? 'bg-blue-500 text-white'
                 : ' border-2 border-gray-200'
               }
             `}>
               {letter}
             </div>
-            <p  className={`text-sm  flex-1
+            <p className={`text-sm  flex-1
               ${isSelected ? 'text-blue-500' : 'text-gray-800'}
             `}>
               {optionText}
@@ -239,20 +239,18 @@ const YesNoQuestion = ({ field, value, onChange }) => {
           onClick={() => onChange('yes')}
           className={`
             relative flex items-center justify-center px-6 py-4 rounded-xl border-2 transition-all duration-200 font-medium text-sm
-            ${
-              value === 'yes'
-                ? 'border-green-500 bg-green-50 text-green-700 shadow-md'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-25 hover:text-green-600'
+            ${value === 'yes'
+              ? 'border-green-500 bg-green-50 text-green-700 shadow-md'
+              : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-25 hover:text-green-600'
             }
           `}
         >
           <div className="flex items-center space-x-2">
             <div className={`
               w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
-              ${
-                value === 'yes'
-                  ? 'border-green-500 bg-green-500'
-                  : 'border-gray-300'
+              ${value === 'yes'
+                ? 'border-green-500 bg-green-500'
+                : 'border-gray-300'
               }
             `}>
               {value === 'yes' && (
@@ -264,26 +262,24 @@ const YesNoQuestion = ({ field, value, onChange }) => {
             <span>{yesLabel}</span>
           </div>
         </button>
-        
+
         <button
           type="button"
           onClick={() => onChange('no')}
           className={`
             relative flex items-center justify-center px-6 py-4 rounded-xl border-2 transition-all duration-200 font-medium text-sm
-            ${
-              value === 'no'
-                ? 'border-red-500 bg-red-50 text-red-700 shadow-md'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-red-300 hover:bg-red-25 hover:text-red-600'
+            ${value === 'no'
+              ? 'border-red-500 bg-red-50 text-red-700 shadow-md'
+              : 'border-gray-200 bg-white text-gray-600 hover:border-red-300 hover:bg-red-25 hover:text-red-600'
             }
           `}
         >
           <div className="flex items-center space-x-2">
             <div className={`
               w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200
-              ${
-                value === 'no'
-                  ? 'border-red-500 bg-red-50'
-                  : 'border-gray-300'
+              ${value === 'no'
+                ? 'border-red-500 bg-red-50'
+                : 'border-gray-300'
               }
             `}>
               {value === 'no' && (
@@ -301,7 +297,7 @@ const YesNoQuestion = ({ field, value, onChange }) => {
 };
 
 const FileUpload = ({ value, onChange, placeholder, isVideo = false }) => (
-  <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+  <div className="relative border-2 border-dashed border-gray-300 rounded-[15px] p-8 text-center hover:border-gray-400 transition-colors">
     <div className="space-y-4">
       <div className="text-blue-500">
         <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,43 +329,43 @@ const FileUpload = ({ value, onChange, placeholder, isVideo = false }) => (
 export default function ApplyPagePreview({ landingPageData, currentStep = 0, isPreviewMode = true, onStepChange }) {
   // 🎨 BRAND COLORS FROM DATABASE  
   const user = useSelector(selectUser);
-  
+
   // STATE DECLARATIONS (MOVED UP TO MATCH APPLY.JS)
   const [formData, setFormData] = useState({});
   const [formFields, setFormFields] = useState([]);
   const [previewOptInAccepted, setPreviewOptInAccepted] = useState(false);
   // Note: currentStep is now controlled by parent component
   // Removed detectedCountry since we're using regular Input instead of PhoneInput
-  
+
   // 🎨 DYNAMIC BRAND COLORS - NO HARDCODING!
   const [stableColors, setStableColors] = useState({
     primary: landingPageData?.primaryColor || null  // NO hardcoded colors!
   });
-  
+
   // Update colors when landing page data changes (SAME AS APPLY.JS)
   useEffect(() => {
     if (landingPageData?.primaryColor) {
       const realPrimary = landingPageData.primaryColor;
-      
+
       console.log("🎨 PREVIEW: USING REAL USER COLOR:", {
         realPrimary,
         landingPageData: !!landingPageData
       });
-      
+
       setStableColors({
         primary: realPrimary
       });
     }
   }, [landingPageData]);
-  
+
   // Use real user colors - NO defaults if not loaded yet (SAME AS APPLY.JS)
   const primaryColor = stableColors.primary || landingPageData?.primaryColor;
   const secondaryColor = primaryColor; // SAME as primary!
   const tertiaryColor = primaryColor;
-  
+
   // 🎨 Check if we have brand data loaded
   const hasBrandData = !!(landingPageData?.primaryColor);
-  
+
   // 🎨 ENHANCED DEBUG: Log ALL color sources in preview
   console.log("🎨 PREVIEW REAL COLORS FROM DATABASE:", {
     "FINAL_USED": { primaryColor, secondaryColor, tertiaryColor },
@@ -384,7 +380,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
     "isUsingCorrectColors": primaryColor === "#11dade" && secondaryColor === "#e0237e",
     "hasColors": !!(landingPageData?.primaryColor)
   });
-  
+
   // 🔥 APPLY COLORS ONLY WHEN WE HAVE REAL USER COLORS (SAME AS APPLY.JS)
   useEffect(() => {
     // ONLY apply if we have real user colors - NO defaults!
@@ -392,12 +388,12 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
       console.log("⏳ PREVIEW: Waiting for real user colors...");
       return;
     }
-    
+
     console.log("🔥 PREVIEW: APPLYING REAL USER COLOR:", {
       primaryColor,
       timestamp: new Date().toISOString()
     });
-    
+
     // Function to apply ONLY real user primary color
     const applyRealUserColor = () => {
       const previewContainer = document.querySelector('.preview-form-container');
@@ -405,14 +401,14 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
         console.log('❌ Preview container not found');
         return;
       }
-      
+
       const allButtons = previewContainer.querySelectorAll('button, .ant-btn, [class*="ant-btn"]');
       console.log(`🎯 PREVIEW: FOUND ${allButtons.length} BUTTONS - APPLYING REAL COLOR: ${primaryColor}`);
-      
+
       allButtons.forEach((btn, i) => {
         const text = btn.textContent?.trim() || '';
         console.log(`🔥 PREVIEW: REAL COLOR on "${text}": ${primaryColor}`);
-        
+
         // Force ONLY real user color
         btn.style.setProperty('background', primaryColor, 'important');
         btn.style.setProperty('background-color', primaryColor, 'important');
@@ -421,26 +417,26 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
         btn.style.setProperty('color', 'white', 'important');
         btn.style.setProperty('background-image', 'none', 'important');
         btn.style.setProperty('box-shadow', 'none', 'important');
-        
+
         // NO hover effects
         btn.onmouseenter = null;
         btn.onmouseleave = null;
       });
     };
-    
+
     // Apply immediately and with delays
     applyRealUserColor();
     setTimeout(applyRealUserColor, 100);
     setTimeout(applyRealUserColor, 500);
     setTimeout(applyRealUserColor, 1000);
-    
+
   }, [primaryColor, landingPageData, currentStep]);
-  
+
   // Template palette hook for consistent color application
   const { getColor, getPrimary } = useTemplatePalette(
     {
       primaryColor: "#5207CD",
-      secondaryColor: "#0C7CE6", 
+      secondaryColor: "#0C7CE6",
       tertiaryColor: "#6B46C1",
     },
     {
@@ -462,9 +458,9 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
       const rawFields = (landingPageData?.form?.fields || []);
       // Always keep full list for stable indexing with sidebar and editor
       setFormFields(rawFields);
-      
-      // Reset form data if we're at step 0 or form structure changed dramatically
-      if (currentStep === 0 || !formFields.length) {
+
+      // Reset form data if form structure changed dramatically
+      if (!formFields.length) {
         setFormData({});
       }
     }
@@ -481,20 +477,17 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
 
   const handleNext = () => {
     console.log('🔄 handleNext: currentStep =', currentStep, 'formFields.length =', formFields.length);
-    
+
     // Skip validation in preview mode for form building
     const flowFields = previewLogicEnabled ? getVisibleFieldsForFlow(formFields, formData) : formFields;
     if (isPreviewMode) {
       if (flowFields.length === 0) {
         message.success('Preview: would submit (no questions visible)');
         setFormData({});
-        if (onStepChange) onStepChange(0);
-        return;
-      }
-      if (currentStep === 0) {
         if (onStepChange) onStepChange(1);
         return;
       }
+      // Step 1 is now the first step (no intro step)
       const currentIndex = currentStep - 1;
       const currentField = formFields[currentIndex];
       const jumpTarget = previewLogicEnabled ? resolveJumpTarget(currentField, formData) : null;
@@ -541,7 +534,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
         if (currentField.lastName?.required && !formData[`${currentField.id}_lastName`]?.trim()) hasError = true;
         if (currentField.email?.required && !formData[`${currentField.id}_email`]?.trim()) hasError = true;
         if (currentField.phone?.required && !formData[`${currentField.id}_phone`]?.trim()) hasError = true;
-        
+
         if (hasError) {
           message.warning('Please fill in all required contact fields');
           return;
@@ -549,12 +542,12 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
       } else if (currentField.type === 'date') {
         // Enhanced date field validation for preview
         const dateValue = formData[currentField.id];
-        
+
         if (!dateValue?.trim()) {
           message.warning('Please select a date');
           return;
         }
-        
+
         // Validate the date format and value
         const date = dayjs(dateValue);
         if (!date.isValid()) {
@@ -568,7 +561,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
           message.warning('Email is required');
           return;
         }
-        
+
         // Basic email format validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email.trim())) {
@@ -582,7 +575,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
           message.warning('Phone number is required');
           return;
         }
-        
+
         // Basic phone format validation (at least 10 digits)
         const phoneDigits = phone.replace(/\D/g, '');
         if (phoneDigits.length < 10) {
@@ -611,24 +604,24 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
     } else {
       // Preview "submission"
       message.success('This is a preview - form would be submitted here');
-      if (onStepChange) onStepChange(0);
+      if (onStepChange) onStepChange(1);
       setFormData({});
     }
   };
 
   const handlePrevious = () => {
     console.log('🔄 handlePrevious: currentStep =', currentStep);
-    
-    if (currentStep > 0) {
+
+    if (currentStep > 1) {
       const newStep = currentStep - 1;
       console.log('🔄 handlePrevious: Moving from step', currentStep, 'to step', newStep);
-      
+
       // Notify parent about step change
       if (onStepChange) {
         onStepChange(newStep);
       }
     } else {
-      console.log('🔄 handlePrevious: Already at step 0, cannot go back further');
+      console.log('🔄 handlePrevious: Already at step 1, cannot go back further');
     }
   };
 
@@ -672,7 +665,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                 </div>
               )}
             </div>
-            
+
             {/* Email field */}
             {field.email?.visible !== false && (
               <div>
@@ -690,7 +683,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                 />
               </div>
             )}
-            
+
             {/* Phone field */}
             {field.phone?.visible !== false && (
               <div>
@@ -712,18 +705,18 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
             {/* Additional contact fields */}
             {field.additionalFields?.map((additionalField) => {
               console.log("🔍 PREVIEW: Rendering additional field in renderSingleField:", additionalField.key, field[additionalField.key]);
-              
+
               // Show the field if it exists and is not explicitly hidden
               const fieldData = field[additionalField.key] || additionalField;
               const isVisible = fieldData?.visible !== false;
-              
+
               return isVisible && (
                 <div key={additionalField.key}>
                   <label className="block mb-1 font-semibold text-xs text-gray-600">
                     {fieldData?.label || additionalField.label || 'Custom Field'}
                     {fieldData?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                  <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_${additionalField.key}`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_${additionalField.key}`, value)}
@@ -796,7 +789,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                     {field.firstName?.label || getTranslation(landingPageData?.lang || 'en', 'firstName') || 'First Name'}
                     {field.firstName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                  <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_firstName`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_firstName`, value)}
@@ -814,7 +807,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                     {field.lastName?.label || getTranslation(landingPageData?.lang || 'en', 'lastName') || 'Last Name'}
                     {field.lastName?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                  <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_lastName`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_lastName`, value)}
@@ -827,7 +820,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                 </div>
               )}
             </div>
-            
+
             {/* Email field */}
             {field.email?.visible !== false && (
               <div>
@@ -835,7 +828,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                   {field.email?.label || getTranslation(landingPageData?.lang || 'en', 'email') || 'Email'}
                   {field.email?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
-                <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                   <CustomInput
                     type="email"
                     value={formData[`${field.id}_email`] || ''}
@@ -847,7 +840,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                 </div>
               </div>
             )}
-            
+
             {/* Phone field */}
             {field.phone?.visible !== false && (
               <div>
@@ -855,7 +848,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                   {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
                   {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
                 </label>
-                <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                   <CustomInput
                     type="tel"
                     value={formData[`${field.id}_phone`] || ''}
@@ -873,18 +866,18 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
               console.log("🔍 PREVIEW: Rendering additional field:", additionalField.key, field[additionalField.key]);
               console.log("🔍 PREVIEW: Field object:", field);
               console.log("🔍 PREVIEW: Additional fields array:", field.additionalFields);
-              
+
               // Show the field if it exists and is not explicitly hidden
               const fieldData = field[additionalField.key] || additionalField;
               const isVisible = fieldData?.visible !== false;
-              
+
               return isVisible && (
                 <div key={additionalField.key}>
                   <label className="block mb-1 font-semibold text-sm">
                     {fieldData?.label || additionalField.label || 'Custom Field'}
                     {fieldData?.required && <span className="ml-1 text-red-500">*</span>}
                   </label>
-                  <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+                  <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                     <CustomInput
                       value={formData[`${field.id}_${additionalField.key}`] || ''}
                       onChange={(value) => handleInputChange(`${field.id}_${additionalField.key}`, value)}
@@ -902,7 +895,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
       case 'email':
         const emailPlaceholder2 = field.placeholder || field.customPlaceholder || getTranslation(landingPageData?.lang || 'en', 'emailAddress') || "Email address";
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               type="email"
               value={value}
@@ -917,7 +910,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
       case 'phone':
         const phonePlaceholder2 = field.placeholder || field.customPlaceholder || getTranslation(landingPageData?.lang || 'en', 'phoneNumber') || "Phone number";
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               type="tel"
               value={value}
@@ -931,7 +924,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
 
       case 'text':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
@@ -944,7 +937,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
 
       case 'longtext':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
@@ -958,7 +951,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
 
       case 'motivation':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               value={value}
               onChange={(value) => handleInputChange(field.id, value)}
@@ -972,7 +965,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
 
       case 'number':
         return (
-          <div className="border border-solid border-blue_gray-100 rounded-lg overflow-hidden focus-within:border-light_blue-A700">
+          <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
             <CustomInput
               type="number"
               value={value}
@@ -1120,7 +1113,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
       case 'date':
         const dateValue = formData[field.id] ? dayjs(formData[field.id]) : null;
         const currentYear = new Date().getFullYear();
-        
+
         return (
           <DatePicker
             value={dateValue}
@@ -1135,7 +1128,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
             disabledDate={(current) => {
               // Disable dates more than 100 years ago or 10 years in the future
               return current && (
-                current < dayjs().subtract(100, 'years') || 
+                current < dayjs().subtract(100, 'years') ||
                 current > dayjs().add(10, 'years')
               );
             }}
@@ -1181,7 +1174,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
   const settings = landingPageData?.form?.settings || {};
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
-  console.log("formFields[currentStep - 1] ",formFields[currentStep - 1])
+  console.log("formFields[currentStep - 1] ", formFields[currentStep - 1])
   return (
     <div className=" bg-gray-50 preview-form-container">{/* UNIQUE PREVIEW CLASS */}
       {/* 🎨 APPLY CUSTOM FONTS */}
@@ -1191,7 +1184,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
         bodyFont: landingPageData?.bodyFont || user?.bodyFont,
         subheaderFont: landingPageData?.subheaderFont || user?.subheaderFont,
       }} />
-      
+
       {/* 🎨 PREVIEW-ONLY BRAND STYLES - ONLY REAL USER COLORS */}
       {primaryColor && (
         <style jsx key={`brand-${primaryColor}`}>{`
@@ -1229,9 +1222,9 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {landingPageData.companyLogo && (
-                <img 
-                  src={landingPageData.companyLogo} 
-                  alt="Company Logo" 
+                <img
+                  src={landingPageData.companyLogo}
+                  alt="Company Logo"
                   className="h-6 w-auto"
                 />
               )}
@@ -1257,12 +1250,12 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
               </div>
             )}
           </div>
-          
+
           {/* Progress Bar */}
           {settings.showProgressBar !== false && (
             <div className="mt-3">
-              <Progress 
-                percent={progressPercentage} 
+              <Progress
+                percent={progressPercentage}
                 showInfo={false}
                 strokeColor={primaryColor}
                 className="mb-2"
@@ -1276,117 +1269,70 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
       <div className="flex-1 flex flex-col p-4 overflow-hidden">
         <div className="bg-white rounded-lg shadow-sm border p-6 flex-1 flex flex-col overflow-auto">
           <div className="flex-1 flex flex-col">
-            {currentStep === 0 ? (
-              // Intro Step
-              <div className="text-center flex-1 flex flex-col justify-center">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">
-                  {landingPageData.form?.title || "Application Form"}
-                </h2>
-                <p className="text-gray-600 mb-6 text-sm">
-                  {landingPageData.form?.description || "Please fill out the form below to apply!"}
-                </p>
-                {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "contact" && (
-                  <div className="text-left max-w-md mx-auto mb-4 p-3 rounded border bg-gray-50">
-                    <div className="font-medium text-sm">{settings.optIn.header || "Subscribe for SMS Alerts"}</div>
-                    {settings.optIn.description && (
-                      <div className="text-xs text-gray-600 mt-1">{settings.optIn.description}</div>
+            {/* Question Step - Show form fields directly (no intro step) */}
+            <div className="flex-1 flex flex-col">
+              {flowFields[currentStep - 1] && (
+                <div className="flex-1 flex flex-col">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                    {flowFields[currentStep - 1].label}
+                    {flowFields[currentStep - 1].required && (
+                      <span className="text-red-500 ml-1">*</span>
                     )}
-                    <label className="flex items-center gap-2 mt-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={previewOptInAccepted}
-                        onChange={(e) => setPreviewOptInAccepted(e.target.checked)}
-                      />
-                      <span>
-                        I agree to opt-in {settings.optIn.required ? "(required)" : "(optional)"}
-                      </span>
-                    </label>
-                  </div>
-                )}
-                <Button 
-                  type="primary" 
-                  size="large"
-                  onClick={handleNext}
-                  className="brand-button !border-0"
-                  style={{
-                    backgroundColor: primaryColor,
-                    borderColor: primaryColor,
-                    color: 'white',
-                    background: primaryColor,
-                    border: `1px solid ${primaryColor}`
-                  }}
-                >
-                  {landingPageData.form?.startApplicationText || getTranslation(landingPageData?.lang || 'en', 'startApplication')}
-                </Button>
-              </div>
-            ) : (
-              // Question Step
-              <div className="flex-1 flex flex-col">
-                {flowFields[currentStep - 1] && (
-                  <div className="flex-1 flex flex-col">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                      {flowFields[currentStep - 1].label}
-                      {flowFields[currentStep - 1].required && (
-                        <span className="text-red-500 ml-1">*</span>
-                      )}
-                    </h2>
-                    
-                    <div className="flex-1 mb-6">
+                  </h2>
+
+                  <div className="flex-1 mb-6">
                     {renderField(flowFields[currentStep - 1])}
-                    </div>
-                    {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "last" && (
-                      <div className="mt-2 p-3 rounded border bg-gray-50">
-                        <div className="font-medium text-sm">{settings.optIn.header || "Subscribe for SMS Alerts"}</div>
-                        {settings.optIn.description && (
-                          <div className="text-xs text-gray-600 mt-1">{settings.optIn.description}</div>
-                        )}
-                        <label className="flex items-center gap-2 mt-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={previewOptInAccepted}
-                            onChange={(e) => setPreviewOptInAccepted(e.target.checked)}
-                          />
-                          <span>
-                            I agree to opt-in {settings.optIn.required ? "(required)" : "(optional)"}
-                          </span>
-                        </label>
-                      </div>
-                    )}
                   </div>
-                )}
-              </div>
-            )}
+                  {settings?.optIn?.enabled && settings?.optIn?.showMessage !== false && settings?.optIn?.messagePlacement === "last" && (
+                    <div className="mt-2 p-3 rounded border bg-gray-50">
+                      <div className="font-medium text-sm">{settings.optIn.header || "Subscribe for SMS Alerts"}</div>
+                      {settings.optIn.description && (
+                        <div className="text-xs text-gray-600 mt-1">{settings.optIn.description}</div>
+                      )}
+                      <label className="flex items-center gap-2 mt-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={previewOptInAccepted}
+                          onChange={(e) => setPreviewOptInAccepted(e.target.checked)}
+                        />
+                        <span>
+                          I agree to opt-in {settings.optIn.required ? "(required)" : "(optional)"}
+                        </span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Navigation */}
-          {currentStep > 0 && (
-            <div className="flex justify-between items-center pt-4 border-t flex-shrink-0">
-              <Button 
-                onClick={handlePrevious}
-                className="flex items-center space-x-2 text-sm"
-                disabled={currentStep === 0}
-              >
-                <ArrowLeft size={14} />
-                                  <span>{landingPageData.form?.previousText || getTranslation(landingPageData?.lang || 'en', 'previous')}</span>
-              </Button>
+          {/* Navigation - Always show navigation (no intro step anymore) */}
+          <div className="flex justify-between items-center pt-4 border-t flex-shrink-0">
+            <Button
+              onClick={handlePrevious}
+              className="flex items-center space-x-2 text-sm"
+              disabled={currentStep <= 1}
+            >
+              <ArrowLeft size={14} />
+              <span>{landingPageData.form?.previousText || getTranslation(landingPageData?.lang || 'en', 'previous')}</span>
+            </Button>
 
-              <Button 
-                type="primary"
-                onClick={handleNext}
-                className="brand-button flex items-center space-x-2 text-sm !border-0"
-                style={{
-                  backgroundColor: primaryColor,
-                  borderColor: primaryColor,
-                  color: 'white',
-                  background: primaryColor, 
-                  border: `1px solid ${primaryColor}`
-                }}
-              >
-                <span>{currentStep === flowFields.length ? (landingPageData.form?.submitText || getTranslation(landingPageData?.lang || 'en', 'submit')) : (landingPageData.form?.nextText || getTranslation(landingPageData?.lang || 'en', 'next'))}</span>
-                <ArrowRight size={14} />
-              </Button>
-            </div>
-          )}
+            <Button
+              type="primary"
+              onClick={handleNext}
+              className="brand-button flex items-center space-x-2 text-sm !border-0"
+              style={{
+                backgroundColor: primaryColor,
+                borderColor: primaryColor,
+                color: 'white',
+                background: primaryColor,
+                border: `1px solid ${primaryColor}`
+              }}
+            >
+              <span>{currentStep === flowFields.length ? (landingPageData.form?.submitText || getTranslation(landingPageData?.lang || 'en', 'submit')) : (landingPageData.form?.nextText || getTranslation(landingPageData?.lang || 'en', 'next'))}</span>
+              <ArrowRight size={14} />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

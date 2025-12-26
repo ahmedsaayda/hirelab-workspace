@@ -173,8 +173,8 @@ export default function AdsEditDemoShell({ paramsId }) {
               </div>
               <Switch checked={adsData?.[selectedAdType]?.enabled} onChange={() => toggleAdType(selectedAdType)} size="small" />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-[#0a8f63] hover:bg-[#099152] text-white font-semibold text-sm rounded-lg border border-[#0a8f63] transition-colors shadow-sm">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect width="16" height="16" rx="8" fill="white" opacity="0.2"/><path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-[#0a8f63] hover:bg-[#099152] text-white font-semibold text-sm rounded-[15px] border border-[#0a8f63] transition-colors shadow-sm">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect width="16" height="16" rx="8" fill="white" opacity="0.2" /><path d="M11.3327 5.5L6.74935 10.0833L4.66602 8" stroke="white" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round" /></svg>
               Approve All
             </button>
           </div>
@@ -187,7 +187,7 @@ export default function AdsEditDemoShell({ paramsId }) {
               <h2 className="font-semibold text-xl text-black leading-5">Ad Types</h2>
               <div className="flex flex-col gap-2">
                 {AD_TYPES.map((t) => (
-                  <button key={t.id} onClick={() => setSelectedAdType(t.id)} className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${selectedAdType===t.id? 'bg-[#eff8ff]':'hover:bg-gray-50'}`}>
+                  <button key={t.id} onClick={() => setSelectedAdType(t.id)} className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${selectedAdType === t.id ? 'bg-[#eff8ff]' : 'hover:bg-gray-50'}`}>
                     <span className="text-xs font-semibold text-[#667085]">{t.label[0]}</span>
                   </button>
                 ))}
@@ -203,7 +203,7 @@ export default function AdsEditDemoShell({ paramsId }) {
                 <div className="h-[1px] bg-[#eaecf0] mb-5 flex-shrink-0" />
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4 min-h-0">
                   {currentVariants.map((variant) => (
-                    <AdVariantCard key={variant.id} variant={variant} selected={variant.selected || variant.id === selectedVariant} isEditing={editingVariant?.id === variant.id} onSelect={() => handleVariantSelect(variant.id)} onEdit={() => {}} onSave={() => {}} onDelete={() => {}} onReplace={() => {}} />
+                    <AdVariantCard key={variant.id} variant={variant} selected={variant.selected || variant.id === selectedVariant} isEditing={editingVariant?.id === variant.id} onSelect={() => handleVariantSelect(variant.id)} onEdit={() => { }} onSave={() => { }} onDelete={() => { }} onReplace={() => { }} />
                   ))}
                 </div>
               </div>
@@ -222,7 +222,7 @@ export default function AdsEditDemoShell({ paramsId }) {
                   </div>
                   <div className="flex items-center gap-3">
                     {AD_FORMATS.map((f) => (
-                      <button key={f.id} onClick={() => setSelectedFormat(f.id)} className={`px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors border ${selectedFormat===f.id? 'bg-[#0e87fe] text-white border-[#0e87fe]':'bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50'}`}>{f.label}</button>
+                      <button key={f.id} onClick={() => setSelectedFormat(f.id)} className={`px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors border ${selectedFormat === f.id ? 'bg-[#0e87fe] text-white border-[#0e87fe]' : 'bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50'}`}>{f.label}</button>
                     ))}
                   </div>
                 </div>

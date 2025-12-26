@@ -356,6 +356,25 @@ const CandidateCard = ({
         </div>
       )}
 
+      {/* Scheduled Interview Info */}
+      {candidate.interviewMeetingTimestamp && (
+        <div className="mb-2 p-2 bg-purple-50 rounded border border-purple-100">
+          <div className="flex items-center gap-1 mb-1">
+            <CalendarOutlined className="text-purple-600 text-xs" />
+            <span className="text-xs font-medium text-purple-800">Interview Scheduled</span>
+          </div>
+          <div className="text-xs text-purple-700 font-medium">
+            {moment(candidate.interviewMeetingTimestamp).format('MMM D, YYYY')}
+          </div>
+          <div className="text-xs text-purple-600">
+            {moment(candidate.interviewMeetingTimestamp).format('h:mm A')}
+            {candidate.interviewMeetingTimestampEnd && (
+              <> - {moment(candidate.interviewMeetingTimestampEnd).format('h:mm A')}</>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Assignment Info - Trello Style */}
       {candidate.assignedTo && (
         <div className="mb-2 flex items-center justify-between">

@@ -23,7 +23,7 @@ const languageOptions = Array.from(
   label: name,
 })).sort((a, b) => a.label.localeCompare(b.label));
 
-const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
+const FromScratchModal = ({ onClose, ongoBack, onRefresh }) => {
   console.log("FromScratchModal");
   const user = useSelector(selectUser);
   const { branding: brandingDetails } = useWorkspaceBranding();
@@ -166,10 +166,10 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
     saveProgress();
   }, [
     // Step 1 dependencies
-    jobTitle, 
-    department, 
-    selectedLanguages, 
-    step, 
+    jobTitle,
+    department,
+    selectedLanguages,
+    step,
     selectedTemplate,
     // Step 2 dependencies
     vacancyDescription,
@@ -183,7 +183,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
   useEffect(() => {
     return () => {
       if (!jobTitle && !department && selectedLanguages.length === 0 &&
-          !vacancyDescription && !perksAndBenefits && (!tags || tags.length === 0)) {
+        !vacancyDescription && !perksAndBenefits && (!tags || tags.length === 0)) {
         console.log('FromScratchModal - Cleaning up empty form data');
         sessionStorage.removeItem('vacancy_scratch_progress');
       }
@@ -263,21 +263,21 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
       // For non-AI path, use company info directly if available
       const companyFactsData = user?.companyInfo
         ? {
-            companyFactsTitle: "About Our Company",
-            companyFactsDescription:
-              user.companyInfo.length > 120
-                ? user.companyInfo.substring(0, 117) + "..."
-                : user.companyInfo,
-            companyFacts: [
-              {
-                headingText: user?.companyName || "Our Company",
-                descriptionText:
-                  user?.companyInfo?.substring(0, 80) ||
-                  "Leading company in our industry",
-                icon: "lucide-react:bar-chart-square",
-              },
-            ],
-          }
+          companyFactsTitle: "About Our Company",
+          companyFactsDescription:
+            user.companyInfo.length > 120
+              ? user.companyInfo.substring(0, 117) + "..."
+              : user.companyInfo,
+          companyFacts: [
+            {
+              headingText: user?.companyName || "Our Company",
+              descriptionText:
+                user?.companyInfo?.substring(0, 80) ||
+                "Leading company in our industry",
+              icon: "lucide-react:bar-chart-square",
+            },
+          ],
+        }
         : {};
 
       // Non-AI path - also default to custom form
@@ -287,7 +287,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         department: formData.department,
         lang: language,
         workspace: user?.isWorkspaceSession ? user.workspaceId : undefined,
-        menuItems:    [
+        menuItems: [
           {
             "id": "job-specifications",
             "key": "Job Specifications",
@@ -407,10 +407,10 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         applyType: 'form', // 🚀 Always default to custom form
         cta2Link: '#apply' // 🚀 Always default to apply action
       });
-      
+
       // Clear session storage on successful creation
       sessionStorage.removeItem('vacancy_scratch_progress');
-      
+
       console.log("Vacancy created without AI:", res);
       router.push(`/edit-page/${res.data.data.result._id}?from=scratch`);
     } catch (error) {
@@ -514,9 +514,9 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
                 placeholder="Enter the job title"
-                className="p-2 w-full text-sm rounded-lg border border-gray-300 dark:bg-gray-900 outline-gray-300"
+                className="p-2 w-full text-sm rounded-[15px] border border-gray-300 dark:bg-gray-900 outline-gray-300"
                 type="text"
-                
+
               />
             </div>
 
@@ -566,7 +566,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
                 </label>
                 <div className="flex justify-center items-center w-4 h-4 rounded-full border cursor-help">
                   <Tooltip title="Describe the vacancy in one or two sentences. Mention the role, key responsibilities, and what kind of candidate you're looking for. E.g. 'Write a technical job description for a medium experienced Python Developer for our Core App dev team.">
-                  ?
+                    ?
                   </Tooltip>
                 </div>
               </div>
@@ -585,7 +585,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
                 </label>
                 <div className="flex justify-center items-center w-4 h-4 rounded-full border cursor-help">
                   <Tooltip title="List all perks and benefits the role offers, separated by commas. E.g. '30 holidays, 70/30 Pension Arrangement, Daycare allowance children, 2500,- Euro Education Budget, Remote Working promoted.' The more detailed, the better.">
-                  ?
+                    ?
                   </Tooltip>
                 </div>
               </div>
@@ -604,7 +604,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
                 </label>
                 <div className="flex justify-center items-center w-4 h-4 rounded-full border cursor-help">
                   <Tooltip title="Add keywords that describe the role (e.g. 'Developer', 'Sales', 'Remote'). Tags help organize and optimize your recruitment campaigns and find back relevant campaigns or pieces of content easier.">
-                  ?
+                    ?
                   </Tooltip>
                 </div>
               </div>
@@ -613,7 +613,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyPress={handleAddTag}
                 placeholder="E.g. Developer"
-                className="p-2 w-full text-sm rounded-lg border border-gray-300 dark:bg-gray-900 outline-gray-300 mb-2"
+                className="p-2 w-full text-sm rounded-[15px] border border-gray-300 dark:bg-gray-900 outline-gray-300 mb-2"
               />
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
@@ -925,7 +925,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
           try {
             const imagesToUpload = imageResponse.data.data;
             console.log(`FromScratchModal: Found ${imagesToUpload.length} images. Uploading them...`);
-            
+
             // Upload images in parallel
             const uploadPromises = imagesToUpload.map(async (img) => {
               try {
@@ -943,12 +943,12 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
             const results = await Promise.all(uploadPromises);
             uploadedImages = results.filter(url => url !== null);
             console.log(`FromScratchModal: Successfully uploaded ${uploadedImages.length} images.`);
-            
+
           } catch (uploadError) {
             console.error("FromScratchModal: Failed to upload Unsplash images:", uploadError);
           }
         } else {
-            console.log("FromScratchModal: No images found from Unsplash search or search failed.");
+          console.log("FromScratchModal: No images found from Unsplash search or search failed.");
         }
 
         // Get the AI-processed content
@@ -963,7 +963,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         // 4: leaderIntroductionAvatar
         // 5-7: aboutTheCompanyImages
         // 8-11: photoImages
-        
+
         const heroImage = uploadedImages[0] || aiResult.heroImage;
         const jobDescriptionImage = uploadedImages[1] || "";
         const textBoxImage = uploadedImages[2] || "";
@@ -1007,7 +1007,7 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
         console.log("FromScratchModal res", res);
         // Clear session storage on successful creation
         sessionStorage.removeItem('vacancy_scratch_progress');
-        
+
         onRefresh()
         setJobTitleModal(false);
         router.push(`/edit-page/${res.data.data.result._id}`);
@@ -1063,12 +1063,11 @@ const FromScratchModal = ({ onClose ,ongoBack ,onRefresh}) => {
                 </button>
                 <button
                   onClick={handleNext}
-                  className={`py-2 px-4 text-white disabled:cursor-not-allowed disabled:opacity-50 ${
-                    selectedTemplate === -1
+                  className={`py-2 px-4 text-white disabled:cursor-not-allowed disabled:opacity-50 ${selectedTemplate === -1
                       ? "bg-blue-300 cursor-not-allowed"
                       : "bg-blue-500 hover:bg-blue-600"
-                  } rounded-md`}
-                  disabled={selectedTemplate === -1||selectedTemplate !== 1}
+                    } rounded-md`}
+                  disabled={selectedTemplate === -1 || selectedTemplate !== 1}
                 >
                   Next
                 </button>

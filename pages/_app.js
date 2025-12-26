@@ -27,7 +27,7 @@ import ThemeUpdater from "../src/pages/Dashboard/Vacancies/components/ThemeUpdat
 import { FocusProvider } from '../src/contexts/FocusContext';
 import AdminReturnButton from "../src/components/AdminReturnButton";
 
-export default function App({Component, pageProps}) {
+export default function App({ Component, pageProps }) {
   const router = useRouter();
 
   // Disable Crisp on public landing pages (lp + lp subpages like apply/thank-you)
@@ -56,25 +56,26 @@ export default function App({Component, pageProps}) {
       )}
 
       <Provider store={store}>
-            <PersistGate loading={null} persistor={persistor}>
-              <ThemeUpdater>
-                <HoverProvider>
-                <ConfigProvider theme={{
-                  token: {
-                    colorPrimary: '#5207CD', // or any other color
-                  },
-                }}>
-                  <FocusProvider>
-                    <WorkspaceProvider>
-                      <AdminReturnButton />
-                      <Component {...pageProps} />
-                    </WorkspaceProvider>
-                  </FocusProvider>
-                  </ConfigProvider>
-                </HoverProvider>
-              </ThemeUpdater>
-            </PersistGate>
-          </Provider>
+        <PersistGate loading={null} persistor={persistor}>
+          <ThemeUpdater>
+            <HoverProvider>
+              <ConfigProvider theme={{
+                token: {
+                  colorPrimary: '#5207CD', // or any other color
+                  borderRadius: 15,
+                },
+              }}>
+                <FocusProvider>
+                  <WorkspaceProvider>
+                    <AdminReturnButton />
+                    <Component {...pageProps} />
+                  </WorkspaceProvider>
+                </FocusProvider>
+              </ConfigProvider>
+            </HoverProvider>
+          </ThemeUpdater>
+        </PersistGate>
+      </Provider>
     </div>
   )
 } 
