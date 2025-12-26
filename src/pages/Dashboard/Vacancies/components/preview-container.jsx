@@ -24,7 +24,7 @@ export const IFrame = ({
   const iframeHead = contentRef?.contentWindow?.document?.head;
 
   const router = useRouter();;
-  
+
   useEffect(() => {
     if (iframeHead) {
       const styleElement =
@@ -34,10 +34,11 @@ export const IFrame = ({
     }
   }, [iframeHead, styles]);
 
- useEffect(() => {
+  useEffect(() => {
     if (contentRef) {
       const iframeDocument = contentRef.contentWindow?.document;
       const iframeRoot = iframeDocument?.documentElement;
+      const iframeBody = iframeDocument?.body;
 
       // Set CSS variables based on the theme
       if (iframeRoot) {
@@ -69,13 +70,27 @@ export const IFrame = ({
         const navbarHeight = 128; // Navbar height
         iframeRoot.style.setProperty('--navbar-height', `${navbarHeight}px`);
         iframeRoot.style.setProperty('scroll-padding-top', `${navbarHeight}px`);
-        
+
         // Minimal fix for CSS rendering issues in scaled iframe
         iframeRoot.style.setProperty('image-rendering', 'crisp-edges');
         iframeRoot.style.setProperty('text-rendering', 'optimizeLegibility');
+
+        // Ensure iframe html/body are scrollable - direct style setting
+        iframeRoot.style.overflowY = 'auto';
+        iframeRoot.style.overflowX = 'hidden';
+        iframeRoot.style.height = 'auto';
+        iframeRoot.style.scrollBehavior = 'smooth';
       }
-        const handleLinkClick = (e) => {
-        const target = e.target ;
+
+      // Ensure body is scrollable
+      if (iframeBody) {
+        iframeBody.style.overflowY = 'auto';
+        iframeBody.style.overflowX = 'hidden';
+        iframeBody.style.minHeight = '100%';
+        iframeBody.style.height = 'auto';
+      }
+      const handleLinkClick = (e) => {
+        const target = e.target;
         const link = target.closest('a');
 
         if (link) {
@@ -94,7 +109,7 @@ export const IFrame = ({
         iframeDocument?.removeEventListener("click", handleLinkClick, true);
       };
     }
-  }, [contentRef,baseColors, variants, gradients]);
+  }, [contentRef, baseColors, variants, gradients]);
 
   // Simple one-time styled-jsx injection after iframe content loads
   useEffect(() => {
@@ -104,7 +119,7 @@ export const IFrame = ({
         const styledJsxStyles = Array.from(document.querySelectorAll('style[data-styled-jsx]'))
           .map(style => style.textContent)
           .join('\n');
-        
+
         if (styledJsxStyles) {
           const existingStyled = iframeHead.querySelector('style[data-styled-jsx-injected]');
           if (!existingStyled) {
@@ -115,7 +130,7 @@ export const IFrame = ({
           }
         }
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
   }, [mountNode, iframeHead]);
@@ -129,7 +144,7 @@ export const IFrame = ({
         scrollbarWidth: "none",
         // paddingTop: "0px",
         paddingTop: fullscreen ? (device === "mobile" ? 40 : 0) : 0,
-        
+
       }}
     >
       {mountNode && createPortal(children, mountNode)}
@@ -165,7 +180,7 @@ export function PreviewContainer({
         setDevice(event.detail.device);
       }
     };
-    
+
     window.addEventListener('deviceChange', handleDeviceChange);
     return () => window.removeEventListener('deviceChange', handleDeviceChange);
   }, []);
@@ -206,15 +221,15 @@ export function PreviewContainer({
   const deviceSizes = React.useMemo(() => {
     if (fullscreen) {
       return {
-        desktop: { 
-          width: windowDimensions.width, 
+        desktop: {
+          width: windowDimensions.width,
           height: windowDimensions.height - 40 // Minimal UI space
         },
         mobile: { width: 475, height: windowDimensions.height - 40 },
       };
     } else {
       return {
-        desktop: { 
+        desktop: {
           width: 1440, // Keep standard desktop width for consistent scaling
           height: windowDimensions.height - 80 // Reduced from 120 for more space
         },
@@ -247,15 +262,22 @@ export function PreviewContainer({
         return "";
       }
     });
-    
+
     return stylesArray.join("\n") + `
       
       html {
         scroll-behavior: smooth;
         scroll-padding-top: var(--navbar-height, 128px);
+        height: auto !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
       }
       body {
         padding-top: var(--navbar-height, 128px);
+        min-height: 100%;
+        height: auto !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
       }
       
       /* Comprehensive fix for JSX styled components in iframe */
@@ -444,32 +466,32 @@ export function PreviewContainer({
     const { titleFont, subheaderFont, bodyFont } = fonts;
     if (titleFont || subheaderFont || bodyFont) {
       let fontCss = "";
-      
+
       // Collection of Google font families to load
       const googleFontFamilies = [];
-      
+
       // Check if each font is a Google Font and collect family names
       if (isGoogleFont(titleFont)) {
         googleFontFamilies.push(titleFont.family);
       }
-      
-      if (isGoogleFont(subheaderFont) && 
-          !googleFontFamilies.includes(subheaderFont.family)) {
+
+      if (isGoogleFont(subheaderFont) &&
+        !googleFontFamilies.includes(subheaderFont.family)) {
         googleFontFamilies.push(subheaderFont.family);
       }
-      
-      if (isGoogleFont(bodyFont) && 
-          !googleFontFamilies.includes(bodyFont.family)) {
+
+      if (isGoogleFont(bodyFont) &&
+        !googleFontFamilies.includes(bodyFont.family)) {
         googleFontFamilies.push(bodyFont.family);
       }
-      
+
       // Load Google Fonts if we have any
       if (googleFontFamilies.length > 0) {
         // Format the families for the URL
         const formattedFamilies = googleFontFamilies
           .map(family => family.replace(/ /g, '+'))
           .join('&family=');
-          
+
         // Add the Google Fonts import
         fontCss += `
           @import url('https://fonts.googleapis.com/css2?family=${formattedFamilies}:wght@400;700&display=swap');
@@ -509,7 +531,7 @@ export function PreviewContainer({
           }
         `;
       }
-      
+
       // If bodyFont is available, apply it as the base font
       if (bodyFont?.family) {
         fontCss += `
@@ -520,7 +542,7 @@ export function PreviewContainer({
       }
 
       setFontStyles(fontCss);
-      
+
       // Direct injection of Google Fonts into the iframe
       // This is a backup to ensure Google Fonts load properly in the iframe
       if (googleFontFamilies.length > 0) {
@@ -532,12 +554,12 @@ export function PreviewContainer({
               const formattedFamilies = googleFontFamilies
                 .map(family => family.replace(/ /g, '+'))
                 .join('&family=');
-                
+
               // Create a link element for Google Fonts
               const linkElement = iframe.contentDocument.createElement('link');
               linkElement.rel = 'stylesheet';
               linkElement.href = `https://fonts.googleapis.com/css2?family=${formattedFamilies}:wght@400;700&display=swap`;
-              
+
               // Add it to the iframe head
               iframe.contentDocument.head.appendChild(linkElement);
             }
@@ -545,22 +567,22 @@ export function PreviewContainer({
         }, 100); // Small delay to ensure iframe is loaded
       }
     }
-  }, [fonts,fullscreen,device]);
+  }, [fonts, fullscreen, device]);
 
   // Updated scale calculation to fill available space
   const calculateScale = () => {
     if (!containerRef.current) return 1;
     const containerWidth = containerRef.current.clientWidth;
     const containerHeight = containerRef.current.clientHeight;
-    
+
     // Base dimensions for scaling reference
     const baseWidth = device === "desktop" ? 1440 : 475;
     const baseHeight = device === "desktop" ? 900 : 800; // Use fixed base heights
-    
+
     // Calculate scale to fill the entire parent container
     const widthScale = containerWidth / baseWidth;
     const heightScale = containerHeight / baseHeight;
-    
+
     // Use the smaller scale to maintain aspect ratio, but fill as much as possible
     return Math.min(widthScale, heightScale);
   };
@@ -571,7 +593,7 @@ export function PreviewContainer({
   //   if (!containerRef.current) return 1;
   //   const containerWidth = containerRef.current.clientWidth;
   //   const containerHeight = containerRef.current.clientHeight;
-    
+
   //   if (device === "desktop") {
   //     // Desktop: Always scale to fit the container width, ignoring height constraints
   //     return containerWidth / 1440;
@@ -590,20 +612,20 @@ export function PreviewContainer({
       setContainerHeight(
         containerRef?.current?.clientHeight || deviceSizes[device].height
       );
-    
+
     updateScale();
     updateHeight();
-    
+
     const handleResize = () => {
       updateScale();
       updateHeight();
     };
-    
+
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [device, deviceSizes, fullscreen]);
 
-     useEffect(() => {
+  useEffect(() => {
     // Handle URL hash change
     const handleHashChange = () => {
       const hash = window.location.hash;
@@ -630,9 +652,9 @@ export function PreviewContainer({
   return (
     <div className="flex relative flex-col w-full h-full">
       {/* Preview header with device switcher */}
-     {fullscreen && <div
-    
-     className="fixed top-0 left-0 right-0 flex gap-2 justify-center items-center pt-2 px-0 flex-shrink-0 bg-white border-b z-[9999] ">
+      {fullscreen && <div
+
+        className="fixed top-0 left-0 right-0 flex gap-2 justify-center items-center pt-2 px-0 flex-shrink-0 bg-white border-b z-[9999] ">
         <Heading
           size="4xl"
           as="h3"
@@ -640,54 +662,52 @@ export function PreviewContainer({
         >
           Preview
         </Heading>
-         
-          <div className="flex p-1 rounded-lg">
-            <button
-              onClick={() => {
-                setDevice("mobile");
-                window.__previewDevice = "mobile";
-                window.dispatchEvent(
-                  new CustomEvent('deviceChange', { detail: { device: 'mobile' } })
-                );
-              }}
-              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
-                device === "mobile"
-                  ? "bg-[#5207CD] text-[#EFF8FF]"
-                  : "text-[#5207CD] hover:bg-gray-100"
-              }`}
-            >
-              Mobile
-            </button>
-            <button
-              onClick={() => {
-                setDevice("desktop");
-                window.__previewDevice = "desktop";
-                window.dispatchEvent(
-                  new CustomEvent('deviceChange', { detail: { device: 'desktop' } })
-                );
-              }}
-              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
-                device === "desktop"
-                  ? "bg-[#5207CD] text-[#EFF8FF]"
-                  : "text-[#5207CD] hover:bg-gray-100"
-              }`}
-            >
-              Desktop
-            </button>
-          </div>
 
+        <div className="flex p-1 rounded-lg">
           <button
-            onClick={() => setFullscreen(false)}
-            className="absolute right-3 flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-[#5207CD] rounded-md hover:bg-[#4506ac] transition-colors"
+            onClick={() => {
+              setDevice("mobile");
+              window.__previewDevice = "mobile";
+              window.dispatchEvent(
+                new CustomEvent('deviceChange', { detail: { device: 'mobile' } })
+              );
+            }}
+            className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "mobile"
+                ? "bg-[#5207CD] text-[#EFF8FF]"
+                : "text-[#5207CD] hover:bg-gray-100"
+              }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Go Back
+            Mobile
           </button>
-     
+          <button
+            onClick={() => {
+              setDevice("desktop");
+              window.__previewDevice = "desktop";
+              window.dispatchEvent(
+                new CustomEvent('deviceChange', { detail: { device: 'desktop' } })
+              );
+            }}
+            className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "desktop"
+                ? "bg-[#5207CD] text-[#EFF8FF]"
+                : "text-[#5207CD] hover:bg-gray-100"
+              }`}
+          >
+            Desktop
+          </button>
+        </div>
+
+        <button
+          onClick={() => setFullscreen(false)}
+          className="absolute right-3 flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-[#5207CD] rounded-md hover:bg-[#4506ac] transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Go Back
+        </button>
+
       </div>}
-     {!fullscreen && <div className="flex relative flex-shrink-0 gap-2 justify-center items-center px-6 pt-2 bg-white border-b">
+      {!fullscreen && <div className="flex relative flex-shrink-0 gap-2 justify-center items-center px-6 pt-2 bg-white border-b">
         <Heading
           size="4xl"
           as="h3"
@@ -705,11 +725,10 @@ export function PreviewContainer({
                   new CustomEvent('deviceChange', { detail: { device: 'mobile' } })
                 );
               }}
-              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
-                device === "mobile"
+              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "mobile"
                   ? "bg-[#5207CD] text-[#EFF8FF]"
                   : "text-[#5207CD] hover:bg-gray-100"
-              }`}
+                }`}
             >
               Mobile
             </button>
@@ -721,11 +740,10 @@ export function PreviewContainer({
                   new CustomEvent('deviceChange', { detail: { device: 'desktop' } })
                 );
               }}
-              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
-                device === "desktop"
+              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "desktop"
                   ? "bg-[#5207CD] text-[#EFF8FF]"
                   : "text-[#5207CD] hover:bg-gray-100"
-              }`}
+                }`}
             >
               Desktop
             </button>
@@ -749,18 +767,18 @@ export function PreviewContainer({
         )}
       </div>}
 
-    
+
 
       {/* Preview content */}
-      <div ref={containerRef} className="flex relative flex-col flex-1 justify-start items-center w-full min-h-0" 
+      <div ref={containerRef} className="flex relative flex-col flex-1 justify-start items-center w-full min-h-0"
         style={{
           overflow: "hidden",
           padding: 0,
           margin: 0,
         }}>
 
-  
-        
+
+
         <div
           style={{
             width: fullscreen && device === "desktop" ? "100%" : (device === "desktop" ? "1440px" : "475px"),
@@ -774,10 +792,10 @@ export function PreviewContainer({
           className="mb-auto"
         >
           {fullscreen && device === "desktop" ? (
-            <div 
-              style={{ 
-                
-                width: "100%", 
+            <div
+              style={{
+
+                width: "100%",
                 height: "100%",
                 '--primary-color': baseColors.primary,
                 '--secondary-color': baseColors.secondary,
