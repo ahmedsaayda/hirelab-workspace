@@ -930,9 +930,7 @@ const CandidateProfile = ({
           </div>
 
           <div className="flex items-center gap-4">
-            <Text className="text-white/90 text-sm">
-              {candidate?.position || 'des'}
-            </Text>
+
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Tooltip title="Aggregated rating from stage reviews. Click the question mark to see breakdown by stage.">

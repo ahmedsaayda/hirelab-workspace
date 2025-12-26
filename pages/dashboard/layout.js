@@ -543,13 +543,7 @@ const Layout = ({ children }) => {
       logo: Puzzle,
       // hide: user?.role !== "recruiter",
     },
-    {
-      name: "Team Management",
-      href: "/dashboard/",
-      logo: Users,
-      grayout: true,
-      // hide: user?.role !== "recruiter",
-    },
+
     {
       name: "Upgrade",
       href: "/dashboard/billing",
