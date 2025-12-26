@@ -726,8 +726,8 @@ export default function Example({
                                       target={item?.target}
                                       className={classNames(
                                         item.current
-                                          ? "bg-indigo-500 text-white current dark:bg-gray-600 dark:text-gray-400"
-                                          : "hover:text-white hover:bg-indigo-500 dark:hover:bg-gray-600",
+                                          ? "bg-purple-50 text-purple-700 current dark:bg-gray-600 dark:text-gray-400"
+                                          : "hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-gray-600",
                                         `submenu-item-box transition-all duration-200 ${collapsed ? "flex justify-center" : ""
                                         }`
                                       )}
@@ -736,8 +736,8 @@ export default function Example({
                                         <item.icon
                                           className={classNames(
                                             item.current
-                                              ? "text-white current"
-                                              : "group-hover:text-white",
+                                              ? "text-purple-600 current"
+                                              : "group-hover:text-purple-600",
                                             "h-6 w-6 shrink-0 submenu-item-icon"
                                           )}
                                           aria-hidden="true"
@@ -872,8 +872,8 @@ export default function Example({
                               target={item?.target}
                               className={classNames(
                                 item.current
-                                  ? "bg-indigo-500 text-white current dark:bg-gray-600 dark:text-gray-400"
-                                  : "hover:text-white hover:bg-indigo-500 dark:hover:bg-gray-600",
+                                  ? "bg-purple-50 text-purple-700 current dark:bg-gray-600 dark:text-gray-400"
+                                  : "hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-gray-600",
                                 `submenu-item-box transition-all duration-200 ${collapsed ? "flex justify-center" : ""
                                 }`
                               )}
@@ -882,8 +882,8 @@ export default function Example({
                                 <item.icon
                                   className={classNames(
                                     item.current
-                                      ? "text-white current"
-                                      : "group-hover:text-white",
+                                      ? "text-purple-600 current"
+                                      : "group-hover:text-purple-600",
                                     "h-6 w-6 shrink-0 submenu-item-icon"
                                   )}
                                   aria-hidden="true"
@@ -915,7 +915,9 @@ export default function Example({
                       style={{ transform: collapsed ? "rotate(180deg)" : "" }}
                       onClick={() => setCollapsed((t) => !t)}
                     >
-                      <TextrIcon />
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 12L6 8L10 4" stroke="#344054" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     </div>
                   </div>
                 </li>

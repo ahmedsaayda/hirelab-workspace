@@ -17,7 +17,7 @@ import { TbRobotFace } from "react-icons/tb";
 import { Mention, MentionsInput } from "react-mentions";
 import { useSelector } from "react-redux";
 import { MINIMUM_AI_CHARS } from "../../../data/constants";
-import { getPartner, selectDarkMode } from "../../../redux/auth/selectors";
+import { getPartner, selectDarkMode, selectUser } from "../../../redux/auth/selectors";
 import CrudService from "../../../services/CrudService";
 import MessagingService from "../../../services/MessagingService";
 import classNamesBody from "./body.module.css";
@@ -61,9 +61,10 @@ const VariableMessageBox = ({
   const socket = useRef(null);
   const socketPing = useRef(null);
   const [candidateData, setCandidateData] = useState(null);
-  console.log("123,candidateData",candidateData)
+  console.log("123,candidateData", candidateData)
   const [templateLibrary, setTemplateLibrary] = useState(null);
   const darkMode = useSelector(selectDarkMode);
+  const user = useSelector(selectUser);
 
   const recipientEmail = useMemo(() => {
     const formData = candidateData?.formData || {};
@@ -84,12 +85,14 @@ const VariableMessageBox = ({
   };
 
   const reloadTemplates = useCallback(async () => {
-    await CrudService.search("MessageTemplate", 10000000, 1, {
+    if (!user?._id) return;
+    await CrudService.search("MessageTemplate", 100, 1, {
+      filters: { user_id: user._id },
       sort: { createdAt: 1 },
     }).then(({ data }) => {
       setTemplates(data.items);
     });
-  }, []);
+  }, [user?._id]);
 
   useEffect(() => {
     reloadTemplates();

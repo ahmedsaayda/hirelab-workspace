@@ -21,7 +21,7 @@ import {
   MINIMUM_AI_CHARS,
   STANDARD_MOMENT_FORMAT,
 } from "../../../data/constants";
-import { getPartner } from "../../../redux/auth/selectors";
+import { getPartner, selectUser } from "../../../redux/auth/selectors";
 import CrudService from "../../../services/CrudService";
 import MessagingService from "../../../services/MessagingService";
 import classNamesBody from "./body.module.css";
@@ -160,6 +160,7 @@ const CandidateMeetingBox = ({
   defaultBody,
   close,
 }) => {
+  const user = useSelector(selectUser);
   const [subject, setSubject] = useState(
     defaultSubject ?? localStorage["lastMeetingMessage_subject"] ?? ""
   );
@@ -190,12 +191,14 @@ const CandidateMeetingBox = ({
   };
 
   const reloadTemplates = useCallback(async () => {
-    await CrudService.search("MessageTemplate", 10000000, 1, {
+    if (!user?._id) return;
+    await CrudService.search("MessageTemplate", 100, 1, {
+      filters: { user_id: user._id },
       sort: { createdAt: 1 },
     }).then(({ data }) => {
       setTemplates(data.items);
     });
-  }, []);
+  }, [user?._id]);
 
   useEffect(() => {
     reloadTemplates();

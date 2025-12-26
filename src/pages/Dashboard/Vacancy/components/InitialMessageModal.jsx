@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Modal, Button, Input, message, Typography, Select, Space, Spin, Popconfirm } from 'antd';
 import { MessageOutlined } from '@ant-design/icons';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../../../redux/auth/selectors';
 import CrudService from '../../../../services/CrudService';
 
 const { TextArea } = Input;
@@ -13,6 +15,7 @@ const InitialMessageModal = ({
   candidate,
   loading = false 
 }) => {
+  const user = useSelector(selectUser);
   const [messageText, setMessageText] = useState(
     localStorage.getItem('initialChatMessageTemplate') || 
     `Hello {candidateName}! I'd like to discuss your application for {jobTitle}. Please feel free to ask any questions you may have.`
@@ -23,15 +26,17 @@ const InitialMessageModal = ({
   const [templateLoading, setTemplateLoading] = useState(false);
 
   const reloadTemplates = useCallback(async () => {
+    if (!user?._id) return;
     try {
-      const { data } = await CrudService.search("MessageTemplate", 10000000, 1, {
+      const { data } = await CrudService.search("MessageTemplate", 100, 1, {
+        filters: { user_id: user._id },
         sort: { createdAt: 1 },
       });
       setTemplates(data.items || []);
     } catch (err) {
       console.error("Failed to load message templates:", err);
     }
-  }, []);
+  }, [user?._id]);
 
   useEffect(() => {
     if (visible) {

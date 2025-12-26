@@ -122,11 +122,11 @@ body {
   height: 24px;
 }
 .submenu-item-box:hover * {
-  stroke: white;
+  stroke: #7C3AED;
 }
 .submenu-item-box.current * {
-  stroke: white;
-  color: white;
+  stroke: #7C3AED;
+  color: #7C3AED;
 }
 
 .submenu-retract-button {
@@ -137,7 +137,13 @@ body {
   align-items: center;
   cursor: pointer;
   border-radius: 8px;
-  background: var(--Primary-blue, #5207CD);
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  transition: all 0.2s ease;
+}
+.submenu-retract-button:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
 }
 
 .topbar {
