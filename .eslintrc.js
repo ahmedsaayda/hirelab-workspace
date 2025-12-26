@@ -1,4 +1,5 @@
 module.exports = {
+  extends: ["next/core-web-vitals"],
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint"],
   parserOptions: {
@@ -21,5 +22,7 @@ module.exports = {
     // Disable strict TypeScript rules that might cause issues
     "@typescript-eslint/no-unused-vars": "off",
     "@typescript-eslint/no-explicit-any": "off",
+    // Allow exhaustive-deps warnings but don't fail build
+    "react-hooks/exhaustive-deps": "warn",
   },
 };
