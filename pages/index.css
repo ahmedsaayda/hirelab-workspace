@@ -327,13 +327,13 @@ html {
 
 /*  all inputs and text areas font size should be input { font-size: max(1em, 28px); } to avoide zoom effect on iphones and other devices  , make sure this override any other font size setup at any level */
 input, input::placeholder {
-  font-size: max(1em, 14px) !important;
+  font-size: max(1em, 16px) !important;
 }
 textarea, textarea::placeholder {
-  font-size: max(1em, 14px) !important;
+  font-size: max(1em, 16px) !important;
 }
 select, select::placeholder {
-  font-size: max(1em, 14px) !important;
+  font-size: max(1em, 16px) !important;
 }
 
 [type="text"], input:where(:not([type])), [type="email"], [type="url"], [type="password"], [type="number"], [type="date"], [type="datetime-local"], [type="month"], [type="search"], [type="tel"], [type="time"], [type="week"], [multiple], textarea, select {
