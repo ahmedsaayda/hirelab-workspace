@@ -58,6 +58,27 @@ class CandidateChatService {
   addCandidateNote(candidateId, note) {
     return this.api.post(`/add-note`, { candidateId, note });
   }
+
+  // Quick Reply operations
+  getQuickReplies() {
+    return this.api.get('/quick-replies');
+  }
+
+  createQuickReply({ title, message, category }) {
+    return this.api.post('/quick-replies', { title, message, category });
+  }
+
+  updateQuickReply(id, { title, message, category }) {
+    return this.api.put(`/quick-replies/${id}`, { title, message, category });
+  }
+
+  deleteQuickReply(id) {
+    return this.api.delete(`/quick-replies/${id}`);
+  }
+
+  useQuickReply(id) {
+    return this.api.post(`/quick-replies/${id}/use`);
+  }
 }
 
 export default new CandidateChatService(`${getBackendUrl()}/candidateChat`); 

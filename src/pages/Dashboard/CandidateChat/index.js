@@ -13,6 +13,7 @@ import InterviewSchedulingMessage from "../../../components/InterviewSchedulingM
 import InterviewSchedulingModal from "../Vacancy/components/InterviewSchedulingModal";
 import CandidateProfile from "../Vacancy/components/CandidateProfile";
 import UploadService from "../../../services/UploadService";
+import QuickRepliesModal from "../../../components/QuickRepliesModal";
 
 const { TextArea } = Input;
 const PAGE_LIMIT = 20;
@@ -43,6 +44,7 @@ const CandidateChat = () => {
   const [messageSearchResults, setMessageSearchResults] = useState([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [candidateProfileId, setCandidateProfileId] = useState(null);
+  const [quickRepliesModalVisible, setQuickRepliesModalVisible] = useState(false);
 
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -947,14 +949,20 @@ const CandidateChat = () => {
                     />
                     <Button
                       type="default"
+                      icon={<span className="anticon">⚡</span>}
+                      onClick={() => setQuickRepliesModalVisible(true)}
+                      disabled={sendingMessage}
+                      className="mb-1 border-purple-300 text-purple-600 hover:border-purple-500 hover:text-purple-700"
+                      title="Quick Replies"
+                    />
+                    <Button
+                      type="default"
                       icon={<CalendarOutlined />}
                       onClick={handleScheduleInterview}
                       disabled={sendingMessage}
                       className="mb-1 border-purple-300 text-purple-600 hover:border-purple-500 hover:text-purple-700"
                       title="Schedule Interview"
-                    >
-                      Schedule
-                    </Button>
+                    />
                   </div>
                   <div className="flex-1 flex space-x-2">
                     <TextArea
@@ -1152,6 +1160,17 @@ const CandidateChat = () => {
           onShowReviewBreakdown={() => {}}
         />
       )}
+
+      {/* Quick Replies Modal */}
+      <QuickRepliesModal
+        visible={quickRepliesModalVisible}
+        onCancel={() => setQuickRepliesModalVisible(false)}
+        onSelectReply={(text) => {
+          setMessageText(text);
+          setQuickRepliesModalVisible(false);
+        }}
+        candidateData={currentChat}
+      />
     </div>
   );
 };
