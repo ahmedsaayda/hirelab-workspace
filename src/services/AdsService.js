@@ -35,10 +35,11 @@ class AdsService {
 
   /**
    * Create a HireLab ad set AND a shallow Meta campaign + ad set.
+   * Now also accepts fresh creatives to store on the ad set.
    * Returns { adSet, metaCampaignId, metaAdSetId }
    */
-  createAdSet(lpId) {
-    return this.api.post(`/landingpage/${lpId}/ads/adset/create`);
+  createAdSet(lpId, creatives = null) {
+    return this.api.post(`/landingpage/${lpId}/ads/adset/create`, { creatives });
   }
 }
 

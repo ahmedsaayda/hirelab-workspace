@@ -113,16 +113,16 @@ export const extractImagesForAdType = (adType, lpData) => {
       addImage(lpData?.evpMissionAvatar);
       addImage(lpData?.leaderIntroductionAvatar);
       if (lpData?.myVideo) {
-         const poster = cloudinaryVideoToPoster(lpData.myVideo);
-         addImage(poster || lpData.myVideo);
+        const poster = cloudinaryVideoToPoster(lpData.myVideo);
+        addImage(poster || lpData.myVideo);
       }
       // Explicitly check for video section video (sometimes under a different key like 'videoUrl' or from 'video' object)
       if (lpData?.video?.url) {
-         const poster = cloudinaryVideoToPoster(lpData.video.url);
-         addImage(poster || lpData.video.url);
+        const poster = cloudinaryVideoToPoster(lpData.video.url);
+        addImage(poster || lpData.video.url);
       } else if (lpData?.videoUrl) {
-         const poster = cloudinaryVideoToPoster(lpData.videoUrl);
-         addImage(poster || lpData.videoUrl);
+        const poster = cloudinaryVideoToPoster(lpData.videoUrl);
+        addImage(poster || lpData.videoUrl);
       }
 
       // Fallback: Use photo images
@@ -167,7 +167,7 @@ export const extractImagesForAdType = (adType, lpData) => {
       // Testimonial Ads: Strictly from testimonials avatars first
       if (Array.isArray(lpData?.testimonials)) {
         lpData.testimonials.forEach(t => {
-            if (t.avatar && t.avatarEnabled !== false) addImage(t.avatar);
+          if (t.avatar && t.avatarEnabled !== false) addImage(t.avatar);
         });
       }
       // Fallback: Use photo images (concept: generic happy team)
@@ -226,7 +226,7 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
     case 'job':
       // Headline: Role Title or "We're Hiring: {Role}"
       const jobHook = pickSectionSentence(lpData?.heroDescription) || pickSectionSentence(lpData?.jobDescription);
-      
+
       if (variantIndex === 0) {
         title = vacancy;
         description = `Join ${company}${locationStr}. ${jobHook}`;
@@ -248,9 +248,9 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
       const evp = pickSectionSentence(lpData?.evpMissionDescription);
       const leader = pickSectionSentence(lpData?.leaderIntroductionDescription);
       const videoDesc = pickSectionSentence(lpData?.videoDescription);
-      
+
       const mission = evp || leader || videoDesc || `Our mission at ${company} is to empower every employee to thrive.`;
-      
+
       title = variantIndex === 0 ? `Life at ${company}` : (variantIndex === 1 ? "Our Mission" : `Meet ${company}`);
       description = mission;
       cta = "Learn More";
@@ -260,10 +260,10 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
     case 'company':
       // Source: Company Info, Facts
       const about = pickSectionSentence(lpData?.aboutTheCompanyDescription || lpData?.companyInfo);
-      const fact = lpData?.companyFacts?.[0]?.headingText 
-        ? `${lpData.companyFacts[0].headingText}: ${lpData.companyFacts[0].descriptionText}` 
+      const fact = lpData?.companyFacts?.[0]?.headingText
+        ? `${lpData.companyFacts[0].headingText}: ${lpData.companyFacts[0].descriptionText}`
         : "";
-      
+
       title = `About ${company}`;
       description = about || fact || `${company} is a leading innovator in the sector.`;
       cta = "Learn More";
@@ -274,7 +274,7 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
       // Source: Testimonials
       const testimonial = lpData?.testimonials?.[variantIndex % (lpData?.testimonials?.length || 1)];
       const quote = stripWrappingQuotes(snippetFromText(testimonial?.comment)) || "Working here has been an incredible experience.";
-      
+
       title = "What our team says";
       description = `"${quote}"`;
       // If we have an author name, maybe append it? 
@@ -291,7 +291,7 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
       description = "Don't miss your chance to join our team. The opportunity is still available – apply now to complete your application.";
       source = "Retargeting Logic";
       break;
-      
+
     default:
       title = vacancy;
       description = pickSectionSentence(lpData?.heroDescription);
@@ -383,7 +383,7 @@ export const generateVariants = (lpData) => {
 
   const createVariant = (adType, i, image, extra = {}) => {
     const copy = generateCopyForAdType(adType, lpData, i);
-    const variantNumber = adType === "job" ? ((i % 2) + 1) : 1;
+    const variantNumber = adType === "job" ? ((i % 3) + 1) : 1;
     return {
       id: `${adType}-variant-${uuidv4().slice(0, 8)}`,
       title: copy.title,

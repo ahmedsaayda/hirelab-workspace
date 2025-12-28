@@ -59,7 +59,7 @@ export default function AdsEditDemoShell({ paramsId }) {
     try {
       const generated = {};
       AD_TYPES.forEach((t) => {
-        const count = t.id === 'job' ? 2 : 1;
+        const count = t.id === 'job' ? 3 : 1;
         generated[t.id] = {
           variants: Array.from({ length: count }).map((_, i) => ({
             id: `${t.id}-variant-${i + 1}`,

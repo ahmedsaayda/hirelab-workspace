@@ -20,7 +20,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       const containerHeight = container.clientHeight - 64;
       // Phone frame height is fixed at 812px (logic in MobileDeviceFrame is 812px)
       const targetHeight = 812;
-      
+
       // Scale based on available height vs phone frame height
       let calculatedScale = containerHeight / targetHeight;
 
@@ -112,25 +112,29 @@ export default function AdPreview({ variant, format, platform, brandData, landin
   // Get component loader for specific ad type, variant, and format
   const getComponentLoader = (adTypeId, variantNumber, formatId) => {
     // console.log('Loading component for:', { adTypeId, variantNumber, formatId });
-    
+
     const componentMap = {
       // Job ads
       job: {
         story: {
           1: () => import('./ads/JobAd/Story/Variant1.jsx').then(m => m.default),
           2: () => import('./ads/JobAd/Story/Variant2.jsx').then(m => m.default),
+          3: () => import('./ads/JobAd/Story/Variant3.jsx').then(m => m.default),
         },
         square: {
           1: () => import('./ads/JobAd/Square/Variant1.jsx').then(m => m.default),
           2: () => import('./ads/JobAd/Square/Variant2.jsx').then(m => m.default),
+          3: () => import('./ads/JobAd/Square/Variant3.jsx').then(m => m.default),
         },
         landscape: {
           1: () => import('./ads/JobAd/Landscape/Variant1.jsx').then(m => m.default),
           2: () => import('./ads/JobAd/Landscape/Variant2.jsx').then(m => m.default),
+          3: () => import('./ads/JobAd/Landscape/Variant3.jsx').then(m => m.default),
         },
         portrait: {
           1: () => import('./ads/JobAd/Landscape/Variant1.jsx').then(m => m.default),
           2: () => import('./ads/JobAd/Landscape/Variant2.jsx').then(m => m.default),
+          3: () => import('./ads/JobAd/Landscape/Variant3.jsx').then(m => m.default),
         },
       },
       // Employer brand ads - try multiple possible IDs
@@ -288,7 +292,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
     // We need to figure out where to put refEl.
     // Ideally, refEl should be on the div wrapping 'content' that is inside the frame but has the correct dimensions
     // But for now, let's wrap the content in the appropriate context
-    
+
     if (isStoryFormat) {
       // For stories, we want the creative to behave like a real Story/Reel:
       // it should fill the full height of the device. To avoid any gap at the
@@ -308,7 +312,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
                 transformOrigin: "center center",
               }}
             >
-              <div ref={refEl} className="w-full h-full">
+              <div ref={refEl} style={{ width: `${width}px`, height: `${height}px` }}>
                 {content}
               </div>
             </div>
@@ -317,8 +321,8 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       );
     } else {
       return (
-        <FeedContext 
-          brandData={brandData} 
+        <FeedContext
+          brandData={brandData}
           // Primary Text (above media)
           text={variant?.description || landingPageData?.heroDescription}
           // Headline (below media)
@@ -335,18 +339,18 @@ export default function AdPreview({ variant, format, platform, brandData, landin
              We need to scale it down.
           */}
           <div className="relative w-full" style={{ aspectRatio: format.aspectRatio === '1:1' ? '1/1' : '4/5' }}>
-             <div 
-               className="absolute top-0 left-0 origin-top-left"
-               style={{ 
-                 width: `${width}px`, 
-                 height: `${height}px`,
-                 transform: `scale(${375 / width})` // Scale to fit phone width
-               }}
-             >
-               <div ref={refEl} className="w-full h-full">
-                 {content}
-               </div>
-             </div>
+            <div
+              className="absolute top-0 left-0 origin-top-left"
+              style={{
+                width: `${width}px`,
+                height: `${height}px`,
+                transform: `scale(${375 / width})` // Scale to fit phone width
+              }}
+            >
+              <div ref={refEl} style={{ width: `${width}px`, height: `${height}px` }}>
+                {content}
+              </div>
+            </div>
           </div>
         </FeedContext>
       );

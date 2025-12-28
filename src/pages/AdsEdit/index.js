@@ -496,6 +496,7 @@ export default function AdsEdit({ paramsId }) {
 
   const handleCreateAdSet = async () => {
     // Create ad set on both HireLab and Meta (shallow campaign + ad set).
+    // Also generate FRESH creatives for this ad set.
     try {
       if (!landingPageData?.metaPixelId) {
         setAdsSettingsDrawerOpen(true);
@@ -503,12 +504,59 @@ export default function AdsEdit({ paramsId }) {
         return;
       }
       setCreatingAdSet(true);
-      const response = await AdsService.createAdSet(lpId);
+      setGenerating(true);
+      message.loading({ key: "create-adset", content: "Creating ad set & generating creatives...", duration: 0 });
+
+      // Generate fresh creatives for this ad set
+      const freshCreatives = initializeAdsData(landingPageData);
+
+      // Try to enhance with AI copy
+      try {
+        const allVariants = [];
+        Object.keys(freshCreatives || {}).forEach((adTypeId) => {
+          const vars = freshCreatives?.[adTypeId]?.variants || [];
+          vars.forEach((v) => {
+            allVariants.push({
+              id: v?.id,
+              adTypeId: v?.adTypeId || adTypeId,
+              variantNumber: v?.variantNumber,
+              source: v?.source,
+            });
+          });
+        });
+        if (allVariants.length) {
+          const lang = landingPageData?.language || landingPageData?.lang;
+          const resp = await AiService.generateAdsCopy({ lpId, variants: allVariants, language: lang });
+          const filled = resp?.data?.data?.variants || [];
+          const filledById = new Map(filled.map((v) => [String(v?.id || ""), v]));
+          // Merge AI copy into creatives
+          Object.keys(freshCreatives || {}).forEach((adTypeId) => {
+            const group = freshCreatives?.[adTypeId];
+            if (!group?.variants) return;
+            group.variants = group.variants.map((v) => {
+              const ai = filledById.get(String(v?.id || ""));
+              if (!ai) return v;
+              return {
+                ...v,
+                title: ai.title ?? v.title,
+                description: ai.description ?? v.description,
+                linkDescription: ai.linkDescription ?? v.linkDescription,
+                callToAction: ai.callToAction ?? v.callToAction,
+              };
+            });
+          });
+        }
+      } catch (aiErr) {
+        console.warn("AI copy generation for ad set failed, using defaults:", aiErr);
+      }
+
+      // Pass creatives to backend to store on ad set
+      const response = await AdsService.createAdSet(lpId, freshCreatives);
       const { adSet, metaCampaignId } = response?.data?.data || {};
       if (!adSet?.id) {
         throw new Error("Failed to create ad set");
       }
-      // Update local state with the new ad set
+      // Update local state with the new ad set (which now has creatives)
       const nextData = {
         ...(adsData || {}),
         _adSets: [...(Array.isArray(adsData?._adSets) ? adsData._adSets : []), adSet],
@@ -519,12 +567,14 @@ export default function AdsEdit({ paramsId }) {
       };
       setAdsData(nextData);
       lastSavedAdsHashRef.current = serializeAdsData(nextData);
-      message.success("Ad set created on Meta");
+      message.destroy("create-adset");
+      message.success("Ad set created with fresh creatives!");
       // Refresh launch summary so the table updates immediately
       await loadLaunchSummary();
       // Immediately open the newly created ad set so the user lands in the editor flow.
       setActiveAdSetId(adSet.id);
     } catch (e) {
+      message.destroy("create-adset");
       const errorMsg = e?.response?.data?.message || "Failed to create ad set";
       // Check if it's a Meta credentials error
       if (errorMsg.toLowerCase().includes("meta") &&
@@ -537,6 +587,7 @@ export default function AdsEdit({ paramsId }) {
       }
     } finally {
       setCreatingAdSet(false);
+      setGenerating(false);
     }
   };
 
@@ -793,17 +844,40 @@ export default function AdsEdit({ paramsId }) {
   };
 
   // Get current variants for selected ad type
+  // When viewing an ad set, use its own creatives instead of campaign-level
   const currentVariants = useMemo(() => {
+    // Find the active ad set if one is selected
+    const activeSet = activeAdSetId
+      ? (Array.isArray(adsData?._adSets) ? adsData._adSets : []).find((s) => s.id === activeAdSetId)
+      : null;
+
+    // If ad set has its own creatives, use those
+    if (activeSet?.creatives?.[selectedAdType]?.variants) {
+      return activeSet.creatives[selectedAdType].variants;
+    }
+
+    // Otherwise fall back to campaign-level creatives
     return adsData?.[selectedAdType]?.variants || [];
-  }, [adsData, selectedAdType]);
+  }, [adsData, selectedAdType, activeAdSetId]);
 
   const hasAnyVariants = useMemo(() => {
     try {
+      // Check ad set creatives if viewing an ad set
+      const activeSet = activeAdSetId
+        ? (Array.isArray(adsData?._adSets) ? adsData._adSets : []).find((s) => s.id === activeAdSetId)
+        : null;
+
+      if (activeSet?.creatives) {
+        return Object.keys(activeSet.creatives || {}).some((k) =>
+          (activeSet.creatives?.[k]?.variants || []).length > 0
+        );
+      }
+
       return Object.keys(adsData || {}).some((k) => (adsData?.[k]?.variants || []).length > 0);
     } catch {
       return false;
     }
-  }, [adsData]);
+  }, [adsData, activeAdSetId]);
 
   // Sync selected variant when ad type changes or variants update
   useEffect(() => {
@@ -977,6 +1051,36 @@ export default function AdsEdit({ paramsId }) {
     window.history.replaceState({}, "", url.pathname + url.search);
   };
 
+  // Helper to update variants in the correct location (campaign-level or ad set-level)
+  const updateVariantsInData = useCallback((updatedVariants, adType = selectedAdType) => {
+    if (activeAdSetId) {
+      // Update ad set's creatives
+      const adSets = Array.isArray(adsData?._adSets) ? [...adsData._adSets] : [];
+      const setIdx = adSets.findIndex((s) => s.id === activeAdSetId);
+      if (setIdx >= 0 && adSets[setIdx]?.creatives) {
+        adSets[setIdx] = {
+          ...adSets[setIdx],
+          creatives: {
+            ...adSets[setIdx].creatives,
+            [adType]: {
+              ...adSets[setIdx].creatives[adType],
+              variants: updatedVariants,
+            },
+          },
+        };
+        return { ...adsData, _adSets: adSets };
+      }
+    }
+    // Fall back to campaign-level
+    return {
+      ...adsData,
+      [adType]: {
+        ...adsData[adType],
+        variants: updatedVariants,
+      },
+    };
+  }, [adsData, activeAdSetId, selectedAdType]);
+
   // Save ads data
   const saveAdsData = async () => {
     try {
@@ -999,13 +1103,7 @@ export default function AdsEdit({ paramsId }) {
       selected: v.id === variantId,
     }));
 
-    setAdsData({
-      ...adsData,
-      [selectedAdType]: {
-        ...adsData[selectedAdType],
-        variants: updatedVariants,
-      },
-    });
+    setAdsData(updateVariantsInData(updatedVariants));
   };
 
   // Handle variant edit
@@ -1024,13 +1122,7 @@ export default function AdsEdit({ paramsId }) {
       okType: "danger",
       onOk: () => {
         const updatedVariants = currentVariants.filter(v => v.id !== variantId);
-        setAdsData({
-          ...adsData,
-          [selectedAdType]: {
-            ...adsData[selectedAdType],
-            variants: updatedVariants,
-          },
-        });
+        setAdsData(updateVariantsInData(updatedVariants));
         message.success("Variant deleted");
       },
     });
@@ -1041,6 +1133,90 @@ export default function AdsEdit({ paramsId }) {
     setSelectedVariant(variantId);
     setMediaPickerVariantId(variantId);
     setMediaPickerOpen(true);
+  };
+
+  // Render preview to blob (for download - similar to renderCurrentPreviewToCloudinary but returns blob)
+  const renderPreviewToBlob = async (format) => {
+    const node = captureRef.current;
+    if (!node) throw new Error("Preview not mounted");
+
+    try {
+      window.__HL_ADS_CAPTURE__ = true;
+    } catch {
+      // ignore
+    }
+
+    const blob = await toBlob(node, {
+      width: format?.width,
+      height: format?.height,
+      pixelRatio: 1,
+      cacheBust: true,
+      backgroundColor: "#ffffff",
+      skipFonts: true,
+      imagePlaceholder: TRANSPARENT_PNG,
+      fetchRequestInit: {
+        mode: "cors",
+        credentials: "omit",
+      },
+    });
+
+    try {
+      window.__HL_ADS_CAPTURE__ = false;
+    } catch {
+      // ignore
+    }
+
+    if (!blob) throw new Error("Failed to render preview");
+    return blob;
+  };
+
+  // Handle variant download - renders the full creative preview (same as approval flow)
+  const handleVariantDownload = async (variant) => {
+    if (!variant) return;
+
+    try {
+      message.loading({ content: "Rendering creative...", key: "download" });
+
+      // Get current format
+      const format = AD_FORMATS.find((f) => f.id === selectedFormat);
+
+      // Ensure the variant is selected and showing in preview
+      // The variant is from the current ad type, so selectedAdType should already be correct
+      setSelectedVariant(variant.id);
+
+      // Wait for preview to render (same timeout as approval flow)
+      await waitForPreviewRender(4000);
+
+      // Render to blob
+      const blob = await renderPreviewToBlob(format);
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Generate filename from variant title and format
+      const safeName = (variant.title || "creative")
+        .replace(/[^a-z0-9]/gi, "_")
+        .substring(0, 40);
+      const formatName = format?.id || "ad";
+      link.download = `${safeName}_${formatName}_${Date.now()}.png`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success({ content: "Downloaded!", key: "download" });
+    } catch (error) {
+      console.error("Download failed:", error);
+      message.error({ content: "Download failed: " + error.message, key: "download" });
+      try {
+        window.__HL_ADS_CAPTURE__ = false;
+      } catch {
+        // ignore
+      }
+    }
   };
 
   // Add Variant: scalable default is to duplicate current variant (new ID)
@@ -1059,13 +1235,7 @@ export default function AdsEdit({ paramsId }) {
       ...currentVariants.map((v) => ({ ...v, selected: false })),
       cloned,
     ];
-    const nextData = {
-      ...adsData,
-      [selectedAdType]: {
-        ...adsData[selectedAdType],
-        variants: updatedVariants,
-      },
-    };
+    const nextData = updateVariantsInData(updatedVariants);
     setAdsData(nextData);
     setSelectedVariant(newId);
     setEditingVariant(cloned);
@@ -1159,10 +1329,19 @@ export default function AdsEdit({ paramsId }) {
 
       const updatedAds = { ...(adsData || {}) };
 
+      // Find the ad set and determine which creatives to use
+      const adSets = Array.isArray(updatedAds._adSets) ? [...updatedAds._adSets] : [];
+      const adSetIdx = adSets.findIndex((s) => s.id === adSetId);
+      const adSet = adSetIdx >= 0 ? adSets[adSetIdx] : null;
+
+      // Use ad set-specific creatives if available, otherwise campaign-level
+      const creativesSource = adSet?.creatives || updatedAds;
+
       // Mark variants approved + collect them for image rendering
       const variantsToPrepare = [];
-      Object.keys(updatedAds).forEach((adType) => {
-        const group = updatedAds[adType];
+      Object.keys(creativesSource).forEach((adType) => {
+        if (adType.startsWith('_')) return; // Skip meta fields like _adSets, _publish
+        const group = creativesSource[adType];
         if (!group?.variants || !Array.isArray(group.variants)) return;
         group.variants = group.variants.map((v) => {
           const approvedVariant = { ...v, approved: true };
@@ -1170,6 +1349,12 @@ export default function AdsEdit({ paramsId }) {
           return approvedVariant;
         });
       });
+
+      // Update the creatives source back to ad set if applicable
+      if (adSet?.creatives && adSetIdx >= 0) {
+        adSets[adSetIdx] = { ...adSets[adSetIdx], creatives: creativesSource };
+        updatedAds._adSets = adSets;
+      }
 
       if (variantsToPrepare.length === 0) {
         message.warning("No creatives found to approve");
@@ -1190,7 +1375,8 @@ export default function AdsEdit({ paramsId }) {
         await waitForPreviewRender(4000);
         // eslint-disable-next-line no-await-in-loop
         const url = await renderCurrentPreviewToCloudinary(format);
-        const group = updatedAds[v.adTypeId];
+        // Update in the correct creatives source (ad set or campaign level)
+        const group = creativesSource[v.adTypeId];
         if (group?.variants) {
           const idx = group.variants.findIndex((x) => x.id === v.id);
           if (idx >= 0) {
@@ -1198,6 +1384,13 @@ export default function AdsEdit({ paramsId }) {
           }
         }
         appendPrepareMessage(`✓ Image ready for ${stepLabel}`);
+      }
+
+      // Make sure ad set creatives are updated in the main data object
+      if (adSet?.creatives && adSetIdx >= 0) {
+        const finalAdSets = Array.isArray(updatedAds._adSets) ? [...updatedAds._adSets] : [];
+        finalAdSets[adSetIdx] = { ...finalAdSets[adSetIdx], creatives: creativesSource };
+        updatedAds._adSets = finalAdSets;
       }
 
       // Update ad set state to "ready" and persist
@@ -1725,13 +1918,7 @@ export default function AdsEdit({ paramsId }) {
                       const updatedVariants = currentVariants.map(v =>
                         v.id === updatedVariant.id ? updatedVariant : v
                       );
-                      const nextData = {
-                        ...adsData,
-                        [selectedAdType]: {
-                          ...adsData[selectedAdType],
-                          variants: updatedVariants,
-                        },
-                      };
+                      const nextData = updateVariantsInData(updatedVariants);
                       setAdsData(nextData);
                       try {
                         await AdsService.saveAds(lpId, nextData);
@@ -1746,15 +1933,10 @@ export default function AdsEdit({ paramsId }) {
                       const updatedVariants = currentVariants.map((v) =>
                         v.id === draftVariant.id ? { ...v, ...draftVariant } : v
                       );
-                      setAdsData({
-                        ...adsData,
-                        [selectedAdType]: {
-                          ...adsData[selectedAdType],
-                          variants: updatedVariants,
-                        },
-                      });
+                      setAdsData(updateVariantsInData(updatedVariants));
                     }}
                     onDelete={() => handleVariantDelete(variant.id)}
+                    onDownload={() => handleVariantDownload(variant)}
                     onReplace={() => handleVariantReplace(variant.id)}
                     landingPageData={landingPageData}
                   />
@@ -1946,13 +2128,7 @@ export default function AdsEdit({ paramsId }) {
             }
             return { ...v, image: url, videoUrl: "" };
           });
-          const nextData = {
-            ...adsData,
-            [selectedAdType]: {
-              ...adsData[selectedAdType],
-              variants: updatedVariants,
-            },
-          };
+          const nextData = updateVariantsInData(updatedVariants);
           setAdsData(nextData);
           setMediaPickerOpen(false);
           setMediaPickerVariantId(null);
@@ -1969,13 +2145,7 @@ export default function AdsEdit({ paramsId }) {
           const updatedVariants = currentVariants.map(v =>
             v.id === updatedVariant.id ? updatedVariant : v
           );
-          const nextData = {
-            ...adsData,
-            [selectedAdType]: {
-              ...adsData[selectedAdType],
-              variants: updatedVariants,
-            },
-          };
+          const nextData = updateVariantsInData(updatedVariants);
           setAdsData(nextData);
           setIsEditModalOpen(false);
           try {
@@ -2247,9 +2417,8 @@ export default function AdsEdit({ paramsId }) {
             <button
               type="button"
               onClick={saveMetaPixelId}
-              className={`px-4 py-2 text-sm font-semibold rounded-md text-white ${
-                metaPixelSaving ? "bg-[#5207CD]/70 cursor-not-allowed" : "bg-[#5207CD] hover:bg-[#4506A6]"
-              }`}
+              className={`px-4 py-2 text-sm font-semibold rounded-md text-white ${metaPixelSaving ? "bg-[#5207CD]/70 cursor-not-allowed" : "bg-[#5207CD] hover:bg-[#4506A6]"
+                }`}
               disabled={metaPixelSaving}
             >
               {metaPixelSaving ? "Saving..." : "Save Changes"}
