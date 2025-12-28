@@ -465,13 +465,27 @@ const Vacancies = () => {
               // Try to get applicant counts, but don't let it break the main functionality
               let landingPagesWithCounts;
               try {
-                console.log('📊 Sending items to countApplicants:', result.data.items?.length, 'items');
-                console.log('📊 Sample item IDs:', result.data.items?.slice(0, 3).map(i => i._id));
-                landingPagesWithCounts = await ATSService.countApplicants(result.data.items);
+                // Only send minimal data needed for counting - just _id and stage references
+                const minimalFunnels = result.data.items?.map(i => ({
+                  _id: i._id,
+                  onQualifiedAssignStage: i.onQualifiedAssignStage,
+                  onRejectedAssignStage: i.onRejectedAssignStage,
+                })) || [];
+                console.log('🚀 CALLING countApplicants with', minimalFunnels.length, 'funnels');
+                landingPagesWithCounts = await ATSService.countApplicants(minimalFunnels);
                 console.log('✅ Successfully fetched applicant counts:', landingPagesWithCounts.data?.length, 'items');
-                console.log('📊 Sample counts:', landingPagesWithCounts.data?.slice(0, 3).map(i => ({ id: i._id, count: i.numberApplicants })));
+                
+                // Merge the counts back into the original items
+                const countsById = new Map(landingPagesWithCounts.data?.map(c => [c._id, c]) || []);
+                landingPagesWithCounts.data = result.data.items?.map(item => ({
+                  ...item,
+                  numberApplicants: countsById.get(item._id)?.numberApplicants || 0,
+                  shortlistedApplicants: countsById.get(item._id)?.shortlistedApplicants || 0,
+                  interviewedApplicants: countsById.get(item._id)?.interviewedApplicants || 0,
+                }));
               } catch (countError) {
-                console.warn('⚠️ Failed to fetch applicant counts, using fallback:', countError.message);
+                console.error('❌ Failed to fetch applicant counts:', countError);
+                console.error('❌ Error details:', countError.response?.data || countError.message);
                 // Fallback: use original data with 0 applicants
                 landingPagesWithCounts = { data: result.data.items };
               }

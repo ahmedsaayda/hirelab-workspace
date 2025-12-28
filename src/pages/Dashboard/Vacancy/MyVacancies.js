@@ -145,9 +145,20 @@ const MyVacancies = () => {
           data
         );
 
-        const newVacancies = (
-          await ATSService.countApplicants(response.data.items)
-        ).data;
+        // Only send minimal data needed for counting
+        const minimalFunnels = response.data.items?.map(i => ({
+          _id: i._id,
+          onQualifiedAssignStage: i.onQualifiedAssignStage,
+          onRejectedAssignStage: i.onRejectedAssignStage,
+        })) || [];
+        const countsResponse = await ATSService.countApplicants(minimalFunnels);
+        const countsById = new Map(countsResponse.data?.map(c => [c._id, c]) || []);
+        const newVacancies = response.data.items?.map(item => ({
+          ...item,
+          numberApplicants: countsById.get(item._id)?.numberApplicants || 0,
+          shortlistedApplicants: countsById.get(item._id)?.shortlistedApplicants || 0,
+          interviewedApplicants: countsById.get(item._id)?.interviewedApplicants || 0,
+        }));
         setVacancies((prevVacancies) => [...prevVacancies, ...newVacancies]);
 
         setPage((prevPage) => prevPage + 1);
@@ -180,9 +191,20 @@ const MyVacancies = () => {
           data
         );
 
-        const newVacancies = (
-          await ATSService.countApplicants(response.data.items)
-        ).data;
+        // Only send minimal data needed for counting
+        const minimalFunnels = response.data.items?.map(i => ({
+          _id: i._id,
+          onQualifiedAssignStage: i.onQualifiedAssignStage,
+          onRejectedAssignStage: i.onRejectedAssignStage,
+        })) || [];
+        const countsResponse = await ATSService.countApplicants(minimalFunnels);
+        const countsById = new Map(countsResponse.data?.map(c => [c._id, c]) || []);
+        const newVacancies = response.data.items?.map(item => ({
+          ...item,
+          numberApplicants: countsById.get(item._id)?.numberApplicants || 0,
+          shortlistedApplicants: countsById.get(item._id)?.shortlistedApplicants || 0,
+          interviewedApplicants: countsById.get(item._id)?.interviewedApplicants || 0,
+        }));
         setVacancies((prevVacancies) => [...prevVacancies, ...newVacancies]);
 
         setPage((prevPage) => prevPage - 1);
