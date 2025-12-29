@@ -49,7 +49,7 @@ const JoinTeamMember = () => {
 
       store.dispatch(login(me.data));
 
-      router.push("/auth/otpemail");
+      router.push("/dashboard");
     },
     [router, tokenData]
   );

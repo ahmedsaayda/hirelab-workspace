@@ -39,7 +39,7 @@ const RegisterInner = () => {
         const [firstName, lastName, email, password] = new Array(4)
           .fill(0)
           .map((_, i) => e.target[i].value);
-  
+
         await AuthService.register({
           firstName,
           lastName,
@@ -47,25 +47,26 @@ const RegisterInner = () => {
           password,
           captchaToken: latestToken
         });
-  
+
         const result = await AuthService.login({
           email,
           password,
+          captchaToken: latestToken
         });
-  
+
         console.log(result);
         if (!result?.data?.accessToken)
           return message.error("Could not load user data");
-  
+
         Cookies.set("accessToken", result?.data?.accessToken);
         Cookies.set("refreshToken", result?.data?.refreshToken);
-  
+
         const me = await AuthService.me();
         console.log(me);
         if (!me?.data) return message.error("Could not load user data");
-  
+
         store.dispatch(login(me.data.me));
-  
+
         // 🎯 TRACK SUCCESSFUL REGISTRATION CONVERSION
         try {
           await TrackingService.trackSignUpConversion({
@@ -75,19 +76,19 @@ const RegisterInner = () => {
             registration_method: 'email',
             user_id: me.data.me._id || me.data.me.id,
           });
-          
+
           console.log('✅ Registration conversion tracking completed');
         } catch (trackingError) {
           console.error('⚠️ Registration tracking failed (non-critical):', trackingError);
           // Continue with registration flow even if tracking fails
         }
-  
+
         // Check for return URL from query params (team invitation)
         const returnUrl = router.query.returnUrl;
         let hasTeamInvite = false;
-        
-  
-        
+
+
+
         // If returnUrl contains a team join link, extract the invite link
         if (returnUrl && returnUrl.includes('/team/join/')) {
           const urlParts = returnUrl.split('/team/join/');
@@ -99,7 +100,7 @@ const RegisterInner = () => {
             console.log("🔥 Registration: Set team invite cookie", inviteLink);
           }
         }
-  
+
         // Check for pending invitation (email invite) - check both localStorage and cookies
         let pendingInvitation = localStorage.getItem("pendingInvitation") || Cookies.get("pendingInvitation");
         if (pendingInvitation) {
@@ -115,7 +116,7 @@ const RegisterInner = () => {
             Cookies.remove("pendingInvitation");
           }
         }
-  
+
         // Check for pending team invite link (shareable link)
         const pendingTeamInvite = localStorage.getItem("pendingTeamInvite");
         if (pendingTeamInvite) {
@@ -133,7 +134,7 @@ const RegisterInner = () => {
             Cookies.remove("pendingTeamInvite");
           }
         }
-        
+
         const consumeWorkspaceInvite = async () => {
           try {
             const inviteString = localStorage.getItem("workspaceInvite") || Cookies.get("workspaceInvite");
@@ -179,7 +180,7 @@ const RegisterInner = () => {
         } else if (hasTeamInvite) {
           router.push("/dashboard");
         } else {
-          router.push("/auth/otpemail");
+          router.push("/dashboard");
         }
       } catch (error) {
         console.log(error);
@@ -263,13 +264,13 @@ const RegisterInner = () => {
             }
             <div>
               <Button
-              type="primary"
-              variant="solid"
-              color="blue"
-              className="w-full"
-              disabled={loading}
+                type="primary"
+                variant="solid"
+                color="blue"
+                className="w-full"
+                disabled={loading}
               >
-                {!loading ? <span>Sign up</span> :<svg width="20" height="20" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#60A5FA" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 120"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"></animateTransform></circle></svg> }
+                {!loading ? <span>Sign up</span> : <svg width="20" height="20" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#60A5FA" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 120"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"></animateTransform></circle></svg>}
               </Button>
             </div>
           </form>

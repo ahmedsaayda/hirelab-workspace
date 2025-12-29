@@ -108,7 +108,7 @@ const PartnerRegistration = ({ onFinishPartnerRegister }) => {
 
     store.dispatch(login(me.data.me));
 
-    router.push("/auth/otpemail");
+    router.push("/dashboard");
   };
 
   return (
