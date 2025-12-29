@@ -212,7 +212,7 @@ const handleApproveAll = () => {
 - ✅ Ad Type sidebar icons (inline SVGs)
 - ✅ Variants card layout (70x70 thumbnails, connected buttons)
 - ✅ Live preview (338x718 Story format)
-- ✅ All colors from Figma (#eceef5, #eaecf0, #d0d5dd, #0e87fe, etc.)
+- ✅ All colors from Figma (#eceef5, #eaecf0, #d0d5dd, #5207CD, etc.)
 - ✅ Typography (20px headings, 14px/16px body)
 - ✅ Spacing (32px padding, 16px gaps)
 

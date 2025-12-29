@@ -222,7 +222,7 @@ export default function AdsEditDemoShell({ paramsId }) {
                   </div>
                   <div className="flex items-center gap-3">
                     {AD_FORMATS.map((f) => (
-                      <button key={f.id} onClick={() => setSelectedFormat(f.id)} className={`px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors border ${selectedFormat === f.id ? 'bg-[#0e87fe] text-white border-[#0e87fe]' : 'bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50'}`}>{f.label}</button>
+                      <button key={f.id} onClick={() => setSelectedFormat(f.id)} className={`px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors border ${selectedFormat === f.id ? 'bg-[#5207CD] text-white border-[#5207CD]' : 'bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50'}`}>{f.label}</button>
                     ))}
                   </div>
                 </div>

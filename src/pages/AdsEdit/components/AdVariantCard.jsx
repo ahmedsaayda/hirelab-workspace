@@ -16,6 +16,7 @@ export default function AdVariantCard({
   onSave,
   onDraftChange,
   landingPageData,
+  mediaType = "image", // "image" | "video" | "both" - controls what media can be uploaded
 }) {
   const dragRef = useRef({ dragging: false, pointerId: null });
   const [editData, setEditData] = useState({
@@ -62,7 +63,7 @@ export default function AdVariantCard({
   // If in edit mode, show expanded editor
   if (isEditing) {
     return (
-      <div className="bg-white border-2 border-[#0e87fe] rounded-xl p-4 transition-all">
+      <div className="bg-white border-2 border-[#5207CD] rounded-xl p-4 transition-all">
         {/* Editor Header */}
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-semibold text-base text-[#101828]">Edit Variant</h3>
@@ -159,8 +160,8 @@ export default function AdVariantCard({
                     emitDraft(next);
                   }}
                   className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${active
-                      ? "bg-[#0e87fe] text-white border-[#0e87fe]"
-                      : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
+                    ? "bg-[#5207CD] text-white border-[#5207CD]"
+                    : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
                     }`}
                 >
                   {cta}
@@ -217,8 +218,8 @@ export default function AdVariantCard({
                 dragRef.current.pointerId = null;
               }}
               className={`relative w-full h-28 rounded-lg overflow-hidden border select-none ${(editData.image || editData.videoUrl)
-                  ? `border-[#e4e7ec] hover:border-[#98a2b3] ${dragRef.current.dragging ? "cursor-grabbing" : "cursor-grab"}`
-                  : "border-[#eaecf0] cursor-not-allowed"
+                ? `border-[#e4e7ec] hover:border-[#98a2b3] ${dragRef.current.dragging ? "cursor-grabbing" : "cursor-grab"}`
+                : "border-[#eaecf0] cursor-not-allowed"
                 }`}
               style={{ touchAction: "none" }}
               title={(editData.image || editData.videoUrl) ? "Drag to position" : "Select media first"}
@@ -304,8 +305,8 @@ export default function AdVariantCard({
                     emitDraft(next);
                   }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${active
-                      ? "bg-[#0e87fe] text-white border-[#0e87fe]"
-                      : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
+                    ? "bg-[#5207CD] text-white border-[#5207CD]"
+                    : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
                     }`}
                 >
                   {fit}
@@ -362,10 +363,10 @@ export default function AdVariantCard({
               }}
               disabled={!editData.image || isLikelyVideoUrl(editData.image)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${(!editData.image || isLikelyVideoUrl(editData.image))
-                  ? "bg-gray-50 text-[#98a2b3] border-[#eaecf0] cursor-not-allowed"
-                  : (editData?.imageAdjustment?.heroImage?.bgRemoved
-                    ? "bg-[#101828] text-white border-[#101828]"
-                    : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50")
+                ? "bg-gray-50 text-[#98a2b3] border-[#eaecf0] cursor-not-allowed"
+                : (editData?.imageAdjustment?.heroImage?.bgRemoved
+                  ? "bg-[#101828] text-white border-[#101828]"
+                  : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50")
                 }`}
               title={isCloudinaryImageUrl(editData.image) ? "Cloudinary background removal (MVP)" : "Requires Cloudinary image URL"}
             >
@@ -413,8 +414,8 @@ export default function AdVariantCard({
                 emitDraft(next);
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${editData?.imageAdjustment?.heroImage?.mirror
-                  ? "bg-[#101828] text-white border-[#101828]"
-                  : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
+                ? "bg-[#101828] text-white border-[#101828]"
+                : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
                 }`}
             >
               {editData?.imageAdjustment?.heroImage?.mirror ? "On" : "Off"}
@@ -427,7 +428,9 @@ export default function AdVariantCard({
 
         {/* Image Picker - unified with media library (click area opens library; supports upload inside) */}
         <div className="mb-4">
-          <label className="text-xs font-medium text-[#344054] block mb-2">Media (image or video)</label>
+          <label className="text-xs font-medium text-[#344054] block mb-2">
+            Media ({mediaType === "video" ? "video" : mediaType === "both" ? "image or video" : "image"})
+          </label>
           <button
             type="button"
             onClick={() => setIsImagePickerOpen(true)}
@@ -448,7 +451,8 @@ export default function AdVariantCard({
                   {editData.image ? "Change media" : "Click to choose or upload"}
                 </div>
                 <div className="text-xs text-[#667085]">
-                  Opens media library. Upload or pick an image/video. {editData.videoUrl ? "Video selected." : "Image selected."}
+                  Opens media library. Upload or pick an {mediaType === "video" ? "video" : mediaType === "both" ? "image/video" : "image"}.{" "}
+                  {editData.videoUrl ? "Video selected." : editData.image ? "Image selected." : ""}
                 </div>
               </div>
             </div>
@@ -461,7 +465,7 @@ export default function AdVariantCard({
             onSave?.({ ...variant, ...editData });
             onEdit(null);
           }}
-          className="w-full px-4 py-2 bg-[#0e87fe] hover:bg-[#0c76e5] text-white font-semibold text-sm rounded-[15px] transition-colors"
+          className="w-full px-4 py-2 bg-[#5207CD] hover:bg-[#0c76e5] text-white font-semibold text-sm rounded-[15px] transition-colors"
         >
           Save Changes
         </button>
@@ -472,15 +476,27 @@ export default function AdVariantCard({
         <ImageSelectionModal
           isOpen={isImagePickerOpen}
           onClose={() => setIsImagePickerOpen(false)}
-          type="all"
-          accept="image/*,video/*"
+          type={mediaType === "video" ? "video" : mediaType === "both" ? "all" : "image"}
+          accept={mediaType === "video" ? "video/*" : mediaType === "both" ? "image/*,video/*" : "image/*"}
           multiple={false}
           existingFiles={editData?.image ? [editData.image] : []}
           onImageSelected={(files = []) => {
             const first = files?.[0];
             const url = (typeof first === "string" ? first : (first?.url || first?.secure_url || first?.thumbnail || ""));
             if (url) {
-              if (isLikelyVideoUrl(url) || String(url).includes("/video/upload/")) {
+              const isVideo = isLikelyVideoUrl(url) || String(url).includes("/video/upload/");
+
+              // Validate media type
+              if (mediaType === "image" && isVideo) {
+                message.error("This template only supports images. Please select an image.");
+                return;
+              }
+              if (mediaType === "video" && !isVideo) {
+                message.error("This template only supports videos. Please select a video.");
+                return;
+              }
+
+              if (isVideo) {
                 const poster = cloudinaryVideoToPoster(url);
                 const next = {
                   ...editData,
@@ -509,8 +525,8 @@ export default function AdVariantCard({
   return (
     <div
       className={`relative bg-white rounded-xl p-4 transition-all cursor-pointer ${selected
-          ? "border-2 border-[#0e87fe]"
-          : "border border-[#eaecf0]"
+        ? "border-2 border-[#5207CD]"
+        : "border border-[#eaecf0]"
         }`}
       onClick={(e) => {
         e.preventDefault();

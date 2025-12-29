@@ -118,7 +118,7 @@ export default function InlineEditor({ variant, onChange, landingPageData, onClo
         {/* Image Upload */}
         <div>
           <label className="text-sm font-medium text-[#344054] block mb-2">Image</label>
-          <div className="border-2 border-dashed border-[#d0d5dd] rounded-lg p-6 text-center hover:border-[#0e87fe] transition-colors cursor-pointer">
+          <div className="border-2 border-dashed border-[#d0d5dd] rounded-lg p-6 text-center hover:border-[#5207CD] transition-colors cursor-pointer">
             {localData.image ? (
               <div className="relative">
                 <img src={localData.image} alt="Ad" className="w-full h-40 object-cover rounded-lg mb-3" />
@@ -133,7 +133,7 @@ export default function InlineEditor({ variant, onChange, landingPageData, onClo
               </div>
             ) : (
               <>
-                <div className="text-[#0e87fe] mb-2">Click to upload</div>
+                <div className="text-[#5207CD] mb-2">Click to upload</div>
                 <div className="text-xs text-[#667085]">or drag and drop</div>
                 <div className="text-xs text-[#667085] mt-1">SVG, PNG, JPG or GIF (max. 800×400px)</div>
               </>
@@ -150,8 +150,8 @@ export default function InlineEditor({ variant, onChange, landingPageData, onClo
                     key={idx}
                     onClick={() => handleChange("image", img)}
                     className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${localData.image === img
-                        ? "border-[#0e87fe] ring-2 ring-[#0e87fe] ring-opacity-20"
-                        : "border-[#e4e7ec] hover:border-[#98a2b3]"
+                      ? "border-[#5207CD] ring-2 ring-[#5207CD] ring-opacity-20"
+                      : "border-[#e4e7ec] hover:border-[#98a2b3]"
                       }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />

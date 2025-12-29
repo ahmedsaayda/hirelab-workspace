@@ -87,7 +87,7 @@ Header:
 Variant Card:
 - Padding: 16px
 - Border-radius: 12px
-- Border: 1px #eaecf0 (2px #0e87fe when selected)
+- Border: 1px #eaecf0 (2px #5207CD when selected)
 - Gap: 16px
 
 Thumbnail:
@@ -106,7 +106,7 @@ Checkbox (top-right 12px):
 - Size: 20×20px
 - Border-radius: 10px
 - Border: 1.25px #d0d5dd
-- Selected: bg #0e87fe, white checkmark
+- Selected: bg #5207CD, white checkmark
 
 Action Buttons:
 - Height: 40px
@@ -144,7 +144,7 @@ Description:
 Image Upload:
 - Border: 2px dashed #d0d5dd
 - Padding: 24px
-- Hover: border-#0e87fe
+- Hover: border-#5207CD
 - Text: "Click to upload" (blue), "or drag and drop" (gray)
 - Subtext: "SVG, PNG, JPG or GIF (max. 800×400px)"
 
@@ -152,7 +152,7 @@ Image Grid:
 - Grid: 3 columns, gap-2
 - Aspect ratio: video (16:9)
 - Border: 2px #e4e7ec
-- Selected: border #0e87fe, ring-2 ring-#0e87fe/20
+- Selected: border #5207CD, ring-2 ring-#5207CD/20
 - Hover: border #98a2b3
 
 CTA Field:

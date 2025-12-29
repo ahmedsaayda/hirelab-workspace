@@ -76,7 +76,7 @@ The editor is **inline within the variant card** in the middle panel, and the **
 
 #### **Default State (Compact Card)**
 ```jsx
-<div className="border-2 border-[#0e87fe] rounded-xl p-4">
+<div className="border-2 border-[#5207CD] rounded-xl p-4">
   {/* 70×70 thumbnail */}
   <img src={variant.image} className="w-[70px] h-[70px]" />
   
@@ -99,7 +99,7 @@ The editor is **inline within the variant card** in the middle panel, and the **
 #### **Edit State (Expanded Inline Editor)**
 ```jsx
 {isEditing && (
-  <div className="border-2 border-[#0e87fe] rounded-xl p-4">
+  <div className="border-2 border-[#5207CD] rounded-xl p-4">
     {/* Header with Close */}
     <div className="flex justify-between">
       <h3>Edit Variant</h3>
@@ -166,14 +166,14 @@ const [editingVariant, setEditingVariant] = useState(null);
 - Buttons: Connected, no gap, 40px height
 
 ### **Expanded Editor View**
-- Same border (2px #0e87fe)
+- Same border (2px #5207CD)
 - Header: "Edit Variant" + Close button
 - Labels: 12px font-medium, #344054
 - Character counters: 12px, #667085, right-aligned
 - TextAreas: 2 rows, text-sm
 - Image Grid: 3 columns, gap-2, aspect-video
-- Selected image: border #0e87fe, ring-2
-- Save button: Full width, #0e87fe bg
+- Selected image: border #5207CD, ring-2
+- Save button: Full width, #5207CD bg
 
 ---
 

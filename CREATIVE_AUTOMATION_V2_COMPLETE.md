@@ -228,7 +228,7 @@ Based on Figma design:
 - [x] Auto-save on changes
 
 ### ✅ **Design Accuracy**
-- [x] Exact Figma colors (#eceef5, #eaecf0, #d0d5dd, #0e87fe, etc.)
+- [x] Exact Figma colors (#eceef5, #eaecf0, #d0d5dd, #5207CD, etc.)
 - [x] Correct typography (Roboto, Lato, exact sizes)
 - [x] Proper spacing (32px padding, 16px gaps)
 - [x] Pixel-perfect Story ad (338×718px)
@@ -286,7 +286,7 @@ new/FE/src/pages/AdsEdit/
 
 ### **Colors**
 ```css
---primary-blue: #0e87fe
+--primary-blue: #5207CD
 --success-green: #0a8f63
 --error-red: #d92d20
 --gray-900: #101828

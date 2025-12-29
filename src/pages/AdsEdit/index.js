@@ -21,6 +21,7 @@ import AdPreview from "./components/AdPreview";
 import AdEditModal from "./components/AdEditModal";
 import InlineEditor from "./components/InlineEditor";
 import EmptyState from "./components/EmptyState";
+import VariantPickerModal, { getVariantMediaType } from "./components/VariantPickerModal";
 import { generateVariants } from "./utils/adGenerationUtils";
 import ImageSelectionModal from "../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
 import AiService from "../../services/AiService";
@@ -28,7 +29,7 @@ import DevBrandControls from "./components/DevBrandControls.jsx";
 
 // Ad type icons as inline SVGs
 const AdTypeIcon = ({ type, active }) => {
-  const color = active ? "#0e87fe" : "#667085";
+  const color = active ? "#5207CD" : "#667085";
 
   const icons = {
     job: (
@@ -158,6 +159,9 @@ export default function AdsEdit({ paramsId }) {
   // Media picker (Replace) - use the real media library instead of the placeholder template modal
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [mediaPickerVariantId, setMediaPickerVariantId] = useState(null);
+
+  // Variant template picker for adding new creatives
+  const [variantPickerOpen, setVariantPickerOpen] = useState(false);
 
   // 🔥 Required setup: Meta Pixel ID before creating ad sets
   const [metaPixelDraft, setMetaPixelDraft] = useState("");
@@ -1219,26 +1223,24 @@ export default function AdsEdit({ paramsId }) {
     }
   };
 
-  // Add Variant: scalable default is to duplicate current variant (new ID)
+  // Add Creative: opens template picker so user can choose a fresh variant template
   const handleAddVariant = () => {
     if (!adsData) return;
-    const base = variantForPreview || currentVariants[0];
-    if (!base) return;
-    const newId = `${selectedAdType}-variant-${Date.now().toString(36)}`;
-    const cloned = {
-      ...base,
-      id: newId,
-      selected: true,
-      approved: false,
-    };
+    setVariantPickerOpen(true);
+  };
+
+  // Handle selection from variant picker modal
+  const handleVariantPickerSelect = (newCreative) => {
+    if (!adsData || !newCreative) return;
+
     const updatedVariants = [
       ...currentVariants.map((v) => ({ ...v, selected: false })),
-      cloned,
+      newCreative,
     ];
     const nextData = updateVariantsInData(updatedVariants);
     setAdsData(nextData);
-    setSelectedVariant(newId);
-    setEditingVariant(cloned);
+    setSelectedVariant(newCreative.id);
+    setEditingVariant(newCreative); // Open editor immediately for the new creative
   };
 
   // Handle approve all – now also prepares Cloudinary images for launch (but does NOT publish)
@@ -1939,17 +1941,18 @@ export default function AdsEdit({ paramsId }) {
                     onDownload={() => handleVariantDownload(variant)}
                     onReplace={() => handleVariantReplace(variant.id)}
                     landingPageData={landingPageData}
+                    mediaType={variant.mediaType || getVariantMediaType(variant.adTypeId || selectedAdType, variant.variantNumber)}
                   />
                 ))}
 
                 <button
                   onClick={handleAddVariant}
-                  className="w-full p-4 border-2 border-dashed border-[#d0d5dd] rounded-xl hover:border-[#0e87fe] hover:bg-[#eff8ff] transition-colors flex items-center justify-center gap-2 text-[#475467] hover:text-[#0e87fe] font-semibold text-sm"
+                  className="w-full p-4 border-2 border-dashed border-[#d0d5dd] rounded-xl hover:border-[#5207CD] hover:bg-[#eff8ff] transition-colors flex items-center justify-center gap-2 text-[#475467] hover:text-[#5207CD] font-semibold text-sm"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  Add Variant
+                  Add Creative
                 </button>
               </div>
             </div>
@@ -2136,6 +2139,16 @@ export default function AdsEdit({ paramsId }) {
         }}
       />
 
+      {/* Variant Template Picker Modal */}
+      <VariantPickerModal
+        visible={variantPickerOpen}
+        onClose={() => setVariantPickerOpen(false)}
+        onSelect={handleVariantPickerSelect}
+        adTypeId={selectedAdType}
+        formatId={selectedFormat}
+        landingPageData={landingPageData}
+      />
+
       {/* Ad Edit Modal */}
       <AdEditModal
         open={isEditModalOpen}
@@ -2173,7 +2186,7 @@ export default function AdsEdit({ paramsId }) {
               href="https://www.facebook.com/pages/create/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#0e87fe] text-sm hover:underline"
+              className="text-[#5207CD] text-sm hover:underline"
               title="Create a Facebook Page"
             >
               Create a Facebook Page
@@ -2294,7 +2307,7 @@ export default function AdsEdit({ paramsId }) {
                 </div>
                 <div className="p-3">
                   <div className="flex justify-between items-center mb-1">
-                    <div className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#0e87fe] capitalize">
+                    <div className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#5207CD] capitalize">
                       {v.adTypeId}
                     </div>
                     {v.approved ? (
@@ -2334,7 +2347,7 @@ export default function AdsEdit({ paramsId }) {
           {preparedVariants.map((v) => (
             <div key={v.id} className="border border-[#eaecf0] rounded-lg p-3">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#0e87fe] capitalize">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#eff8ff] text-[#5207CD] capitalize">
                   {v.adTypeId}
                 </span>
                 {v.approved && (
