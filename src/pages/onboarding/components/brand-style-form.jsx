@@ -1540,7 +1540,7 @@ export default function BrandStyleForm() {
 
       console.log("vacancyLenth", vacancyLenth)
       if (vacancyLenth === 0) {
-        router.push("/dashboard/vacancies?new=true");
+        router.push("/dashboard/campaigns?new=true");
       } else {
         router.push("/dashboard/vacancies");
       }

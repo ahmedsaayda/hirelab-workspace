@@ -358,11 +358,11 @@ const Vacancies = () => {
   useEffect(() => {
     if (isNew === "true") {
       if (landingPages && landingPages.length > 0) {
-        setAddNewModal(false);
+        setCampaignTypeSelectorOpen(false);
         return
       } else {
-
-        setAddNewModal(true);
+        // Show campaign type selector first to let user choose Single Job or Multi-Job
+        setCampaignTypeSelectorOpen(true);
       }
     }
   }, [isNew]);
@@ -474,7 +474,7 @@ const Vacancies = () => {
                 console.log('🚀 CALLING countApplicants with', minimalFunnels.length, 'funnels');
                 landingPagesWithCounts = await ATSService.countApplicants(minimalFunnels);
                 console.log('✅ Successfully fetched applicant counts:', landingPagesWithCounts.data?.length, 'items');
-                
+
                 // Merge the counts back into the original items
                 const countsById = new Map(landingPagesWithCounts.data?.map(c => [c._id, c]) || []);
                 landingPagesWithCounts.data = result.data.items?.map(item => ({
@@ -1264,7 +1264,7 @@ Respond with json that adheres to the following jsonschema:
                 </div>
 
                 {/* View switch (right-aligned) */}
-                {isCampaignsRoute && (
+                {/* {isCampaignsRoute && (
                   <button
                     onClick={() => {
                       const next = viewMode === 'cards' ? 'timeline' : 'cards';
@@ -1279,7 +1279,7 @@ Respond with json that adheres to the following jsonschema:
                   >
                     {viewMode === 'cards' ? 'Timeline view' : 'Cards view'}
                   </button>
-                )}
+                )} */}
 
                 {/* Create button */}
                 <button

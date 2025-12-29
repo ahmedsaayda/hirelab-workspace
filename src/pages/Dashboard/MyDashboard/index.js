@@ -29,11 +29,11 @@ const MyDashboard = () => {
       label: "Overview",
       children: <Overview />,
     },
- /*    {
-      key: "2",
-      label: "Reports",
-      children: <Reports />,
-    }, */
+    /*    {
+         key: "2",
+         label: "Reports",
+         children: <Reports />,
+       }, */
   ];
   const [activeKey, setActiveKey] = useState("1");
   const [showInviteModal, setShowInviteModal] = useState(true);
@@ -204,7 +204,7 @@ const MyDashboard = () => {
     }
 
     console.log('✅ DASHBOARD ALLOWING: User can create new vacancy');
-    router.push("/dashboard/vacancies?new=true");
+    router.push("/dashboard/campaigns?new=true");
   };
 
   return (
@@ -250,11 +250,11 @@ const MyDashboard = () => {
                             title={
                               <div className="space-y-2">
                                 <div className="font-medium text-gray-900">Funnel Allocation Breakdown</div>
-                          <div className="space-y-1 text-sm">
-                            <div className="flex justify-between">
-                              <span>Main Account:</span>
-                              <span>{funnelUsage.mainAccountFunnels || 0} funnels</span>
-                            </div>
+                                <div className="space-y-1 text-sm">
+                                  <div className="flex justify-between">
+                                    <span>Main Account:</span>
+                                    <span>{funnelUsage.mainAccountFunnels || 0} funnels</span>
+                                  </div>
                                   {funnelUsage.workspaces.map(workspace => (
                                     <div key={workspace._id} className="flex justify-between">
                                       <span>{workspace.name}:</span>
@@ -279,7 +279,7 @@ const MyDashboard = () => {
                           {tierName} Plan
                         </span>
                       </div>
-                      
+
                       {/* Create button */}
                       <Button
                         shape="round"
@@ -289,17 +289,16 @@ const MyDashboard = () => {
                           hasReachedLimit ? (
                             <CrownOutlined className="mr-2 text-yellow-500" />
                           ) : (
-                           <PlusOutlined className="mr-2 text-white" />
+                            <PlusOutlined className="mr-2 text-white" />
                           )
                         }
-                        className={`min-w-[225px] gap-1.5 font-semibold px-[4px] ${
-                          hasReachedLimit 
-                            ? 'bg-orange-500 hover:bg-orange-600 text-white' 
-                            : 'bg-[#5207CD] text-white'
-                        }`}
+                        className={`min-w-[225px] gap-1.5 font-semibold px-[4px] ${hasReachedLimit
+                          ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                          : 'bg-[#5207CD] text-white'
+                          }`}
                         title={hasReachedLimit ? `You've reached your ${maxFunnels} funnel limit. Click to upgrade.` : 'Create a new vacancy'}
                       >
-                        {hasReachedLimit ? 'Upgrade to Create More' : 'Create a New Vacancy'}
+                        {hasReachedLimit ? 'Upgrade to Create More' : 'Create a New Campaign'}
                       </Button>
                     </div>
                   );
