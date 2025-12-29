@@ -61,7 +61,7 @@ const { Option } = Select;
 export default function FormEdit({ paramsId }) {
   const router = useRouter();
   const lpId = paramsId;
-  
+
   // 🔥 NEW: Navigation guard for unsaved form changes
   const [isExitModalVisible, setIsExitModalVisible] = useState(false);
   const [hasImmediateUnsavedChanges, setHasImmediateUnsavedChanges] = useState(false);
@@ -121,15 +121,15 @@ export default function FormEdit({ paramsId }) {
   const [isEditingButtonSettings, setIsEditingButtonSettings] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [device, setDevice] = useState("desktop");
-  
+
   // 🔥 NEW: Form-specific change detection state
   const [hasUnpublishedFormChanges, setHasUnpublishedFormChanges] = useState(false);
-  
+
   // 🔥 NEW: Navigation guard logic for form changes (use unpublished changes)
   useEffect(() => {
     hasUnpublishedChangesRef.current = hasUnpublishedFormChanges;
   }, [hasUnpublishedFormChanges]);
-  
+
   const handleExitCancel = useCallback(() => {
     pendingNavigationRef.current = null;
     setIsExitModalVisible(false);
@@ -406,13 +406,11 @@ export default function FormEdit({ paramsId }) {
             (res.data?.form?.fields || []).forEach((field, index) => {
               console.log(`   RAW Field ${index + 1} (${field.type}):`);
               console.log(
-                `      visible: ${
-                  field.visible
+                `      visible: ${field.visible
                 } (type: ${typeof field.visible})`
               );
               console.log(
-                `      required: ${
-                  field.required
+                `      required: ${field.required
                 } (type: ${typeof field.required})`
               );
               console.log(`      Full field:`, field);
@@ -433,241 +431,241 @@ export default function FormEdit({ paramsId }) {
                 // Normalize address subfields
                 ...(field.type === "address"
                   ? {
-                      line1:
-                        typeof field.line1 === "object"
+                    line1:
+                      typeof field.line1 === "object"
+                        ? {
+                          visible:
+                            field.line1.visible !== undefined
+                              ? field.line1.visible
+                              : true,
+                          required:
+                            field.line1.required !== undefined
+                              ? field.line1.required
+                              : false,
+                          label: field.line1.label || "Address Line 1",
+                          placeholder: field.line1.placeholder || "",
+                        }
+                        : typeof field.line1 === "string"
                           ? {
-                              visible:
-                                field.line1.visible !== undefined
-                                  ? field.line1.visible
-                                  : true,
-                              required:
-                                field.line1.required !== undefined
-                                  ? field.line1.required
-                                  : false,
-                              label: field.line1.label || "Address Line 1",
-                              placeholder: field.line1.placeholder || "",
-                            }
-                          : typeof field.line1 === "string"
-                          ? {
-                              visible: true,
-                              required: false,
-                              label: "Address Line 1",
-                              placeholder: field.line1,
-                            }
+                            visible: true,
+                            required: false,
+                            label: "Address Line 1",
+                            placeholder: field.line1,
+                          }
                           : {
-                              visible: true,
-                              required: false,
-                              label: "Address Line 1",
-                              placeholder: "",
-                            },
-                      line2:
-                        typeof field.line2 === "object"
+                            visible: true,
+                            required: false,
+                            label: "Address Line 1",
+                            placeholder: "",
+                          },
+                    line2:
+                      typeof field.line2 === "object"
+                        ? {
+                          visible:
+                            field.line2.visible !== undefined
+                              ? field.line2.visible
+                              : true,
+                          required:
+                            field.line2.required !== undefined
+                              ? field.line2.required
+                              : false,
+                          label: field.line2.label || "Address Line 2",
+                          placeholder: field.line2.placeholder || "",
+                        }
+                        : typeof field.line2 === "string"
                           ? {
-                              visible:
-                                field.line2.visible !== undefined
-                                  ? field.line2.visible
-                                  : true,
-                              required:
-                                field.line2.required !== undefined
-                                  ? field.line2.required
-                                  : false,
-                              label: field.line2.label || "Address Line 2",
-                              placeholder: field.line2.placeholder || "",
-                            }
-                          : typeof field.line2 === "string"
-                          ? {
-                              visible: true,
-                              required: false,
-                              label: "Address Line 2",
-                              placeholder: field.line2,
-                            }
+                            visible: true,
+                            required: false,
+                            label: "Address Line 2",
+                            placeholder: field.line2,
+                          }
                           : {
-                              visible: true,
-                              required: false,
-                              label: "Address Line 2",
-                              placeholder: "",
-                            },
-                      city:
-                        typeof field.city === "object"
+                            visible: true,
+                            required: false,
+                            label: "Address Line 2",
+                            placeholder: "",
+                          },
+                    city:
+                      typeof field.city === "object"
+                        ? {
+                          visible:
+                            field.city.visible !== undefined
+                              ? field.city.visible
+                              : true,
+                          required:
+                            field.city.required !== undefined
+                              ? field.city.required
+                              : false,
+                          label: field.city.label || "City",
+                          placeholder: field.city.placeholder || "",
+                        }
+                        : typeof field.city === "string"
                           ? {
-                              visible:
-                                field.city.visible !== undefined
-                                  ? field.city.visible
-                                  : true,
-                              required:
-                                field.city.required !== undefined
-                                  ? field.city.required
-                                  : false,
-                              label: field.city.label || "City",
-                              placeholder: field.city.placeholder || "",
-                            }
-                          : typeof field.city === "string"
-                          ? {
-                              visible: true,
-                              required: false,
-                              label: "City",
-                              placeholder: field.city,
-                            }
+                            visible: true,
+                            required: false,
+                            label: "City",
+                            placeholder: field.city,
+                          }
                           : {
-                              visible: true,
-                              required: false,
-                              label: "City",
-                              placeholder: "",
-                            },
-                      state:
-                        typeof field.state === "object"
+                            visible: true,
+                            required: false,
+                            label: "City",
+                            placeholder: "",
+                          },
+                    state:
+                      typeof field.state === "object"
+                        ? {
+                          visible:
+                            field.state.visible !== undefined
+                              ? field.state.visible
+                              : true,
+                          required:
+                            field.state.required !== undefined
+                              ? field.state.required
+                              : false,
+                          label: field.state.label || "State/Province",
+                          placeholder: field.state.placeholder || "",
+                        }
+                        : typeof field.state === "string"
                           ? {
-                              visible:
-                                field.state.visible !== undefined
-                                  ? field.state.visible
-                                  : true,
-                              required:
-                                field.state.required !== undefined
-                                  ? field.state.required
-                                  : false,
-                              label: field.state.label || "State/Province",
-                              placeholder: field.state.placeholder || "",
-                            }
-                          : typeof field.state === "string"
-                          ? {
-                              visible: true,
-                              required: false,
-                              label: "State/Province",
-                              placeholder: field.state,
-                            }
+                            visible: true,
+                            required: false,
+                            label: "State/Province",
+                            placeholder: field.state,
+                          }
                           : {
-                              visible: true,
-                              required: false,
-                              label: "State/Province",
-                              placeholder: "",
-                            },
-                      zip:
-                        typeof field.zip === "object"
+                            visible: true,
+                            required: false,
+                            label: "State/Province",
+                            placeholder: "",
+                          },
+                    zip:
+                      typeof field.zip === "object"
+                        ? {
+                          visible:
+                            field.zip.visible !== undefined
+                              ? field.zip.visible
+                              : true,
+                          required:
+                            field.zip.required !== undefined
+                              ? field.zip.required
+                              : false,
+                          label: field.zip.label || "ZIP/Postal Code",
+                          placeholder: field.zip.placeholder || "",
+                        }
+                        : typeof field.zip === "string"
                           ? {
-                              visible:
-                                field.zip.visible !== undefined
-                                  ? field.zip.visible
-                                  : true,
-                              required:
-                                field.zip.required !== undefined
-                                  ? field.zip.required
-                                  : false,
-                              label: field.zip.label || "ZIP/Postal Code",
-                              placeholder: field.zip.placeholder || "",
-                            }
-                          : typeof field.zip === "string"
-                          ? {
-                              visible: true,
-                              required: false,
-                              label: "ZIP/Postal Code",
-                              placeholder: field.zip,
-                            }
+                            visible: true,
+                            required: false,
+                            label: "ZIP/Postal Code",
+                            placeholder: field.zip,
+                          }
                           : {
-                              visible: true,
-                              required: false,
-                              label: "ZIP/Postal Code",
-                              placeholder: "",
-                            },
-                      country:
-                        typeof field.country === "object"
+                            visible: true,
+                            required: false,
+                            label: "ZIP/Postal Code",
+                            placeholder: "",
+                          },
+                    country:
+                      typeof field.country === "object"
+                        ? {
+                          visible:
+                            field.country.visible !== undefined
+                              ? field.country.visible
+                              : true,
+                          required:
+                            field.country.required !== undefined
+                              ? field.country.required
+                              : false,
+                          label: field.country.label || "Country",
+                          placeholder: field.country.placeholder || "",
+                        }
+                        : typeof field.country === "string"
                           ? {
-                              visible:
-                                field.country.visible !== undefined
-                                  ? field.country.visible
-                                  : true,
-                              required:
-                                field.country.required !== undefined
-                                  ? field.country.required
-                                  : false,
-                              label: field.country.label || "Country",
-                              placeholder: field.country.placeholder || "",
-                            }
-                          : typeof field.country === "string"
-                          ? {
-                              visible: true,
-                              required: false,
-                              label: "Country",
-                              placeholder: field.country,
-                            }
+                            visible: true,
+                            required: false,
+                            label: "Country",
+                            placeholder: field.country,
+                          }
                           : {
-                              visible: true,
-                              required: false,
-                              label: "Country",
-                              placeholder: "",
-                            },
-                    }
+                            visible: true,
+                            required: false,
+                            label: "Country",
+                            placeholder: "",
+                          },
+                  }
                   : {}),
                 // Special handling for contact fields
                 ...(field.type === "contact" &&
-                field.firstName &&
-                field.lastName
+                  field.firstName &&
+                  field.lastName
                   ? {
-                      firstName: {
-                        ...field.firstName,
-                        visible:
-                          field.firstName.visible !== undefined
-                            ? field.firstName.visible
-                            : true,
-                        required:
-                          field.firstName.required !== undefined
-                            ? field.firstName.required
-                            : true,
-                      },
-                      lastName: {
-                        ...field.lastName,
-                        visible:
-                          field.lastName.visible !== undefined
-                            ? field.lastName.visible
-                            : true,
-                        required:
-                          field.lastName.required !== undefined
-                            ? field.lastName.required
-                            : true,
-                      },
-                    }
+                    firstName: {
+                      ...field.firstName,
+                      visible:
+                        field.firstName.visible !== undefined
+                          ? field.firstName.visible
+                          : true,
+                      required:
+                        field.firstName.required !== undefined
+                          ? field.firstName.required
+                          : true,
+                    },
+                    lastName: {
+                      ...field.lastName,
+                      visible:
+                        field.lastName.visible !== undefined
+                          ? field.lastName.visible
+                          : true,
+                      required:
+                        field.lastName.required !== undefined
+                          ? field.lastName.required
+                          : true,
+                    },
+                  }
                   : {}),
                 // 🔥 CRITICAL: Normalize options for multichoice/dropdown/multiselect fields
                 // Handle 3 different formats: string arrays, object arrays, and missing options
                 ...((field.type === "multichoice" || field.type === "dropdown" || field.type === "multiselect")
                   ? {
-                      options: (() => {
-                        if (!field.options || field.options.length === 0) {
-                          // No options - create default
-                          return [{ text: "Option 1", isNegative: false }];
-                        }
-                        
-                        // Check if first option is a string (format 1 & 2) or object (format 3)
-                        if (typeof field.options[0] === 'string') {
-                          // Convert string array to object array
-                          return field.options.map(optionText => ({
-                            text: optionText,
-                            isNegative: false
-                          }));
-                        } else if (typeof field.options[0] === 'object') {
-                          // Already object array - ensure proper structure
-                          return field.options.map(opt => ({
-                            text: opt.text || opt.label || opt.value || "Option",
-                            isNegative: opt.isNegative || false
-                          }));
-                        }
-                        
-                        // Fallback
+                    options: (() => {
+                      if (!field.options || field.options.length === 0) {
+                        // No options - create default
                         return [{ text: "Option 1", isNegative: false }];
-                      })()
-                    }
+                      }
+
+                      // Check if first option is a string (format 1 & 2) or object (format 3)
+                      if (typeof field.options[0] === 'string') {
+                        // Convert string array to object array
+                        return field.options.map(optionText => ({
+                          text: optionText,
+                          isNegative: false
+                        }));
+                      } else if (typeof field.options[0] === 'object') {
+                        // Already object array - ensure proper structure
+                        return field.options.map(opt => ({
+                          text: opt.text || opt.label || opt.value || "Option",
+                          isNegative: opt.isNegative || false
+                        }));
+                      }
+
+                      // Fallback
+                      return [{ text: "Option 1", isNegative: false }];
+                    })()
+                  }
                   : {}),
               };
 
               console.log(
                 `   After: visible=${processedField.visible}, required=${processedField.required}`
               );
-              
+
               // 🔍 DEBUG: Log normalized options for choice-based fields
               if (processedField.type === "multichoice" || processedField.type === "dropdown" || processedField.type === "multiselect") {
                 console.log(`   📋 NORMALIZED Options for ${processedField.type}:`, processedField.options);
                 console.log(`   📋 ORIGINAL Options from DB:`, field.options);
               }
-              
+
               return processedField;
             });
 
@@ -762,16 +760,16 @@ export default function FormEdit({ paramsId }) {
                 },
                 phone: existingContactField.phone
                   ? {
-                      ...existingContactField.phone,
-                    }
+                    ...existingContactField.phone,
+                  }
                   : {
-                      visible: true,
-                      required: false,
-                      label:
-                        getTranslation(landingPageData?.lang, "phone") ||
-                        "Phone",
-                      placeholder: "",
-                    },
+                    visible: true,
+                    required: false,
+                    label:
+                      getTranslation(landingPageData?.lang, "phone") ||
+                      "Phone",
+                    placeholder: "",
+                  },
               };
 
               // Remove standalone email/phone fields and replace/add the unified contact field
@@ -787,10 +785,8 @@ export default function FormEdit({ paramsId }) {
             console.log("🔍 DETAILED FIELD ANALYSIS:");
             fields.forEach((field, index) => {
               console.log(
-                `   Field ${index + 1}: ${field.type} - visible: ${
-                  field.visible
-                }, required: ${field.required}, isLeadCapture: ${
-                  field.isLeadCapture
+                `   Field ${index + 1}: ${field.type} - visible: ${field.visible
+                }, required: ${field.required}, isLeadCapture: ${field.isLeadCapture
                 }`
               );
               if (field.firstName && field.lastName) {
@@ -883,9 +879,11 @@ export default function FormEdit({ paramsId }) {
       autoJumpToNext: false,
       redirectToUrl: "",
       ...base,
-      respondentEmail: { ...{
-        enabled: false, toFieldId: "contact.email", replyTo: "", subject: "", fromName: "", body: ""
-      }, ...(base?.respondentEmail || {}) },
+      respondentEmail: {
+        ...{
+          enabled: false, toFieldId: "contact.email", replyTo: "", subject: "", fromName: "", body: ""
+        }, ...(base?.respondentEmail || {})
+      },
       optIn: { ...{ enabled: false, showMessage: true, messagePlacement: "contact", header: "", description: "", required: false }, ...(base?.optIn || {}) },
     };
   }, [landingPageData?.form?.settings]);
@@ -941,7 +939,7 @@ export default function FormEdit({ paramsId }) {
 
   const updateFormData = (fields, shouldForceUpdate = false) => {
     console.log("📋 updateFormData with fields:", fields);
-    
+
     // Mark as having immediate unsaved changes
     setHasImmediateUnsavedChanges(true);
     sessionHasChangesRef.current = true;
@@ -1002,17 +1000,13 @@ export default function FormEdit({ paramsId }) {
         console.log(`      Full field being saved:`, field);
         if (field.firstName && field.lastName) {
           console.log(
-            `      Saving First Name: visible: ${
-              field.firstName.visible
-            } (type: ${typeof field.firstName.visible}), required: ${
-              field.firstName.required
+            `      Saving First Name: visible: ${field.firstName.visible
+            } (type: ${typeof field.firstName.visible}), required: ${field.firstName.required
             } (type: ${typeof field.firstName.required})`
           );
           console.log(
-            `      Saving Last Name: visible: ${
-              field.lastName.visible
-            } (type: ${typeof field.lastName.visible}), required: ${
-              field.lastName.required
+            `      Saving Last Name: visible: ${field.lastName.visible
+            } (type: ${typeof field.lastName.visible}), required: ${field.lastName.required
             } (type: ${typeof field.lastName.required})`
           );
         }
@@ -1049,7 +1043,7 @@ export default function FormEdit({ paramsId }) {
 
             return nextData;
           });
-          
+
           console.log(
             "📅 Updated landingPageData with latest timestamp:",
             response.data.updatedAt
@@ -1121,17 +1115,15 @@ export default function FormEdit({ paramsId }) {
         <div className="flex items-start justify-between gap-6">
           <div className="max-w-[70%]">
             <div
-              className={`text-sm font-semibold ${
-                disabled ? "text-gray-500" : "text-gray-900"
-              }`}
+              className={`text-sm font-semibold ${disabled ? "text-gray-500" : "text-gray-900"
+                }`}
             >
               {title}
             </div>
             {description && (
               <div
-                className={`text-xs mt-1 leading-relaxed ${
-                  disabled ? "text-gray-400" : "text-gray-500"
-                }`}
+                className={`text-xs mt-1 leading-relaxed ${disabled ? "text-gray-400" : "text-gray-500"
+                  }`}
               >
                 {description}
               </div>
@@ -1142,7 +1134,7 @@ export default function FormEdit({ paramsId }) {
         {children && <div className="mt-3 pl-0">{children}</div>}
       </div>
     ),
-  []);
+    []);
 
   // Memoized drawer content to prevent re-renders
   const drawerContent = useMemo(() => {
@@ -1162,7 +1154,7 @@ export default function FormEdit({ paramsId }) {
           }
         />
 
-   
+
 
         <SettingRow
           title="Respondent Email Notification"
@@ -1457,7 +1449,7 @@ export default function FormEdit({ paramsId }) {
 
   const handleAddSection = (type) => {
     console.log("type", type);
-    
+
     // Mark as having immediate unsaved changes
     setHasImmediateUnsavedChanges(true);
 
@@ -1476,8 +1468,7 @@ export default function FormEdit({ paramsId }) {
       );
       if (contactExists) {
         message.error(
-          `${
-            type === "email" ? "Email" : "Phone"
+          `${type === "email" ? "Email" : "Phone"
           } field is already included in the Contact Information section`
         );
         return;
@@ -1505,8 +1496,7 @@ export default function FormEdit({ paramsId }) {
       const typeExist = formSections.find((section) => section.type === type);
       if (typeExist) {
         message.error(
-          `${
-            formItems.find((item) => item.type === type)?.text || type
+          `${formItems.find((item) => item.type === type)?.text || type
           } field already exists as a lead capture field`
         );
         return;
@@ -1527,49 +1517,49 @@ export default function FormEdit({ paramsId }) {
       ...(type === "number" ? { min: 0, max: 100 } : {}),
       ...(type === "contact"
         ? {
-            firstName: { visible: true, required: true },
-            lastName: { visible: true, required: true },
-          }
+          firstName: { visible: true, required: true },
+          lastName: { visible: true, required: true },
+        }
         : {}),
       ...(type === "address"
         ? {
-            line1: {
-              visible: true,
-              required: false,
-              label: "Address Line 1",
-              placeholder: "",
-            },
-            line2: {
-              visible: true,
-              required: false,
-              label: "Address Line 2",
-              placeholder: "",
-            },
-            city: {
-              visible: true,
-              required: false,
-              label: "City",
-              placeholder: "",
-            },
-            state: {
-              visible: true,
-              required: false,
-              label: "State/Province",
-              placeholder: "",
-            },
-            zip: {
-              visible: true,
-              required: false,
-              label: "ZIP/Postal Code",
-              placeholder: "",
-            },
-            country: {
-              visible: true,
-              required: false,
-              label: "Country",
-              placeholder: "",
-            },
-          }
+          line1: {
+            visible: true,
+            required: false,
+            label: "Address Line 1",
+            placeholder: "",
+          },
+          line2: {
+            visible: true,
+            required: false,
+            label: "Address Line 2",
+            placeholder: "",
+          },
+          city: {
+            visible: true,
+            required: false,
+            label: "City",
+            placeholder: "",
+          },
+          state: {
+            visible: true,
+            required: false,
+            label: "State/Province",
+            placeholder: "",
+          },
+          zip: {
+            visible: true,
+            required: false,
+            label: "ZIP/Postal Code",
+            placeholder: "",
+          },
+          country: {
+            visible: true,
+            required: false,
+            label: "Country",
+            placeholder: "",
+          },
+        }
         : {}),
     };
 
@@ -1592,7 +1582,7 @@ export default function FormEdit({ paramsId }) {
   const handleRemoveSection = (sectionId) => {
     // Mark as having immediate unsaved changes
     setHasImmediateUnsavedChanges(true);
-    
+
     // 🔒 LEAD CAPTURE PROTECTION: Prevent removal of lead capture fields
     const sectionToRemove = formSections.find(
       (section) => section.id === sectionId
@@ -1774,7 +1764,7 @@ export default function FormEdit({ paramsId }) {
     // Mark as having immediate unsaved changes
     setHasImmediateUnsavedChanges(true);
     sessionHasChangesRef.current = true;
-    
+
     const updatedSections = formSections.map((section) =>
       section.id === updatedField.id ? updatedField : section
     );
@@ -1942,128 +1932,128 @@ export default function FormEdit({ paramsId }) {
 
           {/* Visibility Rules */}
           {currentIndex > 0 && (
-          <div className="p-3 rounded-lg border border-gray-200 bg-gray-50/30 mt-2 logic-editor">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-[14px] text-[#475647]">Show this question when</span>
-              <div className="flex items-center gap-2 text-xs">
-                <span>Match</span>
-                <Select
-                  size="small"
-                  value={logic.visibleWhen.all ? 'all' : 'any'}
-                  onChange={(val) => {
-                    const updated = {
-                      ...logic,
-                      visibleWhen: { ...logic.visibleWhen, all: val === 'all' },
-                    };
-                    handleUpdateSection(section.id, { logic: updated });
-                  }}
-                  style={{ minWidth: 90 }}
-                >
-                  <Option value="all">all</Option>
-                  <Option value="any">any</Option>
-                </Select>
-                <span>conditions</span>
+            <div className="p-3 rounded-lg border border-gray-200 bg-gray-50/30 mt-2 logic-editor">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-[14px] text-[#475647]">Show this question when</span>
+                <div className="flex items-center gap-2 text-xs">
+                  <span>Match</span>
+                  <Select
+                    size="small"
+                    value={logic.visibleWhen.all ? 'all' : 'any'}
+                    onChange={(val) => {
+                      const updated = {
+                        ...logic,
+                        visibleWhen: { ...logic.visibleWhen, all: val === 'all' },
+                      };
+                      handleUpdateSection(section.id, { logic: updated });
+                    }}
+                    style={{ minWidth: 90 }}
+                  >
+                    <Option value="all">all</Option>
+                    <Option value="any">any</Option>
+                  </Select>
+                  <span>conditions</span>
+                </div>
               </div>
-            </div>
 
-            {(logic.visibleWhen.conditions || []).map((c, idx) => {
-              const valueOptions = getValueOptionsForField(c.fieldId);
-              return (
-                <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center mb-2">
-                  <div className="col-span-4">
-                    <Select
-                      size="middle"
-                      className="w-full"
-                      value={c.fieldId || undefined}
-                      placeholder="Select question…"
-                      onChange={(val) => {
-                        const nextConds = [...logic.visibleWhen.conditions];
-                        nextConds[idx] = { ...c, fieldId: val, value: undefined };
-                        const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
-                        handleUpdateSection(section.id, { logic: updated });
-                      }}
-                      showSearch
-                      optionFilterProp="children"
-                    >
-                      {allFields.map((f) => (
-                        <Option key={f.id} value={f.id}>{f.label || f.id}</Option>
-                      ))}
-                    </Select>
-                  </div>
-                  <div className="col-span-3">
-                    <Select
-                      className="w-full"
-                      value={c.operator || 'equals'}
-                      onChange={(val) => {
-                        const nextConds = [...logic.visibleWhen.conditions];
-                        nextConds[idx] = { ...c, operator: val };
-                        const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
-                        handleUpdateSection(section.id, { logic: updated });
-                      }}
-                      size="middle"
-                    >
-                      {supportedOperators.map((op) => (
-                        <Option key={op.v} value={op.v}>{op.t}</Option>
-                      ))}
-                    </Select>
-                  </div>
-                  <div className="col-span-4">
-                    {valueOptions ? (
+              {(logic.visibleWhen.conditions || []).map((c, idx) => {
+                const valueOptions = getValueOptionsForField(c.fieldId);
+                return (
+                  <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center mb-2">
+                    <div className="col-span-4">
                       <Select
+                        size="middle"
                         className="w-full"
-                        value={c.value ?? undefined}
-                        placeholder="Select value…"
+                        value={c.fieldId || undefined}
+                        placeholder="Select question…"
                         onChange={(val) => {
                           const nextConds = [...logic.visibleWhen.conditions];
-                          nextConds[idx] = { ...c, value: val };
+                          nextConds[idx] = { ...c, fieldId: val, value: undefined };
                           const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
                           handleUpdateSection(section.id, { logic: updated });
                         }}
                         showSearch
                         optionFilterProp="children"
                       >
-                        {valueOptions.map((v) => (
-                          <Option key={v} value={v}>{v}</Option>
+                        {allFields.map((f) => (
+                          <Option key={f.id} value={f.id}>{f.label || f.id}</Option>
                         ))}
                       </Select>
-                    ) : (
-                      getValueEditor(c, (val) => {
-                        const nextConds = [...logic.visibleWhen.conditions];
-                        nextConds[idx] = { ...c, value: val };
-                        const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
-                        handleUpdateSection(section.id, { logic: updated });
-                      })
-                    )}
+                    </div>
+                    <div className="col-span-3">
+                      <Select
+                        className="w-full"
+                        value={c.operator || 'equals'}
+                        onChange={(val) => {
+                          const nextConds = [...logic.visibleWhen.conditions];
+                          nextConds[idx] = { ...c, operator: val };
+                          const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                          handleUpdateSection(section.id, { logic: updated });
+                        }}
+                        size="middle"
+                      >
+                        {supportedOperators.map((op) => (
+                          <Option key={op.v} value={op.v}>{op.t}</Option>
+                        ))}
+                      </Select>
+                    </div>
+                    <div className="col-span-4">
+                      {valueOptions ? (
+                        <Select
+                          className="w-full"
+                          value={c.value ?? undefined}
+                          placeholder="Select value…"
+                          onChange={(val) => {
+                            const nextConds = [...logic.visibleWhen.conditions];
+                            nextConds[idx] = { ...c, value: val };
+                            const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                            handleUpdateSection(section.id, { logic: updated });
+                          }}
+                          showSearch
+                          optionFilterProp="children"
+                        >
+                          {valueOptions.map((v) => (
+                            <Option key={v} value={v}>{v}</Option>
+                          ))}
+                        </Select>
+                      ) : (
+                        getValueEditor(c, (val) => {
+                          const nextConds = [...logic.visibleWhen.conditions];
+                          nextConds[idx] = { ...c, value: val };
+                          const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                          handleUpdateSection(section.id, { logic: updated });
+                        })
+                      )}
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      <button
+                        type="button"
+                        className="p-1 rounded hover:bg-gray-100"
+                        title="Remove rule"
+                        onClick={() => {
+                          const nextConds = (logic.visibleWhen.conditions || []).filter((_, i) => i !== idx);
+                          const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                          handleUpdateSection(section.id, { logic: updated });
+                        }}
+                      >
+                        <img src="/images2/img_trash_01_red_700.svg" alt="remove" className="h-[16px] w-[16px]" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="col-span-1 flex justify-end">
-                    <button
-                      type="button"
-                      className="p-1 rounded hover:bg-gray-100"
-                      title="Remove rule"
-                      onClick={() => {
-                        const nextConds = (logic.visibleWhen.conditions || []).filter((_, i) => i !== idx);
-                        const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
-                        handleUpdateSection(section.id, { logic: updated });
-                      }}
-                    >
-                      <img src="/images2/img_trash_01_red_700.svg" alt="remove" className="h-[16px] w-[16px]" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-            <button
-              type="button"
-              className="mt-1 px-3 py-1 text-xs border rounded"
-              onClick={() => {
-                const nextConds = [...(logic.visibleWhen.conditions || []), { fieldId: '', operator: 'equals', value: '' }];
-                const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
-                handleUpdateSection(section.id, { logic: updated });
-              }}
-            >
-              + Add condition
-            </button>
-          </div>
+                );
+              })}
+              <button
+                type="button"
+                className="mt-1 px-3 py-1 text-xs border rounded"
+                onClick={() => {
+                  const nextConds = [...(logic.visibleWhen.conditions || []), { fieldId: '', operator: 'equals', value: '' }];
+                  const updated = { ...logic, visibleWhen: { ...logic.visibleWhen, conditions: nextConds } };
+                  handleUpdateSection(section.id, { logic: updated });
+                }}
+              >
+                + Add condition
+              </button>
+            </div>
           )}
 
           {/* Jump Rules (only for allowed types) */}
@@ -2171,7 +2161,7 @@ export default function FormEdit({ paramsId }) {
                 >
                   + Add answer rule
                 </button>
-                </>
+              </>
             </div>
           )}
         </>
@@ -2190,7 +2180,7 @@ export default function FormEdit({ paramsId }) {
                 </span>
               }
             >
-              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+              <div className="overflow-hidden rounded-[15px] border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
                 <CustomInput
                   value={currentSection.label}
                   onChange={(value) =>
@@ -2202,7 +2192,7 @@ export default function FormEdit({ paramsId }) {
               </div>
             </Form.Item>
 
-          
+
 
             {/* Core contact fields with borders and separation */}
             {[
@@ -2426,7 +2416,7 @@ export default function FormEdit({ paramsId }) {
               </span>
             }
           >
-            <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+            <div className="overflow-hidden rounded-[15px] border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
               <CustomInput
                 value={currentSection.label}
                 onChange={(value) =>
@@ -2553,7 +2543,7 @@ export default function FormEdit({ paramsId }) {
             <span className="font-bold text-[14px] text-[#475647]">Label</span>
           }
         >
-          <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+          <div className="overflow-hidden rounded-[15px] border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
             <CustomInput
               value={currentSection.label}
               onChange={(value) =>
@@ -2575,32 +2565,32 @@ export default function FormEdit({ paramsId }) {
           "phone",
           "website",
         ].includes(currentSection.type) && (
-          <Form.Item
-            label={
-              <span className="font-bold text-[14px] text-[#475647]">
-                Placeholder
-              </span>
-            }
-          >
-            <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-              <CustomInput
-                value={currentSection.placeholder}
-                onChange={(value) =>
-                  handleUpdateSection(currentSection.id, {
-                    placeholder: value,
-                  })
-                }
-                className="text-sm border-none focus:ring-0"
-                shape="round"
-              />
-            </div>
-          </Form.Item>
-        )}
+            <Form.Item
+              label={
+                <span className="font-bold text-[14px] text-[#475647]">
+                  Placeholder
+                </span>
+              }
+            >
+              <div className="overflow-hidden rounded-[15px] border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                <CustomInput
+                  value={currentSection.placeholder}
+                  onChange={(value) =>
+                    handleUpdateSection(currentSection.id, {
+                      placeholder: value,
+                    })
+                  }
+                  className="text-sm border-none focus:ring-0"
+                  shape="round"
+                />
+              </div>
+            </Form.Item>
+          )}
 
         {currentSection.type === "number" && (
           <div className="flex gap-4">
             <Form.Item label="Min Value" className="flex-1">
-              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+              <div className="overflow-hidden rounded-[15px] border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
                 <CustomInput
                   type="number"
                   value={currentSection.min}
@@ -2615,7 +2605,7 @@ export default function FormEdit({ paramsId }) {
               </div>
             </Form.Item>
             <Form.Item label="Max Value" className="flex-1">
-              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+              <div className="overflow-hidden rounded-[15px] border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
                 <CustomInput
                   type="number"
                   value={currentSection.max}
@@ -2639,7 +2629,7 @@ export default function FormEdit({ paramsId }) {
             <Form.Item
               label={<span className="font-bold text-[14px] text-[#475647]">Yes Label</span>}
             >
-              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+              <div className="overflow-hidden rounded-[15px] border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
                 <CustomInput
                   value={currentSection.yesLabel || "Yes"}
                   onChange={(value) =>
@@ -2653,7 +2643,7 @@ export default function FormEdit({ paramsId }) {
             <Form.Item
               label={<span className="font-bold text-[14px] text-[#475647]">No Label</span>}
             >
-              <div className="overflow-hidden rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+              <div className="overflow-hidden rounded-[15px] border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
                 <CustomInput
                   value={currentSection.noLabel || "No"}
                   onChange={(value) =>
@@ -2694,75 +2684,75 @@ export default function FormEdit({ paramsId }) {
         {(currentSection.type === "multichoice" ||
           currentSection.type === "dropdown" ||
           currentSection.type === "multiselect") && (
-          <Form.Item
-            label={
-              <span className="font-bold text-[16px] text-[#475647]">
-                Options
-              </span>
-            }
-          >
-            <div className="space-y-2">
-              {currentSection.options?.map((option, index) => (
-                <div
-                  key={index}
-                  className="flex relative items-center mb-2 w-full"
-                >
-                  <div className="overflow-hidden mt-2 w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
-                    <Input
-                      value={option.text || ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const newOptions = [...currentSection.options];
-                        newOptions[index] = { ...option, text: value };
+            <Form.Item
+              label={
+                <span className="font-bold text-[16px] text-[#475647]">
+                  Options
+                </span>
+              }
+            >
+              <div className="space-y-2">
+                {currentSection.options?.map((option, index) => (
+                  <div
+                    key={index}
+                    className="flex relative items-center mb-2 w-full"
+                  >
+                    <div className="overflow-hidden mt-2 w-full rounded-lg border border-solid border-blue_gray-100 focus-within:border-light_blue-A700">
+                      <Input
+                        value={option.text || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const newOptions = [...currentSection.options];
+                          newOptions[index] = { ...option, text: value };
+                          handleUpdateSection(currentSection.id, {
+                            options: newOptions,
+                          });
+                        }}
+                        className="text-sm border-none focus:ring-0"
+                        placeholder="Enter Option"
+                        style={{ border: 'none', boxShadow: 'none' }}
+                      />
+                    </div>
+                    <Button
+                      size="xl"
+                      onClick={() => {
+                        const newOptions = currentSection.options.filter(
+                          (_, i) => i !== index
+                        );
                         handleUpdateSection(currentSection.id, {
                           options: newOptions,
                         });
                       }}
-                      className="text-sm border-none focus:ring-0"
-                      placeholder="Enter Option"
-                      style={{ border: 'none', boxShadow: 'none' }}
-                    />
+                      className="!absolute right-2 top-1/2 -translate-y-1/2 p-0  bg-transparent border-none shadow-none"
+                      style={{ lineHeight: 0, minWidth: 0 }}
+                      type="text"
+                    >
+                      <img
+                        src="/images2/img_trash_01_red_700.svg"
+                        alt="trash-01"
+                        className="h-[20px] w-[20px] cursor-pointer mt-2"
+                      />
+                    </Button>
                   </div>
-                  <Button
-                    size="xl"
-                    onClick={() => {
-                      const newOptions = currentSection.options.filter(
-                        (_, i) => i !== index
-                      );
-                      handleUpdateSection(currentSection.id, {
-                        options: newOptions,
-                      });
-                    }}
-                    className="!absolute right-2 top-1/2 -translate-y-1/2 p-0  bg-transparent border-none shadow-none"
-                    style={{ lineHeight: 0, minWidth: 0 }}
-                    type="text"
-                  >
-                    <img
-                      src="/images2/img_trash_01_red_700.svg"
-                      alt="trash-01"
-                      className="h-[20px] w-[20px] cursor-pointer mt-2"
-                    />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                size="xl"
-                onClick={() => {
-                  const newOptions = [
-                    ...(currentSection.options || []),
-                    { text: "", isNegative: false },
-                  ];
-                  handleUpdateSection(currentSection.id, {
-                    options: newOptions,
-                  });
-                }}
-                className="mt-2 text-[14px] text-[#475647] font-bold"
-              >
-                <PlusOutlined /> Add More
-              </Button>
-            </div>
-          </Form.Item>
-        )}
+                ))}
+                <Button
+                  size="xl"
+                  onClick={() => {
+                    const newOptions = [
+                      ...(currentSection.options || []),
+                      { text: "", isNegative: false },
+                    ];
+                    handleUpdateSection(currentSection.id, {
+                      options: newOptions,
+                    });
+                  }}
+                  className="mt-2 text-[14px] text-[#475647] font-bold"
+                >
+                  <PlusOutlined /> Add More
+                </Button>
+              </div>
+            </Form.Item>
+          )}
 
         {/* Date Field Editor */}
         {currentSection.type === "date" && (
@@ -2820,21 +2810,19 @@ export default function FormEdit({ paramsId }) {
             <div className="flex p-1 rounded-lg">
               <button
                 onClick={() => setDevice("mobile")}
-                className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
-                  device === "mobile"
+                className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "mobile"
                     ? "bg-[#5207CD] text-[#EFF8FF]"
                     : "text-[#5207CD] hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 Mobile
               </button>
               <button
                 onClick={() => setDevice("desktop")}
-                className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
-                  device === "desktop"
+                className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "desktop"
                     ? "bg-[#5207CD] text-[#EFF8FF]"
                     : "text-[#5207CD] hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 Desktop
               </button>
@@ -2875,11 +2863,11 @@ export default function FormEdit({ paramsId }) {
               style={
                 device === "mobile"
                   ? {
-                      width: 390,
-                      background: "white",
-                      borderRadius: 12,
-                      boxShadow: "0 2px 12px #0001",
-                    }
+                    width: 390,
+                    background: "white",
+                    borderRadius: 12,
+                    boxShadow: "0 2px 12px #0001",
+                  }
                   : { width: 672 }
               }
             >
@@ -2950,7 +2938,7 @@ export default function FormEdit({ paramsId }) {
                     setLandingPageData(synced);
                     await LandingPageService.publishLandingPage(lpId, "form");
                     message.success("✅ Form changes published");
-                    
+
                     // Refresh data to get latest publishedVersion
                     setTimeout(() => {
                       fetchData();
@@ -2967,22 +2955,22 @@ export default function FormEdit({ paramsId }) {
                   console.error("❌ Failed to update published status:", error);
                   message.error(
                     "Failed to update published status: " +
-                      (error.message || "Unknown error")
+                    (error.message || "Unknown error")
                   );
                 }
               }}
               setLandingPageData={setLandingPageData}
               reload={fetchData}
               onOpenFormSettings={() => setSettingsDrawerOpen(true)}
-        onNavigateAttempt={(href) => {
-          const acknowledged = ackKey ? sessionStorage.getItem(ackKey) === 'ack' : false;
-          if (!hasUnpublishedChangesRef.current || (acknowledged && !sessionHasChangesRef.current)) {
-            router.push(href);
-            return;
-          }
-          pendingNavigationRef.current = { exec: () => router.push(href) };
-          setIsExitModalVisible(true);
-        }}
+              onNavigateAttempt={(href) => {
+                const acknowledged = ackKey ? sessionStorage.getItem(ackKey) === 'ack' : false;
+                if (!hasUnpublishedChangesRef.current || (acknowledged && !sessionHasChangesRef.current)) {
+                  router.push(href);
+                  return;
+                }
+                pendingNavigationRef.current = { exec: () => router.push(href) };
+                setIsExitModalVisible(true);
+              }}
             />
             <div className="flex overflow-hidden flex-col flex-1 smx:pb-5 main-container">
               <div className="flex gap-2 justify-center items-start p-2 h-full smx:gap-1 md:gap-4 smx:p-1 md:p-3 container-sm">
@@ -3033,7 +3021,7 @@ export default function FormEdit({ paramsId }) {
                           <span className="hidden md:inline">Questions</span>
                           <span className="md:hidden">Q</span>
                         </Heading>
-                      
+
 
                         <BeautifulDragDropContext onDragEnd={handleDragEnd}>
                           <BeautifulDroppable droppableId="sections">
@@ -3059,12 +3047,11 @@ export default function FormEdit({ paramsId }) {
                                     mouseEnterDelay={0.3}
                                   >
                                     <div
-                                      className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group ${
-                                        currentStep === 1 &&
-                                        formSections[0]?.isLeadCapture
+                                      className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group ${currentStep === 1 &&
+                                          formSections[0]?.isLeadCapture
                                           ? "bg-[#eff8ff]"
                                           : "hover:bg-[#eff8ff]"
-                                      }`}
+                                        }`}
                                       style={{
                                         minWidth: 0,
                                         flexShrink: 0,
@@ -3094,11 +3081,11 @@ export default function FormEdit({ paramsId }) {
                                           className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
                                           style={
                                             currentStep === 1 &&
-                                            formSections[0]?.isLeadCapture
+                                              formSections[0]?.isLeadCapture
                                               ? {
-                                                  background: brandColor,
-                                                  opacity: 0.6,
-                                                }
+                                                background: brandColor,
+                                                opacity: 0.6,
+                                              }
                                               : {}
                                           }
                                         >
@@ -3108,11 +3095,11 @@ export default function FormEdit({ paramsId }) {
                                             className="h-[16px] w-[16px] transition-all"
                                             style={
                                               currentStep === 1 &&
-                                              formSections[0]?.isLeadCapture
+                                                formSections[0]?.isLeadCapture
                                                 ? {
-                                                    filter:
-                                                      "brightness(0) invert(1)",
-                                                  }
+                                                  filter:
+                                                    "brightness(0) invert(1)",
+                                                }
                                                 : {}
                                             }
                                           />
@@ -3213,34 +3200,32 @@ export default function FormEdit({ paramsId }) {
                                                 opacity: 1,
                                                 ...(isDragging
                                                   ? {
-                                                      width: "auto",
-                                                      maxWidth: "calc(100% - 16px)",
-                                                      padding: "8px",
-                                                      background: "#f5faff",
-                                                      borderRadius: "8px",
-                                                      boxShadow:
-                                                        "0 2px 10px rgba(0, 0, 0, 0.15)",
-                                                      zIndex: 9999,
-                                                      height: "auto !important",
-                                                      minWidth: "40px",
-                                                      minHeight: "40px",
-                                                      overflow: "visible",
-                                                      border:
-                                                        "1.5px solid #e0e7ef",
-                                                    }
+                                                    width: "auto",
+                                                    maxWidth: "calc(100% - 16px)",
+                                                    padding: "8px",
+                                                    background: "#f5faff",
+                                                    borderRadius: "8px",
+                                                    boxShadow:
+                                                      "0 2px 10px rgba(0, 0, 0, 0.15)",
+                                                    zIndex: 9999,
+                                                    height: "auto !important",
+                                                    minWidth: "40px",
+                                                    minHeight: "40px",
+                                                    overflow: "visible",
+                                                    border:
+                                                      "1.5px solid #e0e7ef",
+                                                  }
                                                   : {
-                                                      width: "100%",
-                                                      minWidth: 0,
-                                                      flexShrink: 0,
-                                                    }),
+                                                    width: "100%",
+                                                    minWidth: 0,
+                                                    flexShrink: 0,
+                                                  }),
                                               }}
-                                              className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group${
-                                                isDragging ? "dragging" : ""
-                                              } ${
-                                                isActive
+                                              className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group${isDragging ? "dragging" : ""
+                                                } ${isActive
                                                   ? "bg-[#eff8ff]"
                                                   : "hover:bg-[#eff8ff]"
-                                              }`}
+                                                }`}
                                               onClick={() => {
                                                 console.log(
                                                   "🖱️ Sidebar click: Selecting section:",
@@ -3270,10 +3255,10 @@ export default function FormEdit({ paramsId }) {
                                                   style={
                                                     isActive
                                                       ? {
-                                                          background:
-                                                            brandColor,
-                                                          opacity: 0.6,
-                                                        }
+                                                        background:
+                                                          brandColor,
+                                                        opacity: 0.6,
+                                                      }
                                                       : {}
                                                   }
                                                 >
@@ -3284,13 +3269,12 @@ export default function FormEdit({ paramsId }) {
                                                           item.type ===
                                                           section.type
                                                       )?.icon
-                                                        ? `/icons/${
-                                                            formItems.find(
-                                                              (item) =>
-                                                                item.type ===
-                                                                section.type
-                                                            )?.icon
-                                                          }`
+                                                        ? `/icons/${formItems.find(
+                                                          (item) =>
+                                                            item.type ===
+                                                            section.type
+                                                        )?.icon
+                                                        }`
                                                         : "/images/default-icon.svg"
                                                     }
                                                     alt={`${section.type} icon`}
@@ -3298,9 +3282,9 @@ export default function FormEdit({ paramsId }) {
                                                     style={
                                                       isActive
                                                         ? {
-                                                            filter:
-                                                              "brightness(0) invert(1)",
-                                                          }
+                                                          filter:
+                                                            "brightness(0) invert(1)",
+                                                        }
                                                         : {}
                                                     }
                                                   />
@@ -3308,11 +3292,10 @@ export default function FormEdit({ paramsId }) {
                                               </div>
                                               {/* Action buttons area */}
                                               <div
-                                                className={`flex gap-1 items-center transition-all duration-300 absolute right-3 top-1/2 -translate-y-1/2 ${
-                                                  isDragging
+                                                className={`flex gap-1 items-center transition-all duration-300 absolute right-3 top-1/2 -translate-y-1/2 ${isDragging
                                                     ? "opacity-100"
                                                     : "opacity-0 group-hover:opacity-100"
-                                                }`}
+                                                  }`}
                                               >
                                                 {section.isLeadCapture ? (
                                                   // Lead capture: Show lock icon instead of drag handle
@@ -3368,11 +3351,10 @@ export default function FormEdit({ paramsId }) {
                                                     );
                                                   }}
                                                   className="flex items-center p-1 rounded cursor-pointer hover:bg-gray-100"
-                                                  title={`${
-                                                    section.visible !== false
+                                                  title={`${section.visible !== false
                                                       ? "Hide"
                                                       : "Show"
-                                                  } field for end users`}
+                                                    } field for end users`}
                                                 >
                                                   {section.visible !== false ? (
                                                     <svg
@@ -3417,11 +3399,10 @@ export default function FormEdit({ paramsId }) {
                                                     );
                                                   }}
                                                   className="flex items-center p-1 rounded cursor-pointer hover:bg-gray-100"
-                                                  title={`${
-                                                    section.required
+                                                  title={`${section.required
                                                       ? "Make optional"
                                                       : "Make required"
-                                                  }`}
+                                                    }`}
                                                 >
                                                   {section.required ? (
                                                     <svg
@@ -3450,11 +3431,10 @@ export default function FormEdit({ paramsId }) {
                                                   )}
                                                 </div>
                                                 <div
-                                                  className={`flex items-center cursor-pointer hover:bg-gray-100 p-1 rounded ${
-                                                    section.isLeadCapture
+                                                  className={`flex items-center cursor-pointer hover:bg-gray-100 p-1 rounded ${section.isLeadCapture
                                                       ? "opacity-50 cursor-not-allowed"
                                                       : ""
-                                                  }`}
+                                                    }`}
                                                   onClick={(e) => {
                                                     e.stopPropagation();
                                                     if (
@@ -3493,11 +3473,10 @@ export default function FormEdit({ paramsId }) {
                                   mouseEnterDelay={0.3}
                                 >
                                   <div
-                                    className={`flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group ${
-                                      isEditingButtonSettings
+                                    className={`flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group ${isEditingButtonSettings
                                         ? "bg-[#eff8ff]"
                                         : "hover:bg-[#eff8ff]"
-                                    }`}
+                                      }`}
                                     style={{
                                       minWidth: 0,
                                       flexShrink: 0,
@@ -3518,9 +3497,9 @@ export default function FormEdit({ paramsId }) {
                                         style={
                                           isEditingButtonSettings
                                             ? {
-                                                background: brandColor,
-                                                opacity: 0.6,
-                                              }
+                                              background: brandColor,
+                                              opacity: 0.6,
+                                            }
                                             : {}
                                         }
                                       >
@@ -3739,7 +3718,7 @@ export default function FormEdit({ paramsId }) {
                                   Customize the text displayed on navigation and submit buttons throughout your form.
                                 </p>
                               </div>
-                              
+
                               <div className="grid grid-cols-1 gap-4">
                                 <div>
                                   <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -3771,7 +3750,7 @@ export default function FormEdit({ paramsId }) {
                                     Shown on multi-step forms to go back to previous step
                                   </p>
                                 </div>
-                                
+
                                 <div>
                                   <label className="block mb-2 text-sm font-medium text-gray-700">
                                     Next Button Text
@@ -3802,7 +3781,7 @@ export default function FormEdit({ paramsId }) {
                                     Shown on multi-step forms to proceed to next step
                                   </p>
                                 </div>
-                                
+
                                 <div>
                                   <label className="block mb-2 text-sm font-medium text-gray-700">
                                     Submit Button Text
@@ -3876,28 +3855,27 @@ export default function FormEdit({ paramsId }) {
 
                     {/* Preview Section - Hidden on mobile, shown in fullscreen */}
                     <div
-                      className={`${
-                        fullscreen ? "flex" : "hidden md:flex"
-                      } flex-1 flex-col gap-[10px] border-r border-solid border-blue_gray-50 px-[15px] pb-[3px] pt-[15px] overflow-hidden`}
+                      className={`${fullscreen ? "flex" : "hidden md:flex"
+                        } flex-1 flex-col gap-[10px] border-r border-solid border-blue_gray-50 px-[15px] pb-[3px] pt-[15px] overflow-hidden`}
                       style={
                         fullscreen
                           ? {
-                              position: "fixed",
-                              top: 0,
-                              left: 0,
-                              width: "100vw",
-                              height: "100vh",
-                              zIndex: 9999,
-                              background: "white",
-                              padding: "10px",
-                              display: "flex",
-                              flexDirection: "column",
-                            }
+                            position: "fixed",
+                            top: 0,
+                            left: 0,
+                            width: "100vw",
+                            height: "100vh",
+                            zIndex: 9999,
+                            background: "white",
+                            padding: "10px",
+                            display: "flex",
+                            flexDirection: "column",
+                          }
                           : {
-                              height: "100%",
-                              flexDirection: "column",
-                              maxHeight: "calc(100vh - 100px)",
-                            }
+                            height: "100%",
+                            flexDirection: "column",
+                            maxHeight: "calc(100vh - 100px)",
+                          }
                       }
                     >
                       {fullscreen ? (
@@ -3915,11 +3893,10 @@ export default function FormEdit({ paramsId }) {
                               onClick={() => {
                                 setDevice("mobile");
                               }}
-                              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
-                                device === "mobile"
+                              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "mobile"
                                   ? "bg-[#5207CD] text-[#EFF8FF]"
                                   : "text-[#5207CD] hover:bg-gray-100"
-                              }`}
+                                }`}
                             >
                               Mobile
                             </button>
@@ -3927,11 +3904,10 @@ export default function FormEdit({ paramsId }) {
                               onClick={() => {
                                 setDevice("desktop");
                               }}
-                              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${
-                                device === "desktop"
+                              className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "desktop"
                                   ? "bg-[#5207CD] text-[#EFF8FF]"
                                   : "text-[#5207CD] hover:bg-gray-100"
-                              }`}
+                                }`}
                             >
                               Desktop
                             </button>
@@ -3972,21 +3948,19 @@ export default function FormEdit({ paramsId }) {
                             <div className="flex p-1 bg-gray-100 rounded-lg">
                               <button
                                 onClick={() => setDevice("mobile")}
-                                className={`h-[24px] px-2 rounded-md flex items-center justify-center font-medium transition text-xs ${
-                                  device === "mobile"
+                                className={`h-[24px] px-2 rounded-md flex items-center justify-center font-medium transition text-xs ${device === "mobile"
                                     ? "bg-[#5207CD] text-[#EFF8FF]"
                                     : "text-[#5207CD]"
-                                }`}
+                                  }`}
                               >
                                 Mobile
                               </button>
                               <button
                                 onClick={() => setDevice("desktop")}
-                                className={`h-[24px] px-2 rounded-md flex items-center justify-center font-medium transition text-xs ${
-                                  device === "desktop"
+                                className={`h-[24px] px-2 rounded-md flex items-center justify-center font-medium transition text-xs ${device === "desktop"
                                     ? "bg-[#5207CD] text-[#EFF8FF]"
                                     : "text-[#5207CD]"
-                                }`}
+                                  }`}
                               >
                                 Desktop
                               </button>
@@ -4006,33 +3980,32 @@ export default function FormEdit({ paramsId }) {
                         </div>
                       )}
                       <div
-                        className={`flex flex-col ${
-                          fullscreen && device === "desktop"
+                        className={`flex flex-col ${fullscreen && device === "desktop"
                             ? "items-center"
                             : "items-start"
-                        } justify-center gap-[2px] mdx:pb flex-1 overflow-auto`}
+                          } justify-center gap-[2px] mdx:pb flex-1 overflow-auto`}
                         style={
                           device === "mobile"
                             ? {
-                                width: 390,
-                                background: "white",
-                                margin: "0 auto",
-                                borderRadius: 12,
-                                boxShadow: "0 2px 12px #0001",
-                                height: "100%",
-                                maxHeight: fullscreen
-                                  ? "calc(100vh - 120px)"
-                                  : "calc(100vh - 200px)",
-                                paddingTop: fullscreen ? 56 : 0,
-                              }
+                              width: 390,
+                              background: "white",
+                              margin: "0 auto",
+                              borderRadius: 12,
+                              boxShadow: "0 2px 12px #0001",
+                              height: "100%",
+                              maxHeight: fullscreen
+                                ? "calc(100vh - 120px)"
+                                : "calc(100vh - 200px)",
+                              paddingTop: fullscreen ? 56 : 0,
+                            }
                             : {
-                                width: "100%",
-                                height: "100%",
-                                maxHeight: fullscreen
-                                  ? "calc(100vh - 120px)"
-                                  : "calc(100vh - 200px)",
-                                paddingTop: fullscreen ? 56 : 0,
-                              }
+                              width: "100%",
+                              height: "100%",
+                              maxHeight: fullscreen
+                                ? "calc(100vh - 120px)"
+                                : "calc(100vh - 200px)",
+                              paddingTop: fullscreen ? 56 : 0,
+                            }
                         }
                       >
                         {fullscreen && (
@@ -4044,10 +4017,10 @@ export default function FormEdit({ paramsId }) {
                             style={
                               fullscreen && device === "desktop"
                                 ? {
-                                    maxWidth: "672px",
-                                    margin: "0 auto",
-                                    width: "100%",
-                                  }
+                                  maxWidth: "672px",
+                                  margin: "0 auto",
+                                  width: "100%",
+                                }
                                 : {}
                             }
                           >
@@ -4388,7 +4361,7 @@ export default function FormEdit({ paramsId }) {
           }
         `}</style>
       </div>
-      
+
       {/* Exit Confirmation Modal */}
       <Modal
         open={isExitModalVisible}
