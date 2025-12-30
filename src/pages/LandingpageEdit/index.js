@@ -2219,7 +2219,7 @@ export default function LandingpageEdit({ paramsId }) {
           <div className="lg:min-w-[450px] flex flex-grow flex-col border-r border-solid border-blue_gray-50  p-0 smx:self-stretch max-h-full">
             <div className="flex flex-col gap-[15px]  flex-grow lg:overflow-auto relative ">
               <div className="h-px bg-blue_gray-50" />
-              <div className="flex gap-5 justify-between items-center pl-3">
+              <div className="flex gap-5 justify-between items-center pl-3 pr-3">
                 <Heading size="3xl" as="h1" className="!text-black-900_01">
                   {activeSection?.key
                     ?.replace?.("flexaligntop", "Hero")
@@ -2251,7 +2251,7 @@ export default function LandingpageEdit({ paramsId }) {
                 />
 
                 {activeSection && (
-                  <div className="flex flex-row items-center justify-end gap-3">
+                  <div className="flex flex-row items-center justify-end gap-3 pr-2">
                     {/* Auto-save indicator */}
                     {isAutoSaving && (
                       <div className="hidden gap-2 items-center text-sm text-blue-600">
@@ -2274,10 +2274,10 @@ export default function LandingpageEdit({ paramsId }) {
                     {/* Copy section from another campaign */}
                     <button
                       onClick={() => setIsCopySectionModalVisible(true)}
-                      className="flex justify-center items-center rounded-md border border-gray-200 p-1.5 hover:bg-gray-50"
+                      className="flex justify-center items-center rounded-md p-1.5 border border-gray-200 hover:bg-gray-50"
                       title="Copy this section from another campaign"
                     >
-                      <CopyIcon className="w-[18px] h-[18px] text-[#344054]" />
+                      <CopyIcon className="w-[18px] h-[18px] text-[#5207CD]" />
                     </button>
 
 
