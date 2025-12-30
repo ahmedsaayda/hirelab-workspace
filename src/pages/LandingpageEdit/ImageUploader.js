@@ -402,43 +402,42 @@ const ImageUploader = ({
     }
   };
 
-  const [isDraggingImage, setIsDraggingImage] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
+  // Ref-based drag state for smoother pointer capture (like AdVariantCard)
+  const imageDragRef = useRef({ dragging: false, pointerId: null, latestSettings: null });
 
-  const handleDragStart = (e) => {
-    setIsDraggingImage(true);
-    setDragStart({
-      x: e.clientX,
-      y: e.clientY,
-    });
-    setLastPosition({
-      x: imageSettings?.objectPosition?.x ?? 50,
-      y: imageSettings?.objectPosition?.y ?? 50,
-    });
+  const handleImagePointerDown = (e) => {
+    e.preventDefault();
+    imageDragRef.current.dragging = true;
+    imageDragRef.current.pointerId = e.pointerId;
+    imageDragRef.current.latestSettings = imageSettings; // Store initial settings
+    e.currentTarget.setPointerCapture?.(e.pointerId);
   };
 
-  const handleDragMove = (e) => {
-    if (!isDraggingImage) return;
+  const handleImagePointerMove = (e) => {
+    if (!imageDragRef.current.dragging) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
+    const cy = Math.min(Math.max(e.clientY - rect.top, 0), rect.height);
+    const x = Math.round((cx / rect.width) * 100);
+    const y = Math.round((cy / rect.height) * 100);
 
-    const deltaX = e.clientX - dragStart.x;
-    const deltaY = e.clientY - dragStart.y;
-
-    // Calculate new position with reduced movement speed (0.5 factor)
-    const newX = Math.max(0, Math.min(100, lastPosition.x + deltaX * 0.5));
-    const newY = Math.max(0, Math.min(100, lastPosition.y + deltaY * 0.5));
-
-    handleSettingsChange({
-      ...imageSettings,
-      objectPosition: {
-        x: newX,
-        y: newY,
-      },
-    });
+    // Only update local state during drag for visual feedback (no save)
+    const newSettings = {
+      ...(imageDragRef.current.latestSettings || imageSettings),
+      objectPosition: { x, y },
+    };
+    imageDragRef.current.latestSettings = newSettings; // Track latest for pointer up
+    setImageSettings(newSettings);
   };
 
-  const handleImageDragEnd = () => {
-    setIsDraggingImage(false);
+  const handleImagePointerUp = () => {
+    // Save changes only when drag ends
+    if (imageDragRef.current.dragging && selectedImage && onImageAdjustmentChange && imageDragRef.current.latestSettings) {
+      onImageAdjustmentChange(fieldKey, imageDragRef.current.latestSettings, selectedImage);
+    }
+    imageDragRef.current.dragging = false;
+    imageDragRef.current.pointerId = null;
+    imageDragRef.current.latestSettings = null;
   };
 
   const renderPreview = (url, index, details, isLogo = false) => {
@@ -562,63 +561,61 @@ const ImageUploader = ({
         </div>
 
         {isSelected && (
-          <div className="mb-4 p-4 bg-gray-50 rounded-lg border">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-sm font-medium">Image Adjustments</h4>
+          <div className="mb-4 p-3 bg-white rounded-lg border border-[#e4e7ec]">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-medium text-[#344054]">Adjust focal point</label>
               <button
                 onClick={() => {
                   setIsSettingsOpen(false);
                   setSelectedImage(null);
                 }}
-                className="text-gray-500 hover:text-gray-700"
+                className="p-1 rounded transition-colors hover:bg-gray-100"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M12 4L4 12M4 4L12 12" stroke="#667085" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </button>
             </div>
-            <p className="text-xs text-gray-500 mb-2 text-center">Drag image to adjust visible area</p>
-            <div className="p-4 flex justify-center">
+            <div
+              role="button"
+              tabIndex={0}
+              onPointerDown={handleImagePointerDown}
+              onPointerMove={handleImagePointerMove}
+              onPointerUp={handleImagePointerUp}
+              onPointerCancel={handleImagePointerUp}
+              className={`relative w-full h-32 rounded-lg overflow-hidden border select-none border-[#e4e7ec] hover:border-[#98a2b3] ${imageDragRef.current?.dragging ? "cursor-grabbing" : "cursor-grab"}`}
+              style={{ touchAction: "none" }}
+              title="Drag to adjust focal point"
+            >
+              <img
+                src={url}
+                alt="Preview"
+                className="w-full h-full pointer-events-none"
+                draggable={false}
+                style={{
+                  objectPosition: `${imageSettings.objectPosition?.x ?? 50}% ${imageSettings.objectPosition?.y ?? 50}%`,
+                  objectFit: imageSettings.objectFit || "cover",
+                }}
+              />
+              {/* Focal point indicator */}
               <div
-                className="w-48 h-64 bg-slate-200 overflow-hidden rounded-xl border-2 border-purple-500 cursor-move relative select-none"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleDragStart(e);
+                style={{
+                  position: "absolute",
+                  left: `${imageSettings.objectPosition?.x ?? 50}%`,
+                  top: `${imageSettings.objectPosition?.y ?? 50}%`,
+                  transform: "translate(-50%, -50%)",
+                  width: 14,
+                  height: 14,
+                  borderRadius: 9999,
+                  border: "2px solid white",
+                  boxShadow: "0 0 0 2px rgba(82, 7, 205, 0.7)",
+                  background: "rgba(82, 7, 205, 0.35)",
                 }}
-                onMouseMove={(e) => {
-                  e.preventDefault();
-                  handleDragMove(e);
-                }}
-                onMouseUp={handleImageDragEnd}
-                onMouseLeave={handleImageDragEnd}
-              >
-                <img
-                  src={url}
-                  alt="Preview"
-                  className="w-full h-full pointer-events-none"
-                  draggable={false}
-                  style={{
-                    objectPosition: `${imageSettings.objectPosition?.x ?? 50}% ${imageSettings.objectPosition?.y ?? 50}%`,
-                    objectFit: imageSettings.objectFit || "cover",
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <Move className="text-white opacity-70 drop-shadow-lg" size={28} />
-                </div>
-              </div>
+              />
             </div>
-            <p className="text-xs text-gray-500 text-center">
-              Position: {Math.round(imageSettings.objectPosition?.x ?? 50)}% x {Math.round(imageSettings.objectPosition?.y ?? 50)}%
-            </p>
+            <div className="mt-2 text-[10px] text-[#667085] text-center">
+              Drag to position • {Math.round(imageSettings.objectPosition?.x ?? 50)}%, {Math.round(imageSettings.objectPosition?.y ?? 50)}%
+            </div>
           </div>
         )}
       </div>

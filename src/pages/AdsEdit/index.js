@@ -248,10 +248,14 @@ export default function AdsEdit({ paramsId }) {
               if (!ai) return v;
               return {
                 ...v,
+                // Image overlay fields
                 title: ai.title ?? v.title,
-                description: ai.description ?? v.description,
                 linkDescription: ai.linkDescription ?? v.linkDescription,
                 callToAction: ai.callToAction ?? v.callToAction,
+                // Meta ad copy fields
+                description: ai.description ?? v.description,
+                metaHeadline: ai.metaHeadline ?? v.metaHeadline,
+                metaDescription: ai.metaDescription ?? v.metaDescription,
               };
             });
           });
@@ -2077,7 +2081,6 @@ export default function AdsEdit({ paramsId }) {
             onOpenSettings={() => setAdsSettingsDrawerOpen(true)}
             onNavigateAttempt={(targetUrl) => {
               setActiveAdSetId(null);
-              router.push(targetUrl || "/dashboard/vacancies");
             }}
             customActions={<>
             </>}

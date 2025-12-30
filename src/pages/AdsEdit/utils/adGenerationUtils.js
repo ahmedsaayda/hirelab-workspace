@@ -305,7 +305,25 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
   // Primary text can be long, but keep it within Meta limits
   const finalDescription = String(description || "").slice(0, 2200);
   const finalCta = (cta === "Learn More" || cta === "Apply Now") ? cta : "Learn More";
-  return { title: finalTitle, description: finalDescription, cta: finalCta, source };
+  
+  // Generate subheadline for image overlay (short, punchy)
+  const linkDescription = location ? `${location}` : (company ? `Join ${company}` : "");
+  
+  // Meta ad copy fields - these will be replaced by AI, but need sensible placeholders
+  // metaHeadline: should be a compelling headline for the ad
+  const metaHeadline = company ? `${company} is Hiring!` : `Join Our Team Today!`;
+  // metaDescription: should describe the opportunity, NOT just the location
+  const metaDescription = vacancy ? `Apply for ${vacancy}` : `Exciting opportunity awaits`;
+  
+  return { 
+    title: finalTitle, 
+    description: finalDescription, 
+    linkDescription: linkDescription.slice(0, 30),
+    cta: finalCta, 
+    source,
+    metaHeadline: metaHeadline.slice(0, 40),
+    metaDescription: metaDescription.slice(0, 30),
+  };
 };
 
 /**
@@ -386,9 +404,15 @@ export const generateVariants = (lpData) => {
     const variantNumber = adType === "job" ? ((i % 3) + 1) : 1;
     return {
       id: `${adType}-variant-${uuidv4().slice(0, 8)}`,
+      // Image overlay fields
       title: copy.title,
-      description: copy.description,
+      linkDescription: copy.linkDescription,
       callToAction: copy.cta,
+      // Meta ad copy fields
+      description: copy.description,
+      metaHeadline: copy.metaHeadline,
+      metaDescription: copy.metaDescription,
+      // Other fields
       source: copy.source,
       image,
       template: "template-1",

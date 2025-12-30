@@ -22,14 +22,17 @@ export default function AdVariantCard({
   const [editData, setEditData] = useState({
     // Meta fields:
     // - title: Headline (40)
-    // - description: Primary Text (2200, hook 125)
-    // - linkDescription: Description (30)
-    title: variant?.title || "",
-    description: variant?.description || "",
-    linkDescription: variant?.linkDescription || "",
+    // Image overlay fields
+    title: variant?.title || "", // Overlay Headline
+    linkDescription: variant?.linkDescription || "", // Overlay Subheadline
+    callToAction: variant?.callToAction || "Apply Now",
+    // Meta ad copy fields
+    description: variant?.description || "", // Meta Primary Text (2200, hook 125)
+    metaHeadline: variant?.metaHeadline || "", // Meta Headline (40)
+    metaDescription: variant?.metaDescription || "", // Meta Description (30)
+    // Media
     image: variant?.image || "",
     videoUrl: variant?.videoUrl || "",
-    callToAction: variant?.callToAction || "Apply Now",
   });
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
 
@@ -77,372 +80,436 @@ export default function AdVariantCard({
           </button>
         </div>
 
-        {/* Primary Text (Meta) - Full width */}
-        <div className="mb-3">
-          <div className="flex justify-between items-center mb-1.5">
-            <label className="text-xs font-medium text-[#344054]">Primary Text</label>
-            <span className="text-xs text-[#667085]">{editData.description.length}/2200</span>
-          </div>
-          <TextArea
-            value={editData.description}
-            onChange={(e) => {
-              const next = { ...editData, description: e.target.value };
-              setEditData(next);
-              emitDraft(next);
-            }}
-            maxLength={2200}
-            rows={3}
-            className="text-sm"
-          />
-          {editData.description.length > 125 && (
-            <div className="mt-1 text-[10px] text-[#667085]">
-              ℹ️ First 125 chars are the "hook" visible before "See more".
-            </div>
-          )}
-        </div>
+        {/* ===== IMAGE CREATIVE SECTION ===== */}
+        <div className="mb-4">
+          <h4 className="text-xs font-semibold text-[#101828] mb-2 uppercase tracking-wide">Image Creative</h4>
 
-        {/* 2-column grid for Headline + Description */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          {/* Headline (Meta) */}
-          <div>
-            <div className="flex justify-between items-center mb-1.5">
-              <label className="text-xs font-medium text-[#344054]">Headline</label>
-              <span className={`text-xs ${editData.title.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
-                {editData.title.length}/40
-              </span>
-            </div>
-            <TextArea
-              value={editData.title}
-              onChange={(e) => {
-                const next = { ...editData, title: e.target.value };
-                setEditData(next);
-                emitDraft(next);
-              }}
-              maxLength={40}
-              rows={2}
-              className="text-sm"
-            />
-          </div>
-
-          {/* Description (Meta) */}
-          <div>
-            <div className="flex justify-between items-center mb-1.5">
-              <label className="text-xs font-medium text-[#344054]">Description</label>
-              <span className={`text-xs ${editData.linkDescription.length > 30 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
-                {editData.linkDescription.length}/30
-              </span>
-            </div>
-            <TextArea
-              value={editData.linkDescription}
-              onChange={(e) => {
-                const next = { ...editData, linkDescription: e.target.value };
-                setEditData(next);
-                emitDraft(next);
-              }}
-              maxLength={30}
-              rows={2}
-              className="text-sm"
-              placeholder="Short description"
-            />
-          </div>
-        </div>
-
-        {/* CTA (Meta) */}
-        <div className="mb-3">
-          <label className="text-xs font-medium text-[#344054] block mb-1.5">Call to Action</label>
-          <div className="flex gap-2">
-            {["Apply Now", "Learn More"].map((cta) => {
-              const active = editData.callToAction === cta;
-              return (
-                <button
-                  key={cta}
-                  type="button"
-                  onClick={() => {
-                    const next = { ...editData, callToAction: cta };
-                    setEditData(next);
-                    emitDraft(next);
-                  }}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${active
-                    ? "bg-[#5207CD] text-white border-[#5207CD]"
-                    : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
-                    }`}
-                >
-                  {cta}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 2-column grid for Media picker and Image position */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          {/* Image Picker - unified with media library */}
-          <div>
-            <label className="text-xs font-medium text-[#344054] block mb-1.5">
-              Media ({mediaType === "video" ? "video" : mediaType === "both" ? "image/video" : "image"})
-            </label>
-            <button
-              type="button"
-              onClick={() => setIsImagePickerOpen(true)}
-              className="w-full border border-dashed border-[#d0d5dd] rounded-lg p-2 text-left hover:bg-gray-50 transition-colors h-[100px] flex flex-col items-center justify-center"
-            >
-              <div className="flex overflow-hidden justify-center items-center w-14 h-14 bg-gray-100 rounded mb-1">
-                {editData.image ? (
-                  <img src={editData.image} alt="Selected" className="object-cover w-full h-full" />
-                ) : (
-                  <svg className="w-6 h-6 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 7a2 2 0 012-2h14a2 2 0 012 2M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M8 11l4 4 4-4" />
-                  </svg>
-                )}
-              </div>
-              <div className="text-[10px] text-[#667085] text-center">
-                {editData.image ? "Change" : "Choose"} media
-              </div>
-            </button>
-          </div>
-
-          {/* Image Position - drag area */}
-          <div>
-            <label className="text-xs font-medium text-[#344054] block mb-1.5">Position (drag)</label>
-            <div
-              role="button"
-              tabIndex={0}
-              onPointerDown={(e) => {
-                if (!editData.image && !editData.videoUrl) return;
-                e.preventDefault();
-                dragRef.current.dragging = true;
-                dragRef.current.pointerId = e.pointerId;
-                e.currentTarget.setPointerCapture?.(e.pointerId);
-              }}
-              onPointerMove={(e) => {
-                if (!dragRef.current.dragging) return;
-                if (!editData.image && !editData.videoUrl) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                const cx = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
-                const cy = Math.min(Math.max(e.clientY - rect.top, 0), rect.height);
-                const x = Math.round((cx / rect.width) * 100);
-                const y = Math.round((cy / rect.height) * 100);
-                const next = {
-                  ...editData,
-                  imageAdjustment: {
-                    ...(editData.imageAdjustment || {}),
-                    heroImage: {
-                      ...(editData.imageAdjustment?.heroImage || {}),
-                      objectPosition: { x, y },
-                    },
-                  },
-                };
-                setEditData(next);
-                emitDraft(next);
-              }}
-              onPointerUp={() => {
-                dragRef.current.dragging = false;
-                dragRef.current.pointerId = null;
-              }}
-              onPointerCancel={() => {
-                dragRef.current.dragging = false;
-                dragRef.current.pointerId = null;
-              }}
-              className={`relative w-full h-[100px] rounded-lg overflow-hidden border select-none ${(editData.image || editData.videoUrl)
-                ? `border-[#e4e7ec] hover:border-[#98a2b3] ${dragRef.current.dragging ? "cursor-grabbing" : "cursor-grab"}`
-                : "border-[#eaecf0] cursor-not-allowed"
-                }`}
-              style={{ touchAction: "none" }}
-              title={(editData.image || editData.videoUrl) ? "Drag to position" : "Select media first"}
-            >
-              {(editData.image || editData.videoUrl) ? (
-                <>
-                  {editData.videoUrl ? (
-                    <video
-                      src={editData.videoUrl}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                      poster={editData.image || undefined}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: editData?.imageAdjustment?.heroImage?.objectFit || "cover",
-                        objectPosition: `${editData?.imageAdjustment?.heroImage?.objectPosition?.x ?? 50
-                          }% ${editData?.imageAdjustment?.heroImage?.objectPosition?.y ?? 50}%`,
-                        transform: editData?.imageAdjustment?.heroImage?.mirror ? "scaleX(-1)" : "none",
-                        pointerEvents: "none",
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src={editData.image}
-                      alt="Focal point preview"
-                      className="w-full h-full"
-                      style={{
-                        objectFit: editData?.imageAdjustment?.heroImage?.objectFit || "cover",
-                        objectPosition: `${editData?.imageAdjustment?.heroImage?.objectPosition?.x ?? 50
-                          }% ${editData?.imageAdjustment?.heroImage?.objectPosition?.y ?? 50}%`,
-                        transform: editData?.imageAdjustment?.heroImage?.mirror ? "scaleX(-1)" : "none",
-                      }}
-                    />
-                  )}
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: `${editData?.imageAdjustment?.heroImage?.objectPosition?.x ?? 50}%`,
-                      top: `${editData?.imageAdjustment?.heroImage?.objectPosition?.y ?? 50}%`,
-                      transform: "translate(-50%, -50%)",
-                      width: 12,
-                      height: 12,
-                      borderRadius: 9999,
-                      border: "2px solid white",
-                      boxShadow: "0 0 0 2px rgba(14,135,254,0.7)",
-                      background: "rgba(14,135,254,0.35)",
-                    }}
-                  />
-                </>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-[10px] text-[#667085] bg-gray-50">
-                  Select media first
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Image controls row */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {["cover", "contain"].map((fit) => {
-            const active = (editData?.imageAdjustment?.heroImage?.objectFit || "cover") === fit;
-            return (
+          {/* 2-column grid for Media picker and Image position */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {/* Image Picker - unified with media library */}
+            <div>
+              <label className="text-xs font-medium text-[#344054] block mb-1.5">
+                Media ({mediaType === "video" ? "video" : mediaType === "both" ? "image/video" : "image"})
+              </label>
               <button
-                key={fit}
                 type="button"
-                onClick={() => {
+                onClick={() => setIsImagePickerOpen(true)}
+                className="w-full border border-dashed border-[#d0d5dd] rounded-lg p-2 text-left hover:bg-gray-50 transition-colors h-[100px] flex flex-col items-center justify-center"
+              >
+                <div className="flex overflow-hidden justify-center items-center w-14 h-14 bg-gray-100 rounded mb-1">
+                  {editData.image ? (
+                    <img src={editData.image} alt="Selected" className="object-cover w-full h-full" />
+                  ) : (
+                    <svg className="w-6 h-6 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 7a2 2 0 012-2h14a2 2 0 012 2M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M8 11l4 4 4-4" />
+                    </svg>
+                  )}
+                </div>
+                <div className="text-[10px] text-[#667085] text-center">
+                  {editData.image ? "Change" : "Choose"} media
+                </div>
+              </button>
+            </div>
+
+            {/* Image Position - drag area */}
+            <div>
+              <label className="text-xs font-medium text-[#344054] block mb-1.5">Position (drag)</label>
+              <div
+                role="button"
+                tabIndex={0}
+                onPointerDown={(e) => {
+                  if (!editData.image && !editData.videoUrl) return;
+                  e.preventDefault();
+                  dragRef.current.dragging = true;
+                  dragRef.current.pointerId = e.pointerId;
+                  e.currentTarget.setPointerCapture?.(e.pointerId);
+                }}
+                onPointerMove={(e) => {
+                  if (!dragRef.current.dragging) return;
+                  if (!editData.image && !editData.videoUrl) return;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const cx = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
+                  const cy = Math.min(Math.max(e.clientY - rect.top, 0), rect.height);
+                  const x = Math.round((cx / rect.width) * 100);
+                  const y = Math.round((cy / rect.height) * 100);
                   const next = {
                     ...editData,
                     imageAdjustment: {
                       ...(editData.imageAdjustment || {}),
                       heroImage: {
                         ...(editData.imageAdjustment?.heroImage || {}),
-                        objectFit: fit,
+                        objectPosition: { x, y },
                       },
                     },
                   };
                   setEditData(next);
                   emitDraft(next);
                 }}
-                className={`px-2 py-1 rounded text-[11px] font-semibold border transition-colors ${active
-                  ? "bg-[#5207CD] text-white border-[#5207CD]"
-                  : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
+                onPointerUp={() => {
+                  dragRef.current.dragging = false;
+                  dragRef.current.pointerId = null;
+                }}
+                onPointerCancel={() => {
+                  dragRef.current.dragging = false;
+                  dragRef.current.pointerId = null;
+                }}
+                className={`relative w-full h-[100px] rounded-lg overflow-hidden border select-none ${(editData.image || editData.videoUrl)
+                  ? `border-[#e4e7ec] hover:border-[#98a2b3] ${dragRef.current.dragging ? "cursor-grabbing" : "cursor-grab"}`
+                  : "border-[#eaecf0] cursor-not-allowed"
                   }`}
+                style={{ touchAction: "none" }}
+                title={(editData.image || editData.videoUrl) ? "Drag to position" : "Select media first"}
               >
-                {fit}
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => {
-              if (!editData.image || isLikelyVideoUrl(editData.image)) {
-                message.info("Select an image to remove its background.");
-                return;
-              }
-              const curHero = editData?.imageAdjustment?.heroImage || {};
-              const isOn = Boolean(curHero?.bgRemoved);
+                {(editData.image || editData.videoUrl) ? (
+                  <>
+                    {editData.videoUrl ? (
+                      <video
+                        src={editData.videoUrl}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        poster={editData.image || undefined}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: editData?.imageAdjustment?.heroImage?.objectFit || "cover",
+                          objectPosition: `${editData?.imageAdjustment?.heroImage?.objectPosition?.x ?? 50
+                            }% ${editData?.imageAdjustment?.heroImage?.objectPosition?.y ?? 50}%`,
+                          transform: editData?.imageAdjustment?.heroImage?.mirror ? "scaleX(-1)" : "none",
+                          pointerEvents: "none",
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={editData.image}
+                        alt="Focal point preview"
+                        className="w-full h-full"
+                        style={{
+                          objectFit: editData?.imageAdjustment?.heroImage?.objectFit || "cover",
+                          objectPosition: `${editData?.imageAdjustment?.heroImage?.objectPosition?.x ?? 50
+                            }% ${editData?.imageAdjustment?.heroImage?.objectPosition?.y ?? 50}%`,
+                          transform: editData?.imageAdjustment?.heroImage?.mirror ? "scaleX(-1)" : "none",
+                        }}
+                      />
+                    )}
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: `${editData?.imageAdjustment?.heroImage?.objectPosition?.x ?? 50}%`,
+                        top: `${editData?.imageAdjustment?.heroImage?.objectPosition?.y ?? 50}%`,
+                        transform: "translate(-50%, -50%)",
+                        width: 12,
+                        height: 12,
+                        borderRadius: 9999,
+                        border: "2px solid white",
+                        boxShadow: "0 0 0 2px rgba(14,135,254,0.7)",
+                        background: "rgba(14,135,254,0.35)",
+                      }}
+                    />
+                  </>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[10px] text-[#667085] bg-gray-50">
+                    Select media first
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-              if (!isOn) {
-                const transformed = applyCloudinaryBgRemoval(editData.image);
-                if (!transformed) {
-                  message.warning("Background removal MVP requires a Cloudinary image URL.");
+          {/* Image controls row */}
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {["cover", "contain"].map((fit) => {
+              const active = (editData?.imageAdjustment?.heroImage?.objectFit || "cover") === fit;
+              return (
+                <button
+                  key={fit}
+                  type="button"
+                  onClick={() => {
+                    const next = {
+                      ...editData,
+                      imageAdjustment: {
+                        ...(editData.imageAdjustment || {}),
+                        heroImage: {
+                          ...(editData.imageAdjustment?.heroImage || {}),
+                          objectFit: fit,
+                        },
+                      },
+                    };
+                    setEditData(next);
+                    emitDraft(next);
+                  }}
+                  className={`px-2 py-1 rounded text-[11px] font-semibold border transition-colors ${active
+                    ? "bg-[#5207CD] text-white border-[#5207CD]"
+                    : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
+                    }`}
+                >
+                  {fit}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => {
+                if (!editData.image || isLikelyVideoUrl(editData.image)) {
+                  message.info("Select an image to remove its background.");
                   return;
                 }
+                const curHero = editData?.imageAdjustment?.heroImage || {};
+                const isOn = Boolean(curHero?.bgRemoved);
+
+                if (!isOn) {
+                  const transformed = applyCloudinaryBgRemoval(editData.image);
+                  if (!transformed) {
+                    message.warning("Background removal MVP requires a Cloudinary image URL.");
+                    return;
+                  }
+                  const next = {
+                    ...editData,
+                    image: transformed,
+                    imageAdjustment: {
+                      ...(editData.imageAdjustment || {}),
+                      heroImage: {
+                        ...curHero,
+                        bgRemoved: true,
+                        bgOriginalUrl: curHero?.bgOriginalUrl || editData.image,
+                      },
+                    },
+                  };
+                  setEditData(next);
+                  emitDraft(next);
+                  return;
+                }
+
+                const original = curHero?.bgOriginalUrl || editData.image;
                 const next = {
                   ...editData,
-                  image: transformed,
+                  image: original,
                   imageAdjustment: {
                     ...(editData.imageAdjustment || {}),
                     heroImage: {
                       ...curHero,
-                      bgRemoved: true,
-                      bgOriginalUrl: curHero?.bgOriginalUrl || editData.image,
+                      bgRemoved: false,
                     },
                   },
                 };
                 setEditData(next);
                 emitDraft(next);
-                return;
-              }
-
-              const original = curHero?.bgOriginalUrl || editData.image;
-              const next = {
-                ...editData,
-                image: original,
-                imageAdjustment: {
-                  ...(editData.imageAdjustment || {}),
-                  heroImage: {
-                    ...curHero,
-                    bgRemoved: false,
+              }}
+              disabled={!editData.image || isLikelyVideoUrl(editData.image)}
+              className={`px-2 py-1 rounded text-[11px] font-semibold border transition-colors ${(!editData.image || isLikelyVideoUrl(editData.image))
+                ? "bg-gray-50 text-[#98a2b3] border-[#eaecf0] cursor-not-allowed"
+                : (editData?.imageAdjustment?.heroImage?.bgRemoved
+                  ? "bg-[#101828] text-white border-[#101828]"
+                  : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50")
+                }`}
+              title={isCloudinaryImageUrl(editData.image) ? "Cloudinary background removal (MVP)" : "Requires Cloudinary image URL"}
+            >
+              {editData?.imageAdjustment?.heroImage?.bgRemoved ? "Restore BG" : "Remove BG"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const next = {
+                  ...editData,
+                  imageAdjustment: {
+                    ...(editData.imageAdjustment || {}),
+                    heroImage: {
+                      objectFit: "cover",
+                      objectPosition: { x: 50, y: 50 },
+                      mirror: false,
+                    },
                   },
-                },
-              };
-              setEditData(next);
-              emitDraft(next);
-            }}
-            disabled={!editData.image || isLikelyVideoUrl(editData.image)}
-            className={`px-2 py-1 rounded text-[11px] font-semibold border transition-colors ${(!editData.image || isLikelyVideoUrl(editData.image))
-              ? "bg-gray-50 text-[#98a2b3] border-[#eaecf0] cursor-not-allowed"
-              : (editData?.imageAdjustment?.heroImage?.bgRemoved
+                };
+                setEditData(next);
+                emitDraft(next);
+              }}
+              className="px-2 py-1 rounded text-[11px] font-semibold border border-[#d0d5dd] text-[#344054] hover:bg-gray-50"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const cur = Boolean(editData?.imageAdjustment?.heroImage?.mirror);
+                const next = {
+                  ...editData,
+                  imageAdjustment: {
+                    ...(editData.imageAdjustment || {}),
+                    heroImage: {
+                      ...(editData.imageAdjustment?.heroImage || {}),
+                      mirror: !cur,
+                    },
+                  },
+                };
+                setEditData(next);
+                emitDraft(next);
+              }}
+              className={`px-2 py-1 rounded text-[11px] font-semibold border transition-colors ${editData?.imageAdjustment?.heroImage?.mirror
                 ? "bg-[#101828] text-white border-[#101828]"
-                : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50")
-              }`}
-            title={isCloudinaryImageUrl(editData.image) ? "Cloudinary background removal (MVP)" : "Requires Cloudinary image URL"}
-          >
-            {editData?.imageAdjustment?.heroImage?.bgRemoved ? "Restore BG" : "Remove BG"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const next = {
-                ...editData,
-                imageAdjustment: {
-                  ...(editData.imageAdjustment || {}),
-                  heroImage: {
-                    objectFit: "cover",
-                    objectPosition: { x: 50, y: 50 },
-                    mirror: false,
-                  },
-                },
-              };
-              setEditData(next);
-              emitDraft(next);
-            }}
-            className="px-2 py-1 rounded text-[11px] font-semibold border border-[#d0d5dd] text-[#344054] hover:bg-gray-50"
-          >
-            Reset
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const cur = Boolean(editData?.imageAdjustment?.heroImage?.mirror);
-              const next = {
-                ...editData,
-                imageAdjustment: {
-                  ...(editData.imageAdjustment || {}),
-                  heroImage: {
-                    ...(editData.imageAdjustment?.heroImage || {}),
-                    mirror: !cur,
-                  },
-                },
-              };
-              setEditData(next);
-              emitDraft(next);
-            }}
-            className={`px-2 py-1 rounded text-[11px] font-semibold border transition-colors ${editData?.imageAdjustment?.heroImage?.mirror
-              ? "bg-[#101828] text-white border-[#101828]"
-              : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
-              }`}
-          >
-            Mirror {editData?.imageAdjustment?.heroImage?.mirror ? "On" : "Off"}
-          </button>
+                : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
+                }`}
+            >
+              Mirror {editData?.imageAdjustment?.heroImage?.mirror ? "On" : "Off"}
+            </button>
+          </div>
+        </div>
+
+        {/* ===== TEXT OVERLAY SECTION ===== */}
+        <div className="mb-4">
+          <h4 className="text-xs font-semibold text-[#101828] mb-2 uppercase tracking-wide">Text Overlay</h4>
+
+          {/* 2-column grid for Headline + Subheadline */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {/* Headline (Overlay) */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-medium text-[#344054]">Headline</label>
+                <span className={`text-xs ${editData.title.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                  {editData.title.length}/40
+                </span>
+              </div>
+              <TextArea
+                value={editData.title}
+                onChange={(e) => {
+                  const next = { ...editData, title: e.target.value };
+                  setEditData(next);
+                  emitDraft(next);
+                }}
+                maxLength={40}
+                rows={2}
+                className="text-sm"
+                placeholder="Enter headline for image overlay..."
+              />
+            </div>
+
+            {/* Subheadline (Overlay) */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-medium text-[#344054]">Subheadline</label>
+                <span className={`text-xs ${editData.linkDescription.length > 30 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                  {editData.linkDescription.length}/30
+                </span>
+              </div>
+              <TextArea
+                value={editData.linkDescription}
+                onChange={(e) => {
+                  const next = { ...editData, linkDescription: e.target.value };
+                  setEditData(next);
+                  emitDraft(next);
+                }}
+                maxLength={30}
+                rows={2}
+                className="text-sm"
+                placeholder="Enter subheadline..."
+              />
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div>
+            <label className="text-xs font-medium text-[#344054] block mb-1.5">Call to Action</label>
+            <div className="flex gap-2">
+              {["Apply Now", "Learn More"].map((cta) => {
+                const active = editData.callToAction === cta;
+                return (
+                  <button
+                    key={cta}
+                    type="button"
+                    onClick={() => {
+                      const next = { ...editData, callToAction: cta };
+                      setEditData(next);
+                      emitDraft(next);
+                    }}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${active
+                      ? "bg-[#5207CD] text-white border-[#5207CD]"
+                      : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
+                      }`}
+                  >
+                    {cta}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* ===== META AD COPY SECTION ===== */}
+        <div className="mb-4">
+          <h4 className="text-xs font-semibold text-[#101828] mb-2 uppercase tracking-wide">Meta Ad Copy</h4>
+
+          {/* Primary Text */}
+          <div className="mb-3">
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="text-xs font-medium text-[#344054]">Primary Text</label>
+              <span className="text-xs text-[#667085]">{editData.description.length}/2200</span>
+            </div>
+            <TextArea
+              value={editData.description}
+              onChange={(e) => {
+                const next = { ...editData, description: e.target.value };
+                setEditData(next);
+                emitDraft(next);
+              }}
+              maxLength={2200}
+              rows={3}
+              className="text-sm"
+              placeholder="Enter primary text..."
+            />
+            {editData.description.length > 125 && (
+              <div className="mt-1 text-[10px] text-[#667085]">
+                ℹ️ First 125 chars are the "hook" visible before "See more".
+              </div>
+            )}
+          </div>
+
+          {/* 2-column grid for Meta Headline + Meta Description */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Meta Headline */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-medium text-[#344054]">Headline</label>
+                <span className={`text-xs ${(editData.metaHeadline?.length || 0) > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                  {editData.metaHeadline?.length || 0}/40
+                </span>
+              </div>
+              <TextArea
+                value={editData.metaHeadline || ""}
+                onChange={(e) => {
+                  const next = { ...editData, metaHeadline: e.target.value };
+                  setEditData(next);
+                  emitDraft(next);
+                }}
+                maxLength={40}
+                rows={2}
+                className="text-sm"
+                placeholder="Meta headline..."
+              />
+            </div>
+
+            {/* Meta Description */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-medium text-[#344054]">Description</label>
+                <span className={`text-xs ${(editData.metaDescription?.length || 0) > 30 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                  {editData.metaDescription?.length || 0}/30
+                </span>
+              </div>
+              <TextArea
+                value={editData.metaDescription || ""}
+                onChange={(e) => {
+                  const next = { ...editData, metaDescription: e.target.value };
+                  setEditData(next);
+                  emitDraft(next);
+                }}
+                maxLength={30}
+                rows={2}
+                className="text-sm"
+                placeholder="Meta description..."
+              />
+            </div>
+          </div>
         </div>
 
         {/* Save Button */}

@@ -903,7 +903,18 @@ export default function LandingpageEdit({ paramsId }) {
       // Clean data for saving (remove system fields)
       const { _id, showHirelabBranding, debugData, ...cleanData } = dataToSave;
 
-      console.log("💾 Auto-saving page changes (not touching publishedVersion)");
+      // Debug: Check payload size and find large fields
+      const payloadSize = JSON.stringify(cleanData).length;
+      console.log("💾 Auto-saving page changes, payload size:", (payloadSize / 1024).toFixed(2), "KB");
+      if (payloadSize > 500000) {
+        console.warn("⚠️ Large payload detected! Checking fields:");
+        Object.entries(cleanData).forEach(([key, value]) => {
+          const fieldSize = JSON.stringify(value).length;
+          if (fieldSize > 10000) {
+            console.warn(`  - ${key}: ${(fieldSize / 1024).toFixed(2)} KB`);
+          }
+        });
+      }
 
       const response = await CrudService.update("LandingPageData", lpId, cleanData, "landing page edit");
 

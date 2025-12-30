@@ -452,7 +452,7 @@ const Layout = ({ children }) => {
         : shouldOnlySeeATS
           ? [
             {
-              name: "ATS",
+              name: "Candidates",
               href: "/dashboard/ats",
               icon: FolderIcon,
             },
@@ -469,7 +469,7 @@ const Layout = ({ children }) => {
               icon: BriefcaserIcon,
             },
             {
-              name: "ATS",
+              name: "Candidates",
               href: "/dashboard/ats",
               icon: FolderIcon,
             },

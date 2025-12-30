@@ -1542,7 +1542,7 @@ export default function BrandStyleForm() {
       if (vacancyLenth === 0) {
         router.push("/dashboard/campaigns?new=true");
       } else {
-        router.push("/dashboard/vacancies");
+        router.push("/dashboard/campaigns");
       }
 
     } catch (error) {

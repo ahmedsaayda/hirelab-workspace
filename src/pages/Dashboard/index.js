@@ -204,7 +204,7 @@ const Dashboard = () => {
     return () => document.removeEventListener("REFRESH.TICKETNUM", refresh);
   }, [location]);
 
-  
+
   const checkCalendlyEventTypes = useCallback(async () => {
     if (!partner?.calendlyclientId) return;
     CalendlyService.getNeedsToSelectEventType().then(({ data }) => {
@@ -304,7 +304,7 @@ const Dashboard = () => {
         //   icon: ToolrIcon,
         // },
         {
-          name: "ATS",
+          name: "Candidates",
           component: <Vacancy />,
           href: "/dashboard/ats",
           icon: FolderIcon,
