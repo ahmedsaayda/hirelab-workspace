@@ -1881,7 +1881,7 @@ export default function AdsEdit({ paramsId }) {
           </div>
 
           {/* Middle Section - Variants List */}
-          <div className="w-[486px] bg-white border-r border-[#eceef5] flex flex-col h-full">
+          <div className="w-[600px] bg-white border-r border-[#eceef5] flex flex-col h-full">
             <div className="flex flex-col p-8 h-full">
               {/* Header */}
               <div className="flex flex-shrink-0 justify-between items-center mb-5">
