@@ -789,7 +789,7 @@ export default function LandingpageEdit({ paramsId }) {
     const handleBeforeUnload = (e) => {
       if (hasUnpublishedChangesRef.current) {
         e.preventDefault();
-        const message = "You're leaving this page but there are unpublished changes, are you sure you want to exit?";
+        const message = "YDo you want to leave this page with unpublished changes?";
         e.returnValue = message;
         return message;
       }
@@ -2685,16 +2685,10 @@ export default function LandingpageEdit({ paramsId }) {
       >
         <div className="flex flex-col gap-5">
           <Heading size="3xl" as="h3" className="!text-black-900_01">
-            You're leaving this page but there are unpublished changes, are you sure you want to exit?
+            Do you want to leave this page with unpublished changes?
           </Heading>
           <div className="flex gap-3 justify-end">
-            <button
-              type="button"
-              className="px-4 py-2 text-gray-700 rounded-md border border-gray-300 hover:bg-gray-50"
-              onClick={handleExitCancel}
-            >
-              No, go back
-            </button>
+
             <button
               type="button"
               className="px-4 py-2 text-gray-700 rounded-md border border-gray-300 hover:bg-gray-50"
@@ -2710,14 +2704,14 @@ export default function LandingpageEdit({ paramsId }) {
                 handleExitConfirm();
               }}
             >
-              Publish & exit
+              Publish and Leave
             </button>
             <button
               type="button"
               className="px-4 py-2 rounded-md bg-[#5207CD] text-white hover:bg-[#0C7CE6]"
               onClick={handleExitConfirm}
             >
-              Yes, exit
+              Leave
             </button>
           </div>
         </div>

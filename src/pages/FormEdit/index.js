@@ -243,7 +243,7 @@ export default function FormEdit({ paramsId }) {
     const handleBeforeUnload = (e) => {
       if (hasUnpublishedChangesRef.current) {
         e.preventDefault();
-        const message = "You're leaving this page but there are unpublished form changes, are you sure you want to exit?";
+        const message = "Do you want to leave this page with unpublished changes?";
         e.returnValue = message;
         return message;
       }
@@ -2811,8 +2811,8 @@ export default function FormEdit({ paramsId }) {
               <button
                 onClick={() => setDevice("mobile")}
                 className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "mobile"
-                    ? "bg-[#5207CD] text-[#EFF8FF]"
-                    : "text-[#5207CD] hover:bg-gray-100"
+                  ? "bg-[#5207CD] text-[#EFF8FF]"
+                  : "text-[#5207CD] hover:bg-gray-100"
                   }`}
               >
                 Mobile
@@ -2820,8 +2820,8 @@ export default function FormEdit({ paramsId }) {
               <button
                 onClick={() => setDevice("desktop")}
                 className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "desktop"
-                    ? "bg-[#5207CD] text-[#EFF8FF]"
-                    : "text-[#5207CD] hover:bg-gray-100"
+                  ? "bg-[#5207CD] text-[#EFF8FF]"
+                  : "text-[#5207CD] hover:bg-gray-100"
                   }`}
               >
                 Desktop
@@ -3048,9 +3048,9 @@ export default function FormEdit({ paramsId }) {
                                   >
                                     <div
                                       className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group ${currentStep === 1 &&
-                                          formSections[0]?.isLeadCapture
-                                          ? "bg-[#eff8ff]"
-                                          : "hover:bg-[#eff8ff]"
+                                        formSections[0]?.isLeadCapture
+                                        ? "bg-[#eff8ff]"
+                                        : "hover:bg-[#eff8ff]"
                                         }`}
                                       style={{
                                         minWidth: 0,
@@ -3293,8 +3293,8 @@ export default function FormEdit({ paramsId }) {
                                               {/* Action buttons area */}
                                               <div
                                                 className={`flex gap-1 items-center transition-all duration-300 absolute right-3 top-1/2 -translate-y-1/2 ${isDragging
-                                                    ? "opacity-100"
-                                                    : "opacity-0 group-hover:opacity-100"
+                                                  ? "opacity-100"
+                                                  : "opacity-0 group-hover:opacity-100"
                                                   }`}
                                               >
                                                 {section.isLeadCapture ? (
@@ -3352,8 +3352,8 @@ export default function FormEdit({ paramsId }) {
                                                   }}
                                                   className="flex items-center p-1 rounded cursor-pointer hover:bg-gray-100"
                                                   title={`${section.visible !== false
-                                                      ? "Hide"
-                                                      : "Show"
+                                                    ? "Hide"
+                                                    : "Show"
                                                     } field for end users`}
                                                 >
                                                   {section.visible !== false ? (
@@ -3400,8 +3400,8 @@ export default function FormEdit({ paramsId }) {
                                                   }}
                                                   className="flex items-center p-1 rounded cursor-pointer hover:bg-gray-100"
                                                   title={`${section.required
-                                                      ? "Make optional"
-                                                      : "Make required"
+                                                    ? "Make optional"
+                                                    : "Make required"
                                                     }`}
                                                 >
                                                   {section.required ? (
@@ -3432,8 +3432,8 @@ export default function FormEdit({ paramsId }) {
                                                 </div>
                                                 <div
                                                   className={`flex items-center cursor-pointer hover:bg-gray-100 p-1 rounded ${section.isLeadCapture
-                                                      ? "opacity-50 cursor-not-allowed"
-                                                      : ""
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : ""
                                                     }`}
                                                   onClick={(e) => {
                                                     e.stopPropagation();
@@ -3474,8 +3474,8 @@ export default function FormEdit({ paramsId }) {
                                 >
                                   <div
                                     className={`flex relative items-center p-2 w-full rounded-lg cursor-pointer sidebar-item group ${isEditingButtonSettings
-                                        ? "bg-[#eff8ff]"
-                                        : "hover:bg-[#eff8ff]"
+                                      ? "bg-[#eff8ff]"
+                                      : "hover:bg-[#eff8ff]"
                                       }`}
                                     style={{
                                       minWidth: 0,
@@ -3894,8 +3894,8 @@ export default function FormEdit({ paramsId }) {
                                 setDevice("mobile");
                               }}
                               className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "mobile"
-                                  ? "bg-[#5207CD] text-[#EFF8FF]"
-                                  : "text-[#5207CD] hover:bg-gray-100"
+                                ? "bg-[#5207CD] text-[#EFF8FF]"
+                                : "text-[#5207CD] hover:bg-gray-100"
                                 }`}
                             >
                               Mobile
@@ -3905,8 +3905,8 @@ export default function FormEdit({ paramsId }) {
                                 setDevice("desktop");
                               }}
                               className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "desktop"
-                                  ? "bg-[#5207CD] text-[#EFF8FF]"
-                                  : "text-[#5207CD] hover:bg-gray-100"
+                                ? "bg-[#5207CD] text-[#EFF8FF]"
+                                : "text-[#5207CD] hover:bg-gray-100"
                                 }`}
                             >
                               Desktop
@@ -3949,8 +3949,8 @@ export default function FormEdit({ paramsId }) {
                               <button
                                 onClick={() => setDevice("mobile")}
                                 className={`h-[24px] px-2 rounded-md flex items-center justify-center font-medium transition text-xs ${device === "mobile"
-                                    ? "bg-[#5207CD] text-[#EFF8FF]"
-                                    : "text-[#5207CD]"
+                                  ? "bg-[#5207CD] text-[#EFF8FF]"
+                                  : "text-[#5207CD]"
                                   }`}
                               >
                                 Mobile
@@ -3958,8 +3958,8 @@ export default function FormEdit({ paramsId }) {
                               <button
                                 onClick={() => setDevice("desktop")}
                                 className={`h-[24px] px-2 rounded-md flex items-center justify-center font-medium transition text-xs ${device === "desktop"
-                                    ? "bg-[#5207CD] text-[#EFF8FF]"
-                                    : "text-[#5207CD]"
+                                  ? "bg-[#5207CD] text-[#EFF8FF]"
+                                  : "text-[#5207CD]"
                                   }`}
                               >
                                 Desktop
@@ -3981,8 +3981,8 @@ export default function FormEdit({ paramsId }) {
                       )}
                       <div
                         className={`flex flex-col ${fullscreen && device === "desktop"
-                            ? "items-center"
-                            : "items-start"
+                          ? "items-center"
+                          : "items-start"
                           } justify-center gap-[2px] mdx:pb flex-1 overflow-auto`}
                         style={
                           device === "mobile"
@@ -4372,16 +4372,10 @@ export default function FormEdit({ paramsId }) {
       >
         <div className="flex flex-col gap-5">
           <Heading size="3xl" as="h3" className="!text-black-900_01">
-            You're leaving this page but there are unpublished form changes, are you sure you want to exit?
+            Do you want to leave this page with unpublished changes?
           </Heading>
           <div className="flex gap-3 justify-end">
-            <button
-              type="button"
-              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
-              onClick={handleExitCancel}
-            >
-              No, go back
-            </button>
+
             <button
               type="button"
               className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
@@ -4396,14 +4390,14 @@ export default function FormEdit({ paramsId }) {
                 handleExitConfirm();
               }}
             >
-              Publish & exit
+              Publish and Leave
             </button>
             <button
               type="button"
               className="px-4 py-2 rounded-md bg-[#5207CD] text-white hover:bg-[#0C7CE6]"
               onClick={handleExitConfirm}
             >
-              Yes, exit
+              Leave
             </button>
           </div>
         </div>
