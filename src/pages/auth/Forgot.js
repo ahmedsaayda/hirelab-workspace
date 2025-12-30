@@ -36,7 +36,7 @@ const Login = () => {
           Password reset
         </h2>
         <p className="mt-3 text-[#667085] dark:text-gray-300 text-base font-normal ">
-          Forgot your password? Type your email, and we will send an OTP.
+          Forgot your password? Type your email, and we will send an verification code.
         </p>
         <form
           action="#"
@@ -59,7 +59,7 @@ const Login = () => {
               className="w-full"
               loading={loading}
             >
-              <span>Request OTP</span>
+              <span>Request Verification Code</span>
             </Button>
           </div>
           <div className="text-center text-sm">

@@ -109,14 +109,14 @@ const PasswordReset = () => {
           Set New Password
         </h2>
         <p className="mt-3 text-[#667085] dark:text-gray-300 text-base font-normal ">
-          Please verify OTP and enter a new password
+          Please verify your verification code and enter a new password
         </p>
         <form
           action="#"
           className="mt-10 grid grid-cols-1 gap-y-8"
           onSubmit={handleSubmit}
         >
-          <TextField label="OTP" name="otp" type="text" required />
+          <TextField label="Verification Code" name="otp" type="text" required />
           <TextField
             label="New Password"
             name="new-password"
