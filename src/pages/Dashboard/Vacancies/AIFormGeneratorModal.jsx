@@ -100,7 +100,7 @@ const AIFormGeneratorModal = ({
         },
         phone: {
           visible: true,
-          required: false,
+          required: true,
           label: getTranslation(language, 'phone') || 'Phone',
           placeholder: getTranslation(language, 'phonePlaceholder') || 'Enter your phone number'
         }
@@ -321,7 +321,7 @@ const AIFormGeneratorModal = ({
                   },
                   phone: {
                     visible: true,
-                    required: false,
+                    required: true,
                     label: getTranslation(language, 'phone') || 'Phone',
                     placeholder: getTranslation(language, 'phonePlaceholder') || 'Enter your phone number'
                   }

@@ -9,11 +9,11 @@ import { calculateTextColor } from "./utils.js";
 import { getFonts } from "./getFonts.js";
 import ApplyCustomFont from "./ApplyCustomFont.jsx";
 import { ChevronRight, ChevronLeft } from "lucide-react";
-import {ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { Modal as AntModal, Switch, Input, Spin, Button as AntButton } from "antd";
 import { message } from "antd";
 import { ClipboardCheck } from "lucide-react";
-import { LinkOutlined,CheckCircleFilled} from '@ant-design/icons';
+import { LinkOutlined, CheckCircleFilled } from '@ant-design/icons';
 import CrudService from "../../services/CrudService";
 import { getTranslation } from "../../utils/translations";
 import AiService from "../../services/AiService";
@@ -120,7 +120,7 @@ const useHeroHover = () => {
   };
 };
 
-const Template3 = ({ landingPageData, onClickApply, isMultiJob=false }) => {
+const Template3 = ({ landingPageData, onClickApply, isMultiJob = false }) => {
   const [showApplyButton, setShowApplyButton] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
@@ -149,14 +149,13 @@ const Template3 = ({ landingPageData, onClickApply, isMultiJob=false }) => {
             <ul className="flex items-center space-x-6">
               {!isMultiJob && (
                 <div
-                  className={`transition-all duration-300 ease-in-out ${
-                    showApplyButton
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 -translate-y-4"
-                  }`}
+                  className={`transition-all duration-300 ease-in-out ${showApplyButton
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 -translate-y-4"
+                    }`}
                 >
                   <Button
-                    {...({} )}
+                    {...({})}
                     color="light_blue_A700"
                     size="lg"
                     className="w-full rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
@@ -176,7 +175,7 @@ const Template3 = ({ landingPageData, onClickApply, isMultiJob=false }) => {
   );
 };
 
-const Template2 = ({ landingPageData, onClickApply, isMultiJob=false }) => {
+const Template2 = ({ landingPageData, onClickApply, isMultiJob = false }) => {
   const [showApplyButton, setShowApplyButton] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
@@ -205,14 +204,13 @@ const Template2 = ({ landingPageData, onClickApply, isMultiJob=false }) => {
             <ul className="flex items-center space-x-6">
               {!isMultiJob && (
                 <div
-                  className={`transition-all duration-300 ease-in-out ${
-                    showApplyButton
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 -translate-y-4"
-                  }`}
+                  className={`transition-all duration-300 ease-in-out ${showApplyButton
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 -translate-y-4"
+                    }`}
                 >
                   <Button
-                    {...({} )}
+                    {...({})}
                     color="light_blue_A700"
                     size="lg"
                     className="w-full  rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
@@ -231,25 +229,25 @@ const Template2 = ({ landingPageData, onClickApply, isMultiJob=false }) => {
 };
 
 
-const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview=false, isMultiJob=false }) => {
-  console.log("lpId",lpId);
+const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview = false, isMultiJob = false }) => {
+  console.log("lpId", lpId);
   // Get device from global variable set by PreviewContainer
-  const [device, setDevice] = useState((window ).__previewDevice || "desktop");
-  
-  console.log("device is",device);
+  const [device, setDevice] = useState((window).__previewDevice || "desktop");
+
+  console.log("device is", device);
   // Listen for device changes
   useEffect(() => {
     const checkDevice = () => {
-      const currentDevice = (window ).__previewDevice || "desktop";
+      const currentDevice = (window).__previewDevice || "desktop";
       setDevice(currentDevice);
     };
-    
+
     // Check immediately
     checkDevice();
-    
+
     // Set up an interval to check for changes
     const interval = setInterval(checkDevice, 100);
-    
+
     return () => clearInterval(interval);
   }, []);
   // Extract colors for dependency tracking
@@ -263,11 +261,11 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   //   const {lpId : lpIdFromQuery} = router?.query || {};
   //   lpId = lpIdFromQuery;
   // }
-  const isEditPage =isEdit || router.pathname?.startsWith("/edit-page/");
+  const isEditPage = isEdit || router.pathname?.startsWith("/edit-page/");
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Add debug logs
-  
+
 
   // Use our template palette hook with the default colors
   const { getColor } = useTemplatePalette(
@@ -295,7 +293,7 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   );
   const [scrollPosition, setScrollPosition] = useState(0);
   // const [isScrolled, setIsScrolled] = useState(false);
-  const[shareIcon, setShareIcon] = useState(<Share2 size={20}/>);
+  const [shareIcon, setShareIcon] = useState(<Share2 size={20} />);
   const [modalVisible, setModalVisible] = useState(false);
   const [link, setLink] = useState('');
   const [applyLinkModalVisible, setApplyLinkModalVisible] = useState(false);
@@ -333,11 +331,11 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
     }
 
     setIsGeneratingForm(true);
-    
+
     try {
       // Build comprehensive job description for better AI generation
       let fullJobDescription = landingPageData.heroDescription || '';
-      
+
       // Add job specifications if available
       if (landingPageData.specifications && landingPageData.specifications.length > 0) {
         fullJobDescription += '\n\nJob Specifications:\n';
@@ -398,10 +396,10 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
         // Ensure contact information is first and properly localized
         const ensureContactFirst = (form) => {
           if (!form.fields || form.fields.length === 0) return form;
-          
+
           // Find contact field
           const contactFieldIndex = form.fields.findIndex(field => field.type === 'contact');
-          
+
           if (contactFieldIndex === -1) {
             // No contact field exists, create one with proper language
             const contactField = {
@@ -412,27 +410,27 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
               required: true,
               visible: true,
               isLeadCapture: true,
-              firstName: { 
-                visible: true, 
+              firstName: {
+                visible: true,
                 required: true,
                 label: getTranslation(landingPageData?.lang, 'firstName') || 'First Name',
                 placeholder: getTranslation(landingPageData?.lang, 'firstNamePlaceholder') || 'Enter firstname'
               },
-              lastName: { 
-                visible: true, 
+              lastName: {
+                visible: true,
                 required: true,
                 label: getTranslation(landingPageData?.lang, 'lastName') || 'Last Name',
                 placeholder: getTranslation(landingPageData?.lang, 'lastNamePlaceholder') || 'Enter lastname'
               },
-              email: { 
-                visible: true, 
+              email: {
+                visible: true,
                 required: true,
                 label: getTranslation(landingPageData?.lang, 'email') || 'Email',
                 placeholder: getTranslation(landingPageData?.lang, 'emailPlaceholder') || 'Enter your email address'
               },
-              phone: { 
-                visible: true, 
-                required: false,
+              phone: {
+                visible: true,
+                required: true,
                 label: getTranslation(landingPageData?.lang, 'phone') || 'Phone',
                 placeholder: getTranslation(landingPageData?.lang, 'phonePlaceholder') || 'Enter your phone number'
               }
@@ -445,7 +443,7 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
             // Contact field exists but not first, move it to first position
             const contactField = form.fields[contactFieldIndex];
             const otherFields = form.fields.filter((_, index) => index !== contactFieldIndex);
-            
+
             // Update labels to match page language
             const updatedContactField = {
               ...contactField,
@@ -471,13 +469,13 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
                 placeholder: getTranslation(landingPageData?.lang, 'phonePlaceholder') || contactField.phone?.placeholder || 'Enter your phone number'
               }
             };
-            
+
             return {
               ...form,
               fields: [updatedContactField, ...otherFields]
             };
           }
-          
+
           return form;
         };
 
@@ -491,7 +489,7 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
         };
 
         await CrudService.update("LandingPageData", lpId, updateData);
-        
+
         // Update local state
         setLandingPageData(prev => ({
           ...prev,
@@ -501,11 +499,11 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
         }));
 
         message.success("🤖 AI form generated successfully! Contact information has been prioritized first.");
-        
+
         // Close modal and reset state after successful generation
         setApplyLinkModalVisible(false);
         setUseAIFormCreation(false);
-        
+
         // Open form editor to show the generated form
         handleOpenFormEditor();
       } else {
@@ -531,15 +529,15 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
     // Try to trigger the browser's bookmark dialog
     const pageTitle = landingPageData?.vacancyTitle || landingPageData?.multiJobHeroTitle || document.title;
     const pageUrl = window.location.href;
-    
+
     // Check if we can use the sidebar API (Firefox)
     if (window.sidebar && window.sidebar.addPanel) {
       window.sidebar.addPanel(pageTitle, pageUrl, '');
-    } 
+    }
     // Check for IE
     else if (window.external && 'AddFavorite' in window.external) {
       window.external.AddFavorite(pageUrl, pageTitle);
-    } 
+    }
     // For other browsers, show instruction message
     else {
       // Detect Mac vs Windows/Linux
@@ -550,38 +548,38 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
   };
 
 
-const handlemediaLink = (platform) => {
-  const url = link; 
-  navigator.clipboard.writeText(url).then(() => {
-    switch (platform) {
-      case 'linkedin':
-        window.open(`https://www.linkedin.com/sharing/share?url=${url}&title=&summary=&source=`, '_blank');
-        break;
-      case 'instagram':
-        window.open(`https://www.instagram.com/direct/new/?text=${url}`, '_blank');
-        break;
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=&hashtag=`, '_blank');
-        break;
-      case 'tiktok':
-        window.open(`https://www.tiktok.com/create-reactive-video?url=${url}`, '_blank');
-      case 'twitter':
-        const twitterLoginUrl = 'https://twitter.com/i/flow/login';
-        window.open(twitterLoginUrl, '_blank');
-        break;
-     case 'email':
-       const gmailUrl = (`https://mail.google.com/mail/?view=cm&fs=1&to=recipient@example.com&su=Check out this link!&body=Hi,%0A%0ACheck out this link: ${"  "} ${url}`);
-        window.open(gmailUrl, '_blank'); 
-        break;
-      default:
-        console.log('Unknown platform');
-    }
-  });
-};
+  const handlemediaLink = (platform) => {
+    const url = link;
+    navigator.clipboard.writeText(url).then(() => {
+      switch (platform) {
+        case 'linkedin':
+          window.open(`https://www.linkedin.com/sharing/share?url=${url}&title=&summary=&source=`, '_blank');
+          break;
+        case 'instagram':
+          window.open(`https://www.instagram.com/direct/new/?text=${url}`, '_blank');
+          break;
+        case 'facebook':
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=&hashtag=`, '_blank');
+          break;
+        case 'tiktok':
+          window.open(`https://www.tiktok.com/create-reactive-video?url=${url}`, '_blank');
+        case 'twitter':
+          const twitterLoginUrl = 'https://twitter.com/i/flow/login';
+          window.open(twitterLoginUrl, '_blank');
+          break;
+        case 'email':
+          const gmailUrl = (`https://mail.google.com/mail/?view=cm&fs=1&to=recipient@example.com&su=Check out this link!&body=Hi,%0A%0ACheck out this link: ${"  "} ${url}`);
+          window.open(gmailUrl, '_blank');
+          break;
+        default:
+          console.log('Unknown platform');
+      }
+    });
+  };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(link).then(() => {
-      setShareIcon(<ClipboardCheck size={20} />);  
+      setShareIcon(<ClipboardCheck size={20} />);
       message.success(getTranslation(landingPageData?.lang, 'linkCopiedToClipboard'));
       setTimeout(() => {
         setShareIcon(<Share2 size={20} />);
@@ -590,25 +588,25 @@ const handlemediaLink = (platform) => {
   };
 
   const handleModalClose = () => {
-    setModalVisible(false); 
+    setModalVisible(false);
   };
 
 
- useEffect(() => {
-  const handleScroll = () => {
-    if (window.scrollY > 0) {
-      setIsScrolled(true);
-    } else {
-      setIsScrolled(false);
-    }
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 0) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
 
-  window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll);
 
-  return () => {
-    window.removeEventListener("scroll", handleScroll);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
 
   const menuItemsArray = landingPageData?.menuItems?.map((item) => item.key);
@@ -664,10 +662,10 @@ const handlemediaLink = (platform) => {
           }
         }
       };
-      
+
       // Check after a short delay to ensure iframe is loaded
       const timeoutId = setTimeout(checkIframeHash, 500);
-      
+
       return () => {
         clearTimeout(timeoutId);
         window.removeEventListener("hashchange", () => handleHashChange(window));
@@ -680,25 +678,25 @@ const handlemediaLink = (platform) => {
   }, [isEdit, isEditPage]);
 
 
-  
+
 
   const handleNavigate = (id) => {
     console.log('id to navigate:', id);
     console.log('Navigating to:', id);
     console.log(`isEdit: ${isEdit}, isEditPage: ${isEditPage}`);
-    
+
     // Immediately update current hash for instant UI feedback
     setCurrentHash(id);
-    
+
     let targetDocument;
     let targetWindow;
     let scrollableContainer = null;
-    
+
     if (isEdit || isEditPage) {
       // In edit mode, we need to find the iframe and access its document
       const iframes = document.querySelectorAll('iframe');
       console.log('Found iframes:', iframes.length);
-      
+
       if (iframes.length > 0) {
         // Get the last iframe (most likely the preview iframe)
         const iframe = iframes[iframes.length - 1];
@@ -709,7 +707,7 @@ const handlemediaLink = (platform) => {
         targetDocument = window.document;
         targetWindow = window;
         console.log('No iframe found, using window document');
-        
+
         // In edit mode without iframe, find the scrollable preview container
         // The preview container has overflow-y-auto and contains the page content
         scrollableContainer = document.querySelector('[class*="overflow-y-auto"]');
@@ -734,32 +732,32 @@ const handlemediaLink = (platform) => {
 
     // Try multiple selector strategies to find the element
     let element = targetDocument.getElementById(id);
-    
+
     if (!element) {
       // Try finding by data attribute or other common patterns
       element = targetDocument.querySelector(`[data-section="${id}"]`) ||
-                targetDocument.querySelector(`[data-id="${id}"]`) ||
-                targetDocument.querySelector(`.section-${id}`) ||
-                targetDocument.querySelector(`div[id*="${id}"]`);
+        targetDocument.querySelector(`[data-id="${id}"]`) ||
+        targetDocument.querySelector(`.section-${id}`) ||
+        targetDocument.querySelector(`div[id*="${id}"]`);
     }
-    
+
     console.log('Found element:', element);
 
     if (element) {
       const navbarHeight = 128;
-      
+
       if (scrollableContainer) {
         // Scroll within the container (preview mode)
         const containerRect = scrollableContainer.getBoundingClientRect();
         const elementRect = element.getBoundingClientRect();
         const currentScrollTop = scrollableContainer.scrollTop;
         const offsetPosition = Math.max(0, elementRect.top - containerRect.top + currentScrollTop - navbarHeight);
-        
+
         console.log('Container scroll - Element rect top:', elementRect.top);
         console.log('Container scroll - Container rect top:', containerRect.top);
         console.log('Container scroll - Current scroll top:', currentScrollTop);
         console.log('Container scroll - Calculated offset position:', offsetPosition);
-        
+
         scrollableContainer.scrollTo({
           top: offsetPosition,
           behavior: 'smooth'
@@ -769,17 +767,17 @@ const handlemediaLink = (platform) => {
         const elementRect = element.getBoundingClientRect();
         const currentScrollTop = targetWindow.pageYOffset || targetWindow.scrollY || 0;
         const offsetPosition = Math.max(0, elementRect.top + currentScrollTop - navbarHeight);
-        
+
         console.log('Window scroll - Element rect top:', elementRect.top);
         console.log('Window scroll - Current scroll top:', currentScrollTop);
         console.log('Window scroll - Calculated offset position:', offsetPosition);
-        
+
         targetWindow.scrollTo({
           top: offsetPosition,
           behavior: 'smooth'
         });
       }
-      
+
       // Update URL hash if possible (only for non-edit mode)
       if (!isEdit && !isEditPage) {
         try {
@@ -798,9 +796,9 @@ const handlemediaLink = (platform) => {
       // List all elements with IDs for debugging
       const allElementsWithIds = Array.from(targetDocument.querySelectorAll('[id]')).map(el => el.id);
       console.log('Available IDs:', allElementsWithIds);
-      
+
       // Also check for data attributes
-      const elementsWithDataId = Array.from(targetDocument.querySelectorAll('[data-section], [data-id]')).map(el => 
+      const elementsWithDataId = Array.from(targetDocument.querySelectorAll('[data-section], [data-id]')).map(el =>
         el.getAttribute('data-section') || el.getAttribute('data-id')
       );
       console.log('Available data-section/data-id:', elementsWithDataId);
@@ -851,7 +849,7 @@ const handlemediaLink = (platform) => {
 
     const containerWidth = container.clientWidth;
     const scrollAmount = containerWidth * 0.8; // Scroll 80% of visible width
-    
+
     if (!areTabsOverflowing) return;
 
     if (direction === "left") {
@@ -876,17 +874,17 @@ const handlemediaLink = (platform) => {
 
     const containerRect = container.getBoundingClientRect();
     const buttonRect = activeButton.getBoundingClientRect();
-    
+
     // Check if button is visible
-    const isVisible = buttonRect.left >= containerRect.left && 
-                     buttonRect.right <= containerRect.right;
-    
+    const isVisible = buttonRect.left >= containerRect.left &&
+      buttonRect.right <= containerRect.right;
+
     if (!isVisible) {
       // Calculate scroll position to center the active item
       const buttonCenter = activeButton.offsetLeft + (activeButton.offsetWidth / 2);
       const containerCenter = container.clientWidth / 2;
       const scrollPosition = buttonCenter - containerCenter;
-      
+
       container.scrollTo({
         left: Math.max(0, scrollPosition),
         behavior: 'smooth'
@@ -919,7 +917,7 @@ const handlemediaLink = (platform) => {
 
       const navbarHeight = 128;
       const currentScrollTop = targetWindow.pageYOffset || targetWindow.scrollY || 0;
-      
+
       // Find the section that's currently most visible
       let currentSection = null;
       let minDistance = Infinity;
@@ -928,14 +926,14 @@ const handlemediaLink = (platform) => {
         .filter(item => item.active && item.visible && item.id)
         .forEach(item => {
           const element = targetDocument.getElementById(item.id) ||
-                         targetDocument.querySelector(`[data-section="${item.id}"]`) ||
-                         targetDocument.querySelector(`[data-id="${item.id}"]`);
-          
+            targetDocument.querySelector(`[data-section="${item.id}"]`) ||
+            targetDocument.querySelector(`[data-id="${item.id}"]`);
+
           if (element) {
             const rect = element.getBoundingClientRect();
             const elementTop = rect.top + currentScrollTop;
             const distance = Math.abs(elementTop - currentScrollTop - navbarHeight);
-            
+
             if (distance < minDistance && rect.top <= navbarHeight + 100) {
               minDistance = distance;
               currentSection = item.id;
@@ -971,7 +969,7 @@ const handlemediaLink = (platform) => {
   };
   const getColorBrightness = (color) => {
     const rgb = color.match(/^#(\w{6})$/)?.[1];
-    if(!rgb) return 0;
+    if (!rgb) return 0;
     const r = parseInt(rgb.slice(0, 2), 16);
     const g = parseInt(rgb.slice(2, 4), 16);
     const b = parseInt(rgb.slice(4, 6), 16);
@@ -979,7 +977,7 @@ const handlemediaLink = (platform) => {
   };
   const { bodyFont } = getFonts(landingPageData);
 
-  
+
   return (
     <div
       style={{
@@ -1002,13 +1000,13 @@ const handlemediaLink = (platform) => {
             <img src={logo} alt="Logo" className="mr-10 w-auto h-8" />
           </div>
           <div className="flex gap-3 justify-end w-full flex-wrap">
-           
+
             {/* Save/Bookmark Button - Icon only on mobile */}
             <button
               style={{
                 color: getColor("primary", 800),
                 borderColor: getColor("primary", 800),
-                border:"1px solid",
+                border: "1px solid",
                 height: "45px",
                 display: "flex",
                 alignItems: "center",
@@ -1027,7 +1025,7 @@ const handlemediaLink = (platform) => {
               style={{
                 color: getColor("primary", 800),
                 borderColor: getColor("primary", 800),
-                border:"1px solid",
+                border: "1px solid",
                 height: "45px",
                 display: "flex",
                 alignItems: "center",
@@ -1048,7 +1046,7 @@ const handlemediaLink = (platform) => {
                 style={{
                   backgroundColor: getColor("primary", 500),
                   color: textColor,
-                  
+
                   height: "45px",
                   display: "flex",
                   alignItems: "center",
@@ -1064,65 +1062,65 @@ const handlemediaLink = (platform) => {
         </div>
       </header>
       <AntModal
-              title={null}
-              visible={modalVisible}
-              onCancel={handleModalClose}
-              footer={null}
-              centered
-              // style={{ width: 300 }}
-              bodyStyle={{ padding: '32px', textAlign: 'center', borderRadius: '16px' }}
-            >
-              <div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
-                  {getTranslation(landingPageData?.lang, 'pagePublished')}<CheckCircleFilled style={{ color: 'green', fontSize: 24,marginLeft: '8px' }} />
-                </div>
-                <div style={{ color: '#888', marginBottom: '24px' }}>
-                  {getTranslation(landingPageData?.lang, 'letsShareWithTheWorld')}
-                </div>
+        title={null}
+        visible={modalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        centered
+        // style={{ width: 300 }}
+        bodyStyle={{ padding: '32px', textAlign: 'center', borderRadius: '16px' }}
+      >
+        <div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+            {getTranslation(landingPageData?.lang, 'pagePublished')}<CheckCircleFilled style={{ color: 'green', fontSize: 24, marginLeft: '8px' }} />
+          </div>
+          <div style={{ color: '#888', marginBottom: '24px' }}>
+            {getTranslation(landingPageData?.lang, 'letsShareWithTheWorld')}
+          </div>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: '#f5f5f5',
-                    borderRadius: '12px',
-                    padding: '10px 16px',
-                    marginBottom: '16px',
-                    wordBreak: 'break-all'
-                  }}
-                >
-                  <span style={{ color: '#000' }}>{link}</span>
-                  <AntButton type="primary" onClick={handleCopyLink}>
-                    {getTranslation(landingPageData?.lang, 'copyLink')} <LinkOutlined />
-                  </AntButton>
-                </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: '#f5f5f5',
+              borderRadius: '12px',
+              padding: '10px 16px',
+              marginBottom: '16px',
+              wordBreak: 'break-all'
+            }}
+          >
+            <span style={{ color: '#000' }}>{link}</span>
+            <AntButton type="primary" onClick={handleCopyLink}>
+              {getTranslation(landingPageData?.lang, 'copyLink')} <LinkOutlined />
+            </AntButton>
+          </div>
 
-                <div style={{ color: '#666', marginBottom: '10px' }}>
-                  {getTranslation(landingPageData?.lang, 'shareWithYourLovedOnes')}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
-                  <AntButton shape="circle"  onClick={()=>handlemediaLink('linkedin')}>
-                    <img src="https://www.linkedin.com/favicon.ico" style={{ width: 20, height: 20 }} />
-                  </AntButton>
-                  <AntButton shape="circle" onClick={()=>handlemediaLink('instagram')}>
-                    <img src="https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png" style={{ width: 20, height: 20 }} />
-                  </AntButton>
-                  <AntButton shape="circle"  onClick={()=>handlemediaLink('facebook')}>
-                    <img src="https://www.facebook.com/favicon.ico" style={{ width: 20, height: 20 }} />
-                  </AntButton>
-                  <AntButton shape="circle"  onClick={()=>handlemediaLink('tiktok')}>
-                    <img src="/icons/tiktok.png" style={{ width: 30, height: 30 }} />
-                  </AntButton>
-                  <AntButton shape="circle"  onClick={()=>handlemediaLink('twitter')}>
-                    <img src="/icons/x.png" style={{ width: 18, height: 18 }} />
-                  </AntButton>
-                  <AntButton shape="circle" onClick={() => handlemediaLink('email')}>
-                    <img src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" style={{ width: 24, height: 24 }} />
-                  </AntButton>
-                </div>
-              </div>
-            </AntModal>
+          <div style={{ color: '#666', marginBottom: '10px' }}>
+            {getTranslation(landingPageData?.lang, 'shareWithYourLovedOnes')}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
+            <AntButton shape="circle" onClick={() => handlemediaLink('linkedin')}>
+              <img src="https://www.linkedin.com/favicon.ico" style={{ width: 20, height: 20 }} />
+            </AntButton>
+            <AntButton shape="circle" onClick={() => handlemediaLink('instagram')}>
+              <img src="https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png" style={{ width: 20, height: 20 }} />
+            </AntButton>
+            <AntButton shape="circle" onClick={() => handlemediaLink('facebook')}>
+              <img src="https://www.facebook.com/favicon.ico" style={{ width: 20, height: 20 }} />
+            </AntButton>
+            <AntButton shape="circle" onClick={() => handlemediaLink('tiktok')}>
+              <img src="/icons/tiktok.png" style={{ width: 30, height: 30 }} />
+            </AntButton>
+            <AntButton shape="circle" onClick={() => handlemediaLink('twitter')}>
+              <img src="/icons/x.png" style={{ width: 18, height: 18 }} />
+            </AntButton>
+            <AntButton shape="circle" onClick={() => handlemediaLink('email')}>
+              <img src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" style={{ width: 24, height: 24 }} />
+            </AntButton>
+          </div>
+        </div>
+      </AntModal>
       {/* Apply Form Creation Modal */}
       <AntModal
         title="Create your application form"
@@ -1141,15 +1139,14 @@ const handlemediaLink = (platform) => {
               How would you like to create your application form? Contact information will be collected first.
             </p>
           </div>
-          
+
           {/* AI vs Manual Form Creation */}
           <div className="space-y-4 mb-8">
-            <div 
-              className={`border-2 rounded-xl p-6 cursor-pointer transition-all ${
-                useAIFormCreation 
-                  ? 'border-[#5207CD] bg-purple-50' 
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
+            <div
+              className={`border-2 rounded-xl p-6 cursor-pointer transition-all ${useAIFormCreation
+                ? 'border-[#5207CD] bg-purple-50'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
               onClick={() => setUseAIFormCreation(true)}
             >
               <div className="flex items-start">
@@ -1170,9 +1167,9 @@ const handlemediaLink = (platform) => {
                 </div>
               </div>
             </div>
-         
+
           </div>
-          
+
           <div className="flex justify-end items-center gap-3">
             <AntButton
               onClick={() => {
@@ -1183,7 +1180,7 @@ const handlemediaLink = (platform) => {
             >
               Cancel
             </AntButton>
-           
+
             <AntButton
               onClick={async () => {
                 if (useAIFormCreation) {
@@ -1195,7 +1192,7 @@ const handlemediaLink = (platform) => {
                     applyType: 'form',
                     cta2Link: '#apply'
                   };
-                  
+
                   try {
                     await CrudService.update("LandingPageData", lpId, updateData);
                     setLandingPageData((d) => ({
@@ -1215,10 +1212,10 @@ const handlemediaLink = (platform) => {
               disabled={isGeneratingForm}
               className="px-6 py-2 bg-[#5207CD] text-white rounded-md hover:bg-[#0C7CE6]"
             >
-              {isGeneratingForm 
-                ? '🤖 Generating...' 
-                : useAIFormCreation 
-                  ? '🤖 Generate with AI' 
+              {isGeneratingForm
+                ? '🤖 Generating...'
+                : useAIFormCreation
+                  ? '🤖 Generate with AI'
                   : 'Create Form'
               }
             </AntButton>
@@ -1226,7 +1223,7 @@ const handlemediaLink = (platform) => {
         </div>
       </AntModal>
 
-{/* Sections navigation */}
+      {/* Sections navigation */}
       <div
         className="h-16 w-full transition-all duration-100 z-[88888] border-t border-gray-200"
         style={{
@@ -1249,101 +1246,101 @@ const handlemediaLink = (platform) => {
             position: "relative"
           }}
         >
-        {/* Left gradient overlay - shows when scrolled right */}
-        <div 
-          className="absolute left-2 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
-          style={{
-            background: "linear-gradient(to right, white 60%, transparent)",
-            zIndex: 10,
-            opacity: areTabsOverflowing && scrollPosition > 0 ? 1 : 0,
-          }}
-        />
-        
-        {/* Right gradient overlay - shows when can scroll more to the right */}
-        <div 
-          className="absolute right-2 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
-          style={{
-            background: "linear-gradient(to left, white 60%, transparent)",
-            zIndex: 10,
-            opacity: areTabsOverflowing && scrollRef.current && scrollPosition < (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) ? 1 : 0,
-          }}
-        />
+          {/* Left gradient overlay - shows when scrolled right */}
+          <div
+            className="absolute left-2 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
+            style={{
+              background: "linear-gradient(to right, white 60%, transparent)",
+              zIndex: 10,
+              opacity: areTabsOverflowing && scrollPosition > 0 ? 1 : 0,
+            }}
+          />
 
-        <button
-          onClick={() => scrollTabs("left")}
-          className="absolute left-2 z-20 p-1 rounded-full bg-white shadow-md hover:bg-gray-200 flex-shrink-0"
-          style={{ zIndex: 20, display: areTabsOverflowing ? 'block' : 'none' }}
-        >
-          <ChevronLeft size={20} style={{ color: getColor("primary", 500) }} />
-        </button>
+          {/* Right gradient overlay - shows when can scroll more to the right */}
+          <div
+            className="absolute right-2 top-0 bottom-0 w-8 z-10 pointer-events-none transition-opacity duration-300"
+            style={{
+              background: "linear-gradient(to left, white 60%, transparent)",
+              zIndex: 10,
+              opacity: areTabsOverflowing && scrollRef.current && scrollPosition < (scrollRef.current.scrollWidth - scrollRef.current.clientWidth) ? 1 : 0,
+            }}
+          />
 
-        <div
-          ref={scrollRef}
-          className="flex items-center justify-center overflow-x-auto scrollbar-hide flex-1"
-          style={{
-            scrollBehavior: "smooth",
-            minWidth: 0,  // Allow flex item to shrink below its content size
-            WebkitOverflowScrolling: "touch",  // Smooth scrolling on iOS
-            gap: "0.5rem"  // Add consistent spacing between items
-          }}
-        >
-        {   
+          <button
+            onClick={() => scrollTabs("left")}
+            className="absolute left-2 z-20 p-1 rounded-full bg-white shadow-md hover:bg-gray-200 flex-shrink-0"
+            style={{ zIndex: 20, display: areTabsOverflowing ? 'block' : 'none' }}
+          >
+            <ChevronLeft size={20} style={{ color: getColor("primary", 500) }} />
+          </button>
 
-
-    landingPageData?.menuItems
-                  ?.filter((tab) => !!tab?.active && !!tab?.visible && !!tab?.id)
-                  ?.map((tab) => {
-                    return {
-                      ...tab,
-                      id: tab.id||tab.key,
-                    }
-                  })
-                  ?.sort((a, b) => (a.sort || 0) - (b.sort || 0))
-                  ?.map((tab, index) => (
-                    <button
-                      key={index}
-                      data-tab-id={tab.id}
-                      onClick={() => handleNavigate(tab.id)}
-                      className="px-3 py-2 md:px-6 md:py-4 text-sm md:text-base whitespace-nowrap transition-all flex-shrink-0 relative"
-                      style={{
-                        color: textColor === "#000000" ? textColor : getColor("primary", 500),
-                        fontWeight: currentHash === tab.id ? "700" : "400",
-                        fontFamily: bodyFont?.family,
-                        marginRight: "8px"
-                      }}
-                      onMouseEnter={(e) => {
-                        // Use text-shadow to create bold effect without layout shift
-                        e.currentTarget.style.textShadow = "0.5px 0 0 currentColor";
-                      }}
-                      onMouseLeave={(e) => {
-                        // Remove text-shadow, but keep actual bold for active items
-                        if (currentHash === tab.id) {
-                          e.currentTarget.style.textShadow = "none";
-                        } else {
-                          e.currentTarget.style.textShadow = "none";
-                        }
-                      }}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-              </div>
+          <div
+            ref={scrollRef}
+            className="flex items-center justify-center overflow-x-auto scrollbar-hide flex-1"
+            style={{
+              scrollBehavior: "smooth",
+              minWidth: 0,  // Allow flex item to shrink below its content size
+              WebkitOverflowScrolling: "touch",  // Smooth scrolling on iOS
+              gap: "0.5rem"  // Add consistent spacing between items
+            }}
+          >
+            {
 
 
-        <button
-          onClick={() => scrollTabs("right")}
-          className="absolute right-2 z-20 p-1 rounded-full bg-white shadow-md hover:bg-gray-100 flex-shrink-0"
-          style={{ zIndex: 20, display: areTabsOverflowing ? 'block' : 'none' }}
-        >
-          <ChevronRight size={20} style={{ color: getColor("primary", 500) }} />
-        </button>
+              landingPageData?.menuItems
+                ?.filter((tab) => !!tab?.active && !!tab?.visible && !!tab?.id)
+                ?.map((tab) => {
+                  return {
+                    ...tab,
+                    id: tab.id || tab.key,
+                  }
+                })
+                ?.sort((a, b) => (a.sort || 0) - (b.sort || 0))
+                ?.map((tab, index) => (
+                  <button
+                    key={index}
+                    data-tab-id={tab.id}
+                    onClick={() => handleNavigate(tab.id)}
+                    className="px-3 py-2 md:px-6 md:py-4 text-sm md:text-base whitespace-nowrap transition-all flex-shrink-0 relative"
+                    style={{
+                      color: textColor === "#000000" ? textColor : getColor("primary", 500),
+                      fontWeight: currentHash === tab.id ? "700" : "400",
+                      fontFamily: bodyFont?.family,
+                      marginRight: "8px"
+                    }}
+                    onMouseEnter={(e) => {
+                      // Use text-shadow to create bold effect without layout shift
+                      e.currentTarget.style.textShadow = "0.5px 0 0 currentColor";
+                    }}
+                    onMouseLeave={(e) => {
+                      // Remove text-shadow, but keep actual bold for active items
+                      if (currentHash === tab.id) {
+                        e.currentTarget.style.textShadow = "none";
+                      } else {
+                        e.currentTarget.style.textShadow = "none";
+                      }
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+          </div>
+
+
+          <button
+            onClick={() => scrollTabs("right")}
+            className="absolute right-2 z-20 p-1 rounded-full bg-white shadow-md hover:bg-gray-100 flex-shrink-0"
+            style={{ zIndex: 20, display: areTabsOverflowing ? 'block' : 'none' }}
+          >
+            <ChevronRight size={20} style={{ color: getColor("primary", 500) }} />
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview=false, isMultiJob=false }) => {
+const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscreen, setFullscreen, lpId, isEdit, setLandingPageData, isMovilePreview = false, isMultiJob = false }) => {
   if (landingPageData?.templateId?.toLowerCase() === "3")
     return (
       <Template3
@@ -1376,9 +1373,9 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
       />
     );
   return (
-    <Template1 
-      landingPageData={landingPageData} 
-      onClickApply={onClickApply} 
+    <Template1
+      landingPageData={landingPageData}
+      onClickApply={onClickApply}
       showBackToEditButton={showBackToEditButton}
       fullscreen={fullscreen}
       setFullscreen={setFullscreen}

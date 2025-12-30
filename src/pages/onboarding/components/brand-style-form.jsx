@@ -135,7 +135,7 @@ export const defaultLandingPageData = {
         },
         "phone": {
           "visible": true,
-          "required": false,
+          "required": true,
           "label": "Phone",
           "placeholder": "Enter your phone number"
         }

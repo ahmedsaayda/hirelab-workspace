@@ -256,6 +256,7 @@ function OnlineApply() {
                 inputClass="dark:!bg-gray-900"
                 dropdownClass="dark:!text-black"
                 buttonClass="dark:!bg-gray-900"
+                required
               />
               <div className="flex gap-2 items-center mt-1">
                 <Checkbox

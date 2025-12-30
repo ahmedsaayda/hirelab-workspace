@@ -750,7 +750,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
               },
               phone: {
                 visible: true,
-                required: false,
+                required: true,
                 label: getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone',
                 placeholder: getTranslation(landingPageData?.lang || 'en', 'phonePlaceholder') || 'Enter your phone number'
               }

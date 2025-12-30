@@ -716,7 +716,7 @@ export default function FormEdit({ paramsId }) {
                   },
                   phone: {
                     visible: true,
-                    required: false,
+                    required: true,
                     label:
                       getTranslation(landingPageData?.lang, "phone") || "Phone",
                     placeholder: "",
@@ -2199,7 +2199,7 @@ export default function FormEdit({ paramsId }) {
               { key: "firstName", label: "First Name", required: true },
               { key: "lastName", label: "Last Name", required: true },
               { key: "email", label: "Email", required: true },
-              { key: "phone", label: "Phone Number", required: false },
+              { key: "phone", label: "Phone Number", required: true },
             ].map((contactField) => (
               <div
                 key={contactField.key}
