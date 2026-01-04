@@ -1,4 +1,5 @@
 import {
+  DatePicker,
   Divider,
   Popconfirm,
   Select,
@@ -11,9 +12,9 @@ import {
 } from "antd";
 import Search from "antd/es/input/Search";
 import moment from "moment";
+import dayjs from "dayjs";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactCountryFlag from "react-country-flag";
-import DatePicker from "react-datepicker";
 import { CiLink } from "react-icons/ci";
 import { FaEdit, FaPlusCircle, FaUniversity } from "react-icons/fa";
 import { FaClover } from "react-icons/fa6";
@@ -511,12 +512,15 @@ const CVTemplate = ({ isEditable = false, finishComponent, CVData }) => {
                               <div>
                                 <DatePicker
                                   className="dark:bg-gray-900"
-                                  selected={
-                                    selectedBirthday ??
-                                    new Date(candidateData?.cv?.birthday)
+                                  value={
+                                    selectedBirthday
+                                      ? dayjs(selectedBirthday)
+                                      : candidateData?.cv?.birthday
+                                        ? dayjs(candidateData?.cv?.birthday)
+                                        : undefined
                                   }
-                                  onChange={handleDateChange}
-                                  maxDate={new Date()}
+                                  onChange={(date) => handleDateChange(date ? date.toDate() : null)}
+                                  maxDate={dayjs()}
                                 />
                               </div>
                               <div>
@@ -1128,27 +1132,27 @@ const CVTemplate = ({ isEditable = false, finishComponent, CVData }) => {
                   <div>
                     <DatePicker
                       className="dark:bg-gray-900"
-                      selected={
+                      value={
                         selectedDate === false
-                          ? new Date()
+                          ? dayjs()
                           : selectedDate
-                          ? selectedDate
+                          ? dayjs(selectedDate)
                           : candidateData?.cv?.[
                               dateEditModalOpen?.experience
                             ]?.find?.(
                               (e) => e._id === dateEditModalOpen?._id
                             )?.[dateEditModalOpen?.start]
-                          ? new Date(
+                          ? dayjs(
                               candidateData?.cv?.[
                                 dateEditModalOpen?.experience
                               ]?.find?.(
                                 (e) => e._id === dateEditModalOpen?._id
                               )?.[dateEditModalOpen?.start]
                             )
-                          : new Date()
+                          : dayjs()
                       }
-                      onChange={(e) => setSelectedDate(e)}
-                      maxDate={new Date()}
+                      onChange={(date) => setSelectedDate(date ? date.toDate() : null)}
+                      maxDate={dayjs()}
                     />
                   </div>
                   {["ending", "expiry"].includes(

@@ -4,6 +4,7 @@ import {
   Alert,
   Badge,
   Button,
+  DatePicker,
   Modal,
   Progress,
   Space,
@@ -13,6 +14,7 @@ import {
 } from "antd";
 import classNames from "classnames";
 import moment from "moment";
+import dayjs from "dayjs";
 import React, {
   Fragment,
   useCallback,
@@ -21,7 +23,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import DatePicker from "react-datepicker";
 import { FaFilter } from "react-icons/fa";
 import { GrInfo, GrValidate } from "react-icons/gr";
 import { RiSortAsc } from "react-icons/ri";
@@ -518,27 +519,28 @@ const PartnerUsers = () => {
           <div>
             <DatePicker
               className="dark:bg-gray-900"
-              placeholderText="Adjusted trial end date"
-              selected={
+              placeholder="Adjusted trial end date"
+              value={
                 users?.find?.((a) => a._id === grantTrialModal)
                   ?.partnerGrantedTrialEnd
-                  ? new Date(
+                  ? dayjs(
                       users?.find?.(
                         (a) => a._id === grantTrialModal
                       )?.partnerGrantedTrialEnd
                     )
                   : undefined
               }
-              onChange={(e) => {
+              onChange={(date) => {
+                const dateValue = date ? date.toDate() : null;
                 PartnerService.updateUser(grantTrialModal, {
-                  partnerGrantedTrialEnd: e,
+                  partnerGrantedTrialEnd: dateValue,
                 });
                 setUsers((users) => {
                   const current = [...users];
                   const user = current?.find?.(
                     (a) => a._id === grantTrialModal
                   );
-                  if (user) user.partnerGrantedTrialEnd = e;
+                  if (user) user.partnerGrantedTrialEnd = dateValue;
                   if (user) setSoftValue(user);
 
                   return current;

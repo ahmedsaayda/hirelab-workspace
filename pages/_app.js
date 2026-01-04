@@ -6,7 +6,6 @@ import "./index.css";
 import "./style/index.scss";
 import "react-phone-input-2/lib/style.css";
 import "allotment/dist/style.css";
-import "react-datepicker/dist/react-datepicker.css";
 import "react-chat-widget/lib/styles.css";
 import "react-alice-carousel/lib/alice-carousel.css";
 import "../src/pages/Landingpage/components/Sharedstyle/customScrollBar.css"
