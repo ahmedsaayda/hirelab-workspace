@@ -930,6 +930,10 @@ export default function AdsEdit({ paramsId }) {
       ? launchSummary.editorAds._adSets : [];
     const localAdSets = Array.isArray(adsData?._adSets) ? adsData._adSets : [];
     const metaSets = Array.isArray(launchSummary?.adSets) ? launchSummary.adSets : [];
+    
+    // Check if localAdSets has been initialized (adsData._adSets exists, even if empty)
+    // If initialized, localAdSets is the source of truth for which ad sets exist
+    const localAdSetsInitialized = adsData?._adSets !== undefined;
 
     // Create a map of Meta ad sets by ID for quick lookup
     const metaSetMap = new Map();
@@ -944,14 +948,18 @@ export default function AdsEdit({ paramsId }) {
     const localMap = new Map(localAdSets.map((s) => [s.id, s]));
     const mergedAdSets = [
       // For ad sets that exist in both, prefer the localAdSets version (most recent local state)
-      ...editorAdSets.map((s) => {
-        const local = localMap.get(s.id);
-        if (local) {
-          // Merge: use local state but keep other fields from editor if not in local
-          return { ...s, ...local };
-        }
-        return s;
-      }),
+      // If localAdSets has been initialized, only include editorAdSets items that also exist in localAdSets
+      // (this handles the deletion case where an ad set was removed from localAdSets)
+      ...editorAdSets
+        .filter((s) => !localAdSetsInitialized || localMap.has(s.id))
+        .map((s) => {
+          const local = localMap.get(s.id);
+          if (local) {
+            // Merge: use local state but keep other fields from editor if not in local
+            return { ...s, ...local };
+          }
+          return s;
+        }),
       // Add any ad sets that are ONLY in localAdSets (newly created, not yet in launchSummary)
       ...localAdSets.filter((s) => !editorAdSets.some((e) => e.id === s.id)),
     ];
