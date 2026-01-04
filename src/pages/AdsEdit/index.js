@@ -715,18 +715,46 @@ export default function AdsEdit({ paramsId }) {
     });
   }, []);
 
-  // Wait until preview has content
-  const waitForPreviewRender = async (timeoutMs = 3000) => {
+  // Wait until preview has content (and optionally matches expected aspect ratio)
+  const waitForPreviewRender = async (timeoutMs = 3000, expectedFormat = null) => {
     const start = Date.now();
+    let lastNodeInfo = null;
+    
     while (Date.now() - start < timeoutMs) {
       const node = captureRef.current;
       if (node && node.childNodes && node.childNodes.length > 0 && node.clientWidth > 0 && node.clientHeight > 0) {
-        return true;
+        const actualW = node.clientWidth;
+        const actualH = node.clientHeight;
+        lastNodeInfo = { actualW, actualH };
+        
+        // If expected format provided, verify dimensions match (not just aspect ratio)
+        if (expectedFormat?.width && expectedFormat?.height) {
+          // Check if the actual dimensions match the expected format
+          // The ref div should have explicit width/height style matching the format
+          const widthMatch = Math.abs(actualW - expectedFormat.width) < 10; // 10px tolerance
+          const heightMatch = Math.abs(actualH - expectedFormat.height) < 10;
+          
+          if (widthMatch && heightMatch) {
+            console.log(`[waitForPreviewRender] Format ${expectedFormat.id} ready: ${actualW}x${actualH}`);
+            return true;
+          }
+          // Wrong dimensions - keep waiting for React to re-render
+        } else {
+          return true;
+        }
       }
-      // small delay
       // eslint-disable-next-line no-await-in-loop
-      await new Promise((r) => setTimeout(r, 120));
+      await new Promise((r) => setTimeout(r, 100));
     }
+    
+    // Timeout - DO NOT proceed if we expected a specific format but got wrong dimensions
+    if (expectedFormat && lastNodeInfo) {
+      const expected = `${expectedFormat.width}x${expectedFormat.height}`;
+      const actual = `${lastNodeInfo.actualW}x${lastNodeInfo.actualH}`;
+      console.error(`[waitForPreviewRender] TIMEOUT: Expected ${expectedFormat.id} (${expected}) but got ${actual}. NOT capturing.`);
+      return false; // Signal to caller not to capture
+    }
+    console.warn("[waitForPreviewRender] Timeout with no node info");
     return false;
   };
 
@@ -1410,8 +1438,38 @@ export default function AdsEdit({ paramsId }) {
           // Switch to this format
           setSelectedFormat(format.id);
           
+          // IMPORTANT: Wait for React to process the format change before rendering.
+          // This needs to be long enough for:
+          // 1. React to schedule and apply the state update
+          // 2. The AdPreview component to re-render with new format dimensions
+          // 3. Any lazy-loaded template to load and render
           // eslint-disable-next-line no-await-in-loop
-          await waitForPreviewRender(4000);
+          await new Promise((r) => setTimeout(r, 1200));
+          
+          // Now wait for the preview to be fully rendered with correct dimensions
+          // eslint-disable-next-line no-await-in-loop
+          const formatReady = await waitForPreviewRender(8000, format);
+          
+          if (!formatReady) {
+            // Format dimensions don't match - try once more with extra delay
+            appendPrepareMessage(`⚠ ${format.label} dimensions not ready, retrying...`);
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, 2000));
+            // eslint-disable-next-line no-await-in-loop
+            const retryReady = await waitForPreviewRender(5000, format);
+            if (!retryReady) {
+              appendPrepareMessage(`❌ ${format.label} failed for ${stepLabel} - skipping`);
+              console.error(`[approveCreatives] Format ${format.id} failed to render correctly for variant ${v.id}`);
+              // Continue to next format instead of failing entirely
+              // eslint-disable-next-line no-continue
+              continue;
+            }
+          }
+          
+          // Additional small delay to ensure all paint operations are complete
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 400));
+          
           // eslint-disable-next-line no-await-in-loop
           const url = await renderCurrentPreviewToCloudinary(format);
           

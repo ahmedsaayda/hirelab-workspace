@@ -1804,41 +1804,10 @@ export default function Launch({ paramsId }) {
             )}
 
             {activeStep === "creatives" && (
-              <div>
-                <div className="text-sm font-semibold text-[#101828] mb-2">Creatives (from Ads Editor)</div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                  {Object.keys(summary?.editorAds || {})
-                    .filter((k) => k !== "_publish")
-                    .map((adType) => (summary.editorAds[adType]?.variants || []).map((v) => {
-                      const img = v.publishImage || v.image;
-                      const isPublished = !!v?.publish?.adId;
-                      const isApproved = !!v?.approved && !!(v.publishImage || v.image);
-                      const badgeLabel = isPublished ? "Published" : isApproved ? "Approved" : "Needs approval";
-                      const badgeClass = isPublished
-                        ? "text-[#0a8f63] border-[#0a8f63]"
-                        : isApproved
-                          ? "text-[#5207CD] border-[#5207CD]"
-                          : "text-[#475467] border-[#98a2b3]";
-                      return (
-                        <div key={`${adType}-${v.id}`} className="rounded-lg border border-[#eaecf0] overflow-hidden">
-                          <div className="bg-gray-50 aspect-square">
-                            {img ? (
-                              <img src={img} alt={v.title} className="object-cover w-full h-full" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-[#98a2b3] text-xs">No image</div>
-                            )}
-                          </div>
-                          <div className="p-2 text-xs">
-                            <div className="font-medium truncate">{v.title || v.id}</div>
-                            <div className={`inline-block mt-1 px-2 py-0.5 rounded-full border ${badgeClass}`}>
-                              {badgeLabel}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }))}
-                </div>
-              </div>
+              <CreativesPreview 
+                editorAds={summary?.editorAds} 
+                lpId={lpId}
+              />
             )}
           </div>
         </div>
@@ -1847,4 +1816,212 @@ export default function Launch({ paramsId }) {
   );
 }
 
+// Creatives Preview Component - readonly preview of approved creatives
+function CreativesPreview({ editorAds, lpId }) {
+  const [selectedFormat, setSelectedFormat] = useState("square");
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  
+  const AD_FORMATS = [
+    { id: "story", label: "Story (9:16)", width: 1080, height: 1920 },
+    { id: "square", label: "Square (1:1)", width: 1080, height: 1080 },
+    { id: "portrait", label: "Portrait (4:5)", width: 1080, height: 1350 },
+  ];
+
+  // Flatten all variants from all ad types
+  const allVariants = React.useMemo(() => {
+    const variants = [];
+    Object.keys(editorAds || {})
+      .filter((k) => !k.startsWith('_'))
+      .forEach((adType) => {
+        (editorAds[adType]?.variants || []).forEach((v) => {
+          variants.push({ ...v, adType });
+        });
+      });
+    return variants;
+  }, [editorAds]);
+
+  // Auto-select first variant
+  React.useEffect(() => {
+    if (!selectedVariant && allVariants.length > 0) {
+      setSelectedVariant(allVariants[0]);
+    }
+  }, [allVariants, selectedVariant]);
+
+  const getImageForFormat = (variant, format) => {
+    if (!variant) return null;
+    const publishImages = variant.publishImages || {};
+    return publishImages[format] || variant.publishImage || variant.image;
+  };
+
+  const currentImage = selectedVariant ? getImageForFormat(selectedVariant, selectedFormat) : null;
+
+  const getStatusInfo = (v) => {
+    const publishImages = v?.publishImages || {};
+    const isPublished = !!v?.publish?.adId || !!(v?.publishByAdSet && Object.values(v.publishByAdSet).some(p => p?.adId || p?.formats));
+    const hasApprovedImages = Object.keys(publishImages).length > 0 || !!v?.publishImage;
+    const isApproved = !!v?.approved && hasApprovedImages;
+    return { isPublished, isApproved, hasApprovedImages };
+  };
+
+  // Get preview container dimensions based on format
+  const getPreviewDimensions = () => {
+    const maxHeight = 480;
+    const format = AD_FORMATS.find(f => f.id === selectedFormat);
+    if (!format) return { width: 300, height: 300 };
+    const aspectRatio = format.width / format.height;
+    const height = maxHeight;
+    const width = Math.round(height * aspectRatio);
+    return { width, height };
+  };
+
+  const previewDims = getPreviewDimensions();
+
+  return (
+    <div className="space-y-4">
+      {/* Info Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="text-sm text-blue-800">
+          <p className="font-medium mb-1">Creatives are linked to this ad set</p>
+          <p className="text-blue-700">
+            These creatives were approved in the Ads Editor and are now linked to this ad set. 
+            If you need different creatives, <a href={`/ads-edit/${lpId}`} className="underline font-medium hover:text-blue-900">create a new ad set</a> with its own unique creatives.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-6">
+        {/* Variants List */}
+        <div className="w-72 flex-shrink-0">
+          <div className="text-sm font-semibold text-[#101828] mb-3">Approved Creatives</div>
+          <div className="space-y-2 max-h-[520px] overflow-y-auto pr-2">
+            {allVariants.map((v) => {
+              const { isPublished, isApproved } = getStatusInfo(v);
+              const publishImages = v.publishImages || {};
+              const thumbImg = publishImages.square || publishImages.portrait || publishImages.story || v.publishImage || v.image;
+              const isSelected = selectedVariant?.id === v.id;
+              const formatCount = Object.keys(publishImages).length;
+              
+              return (
+                <div
+                  key={`${v.adType}-${v.id}`}
+                  onClick={() => setSelectedVariant(v)}
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                    isSelected 
+                      ? "bg-[#5207CD]/10 border-2 border-[#5207CD]" 
+                      : "bg-white border border-[#eaecf0] hover:border-[#5207CD]/50 hover:shadow-sm"
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 shadow-sm">
+                    {thumbImg ? (
+                      <img src={thumbImg} alt={v.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#98a2b3] text-xs">No img</div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate text-[#101828]">{v.title || v.id}</div>
+                    <div className={`text-xs mt-0.5 ${isPublished ? "text-[#0a8f63]" : isApproved ? "text-[#5207CD]" : "text-[#98a2b3]"}`}>
+                      {isPublished ? "✓ Published" : isApproved ? "✓ Approved" : "Needs approval"}
+                    </div>
+                    {formatCount > 0 && (
+                      <div className="text-xs text-[#98a2b3] mt-1">{formatCount} format{formatCount > 1 ? 's' : ''} ready</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {allVariants.length === 0 && (
+              <div className="text-sm text-[#98a2b3] text-center py-8 bg-gray-50 rounded-lg">
+                No creatives found.<br/>
+                <a href={`/ads-edit/${lpId}`} className="text-[#5207CD] underline mt-2 inline-block">Go to Ads Editor</a>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Preview Panel */}
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-sm font-semibold text-[#101828]">Preview</div>
+            {/* Format Switcher */}
+            <div className="flex gap-2">
+              {AD_FORMATS.map((format) => (
+                <button
+                  key={format.id}
+                  onClick={() => setSelectedFormat(format.id)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
+                    selectedFormat === format.id
+                      ? "bg-[#5207CD] text-white"
+                      : "bg-white text-[#344054] border border-[#d0d5dd] hover:border-[#5207CD]"
+                  }`}
+                >
+                  {format.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Preview Image - Clean display */}
+          <div className="flex justify-center bg-[#f8f9fa] rounded-xl p-6 min-h-[520px] items-center">
+            <div 
+              className="rounded-lg overflow-hidden shadow-xl bg-white flex items-center justify-center"
+              style={{ width: `${previewDims.width}px`, height: `${previewDims.height}px` }}
+            >
+              {currentImage ? (
+                <img 
+                  src={currentImage} 
+                  alt={selectedVariant?.title || "Preview"} 
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-[#98a2b3]">
+                  <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm">{selectedVariant ? `No ${selectedFormat} preview` : "Select a creative"}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Selected Variant Info */}
+          {selectedVariant && (
+            <div className="mt-4 p-4 bg-white border border-[#eaecf0] rounded-lg">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0 mr-4">
+                  <div className="text-sm font-semibold text-[#101828]">{selectedVariant.title}</div>
+                  {selectedVariant.description && (
+                    <div className="text-xs text-[#475467] mt-1 line-clamp-2">{selectedVariant.description}</div>
+                  )}
+                </div>
+                <div className="flex gap-1.5 flex-shrink-0">
+                  {AD_FORMATS.map((fmt) => {
+                    const hasFormat = selectedVariant.publishImages?.[fmt.id];
+                    return (
+                      <button
+                        key={fmt.id}
+                        onClick={() => hasFormat && setSelectedFormat(fmt.id)}
+                        disabled={!hasFormat}
+                        className={`text-xs px-2 py-1 rounded transition-all ${
+                          selectedFormat === fmt.id
+                            ? "bg-[#5207CD] text-white"
+                            : hasFormat
+                              ? "bg-gray-100 text-[#344054] hover:bg-gray-200"
+                              : "bg-gray-50 text-[#d0d5dd] cursor-not-allowed"
+                        }`}
+                      >
+                        {fmt.id.charAt(0).toUpperCase() + fmt.id.slice(1)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
