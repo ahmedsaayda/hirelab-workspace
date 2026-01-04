@@ -1053,36 +1053,6 @@ export default function Variant1({ variant, brandData, landingPageData }) {
                   <mask id="mask43_4_694" style={{ maskType: 'luminance' }} maskUnits="userSpaceOnUse" x={684} y={361} width={609} height={117}>
                     <path d="M694.922 361.25H1282.14C1284.79 361.25 1287.33 362.302 1289.2 364.177C1291.08 366.052 1292.14 368.599 1292.14 371.25V467.646C1292.14 470.297 1291.08 472.844 1289.2 474.719C1287.33 476.594 1284.79 477.646 1282.14 477.646H694.922C692.271 477.646 689.729 476.594 687.849 474.719C685.974 472.844 684.922 470.297 684.922 467.646V371.25C684.922 368.599 685.974 366.052 687.849 364.177C689.729 362.302 692.271 361.25 694.922 361.25Z" fill="white" />
                   </mask>
-                  <g mask="url(#mask43_4_694)">
-                    <path d="M684.922 361.25H1292.36V477.646H684.922V361.25Z" fill="white" />
-                    {/* Logo inside white box */}
-                    {brandLogo && !logoFailed ? (
-                      <image
-                        href={brandLogo}
-                        x="710"
-                        y="375"
-                        width="340"
-                        height="90"
-                        preserveAspectRatio="xMidYMid meet"
-                        onError={() => setLogoFailed(true)}
-                      />
-                    ) : (
-                      <text
-                        x="880"
-                        y="420"
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        style={{
-                          fontFamily: "'Inter', sans-serif",
-                          fontSize: "42px",
-                          fontWeight: 700,
-                          fill: secondaryColor,
-                        }}
-                      >
-                        {brandName}
-                      </text>
-                    )}
-                  </g>
                 </g>
               </g>
             </g>

@@ -25,6 +25,12 @@ export const VARIANT_TEMPLATES = {
             description: "Contemporary style with gradient overlay",
             mediaType: "image",
         },
+        {
+            variantNumber: 4,
+            name: "Industrial",
+            description: "Simplistic style",
+            mediaType: "image",
+        },
     ],
     "employer-brand": [
         {
@@ -92,6 +98,9 @@ function RawTemplatePreview({ variantNumber, adTypeId, variant, brandData, landi
                             break;
                         case 3:
                             module = await import("./ads/JobAd/Square/Variant3.jsx");
+                            break;
+                        case 4:
+                            module = await import("./ads/JobAd/Square/Variant4.jsx");
                             break;
                         default:
                             module = await import("./ads/JobAd/Square/Variant1.jsx");

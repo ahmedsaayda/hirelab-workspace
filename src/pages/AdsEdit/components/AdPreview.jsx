@@ -120,21 +120,25 @@ export default function AdPreview({ variant, format, platform, brandData, landin
           1: () => import('./ads/JobAd/Story/Variant1.jsx').then(m => m.default),
           2: () => import('./ads/JobAd/Story/Variant2.jsx').then(m => m.default),
           3: () => import('./ads/JobAd/Story/Variant3.jsx').then(m => m.default),
+          4: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default),
         },
         square: {
           1: () => import('./ads/JobAd/Square/Variant1.jsx').then(m => m.default),
           2: () => import('./ads/JobAd/Square/Variant2.jsx').then(m => m.default),
           3: () => import('./ads/JobAd/Square/Variant3.jsx').then(m => m.default),
+          4: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default),
         },
         landscape: {
           1: () => import('./ads/JobAd/Landscape/Variant1.jsx').then(m => m.default),
           2: () => import('./ads/JobAd/Landscape/Variant2.jsx').then(m => m.default),
           3: () => import('./ads/JobAd/Landscape/Variant3.jsx').then(m => m.default),
+          4: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default),
         },
         portrait: {
           1: () => import('./ads/JobAd/Landscape/Variant1.jsx').then(m => m.default),
           2: () => import('./ads/JobAd/Landscape/Variant2.jsx').then(m => m.default),
           3: () => import('./ads/JobAd/Landscape/Variant3.jsx').then(m => m.default),
+          4: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default),
         },
       },
       // Employer brand ads - try multiple possible IDs
@@ -214,7 +218,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
     // - Most ad types only have Variant1 implemented -> always use 1
     // - Job ads have Variant1 + Variant2 -> alternate (same design set, different images)
     if (adTypeId === "job") {
-      const alt = ((Number(variantNumber) - 1) % 2) + 1; // 1,2,1,2...
+      const alt = ((Number(variantNumber) - 1) % 4) + 1;
       return variantsForTypeAndFormat?.[alt] || variantsForTypeAndFormat?.[1] || null;
     }
 
@@ -310,9 +314,11 @@ export default function AdPreview({ variant, format, platform, brandData, landin
                 height: `${height}px`,
                 transform: `scale(${contentScale})`,
                 transformOrigin: "center center",
+                cursor: "pointer",
+                userSelect: "none",
               }}
             >
-              <div ref={refEl} style={{ width: `${width}px`, height: `${height}px` }}>
+              <div ref={refEl} style={{ width: `${width}px`, height: `${height}px`, pointerEvents: "none" }}>
                 {content}
               </div>
             </div>
@@ -338,13 +344,21 @@ export default function AdPreview({ variant, format, platform, brandData, landin
              The TemplateComponent renders at full resolution (e.g. 1080px).
              We need to scale it down.
           */}
-          <div className="relative w-full" style={{ aspectRatio: format.aspectRatio === '1:1' ? '1/1' : '4/5' }}>
+          <div 
+            className="relative w-full" 
+            style={{ 
+              aspectRatio: format.aspectRatio === '1:1' ? '1/1' : '4/5',
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
             <div
               className="absolute top-0 left-0 origin-top-left"
               style={{
                 width: `${width}px`,
                 height: `${height}px`,
-                transform: `scale(${375 / width})` // Scale to fit phone width
+                transform: `scale(${375 / width})`, // Scale to fit phone width
+                pointerEvents: "none",
               }}
             >
               <div ref={refEl} style={{ width: `${width}px`, height: `${height}px` }}>

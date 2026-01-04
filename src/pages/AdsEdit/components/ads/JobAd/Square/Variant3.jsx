@@ -1349,36 +1349,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
                   <mask id="mask49_4_1708" style={{ maskType: 'luminance' }} maskUnits="userSpaceOnUse" x={724} y={76} width={608} height={117}>
                     <path d="M734.338 76.3333H1321.55C1324.2 76.3333 1326.75 77.3905 1328.62 79.2655C1330.5 81.1405 1331.55 83.6822 1331.55 86.3333V182.729C1331.55 185.385 1330.5 187.927 1328.62 189.802C1326.75 191.677 1324.2 192.729 1321.55 192.729H734.338C731.687 192.729 729.146 191.677 727.271 189.802C725.396 187.927 724.338 185.385 724.338 182.729V86.3333C724.338 83.6822 725.396 81.1405 727.271 79.2655C729.146 77.3905 731.687 76.3333 734.338 76.3333Z" fill="white" />
                   </mask>
-                  <g mask="url(#mask49_4_1708)">
-                    <path d="M724.338 76.3333H1331.78V192.729H724.338V76.3333Z" fill="white" />
-                    {/* Logo inside white box */}
-                    {brandLogo && !logoFailed ? (
-                      <image
-                        href={brandLogo}
-                        x="750"
-                        y="95"
-                        width="300"
-                        height="80"
-                        preserveAspectRatio="xMidYMid meet"
-                        onError={() => setLogoFailed(true)}
-                      />
-                    ) : (
-                      <text
-                        x="900"
-                        y="135"
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        style={{
-                          fontFamily: "'Inter', sans-serif",
-                          fontSize: "36px",
-                          fontWeight: 700,
-                          fill: secondaryColor,
-                        }}
-                      >
-                        {brandName}
-                      </text>
-                    )}
-                  </g>
+                  
                 </g>
               </g>
             </g>

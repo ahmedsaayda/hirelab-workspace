@@ -401,7 +401,7 @@ export const generateVariants = (lpData) => {
 
   const createVariant = (adType, i, image, extra = {}) => {
     const copy = generateCopyForAdType(adType, lpData, i);
-    const variantNumber = adType === "job" ? ((i % 3) + 1) : 1;
+    const variantNumber = adType === "job" ? ((i % 4) + 1) : 1;
     return {
       id: `${adType}-variant-${uuidv4().slice(0, 8)}`,
       // Image overlay fields
