@@ -1425,7 +1425,6 @@ export default function Launch({ paramsId }) {
                         setTouched((t) => ({ ...t, optimization: true }));
                       }}
                       options={[
-                        { label: "Apply Now (Conversion)", value: "Apply Now (Conversion)" },
                         { label: "Traffic", value: "OUTCOME_TRAFFIC" },
                         { label: "Leads", value: "LEADS" },
                       ]}
@@ -1885,7 +1884,7 @@ function CreativesPreview({ editorAds, lpId }) {
           <p className="font-medium mb-1">Creatives are linked to this ad set</p>
           <p className="text-blue-700">
             These creatives were approved in the Ads Editor and are now linked to this ad set. 
-            If you need different creatives, <a href={`/ads-edit/${lpId}`} className="underline font-medium hover:text-blue-900">create a new ad set</a> with its own unique creatives.
+            If you need different creatives, create a new ad set with its own unique creatives.
           </p>
         </div>
       </div>
@@ -1985,40 +1984,7 @@ function CreativesPreview({ editorAds, lpId }) {
             </div>
           </div>
 
-          {/* Selected Variant Info */}
-          {selectedVariant && (
-            <div className="mt-4 p-4 bg-white border border-[#eaecf0] rounded-lg">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0 mr-4">
-                  <div className="text-sm font-semibold text-[#101828]">{selectedVariant.title}</div>
-                  {selectedVariant.description && (
-                    <div className="text-xs text-[#475467] mt-1 line-clamp-2">{selectedVariant.description}</div>
-                  )}
-                </div>
-                <div className="flex gap-1.5 flex-shrink-0">
-                  {AD_FORMATS.map((fmt) => {
-                    const hasFormat = selectedVariant.publishImages?.[fmt.id];
-                    return (
-                      <button
-                        key={fmt.id}
-                        onClick={() => hasFormat && setSelectedFormat(fmt.id)}
-                        disabled={!hasFormat}
-                        className={`text-xs px-2 py-1 rounded transition-all ${
-                          selectedFormat === fmt.id
-                            ? "bg-[#5207CD] text-white"
-                            : hasFormat
-                              ? "bg-gray-100 text-[#344054] hover:bg-gray-200"
-                              : "bg-gray-50 text-[#d0d5dd] cursor-not-allowed"
-                        }`}
-                      >
-                        {fmt.id.charAt(0).toUpperCase() + fmt.id.slice(1)}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
+        
         </div>
       </div>
     </div>
