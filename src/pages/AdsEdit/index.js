@@ -1136,10 +1136,20 @@ export default function AdsEdit({ paramsId }) {
       content: "Are you sure you want to delete this variant?",
       okText: "Delete",
       okType: "danger",
-      onOk: () => {
+      onOk: async () => {
         const updatedVariants = currentVariants.filter(v => v.id !== variantId);
-        setAdsData(updateVariantsInData(updatedVariants));
-        message.success("Variant deleted");
+        const nextData = updateVariantsInData(updatedVariants);
+        setAdsData(nextData);
+        
+        // Save to backend
+        try {
+          await AdsService.saveAds(lpId, nextData);
+          lastSavedAdsHashRef.current = serializeAdsData(nextData);
+          message.success("Variant deleted");
+        } catch (err) {
+          console.error("Failed to save after delete:", err);
+          message.error("Variant deleted locally but failed to save to server");
+        }
       },
     });
   };
@@ -1377,27 +1387,51 @@ export default function AdsEdit({ paramsId }) {
 
       setAdsData(updatedAds);
 
-      // Render each approved variant via preview and upload to Cloudinary
-      const format = AD_FORMATS.find((f) => f.id === selectedFormat);
+      // Render each approved variant for ALL formats (story, square, portrait)
+      // Each format gets its own image stored in publishImages object
+      const totalSteps = variantsToPrepare.length * AD_FORMATS.length;
+      let currentStep = 0;
+      
       for (let index = 0; index < variantsToPrepare.length; index += 1) {
         const v = variantsToPrepare[index];
         const stepLabel = `${v.adTypeId} · ${v.title || v.id}`;
-        appendPrepareMessage(`Preparing ${index + 1}/${variantsToPrepare.length}: ${stepLabel}`);
+        
         setSelectedAdType(v.adTypeId);
         setSelectedVariant(v.id);
-        // eslint-disable-next-line no-await-in-loop
-        await waitForPreviewRender(4000);
-        // eslint-disable-next-line no-await-in-loop
-        const url = await renderCurrentPreviewToCloudinary(format);
+        
+        // Initialize publishImages object for this variant
+        const publishImages = {};
+        
+        // Render each format for this variant
+        for (const format of AD_FORMATS) {
+          currentStep += 1;
+          appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label})`);
+          
+          // Switch to this format
+          setSelectedFormat(format.id);
+          
+          // eslint-disable-next-line no-await-in-loop
+          await waitForPreviewRender(4000);
+          // eslint-disable-next-line no-await-in-loop
+          const url = await renderCurrentPreviewToCloudinary(format);
+          
+          publishImages[format.id] = url;
+          appendPrepareMessage(`✓ ${format.label} ready for ${stepLabel}`);
+        }
+        
         // Update in the correct creatives source (ad set or campaign level)
         const group = creativesSource[v.adTypeId];
         if (group?.variants) {
           const idx = group.variants.findIndex((x) => x.id === v.id);
           if (idx >= 0) {
-            group.variants[idx] = { ...group.variants[idx], publishImage: url };
+            group.variants[idx] = { 
+              ...group.variants[idx], 
+              publishImages,
+              // Keep publishImage for backwards compatibility (use square as default)
+              publishImage: publishImages.square || publishImages.story || publishImages.portrait,
+            };
           }
         }
-        appendPrepareMessage(`✓ Image ready for ${stepLabel}`);
       }
 
       // Make sure ad set creatives are updated in the main data object
