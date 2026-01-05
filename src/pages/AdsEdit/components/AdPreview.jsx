@@ -329,12 +329,12 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       return (
         <FeedContext
           brandData={brandData}
-          // Primary Text (above media)
+          // Primary Text (above media) - from Meta Ad Copy
           text={variant?.description || landingPageData?.heroDescription}
-          // Headline (below media)
-          title={variant?.title || landingPageData?.vacancyTitle}
-          // Description (below headline)
-          description={variant?.linkDescription || ""}
+          // Headline (below media) - from Meta Ad Copy, fallback to text overlay title
+          title={variant?.metaHeadline || variant?.title || landingPageData?.vacancyTitle}
+          // Description (below headline) - from Meta Ad Copy, fallback to text overlay linkDescription
+          description={variant?.metaDescription || variant?.linkDescription || ""}
           // CTA button
           ctaText={variant?.callToAction || "Learn More"}
         >
