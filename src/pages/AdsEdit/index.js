@@ -366,11 +366,13 @@ export default function AdsEdit({ paramsId }) {
     }
   }, [metaPixelDraft, lpId]);
 
-  const loadLaunchSummary = useCallback(async () => {
+  const loadLaunchSummary = useCallback(async (adSetIdOverride = null) => {
     if (!lpId) return;
     setLaunchSummaryLoading(true);
     try {
-      const res = await AdsLaunchService.getSummary(lpId, {});
+      // Pass adset param when viewing a specific ad set to get ad-set-level insights
+      const params = adSetIdOverride ? { adset: adSetIdOverride } : {};
+      const res = await AdsLaunchService.getSummary(lpId, params);
       setLaunchSummary(res?.data?.data || null);
     } catch (e) {
       // Ignore summary errors to keep Ads editor usable offline
@@ -1067,6 +1069,13 @@ export default function AdsEdit({ paramsId }) {
       setActiveAdSetId(null);
     }
   }, [activeAdSetId, activeAdSet]);
+
+  // Refetch launch summary with ad set ID when viewing a launched ad set (for ad-set-level insights)
+  useEffect(() => {
+    if (activeAdSetId && activeAdSetState === "launched") {
+      loadLaunchSummary(activeAdSetId);
+    }
+  }, [activeAdSetId, activeAdSetState, loadLaunchSummary]);
 
   // If user opens an ad set that is "ready" (creatives approved but not launched yet),
   // we always send them to the per-ad-set Launch page (no intermediate "open launch settings" view).
