@@ -72,22 +72,56 @@ const Integrations = () => {
     try {
       const resp = await MetaService.listAssets(workspaceId);
       const data = resp?.data?.data || {};
-      setAssets({
+      const newAssets = {
         adAccounts: data.adAccounts || [],
         pages: data.pages || [],
         instagramByPageId: data.instagramByPageId || {},
-      });
+      };
+      setAssets(newAssets);
+      
+      // Auto-sync Instagram account: if the selected page has a linked Instagram account,
+      // and the current selectedInstagramAccount is either null or doesn't match the linked account,
+      // update it to the correct one. This handles cases where the saved ID is stale/invalid.
+      if (selectedPage && newAssets.instagramByPageId[selectedPage]) {
+        const linkedIg = newAssets.instagramByPageId[selectedPage];
+        const correctIgId = typeof linkedIg === 'object' ? linkedIg?.id : linkedIg;
+        if (correctIgId && selectedInstagramAccount !== correctIgId) {
+          console.log("[Integrations] Auto-syncing Instagram account:", { 
+            old: selectedInstagramAccount, 
+            new: correctIgId,
+            pageId: selectedPage 
+          });
+          setSelectedInstagramAccount(correctIgId);
+        }
+      }
     } catch (e) {
       console.error("Failed to load Meta assets:", e);
       message.error("Failed to load Meta assets");
     } finally {
       setAssetsLoading(false);
     }
-  }, [workspaceId]);
+  }, [workspaceId, selectedPage, selectedInstagramAccount]);
 
   useEffect(() => {
     loadMetaStatus();
   }, [loadMetaStatus]);
+
+  // Sync Instagram account when assets or selectedPage changes
+  // This ensures stale Instagram IDs are replaced with the correct linked account
+  useEffect(() => {
+    if (selectedPage && assets.instagramByPageId[selectedPage]) {
+      const linkedIg = assets.instagramByPageId[selectedPage];
+      const correctIgId = typeof linkedIg === 'object' ? linkedIg?.id : linkedIg;
+      if (correctIgId && selectedInstagramAccount !== correctIgId) {
+        console.log("[Integrations] Syncing stale Instagram account:", { 
+          old: selectedInstagramAccount, 
+          new: correctIgId,
+          pageId: selectedPage 
+        });
+        setSelectedInstagramAccount(correctIgId);
+      }
+    }
+  }, [assets.instagramByPageId, selectedPage]);
 
   // Check for OAuth callback success
   useEffect(() => {
@@ -169,12 +203,19 @@ const Integrations = () => {
     const linkedIg = assets.instagramByPageId[pageId];
     // Handle both old format (string ID) and new format (object with id, username)
     const igId = typeof linkedIg === 'object' ? linkedIg?.id : linkedIg;
-    setSelectedInstagramAccount(igId || null);
+    
+    // Only update Instagram if the API returned one for this page
+    // Don't clear an existing stored value just because API didn't return data (permissions issue)
+    if (igId) {
+      setSelectedInstagramAccount(igId);
+    }
+    // If no igId from API, keep the existing selectedInstagramAccount (it might be the saved value)
   };
 
-  // Get Instagram options for the selected page
+  // Get Instagram options for the selected page - ONLY from Meta API data
   const getInstagramOptions = () => {
     if (!selectedPage) return [];
+    
     const linkedIg = assets.instagramByPageId[selectedPage];
     if (!linkedIg) return [];
     
@@ -185,16 +226,12 @@ const Integrations = () => {
     
     if (!igId) return [];
     
-    // Build label with username if available
     let label = igUsername ? `@${igUsername}` : (igName || `Instagram Account`);
-    if (igId && !igUsername) {
+    if (!igUsername && !igName) {
       label += ` (ID: ${igId})`;
     }
     
-    return [{
-      value: igId,
-      label,
-    }];
+    return [{ value: igId, label }];
   };
 
   // Check if settings have changed
