@@ -12,6 +12,7 @@ export default function AdVariantCard({
   onDelete,
   onDownload,
   onReplace,
+  onChangeTemplate,
   isEditing,
   onSave,
   onDraftChange,
@@ -69,7 +70,20 @@ export default function AdVariantCard({
       <div className="bg-white border-2 border-[#5207CD] rounded-xl p-4 transition-all">
         {/* Editor Header */}
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold text-base text-[#101828]">Edit Variant</h3>
+          <div className="flex items-center gap-3">
+            <h3 className="font-semibold text-base text-[#101828]">Edit Variant</h3>
+            {onChangeTemplate && (
+              <button
+                onClick={() => onChangeTemplate(variant)}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#5207CD] bg-[#F3F0FF] rounded-md hover:bg-[#E4D9FF] transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                </svg>
+                Change template
+              </button>
+            )}
+          </div>
           <button
             onClick={() => onEdit(null)}
             className="p-1 rounded transition-colors hover:bg-gray-100"
@@ -648,17 +662,13 @@ export default function AdVariantCard({
             e.stopPropagation();
             onReplace();
           }}
-          title="Replace"
+          title="Replace image"
           className="flex-1 flex items-center justify-center px-3 py-2.5 text-[#344054] bg-white hover:bg-gray-50 border border-[#d0d5dd] rounded-l-lg transition-colors"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M15.75 9C15.75 12.7279 12.7279 15.75 9 15.75M15.75 9C15.75 5.27208 12.7279 2.25 9 2.25M15.75 9H17.25M9 15.75C5.27208 15.75 2.25 12.7279 2.25 9M9 15.75V17.25M2.25 9C2.25 5.27208 5.27208 2.25 9 2.25M2.25 9H0.75M9 2.25V0.75"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M3 16L8 11L11 14L16 9L21 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
 

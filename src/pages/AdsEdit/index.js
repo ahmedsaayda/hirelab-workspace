@@ -162,6 +162,8 @@ export default function AdsEdit({ paramsId }) {
 
   // Variant template picker for adding new creatives
   const [variantPickerOpen, setVariantPickerOpen] = useState(false);
+  // Track variant being edited for template change (null = new creative, variant = change template)
+  const [templateChangeVariant, setTemplateChangeVariant] = useState(null);
 
   // 🔥 Required setup: Meta Pixel ID before creating ad sets
   const [metaPixelDraft, setMetaPixelDraft] = useState("");
@@ -1283,6 +1285,28 @@ export default function AdsEdit({ paramsId }) {
   const handleVariantPickerSelect = (newCreative) => {
     if (!adsData || !newCreative) return;
 
+    // If we're changing template for an existing variant
+    if (templateChangeVariant) {
+      const updatedVariants = currentVariants.map((v) => {
+        if (v.id === templateChangeVariant.id) {
+          // Keep existing content but update template/variantNumber
+          return {
+            ...v,
+            variantNumber: newCreative.variantNumber,
+            template: newCreative.template,
+            mediaType: newCreative.mediaType,
+          };
+        }
+        return v;
+      });
+      const nextData = updateVariantsInData(updatedVariants);
+      setAdsData(nextData);
+      setTemplateChangeVariant(null);
+      message.success("Template changed");
+      return;
+    }
+
+    // Otherwise, add as new creative
     const updatedVariants = [
       ...currentVariants.map((v) => ({ ...v, selected: false })),
       newCreative,
@@ -1676,10 +1700,15 @@ export default function AdsEdit({ paramsId }) {
             {adSetsList.map((set) => (
               <tr key={set.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-semibold text-[#101828]">{set.name}</div>
-                  <div className="text-xs text-[#667085]">
-                    {set.source === "meta" ? "Synced from Meta" : "HireLab"}
-                  </div>
+                  <button
+                    onClick={() => setActiveAdSetId(set.id)}
+                    className="text-left hover:opacity-80 transition-opacity"
+                  >
+                    <div className="text-sm font-semibold text-[#101828] hover:text-[#5207CD]">{set.name}</div>
+                    <div className="text-xs text-[#667085]">
+                      {set.source === "meta" ? "Synced from Meta" : "HireLab"}
+                    </div>
+                  </button>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{renderStatusBadge(set.state)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#475467]">
@@ -1734,20 +1763,32 @@ export default function AdsEdit({ paramsId }) {
                           disabled: !isHireLab,
                           onClick: () => deleteHireLabAdSet(set.id),
                         };
-                        return [
-                          {
-                            key: "open",
-                            label: "Open ad set",
-                            onClick: () => {
-                              // Draft stays in Ads editor, Ready goes to Launch setup,
-                              // Launched stays in Ads overview (no Launch edits after first publish).
-                              if (set.state === "ready") {
+                        // Show "Open creatives editor" for draft state, "Open ad launcher" for ready/launched
+                        const openLauncherItem = set.state === "draft" || set.state === "creatives_needed"
+                          ? {
+                              key: "open_creatives",
+                              label: "Open creatives editor",
+                              onClick: () => {
+                                setActiveAdSetId(set.id);
+                              },
+                            }
+                          : {
+                              key: "open_launcher",
+                              label: "Open ad launcher",
+                              onClick: () => {
                                 router.push(`/launch/${lpId}?adset=${encodeURIComponent(set.id)}`);
-                                return;
-                              }
-                              setActiveAdSetId(set.id);
-                            },
+                              },
+                            };
+                        const openResultsItem = {
+                          key: "open_results",
+                          label: "Open ad results",
+                          onClick: () => {
+                            setActiveAdSetId(set.id);
                           },
+                        };
+                        return [
+                          openLauncherItem,
+                          openResultsItem,
                           ...(isMeta ? [pauseItem, resumeItem, deleteItem] : []),
                           // Only show local delete for HireLab ad sets NOT synced to Meta
                           ...(isHireLab && !set.metaAdSetId ? [deleteLocalItem] : []),
@@ -2044,6 +2085,10 @@ export default function AdsEdit({ paramsId }) {
                     onDelete={() => handleVariantDelete(variant.id)}
                     onDownload={() => handleVariantDownload(variant)}
                     onReplace={() => handleVariantReplace(variant.id)}
+                    onChangeTemplate={(v) => {
+                      setTemplateChangeVariant(v);
+                      setVariantPickerOpen(true);
+                    }}
                     landingPageData={landingPageData}
                     mediaType={variant.mediaType || getVariantMediaType(variant.adTypeId || selectedAdType, variant.variantNumber)}
                   />
@@ -2245,11 +2290,15 @@ export default function AdsEdit({ paramsId }) {
       {/* Variant Template Picker Modal */}
       <VariantPickerModal
         visible={variantPickerOpen}
-        onClose={() => setVariantPickerOpen(false)}
+        onClose={() => {
+          setVariantPickerOpen(false);
+          setTemplateChangeVariant(null);
+        }}
         onSelect={handleVariantPickerSelect}
-        adTypeId={selectedAdType}
+        adTypeId={templateChangeVariant?.adTypeId || selectedAdType}
         formatId={selectedFormat}
         landingPageData={landingPageData}
+        isTemplateChange={!!templateChangeVariant}
       />
 
       {/* Ad Edit Modal */}

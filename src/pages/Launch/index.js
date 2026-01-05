@@ -1085,6 +1085,14 @@ export default function Launch({ paramsId }) {
       </div>
 
       <div className="overflow-y-auto flex-1 px-8 py-6">
+        {/* Back to ad sets link */}
+        <button
+          onClick={() => router.push(`/lp-editor/${lpId}/ads`)}
+          className="text-sm text-[#5207CD] hover:underline mb-4"
+        >
+          ← Back to ad sets
+        </button>
+
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
           {/* Sidebar */}
           <div className="space-y-6">
