@@ -6,13 +6,17 @@ import { FaFacebook, FaGoogle, FaLinkedin, FaTiktok, FaSnapchat, FaInstagram } f
 import { Check, ChevronRight, AlertCircle, TrendingUp, Users, Target, BarChart2, RefreshCw, Calendar, Clock, DollarSign, Zap, MapPin, Search, Plus, X } from "lucide-react";
 import AdsLaunchService from "../../services/AdsLaunchService";
 import AdsService from "../../services/AdsService";
+import MetaService from "../../services/MetaService";
 import Header from "../Dashboard/Vacancies/components/components/Header";
+import { useWorkspace } from "../../contexts/WorkspaceContext";
 import { Heading } from "../Dashboard/Vacancies/components/components";
 import dayjs from "dayjs";
 
 export default function Launch({ paramsId }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { workspaceSession, currentWorkspace } = useWorkspace();
+  const workspaceId = workspaceSession?.workspaceId || currentWorkspace?._id || null;
 
   let lpId = paramsId || router.query.lpId;
   let isDemo = router.query.demo === 'true' || searchParams?.get('demo') === 'true';
@@ -62,8 +66,12 @@ export default function Launch({ paramsId }) {
   // No automatic redirect from Launch page
   const [launching, setLaunching] = useState(false);
   const [launchDailyBudget, setLaunchDailyBudget] = useState(null);
-  const [optimizationGoal, setOptimizationGoal] = useState(null);
+  const [optimizationGoal, setOptimizationGoal] = useState("LEADS"); // Always optimize for conversions
   const [pacingPlan, setPacingPlan] = useState(null);
+  // Pixel/Dataset selection for conversion optimization
+  const [availablePixels, setAvailablePixels] = useState([]);
+  const [selectedPixel, setSelectedPixel] = useState(null);
+  const [pixelsLoading, setPixelsLoading] = useState(false);
   const [scheduleOverride, setScheduleOverride] = useState({ start: null, end: null });
   const [touched, setTouched] = useState({
     budget: false,
@@ -71,6 +79,7 @@ export default function Launch({ paramsId }) {
     audience: false,
     optimization: false,
     pacing: false,
+    pixel: false,
   });
   const didInitFromSummaryRef = useRef(false);
   const initKeyRef = useRef("");
@@ -111,6 +120,60 @@ export default function Launch({ paramsId }) {
   useEffect(() => {
     reload();
   }, [lpId, datePreset, adSetKey]);
+
+  // Fetch available pixels for conversion optimization
+  useEffect(() => {
+    const fetchPixels = async () => {
+      setPixelsLoading(true);
+      try {
+        const resp = await MetaService.listPixels(workspaceId);
+        const pixels = resp?.data?.data?.pixels || [];
+        setAvailablePixels(pixels);
+      } catch (e) {
+        console.error("Failed to load pixels:", e);
+      } finally {
+        setPixelsLoading(false);
+      }
+    };
+    fetchPixels();
+  }, [workspaceId]);
+
+  // Auto-select pixel when pixels are loaded AND summary is available
+  // Uses a ref to track whether we've done initial selection to avoid overwriting user changes
+  const pixelInitializedRef = useRef(false);
+  useEffect(() => {
+    // Reset initialization flag when adset changes
+    pixelInitializedRef.current = false;
+  }, [adSetKey]);
+  
+  useEffect(() => {
+    // Only auto-select if user hasn't manually changed the pixel
+    if (touched.pixel) return;
+    if (availablePixels.length === 0) return;
+    
+    // Priority: 1. Saved in launchSettings, 2. LP's saved pixel, 3. Hirelab pixel, 4. First available
+    const savedPixelId = summary?.launchSettings?.metaPixelId;
+    const lpPixelId = summary?.metaPixelId;
+    const savedPixel = savedPixelId ? availablePixels.find(p => p.id === savedPixelId) : null;
+    const lpPixel = lpPixelId ? availablePixels.find(p => p.id === lpPixelId) : null;
+    const hirelabPixel = availablePixels.find(p => p.name?.toLowerCase().includes('hirelab'));
+    
+    // If we have a saved pixel from launchSettings, always use that
+    if (savedPixel) {
+      setSelectedPixel(savedPixel.id);
+      pixelInitializedRef.current = true;
+      return;
+    }
+    
+    // Only do the fallback selection once (to avoid overwriting when summary loads later)
+    if (pixelInitializedRef.current) return;
+    
+    const fallbackPixel = lpPixel?.id || hirelabPixel?.id || availablePixels[0]?.id;
+    if (fallbackPixel) {
+      setSelectedPixel(fallbackPixel);
+      pixelInitializedRef.current = true;
+    }
+  }, [availablePixels, summary?.metaPixelId, summary?.launchSettings?.metaPixelId, touched.pixel]);
 
   // Keep format functions but don't return early yet if we want hooks to run consistently
   // The early return "if (!lpId || loading)" causes issues if other hooks come after it.
@@ -403,32 +466,16 @@ export default function Launch({ paramsId }) {
 
     const approxTwoWeekTotal = effectiveDailyBudget * 14;
 
-    // Schedule (campaign → resolved ad set → saved draft):
-    // In ad-set mode, check the resolved ad set for times (it might already be published on Meta)
-    const firstAdSet = Array.isArray(summary?.adSets) ? summary.adSets[0] : null;
-    const resolvedAdSet = adSetKey && Array.isArray(summary?.adSets)
-      ? summary.adSets.find(s => String(s?.id) === String(adSetKey)) || firstAdSet
-      : firstAdSet;
-    const providerStartRaw =
-      summary?.campaign?.start_time || resolvedAdSet?.start_time || null;
-    const providerEndRaw =
-      summary?.campaign?.stop_time || resolvedAdSet?.end_time || null;
+    // Schedule: Always use saved launchSettings (draft) as the source of truth.
+    // The Launch page is for planning/editing settings, not displaying live Meta status.
+    // Users can adjust dates here and then push updates to Meta via "Launch" or "Update".
+    const scheduleStart = draft.scheduleStart
+      ? dayjs(draft.scheduleStart)
+      : null;
 
-    // Use Meta times if available (campaign published or ad set published), otherwise fall back to draft
-    const hasMetaTimes = !!providerStartRaw;
-    const scheduleStart = hasMetaTimes
-      ? dayjs(providerStartRaw)
-      : draft.scheduleStart
-        ? dayjs(draft.scheduleStart)
-        : null;
-
-    const scheduleEnd = hasMetaTimes
-      ? providerEndRaw
-        ? dayjs(providerEndRaw)
-        : null
-      : draft.scheduleEnd
-        ? dayjs(draft.scheduleEnd)
-        : null;
+    const scheduleEnd = draft.scheduleEnd
+      ? dayjs(draft.scheduleEnd)
+      : null;
 
     return {
       optimizationGoal: optimizationGoalValue,
@@ -620,6 +667,7 @@ export default function Launch({ paramsId }) {
         audience: false,
         optimization: false,
         pacing: false,
+        pixel: false,
       });
       // Release hydration lock after React applies the state updates.
       setTimeout(() => {
@@ -664,7 +712,8 @@ export default function Launch({ paramsId }) {
       !touched.schedule &&
       !touched.audience &&
       !touched.optimization &&
-      !touched.pacing
+      !touched.pacing &&
+      !touched.pixel
     ) return;
     // Only send fields the user actually changed; otherwise we accidentally overwrite stored values
     // with null/defaults on unrelated edits.
@@ -673,6 +722,7 @@ export default function Launch({ paramsId }) {
       clientUpdatedAt: new Date().toISOString(),
       ...(touched.optimization ? { optimizationGoal } : {}),
       ...(touched.pacing ? { pacing: pacingPlan } : {}),
+      ...(touched.pixel ? { metaPixelId: selectedPixel } : {}),
       ...(touched.budget
         ? {
           budgetDaily:
@@ -717,6 +767,7 @@ export default function Launch({ paramsId }) {
     optimizationGoal,
     pacingPlan,
     launchDailyBudget,
+    selectedPixel,
     scheduleOverride.start,
     scheduleOverride.end,
     audienceLocations,
@@ -725,6 +776,7 @@ export default function Launch({ paramsId }) {
     touched.audience,
     touched.optimization,
     touched.pacing,
+    touched.pixel,
   ]);
 
   if (!lpId || loading) {
@@ -946,9 +998,10 @@ export default function Launch({ paramsId }) {
       message.error("Launch data is still loading. Please wait a moment and try again.");
       return;
     }
-    if (!summary?.metaPixelId) {
+    // Require either a selected pixel OR a default pixel from the landing page
+    if (!selectedPixel && !summary?.metaPixelId) {
       message.error(
-        "Meta Pixel / hirelab.FormSubmitted conversion is not configured. Please configure it in Meta settings before publishing."
+        "Please select a Meta Pixel / Dataset for conversion tracking before launching."
       );
       return;
     }
@@ -1045,6 +1098,22 @@ export default function Launch({ paramsId }) {
         payload.audienceLocations = audiencePayload;
       }
 
+      // Include pixel for conversion optimization
+      // Use selected pixel first, fallback to LP's saved pixel
+      const effectivePixel = selectedPixel || summary?.metaPixelId;
+      console.log("[Launch] Pixel selection:", {
+        selectedPixel,
+        summaryMetaPixelId: summary?.metaPixelId,
+        effectivePixel,
+      });
+      if (effectivePixel) {
+        payload.metaPixelId = effectivePixel;
+        payload.conversionEvent = "LEAD"; // Meta standard event for lead optimization
+      } else {
+        console.warn("[Launch] No pixel selected - ad set will use LINK_CLICKS instead of CONVERSIONS");
+      }
+
+      console.log("[Launch] Full payload:", JSON.stringify(payload, null, 2));
       const res = await AdsService.publish(lpId, payload);
       if (res?.data?.success) {
         message.success(adSetKey ? "Ad set launched successfully!" : "Campaign launched successfully!");
@@ -1425,18 +1494,46 @@ export default function Launch({ paramsId }) {
                       <div className="text-base font-semibold text-gray-700">Optimization Goal</div>
                     </div>
                     <Select
-                      value={settingsData.optimizationGoal}
+                      value="LEADS"
                       className="w-full h-11"
-                      onChange={(val) => {
-                        if (hydratingRef.current) return;
-                        setOptimizationGoal(val);
-                        setTouched((t) => ({ ...t, optimization: true }));
-                      }}
+                      disabled
                       options={[
-                        { label: "Traffic", value: "OUTCOME_TRAFFIC" },
                         { label: "Leads", value: "LEADS" },
                       ]}
                     />
+                    <p className="mt-2 text-xs text-gray-500">
+                      Optimized for maximum Lead conversions
+                    </p>
+                  </div>
+
+                  {/* Pixel/Dataset Selection */}
+                  <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div className="flex gap-3 items-center mb-4">
+                      <BarChart2 className="w-4 h-4 text-violet-700" />
+                      <div className="text-base font-semibold text-gray-700">Dataset (Pixel)</div>
+                    </div>
+                    <Select
+                      value={selectedPixel}
+                      className="w-full h-11"
+                      loading={pixelsLoading}
+                      placeholder="Select a pixel for conversion tracking"
+                      onChange={(val) => {
+                        if (hydratingRef.current) return;
+                        setSelectedPixel(val);
+                        setTouched((t) => ({ ...t, pixel: true }));
+                      }}
+                      options={availablePixels.map(p => ({
+                        value: p.id,
+                        label: p.name || `Pixel ${p.id}`,
+                      }))}
+                      showSearch
+                      filterOption={(input, option) =>
+                        (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                      }
+                    />
+                    <p className="mt-2 text-xs text-gray-500">
+                      Used to track and optimize for Lead conversions
+                    </p>
                   </div>
 
                 </div>
@@ -1682,131 +1779,16 @@ export default function Launch({ paramsId }) {
                   </div>
                 </Modal>
 
-                {/* Inclusive & Automated Demographics */}
-                <div className="p-6 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="flex gap-3 items-center mb-2">
-                    <Users className="w-5 h-5 text-gray-700" />
-                    <div className="text-base font-semibold text-gray-800">Inclusive & Automated Demographics</div>
-                  </div>
-                  <div className="mb-1 text-sm text-gray-600">
-                    Employer Ads are automatically optimized for inclusive reach. Age, gender, and personal attributes are excluded to ensure fair opportunity.
-                  </div>
-                  <div className="text-xs text-gray-400">Compliance with EU Equal Opportunity Laws</div>
-                </div>
+        
 
-                {/* Keywords */}
-                <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="flex gap-2 items-center">
-                      <div className="text-base font-semibold text-gray-800">Keywords</div>
-                      <Search className="w-3 h-3 text-gray-400" />
-                    </div>
-                    <button
-                      className="flex gap-2 items-center text-sm font-semibold text-violet-700 hover:text-violet-800"
-                      onClick={() => setIsKeywordModalOpen(true)}
-                    >
-                      <Plus className="w-3 h-3" /> Add Keyword
-                    </button>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    {audienceKeywords.map((k, i) => (
-                      <div key={i} className="flex gap-2 items-center px-3 py-1.5 bg-gray-100 rounded-lg group">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                        <span className="text-sm font-medium text-gray-700">{k.name}</span>
-                        <button
-                          onClick={() => handleRemoveKeyword(i)}
-                          aria-label="Remove keyword"
-                          className="ml-1 text-gray-400 opacity-100 transition-opacity hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                    {audienceData.keywordsCount && (
-                      <div className="flex justify-center items-center px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-200 rounded-lg">
-                        {audienceData.keywordsCount}
-                      </div>
-                    )}
-                  </div>
-                </div>
+             
 
                 <Modal title="Add Keyword" open={isKeywordModalOpen} onOk={handleAddKeyword} onCancel={() => setIsKeywordModalOpen(false)}>
                   <Input placeholder="Enter keyword (e.g. Leadership)" value={newKeyword} onChange={(e) => setNewKeyword(e.target.value)} onPressEnter={handleAddKeyword} />
                 </Modal>
 
-                {/* Retargeting & AI Targeting */}
-                <div className="flex gap-6">
-                  <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex justify-between items-start mb-6">
-                      <div>
-                        <div className="flex gap-3 items-center mb-1">
-                          <RefreshCw className="w-4 h-4 text-gray-700" />
-                          <div className="text-base font-semibold text-gray-800">Retargeting Activation</div>
-                        </div>
-                        <div className="mb-1 text-sm text-gray-600">Activate Retargeting</div>
-                        <div className="text-xs text-gray-400">
-                          {audienceData.retargeting.desc} <span className="font-semibold text-gray-500">{audienceData.retargeting.threshold}</span> visitors
-                        </div>
-                      </div>
-                      <Switch defaultChecked={audienceData.retargeting.active} className="bg-emerald-500" />
-                    </div>
-                  </div>
 
-                  <div className="flex-1 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex gap-3 items-center mb-4">
-                      <Target className="w-4 h-4 text-gray-700" />
-                      <div className="text-base font-semibold text-gray-800">AI Targeting</div>
-                    </div>
-                    <div className="mb-4 text-sm text-gray-600">Targeting includes people who recently interacted with:</div>
-                    <div className="space-y-2">
-                      {audienceData.aiTargeting.map((t, i) => (
-                        <div key={i} className="flex gap-3 items-center">
-                          <Check className="w-3 h-3 text-gray-400" />
-                          <span className="text-sm text-gray-700">{t.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Audience Layers */}
-                <div className="flex gap-8 items-center p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="flex flex-col gap-4 items-center w-1/3">
-                    <div className="flex gap-3 items-center">
-                      <Users className="w-4 h-4 text-gray-700" />
-                      <div className="text-base font-semibold text-gray-800">Audience Layers</div>
-                    </div>
-                    <div className="relative w-48 h-48">
-                      <div className="absolute inset-0 bg-purple-100 rounded-full"></div>
-                      <div className="absolute inset-4 bg-purple-300 rounded-full"></div>
-                      <div className="absolute inset-8 bg-violet-700 rounded-full"></div>
-                    </div>
-                  </div>
-                  <div className="flex-1 space-y-4">
-                    <div>
-                      <div className="flex gap-3 items-center mb-1">
-                        <div className="w-3 h-3 bg-violet-700 rounded-full"></div>
-                        <div className="text-sm font-semibold text-gray-800">Warm Audience</div>
-                      </div>
-                      <div className="ml-6 text-sm text-gray-500">{audienceData.layers.warm}</div>
-                    </div>
-                    <div>
-                      <div className="flex gap-3 items-center mb-1">
-                        <div className="w-3 h-3 bg-purple-300 rounded-full"></div>
-                        <div className="text-sm font-semibold text-gray-800">Lookalike Audience</div>
-                      </div>
-                      <div className="ml-6 text-sm text-gray-500">{audienceData.layers.lookalike}</div>
-                    </div>
-                    <div>
-                      <div className="flex gap-3 items-center mb-1">
-                        <div className="w-3 h-3 bg-purple-100 rounded-full"></div>
-                        <div className="text-sm font-semibold text-gray-800">Cold Audience</div>
-                      </div>
-                      <div className="ml-6 text-sm text-gray-500">{audienceData.layers.cold}</div>
-                    </div>
-                  </div>
-                </div>
+              
               </div>
             )}
 

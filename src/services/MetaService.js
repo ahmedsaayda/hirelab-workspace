@@ -21,6 +21,10 @@ class MetaService {
     return this.api.get(`/assets`, { params: { workspaceId } });
   }
 
+  listPixels(workspaceId) {
+    return this.api.get(`/pixels`, { params: { workspaceId } });
+  }
+
   saveAssets({ workspaceId, adAccountId, pageId, instagramActorId, lpId }) {
     return this.api.post(`/select-assets`, {
       workspaceId,

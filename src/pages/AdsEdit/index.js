@@ -1542,28 +1542,10 @@ export default function AdsEdit({ paramsId }) {
       lastSavedAdsHashRef.current = serializeAdsData(updatedAds);
       setAdsData(updatedAds);
 
-      // Create ads on Meta (PAUSED) - this ensures they exist under the ad set
-      appendPrepareMessage("Creating ads on Meta (paused)...");
-      try {
-        // Get ad set's launch settings for budget/schedule
-        const adSetRecord = localSets.find((s) => s.id === adSetId);
-        const ls = adSetRecord?.launchSettings || {};
-
-        await AdsService.publish(lpId, {
-          hirelabAdSetId: adSetId,
-          budget: (ls.budgetDaily || 5) * 100, // Convert to minor units
-          start_time: ls.scheduleStart || null,
-          end_time: ls.scheduleEnd || null,
-          placements: ["facebook_feed", "instagram_story"],
-          audienceLocations: ls.audienceLocations || [],
-          launch: false, // Keep PAUSED - don't activate yet
-        });
-        appendPrepareMessage("✓ Ads created on Meta (paused)");
-      } catch (publishErr) {
-        console.error("Error creating ads on Meta:", publishErr);
-        appendPrepareMessage(`⚠ Warning: Ads not created on Meta: ${publishErr?.response?.data?.message || publishErr?.message || "Unknown error"}`);
-        // Don't throw - still allow user to proceed to launch page
-      }
+      // DON'T create ads on Meta here - wait until user clicks "Launch Ad Set"
+      // This allows the user to configure pixel, budget, schedule in the Launcher first
+      // Meta campaign + ad set + ads will all be created together on launch
+      appendPrepareMessage("✓ Creatives ready for launch");
 
       setPreparedOnce(true);
       setPreparedVariants(variantsToPrepare);
