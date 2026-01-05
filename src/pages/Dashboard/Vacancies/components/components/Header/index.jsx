@@ -58,6 +58,10 @@ export default function Header({
   const [languageConfirmVisible, setLanguageConfirmVisible] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
 
+  // 📊 Meta Pixel states
+  const [metaPixelDraft, setMetaPixelDraft] = useState("");
+  const [metaPixelSaving, setMetaPixelSaving] = useState(false);
+
   // Initialize CTA link from landingPageData
   useEffect(() => {
     if (landingPageData) {
@@ -71,6 +75,31 @@ export default function Header({
     const lang = landingPageData?.lang || landingPageData?.language || "English";
     setSelectedLanguage(lang);
   }, [landingPageData?.lang, landingPageData?.language]);
+
+  // Initialize Meta Pixel from landingPageData
+  useEffect(() => {
+    setMetaPixelDraft(landingPageData?.metaPixelId || "");
+  }, [landingPageData?.metaPixelId]);
+
+  // Save Meta Pixel ID
+  const saveMetaPixelId = useCallback(async () => {
+    const value = (metaPixelDraft || "").trim();
+    if (value && !/^\d{6,20}$/.test(value)) {
+      message.error("Meta Pixel ID should be a numeric ID (e.g., 1234567890123456)");
+      return;
+    }
+    if (!lpId) return;
+    try {
+      setMetaPixelSaving(true);
+      await CrudService.update("LandingPageData", lpId, { metaPixelId: value || null });
+      setLandingPageData((prev) => ({ ...(prev || {}), metaPixelId: value || null }));
+      message.success(value ? "Meta Pixel ID saved" : "Meta Pixel ID removed");
+    } catch (e) {
+      message.error("Failed to save Meta Pixel ID");
+    } finally {
+      setMetaPixelSaving(false);
+    }
+  }, [metaPixelDraft, lpId, setLandingPageData]);
 
   const handleSave = async () => {
     console.log("landingPageData", landingPageData?.companyLogo);
@@ -568,6 +597,38 @@ export default function Header({
           </div>
 
           {/* Meta Pixel Configuration Section */}
+          <div className="py-4">
+            <h3 className="text-lg font-semibold mb-2 text-gray-800">Meta Pixel</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Used to track and optimize conversions for your ads (hirelab.FormSubmitted).
+            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Meta Pixel ID (Facebook Pixel)
+            </label>
+            <div className="flex gap-2">
+              <Input
+                value={metaPixelDraft}
+                onChange={(e) => setMetaPixelDraft(e.target.value)}
+                placeholder="e.g., 1234567890123456"
+                inputMode="numeric"
+                className="flex-1"
+              />
+              <button
+                type="button"
+                onClick={saveMetaPixelId}
+                disabled={metaPixelSaving}
+                className={`px-4 py-2 text-sm font-semibold rounded-md text-white whitespace-nowrap ${
+                  metaPixelSaving ? "bg-[#5207CD]/70 cursor-not-allowed" : "bg-[#5207CD] hover:bg-[#4506A6]"
+                }`}
+              >
+                {metaPixelSaving ? "Saving..." : "Save"}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Find this in Meta Ads Manager → Events Manager → Pixels.
+            </p>
+          </div>
+
           {/* Template Selection Section */}
           <div className="py-4">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Choose Template</h3>
