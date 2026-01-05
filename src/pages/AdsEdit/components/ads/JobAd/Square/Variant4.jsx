@@ -422,48 +422,57 @@ export default function Variant2({ variant, brandData, landingPageData }) {
   <g transform="matrix(1, 0, 0, 1, 54, 132)">
     <g clipPath="url(#8484e09237)" />
   </g>
-  {/* White box for subheadline - only show when text exists */}
-  {linkDescription && (
-    <g clipPath="url(#6b23e0a08e)">
-      <g clipPath="url(#0d1722ac79)">
-        <g transform="matrix(1, 0, 0, 1, 54, 611)">
-          <g clipPath="url(#805dbc8603)">
-            <g clipPath="url(#4277cfcbf5)">
-              <g clipPath="url(#a22f19dbbf)">
-                <path
-                  fill="#fdfdfd"
-                  d="M 0.71875 0.425781 L 457.371094 0.425781 L 457.371094 65.011719 L 0.71875 65.011719 Z M 0.71875 0.425781 "
-                  fillOpacity={1}
-                  fillRule="nonzero"
-                />
-              </g>
-            </g>
-          </g>
-        </g>
+  {/* Subheadline / Link Description with text effect background */}
+  {linkDescription && (() => {
+    const lines = wrapText(linkDescription, 35);
+    const fontSize = 26;
+    const lineHeight = fontSize * 1.3;
+    const paddingX = 12;
+    const paddingY = 6;
+    const centerX = 283;
+    const startY = 648;
+    
+    // Calculate width based on longest line (approximate: ~0.6 * fontSize per character)
+    const charWidth = fontSize * 0.55;
+    const maxLineLength = Math.max(...lines.map(line => line.length));
+    const bgWidth = maxLineLength * charWidth + paddingX * 2;
+    
+    return (
+      <g>
+        {/* Background rectangles for each line - all same width */}
+        {lines.map((line, i) => (
+          <rect
+            key={`bg-${i}`}
+            x={centerX - bgWidth / 2}
+            y={startY - fontSize + paddingY / 2 + i * lineHeight}
+            width={bgWidth}
+            height={fontSize + paddingY}
+            fill="#fdfdfd"
+            rx="4"
+            ry="4"
+          />
+        ))}
+        {/* Text on top */}
+        <text
+          x={centerX}
+          y={startY}
+          textAnchor="middle"
+          style={{
+            fontSize: `${fontSize}px`,
+            fontWeight: "600",
+            fontFamily: "Arial, sans-serif",
+          }}
+          fill={secondaryColor}
+        >
+          {lines.map((line, i) => (
+            <tspan key={i} x={centerX} dy={i === 0 ? 0 : `${lineHeight}px`}>
+              {line}
+            </tspan>
+          ))}
+        </text>
       </g>
-    </g>
-  )}
-  
-  {/* Subheadline / Link Description - positioned in the white box */}
-  {linkDescription && (
-    <text
-      x="283"
-      y="648"
-      textAnchor="middle"
-      style={{
-        fontSize: "26px",
-        fontWeight: "600",
-        fontFamily: "Arial, sans-serif",
-      }}
-      fill={secondaryColor}
-    >
-      {wrapText(linkDescription, 35).map((line, i) => (
-        <tspan key={i} x="283" dy={i === 0 ? 0 : "1.2em"}>
-          {line}
-        </tspan>
-      ))}
-    </text>
-  )}
+    );
+  })()}
 </svg>
 
     </div>

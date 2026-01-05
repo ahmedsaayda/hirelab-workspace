@@ -321,39 +321,57 @@ x="185" y="322"
                       {ctaText}
                     </text>
 
-  {/* Subheadline / Link Description */}
-  {linkDescription && (
-    <>
-      {/* White background box */}
-      <rect
-        x="63"
-        y="370"
-        width="280"
-        height="100"
-        rx="8"
-        ry="8"
-        fill="#fdfdfd"
-      />
-      {/* Text with word wrapping using tspan */}
-      <text
-        x="203"
-        y="400"
-        textAnchor="middle"
-        style={{
-          fontSize: "22px",
-          fontWeight: "600",
-          fontFamily: "Arial, sans-serif",
-        }}
-        fill={secondaryColor}
-      >
-        {wrapText(linkDescription, 18).map((line, i) => (
-          <tspan key={i} x="203" dy={i === 0 ? 0 : "1.3em"}>
-            {line}
-          </tspan>
+  {/* Subheadline / Link Description with text effect background */}
+  {linkDescription && (() => {
+    const lines = wrapText(linkDescription, 18);
+    const fontSize = 22;
+    const lineHeight = fontSize * 1.3;
+    const paddingX = 10;
+    const paddingY = 6;
+    const centerX = 203;
+    const startY = 400;
+    
+    // Calculate width based on longest line (approximate: ~0.55 * fontSize per character)
+    const charWidth = fontSize * 0.55;
+    const maxLineLength = Math.max(...lines.map(line => line.length));
+    const bgWidth = maxLineLength * charWidth + paddingX * 2;
+    
+    return (
+      <g>
+        {/* Background rectangles for each line - all same width */}
+        {lines.map((line, i) => (
+          <rect
+            key={`bg-${i}`}
+            x={centerX - bgWidth / 2}
+            y={startY - fontSize + paddingY / 2 + i * lineHeight}
+            width={bgWidth}
+            height={fontSize + paddingY}
+            fill="#fdfdfd"
+            rx="4"
+            ry="4"
+          />
         ))}
-      </text>
-    </>
-  )}
+        {/* Text on top */}
+        <text
+          x={centerX}
+          y={startY}
+          textAnchor="middle"
+          style={{
+            fontSize: `${fontSize}px`,
+            fontWeight: "600",
+            fontFamily: "Arial, sans-serif",
+          }}
+          fill={secondaryColor}
+        >
+          {lines.map((line, i) => (
+            <tspan key={i} x={centerX} dy={i === 0 ? 0 : `${lineHeight}px`}>
+              {line}
+            </tspan>
+          ))}
+        </text>
+      </g>
+    );
+  })()}
 
   <g clipPath="url(#c8cd783473)">
     <path
