@@ -343,10 +343,10 @@ export default function Header({
     >
       <div className="flex gap-5 justify-between items-center w-full mdx:flex-col">
         <div className="flex items-center justify-left mdx:w-full">
-          <Link href={backLinkOverride || (isFormEditor ? `/edit-page/${lpId}` : "/dashboard/vacancies")} onClick={(e) => {
+          <Link href={backLinkOverride || (isFormEditor ? `/edit-page/${lpId}` : "/dashboard/campaigns")} onClick={(e) => {
             if (typeof onNavigateAttempt === 'function') {
               e.preventDefault();
-              onNavigateAttempt(backLinkOverride || (isFormEditor ? `/edit-page/${lpId}` : "/dashboard/vacancies"));
+              onNavigateAttempt(backLinkOverride || (isFormEditor ? `/edit-page/${lpId}` : "/dashboard/campaigns"));
             }
           }}>
             <Img

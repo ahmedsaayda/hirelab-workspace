@@ -36,6 +36,7 @@ export default function AdVariantCard({
     videoUrl: variant?.videoUrl || "",
   });
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   const isLikelyVideoUrl = (u) => /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(String(u || ""));
   const cloudinaryVideoToPoster = (url, seconds = 0) => {
@@ -585,6 +586,15 @@ export default function AdVariantCard({
     );
   }
 
+  // Truncate text helper
+  const truncateText = (text, maxLength = 150) => {
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + "....";
+  };
+
+  const descriptionTruncated = (variant.description?.length || 0) > 150;
+
   // Default card view
   return (
     <div
@@ -599,9 +609,9 @@ export default function AdVariantCard({
       }}
     >
       {/* Content Container */}
-      <div className="flex gap-2 items-start pr-6 mb-4">
-        {/* Image Thumbnail */}
-        <div className="relative w-[70px] h-[70px] flex-shrink-0 bg-gray-100 rounded-[10px] overflow-hidden">
+      <div className="flex gap-3 items-start mb-4">
+        {/* Image Thumbnail - Larger size */}
+        <div className="relative w-[100px] h-[100px] flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
           {variant.image ? (
             <img
               src={variant.image}
@@ -611,7 +621,7 @@ export default function AdVariantCard({
           ) : (
             <div className="flex justify-center items-center w-full h-full text-gray-400">
               <svg
-                className="w-8 h-8"
+                className="w-10 h-10"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -627,8 +637,8 @@ export default function AdVariantCard({
           )}
           {variant.videoUrl ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-7 h-7 rounded-full bg-black/55 flex items-center justify-center">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+              <div className="w-8 h-8 rounded-full bg-black/55 flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="white" aria-hidden="true">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
@@ -637,24 +647,44 @@ export default function AdVariantCard({
         </div>
 
         {/* Text Content */}
-        <div className="flex flex-col flex-1 gap-1.5 justify-center min-w-0">
-          <h4 className="font-semibold text-base leading-6 text-[#101828]">
+        <div className="flex flex-col flex-1 gap-1 min-w-0">
+          <h4 className="font-semibold text-sm leading-5 text-[#101828]">
             {variant.title}
           </h4>
-          <p className="text-sm leading-5 text-[#475467]">
-            {variant.description}
+          <p className="text-xs leading-4 text-[#475467]">
+            {showFullDescription ? variant.description : truncateText(variant.description, 150)}
+            {descriptionTruncated && !showFullDescription && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowFullDescription(true);
+                }}
+                className="text-[#5207CD] hover:underline ml-1 font-medium"
+              >
+                Read more
+              </button>
+            )}
+            {showFullDescription && descriptionTruncated && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowFullDescription(false);
+                }}
+                className="text-[#5207CD] hover:underline ml-1 font-medium"
+              >
+                Show less
+              </button>
+            )}
           </p>
           {variant.linkDescription ? (
-            <p className="text-xs leading-4 text-[#667085] truncate">
+            <p className="text-xs leading-4 text-[#667085] truncate mt-0.5">
               {variant.linkDescription}
             </p>
           ) : null}
         </div>
       </div>
 
-
-
-      {/* Action Buttons - Connected Group (icon-only to fit 4 buttons) */}
+      {/* Action Buttons - With text labels */}
       <div className="flex items-center w-full">
         <button
           onClick={(e) => {
@@ -663,13 +693,14 @@ export default function AdVariantCard({
             onReplace();
           }}
           title="Replace image"
-          className="flex-1 flex items-center justify-center px-3 py-2.5 text-[#344054] bg-white hover:bg-gray-50 border border-[#d0d5dd] rounded-l-lg transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-[#344054] bg-white hover:bg-gray-50 border border-[#d0d5dd] rounded-l-lg transition-colors"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" />
             <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M3 16L8 11L11 14L16 9L21 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
+          <span className="hidden sm:inline">Image</span>
         </button>
 
         <button
@@ -679,9 +710,9 @@ export default function AdVariantCard({
             onEdit();
           }}
           title="Edit"
-          className="flex-1 flex items-center justify-center px-3 py-2.5 text-[#344054] bg-white hover:bg-gray-50 border-t border-b border-[#d0d5dd] transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-[#344054] bg-white hover:bg-gray-50 border-t border-b border-[#d0d5dd] transition-colors"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
             <path
               d="M8.25 3H3C2.58579 3 2.25 3.33579 2.25 3.75V15C2.25 15.4142 2.58579 15.75 3 15.75H14.25C14.6642 15.75 15 15.4142 15 15V9.75M13.7197 2.21967C14.0126 1.92678 14.4874 1.92678 14.7803 2.21967L15.7803 3.21967C16.0732 3.51256 16.0732 3.98744 15.7803 4.28033L8.03033 12.0303C7.88968 12.171 7.69891 12.25 7.5 12.25H5.25V10L13.7197 2.21967Z"
               stroke="currentColor"
@@ -690,6 +721,7 @@ export default function AdVariantCard({
               strokeLinejoin="round"
             />
           </svg>
+          <span className="hidden sm:inline">Edit</span>
         </button>
 
         <button
@@ -699,9 +731,9 @@ export default function AdVariantCard({
             if (onDownload) onDownload();
           }}
           title="Download"
-          className="flex-1 flex items-center justify-center px-3 py-2.5 text-[#344054] bg-white hover:bg-gray-50 border-t border-b border-l border-[#d0d5dd] transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-[#344054] bg-white hover:bg-gray-50 border-t border-b border-l border-[#d0d5dd] transition-colors"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
             <path
               d="M9 2.25V11.25M9 11.25L5.25 7.5M9 11.25L12.75 7.5M2.25 12.75V14.25C2.25 15.0784 2.92157 15.75 3.75 15.75H14.25C15.0784 15.75 15.75 15.0784 15.75 14.25V12.75"
               stroke="currentColor"
@@ -710,6 +742,7 @@ export default function AdVariantCard({
               strokeLinejoin="round"
             />
           </svg>
+          <span className="hidden sm:inline">Download</span>
         </button>
 
         <button
@@ -719,9 +752,9 @@ export default function AdVariantCard({
             onDelete();
           }}
           title="Delete"
-          className="flex-1 flex items-center justify-center px-3 py-2.5 text-[#d92d20] bg-white hover:bg-red-50 border border-[#d0d5dd] rounded-r-lg transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-[#d92d20] bg-white hover:bg-red-50 border border-[#d0d5dd] rounded-r-lg transition-colors"
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
             <path
               d="M12 4.5V3.75C12 2.92157 11.3284 2.25 10.5 2.25H7.5C6.67157 2.25 6 2.92157 6 3.75V4.5M14.25 4.5V14.25C14.25 15.0784 13.5784 15.75 12.75 15.75H5.25C4.42157 15.75 3.75 15.0784 3.75 14.25V4.5M2.25 4.5H15.75M7.5 8.25V12M10.5 8.25V12"
               stroke="currentColor"

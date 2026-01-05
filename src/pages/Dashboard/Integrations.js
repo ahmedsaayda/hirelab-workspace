@@ -35,6 +35,7 @@ const Integrations = () => {
   const [assetsLoading, setAssetsLoading] = useState(false);
   const [selectedAdAccount, setSelectedAdAccount] = useState(null);
   const [selectedPage, setSelectedPage] = useState(null);
+  const [selectedInstagramAccount, setSelectedInstagramAccount] = useState(null);
   const [saving, setSaving] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
@@ -54,6 +55,7 @@ const Integrations = () => {
       if (data.connected) {
         setSelectedAdAccount(data.adAccountId || null);
         setSelectedPage(data.pageId || null);
+        setSelectedInstagramAccount(data.instagramActorId || null);
         loadAssets();
       }
     } catch (e) {
@@ -124,6 +126,7 @@ const Integrations = () => {
       setAssets({ adAccounts: [], pages: [], instagramByPageId: {} });
       setSelectedAdAccount(null);
       setSelectedPage(null);
+      setSelectedInstagramAccount(null);
       message.success("Meta disconnected successfully");
       setShowDisconnectModal(false);
     } catch (e) {
@@ -142,12 +145,11 @@ const Integrations = () => {
     }
     setSaving(true);
     try {
-      const igActorId = assets.instagramByPageId[selectedPage] || null;
       await MetaService.saveAssets({
         workspaceId,
         adAccountId: selectedAdAccount,
         pageId: selectedPage,
-        instagramActorId: igActorId,
+        instagramActorId: selectedInstagramAccount || null,
       });
       message.success("Meta settings saved successfully");
       // Refresh status to confirm
@@ -160,11 +162,47 @@ const Integrations = () => {
     }
   };
 
+  // Auto-update Instagram account when page changes
+  const handlePageChange = (pageId) => {
+    setSelectedPage(pageId);
+    // Auto-select the Instagram account linked to this page if available
+    const linkedIg = assets.instagramByPageId[pageId];
+    // Handle both old format (string ID) and new format (object with id, username)
+    const igId = typeof linkedIg === 'object' ? linkedIg?.id : linkedIg;
+    setSelectedInstagramAccount(igId || null);
+  };
+
+  // Get Instagram options for the selected page
+  const getInstagramOptions = () => {
+    if (!selectedPage) return [];
+    const linkedIg = assets.instagramByPageId[selectedPage];
+    if (!linkedIg) return [];
+    
+    // Handle both old format (string ID) and new format (object with id, username)
+    const igId = typeof linkedIg === 'object' ? linkedIg?.id : linkedIg;
+    const igUsername = typeof linkedIg === 'object' ? linkedIg?.username : null;
+    const igName = typeof linkedIg === 'object' ? linkedIg?.name : null;
+    
+    if (!igId) return [];
+    
+    // Build label with username if available
+    let label = igUsername ? `@${igUsername}` : (igName || `Instagram Account`);
+    if (igId && !igUsername) {
+      label += ` (ID: ${igId})`;
+    }
+    
+    return [{
+      value: igId,
+      label,
+    }];
+  };
+
   // Check if settings have changed
   const hasChanges =
     metaStatus?.connected &&
     (selectedAdAccount !== metaStatus?.adAccountId ||
-      selectedPage !== metaStatus?.pageId);
+      selectedPage !== metaStatus?.pageId ||
+      selectedInstagramAccount !== metaStatus?.instagramActorId);
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
@@ -337,7 +375,7 @@ const Integrations = () => {
                       placeholder="Select a Page"
                       loading={assetsLoading}
                       value={selectedPage}
-                      onChange={setSelectedPage}
+                      onChange={handlePageChange}
                       options={assets.pages.map((page) => ({
                         value: page.id,
                         label: page.name || "Unnamed Page",
@@ -349,14 +387,56 @@ const Integrations = () => {
                           .includes(input.toLowerCase())
                       }
                     />
-                    {selectedPage && assets.instagramByPageId[selectedPage] && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        <span className="text-purple-600">
-                          Instagram connected
-                        </span>
-                      </p>
-                    )}
                   </div>
+                </div>
+
+                {/* Instagram Account Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Instagram Account
+                  </label>
+                  {!selectedPage ? (
+                    <Select
+                      className="w-full"
+                      placeholder="Select a Facebook Page first"
+                      disabled
+                    />
+                  ) : getInstagramOptions().length > 0 ? (
+                    <>
+                      <Select
+                        className="w-full"
+                        placeholder="Select an Instagram account"
+                        loading={assetsLoading}
+                        value={selectedInstagramAccount}
+                        onChange={setSelectedInstagramAccount}
+                        options={getInstagramOptions()}
+                        allowClear
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Instagram account linked to your Facebook Page
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Select
+                        className="w-full"
+                        placeholder="No Instagram account linked"
+                        disabled
+                      />
+                      <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        No Instagram account is linked to this Facebook Page. 
+                        <a 
+                          href="https://www.facebook.com/business/help/898752960195806" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="underline hover:text-amber-700"
+                        >
+                          Learn how to connect
+                        </a>
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {/* Save / Actions */}
