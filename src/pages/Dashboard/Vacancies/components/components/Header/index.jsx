@@ -31,6 +31,7 @@ export default function Header({
   isAdsEditor = false,
   hasUnpublishedChanges = false, // 🔥 NEW: Passed from parent
   onNavigateAttempt,
+  onNavigateAttemptAds,
   onOpenFormSettings,
   onOpenSettings,
   customActions,
@@ -507,6 +508,7 @@ export default function Header({
                   ),
                   className: "rounded-lg",
                   disabled: false,
+                  isAds: true
                 },
 
               ].filter((item) => {
@@ -527,7 +529,10 @@ export default function Header({
                         href={item.link(lpId || landingPageData?._id)}
                         className="flex gap-2 justify-center items-center cursor-pointer w-full"
                         onClick={(e) => {
-                          if (typeof onNavigateAttempt === 'function') {
+                          if(onNavigateAttemptAds && item.isAds) {
+                            e.preventDefault();
+                            onNavigateAttemptAds(item.link(lpId || landingPageData?._id));
+                          } else if (typeof onNavigateAttempt === 'function') {
                             e.preventDefault();
                             onNavigateAttempt(item.link(lpId || landingPageData?._id));
                           }

@@ -405,6 +405,13 @@ export default function AdsEdit({ paramsId }) {
     fetchData();
   }, [fetchData]);
 
+  // Redirect to edit page if landing page is not published
+  useEffect(() => {
+    if (landingPageData && landingPageData.published === false) {
+      router.replace(`/edit-page/${lpId}`);
+    }
+  }, [landingPageData, lpId, router]);
+
   useEffect(() => {
     loadLaunchSummary();
   }, [loadLaunchSummary]);
@@ -2196,7 +2203,7 @@ export default function AdsEdit({ paramsId }) {
 
       <div className="flex flex-col h-screen bg-[#f8f8f8]">
         {/* Header */}
-        <div className="px-8 py-6 bg-white border-b border-[#eaecf0] flex-shrink-0">
+        <div className="bg-white border-b border-[#eaecf0] flex-shrink-0">
           <Header
             landingPageData={landingPageData}
             setPublished={(val) => {
@@ -2215,9 +2222,7 @@ export default function AdsEdit({ paramsId }) {
             hideSettings={false}
             hideLaunchNav
             onOpenSettings={() => setAdsSettingsDrawerOpen(true)}
-            onNavigateAttempt={(targetUrl) => {
-              setActiveAdSetId(null);
-            }}
+   
             customActions={<>
             </>}
 

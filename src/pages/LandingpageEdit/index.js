@@ -692,7 +692,7 @@ export default function LandingpageEdit({ paramsId }) {
     }
 
     navigationOverrideRef.current = true;
-    if (ackKey) sessionStorage.setItem(ackKey, 'ack');
+    // if (ackKey) sessionStorage.setItem(ackKey, 'ack');
     sessionHasChangesRef.current = false;
 
     // Execute navigation after a short delay to ensure modal closes first
@@ -710,78 +710,11 @@ export default function LandingpageEdit({ paramsId }) {
     }, 10);
   }, []);
 
-  useEffect(() => {
-    const handleRouteChangeStart = (url, opts = {}) => {
-      if (navigationOverrideRef.current) return;
 
-      // Respect prior acknowledgement if no new edits since last acknowledgement
-      const acknowledged = ackKey ? sessionStorage.getItem(ackKey) === 'ack' : false;
-      if (acknowledged && !sessionHasChangesRef.current) {
-        return;
-      }
 
-      if (!hasUnpublishedChangesRef.current) {
-        return;
-      }
 
-      // Prevent guard when navigating to the same path
-      if (url === router.asPath) {
-        return;
-      }
 
-      pendingNavigationRef.current = {
-        exec: () => router.push(url, undefined, opts),
-      };
 
-      setIsExitModalVisible(true);
-
-      const error = new Error("Route change aborted due to unpublished changes.");
-      error.cancelled = true;
-      router.events.emit("routeChangeError", error, url, opts);
-      throw error;
-    };
-
-    const handleRouteChangeComplete = () => {
-      navigationOverrideRef.current = false;
-    };
-
-    const handleRouteChangeError = () => {
-      navigationOverrideRef.current = false;
-    };
-
-    router.events.on("routeChangeStart", handleRouteChangeStart);
-    router.events.on("routeChangeComplete", handleRouteChangeComplete);
-    router.events.on("routeChangeError", handleRouteChangeError);
-
-    return () => {
-      router.events.off("routeChangeStart", handleRouteChangeStart);
-      router.events.off("routeChangeComplete", handleRouteChangeComplete);
-      router.events.off("routeChangeError", handleRouteChangeError);
-    };
-  }, [router]);
-
-  useEffect(() => {
-    router.beforePopState(() => {
-      if (navigationOverrideRef.current || !hasUnpublishedChangesRef.current) {
-        return true;
-      }
-
-      pendingNavigationRef.current = { exec: () => router.back() };
-      setIsExitModalVisible(true);
-      return false;
-    });
-
-    return () => {
-      router.beforePopState(() => true);
-    };
-  }, [router]);
-
-  useEffect(() => {
-    if (!hasImmediateUnsavedChanges) {
-      setIsExitModalVisible(false);
-      pendingNavigationRef.current = null;
-    }
-  }, [hasImmediateUnsavedChanges]);
 
 
   // Handle browser refresh/close with native dialog
@@ -789,28 +722,16 @@ export default function LandingpageEdit({ paramsId }) {
     const handleBeforeUnload = (e) => {
       if (hasUnpublishedChangesRef.current) {
         e.preventDefault();
-        const message = "YDo you want to leave this page with unpublished changes?";
+        const message = "Do you want to leave this page with unpublished changes?";
         e.returnValue = message;
         return message;
       }
     };
 
-    const handleKeydown = (e) => {
-      // Intercept refresh shortcuts and show our modal instead
-      const isRefresh = (e.key === 'F5') || (e.key.toLowerCase() === 'r' && (e.ctrlKey || e.metaKey));
-      if (isRefresh && hasUnpublishedChangesRef.current) {
-        e.preventDefault();
-        e.stopPropagation();
-        pendingNavigationRef.current = { exec: () => window.location.reload() };
-        setIsExitModalVisible(true);
-      }
-    };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("keydown", handleKeydown, { capture: true });
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("keydown", handleKeydown, { capture: true });
     };
   }, []);
 
@@ -2196,9 +2117,9 @@ export default function LandingpageEdit({ paramsId }) {
         isAutoSaving={isAutoSaving}
         hasUnpublishedChanges={hasUnpublishedChanges}
         lpId={lpId}
-        onNavigateAttempt={(href) => {
-          const acknowledged = ackKey ? sessionStorage.getItem(ackKey) === 'ack' : false;
-          if (!hasUnpublishedChangesRef.current || (acknowledged && !sessionHasChangesRef.current)) {
+        onNavigateAttemptAds={(href) => {
+          if(landingPageData?.published === false) return message.error("Please publish your page and form before creating ads");
+          if (!hasUnpublishedChangesRef.current ) {
             router.push(href);
             return;
           }
@@ -2696,13 +2617,21 @@ export default function LandingpageEdit({ paramsId }) {
       >
         <div className="flex flex-col gap-5">
           <Heading size="3xl" as="h3" className="!text-black-900_01">
-            Do you want to leave this page with unpublished changes?
+          Before creating ads, be sure to publish your page and form
           </Heading>
           <div className="flex gap-3 justify-end">
 
             <button
               type="button"
               className="px-4 py-2 text-gray-700 rounded-md border border-gray-300 hover:bg-gray-50"
+              onClick={handleExitConfirm}
+              
+            >
+              No, keep editing
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 rounded-md bg-[#5207CD] text-white hover:bg-[#0C7CE6]"
               onClick={async () => {
                 const nextNav = pendingNavigationRef.current;
                 if (!nextNav) return;
@@ -2715,14 +2644,7 @@ export default function LandingpageEdit({ paramsId }) {
                 handleExitConfirm();
               }}
             >
-              Publish and Leave
-            </button>
-            <button
-              type="button"
-              className="px-4 py-2 rounded-md bg-[#5207CD] text-white hover:bg-[#0C7CE6]"
-              onClick={handleExitConfirm}
-            >
-              Leave
+              Yes, publish
             </button>
           </div>
         </div>
