@@ -540,10 +540,24 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
     }
     // For other browsers, show instruction message
     else {
-      // Detect Mac vs Windows/Linux
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const shortcut = isMac ? 'Cmd+D' : 'Ctrl+D';
-      message.info(getTranslation(landingPageData?.lang, 'bookmarkInstructions') || `Press ${shortcut} to bookmark this page`);
+      // Detect mobile devices first
+      const userAgent = navigator.userAgent || '';
+      const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+      const isAndroid = /Android/i.test(userAgent);
+      const isMobile = isIOS || isAndroid;
+      
+      let bookmarkMessage;
+      if (isIOS) {
+        bookmarkMessage = getTranslation(landingPageData?.lang, 'bookmarkInstructionsIOS') || 'Tap the share button and select "Add to Home Screen" or "Add Bookmark"';
+      } else if (isAndroid) {
+        bookmarkMessage = getTranslation(landingPageData?.lang, 'bookmarkInstructionsAndroid') || 'Tap the menu (⋮) and select "Add to Home Screen" or "Add Bookmark"';
+      } else {
+        // Desktop: Detect Mac vs Windows/Linux
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const shortcut = isMac ? 'Cmd+D' : 'Ctrl+D';
+        bookmarkMessage = getTranslation(landingPageData?.lang, 'bookmarkInstructions') || `Press ${shortcut} to bookmark this page`;
+      }
+      message.info(bookmarkMessage);
     }
   };
 

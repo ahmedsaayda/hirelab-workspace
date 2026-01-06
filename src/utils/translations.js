@@ -73,7 +73,9 @@ const coreTranslations = {
     // Save/Bookmark
     save: "Save",
     bookmarkAdded: "Page bookmarked! Press Ctrl+D (Cmd+D on Mac) to save.",
-    bookmarkInstructions: "Press Ctrl+D (Cmd+D on Mac) to bookmark this page"
+    bookmarkInstructions: "Press Ctrl+D (Cmd+D on Mac) to bookmark this page",
+    bookmarkInstructionsIOS: "Tap the share button and select \"Add to Home Screen\" or \"Add Bookmark\"",
+    bookmarkInstructionsAndroid: "Tap the menu (⋮) and select \"Add to Home Screen\" or \"Add Bookmark\""
   },
   Dutch: {
     weAreHiring: " WE ZOEKEN PERSONEEL",
@@ -136,7 +138,9 @@ const coreTranslations = {
     // Save/Bookmark
     save: "Opslaan",
     bookmarkAdded: "Pagina opgeslagen! Druk op Ctrl+D (Cmd+D op Mac) om op te slaan.",
-    bookmarkInstructions: "Druk op Ctrl+D (Cmd+D op Mac) om deze pagina op te slaan"
+    bookmarkInstructions: "Druk op Ctrl+D (Cmd+D op Mac) om deze pagina op te slaan",
+    bookmarkInstructionsIOS: "Tik op de deelknop en selecteer \"Zet op beginscherm\" of \"Voeg bladwijzer toe\"",
+    bookmarkInstructionsAndroid: "Tik op het menu (⋮) en selecteer \"Toevoegen aan startscherm\" of \"Bladwijzer toevoegen\""
   },
   German: {
     weAreHiring: " WIR STELLEN EIN",
@@ -199,7 +203,9 @@ const coreTranslations = {
     // Save/Bookmark
     save: "Speichern",
     bookmarkAdded: "Seite gemerkt! Drücken Sie Strg+D (Cmd+D auf Mac) zum Speichern.",
-    bookmarkInstructions: "Drücken Sie Strg+D (Cmd+D auf Mac) um diese Seite zu speichern"
+    bookmarkInstructions: "Drücken Sie Strg+D (Cmd+D auf Mac) um diese Seite zu speichern",
+    bookmarkInstructionsIOS: "Tippen Sie auf die Teilen-Schaltfläche und wählen Sie \"Zum Home-Bildschirm\" oder \"Lesezeichen hinzufügen\"",
+    bookmarkInstructionsAndroid: "Tippen Sie auf das Menü (⋮) und wählen Sie \"Zum Startbildschirm hinzufügen\" oder \"Lesezeichen hinzufügen\""
   },
   French: {
     weAreHiring: " NOUS RECRUTONS",
@@ -232,7 +238,9 @@ const coreTranslations = {
     // Save/Bookmark
     save: "Enregistrer",
     bookmarkAdded: "Page enregistrée ! Appuyez sur Ctrl+D (Cmd+D sur Mac) pour sauvegarder.",
-    bookmarkInstructions: "Appuyez sur Ctrl+D (Cmd+D sur Mac) pour enregistrer cette page"
+    bookmarkInstructions: "Appuyez sur Ctrl+D (Cmd+D sur Mac) pour enregistrer cette page",
+    bookmarkInstructionsIOS: "Appuyez sur le bouton de partage et sélectionnez \"Sur l'écran d'accueil\" ou \"Ajouter un signet\"",
+    bookmarkInstructionsAndroid: "Appuyez sur le menu (⋮) et sélectionnez \"Ajouter à l'écran d'accueil\" ou \"Ajouter un favori\""
   },
   Spanish: {
     weAreHiring: " ESTAMOS CONTRATANDO",
@@ -265,7 +273,9 @@ const coreTranslations = {
     // Save/Bookmark
     save: "Guardar",
     bookmarkAdded: "¡Página guardada! Presiona Ctrl+D (Cmd+D en Mac) para guardar.",
-    bookmarkInstructions: "Presiona Ctrl+D (Cmd+D en Mac) para guardar esta página"
+    bookmarkInstructions: "Presiona Ctrl+D (Cmd+D en Mac) para guardar esta página",
+    bookmarkInstructionsIOS: "Toca el botón de compartir y selecciona \"Añadir a pantalla de inicio\" o \"Añadir marcador\"",
+    bookmarkInstructionsAndroid: "Toca el menú (⋮) y selecciona \"Añadir a pantalla de inicio\" o \"Añadir marcador\""
   },
   Italian: {
     weAreHiring: " STIAMO ASSUMENDO",
@@ -294,7 +304,12 @@ const coreTranslations = {
     selectDepartment: "Seleziona un dipartimento", language: "Lingua", selectLanguage: "Seleziona una lingua",
     pasteJobDescription: "Incolla Descrizione Lavoro (Ctrl+V)",
     pasteJobTip: "Suggerimento: Copia (Ctrl+C) l'intera offerta di lavoro da un sito web e incollala (Ctrl+V) qui. La nostra IA estrarrà tutte le informazioni rilevanti.",
-    readMore: "Leggi Di Più", readLess: "Leggi Di Meno"
+    readMore: "Leggi Di Più", readLess: "Leggi Di Meno",
+    save: "Salva",
+    bookmarkAdded: "Pagina salvata nei preferiti! Premi Ctrl+D (Cmd+D su Mac) per salvare.",
+    bookmarkInstructions: "Premi Ctrl+D (Cmd+D su Mac) per salvare questa pagina nei preferiti",
+    bookmarkInstructionsIOS: "Tocca il pulsante di condivisione e seleziona \"Aggiungi alla schermata Home\" o \"Aggiungi segnalibro\"",
+    bookmarkInstructionsAndroid: "Tocca il menu (⋮) e seleziona \"Aggiungi alla schermata Home\" o \"Aggiungi segnalibro\""
   },
   Portuguese: {
     weAreHiring: " ESTAMOS CONTRATANDO",
@@ -323,7 +338,12 @@ const coreTranslations = {
     selectDepartment: "Selecione um departamento", language: "Idioma", selectLanguage: "Selecione um idioma",
     pasteJobDescription: "Colar Descrição do Trabalho (Ctrl+V)",
     pasteJobTip: "Dica: Copie (Ctrl+C) toda a oferta de trabalho de um site e cole (Ctrl+V) aqui. Nossa IA extrairá todas as informações relevantes.",
-    readMore: "Ler Mais", readLess: "Ler Menos"
+    readMore: "Ler Mais", readLess: "Ler Menos",
+    save: "Salvar",
+    bookmarkAdded: "Página salva nos favoritos! Pressione Ctrl+D (Cmd+D no Mac) para salvar.",
+    bookmarkInstructions: "Pressione Ctrl+D (Cmd+D no Mac) para salvar esta página nos favoritos",
+    bookmarkInstructionsIOS: "Toque no botão de compartilhar e selecione \"Adicionar à Tela de Início\" ou \"Adicionar Favorito\"",
+    bookmarkInstructionsAndroid: "Toque no menu (⋮) e selecione \"Adicionar à tela inicial\" ou \"Adicionar aos favoritos\""
   },
   Norwegian: {
     weAreHiring: " VI ANSETTER",
@@ -352,6 +372,11 @@ const coreTranslations = {
     selectDepartment: "Velg en avdeling", language: "Språk", selectLanguage: "Velg et språk",
     pasteJobDescription: "Lim inn Jobbeskrivelse (Ctrl+V)",
     pasteJobTip: "Tips: Kopier (Ctrl+C) hele jobbutlysningen fra en nettside og lim den inn (Ctrl+V) her. Vår AI vil trekke ut all relevant informasjon.",
+    save: "Lagre",
+    bookmarkAdded: "Side lagret som bokmerke! Trykk Ctrl+D (Cmd+D på Mac) for å lagre.",
+    bookmarkInstructions: "Trykk Ctrl+D (Cmd+D på Mac) for å lagre denne siden som bokmerke",
+    bookmarkInstructionsIOS: "Trykk på del-knappen og velg \"Legg til på Hjem-skjerm\" eller \"Legg til bokmerke\"",
+    bookmarkInstructionsAndroid: "Trykk på menyen (⋮) og velg \"Legg til på startskjermen\" eller \"Legg til bokmerke\""
   },
   // Strategic core languages for major language families
   Russian: {
