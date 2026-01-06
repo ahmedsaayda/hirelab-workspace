@@ -831,13 +831,16 @@ const Billing = () => {
                 <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
                 <div className="mb-4">
                   <div className="text-3xl font-bold">
-                    €{frequency === 0 ? plan.monthlyPrice : plan.annualPrice}
+                    €{frequency === 0 ? plan.monthlyPrice : Math.round((plan.annualPrice / 12) * 100) / 100}
                   </div>
-                  <div className="text-gray-500">per {frequency === 0 ? 'month' : 'year'}</div>
+                  <div className="text-gray-500">per month</div>
                   {frequency === 1 && plan.monthlyPrice > 0 && (
-                    <div className="text-sm text-green-600">
-                      Save €{((plan.monthlyPrice  * 12) - plan.annualPrice)}/year
-                    </div>
+                    <>
+                      <div className="text-xs text-gray-400">billed annually</div>
+                      <div className="text-sm text-green-600">
+                        Save €{((plan.monthlyPrice * 12) - plan.annualPrice)}/year
+                      </div>
+                    </>
                   )}
                 </div>
                 <p className="text-gray-600 mb-4">{plan.description}</p>
