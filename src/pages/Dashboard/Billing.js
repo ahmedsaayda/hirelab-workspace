@@ -833,7 +833,7 @@ const Billing = () => {
                   <div className="text-3xl font-bold">
                     €{frequency === 0 ? plan.monthlyPrice : plan.annualPrice}
                   </div>
-                  <div className="text-gray-500">per month</div>
+                  <div className="text-gray-500">per {frequency === 0 ? 'month' : 'year'}</div>
                   {frequency === 1 && plan.monthlyPrice > 0 && (
                     <div className="text-sm text-green-600">
                       Save €{((plan.monthlyPrice  * 12) - plan.annualPrice)}/year
