@@ -197,7 +197,7 @@ export default function AdsEditDemoShell({ paramsId }) {
             <div className="w-[486px] bg-white border-r border-[#eceef5] flex flex-col h-full">
               <div className="p-8 flex flex-col h-full">
                 <div className="flex items-center justify-between mb-5 flex-shrink-0">
-                  <h2 className="font-semibold text-xl text-black leading-5">Variants</h2>
+                  <h2 className="font-semibold text-xl text-black leading-5">{selectedAdType.toString()}</h2>
                   <div className="flex items-center gap-2"><div className="w-2 h-2 bg-[#0a8f63] rounded-full" /><span className="font-semibold text-sm text-[#475467] leading-5">{currentVariants.length} variants</span></div>
                 </div>
                 <div className="h-[1px] bg-[#eaecf0] mb-5 flex-shrink-0" />

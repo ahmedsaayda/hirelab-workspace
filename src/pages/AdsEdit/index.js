@@ -2028,8 +2028,8 @@ export default function AdsEdit({ paramsId }) {
             <div className="flex flex-col p-8 h-full">
               {/* Header */}
               <div className="flex flex-shrink-0 justify-between items-center mb-5">
-                <h2 className="text-xl font-semibold leading-5 text-black">
-                  Variants
+                <h2 className="text-xl font-semibold leading-5 text-black capitalize">
+                 {selectedAdType.toString()} Ads
                 </h2>
 
                 <div className="flex gap-2 items-center">
