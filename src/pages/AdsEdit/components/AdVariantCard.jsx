@@ -48,20 +48,6 @@ export default function AdVariantCard({
     return withTransform.replace(/\.(mp4|mov|webm|mkv)(\?.*)?$/i, ".jpg$2");
   };
 
-  // MVP: Background removal via Cloudinary URL transformation.
-  // Requires the image to already be hosted on Cloudinary.
-  const isCloudinaryImageUrl = (url) => {
-    const u = String(url || "");
-    return u.includes("res.cloudinary.com") && u.includes("/image/upload/");
-  };
-  const applyCloudinaryBgRemoval = (url) => {
-    const u = String(url || "");
-    if (!isCloudinaryImageUrl(u)) return "";
-    if (u.includes("e_background_removal") || u.includes("e_bgremoval")) return u;
-    // Insert transformation after /image/upload/
-    return u.replace("/image/upload/", "/image/upload/e_background_removal/");
-  };
-
   const emitDraft = (nextEditData) => {
     onDraftChange?.({ ...variant, ...nextEditData });
   };
@@ -265,110 +251,6 @@ export default function AdVariantCard({
                 </button>
               );
             })}
-            <button
-              type="button"
-              onClick={() => {
-                if (!editData.image || isLikelyVideoUrl(editData.image)) {
-                  message.info("Select an image to remove its background.");
-                  return;
-                }
-                const curHero = editData?.imageAdjustment?.heroImage || {};
-                const isOn = Boolean(curHero?.bgRemoved);
-
-                if (!isOn) {
-                  const transformed = applyCloudinaryBgRemoval(editData.image);
-                  if (!transformed) {
-                    message.warning("Background removal MVP requires a Cloudinary image URL.");
-                    return;
-                  }
-                  const next = {
-                    ...editData,
-                    image: transformed,
-                    imageAdjustment: {
-                      ...(editData.imageAdjustment || {}),
-                      heroImage: {
-                        ...curHero,
-                        bgRemoved: true,
-                        bgOriginalUrl: curHero?.bgOriginalUrl || editData.image,
-                      },
-                    },
-                  };
-                  setEditData(next);
-                  emitDraft(next);
-                  return;
-                }
-
-                const original = curHero?.bgOriginalUrl || editData.image;
-                const next = {
-                  ...editData,
-                  image: original,
-                  imageAdjustment: {
-                    ...(editData.imageAdjustment || {}),
-                    heroImage: {
-                      ...curHero,
-                      bgRemoved: false,
-                    },
-                  },
-                };
-                setEditData(next);
-                emitDraft(next);
-              }}
-              disabled={!editData.image || isLikelyVideoUrl(editData.image)}
-              className={`px-2 py-1 rounded text-[11px] font-semibold border transition-colors ${(!editData.image || isLikelyVideoUrl(editData.image))
-                ? "bg-gray-50 text-[#98a2b3] border-[#eaecf0] cursor-not-allowed"
-                : (editData?.imageAdjustment?.heroImage?.bgRemoved
-                  ? "bg-[#101828] text-white border-[#101828]"
-                  : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50")
-                }`}
-              title={isCloudinaryImageUrl(editData.image) ? "Cloudinary background removal (MVP)" : "Requires Cloudinary image URL"}
-            >
-              {editData?.imageAdjustment?.heroImage?.bgRemoved ? "Restore BG" : "Remove BG"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const next = {
-                  ...editData,
-                  imageAdjustment: {
-                    ...(editData.imageAdjustment || {}),
-                    heroImage: {
-                      objectFit: "cover",
-                      objectPosition: { x: 50, y: 50 },
-                      mirror: false,
-                    },
-                  },
-                };
-                setEditData(next);
-                emitDraft(next);
-              }}
-              className="px-2 py-1 rounded text-[11px] font-semibold border border-[#d0d5dd] text-[#344054] hover:bg-gray-50"
-            >
-              Reset
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const cur = Boolean(editData?.imageAdjustment?.heroImage?.mirror);
-                const next = {
-                  ...editData,
-                  imageAdjustment: {
-                    ...(editData.imageAdjustment || {}),
-                    heroImage: {
-                      ...(editData.imageAdjustment?.heroImage || {}),
-                      mirror: !cur,
-                    },
-                  },
-                };
-                setEditData(next);
-                emitDraft(next);
-              }}
-              className={`px-2 py-1 rounded text-[11px] font-semibold border transition-colors ${editData?.imageAdjustment?.heroImage?.mirror
-                ? "bg-[#101828] text-white border-[#101828]"
-                : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
-                }`}
-            >
-              Mirror {editData?.imageAdjustment?.heroImage?.mirror ? "On" : "Off"}
-            </button>
           </div>
         </div>
 
