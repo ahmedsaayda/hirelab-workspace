@@ -392,6 +392,7 @@ x="185" y="322"
                 {isVideo && !videoFailed && !isCapture ? (
                   <video
                     src={videoUrl}
+                    crossOrigin="anonymous"
                     autoPlay
                     muted
                     loop

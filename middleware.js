@@ -36,7 +36,8 @@ const publicPaths = [
   '/_next', // Next.js assets
   '/favicon.ico',
   '/api', // API routes
-  "/workspace-invitation" // Workspace invitation page
+  "/workspace-invitation", // Workspace invitation page
+  '/render-preview', // Puppeteer video recording (no auth needed - data passed in URL)
 ];
 
 // Define static file extensions that should be publicly accessible

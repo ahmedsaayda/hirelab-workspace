@@ -45,7 +45,7 @@ export const VARIANT_TEMPLATES = {
             variantNumber: 1,
             name: "Company Story",
             description: "Tell your company's story with visuals",
-            mediaType: "image",
+            mediaType: "both",
         },
     ],
     testimonial: [

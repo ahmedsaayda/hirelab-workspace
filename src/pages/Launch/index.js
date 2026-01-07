@@ -1017,11 +1017,22 @@ export default function Launch({ paramsId }) {
     }
     try {
       setLaunching(true);
-      const ads = summary.editorAds;
+      const editorAds = summary.editorAds;
+      
+      // Get the correct creatives source - ad set-specific or campaign-level
+      let creativesSource = editorAds;
+      if (adSetKey) {
+        const adSets = Array.isArray(editorAds?._adSets) ? editorAds._adSets : [];
+        const adSet = adSets.find((s) => s?.id === adSetKey);
+        if (adSet?.creatives) {
+          creativesSource = adSet.creatives;
+        }
+      }
+      
       const ids = [];
-      Object.keys(ads || {}).forEach((adType) => {
-        if (adType === "_publish") return;
-        const group = ads[adType];
+      Object.keys(creativesSource || {}).forEach((adType) => {
+        if (adType.startsWith("_")) return;
+        const group = creativesSource[adType];
         (group?.variants || []).forEach((v) => {
           if (v.approved) {
             ids.push(v.id);
@@ -1796,6 +1807,7 @@ export default function Launch({ paramsId }) {
               <CreativesPreview 
                 editorAds={summary?.editorAds} 
                 lpId={lpId}
+                adSetKey={adSetKey}
               />
             )}
           </div>
@@ -1806,7 +1818,7 @@ export default function Launch({ paramsId }) {
 }
 
 // Creatives Preview Component - readonly preview of approved creatives
-function CreativesPreview({ editorAds, lpId }) {
+function CreativesPreview({ editorAds, lpId, adSetKey }) {
   const [selectedFormat, setSelectedFormat] = useState("square");
   const [selectedVariant, setSelectedVariant] = useState(null);
   
@@ -1816,18 +1828,40 @@ function CreativesPreview({ editorAds, lpId }) {
     { id: "portrait", label: "Portrait (4:5)", width: 1080, height: 1350 },
   ];
 
-  // Flatten all variants from all ad types
+  // Get the correct creatives source - ad set-specific or campaign-level
+  const creativesSource = React.useMemo(() => {
+    if (!editorAds) return {};
+    
+    // If we have an ad set key, look for ad set-specific creatives
+    if (adSetKey) {
+      const adSets = Array.isArray(editorAds._adSets) ? editorAds._adSets : [];
+      const adSet = adSets.find((s) => s?.id === adSetKey);
+      if (adSet?.creatives) {
+        return adSet.creatives;
+      }
+    }
+    
+    // Fall back to campaign-level creatives
+    return editorAds;
+  }, [editorAds, adSetKey]);
+
+  // Flatten only APPROVED variants that have generated images/videos
   const allVariants = React.useMemo(() => {
     const variants = [];
-    Object.keys(editorAds || {})
+    Object.keys(creativesSource || {})
       .filter((k) => !k.startsWith('_'))
       .forEach((adType) => {
-        (editorAds[adType]?.variants || []).forEach((v) => {
-          variants.push({ ...v, adType });
+        (creativesSource[adType]?.variants || []).forEach((v) => {
+          // Only include approved variants with generated publish images/videos
+          const hasPublishImages = Object.keys(v.publishImages || {}).length > 0 || !!v.publishImage;
+          const hasPublishVideos = Object.keys(v.publishVideos || {}).length > 0 || !!v.publishVideo;
+          if (v.approved && (hasPublishImages || hasPublishVideos)) {
+            variants.push({ ...v, adType });
+          }
         });
       });
     return variants;
-  }, [editorAds]);
+  }, [creativesSource]);
 
   // Auto-select first variant
   React.useEffect(() => {
@@ -1838,8 +1872,11 @@ function CreativesPreview({ editorAds, lpId }) {
 
   const getImageForFormat = (variant, format) => {
     if (!variant) return null;
+    // For videos, prefer publishVideos, then fall back to publishImages (poster)
+    const publishVideos = variant.publishVideos || {};
     const publishImages = variant.publishImages || {};
-    return publishImages[format] || variant.publishImage || variant.image;
+    // Return the generated creative image/video, NOT the raw background image
+    return publishVideos[format] || publishImages[format] || variant.publishVideo || variant.publishImage;
   };
 
   const currentImage = selectedVariant ? getImageForFormat(selectedVariant, selectedFormat) : null;
@@ -1887,9 +1924,11 @@ function CreativesPreview({ editorAds, lpId }) {
             {allVariants.map((v) => {
               const { isPublished, isApproved } = getStatusInfo(v);
               const publishImages = v.publishImages || {};
-              const thumbImg = publishImages.square || publishImages.portrait || publishImages.story || v.publishImage || v.image;
+              const publishVideos = v.publishVideos || {};
+              // Use generated creatives only, NOT raw background image
+              const thumbImg = publishImages.square || publishImages.portrait || publishImages.story || v.publishImage || publishVideos.square || publishVideos.portrait || publishVideos.story || v.publishVideo;
               const isSelected = selectedVariant?.id === v.id;
-              const formatCount = Object.keys(publishImages).length;
+              const formatCount = Object.keys(publishImages).length + Object.keys(publishVideos).length;
               
               return (
                 <div
@@ -1922,8 +1961,9 @@ function CreativesPreview({ editorAds, lpId }) {
             })}
             {allVariants.length === 0 && (
               <div className="text-sm text-[#98a2b3] text-center py-8 bg-gray-50 rounded-lg">
-                No creatives found.<br/>
-                <a href={`/ads-edit/${lpId}`} className="text-[#5207CD] underline mt-2 inline-block">Go to Ads Editor</a>
+                No approved creatives found.<br/>
+                <span className="text-xs">Click "Approve creatives" in the Ads Editor first.</span><br/>
+                <a href={`/lp-editor/${lpId}/ads`} className="text-[#5207CD] underline mt-2 inline-block">Go to Ads Editor</a>
               </div>
             )}
           </div>
@@ -1951,18 +1991,29 @@ function CreativesPreview({ editorAds, lpId }) {
             </div>
           </div>
 
-          {/* Preview Image - Clean display */}
+          {/* Preview - supports both images and videos */}
           <div className="flex justify-center bg-[#f8f9fa] rounded-xl p-6 min-h-[520px] items-center">
             <div 
               className="rounded-lg overflow-hidden shadow-xl bg-white flex items-center justify-center"
               style={{ width: `${previewDims.width}px`, height: `${previewDims.height}px` }}
             >
               {currentImage ? (
-                <img 
-                  src={currentImage} 
-                  alt={selectedVariant?.title || "Preview"} 
-                  className="w-full h-full object-contain"
-                />
+                /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(currentImage) ? (
+                  <video 
+                    src={currentImage} 
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <img 
+                    src={currentImage} 
+                    alt={selectedVariant?.title || "Preview"} 
+                    className="w-full h-full object-contain"
+                  />
+                )
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-[#98a2b3]">
                   <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">

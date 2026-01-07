@@ -376,6 +376,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
                 {isVideo && !videoFailed && !isCapture ? (
                   <video
                     src={videoUrl}
+                    crossOrigin="anonymous"
                     autoPlay
                     muted
                     loop

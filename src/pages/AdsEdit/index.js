@@ -796,6 +796,11 @@ export default function AdsEdit({ paramsId }) {
         mode: "cors",
         credentials: "omit",
       },
+      // Filter out video elements to avoid tainted canvas errors
+      filter: (domNode) => {
+        if (domNode.tagName === "VIDEO") return false;
+        return true;
+      },
     });
     try {
       window.__HL_ADS_CAPTURE__ = false;
@@ -1230,6 +1235,11 @@ export default function AdsEdit({ paramsId }) {
         mode: "cors",
         credentials: "omit",
       },
+      // Filter out video elements to avoid tainted canvas errors
+      filter: (domNode) => {
+        if (domNode.tagName === "VIDEO") return false;
+        return true;
+      },
     });
 
     try {
@@ -1242,44 +1252,101 @@ export default function AdsEdit({ paramsId }) {
     return blob;
   };
 
-  // Handle variant download - renders the full creative preview (same as approval flow)
+  // State to track if download is in progress (prevents multiple clicks)
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  // Handle variant download
+  // For video variants: records the exact preview as video
+  // For image variants: renders the full creative preview as PNG
   const handleVariantDownload = async (variant) => {
-    if (!variant) return;
+    if (!variant || isDownloading) return;
+
+    // Check if this is a video variant
+    const videoUrl = variant?.videoUrl || "";
+    const isVideoVariant = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+
+    setIsDownloading(true);
 
     try {
-      message.loading({ content: "Rendering creative...", key: "download" });
-
-      // Get current format
-      const format = AD_FORMATS.find((f) => f.id === selectedFormat);
-
-      // Ensure the variant is selected and showing in preview
-      // The variant is from the current ad type, so selectedAdType should already be correct
-      setSelectedVariant(variant.id);
-
-      // Wait for preview to render (same timeout as approval flow)
-      await waitForPreviewRender(4000);
-
-      // Render to blob
-      const blob = await renderPreviewToBlob(format);
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-
       // Generate filename from variant title and format
+      const format = AD_FORMATS.find((f) => f.id === selectedFormat);
       const safeName = (variant.title || "creative")
         .replace(/[^a-z0-9]/gi, "_")
         .substring(0, 40);
       const formatName = format?.id || "ad";
-      link.download = `${safeName}_${formatName}_${Date.now()}.png`;
 
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      if (isVideoVariant) {
+        // For video variants: Generate video with Creatomate (video + overlays burned in)
+        message.loading({ content: "Generating video... This may take a minute.", key: "download", duration: 0 });
 
-      message.success({ content: "Downloaded!", key: "download" });
+        // Start video generation
+        const genResponse = await AdsService.generateVideo(lpId, {
+          variantId: variant.id,
+          variant: variant,
+          landingPage: {
+            companyName: landingPageData?.companyName,
+            logo: landingPageData?.logo,
+            buttonColor: landingPageData?.buttonColor,
+            primaryColor: landingPageData?.primaryColor,
+            accentColor: landingPageData?.accentColor,
+          },
+          format: format?.id || 'story',
+        });
+
+        const renderId = genResponse?.data?.data?.renderId;
+        if (!renderId) {
+          throw new Error("Failed to start video generation");
+        }
+
+        message.loading({ content: "Rendering video... Please wait.", key: "download", duration: 0 });
+
+        // Wait for render to complete
+        const videoUrl = await AdsService.waitForRender(lpId, renderId, 120000);
+
+        message.loading({ content: "Downloading video...", key: "download" });
+
+        // Download the video
+        const videoResponse = await fetch(videoUrl);
+        if (!videoResponse.ok) throw new Error("Failed to fetch video");
+        const blob = await videoResponse.blob();
+
+        // Download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${safeName}_${formatName}_${Date.now()}.mp4`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        message.success({ content: "Video downloaded!", key: "download" });
+      } else {
+        // For image variants, render the full creative preview as PNG
+        message.loading({ content: "Rendering creative...", key: "download" });
+
+        // Ensure the variant is selected and showing in preview
+        setSelectedVariant(variant.id);
+
+        // Wait for preview to render
+        await waitForPreviewRender(4000);
+
+        // Render to blob
+        const blob = await renderPreviewToBlob(format);
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${safeName}_${formatName}_${Date.now()}.png`;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        message.success({ content: "Creative downloaded!", key: "download" });
+      }
     } catch (error) {
       console.error("Download failed:", error);
       message.error({ content: "Download failed: " + error.message, key: "download" });
@@ -1288,6 +1355,8 @@ export default function AdsEdit({ paramsId }) {
       } catch {
         // ignore
       }
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -1464,57 +1533,122 @@ export default function AdsEdit({ paramsId }) {
         const v = variantsToPrepare[index];
         const stepLabel = `${v.adTypeId} · ${v.title || v.id}`;
         
+        // Check if this is a video variant
+        const videoUrl = v?.videoUrl || "";
+        const isVideoVariant = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
+        
         setSelectedAdType(v.adTypeId);
         setSelectedVariant(v.id);
         
-        // Initialize publishImages object for this variant
+        // Initialize publishImages/publishVideos objects for this variant
         const publishImages = {};
+        const publishVideos = {};
         
-        // Render each format for this variant
-        for (const format of AD_FORMATS) {
-          currentStep += 1;
-          appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label})`);
+        if (isVideoVariant) {
+          appendPrepareMessage(`📹 Video creative detected for ${stepLabel}`);
           
-          // Switch to this format
-          setSelectedFormat(format.id);
-          
-          // IMPORTANT: Wait for React to process the format change before rendering.
-          // This needs to be long enough for:
-          // 1. React to schedule and apply the state update
-          // 2. The AdPreview component to re-render with new format dimensions
-          // 3. Any lazy-loaded template to load and render
+          // For video variants: Generate videos with overlays via Creatomate (same method as download)
           // eslint-disable-next-line no-await-in-loop
-          await new Promise((r) => setTimeout(r, 1200));
-          
-          // Now wait for the preview to be fully rendered with correct dimensions
-          // eslint-disable-next-line no-await-in-loop
-          const formatReady = await waitForPreviewRender(8000, format);
-          
-          if (!formatReady) {
-            // Format dimensions don't match - try once more with extra delay
-            appendPrepareMessage(`⚠ ${format.label} dimensions not ready, retrying...`);
-            // eslint-disable-next-line no-await-in-loop
-            await new Promise((r) => setTimeout(r, 2000));
-            // eslint-disable-next-line no-await-in-loop
-            const retryReady = await waitForPreviewRender(5000, format);
-            if (!retryReady) {
-              appendPrepareMessage(`❌ ${format.label} failed for ${stepLabel} - skipping`);
-              console.error(`[approveCreatives] Format ${format.id} failed to render correctly for variant ${v.id}`);
-              // Continue to next format instead of failing entirely
-              // eslint-disable-next-line no-continue
-              continue;
+          for (const format of AD_FORMATS) {
+            currentStep += 1;
+            appendPrepareMessage(`Generating ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} video)`);
+            
+            try {
+              // Use EXACT same flow as download - ALWAYS wait for render
+              // eslint-disable-next-line no-await-in-loop
+              const response = await AdsService.generateVideo(lpId, {
+                variantId: v.id,
+                variant: v,
+                landingPage: {
+                  companyName: landingPageData?.companyName,
+                  logo: landingPageData?.logo,
+                  buttonColor: landingPageData?.buttonColor,
+                  primaryColor: landingPageData?.primaryColor,
+                  accentColor: landingPageData?.accentColor,
+                },
+                format: format.id,
+              });
+              
+              // Get renderId - MUST exist for Creatomate
+              const renderId = response?.data?.data?.renderId;
+              if (!renderId) {
+                throw new Error("Failed to start video generation - no renderId");
+              }
+              
+              // ALWAYS wait for render to complete (same as download)
+              appendPrepareMessage(`⏳ ${format.label} rendering video...`);
+              // eslint-disable-next-line no-await-in-loop
+              const generatedVideoUrl = await AdsService.waitForRender(lpId, renderId, 120000);
+              
+              // Creatomate videos are permanently hosted on Backblaze B2 - no need to re-upload
+              publishVideos[format.id] = generatedVideoUrl;
+              appendPrepareMessage(`✓ ${format.label} video ready for ${stepLabel}`);
+            } catch (videoError) {
+              console.error(`[approveCreatives] Video generation failed for ${format.id}:`, videoError);
+              // Fallback: use original video URL
+              publishVideos[format.id] = videoUrl;
+              appendPrepareMessage(`⚠ ${format.label} fallback to original video`);
             }
           }
           
-          // Additional small delay to ensure all paint operations are complete
-          // eslint-disable-next-line no-await-in-loop
-          await new Promise((r) => setTimeout(r, 400));
-          
-          // eslint-disable-next-line no-await-in-loop
-          const url = await renderCurrentPreviewToCloudinary(format);
-          
-          publishImages[format.id] = url;
-          appendPrepareMessage(`✓ ${format.label} ready for ${stepLabel}`);
+          // Also render a poster image (thumbnail) for each format
+          for (const format of AD_FORMATS) {
+            appendPrepareMessage(`Rendering poster for ${stepLabel} (${format.label})`);
+            setSelectedFormat(format.id);
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, 1200));
+            // eslint-disable-next-line no-await-in-loop
+            await waitForPreviewRender(5000, format);
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, 400));
+            try {
+              // eslint-disable-next-line no-await-in-loop
+              const posterUrl = await renderCurrentPreviewToCloudinary(format);
+              publishImages[format.id] = posterUrl;
+            } catch {
+              // Poster failed, not critical
+            }
+          }
+        } else {
+          // For image variants: Render each format to PNG (existing flow)
+          for (const format of AD_FORMATS) {
+            currentStep += 1;
+            appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} image)`);
+            
+            // Switch to this format
+            setSelectedFormat(format.id);
+            
+            // IMPORTANT: Wait for React to process the format change before rendering.
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, 1200));
+            
+            // Now wait for the preview to be fully rendered with correct dimensions
+            // eslint-disable-next-line no-await-in-loop
+            const formatReady = await waitForPreviewRender(8000, format);
+            
+            if (!formatReady) {
+              appendPrepareMessage(`⚠ ${format.label} dimensions not ready, retrying...`);
+              // eslint-disable-next-line no-await-in-loop
+              await new Promise((r) => setTimeout(r, 2000));
+              // eslint-disable-next-line no-await-in-loop
+              const retryReady = await waitForPreviewRender(5000, format);
+              if (!retryReady) {
+                appendPrepareMessage(`❌ ${format.label} failed for ${stepLabel} - skipping`);
+                console.error(`[approveCreatives] Format ${format.id} failed to render correctly for variant ${v.id}`);
+                // eslint-disable-next-line no-continue
+                continue;
+              }
+            }
+            
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, 400));
+            
+            // eslint-disable-next-line no-await-in-loop
+            const url = await renderCurrentPreviewToCloudinary(format);
+            
+            publishImages[format.id] = url;
+            appendPrepareMessage(`✓ ${format.label} image ready for ${stepLabel}`);
+          }
         }
         
         // Update in the correct creatives source (ad set or campaign level)
@@ -1527,6 +1661,11 @@ export default function AdsEdit({ paramsId }) {
               publishImages,
               // Keep publishImage for backwards compatibility (use square as default)
               publishImage: publishImages.square || publishImages.story || publishImages.portrait,
+              // For video variants, store generated videos with overlays
+              ...(Object.keys(publishVideos).length > 0 ? { 
+                publishVideos,
+                publishVideo: publishVideos.story || publishVideos.square || publishVideos.portrait,
+              } : {}),
             };
           }
         }
@@ -2082,6 +2221,7 @@ export default function AdsEdit({ paramsId }) {
                     }}
                     onDelete={() => handleVariantDelete(variant.id)}
                     onDownload={() => handleVariantDownload(variant)}
+                    isDownloading={isDownloading}
                     onReplace={() => handleVariantReplace(variant.id)}
                     onChangeTemplate={(v) => {
                       setTemplateChangeVariant(v);

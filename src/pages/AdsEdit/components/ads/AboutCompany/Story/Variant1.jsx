@@ -36,9 +36,8 @@ const MenuDotsIcon = ({ color = "#fff" }) => (
 export default function Variant1({ variant, brandData, landingPageData, showStoryChrome = true }) {
   const titleRaw =
     variant?.title ||
-    landingPageData?.aboutCompanyTitle ||
-    "Forward-thinking Technology Company";
-  const tag = landingPageData?.aboutCompanyTag || "WE ARE HIRELAB";
+    landingPageData?.aboutCompanyTitle;
+  const tag = variant?.linkDescription || landingPageData?.aboutCompanyTag;
   const heroImage = variant?.image || landingPageData?.heroImage || HERO_FALLBACK;
   const videoUrl = variant?.videoUrl || "";
   const isCapture =

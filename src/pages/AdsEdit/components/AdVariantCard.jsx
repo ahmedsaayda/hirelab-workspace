@@ -18,6 +18,7 @@ export default function AdVariantCard({
   onDraftChange,
   landingPageData,
   mediaType = "image", // "image" | "video" | "both" - controls what media can be uploaded
+  isDownloading = false, // Disables download button when true
 }) {
   const dragRef = useRef({ dragging: false, pointerId: null });
   const [editData, setEditData] = useState({
@@ -728,21 +729,33 @@ export default function AdVariantCard({
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            if (onDownload) onDownload();
+            if (onDownload && !isDownloading) onDownload();
           }}
-          title="Download"
-          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-[#344054] bg-white hover:bg-gray-50 border-t border-b border-l border-[#d0d5dd] transition-colors"
+          disabled={isDownloading}
+          title={isDownloading ? "Download in progress..." : "Download"}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium border-t border-b border-l border-[#d0d5dd] transition-colors ${
+            isDownloading 
+              ? "text-[#98a2b3] bg-gray-100 cursor-not-allowed" 
+              : "text-[#344054] bg-white hover:bg-gray-50"
+          }`}
         >
-          <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M9 2.25V11.25M9 11.25L5.25 7.5M9 11.25L12.75 7.5M2.25 12.75V14.25C2.25 15.0784 2.92157 15.75 3.75 15.75H14.25C15.0784 15.75 15.75 15.0784 15.75 14.25V12.75"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="hidden sm:inline">Download</span>
+          {isDownloading ? (
+            <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M9 2.25V11.25M9 11.25L5.25 7.5M9 11.25L12.75 7.5M2.25 12.75V14.25C2.25 15.0784 2.92157 15.75 3.75 15.75H14.25C15.0784 15.75 15.75 15.0784 15.75 14.25V12.75"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+          <span className="hidden sm:inline">{isDownloading ? "Recording..." : "Download"}</span>
         </button>
 
         <button

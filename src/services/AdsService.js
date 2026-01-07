@@ -41,6 +41,66 @@ class AdsService {
   createAdSet(lpId, creatives = null) {
     return this.api.post(`/landingpage/${lpId}/ads/adset/create`, { creatives });
   }
+
+  /**
+   * Generate video with Creatomate (used for both download and approve creatives)
+   * @param {string} lpId - Landing page ID
+   * @param {Object} params - Generation parameters
+   * @param {string} params.variantId - Variant ID
+   * @param {Object} params.variant - Full variant object with title, linkDescription, videoUrl, etc.
+   * @param {Object} params.landingPage - Landing page data with buttonColor, primaryColor, etc.
+   * @param {string} params.format - 'story' | 'square' | 'portrait'
+   * @returns {Promise<{renderId: string, status: string, videoUrl?: string}>}
+   */
+  generateVideo(lpId, { variantId, variant, landingPage, format = 'story' }) {
+    return this.api.post(`/landingpage/${lpId}/ads/record-video`, {
+      variantId,
+      variant,
+      landingPage,
+      format,
+    }, {
+      timeout: 60000,
+    });
+  }
+
+  /**
+   * Check Creatomate render status
+   * @param {string} lpId - Landing page ID
+   * @param {string} renderId - Creatomate render ID
+   * @returns {Promise<{status: string, videoUrl?: string}>}
+   */
+  getRenderStatus(lpId, renderId) {
+    return this.api.get(`/landingpage/${lpId}/ads/render-status/${renderId}`);
+  }
+
+  /**
+   * Wait for video render to complete
+   * @param {string} lpId - Landing page ID
+   * @param {string} renderId - Creatomate render ID
+   * @param {number} maxWaitMs - Maximum wait time
+   * @returns {Promise<string>} - Video URL
+   */
+  async waitForRender(lpId, renderId, maxWaitMs = 120000) {
+    const startTime = Date.now();
+    const pollInterval = 2000;
+
+    while (Date.now() - startTime < maxWaitMs) {
+      const response = await this.getRenderStatus(lpId, renderId);
+      const data = response?.data?.data;
+
+      if (data?.status === 'succeeded' && data?.videoUrl) {
+        return data.videoUrl;
+      }
+
+      if (data?.status === 'failed') {
+        throw new Error(data?.errorMessage || 'Video render failed');
+      }
+
+      await new Promise(r => setTimeout(r, pollInterval));
+    }
+
+    throw new Error('Video render timed out');
+  }
 }
 
 export default new AdsService(`${getBackendUrl()}/landingPage`);
