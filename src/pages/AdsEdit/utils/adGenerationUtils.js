@@ -448,19 +448,18 @@ export const generateVariants = (lpData) => {
     ads.company = { variants, enabled: false };
   }
 
-  // EMPLOYER BRAND (EVP, Leader, Video)
+  // EMPLOYER BRAND (EVP, Leader, Mission)
+  // NOTE: Employer-Brand does NOT support video - only images
   {
     const variants = [];
     const evp = lpData?.evpMissionAvatar || "";
     const leader = lpData?.leaderIntroductionAvatar || "";
-    const videoUrl = getVideoUrlFromLp(lpData);
-    const videoPoster = videoUrl ? (cloudinaryVideoToPoster(videoUrl) || "") : "";
 
     variants.push(
       createVariant(
         "employer-brand",
         0,
-        evp || leader || videoPoster || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
+        evp || leader || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
         { mediaKind: evp ? "image" : "fallback", mediaSource: evp ? "evpMissionAvatar" : "fallback" }
       )
     );
@@ -468,7 +467,7 @@ export const generateVariants = (lpData) => {
       createVariant(
         "employer-brand",
         1,
-        leader || evp || videoPoster || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
+        leader || evp || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
         { mediaKind: leader ? "image" : "fallback", mediaSource: leader ? "leaderIntroductionAvatar" : "fallback" }
       )
     );
@@ -476,8 +475,8 @@ export const generateVariants = (lpData) => {
       createVariant(
         "employer-brand",
         2,
-        videoPoster || evp || leader || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
-        { mediaKind: videoUrl ? "video" : "fallback", mediaSource: videoUrl ? "myVideo" : "fallback", videoUrl: videoUrl || "" }
+        lpData?.heroImage || evp || leader || lpData?.companyLogo || TRANSPARENT_PNG,
+        { mediaKind: "image", mediaSource: "heroImage" }
       )
     );
 
