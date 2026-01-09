@@ -1005,12 +1005,7 @@ export default function Launch({ paramsId }) {
       );
       return;
     }
-    if (!summary?.adAccountId || !summary?.pageId) {
-      message.error(
-        "Meta Ad Account and Page are not configured. Please open the Ads Editor Meta settings and select an Ad Account & Page before launching."
-      );
-      return;
-    }
+   
     if (!summary?.editorAds) {
       message.warning("No creatives available to launch");
       return;
