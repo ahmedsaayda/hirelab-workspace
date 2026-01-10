@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 /**
  * FeedContext
@@ -9,6 +9,22 @@ export default function FeedContext({ children, brandData, text, title, descript
   const brandName = brandData?.companyName || "Company Name";
   // Priority: Facebook Page logo (metaPageLogo) > companyLogo > logo > fallback
   const brandLogo = brandData?.metaPageLogo || brandData?.companyLogo || brandData?.logo;
+
+  // Facebook/Instagram truncates primary text to ~125 characters initially
+  const MAX_VISIBLE_CHARS = 125;
+  const fullText = text || "We're hiring! Check out our latest opportunities and join a team that's building the future.";
+  const canTruncate = fullText.length > MAX_VISIBLE_CHARS;
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Reset expanded state when text changes (e.g., switching variants or formats)
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [text]);
+
+  const showTruncated = canTruncate && !isExpanded;
+  const displayText = showTruncated
+    ? fullText.substring(0, MAX_VISIBLE_CHARS).trim()
+    : fullText;
 
   return (
     <div className="w-full h-full bg-[#f0f2f5] flex flex-col overflow-y-auto hide-scrollbar">
@@ -57,9 +73,17 @@ export default function FeedContext({ children, brandData, text, title, descript
           </button>
         </div>
 
-        {/* Caption */}
-        <div className="px-3 pb-3 text-[15px] text-gray-900 whitespace-pre-wrap leading-normal">
-          {text || "We're hiring! Check out our latest opportunities and join a team that's building the future."}
+        {/* Caption - Truncated to 125 chars like FB/Instagram */}
+        <div className="px-3 pb-3 text-[15px] text-gray-900 leading-normal">
+          <span className="whitespace-pre-wrap">{displayText}</span>
+          {showTruncated && (
+            <span
+              className="text-gray-400 cursor-pointer"
+              onClick={() => setIsExpanded(true)}
+            >
+              ... <span className="text-gray-500 hover:underline">Read more</span>
+            </span>
+          )}
         </div>
 
         {/* Media Content - The Ad */}

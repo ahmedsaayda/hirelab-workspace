@@ -330,6 +330,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
     } else {
       return (
         <FeedContext
+          key={`feed-${format?.id}-${variant?.id || variant?.title}`}
           brandData={brandData}
           // Primary Text (above media) - from Meta Ad Copy
           text={variant?.description || landingPageData?.heroDescription}
