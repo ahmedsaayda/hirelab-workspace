@@ -38,6 +38,10 @@ class MetaService {
   disconnect(workspaceId) {
     return this.api.post(`/disconnect`, { workspaceId });
   }
+
+  getPageLogo(workspaceId, forceRefresh = false) {
+    return this.api.get(`/page-logo`, { params: { workspaceId, forceRefresh } });
+  }
 }
 
 export default new MetaService(`${getBackendUrl()}/meta`);
