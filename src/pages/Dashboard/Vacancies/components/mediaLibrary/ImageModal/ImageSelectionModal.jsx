@@ -60,6 +60,7 @@ const ImageSelectionModal = ({
   console.log("unsplashResults", unsplashResults);
   const [unsplashPage, setUnsplashPage] = useState(1);
   const [unsplashHasMore, setUnsplashHasMore] = useState(true);
+  const [unsplashOrientation, setUnsplashOrientation] = useState("all"); // "all", "landscape", "portrait", "squarish"
   const unsplashSentinelRef = useRef(null);
   const unsplashInFlightRef = useRef(false);
   const unsplashRequestedPagesRef = useRef(new Set());
@@ -320,7 +321,7 @@ const ImageSelectionModal = ({
     }
   }, [isOpen]);
 
-  // Reset Unsplash pagination when query changes
+  // Reset Unsplash pagination when query or orientation changes
   useEffect(() => {
     if (!isOpen) return;
     if (activeOption !== "unsplash") return;
@@ -331,9 +332,9 @@ const ImageSelectionModal = ({
     unsplashRequestedPagesRef.current = new Set();
     unsplashLoadedPagesRef.current = new Set();
     unsplashSeenIdsRef.current = new Set();
-  }, [unsplashQuery, isOpen, activeOption]);
+  }, [unsplashQuery, unsplashOrientation, isOpen, activeOption]);
 
-  const fetchUnsplashPage = async ({ query, page }) => {
+  const fetchUnsplashPage = async ({ query, page, orientation }) => {
     const q = (query || "").trim();
     if (!q) return;
     // Prevent duplicate loads of the same page and concurrent fetches
@@ -344,7 +345,7 @@ const ImageSelectionModal = ({
       unsplashInFlightRef.current = true;
       unsplashRequestedPagesRef.current.add(page);
       setUnsplashLoading(true);
-      const res = await AiService.searchUnsplash(q, 24, page);
+      const res = await AiService.searchUnsplash(q, 24, page, orientation === "all" ? null : orientation);
       const items = res?.data?.data || [];
       const meta = res?.data?.meta || {};
       const nextItems = Array.isArray(items) ? items : [];
@@ -412,11 +413,11 @@ const ImageSelectionModal = ({
     }
 
     const t = setTimeout(async () => {
-      await fetchUnsplashPage({ query: q, page: 1 });
+      await fetchUnsplashPage({ query: q, page: 1, orientation: unsplashOrientation });
     }, 400);
 
     return () => clearTimeout(t);
-  }, [isOpen, activeOption, unsplashQuery]);
+  }, [isOpen, activeOption, unsplashQuery, unsplashOrientation]);
 
   // Infinite scroll sentinel for Unsplash results
   useEffect(() => {
@@ -442,14 +443,14 @@ const ImageSelectionModal = ({
         // Guard: only fetch a page once
         if (unsplashLoadedPagesRef.current.has(nextPage)) return;
         setUnsplashPage(nextPage);
-        fetchUnsplashPage({ query: q, page: nextPage });
+        fetchUnsplashPage({ query: q, page: nextPage, orientation: unsplashOrientation });
       },
       { root: null, rootMargin: "200px", threshold: 0 }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [isOpen, activeOption, unsplashQuery, unsplashHasMore, unsplashLoading, unsplashPage]);
+  }, [isOpen, activeOption, unsplashQuery, unsplashHasMore, unsplashLoading, unsplashPage, unsplashOrientation]);
 
   // Also sync when existingFiles changes while modal is open
   useEffect(() => {
@@ -855,6 +856,62 @@ const ImageSelectionModal = ({
                       <div className="mt-1 text-xs text-gray-500">
                         Images are imported into your Media Library after upload.
                       </div>
+                    </div>
+                    {/* Orientation Filter */}
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <button
+                        type="button"
+                        onClick={() => setUnsplashOrientation("all")}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                          unsplashOrientation === "all"
+                            ? "bg-blue-500 text-white border-blue-500"
+                            : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                        }`}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUnsplashOrientation("landscape")}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center gap-1.5 ${
+                          unsplashOrientation === "landscape"
+                            ? "bg-blue-500 text-white border-blue-500"
+                            : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                        }`}
+                      >
+                        <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor">
+                          <rect x="0.5" y="0.5" width="13" height="9" rx="1" stroke="currentColor" strokeWidth="1" fill="none"/>
+                        </svg>
+                        Horizontal
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUnsplashOrientation("portrait")}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center gap-1.5 ${
+                          unsplashOrientation === "portrait"
+                            ? "bg-blue-500 text-white border-blue-500"
+                            : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                        }`}
+                      >
+                        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
+                          <rect x="0.5" y="0.5" width="9" height="13" rx="1" stroke="currentColor" strokeWidth="1" fill="none"/>
+                        </svg>
+                        Vertical
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUnsplashOrientation("squarish")}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center gap-1.5 ${
+                          unsplashOrientation === "squarish"
+                            ? "bg-blue-500 text-white border-blue-500"
+                            : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                        }`}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                          <rect x="0.5" y="0.5" width="11" height="11" rx="1" stroke="currentColor" strokeWidth="1" fill="none"/>
+                        </svg>
+                        Square
+                      </button>
                     </div>
                   </div>
 

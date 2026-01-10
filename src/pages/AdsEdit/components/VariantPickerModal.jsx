@@ -106,13 +106,49 @@ function RawTemplatePreview({ variantNumber, adTypeId, variant, brandData, landi
                             module = await import("./ads/JobAd/Square/Variant1.jsx");
                     }
                 } else if (adTypeId === "employer-brand") {
-                    module = await import("./ads/EmployerBrand/Square/Variant1.jsx");
+                    switch (variantNumber) {
+                        case 1:
+                            module = await import("./ads/EmployerBrand/Square/Variant1.jsx");
+                            break;
+                        case 2:
+                            module = await import("./ads/JobAd/Square/Variant4.jsx");
+                            break;
+                        default:
+                            module = await import("./ads/EmployerBrand/Square/Variant1.jsx");
+                    }
                 } else if (adTypeId === "company") {
-                    module = await import("./ads/AboutCompany/Square/Variant1.jsx");
+                    switch (variantNumber) {
+                        case 1:
+                            module = await import("./ads/AboutCompany/Square/Variant1.jsx");
+                            break;
+                        case 2:
+                            module = await import("./ads/JobAd/Square/Variant4.jsx");
+                            break;
+                        default:
+                            module = await import("./ads/AboutCompany/Square/Variant1.jsx");
+                    }
                 } else if (adTypeId === "testimonial") {
-                    module = await import("./ads/Testimonial/Square/Variant1.jsx");
+                    switch (variantNumber) {
+                        case 1:
+                            module = await import("./ads/Testimonial/Square/Variant1.jsx");
+                            break;
+                        case 2:
+                            module = await import("./ads/JobAd/Square/Variant4.jsx");
+                            break;
+                        default:
+                            module = await import("./ads/Testimonial/Square/Variant1.jsx");
+                    }
                 } else if (adTypeId === "retargeting") {
-                    module = await import("./ads/Retargeting/Square/Variant1.jsx");
+                    switch (variantNumber) {
+                        case 1:
+                            module = await import("./ads/Retargeting/Square/Variant1.jsx");
+                            break;
+                        case 2:
+                            module = await import("./ads/JobAd/Square/Variant4.jsx");
+                            break;
+                        default:
+                            module = await import("./ads/Retargeting/Square/Variant1.jsx");
+                    }
                 }
 
                 if (module?.default) {

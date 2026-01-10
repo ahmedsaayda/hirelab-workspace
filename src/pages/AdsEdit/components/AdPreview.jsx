@@ -143,67 +143,67 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       },
       // Employer brand ads - try multiple possible IDs
       'employer-brand': {
-        story: { 1: () => import('./ads/EmployerBrand/Story/Variant1.jsx').then(m => m.default) },
-        square: { 1: () => import('./ads/EmployerBrand/Square/Variant1.jsx').then(m => m.default) },
-        landscape: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default) },
-        portrait: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default) },
+        story: { 1: () => import('./ads/EmployerBrand/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
+        square: { 1: () => import('./ads/EmployerBrand/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
+        landscape: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+        portrait: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
       },
       'employer_brand': {
-        story: { 1: () => import('./ads/EmployerBrand/Story/Variant1.jsx').then(m => m.default) },
-        square: { 1: () => import('./ads/EmployerBrand/Square/Variant1.jsx').then(m => m.default) },
-        landscape: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default) },
-        portrait: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default) },
+        story: { 1: () => import('./ads/EmployerBrand/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
+        square: { 1: () => import('./ads/EmployerBrand/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
+        landscape: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+        portrait: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
       },
       employerBrand: {
-        story: { 1: () => import('./ads/EmployerBrand/Story/Variant1.jsx').then(m => m.default) },
-        square: { 1: () => import('./ads/EmployerBrand/Square/Variant1.jsx').then(m => m.default) },
-        landscape: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default) },
-        portrait: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default) },
+        story: { 1: () => import('./ads/EmployerBrand/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
+        square: { 1: () => import('./ads/EmployerBrand/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
+        landscape: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+        portrait: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
       },
       // Testimonial ads - try multiple possible IDs
       testimonial: {
-        story: { 1: () => import('./ads/Testimonial/Story/Variant1.jsx').then(m => m.default) },
-        square: { 1: () => import('./ads/Testimonial/Square/Variant1.jsx').then(m => m.default) },
-        landscape: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default) },
-        portrait: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default) },
+        story: { 1: () => import('./ads/Testimonial/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
+        square: { 1: () => import('./ads/Testimonial/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
+        landscape: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+        portrait: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
       },
       testimonials: {
-        story: { 1: () => import('./ads/Testimonial/Story/Variant1.jsx').then(m => m.default) },
-        square: { 1: () => import('./ads/Testimonial/Square/Variant1.jsx').then(m => m.default) },
-        landscape: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default) },
-        portrait: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default) },
+        story: { 1: () => import('./ads/Testimonial/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
+        square: { 1: () => import('./ads/Testimonial/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
+        landscape: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+        portrait: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
       },
       // About company ads - try multiple possible IDs
       company: {
-        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default) },
-        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default) },
-        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default) },
-        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default) },
+        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
+        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
+        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
       },
       'about-company': {
-        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default) },
-        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default) },
-        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default) },
-        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default) },
+        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
+        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
+        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
       },
       'about_company': {
-        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default) },
-        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default) },
-        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default) },
-        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default) },
+        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
+        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
+        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
       },
       aboutCompany: {
-        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default) },
-        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default) },
-        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default) },
-        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default) },
+        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
+        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
+        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
       },
       // Retargeting ads
       retargeting: {
-        story: { 1: () => import('./ads/Retargeting/Story/Variant1.jsx').then(m => m.default) },
-        square: { 1: () => import('./ads/Retargeting/Square/Variant1.jsx').then(m => m.default) },
-        landscape: { 1: () => import('./ads/Retargeting/Landscape/Variant1.jsx').then(m => m.default) },
-        portrait: { 1: () => import('./ads/Retargeting/Landscape/Variant1.jsx').then(m => m.default) },
+        story: { 1: () => import('./ads/Retargeting/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
+        square: { 1: () => import('./ads/Retargeting/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
+        landscape: { 1: () => import('./ads/Retargeting/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+        portrait: { 1: () => import('./ads/Retargeting/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
       },
     };
 
@@ -222,7 +222,9 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       return variantsForTypeAndFormat?.[alt] || variantsForTypeAndFormat?.[1] || null;
     }
 
-    return variantsForTypeAndFormat?.[1] || null;
+    const alt = ((Number(variantNumber) - 1) % 2) + 1;
+    return variantsForTypeAndFormat?.[alt] || variantsForTypeAndFormat?.[1] || null;
+
   };
 
   // Get ad type label
@@ -344,9 +346,9 @@ export default function AdPreview({ variant, format, platform, brandData, landin
              The TemplateComponent renders at full resolution (e.g. 1080px).
              We need to scale it down.
           */}
-          <div 
-            className="relative w-full" 
-            style={{ 
+          <div
+            className="relative w-full"
+            style={{
               aspectRatio: format.aspectRatio === '1:1' ? '1/1' : '4/5',
               cursor: "pointer",
               userSelect: "none",

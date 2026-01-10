@@ -27,9 +27,9 @@ class AiService {
   }
 
   // Search images from Unsplash
-  searchUnsplash(query, per_page = 5, page = 1) {
-    console.log(`[AiService] searching Unsplash for: "${query}" with per_page: ${per_page}, page: ${page}`);
-    return this.api.post("/search-images", { query, per_page, page });
+  searchUnsplash(query, per_page = 5, page = 1, orientation = null) {
+    console.log(`[AiService] searching Unsplash for: "${query}" with per_page: ${per_page}, page: ${page}, orientation: ${orientation}`);
+    return this.api.post("/search-images", { query, per_page, page, orientation });
   }
 
   // Create vacancy in database

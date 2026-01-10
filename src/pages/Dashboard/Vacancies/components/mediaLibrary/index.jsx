@@ -321,9 +321,28 @@ export default function MyMediaLibrary({ isAddSectionButtonVisible, getSelectedM
           sort: activeSorterKey && activeSorterDirection ? { [activeSorterKey]: activeSorterDirection } : {},  // Add empty object if no sorter
       });
 
+      // Filter by orientation if specified (calculated from resolution)
+      let filteredItems = result?.data?.items || [];
+      if (filters.orientation) {
+        filteredItems = filteredItems.filter((item) => {
+          if (!item.resolution) return false;
+          const [width, height] = item.resolution.split('x').map(Number);
+          if (isNaN(width) || isNaN(height)) return false;
+          
+          const ratio = width / height;
+          if (filters.orientation === 'landscape') {
+            return ratio > 1.1; // width > height by at least 10%
+          } else if (filters.orientation === 'portrait') {
+            return ratio < 0.9; // height > width by at least 10%
+          } else if (filters.orientation === 'squarish') {
+            return ratio >= 0.9 && ratio <= 1.1; // roughly square
+          }
+          return true;
+        });
+      }
       
-      setMediaData(result?.data?.items);
-      setAllMediaData(result?.data?.items);
+      setMediaData(filteredItems);
+      setAllMediaData(filteredItems);
       setTotalItems(result.data.total);
       // Process tags (if necessary)
       const tagsSet = new Set();
