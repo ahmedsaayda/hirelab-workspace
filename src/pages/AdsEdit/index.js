@@ -1385,38 +1385,33 @@ export default function AdsEdit({ paramsId }) {
     }
   };
 
-  // Add Creative: opens template picker so user can choose a fresh variant template
+  // Add Creative: directly adds a new creative with the current ad set template
   const handleAddVariant = () => {
     if (!adsData) return;
-    setVariantPickerOpen(true);
-  };
 
-  // Handle selection from variant picker modal
-  const handleVariantPickerSelect = (newCreative) => {
-    if (!adsData || !newCreative) return;
+    // Get the current template number from existing variants (default to 1)
+    const currentTemplateNumber = currentVariants?.[0]?.templateNumber || currentVariants?.[0]?.variantNumber || 1;
 
-    // If we're changing template for an existing variant
-    if (templateChangeVariant) {
-      const updatedVariants = currentVariants.map((v) => {
-        if (v.id === templateChangeVariant.id) {
-          // Keep existing content but update template/variantNumber
-          return {
-            ...v,
-            variantNumber: newCreative.variantNumber,
-            template: newCreative.template,
-            mediaType: newCreative.mediaType,
-          };
-        }
-        return v;
-      });
-      const nextData = updateVariantsInData(updatedVariants);
-      setAdsData(nextData);
-      setTemplateChangeVariant(null);
-      message.success("Template changed");
-      return;
-    }
+    // Create a new creative with the same template as existing ones
+    const newCreative = {
+      id: `${selectedAdType}-variant-${Date.now().toString(36)}`,
+      templateNumber: currentTemplateNumber,
+      variantNumber: currentTemplateNumber, // Legacy support
+      template: `template-${currentTemplateNumber}`,
+      title: "",
+      description: "",
+      linkDescription: "",
+      callToAction: "Apply Now",
+      image: "",
+      videoUrl: "",
+      adTypeId: selectedAdType,
+      selected: true,
+      approved: false,
+      source: "Manual",
+      mediaType: "both",
+    };
 
-    // Otherwise, add as new creative
+    // Add new creative and select it
     const updatedVariants = [
       ...currentVariants.map((v) => ({ ...v, selected: false })),
       newCreative,
@@ -1424,7 +1419,30 @@ export default function AdsEdit({ paramsId }) {
     const nextData = updateVariantsInData(updatedVariants);
     setAdsData(nextData);
     setSelectedVariant(newCreative.id);
-    setEditingVariant(newCreative); // Open editor immediately for the new creative
+    setEditingVariant(newCreative); // Open editor immediately
+  };
+
+  // Handle selection from variant picker modal
+  // GLOBAL template selection - applies to ALL creatives in the ad set
+  const handleVariantPickerSelect = (templateSelection) => {
+    if (!adsData || !templateSelection) return;
+
+    const { templateNumber, templateName, mediaType } = templateSelection;
+
+    // Apply template to ALL variants in the current ad type
+    // This is a GLOBAL setting for the ad set
+    const updatedVariants = currentVariants.map((v) => ({
+      ...v,
+      templateNumber,
+      variantNumber: templateNumber, // Legacy support
+      template: `template-${templateNumber}`,
+      mediaType: mediaType || v.mediaType,
+    }));
+
+    const nextData = updateVariantsInData(updatedVariants);
+    setAdsData(nextData);
+    setTemplateChangeVariant(null);
+    message.success(`Template "${templateName}" applied to all creatives`);
   };
 
   // Handle approve all – now also prepares Cloudinary images for launch (but does NOT publish)
@@ -2192,9 +2210,21 @@ export default function AdsEdit({ paramsId }) {
             <div className="flex flex-col p-8 h-full">
               {/* Header */}
               <div className="flex flex-shrink-0 justify-between items-center mb-5">
-                <h2 className="text-xl font-semibold leading-5 text-black capitalize">
-                  {selectedAdType.toString()} Ads
-                </h2>
+                <div className="flex items-center gap-4">
+                  <h2 className="text-xl font-semibold leading-5 text-black capitalize">
+                    {selectedAdType.toString()} Ads
+                  </h2>
+                  {/* Global Change Template Button */}
+                  <button
+                    onClick={() => setVariantPickerOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#5207CD] bg-[#F3F0FF] rounded-lg hover:bg-[#E4D9FF] transition-colors border border-[#5207CD]/20"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                    </svg>
+                    Change Template
+                  </button>
+                </div>
 
                 <div className="flex gap-2 items-center">
                   <div className="w-2 h-2 bg-[#0a8f63] rounded-full" />
@@ -2248,10 +2278,6 @@ export default function AdsEdit({ paramsId }) {
                     onDownload={() => handleVariantDownload(variant)}
                     isDownloading={isDownloading}
                     onReplace={() => handleVariantReplace(variant.id)}
-                    onChangeTemplate={(v) => {
-                      setTemplateChangeVariant(v);
-                      setVariantPickerOpen(true);
-                    }}
                     landingPageData={landingPageData}
                     mediaType={variant.mediaType || getVariantMediaType(variant.adTypeId || selectedAdType, variant.variantNumber)}
                   />
@@ -2449,7 +2475,7 @@ export default function AdsEdit({ paramsId }) {
         }}
       />
 
-      {/* Variant Template Picker Modal */}
+      {/* Template Picker Modal - GLOBAL setting for ad set */}
       <VariantPickerModal
         visible={variantPickerOpen}
         onClose={() => {
@@ -2457,10 +2483,11 @@ export default function AdsEdit({ paramsId }) {
           setTemplateChangeVariant(null);
         }}
         onSelect={handleVariantPickerSelect}
-        adTypeId={templateChangeVariant?.adTypeId || selectedAdType}
+        adTypeId={selectedAdType}
         formatId={selectedFormat}
         landingPageData={landingPageData}
-        isTemplateChange={!!templateChangeVariant}
+        isTemplateChange={true} // Always "change" mode - applies to all creatives
+        currentTemplateNumber={currentVariants?.[0]?.templateNumber || currentVariants?.[0]?.variantNumber || 1}
       />
 
       {/* Ad Edit Modal */}

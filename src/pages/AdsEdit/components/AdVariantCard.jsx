@@ -12,7 +12,6 @@ export default function AdVariantCard({
   onDelete,
   onDownload,
   onReplace,
-  onChangeTemplate,
   isEditing,
   onSave,
   onDraftChange,
@@ -26,8 +25,12 @@ export default function AdVariantCard({
     // - title: Headline (40)
     // Image overlay fields
     title: variant?.title || "", // Overlay Headline
-    linkDescription: variant?.linkDescription || "", // Overlay Subheadline
+    linkDescription: variant?.linkDescription || "", // Overlay Subheadline (for non-quote ad types)
     callToAction: variant?.callToAction || "Apply Now",
+    // Quote fields (for testimonial and employer-brand ad types - replaces subheadline)
+    quoteText: variant?.quoteText || "",
+    quoteAuthorName: variant?.quoteAuthorName || "",
+    quoteAuthorPosition: variant?.quoteAuthorPosition || "",
     // Meta ad copy fields
     description: variant?.description || "", // Meta Primary Text (2200, hook 125)
     metaHeadline: variant?.metaHeadline || "", // Meta Headline (40)
@@ -36,6 +39,9 @@ export default function AdVariantCard({
     image: variant?.image || "",
     videoUrl: variant?.videoUrl || "",
   });
+
+  // Check if this ad type uses quote fields instead of subheadline
+  const usesQuoteFields = variant?.adTypeId === 'testimonial' || variant?.adTypeId === 'employer-brand';
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
@@ -60,17 +66,6 @@ export default function AdVariantCard({
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
             <h3 className="font-semibold text-base text-[#101828]">Edit Variant</h3>
-            {onChangeTemplate && (
-              <button
-                onClick={() => onChangeTemplate(variant)}
-                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#5207CD] bg-[#F3F0FF] rounded-md hover:bg-[#E4D9FF] transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                </svg>
-                Change template
-              </button>
-            )}
           </div>
           <button
             onClick={() => onEdit(null)}
@@ -258,32 +253,101 @@ export default function AdVariantCard({
         <div className="mb-4">
           <h4 className="text-xs font-semibold text-[#101828] mb-2 uppercase tracking-wide">Text Overlay</h4>
 
-          {/* 2-column grid for Headline + Subheadline */}
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            {/* Headline (Overlay) */}
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-medium text-[#344054]">Headline</label>
-                <span className={`text-xs ${editData.title.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
-                  {editData.title.length}/40
-                </span>
-              </div>
-              <TextArea
-                value={editData.title}
-                onChange={(e) => {
-                  const next = { ...editData, title: e.target.value };
-                  setEditData(next);
-                  emitDraft(next);
-                }}
-                maxLength={40}
-                rows={2}
-                className="text-sm"
-                placeholder="Enter headline for image overlay..."
-              />
+          {/* Headline field */}
+          <div className="mb-3">
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="text-xs font-medium text-[#344054]">Headline</label>
+              <span className={`text-xs ${editData.title.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                {editData.title.length}/40
+              </span>
             </div>
+            <TextArea
+              value={editData.title}
+              onChange={(e) => {
+                const next = { ...editData, title: e.target.value };
+                setEditData(next);
+                emitDraft(next);
+              }}
+              maxLength={40}
+              rows={2}
+              className="text-sm"
+              placeholder="Enter headline for image overlay..."
+            />
+          </div>
 
-            {/* Subheadline (Overlay) */}
-            <div>
+          {/* Quote fields for testimonial and employer-brand ads */}
+          {usesQuoteFields ? (
+            <div className="space-y-3 mb-3">
+              {/* Quote Text */}
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-medium text-[#344054]">Quote Text</label>
+                  <span className={`text-xs ${editData.quoteText.length > 300 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                    {editData.quoteText.length}/300
+                  </span>
+                </div>
+                <TextArea
+                  value={editData.quoteText}
+                  onChange={(e) => {
+                    const next = { ...editData, quoteText: e.target.value };
+                    setEditData(next);
+                    emitDraft(next);
+                  }}
+                  maxLength={300}
+                  rows={3}
+                  className="text-sm"
+                  placeholder="Enter quote text..."
+                />
+              </div>
+
+              {/* 2-column grid for Author Name + Position */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Author Name */}
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-xs font-medium text-[#344054]">Author Name</label>
+                    <span className={`text-xs ${editData.quoteAuthorName.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                      {editData.quoteAuthorName.length}/40
+                    </span>
+                  </div>
+                  <Input
+                    value={editData.quoteAuthorName}
+                    onChange={(e) => {
+                      const next = { ...editData, quoteAuthorName: e.target.value };
+                      setEditData(next);
+                      emitDraft(next);
+                    }}
+                    maxLength={40}
+                    className="text-sm"
+                    placeholder="Full name..."
+                  />
+                </div>
+
+                {/* Author Position */}
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-xs font-medium text-[#344054]">Position</label>
+                    <span className={`text-xs ${editData.quoteAuthorPosition.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                      {editData.quoteAuthorPosition.length}/40
+                    </span>
+                  </div>
+                  <Input
+                    value={editData.quoteAuthorPosition}
+                    onChange={(e) => {
+                      const next = { ...editData, quoteAuthorPosition: e.target.value };
+                      setEditData(next);
+                      emitDraft(next);
+                    }}
+                    maxLength={40}
+                    className="text-sm"
+                    placeholder="Job title / role..."
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Subheadline for non-quote ad types */
+            <div className="mb-3">
               <div className="flex justify-between items-center mb-1.5">
                 <label className="text-xs font-medium text-[#344054]">Subheadline</label>
                 <span className={`text-xs ${editData.linkDescription.length > 30 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
@@ -303,7 +367,7 @@ export default function AdVariantCard({
                 placeholder="Enter subheadline..."
               />
             </div>
-          </div>
+          )}
 
           {/* CTA */}
           <div>
@@ -559,7 +623,12 @@ export default function AdVariantCard({
               </button>
             )}
           </p>
-          {variant.linkDescription ? (
+          {/* Show quote info for testimonial/employer-brand, otherwise show linkDescription */}
+          {(variant?.adTypeId === 'testimonial' || variant?.adTypeId === 'employer-brand') && variant.quoteAuthorName ? (
+            <p className="text-xs leading-4 text-[#667085] truncate mt-0.5">
+              — {variant.quoteAuthorName}{variant.quoteAuthorPosition ? `, ${variant.quoteAuthorPosition}` : ''}
+            </p>
+          ) : variant.linkDescription ? (
             <p className="text-xs leading-4 text-[#667085] truncate mt-0.5">
               {variant.linkDescription}
             </p>
@@ -616,8 +685,8 @@ export default function AdVariantCard({
           disabled={isDownloading}
           title={isDownloading ? "Download in progress..." : "Download"}
           className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium border-t border-b border-l border-[#d0d5dd] transition-colors ${isDownloading
-              ? "text-[#98a2b3] bg-gray-100 cursor-not-allowed"
-              : "text-[#344054] bg-white hover:bg-gray-50"
+            ? "text-[#98a2b3] bg-gray-100 cursor-not-allowed"
+            : "text-[#344054] bg-white hover:bg-gray-50"
             }`}
         >
           {isDownloading ? (

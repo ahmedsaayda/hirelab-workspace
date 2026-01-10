@@ -2,153 +2,79 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Modal } from "antd";
 
 /**
- * Configuration for all available variant templates.
+ * Configuration for all available templates.
+ * Universal templates that work for ALL ad types.
  * mediaType: "image" | "video" | "both" - controls what media can be uploaded
+ * 
+ * When user selects "video" as media, we use Creatomate for preview/render.
+ * When user selects "image" as media, we use our coded React component.
  */
+export const UNIVERSAL_TEMPLATES = [
+    {
+        templateNumber: 1,
+        name: "Industrial",
+        description: "Clean, modern layout with strong typography",
+        mediaType: "both", // Supports both image and video
+        previewImage: null, // Will use live component preview
+    },
+    // Future templates can be added here:
+    // {
+    //     templateNumber: 2,
+    //     name: "Bold",
+    //     description: "Eye-catching design with vibrant colors",
+    //     mediaType: "both",
+    // },
+];
+
+// Legacy support: map old ad-type-specific configs to universal
 export const VARIANT_TEMPLATES = {
-    job: [
-        {
-            variantNumber: 1,
-            name: "Classic",
-            description: "Clean, professional layout with prominent CTA",
-            mediaType: "image",
-        },
-        {
-            variantNumber: 2,
-            name: "Bold",
-            description: "Eye-catching design with strong visual hierarchy",
-            mediaType: "image",
-        },
-        {
-            variantNumber: 3,
-            name: "Modern",
-            description: "Contemporary style with gradient overlay",
-            mediaType: "image",
-        },
-        {
-            variantNumber: 4,
-            name: "Industrial",
-            description: "Simplistic style",
-            mediaType: "image",
-        },
-    ],
-    "employer-brand": [
-        {
-            variantNumber: 1,
-            name: "Culture Focus",
-            description: "Highlight your company culture and values",
-            mediaType: "image",
-        },
-    ],
-    company: [
-        {
-            variantNumber: 1,
-            name: "Company Story",
-            description: "Tell your company's story with visuals",
-            mediaType: "both",
-        },
-    ],
-    testimonial: [
-        {
-            variantNumber: 1,
-            name: "Employee Spotlight",
-            description: "Feature employee testimonials",
-            mediaType: "image",
-        },
-    ],
-    retargeting: [
-        {
-            variantNumber: 1,
-            name: "Re-engage",
-            description: "Bring back interested candidates",
-            mediaType: "image",
-        },
-    ],
+    job: UNIVERSAL_TEMPLATES,
+    "employer-brand": UNIVERSAL_TEMPLATES,
+    company: UNIVERSAL_TEMPLATES,
+    testimonial: UNIVERSAL_TEMPLATES,
+    retargeting: UNIVERSAL_TEMPLATES,
 };
 
 /**
- * Get the media type allowed for a specific variant
+ * Get the media type allowed for a specific template
+ * Now uses universal templates - adTypeId is kept for backwards compatibility but ignored
  */
-export function getVariantMediaType(adTypeId, variantNumber) {
-    const templates = VARIANT_TEMPLATES[adTypeId] || [];
-    const template = templates.find((t) => t.variantNumber === variantNumber);
-    return template?.mediaType || "image";
+export function getVariantMediaType(adTypeId, templateNumber) {
+    const template = UNIVERSAL_TEMPLATES.find((t) => t.templateNumber === templateNumber);
+    return template?.mediaType || "both";
+}
+
+/**
+ * Get a template by number
+ */
+export function getTemplateByNumber(templateNumber) {
+    return UNIVERSAL_TEMPLATES.find((t) => t.templateNumber === templateNumber) || UNIVERSAL_TEMPLATES[0];
 }
 
 // Placeholder image for preview
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=60";
 
 // Raw template preview - renders just the ad component without phone frames
-function RawTemplatePreview({ variantNumber, adTypeId, variant, brandData, landingPageData }) {
+// Uses Universal templates for all ad types
+function RawTemplatePreview({ templateNumber, variant, brandData, landingPageData }) {
     const [TemplateComponent, setTemplateComponent] = useState(null);
 
     useEffect(() => {
-        // Dynamically load the square variant component
+        // Dynamically load the square variant component from Universal templates
         const loadComponent = async () => {
             try {
                 let module;
-                // Load square format for consistent preview
-                if (adTypeId === "job") {
-                    switch (variantNumber) {
-                        case 1:
-                            module = await import("./ads/JobAd/Square/Variant1.jsx");
-                            break;
-                        case 2:
-                            module = await import("./ads/JobAd/Square/Variant2.jsx");
-                            break;
-                        case 3:
-                            module = await import("./ads/JobAd/Square/Variant3.jsx");
-                            break;
-                        case 4:
-                            module = await import("./ads/JobAd/Square/Variant4.jsx");
-                            break;
-                        default:
-                            module = await import("./ads/JobAd/Square/Variant1.jsx");
-                    }
-                } else if (adTypeId === "employer-brand") {
-                    switch (variantNumber) {
-                        case 1:
-                            module = await import("./ads/EmployerBrand/Square/Variant1.jsx");
-                            break;
-                        case 2:
-                            module = await import("./ads/JobAd/Square/Variant4.jsx");
-                            break;
-                        default:
-                            module = await import("./ads/EmployerBrand/Square/Variant1.jsx");
-                    }
-                } else if (adTypeId === "company") {
-                    switch (variantNumber) {
-                        case 1:
-                            module = await import("./ads/AboutCompany/Square/Variant1.jsx");
-                            break;
-                        case 2:
-                            module = await import("./ads/JobAd/Square/Variant4.jsx");
-                            break;
-                        default:
-                            module = await import("./ads/AboutCompany/Square/Variant1.jsx");
-                    }
-                } else if (adTypeId === "testimonial") {
-                    switch (variantNumber) {
-                        case 1:
-                            module = await import("./ads/Testimonial/Square/Variant1.jsx");
-                            break;
-                        case 2:
-                            module = await import("./ads/JobAd/Square/Variant4.jsx");
-                            break;
-                        default:
-                            module = await import("./ads/Testimonial/Square/Variant1.jsx");
-                    }
-                } else if (adTypeId === "retargeting") {
-                    switch (variantNumber) {
-                        case 1:
-                            module = await import("./ads/Retargeting/Square/Variant1.jsx");
-                            break;
-                        case 2:
-                            module = await import("./ads/JobAd/Square/Variant4.jsx");
-                            break;
-                        default:
-                            module = await import("./ads/Retargeting/Square/Variant1.jsx");
-                    }
+                // Load square format for consistent preview - all templates from Universal folder
+                switch (templateNumber) {
+                    case 1:
+                        module = await import("./ads/Universal/Square/Template1.jsx");
+                        break;
+                    // Future templates:
+                    // case 2:
+                    //     module = await import("./ads/Universal/Square/Template2.jsx");
+                    //     break;
+                    default:
+                        module = await import("./ads/Universal/Square/Template1.jsx");
                 }
 
                 if (module?.default) {
@@ -160,7 +86,7 @@ function RawTemplatePreview({ variantNumber, adTypeId, variant, brandData, landi
         };
 
         loadComponent();
-    }, [variantNumber, adTypeId]);
+    }, [templateNumber]);
 
     if (!TemplateComponent) {
         return (
@@ -181,22 +107,25 @@ function RawTemplatePreview({ variantNumber, adTypeId, variant, brandData, landi
 }
 
 /**
- * Modal to pick a variant template when creating a new creative
+ * Modal to pick a template for the ad set (global setting)
+ * This applies to ALL creatives within the ad set
  */
 export default function VariantPickerModal({
     visible,
     onClose,
     onSelect,
-    adTypeId,
+    adTypeId, // Kept for backwards compatibility, but templates are universal
     formatId,
     landingPageData,
     isTemplateChange = false,
+    currentTemplateNumber = null, // Currently selected template for the ad set
 }) {
     const [selectedTemplate, setSelectedTemplate] = useState(null);
 
+    // Use universal templates for all ad types
     const templates = useMemo(() => {
-        return VARIANT_TEMPLATES[adTypeId] || VARIANT_TEMPLATES.job;
-    }, [adTypeId]);
+        return UNIVERSAL_TEMPLATES;
+    }, []);
 
     // Create preview variant data for each template
     const getPreviewVariant = (template) => {
@@ -205,8 +134,9 @@ export default function VariantPickerModal({
         const mediaImage = landingPageData?.mediaImages?.[0]?.url || PLACEHOLDER_IMAGE;
 
         return {
-            id: `preview-${template.variantNumber}`,
-            variantNumber: template.variantNumber,
+            id: `preview-${template.templateNumber}`,
+            templateNumber: template.templateNumber,
+            variantNumber: template.templateNumber, // Legacy support
             title: jobTitle,
             description: "Join our amazing team and make an impact. We're looking for talented individuals who share our passion.",
             linkDescription: "Apply today",
@@ -238,24 +168,15 @@ export default function VariantPickerModal({
     const handleSelect = () => {
         if (!selectedTemplate) return;
 
-        const newCreative = {
-            id: `${adTypeId}-variant-${Date.now().toString(36)}`,
-            variantNumber: selectedTemplate.variantNumber,
-            title: "",
-            description: "",
-            linkDescription: "",
-            callToAction: "Apply Now",
-            image: "",
-            videoUrl: "",
-            template: `template-${selectedTemplate.variantNumber}`,
-            adTypeId,
-            selected: true,
-            approved: false,
-            source: "Manual",
+        // For ad set level template selection, return the template info
+        // The parent will apply this to all creatives in the ad set
+        const templateSelection = {
+            templateNumber: selectedTemplate.templateNumber,
+            templateName: selectedTemplate.name,
             mediaType: selectedTemplate.mediaType,
         };
 
-        onSelect(newCreative);
+        onSelect(templateSelection);
         setSelectedTemplate(null);
         onClose();
     };
@@ -309,20 +230,29 @@ export default function VariantPickerModal({
                     : "Select a template for your new creative. You can customize the content after creation."}
             </p>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className={`grid gap-4 ${templates.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' : templates.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
                 {templates.map((template) => {
                     const previewVariant = getPreviewVariant(template);
-                    const isSelected = selectedTemplate?.variantNumber === template.variantNumber;
+                    const isSelected = selectedTemplate?.templateNumber === template.templateNumber;
+                    const isCurrent = currentTemplateNumber === template.templateNumber;
 
                     return (
                         <div
-                            key={template.variantNumber}
+                            key={template.templateNumber}
                             onClick={() => setSelectedTemplate(template)}
                             className={`relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${isSelected
                                 ? "border-[#5207CD] shadow-lg ring-2 ring-[#5207CD]/20"
-                                : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+                                : isCurrent
+                                    ? "border-green-500 shadow-md"
+                                    : "border-gray-200 hover:border-gray-300 hover:shadow-md"
                                 }`}
                         >
+                            {/* Current template badge */}
+                            {isCurrent && !isSelected && (
+                                <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-green-500 text-white text-[10px] font-medium rounded-full">
+                                    Current
+                                </div>
+                            )}
                             {/* Raw template preview - no phone frame */}
                             <div className="relative overflow-hidden aspect-square">
                                 <div
@@ -335,8 +265,7 @@ export default function VariantPickerModal({
                                     }}
                                 >
                                     <RawTemplatePreview
-                                        variantNumber={template.variantNumber}
-                                        adTypeId={adTypeId}
+                                        templateNumber={template.templateNumber}
                                         variant={previewVariant}
                                         brandData={previewBrandData}
                                         landingPageData={previewLandingPageData}

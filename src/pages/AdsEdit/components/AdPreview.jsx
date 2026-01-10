@@ -2,6 +2,7 @@ import React from "react";
 import StoryOverlay from "./StoryFrame";
 import FeedContext from "./FeedContext";
 import MobileDeviceFrame from "./MobileDeviceFrame";
+import CreatomatPreview, { shouldUseCreatomatPreview } from "./CreatomatPreview";
 
 export default function AdPreview({ variant, format, platform, brandData, landingPageData, adType, refEl }) {
   if (!variant) return null;
@@ -110,121 +111,35 @@ export default function AdPreview({ variant, format, platform, brandData, landin
   }, [normalizedAdTypeId, normalizedFormatId, variant?.variantNumber]);
 
   // Get component loader for specific ad type, variant, and format
-  const getComponentLoader = (adTypeId, variantNumber, formatId) => {
-    // console.log('Loading component for:', { adTypeId, variantNumber, formatId });
-
-    const componentMap = {
-      // Job ads
-      job: {
-        story: {
-          1: () => import('./ads/JobAd/Story/Variant1.jsx').then(m => m.default),
-          2: () => import('./ads/JobAd/Story/Variant2.jsx').then(m => m.default),
-          3: () => import('./ads/JobAd/Story/Variant3.jsx').then(m => m.default),
-          4: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default),
-        },
-        square: {
-          1: () => import('./ads/JobAd/Square/Variant1.jsx').then(m => m.default),
-          2: () => import('./ads/JobAd/Square/Variant2.jsx').then(m => m.default),
-          3: () => import('./ads/JobAd/Square/Variant3.jsx').then(m => m.default),
-          4: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default),
-        },
-        landscape: {
-          1: () => import('./ads/JobAd/Landscape/Variant1.jsx').then(m => m.default),
-          2: () => import('./ads/JobAd/Landscape/Variant2.jsx').then(m => m.default),
-          3: () => import('./ads/JobAd/Landscape/Variant3.jsx').then(m => m.default),
-          4: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default),
-        },
-        portrait: {
-          1: () => import('./ads/JobAd/Landscape/Variant1.jsx').then(m => m.default),
-          2: () => import('./ads/JobAd/Landscape/Variant2.jsx').then(m => m.default),
-          3: () => import('./ads/JobAd/Landscape/Variant3.jsx').then(m => m.default),
-          4: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default),
-        },
+  // Uses Universal templates for ALL ad types - single source of truth
+  const getComponentLoader = (adTypeId, templateNumber, formatId) => {
+    // Universal template loaders - used for all ad types
+    const universalTemplates = {
+      story: {
+        1: () => import('./ads/Universal/Story/Template1.jsx').then(m => m.default),
+        // Future templates can be added here:
+        // 2: () => import('./ads/Universal/Story/Template2.jsx').then(m => m.default),
       },
-      // Employer brand ads - try multiple possible IDs
-      'employer-brand': {
-        story: { 1: () => import('./ads/EmployerBrand/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
-        square: { 1: () => import('./ads/EmployerBrand/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
-        landscape: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-        portrait: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+      square: {
+        1: () => import('./ads/Universal/Square/Template1.jsx').then(m => m.default),
       },
-      'employer_brand': {
-        story: { 1: () => import('./ads/EmployerBrand/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
-        square: { 1: () => import('./ads/EmployerBrand/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
-        landscape: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-        portrait: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+      landscape: {
+        1: () => import('./ads/Universal/Landscape/Template1.jsx').then(m => m.default),
       },
-      employerBrand: {
-        story: { 1: () => import('./ads/EmployerBrand/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
-        square: { 1: () => import('./ads/EmployerBrand/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
-        landscape: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-        portrait: { 1: () => import('./ads/EmployerBrand/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-      },
-      // Testimonial ads - try multiple possible IDs
-      testimonial: {
-        story: { 1: () => import('./ads/Testimonial/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
-        square: { 1: () => import('./ads/Testimonial/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
-        landscape: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-        portrait: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-      },
-      testimonials: {
-        story: { 1: () => import('./ads/Testimonial/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
-        square: { 1: () => import('./ads/Testimonial/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
-        landscape: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-        portrait: { 1: () => import('./ads/Testimonial/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-      },
-      // About company ads - try multiple possible IDs
-      company: {
-        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
-        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
-        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-      },
-      'about-company': {
-        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
-        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
-        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-      },
-      'about_company': {
-        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
-        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
-        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-      },
-      aboutCompany: {
-        story: { 1: () => import('./ads/AboutCompany/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
-        square: { 1: () => import('./ads/AboutCompany/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
-        landscape: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-        portrait: { 1: () => import('./ads/AboutCompany/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-      },
-      // Retargeting ads
-      retargeting: {
-        story: { 1: () => import('./ads/Retargeting/Story/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Story/Variant4.jsx').then(m => m.default), },
-        square: { 1: () => import('./ads/Retargeting/Square/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Square/Variant4.jsx').then(m => m.default), },
-        landscape: { 1: () => import('./ads/Retargeting/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
-        portrait: { 1: () => import('./ads/Retargeting/Landscape/Variant1.jsx').then(m => m.default), 2: () => import('./ads/JobAd/Landscape/Variant4.jsx').then(m => m.default), },
+      portrait: {
+        1: () => import('./ads/Universal/Landscape/Template1.jsx').then(m => m.default),
       },
     };
 
-    const variantsForTypeAndFormat = componentMap[adTypeId]?.[formatId];
-    if (!variantsForTypeAndFormat) return null;
+    const templatesForFormat = universalTemplates[formatId];
+    if (!templatesForFormat) return null;
 
-    // Direct match
-    const direct = variantsForTypeAndFormat?.[variantNumber];
+    // Direct match for template number
+    const direct = templatesForFormat[templateNumber];
     if (direct) return direct;
 
-    // Fallback behavior:
-    // - Most ad types only have Variant1 implemented -> always use 1
-    // - Job ads have Variant1 + Variant2 -> alternate (same design set, different images)
-    if (adTypeId === "job") {
-      const alt = ((Number(variantNumber) - 1) % 4) + 1;
-      return variantsForTypeAndFormat?.[alt] || variantsForTypeAndFormat?.[1] || null;
-    }
-
-    const alt = ((Number(variantNumber) - 1) % 2) + 1;
-    return variantsForTypeAndFormat?.[alt] || variantsForTypeAndFormat?.[1] || null;
-
+    // Fallback to template 1 if requested template doesn't exist
+    return templatesForFormat[1] || null;
   };
 
   // Get ad type label
@@ -239,6 +154,9 @@ export default function AdPreview({ variant, format, platform, brandData, landin
   const adTypeLabel = adType?.label || AD_TYPE_LABELS[adType?.id] || 'Ad';
   const formatLabel = format.label;
 
+  // Check if this variant uses video (should show Creatomate preview)
+  const useCreatomatPreview = shouldUseCreatomatPreview(variant);
+
   // Render based on format
   const renderPreview = () => {
     // Determine if this is a story format
@@ -247,7 +165,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
     let content;
 
     // Show loading state while component is loading
-    if (isLoading) {
+    if (isLoading && !useCreatomatPreview) {
       content = (
         <div className="w-full h-full bg-gray-100 flex items-center justify-center rounded-lg">
           <div className="text-center">
@@ -256,9 +174,20 @@ export default function AdPreview({ variant, format, platform, brandData, landin
           </div>
         </div>
       );
+    } else if (useCreatomatPreview) {
+      // Use Creatomate Preview SDK for video backgrounds
+      // This shows the exact preview that will be rendered by Creatomate
+      content = (
+        <CreatomatPreview
+          format={format?.id === 'portrait' ? 'portrait' : format?.id || 'square'}
+          variant={variant}
+          brandData={brandData}
+          landingPageData={landingPageData}
+          className="w-full h-full"
+        />
+      );
     } else if (TemplateComponent && typeof TemplateComponent === 'function') {
-      // Check if we have a loaded custom template component
-      const isStoryFormat = format?.id === 'story' || format?.aspectRatio === '9:16';
+      // Use our coded React template for image backgrounds
       content = (
         <TemplateComponent
           variant={variant}
@@ -300,12 +229,17 @@ export default function AdPreview({ variant, format, platform, brandData, landin
     // But for now, let's wrap the content in the appropriate context
 
     if (isStoryFormat) {
-      // For stories, we want the creative to behave like a real Story/Reel:
-      // it should fill the full height of the device. To avoid any gap at the
-      // bottom, we scale based ONLY on height (cover behavior), allowing a bit
-      // of horizontal crop if needed.
+      // For stories, we want the creative to fit within the phone frame
+      // without any clipping. Scale based on the constraining dimension.
+      const frameWidth = 375;
       const frameHeight = 812;
-      const contentScale = frameHeight / height;
+
+      // Calculate scale factors for both dimensions
+      const scaleByWidth = frameWidth / width;
+      const scaleByHeight = frameHeight / height;
+
+      // Use the smaller scale to ensure content fits completely (contain behavior)
+      const contentScale = Math.min(scaleByWidth, scaleByHeight);
 
       return (
         <StoryOverlay brandData={brandData}>

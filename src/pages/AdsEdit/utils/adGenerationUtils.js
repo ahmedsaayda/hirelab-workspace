@@ -338,14 +338,14 @@ export const generateVariants = (lpData) => {
   const MIN = {
     job: 4,
     company: 1,
-    testimonial: 1,
+    testimonial: 0, // Testimonial count is based on actual testimonials in landing page
     retargeting: 1,
-    "employer-brand": 3, // EVP, Leader, Video
+    "employer-brand": 3, // EVP, Leader, Combined
   };
   const CAP = {
     job: 12,
     company: 6,
-    testimonial: 4,
+    testimonial: 10, // Max testimonials (if landing page has that many)
     retargeting: 3,
     "employer-brand": 3,
   };
@@ -401,7 +401,9 @@ export const generateVariants = (lpData) => {
 
   const createVariant = (adType, i, image, extra = {}) => {
     const copy = generateCopyForAdType(adType, lpData, i);
-    const variantNumber = adType === "job" ? ((i % 4) + 1) : ((i % 2) + 1);
+    // Universal template system - all ads use template 1 by default
+    // templateNumber is the ad set level setting, variantNumber kept for legacy support
+    const templateNumber = 1;
     return {
       id: `${adType}-variant-${uuidv4().slice(0, 8)}`,
       // Image overlay fields
@@ -415,9 +417,10 @@ export const generateVariants = (lpData) => {
       // Other fields
       source: copy.source,
       image,
-      template: "template-1",
+      template: `template-${templateNumber}`,
       adTypeId: adType,
-      variantNumber,
+      templateNumber,
+      variantNumber: templateNumber, // Legacy support
       selected: i === 0,
       approved: false,
       ...extra,
@@ -450,62 +453,129 @@ export const generateVariants = (lpData) => {
 
   // EMPLOYER BRAND (EVP, Leader, Mission)
   // NOTE: Employer-Brand does NOT support video - only images
+  // Uses EVP/Mission body text as quote (up to 300 chars)
   {
     const variants = [];
-    const evp = lpData?.evpMissionAvatar || "";
-    const leader = lpData?.leaderIntroductionAvatar || "";
+    const evpAvatar = lpData?.evpMissionAvatar || "";
+    const leaderAvatar = lpData?.leaderIntroductionAvatar || "";
+    const company = lpData?.companyName || "our company";
 
+    // Get EVP/Mission body text for quote (sanitize placeholders)
+    const evpBodyText = sanitizePlaceholderText(lpData?.evpMissionDescription || "");
+    const leaderBodyText = sanitizePlaceholderText(lpData?.leaderIntroductionDescription || "");
+
+    // Leader intro fields for author info
+    const leaderName = sanitizePlaceholderText(lpData?.leaderIntroductionFullname || "");
+    const leaderTitle = sanitizePlaceholderText(lpData?.leaderIntroductionJobTitle || "");
+
+    // EVP Mission fields
+    const evpHeader = sanitizePlaceholderText(lpData?.evpMissionHeader || "");
+
+    // Variant 0: EVP/Mission quote
+    const evpQuote = evpBodyText.slice(0, 300) || `At ${company}, our mission is to empower every employee to thrive.`;
     variants.push(
       createVariant(
         "employer-brand",
         0,
-        evp || leader || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
-        { mediaKind: evp ? "image" : "fallback", mediaSource: evp ? "evpMissionAvatar" : "fallback" }
+        evpAvatar || leaderAvatar || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
+        {
+          mediaKind: evpAvatar ? "image" : "fallback",
+          mediaSource: evpAvatar ? "evpMissionAvatar" : "fallback",
+          // Quote fields (replaces linkDescription for employer-brand ads)
+          quoteText: evpQuote,
+          quoteAuthorName: evpHeader || company,
+          quoteAuthorPosition: "EVP / Mission",
+          // Clear linkDescription as we use quote instead
+          linkDescription: "",
+        }
       )
     );
+
+    // Variant 1: Leader Intro quote
+    const leaderQuote = leaderBodyText.slice(0, 300) || evpQuote;
     variants.push(
       createVariant(
         "employer-brand",
         1,
-        leader || evp || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
-        { mediaKind: leader ? "image" : "fallback", mediaSource: leader ? "leaderIntroductionAvatar" : "fallback" }
+        leaderAvatar || evpAvatar || lpData?.heroImage || lpData?.companyLogo || TRANSPARENT_PNG,
+        {
+          mediaKind: leaderAvatar ? "image" : "fallback",
+          mediaSource: leaderAvatar ? "leaderIntroductionAvatar" : "fallback",
+          // Quote fields
+          quoteText: leaderQuote,
+          quoteAuthorName: leaderName || company,
+          quoteAuthorPosition: leaderTitle || "Leadership",
+          linkDescription: "",
+        }
       )
     );
+
+    // Variant 2: Combined mission statement
+    const combinedQuote = (evpBodyText || leaderBodyText).slice(0, 300) || `Join ${company} and be part of something special.`;
     variants.push(
       createVariant(
         "employer-brand",
         2,
-        lpData?.heroImage || evp || leader || lpData?.companyLogo || TRANSPARENT_PNG,
-        { mediaKind: "image", mediaSource: "heroImage" }
+        lpData?.heroImage || evpAvatar || leaderAvatar || lpData?.companyLogo || TRANSPARENT_PNG,
+        {
+          mediaKind: "image",
+          mediaSource: "heroImage",
+          quoteText: combinedQuote,
+          quoteAuthorName: company,
+          quoteAuthorPosition: "Our Promise",
+          linkDescription: "",
+        }
       )
     );
 
     ads["employer-brand"] = { variants, enabled: false };
   }
 
-  // TESTIMONIAL (from testimonials; fallback to images if no avatars)
+  // TESTIMONIAL (from testimonials ONLY - if no testimonials in landing page, no ads generated)
   {
     const variants = [];
-    const imgs = testimonialImages.length ? testimonialImages : [TRANSPARENT_PNG];
-    const testimonials = Array.isArray(lpData?.testimonials) ? lpData.testimonials : [];
-    for (let i = 0; i < counts.testimonial; i++) {
-      const image = imgs[i % imgs.length];
-      const t = testimonials.length ? testimonials[i % testimonials.length] : null;
-      const quote = stripWrappingQuotes(snippetFromText(t?.comment, 140)) || "Working here has been an incredible experience.";
-      const author = stripWrappingQuotes(t?.fullname) || "";
-      const role = stripWrappingQuotes(t?.role) || "";
+    // Filter to only valid testimonials with actual content (not placeholders)
+    const testimonials = Array.isArray(lpData?.testimonials)
+      ? lpData.testimonials.filter(t => {
+        const hasValidComment = t?.comment &&
+          typeof t.comment === 'string' &&
+          t.comment.length > 0 &&
+          !t.comment.includes('[Insert') &&
+          !t.comment.includes('[Employee');
+        return hasValidComment;
+      })
+      : [];
+
+    // Only generate testimonial ads if we have actual testimonials from landing page
+    // Each testimonial creates exactly 1 creative
+    for (let i = 0; i < testimonials.length; i++) {
+      const t = testimonials[i];
+      const image = (t.avatar && t.avatarEnabled !== false) ? t.avatar : (testimonialImages[i % testimonialImages.length] || TRANSPARENT_PNG);
+
+      // Quote fields for testimonial ad type (replaces subheadline/linkDescription)
+      const quoteText = sanitizePlaceholderText(t.comment || "").slice(0, 300);
+      const quoteAuthorName = stripWrappingQuotes(t.fullname) || "";
+      const quoteAuthorPosition = stripWrappingQuotes(t.role) || "";
+
       variants.push(
         createVariant("testimonial", i, image, {
-          // Match template expected fields
-          quote,
-          author,
-          role,
-          // For feed context too
-          description: `"${quote}"${author ? ` - ${author}` : ""}`,
+          // Quote fields (replaces linkDescription for testimonial ads)
+          quoteText,
+          quoteAuthorName,
+          quoteAuthorPosition,
+          // Legacy fields for compatibility
+          quote: quoteText,
+          author: quoteAuthorName,
+          role: quoteAuthorPosition,
+          // For feed context / Meta primary text
+          description: `"${quoteText}"${quoteAuthorName ? ` - ${quoteAuthorName}${quoteAuthorPosition ? `, ${quoteAuthorPosition}` : ""}` : ""}`,
+          // Clear linkDescription as we use quote instead
+          linkDescription: "",
         })
       );
     }
-    ads.testimonial = { variants, enabled: false };
+    // If no valid testimonials, ads.testimonial will have empty variants array
+    ads.testimonial = { variants, enabled: variants.length > 0 };
   }
 
   // RETARGETING (messaging-driven)
