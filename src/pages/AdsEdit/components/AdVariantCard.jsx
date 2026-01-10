@@ -615,11 +615,10 @@ export default function AdVariantCard({
           }}
           disabled={isDownloading}
           title={isDownloading ? "Download in progress..." : "Download"}
-          className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium border-t border-b border-l border-[#d0d5dd] transition-colors ${
-            isDownloading 
-              ? "text-[#98a2b3] bg-gray-100 cursor-not-allowed" 
+          className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium border-t border-b border-l border-[#d0d5dd] transition-colors ${isDownloading
+              ? "text-[#98a2b3] bg-gray-100 cursor-not-allowed"
               : "text-[#344054] bg-white hover:bg-gray-50"
-          }`}
+            }`}
         >
           {isDownloading ? (
             <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -658,6 +657,7 @@ export default function AdVariantCard({
               strokeLinejoin="round"
             />
           </svg>
+          <span className="hidden sm:inline">Delete</span>
         </button>
       </div>
 
