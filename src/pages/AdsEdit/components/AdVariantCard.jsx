@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo, useCallback } from "react";
 import { Input, message } from "antd";
 import ImageSelectionModal from "../../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
 
@@ -38,7 +38,12 @@ export default function AdVariantCard({
     // Media
     image: variant?.image || "",
     videoUrl: variant?.videoUrl || "",
+    // Custom creatives per format (complete override of template)
+    customCreatives: variant?.customCreatives || {},
   });
+  
+  // State for custom creative picker per format
+  const [customCreativePickerFormat, setCustomCreativePickerFormat] = useState(null);
 
   // Check if this ad type uses quote fields instead of subheadline
   const usesQuoteFields = variant?.adTypeId === 'testimonial' || variant?.adTypeId === 'employer-brand';
@@ -248,6 +253,99 @@ export default function AdVariantCard({
             })}
           </div>
         </div>
+
+        {/* ===== CUSTOM CREATIVE OVERRIDE SECTION ===== */}
+        <div className="mb-4">
+          <h4 className="text-xs font-semibold text-[#101828] mb-2 uppercase tracking-wide">
+            Custom Creative Override
+            <span className="font-normal text-[#667085] ml-2">(replaces template)</span>
+          </h4>
+          <p className="text-[10px] text-[#667085] mb-2">
+            Upload your own finished creative for each format. This will completely replace the template-generated ad.
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: 'story', label: 'Story (9:16)', size: '1080×1920' },
+              { id: 'square', label: 'Square (1:1)', size: '1080×1080' },
+              { id: 'portrait', label: 'Portrait (4:5)', size: '1080×1350' },
+            ].map((format) => {
+              const customUrl = editData.customCreatives?.[format.id];
+              return (
+                <div key={format.id} className="flex flex-col">
+                  <label className="text-[10px] font-medium text-[#344054] mb-1">{format.label}</label>
+                  <button
+                    type="button"
+                    onClick={() => setCustomCreativePickerFormat(format.id)}
+                    className="relative w-full aspect-square border border-dashed border-[#d0d5dd] rounded-lg overflow-hidden hover:bg-gray-50 transition-colors flex items-center justify-center"
+                  >
+                    {customUrl ? (
+                      <>
+                        <img src={customUrl} alt={format.label} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-white text-[10px] font-medium">Change</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <svg className="w-5 h-5 text-gray-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span className="text-[9px] text-[#667085]">{format.size}</span>
+                      </div>
+                    )}
+                  </button>
+                  {customUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = {
+                          ...editData,
+                          customCreatives: {
+                            ...(editData.customCreatives || {}),
+                            [format.id]: undefined,
+                          },
+                        };
+                        setEditData(next);
+                        emitDraft(next);
+                      }}
+                      className="mt-1 text-[9px] text-red-500 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Custom Creative Picker Modal */}
+        <ImageSelectionModal
+          isOpen={!!customCreativePickerFormat}
+          onClose={() => setCustomCreativePickerFormat(null)}
+          type="image"
+          accept="image/*"
+          multiple={false}
+          autosave={true}
+          maxFiles={1}
+          onImageSelected={(files = []) => {
+            const first = files?.[0];
+            const url = typeof first === "string" ? first : (first?.url || first?.secure_url || first?.thumbnail || "");
+            if (url && customCreativePickerFormat) {
+              const next = {
+                ...editData,
+                customCreatives: {
+                  ...(editData.customCreatives || {}),
+                  [customCreativePickerFormat]: url,
+                },
+              };
+              setEditData(next);
+              emitDraft(next);
+              message.success(`Custom creative selected for ${customCreativePickerFormat}`);
+            }
+            setCustomCreativePickerFormat(null);
+          }}
+        />
 
         {/* ===== TEXT OVERLAY SECTION ===== */}
         <div className="mb-4">

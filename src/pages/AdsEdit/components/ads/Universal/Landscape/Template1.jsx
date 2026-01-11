@@ -165,7 +165,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
             <div style={{
               position: "absolute",
               bottom: "20px",
-              left: "220px",
+              left: "20px",
               right: "20px",
               backgroundColor: "rgba(255,255,255,0.75)",
               borderRadius: "8px",

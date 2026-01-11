@@ -161,11 +161,24 @@ export default function AdPreview({ variant, format, platform, brandData, landin
   const renderPreview = () => {
     // Determine if this is a story format
     const isStoryFormat = format?.id === 'story' || format?.aspectRatio === '9:16';
+    
+    // Check if there's a custom creative override for this format
+    const customCreativeUrl = variant?.customCreatives?.[format?.id];
 
     let content;
 
-    // Show loading state while component is loading
-    if (isLoading && !useCreatomatPreview) {
+    // If custom creative exists, show it instead of template
+    if (customCreativeUrl) {
+      content = (
+        <div className="w-full h-full relative">
+          <img
+            src={customCreativeUrl}
+            alt="Custom creative"
+            className="w-full h-full object-contain bg-gray-100"
+          />
+        </div>
+      );
+    } else if (isLoading && !useCreatomatPreview) {
       content = (
         <div className="w-full h-full bg-gray-100 flex items-center justify-center rounded-lg">
           <div className="text-center">

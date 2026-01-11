@@ -1347,6 +1347,33 @@ export default function AdsEdit({ paramsId }) {
 
         message.success({ content: "Video downloaded!", key: "download" });
       } else {
+        // Check if there's a custom creative override for this format
+        const customCreativeUrl = variant?.customCreatives?.[format?.id];
+        
+        if (customCreativeUrl) {
+          // Download custom creative directly
+          message.loading({ content: "Downloading custom creative...", key: "download" });
+          
+          const response = await fetch(customCreativeUrl);
+          if (!response.ok) throw new Error("Failed to fetch custom creative");
+          const blob = await response.blob();
+          
+          // Create download link
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          const ext = customCreativeUrl.match(/\.(jpg|jpeg|png|gif|webp)/i)?.[1] || 'png';
+          link.download = `${safeName}_${formatName}_custom_${Date.now()}.${ext}`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          
+          message.success({ content: "Custom creative downloaded!", key: "download" });
+          setIsDownloading(false);
+          return;
+        }
+        
         // For image variants, render the full creative preview as PNG
         message.loading({ content: "Rendering creative...", key: "download" });
 
@@ -1656,6 +1683,19 @@ export default function AdsEdit({ paramsId }) {
           // For image variants: Render each format to PNG (existing flow)
           for (const format of AD_FORMATS) {
             currentStep += 1;
+            
+            // Check if there's a custom creative override for this format
+            const customCreativeUrl = v?.customCreatives?.[format.id];
+            
+            if (customCreativeUrl) {
+              // Use custom creative directly - no need to render
+              appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} custom creative)`);
+              publishImages[format.id] = customCreativeUrl;
+              appendPrepareMessage(`✓ ${format.label} custom creative ready for ${stepLabel}`);
+              // eslint-disable-next-line no-continue
+              continue;
+            }
+            
             appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} image)`);
 
             // Switch to this format
