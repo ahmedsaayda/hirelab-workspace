@@ -755,21 +755,21 @@ export default function AdsEdit({ paramsId }) {
   const waitForPreviewRender = async (timeoutMs = 3000, expectedFormat = null) => {
     const start = Date.now();
     let lastNodeInfo = null;
-
+    
     while (Date.now() - start < timeoutMs) {
       const node = captureRef.current;
       if (node && node.childNodes && node.childNodes.length > 0 && node.clientWidth > 0 && node.clientHeight > 0) {
         const actualW = node.clientWidth;
         const actualH = node.clientHeight;
         lastNodeInfo = { actualW, actualH };
-
+        
         // If expected format provided, verify dimensions match (not just aspect ratio)
         if (expectedFormat?.width && expectedFormat?.height) {
           // Check if the actual dimensions match the expected format
           // The ref div should have explicit width/height style matching the format
           const widthMatch = Math.abs(actualW - expectedFormat.width) < 10; // 10px tolerance
           const heightMatch = Math.abs(actualH - expectedFormat.height) < 10;
-
+          
           if (widthMatch && heightMatch) {
             console.log(`[waitForPreviewRender] Format ${expectedFormat.id} ready: ${actualW}x${actualH}`);
             return true;
@@ -782,7 +782,7 @@ export default function AdsEdit({ paramsId }) {
       // eslint-disable-next-line no-await-in-loop
       await new Promise((r) => setTimeout(r, 100));
     }
-
+    
     // Timeout - DO NOT proceed if we expected a specific format but got wrong dimensions
     if (expectedFormat && lastNodeInfo) {
       const expected = `${expectedFormat.width}x${expectedFormat.height}`;
@@ -999,7 +999,7 @@ export default function AdsEdit({ paramsId }) {
       ? launchSummary.editorAds._adSets : [];
     const localAdSets = Array.isArray(adsData?._adSets) ? adsData._adSets : [];
     const metaSets = Array.isArray(launchSummary?.adSets) ? launchSummary.adSets : [];
-
+    
     // Check if localAdSets has been initialized (adsData._adSets exists, even if empty)
     // If initialized, localAdSets is the source of truth for which ad sets exist
     const localAdSetsInitialized = adsData?._adSets !== undefined;
@@ -1216,7 +1216,7 @@ export default function AdsEdit({ paramsId }) {
         const updatedVariants = currentVariants.filter(v => v.id !== variantId);
         const nextData = updateVariantsInData(updatedVariants);
         setAdsData(nextData);
-
+        
         // Save to backend
         try {
           await AdsService.saveAds(lpId, nextData);
@@ -1571,31 +1571,31 @@ export default function AdsEdit({ paramsId }) {
       // Each format gets its own image stored in publishImages object
       const totalSteps = variantsToPrepare.length * AD_FORMATS.length;
       let currentStep = 0;
-
+      
       for (let index = 0; index < variantsToPrepare.length; index += 1) {
         const v = variantsToPrepare[index];
         const stepLabel = `${v.adTypeId} · ${v.title || v.id}`;
-
+        
         // Check if this is a video variant
         const videoUrl = v?.videoUrl || "";
         const isVideoVariant = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
-
+        
         setSelectedAdType(v.adTypeId);
         setSelectedVariant(v.id);
-
+        
         // Initialize publishImages/publishVideos objects for this variant
         const publishImages = {};
         const publishVideos = {};
-
+        
         if (isVideoVariant) {
           appendPrepareMessage(`📹 Video creative detected for ${stepLabel}`);
-
+          
           // For video variants: Generate videos with overlays via Creatomate (same method as download)
           // eslint-disable-next-line no-await-in-loop
           for (const format of AD_FORMATS) {
             currentStep += 1;
             appendPrepareMessage(`Generating ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} video)`);
-
+            
             try {
               // Use EXACT same flow as download - ALWAYS wait for render
               // eslint-disable-next-line no-await-in-loop
@@ -1611,18 +1611,18 @@ export default function AdsEdit({ paramsId }) {
                 },
                 format: format.id,
               });
-
+              
               // Get renderId - MUST exist for Creatomate
               const renderId = response?.data?.data?.renderId;
               if (!renderId) {
                 throw new Error("Failed to start video generation - no renderId");
               }
-
+              
               // ALWAYS wait for render to complete (same as download)
               appendPrepareMessage(`⏳ ${format.label} rendering video...`);
               // eslint-disable-next-line no-await-in-loop
               const generatedVideoUrl = await AdsService.waitForRender(lpId, renderId, 120000);
-
+              
               // Creatomate videos are permanently hosted on Backblaze B2 - no need to re-upload
               publishVideos[format.id] = generatedVideoUrl;
               appendPrepareMessage(`✓ ${format.label} video ready for ${stepLabel}`);
@@ -1633,7 +1633,7 @@ export default function AdsEdit({ paramsId }) {
               appendPrepareMessage(`⚠ ${format.label} fallback to original video`);
             }
           }
-
+          
           // Also render a poster image (thumbnail) for each format
           for (const format of AD_FORMATS) {
             appendPrepareMessage(`Rendering poster for ${stepLabel} (${format.label})`);
@@ -1657,18 +1657,18 @@ export default function AdsEdit({ paramsId }) {
           for (const format of AD_FORMATS) {
             currentStep += 1;
             appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} image)`);
-
+            
             // Switch to this format
             setSelectedFormat(format.id);
-
+            
             // IMPORTANT: Wait for React to process the format change before rendering.
             // eslint-disable-next-line no-await-in-loop
             await new Promise((r) => setTimeout(r, 1200));
-
+            
             // Now wait for the preview to be fully rendered with correct dimensions
             // eslint-disable-next-line no-await-in-loop
             const formatReady = await waitForPreviewRender(8000, format);
-
+            
             if (!formatReady) {
               appendPrepareMessage(`⚠ ${format.label} dimensions not ready, retrying...`);
               // eslint-disable-next-line no-await-in-loop
@@ -1682,30 +1682,30 @@ export default function AdsEdit({ paramsId }) {
                 continue;
               }
             }
-
+            
             // eslint-disable-next-line no-await-in-loop
             await new Promise((r) => setTimeout(r, 400));
-
+            
             // eslint-disable-next-line no-await-in-loop
             const url = await renderCurrentPreviewToCloudinary(format);
-
+            
             publishImages[format.id] = url;
             appendPrepareMessage(`✓ ${format.label} image ready for ${stepLabel}`);
           }
         }
-
+        
         // Update in the correct creatives source (ad set or campaign level)
         const group = creativesSource[v.adTypeId];
         if (group?.variants) {
           const idx = group.variants.findIndex((x) => x.id === v.id);
           if (idx >= 0) {
-            group.variants[idx] = {
-              ...group.variants[idx],
+            group.variants[idx] = { 
+              ...group.variants[idx], 
               publishImages,
               // Keep publishImage for backwards compatibility (use square as default)
               publishImage: publishImages.square || publishImages.story || publishImages.portrait,
               // For video variants, store generated videos with overlays
-              ...(Object.keys(publishVideos).length > 0 ? {
+              ...(Object.keys(publishVideos).length > 0 ? { 
                 publishVideos,
                 publishVideo: publishVideos.story || publishVideos.square || publishVideos.portrait,
               } : {}),
@@ -1946,19 +1946,19 @@ export default function AdsEdit({ paramsId }) {
                         // Show "Open creatives editor" for draft state, "Open ad launcher" for ready/launched
                         const openLauncherItem = set.state === "draft" || set.state === "creatives_needed"
                           ? {
-                            key: "open_creatives",
-                            label: "Open creatives editor",
-                            onClick: () => {
-                              setActiveAdSetId(set.id);
-                            },
-                          }
+                              key: "open_creatives",
+                              label: "Open creatives editor",
+                              onClick: () => {
+                                setActiveAdSetId(set.id);
+                              },
+                            }
                           : {
-                            key: "open_launcher",
-                            label: "Open ad launcher",
-                            onClick: () => {
-                              router.push(`/launch/${lpId}?adset=${encodeURIComponent(set.id)}`);
-                            },
-                          };
+                              key: "open_launcher",
+                              label: "Open ad launcher",
+                              onClick: () => {
+                                router.push(`/launch/${lpId}?adset=${encodeURIComponent(set.id)}`);
+                              },
+                            };
                         const openResultsItem = {
                           key: "open_results",
                           label: "Open ad results",
@@ -2211,9 +2211,9 @@ export default function AdsEdit({ paramsId }) {
               {/* Header */}
               <div className="flex flex-shrink-0 justify-between items-center mb-5">
                 <div className="flex items-center gap-4">
-                  <h2 className="text-xl font-semibold leading-5 text-black capitalize">
-                    {selectedAdType.toString()} Ads
-                  </h2>
+                <h2 className="text-xl font-semibold leading-5 text-black capitalize">
+                 {selectedAdType.toString()} Ads
+                </h2>
                   {/* Global Change Template Button */}
                   <button
                     onClick={() => setVariantPickerOpen(true)}
@@ -2414,7 +2414,7 @@ export default function AdsEdit({ paramsId }) {
             hideSettings={false}
             hideLaunchNav
             onOpenSettings={() => setAdsSettingsDrawerOpen(true)}
-
+   
             customActions={<>
             </>}
 

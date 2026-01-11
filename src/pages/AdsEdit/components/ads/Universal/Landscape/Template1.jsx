@@ -83,7 +83,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
             fontFamily: "Arial Black, Arial, sans-serif",
             textTransform: "uppercase",
             letterSpacing: "-1px",
-            color: secondaryColor,
+            color: primaryColor,
             lineHeight: "1.1",
           }}>
             {titleLines.map((line, i) => (
@@ -100,7 +100,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
           viewBox="0 0 36 36"
           fill="none"
         >
-          <path d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z" fill={primaryColor} />
+          <path d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z" fill={secondaryColor} />
         </svg>
 
         {/* Full-width image */}
@@ -248,7 +248,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
         viewBox="0 0 36 36"
         fill="none"
       >
-        <path d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z" fill={primaryColor} />
+        <path d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z" fill={secondaryColor} />
       </svg>
 
       {/* Title */}
@@ -265,7 +265,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
           fontFamily: "Arial Black, Arial, sans-serif",
           textTransform: "uppercase",
           letterSpacing: "-1px",
-          color: secondaryColor,
+          color: primaryColor,
           lineHeight: "1.1",
         }}>
           {titleLines.map((line, i) => (

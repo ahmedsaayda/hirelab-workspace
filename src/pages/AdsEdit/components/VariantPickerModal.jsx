@@ -66,14 +66,14 @@ function RawTemplatePreview({ templateNumber, variant, brandData, landingPageDat
                 let module;
                 // Load square format for consistent preview - all templates from Universal folder
                 switch (templateNumber) {
-                    case 1:
+                        case 1:
                         module = await import("./ads/Universal/Square/Template1.jsx");
-                        break;
+                            break;
                     // Future templates:
                     // case 2:
                     //     module = await import("./ads/Universal/Square/Template2.jsx");
                     //     break;
-                    default:
+                        default:
                         module = await import("./ads/Universal/Square/Template1.jsx");
                 }
 
@@ -244,7 +244,7 @@ export default function VariantPickerModal({
                                 ? "border-[#5207CD] shadow-lg ring-2 ring-[#5207CD]/20"
                                 : isCurrent
                                     ? "border-green-500 shadow-md"
-                                    : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+                                : "border-gray-200 hover:border-gray-300 hover:shadow-md"
                                 }`}
                         >
                             {/* Current template badge */}

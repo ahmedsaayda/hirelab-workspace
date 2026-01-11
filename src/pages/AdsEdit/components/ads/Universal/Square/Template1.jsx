@@ -79,7 +79,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
             fontFamily: "Arial Black, Arial, sans-serif",
             textTransform: "uppercase",
             letterSpacing: "-1px",
-            color: secondaryColor,
+            color: primaryColor,
             lineHeight: "1.1",
           }}>
             {titleLines.map((line, i) => (
@@ -98,7 +98,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
         >
           <path
             d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z"
-            fill={primaryColor}
+            fill={secondaryColor}
           />
         </svg>
 
@@ -253,7 +253,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
       >
         <path
           d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z"
-          fill={primaryColor}
+          fill={secondaryColor}
         />
       </svg>
 
@@ -271,7 +271,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
           fontFamily: "Arial Black, Arial, sans-serif",
           textTransform: "uppercase",
           letterSpacing: "-1px",
-          color: secondaryColor,
+          color: primaryColor,
           lineHeight: "1.1",
         }}>
           {titleLines.map((line, i) => (

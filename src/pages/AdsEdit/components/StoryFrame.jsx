@@ -28,7 +28,7 @@ export default function StoryOverlay({ children, brandData }) {
           <div className="flex gap-1 mb-3">
             {/* Active progress bar - showing current story */}
             <div className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden">
-              <div
+              <div 
                 className="h-full bg-white rounded-full"
                 style={{
                   width: '65%',
@@ -38,7 +38,7 @@ export default function StoryOverlay({ children, brandData }) {
             </div>
             {/* Remaining progress bars - upcoming stories */}
             {[1, 2].map((i) => (
-              <div
+              <div 
                 key={i}
                 className="flex-1 h-0.5 bg-white/30 rounded-full"
               />
@@ -53,8 +53,8 @@ export default function StoryOverlay({ children, brandData }) {
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 p-0.5">
                 <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
                   {brandLogo ? (
-                    <img
-                      src={brandLogo}
+                    <img 
+                      src={brandLogo} 
                       alt={brandName}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -92,7 +92,7 @@ export default function StoryOverlay({ children, brandData }) {
                   <circle cx="12" cy="19" r="1.5" fill="white" />
                 </svg>
               </button>
-
+              
               {/* Close Button (X) */}
               <button className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors pointer-events-auto">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -106,7 +106,7 @@ export default function StoryOverlay({ children, brandData }) {
 
         {/* Bottom gradient overlay for better text readability */}
         {/* <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/40 to-transparent" /> */}
-
+        
         {/* Bottom Action Area (Like/Send) - hidden in editor to avoid covering CTA */}
       </div>
     </div>
