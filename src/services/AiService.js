@@ -87,6 +87,12 @@ class AiService {
   generateAdsCopy({ lpId, variants = [], language }) {
     return this.api.post("/generate-ads-copy", { lpId, variants, language });
   }
+
+  // Regenerate a single ad text field using AI
+  // field: title, linkDescription, quoteText, description, metaHeadline, metaDescription, etc.
+  regenerateAdField({ lpId, field, currentValue, adTypeId, instruction, language }) {
+    return this.api.post("/regenerate-ad-field", { lpId, field, currentValue, adTypeId, instruction, language });
+  }
 }
 
 export default new AiService(`${getBackendUrl()}/ai`);

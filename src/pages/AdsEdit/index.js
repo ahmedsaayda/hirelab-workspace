@@ -2319,6 +2319,7 @@ export default function AdsEdit({ paramsId }) {
                     isDownloading={isDownloading}
                     onReplace={() => handleVariantReplace(variant.id)}
                     landingPageData={landingPageData}
+                    lpId={lpId}
                     mediaType={variant.mediaType || getVariantMediaType(variant.adTypeId || selectedAdType, variant.variantNumber)}
                   />
                 ))}

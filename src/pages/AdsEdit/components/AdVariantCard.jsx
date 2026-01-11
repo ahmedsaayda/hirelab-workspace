@@ -1,8 +1,20 @@
 import React, { useRef, useState, useMemo, useCallback } from "react";
-import { Input, message } from "antd";
+import { Input, message, Tooltip, Popover } from "antd";
 import ImageSelectionModal from "../../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
+import AiService from "../../../services/AiService.js";
 
 const { TextArea } = Input;
+
+// Magic Pencil Icon SVG
+const MagicPencilIcon = ({ className = "" }) => (
+  <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z" />
+    <path d="M5 3v4" />
+    <path d="M3 5h4" />
+    <path d="M19 17v4" />
+    <path d="M17 19h4" />
+  </svg>
+);
 
 export default function AdVariantCard({
   variant,
@@ -16,10 +28,14 @@ export default function AdVariantCard({
   onSave,
   onDraftChange,
   landingPageData,
+  lpId, // Landing page ID for AI regeneration
   mediaType = "image", // "image" | "video" | "both" - controls what media can be uploaded
   isDownloading = false, // Disables download button when true
 }) {
   const dragRef = useRef({ dragging: false, pointerId: null });
+  const [regeneratingField, setRegeneratingField] = useState(null); // Track which field is being regenerated
+  const [instructionPopover, setInstructionPopover] = useState(null); // Track which field has instruction popover open
+  const [customInstruction, setCustomInstruction] = useState(""); // Custom instruction for AI
   const [editData, setEditData] = useState({
     // Meta fields:
     // - title: Headline (40)
@@ -63,6 +79,151 @@ export default function AdVariantCard({
     onDraftChange?.({ ...variant, ...nextEditData });
   };
 
+  // Regenerate a single field using AI
+  const regenerateField = useCallback(async (field, instruction = "") => {
+    if (!lpId) {
+      message.error("Cannot regenerate: Landing page ID not available");
+      return;
+    }
+
+    setRegeneratingField(field);
+    setInstructionPopover(null);
+    setCustomInstruction("");
+
+    try {
+      const response = await AiService.regenerateAdField({
+        lpId,
+        field,
+        currentValue: editData[field] || "",
+        adTypeId: variant?.adTypeId || "job",
+        instruction: instruction || undefined,
+        language: landingPageData?.language || "English",
+      });
+
+      if (response?.data?.success && response?.data?.data?.value) {
+        const newValue = response.data.data.value;
+        const next = { ...editData, [field]: newValue };
+        setEditData(next);
+        emitDraft(next);
+        message.success(`${field} regenerated!`);
+      } else {
+        throw new Error(response?.data?.error || "Failed to regenerate");
+      }
+    } catch (error) {
+      console.error("Regenerate error:", error);
+      message.error(`Failed to regenerate: ${error.message}`);
+    } finally {
+      setRegeneratingField(null);
+    }
+  }, [lpId, editData, variant?.adTypeId, landingPageData?.language, emitDraft]);
+
+  // Render magic pencil button for a field
+  const renderMagicPencilButton = (field, disabled = false) => {
+    const isRegenerating = regeneratingField === field;
+    const isPopoverOpen = instructionPopover === field;
+
+    return (
+      <Popover
+        content={
+          <div className="w-64" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xs text-gray-600 mb-2">
+              Add optional instructions for the AI:
+            </p>
+            <input
+              type="text"
+              value={instructionPopover === field ? customInstruction : ""}
+              onChange={(e) => {
+                e.stopPropagation();
+                setCustomInstruction(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  regenerateField(field, customInstruction);
+                }
+              }}
+              placeholder="e.g., Make it more casual..."
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded mb-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  regenerateField(field, customInstruction);
+                }}
+                disabled={isRegenerating}
+                className="flex-1 px-2 py-1.5 bg-[#5207CD] text-white text-xs font-medium rounded hover:bg-[#4106a8] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isRegenerating ? "Generating..." : "Generate"}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setInstructionPopover(null);
+                  setCustomInstruction("");
+                }}
+                className="px-2 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        }
+        title={<span className="text-sm font-medium">✨ AI Regenerate</span>}
+        trigger="click"
+        open={isPopoverOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setInstructionPopover(field);
+            setCustomInstruction("");
+          } else {
+            setInstructionPopover(null);
+            setCustomInstruction("");
+          }
+        }}
+        placement="bottomRight"
+        destroyTooltipOnHide
+      >
+        <Tooltip title={isRegenerating ? "Regenerating..." : "Regenerate with AI"} placement="top">
+          <button
+            type="button"
+            disabled={disabled || isRegenerating || !lpId}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            className={`p-1 rounded transition-colors ${
+              isRegenerating
+                ? "text-[#5207CD] animate-pulse cursor-wait"
+                : disabled || !lpId
+                ? "text-gray-300 cursor-not-allowed"
+                : "text-[#5207CD] hover:text-[#4106a8] hover:bg-purple-50"
+            }`}
+          >
+            {isRegenerating ? (
+              <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25" />
+                <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <MagicPencilIcon />
+            )}
+          </button>
+        </Tooltip>
+      </Popover>
+    );
+  };
+
+  // Check if any custom creative is set
+  const hasAnyCustomCreative = Object.values(editData.customCreatives || {}).some(Boolean);
+  
+  // Mode: 'template' or 'custom' - determines which sections to show
+  const [creativeMode, setCreativeMode] = useState(hasAnyCustomCreative ? 'custom' : 'template');
+
   // If in edit mode, show expanded editor
   if (isEditing) {
     return (
@@ -82,6 +243,52 @@ export default function AdVariantCard({
           </button>
         </div>
 
+        {/* Mode Toggle */}
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCreativeMode('template')}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                creativeMode === 'template'
+                  ? 'bg-white text-[#5207CD] border border-[#5207CD] shadow-sm'
+                  : 'text-gray-500 hover:bg-white hover:text-gray-700'
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18" />
+                <path d="M9 21V9" />
+              </svg>
+              Template Mode
+            </button>
+            <button
+              type="button"
+              onClick={() => setCreativeMode('custom')}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                creativeMode === 'custom'
+                  ? 'bg-white text-[#5207CD] border border-[#5207CD] shadow-sm'
+                  : 'text-gray-500 hover:bg-white hover:text-gray-700'
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Custom Upload
+            </button>
+          </div>
+          <p className="text-[10px] text-gray-500 mt-2 text-center">
+            {creativeMode === 'template' 
+              ? 'Use the template with your media and text overlays'
+              : 'Upload your own finished creatives for each format'}
+          </p>
+        </div>
+
+        {/* ===== TEMPLATE MODE: IMAGE CREATIVE + TEXT OVERLAY ===== */}
+        {creativeMode === 'template' && (
+          <>
         {/* ===== IMAGE CREATIVE SECTION ===== */}
         <div className="mb-4">
           <h4 className="text-xs font-semibold text-[#101828] mb-2 uppercase tracking-wide">Image Creative</h4>
@@ -253,12 +460,14 @@ export default function AdVariantCard({
             })}
           </div>
         </div>
+        </>
+        )}
 
-        {/* ===== CUSTOM CREATIVE OVERRIDE SECTION ===== */}
+        {/* ===== CUSTOM MODE: CUSTOM CREATIVE OVERRIDE SECTION ===== */}
+        {creativeMode === 'custom' && (
         <div className="mb-4">
           <h4 className="text-xs font-semibold text-[#101828] mb-2 uppercase tracking-wide">
-            Custom Creative Override
-            <span className="font-normal text-[#667085] ml-2">(replaces template)</span>
+            Custom Creative Upload
           </h4>
           <p className="text-[10px] text-[#667085] mb-2">
             Upload your own finished creative for each format. This will completely replace the template-generated ad.
@@ -317,44 +526,49 @@ export default function AdVariantCard({
               );
             })}
           </div>
+
+          {/* Custom Creative Picker Modal */}
+          <ImageSelectionModal
+            isOpen={!!customCreativePickerFormat}
+            onClose={() => setCustomCreativePickerFormat(null)}
+            type="image"
+            accept="image/*"
+            multiple={false}
+            autosave={true}
+            maxFiles={1}
+            onImageSelected={(files = []) => {
+              const first = files?.[0];
+              const url = typeof first === "string" ? first : (first?.url || first?.secure_url || first?.thumbnail || "");
+              if (url && customCreativePickerFormat) {
+                const next = {
+                  ...editData,
+                  customCreatives: {
+                    ...(editData.customCreatives || {}),
+                    [customCreativePickerFormat]: url,
+                  },
+                };
+                setEditData(next);
+                emitDraft(next);
+                message.success(`Custom creative selected for ${customCreativePickerFormat}`);
+              }
+              setCustomCreativePickerFormat(null);
+            }}
+          />
         </div>
+        )}
 
-        {/* Custom Creative Picker Modal */}
-        <ImageSelectionModal
-          isOpen={!!customCreativePickerFormat}
-          onClose={() => setCustomCreativePickerFormat(null)}
-          type="image"
-          accept="image/*"
-          multiple={false}
-          autosave={true}
-          maxFiles={1}
-          onImageSelected={(files = []) => {
-            const first = files?.[0];
-            const url = typeof first === "string" ? first : (first?.url || first?.secure_url || first?.thumbnail || "");
-            if (url && customCreativePickerFormat) {
-              const next = {
-                ...editData,
-                customCreatives: {
-                  ...(editData.customCreatives || {}),
-                  [customCreativePickerFormat]: url,
-                },
-              };
-              setEditData(next);
-              emitDraft(next);
-              message.success(`Custom creative selected for ${customCreativePickerFormat}`);
-            }
-            setCustomCreativePickerFormat(null);
-          }}
-        />
-
-        {/* ===== TEXT OVERLAY SECTION ===== */}
+        {/* ===== TEMPLATE MODE: TEXT OVERLAY SECTION ===== */}
+        {creativeMode === 'template' && (
         <div className="mb-4">
           <h4 className="text-xs font-semibold text-[#101828] mb-2 uppercase tracking-wide">Text Overlay</h4>
 
           {/* Headline field */}
           <div className="mb-3">
             <div className="flex justify-between items-center mb-1.5">
-              <label className="text-xs font-medium text-[#344054]">Headline</label>
+              <div className="flex items-center gap-1">
+                <label className="text-xs font-medium text-[#344054]">Headline</label>
+                {renderMagicPencilButton("title")}
+              </div>
               <span className={`text-xs ${editData.title.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
                 {editData.title.length}/40
               </span>
@@ -379,7 +593,10 @@ export default function AdVariantCard({
               {/* Quote Text */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-medium text-[#344054]">Quote Text</label>
+                  <div className="flex items-center gap-1">
+                    <label className="text-xs font-medium text-[#344054]">Quote Text</label>
+                    {renderMagicPencilButton("quoteText")}
+                  </div>
                   <span className={`text-xs ${editData.quoteText.length > 300 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
                     {editData.quoteText.length}/300
                   </span>
@@ -403,7 +620,10 @@ export default function AdVariantCard({
                 {/* Author Name */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-xs font-medium text-[#344054]">Author Name</label>
+                    <div className="flex items-center gap-1">
+                      <label className="text-xs font-medium text-[#344054]">Author Name</label>
+                      {renderMagicPencilButton("quoteAuthorName")}
+                    </div>
                     <span className={`text-xs ${editData.quoteAuthorName.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
                       {editData.quoteAuthorName.length}/40
                     </span>
@@ -424,7 +644,10 @@ export default function AdVariantCard({
                 {/* Author Position */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-xs font-medium text-[#344054]">Position</label>
+                    <div className="flex items-center gap-1">
+                      <label className="text-xs font-medium text-[#344054]">Position</label>
+                      {renderMagicPencilButton("quoteAuthorPosition")}
+                    </div>
                     <span className={`text-xs ${editData.quoteAuthorPosition.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
                       {editData.quoteAuthorPosition.length}/40
                     </span>
@@ -447,7 +670,10 @@ export default function AdVariantCard({
             /* Subheadline for non-quote ad types */
             <div className="mb-3">
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-medium text-[#344054]">Subheadline</label>
+                <div className="flex items-center gap-1">
+                  <label className="text-xs font-medium text-[#344054]">Subheadline</label>
+                  {renderMagicPencilButton("linkDescription")}
+                </div>
                 <span className={`text-xs ${editData.linkDescription.length > 30 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
                   {editData.linkDescription.length}/30
                 </span>
@@ -494,15 +720,19 @@ export default function AdVariantCard({
             </div>
           </div>
         </div>
+        )}
 
-        {/* ===== META AD COPY SECTION ===== */}
+        {/* ===== META AD COPY SECTION (Always visible) ===== */}
         <div className="mb-4">
           <h4 className="text-xs font-semibold text-[#101828] mb-2 uppercase tracking-wide">Meta Ad Copy</h4>
 
           {/* Primary Text */}
           <div className="mb-3">
             <div className="flex justify-between items-center mb-1.5">
-              <label className="text-xs font-medium text-[#344054]">Primary Text</label>
+              <div className="flex items-center gap-1">
+                <label className="text-xs font-medium text-[#344054]">Primary Text</label>
+                {renderMagicPencilButton("description")}
+              </div>
               <span className="text-xs text-[#667085]">{editData.description.length}/2200</span>
             </div>
             <TextArea
@@ -529,7 +759,10 @@ export default function AdVariantCard({
             {/* Meta Headline */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-medium text-[#344054]">Headline</label>
+                <div className="flex items-center gap-1">
+                  <label className="text-xs font-medium text-[#344054]">Headline</label>
+                  {renderMagicPencilButton("metaHeadline")}
+                </div>
                 <span className={`text-xs ${(editData.metaHeadline?.length || 0) > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
                   {editData.metaHeadline?.length || 0}/40
                 </span>
@@ -551,7 +784,10 @@ export default function AdVariantCard({
             {/* Meta Description */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-medium text-[#344054]">Description</label>
+                <div className="flex items-center gap-1">
+                  <label className="text-xs font-medium text-[#344054]">Description</label>
+                  {renderMagicPencilButton("metaDescription")}
+                </div>
                 <span className={`text-xs ${(editData.metaDescription?.length || 0) > 30 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
                   {editData.metaDescription?.length || 0}/30
                 </span>
