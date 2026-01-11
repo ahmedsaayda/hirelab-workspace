@@ -12,7 +12,7 @@ export default function FeedContext({ children, brandData, text, title, descript
 
   // Facebook/Instagram truncates primary text to ~125 characters initially
   const MAX_VISIBLE_CHARS = 125;
-  const fullText = text || "We're hiring! Check out our latest opportunities and join a team that's building the future.";
+  const fullText = text || "";
   const canTruncate = fullText.length > MAX_VISIBLE_CHARS;
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -98,11 +98,13 @@ export default function FeedContext({ children, brandData, text, title, descript
               {brandData?.website || "HIRELAB.COM"}
             </div>
             <div className="font-semibold text-[16px] text-gray-900 truncate">
-              {title || "Join Our Team"}
+              {title || ""}
             </div>
-            <div className="text-[13px] text-gray-600 truncate">
-              {description || ""}
-            </div>
+            {description && (
+              <div className="text-[13px] text-gray-600 truncate">
+                {description}
+              </div>
+            )}
           </div>
           <button className="bg-[#EBF5FF] text-[#0064D1] px-4 py-2 rounded-[6px] text-[15px] font-semibold whitespace-nowrap">
             {ctaText || "Learn More"}
