@@ -102,7 +102,7 @@ export default function AdLibraryModal({ open, onClose, onSelect, platform, form
       const matchesPlatform = !selectedPlatform || template.platform === selectedPlatform;
       const matchesFormat = !selectedFormat || template.format === selectedFormat;
       const matchesAdType = !selectedAdType || template.adType === selectedAdType;
-      const matchesSearch = !searchTerm || 
+      const matchesSearch = !searchTerm ||
         template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -160,7 +160,7 @@ export default function AdLibraryModal({ open, onClose, onSelect, platform, form
             onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          
+
           <Select
             value={selectedPlatform}
             onChange={setSelectedPlatform}
@@ -182,7 +182,7 @@ export default function AdLibraryModal({ open, onClose, onSelect, platform, form
             allowClear
           >
             <Option value="square">Square (1:1)</Option>
-            <Option value="story">Story (9:16)</Option>
+            <Option value="story">Vertical (9:16)</Option>
             <Option value="landscape">Landscape (16:9)</Option>
           </Select>
 
@@ -217,11 +217,10 @@ export default function AdLibraryModal({ open, onClose, onSelect, platform, form
                 <button
                   key={template.id}
                   onClick={() => handleTemplateSelect(template)}
-                  className={`relative group rounded-lg overflow-hidden transition-all ${
-                    selectedTemplate === template.id
+                  className={`relative group rounded-lg overflow-hidden transition-all ${selectedTemplate === template.id
                       ? "ring-4 ring-blue-500 scale-105"
                       : "hover:scale-105 hover:shadow-lg"
-                  }`}
+                    }`}
                 >
                   {/* Template Preview */}
                   <div className="aspect-[9/16] bg-gray-100 relative">

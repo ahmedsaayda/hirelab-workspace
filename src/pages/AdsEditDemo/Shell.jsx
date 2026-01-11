@@ -21,7 +21,7 @@ const AD_TYPES = [
 ];
 
 const AD_FORMATS = [
-  { id: "story", label: "Story (9:16)", aspectRatio: "9:16", width: 1080, height: 1920 },
+  { id: "story", label: "Vertical (9:16)", aspectRatio: "9:16", width: 1080, height: 1920 },
   { id: "square", label: "Square (1:1)", aspectRatio: "1:1", width: 1080, height: 1080 },
   { id: "portrait", label: "Portrait (4:5)", aspectRatio: "4:5", width: 1080, height: 1350 },
 ];

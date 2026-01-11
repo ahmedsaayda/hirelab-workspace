@@ -142,7 +142,7 @@ await LandingPageData.findByIdAndUpdate(
 ```
 
 #### 2. Template Requirements
-- **Story (9:16):** 338px × 600px minimum
+- **Vertical (9:16):** 338px × 600px minimum
 - **Square (1:1):** 400px × 400px minimum  
 - **Landscape (4:5):** 640px × 800px minimum
 - All text must support dynamic content

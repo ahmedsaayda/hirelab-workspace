@@ -336,18 +336,18 @@ export const generateVariants = (lpData) => {
   const totalTarget = clamp(15 + Math.floor(Math.random() * 6), 7, 20); // 15–20
 
   const MIN = {
-    job: 4,
+    job: 2,
     company: 1,
     testimonial: 0, // Testimonial count is based on actual testimonials in landing page
     retargeting: 1,
-    "employer-brand": 3, // EVP, Leader, Combined
+    "employer-brand": 1, // EVP, Leader, Combined
   };
   const CAP = {
-    job: 12,
-    company: 6,
-    testimonial: 10, // Max testimonials (if landing page has that many)
-    retargeting: 3,
-    "employer-brand": 3,
+    job: 2,
+    company: 1,
+    testimonial: 2, // Max testimonials (if landing page has that many)
+    retargeting: 1,
+    "employer-brand": 1,
   };
 
   const jobImages = shuffle(extractImagesForAdType("job", lpData));

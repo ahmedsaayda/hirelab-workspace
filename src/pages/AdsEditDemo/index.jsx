@@ -1,7 +1,7 @@
 import React from "react";
 
 const FORMAT_SPECS = {
-  story: { id: 'story', label: 'Story (9:16)', width: 1080, height: 1920, aspectRatio: '9:16' },
+  story: { id: 'story', label: 'Vertical (9:16)', width: 1080, height: 1920, aspectRatio: '9:16' },
   square: { id: 'square', label: 'Square (1:1)', width: 1080, height: 1080, aspectRatio: '1:1' },
   portrait: { id: 'portrait', label: 'Portrait (4:5)', width: 1080, height: 1350, aspectRatio: '4:5' },
 };
@@ -111,7 +111,7 @@ export default function AdsEditDemo() {
       <div className="flex items-center justify-between mb-4">
         <div className="text-xl font-semibold">Demo Image Slots</div>
         <div className="flex gap-2">
-          <Button id="story">Story (9:16)</Button>
+          <Button id="story">Vertical (9:16)</Button>
           <Button id="square">Square (1:1)</Button>
           <Button id="portrait">Portrait (4:5)</Button>
         </div>

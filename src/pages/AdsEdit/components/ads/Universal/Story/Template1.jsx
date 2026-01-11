@@ -72,10 +72,10 @@ export default function Variant4({ variant, brandData, landingPageData }) {
 
     return (
       <div className="relative" style={{ width: "1080px", height: "1920px", backgroundColor: "#ffffff", overflow: "hidden" }}>
-        {/* Title at top */}
+        {/* Title - positioned lower for safe zone */}
         <div style={{
           position: "absolute",
-          top: "60px",
+          top: "180px",
           left: "60px",
           right: "120px",
           zIndex: 10
@@ -97,7 +97,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
 
         {/* Arrow icon top right */}
         <svg
-          style={{ position: "absolute", top: "60px", right: "60px", zIndex: 10 }}
+          style={{ position: "absolute", top: "180px", right: "60px", zIndex: 10 }}
           width="45"
           height="45"
           viewBox="0 0 36 36"
@@ -109,7 +109,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
         {/* Full-width image */}
         <div style={{
           position: "absolute",
-          top: titleLines.length > 2 ? "280px" : "240px",
+          top: titleLines.length > 2 ? "400px" : "360px",
           left: "60px",
           right: "60px",
           bottom: "60px",
@@ -163,14 +163,15 @@ export default function Variant4({ variant, brandData, landingPageData }) {
             />
           )}
 
-          {/* Quote overlay at bottom */}
+          {/* Quote overlay - positioned slightly below center for safe zone */}
           {quoteText && (
             <div style={{
               position: "absolute",
-              bottom: "24px",
+              top: "55%",
               left: "24px",
               right: "24px",
-              backgroundColor: "rgba(255,255,255,0.95)",
+              transform: "translateY(-50%)",
+              backgroundColor: "rgba(255,255,255,0.75)",
               borderRadius: "10px",
               padding: "28px 32px",
               zIndex: 20,
@@ -235,9 +236,9 @@ export default function Variant4({ variant, brandData, landingPageData }) {
         )}
       </div>
 
-      {/* Chevrons top right - aligned with title */}
+      {/* Chevrons top right - fixed position aligned with logo */}
       <svg
-        style={{ position: "absolute", top: "140px", right: "60px", zIndex: 10 }}
+        style={{ position: "absolute", top: "55px", right: "60px", zIndex: 10 }}
         width="160"
         height="80"
         viewBox="0 0 160 80"
@@ -272,29 +273,6 @@ export default function Variant4({ variant, brandData, landingPageData }) {
         </div>
       </div>
 
-      {/* CTA Button */}
-      <div style={{
-        position: "absolute",
-        top: titleLines.length > 2 ? "380px" : "320px",
-        left: "60px",
-        zIndex: 10,
-      }}>
-        <div style={{
-          backgroundColor: primaryColor,
-          color: ctaTextColor,
-          fontSize: "22px",
-          fontWeight: "bold",
-          fontFamily: "Arial, sans-serif",
-          textTransform: "uppercase",
-          letterSpacing: "1px",
-          padding: "18px 36px",
-          borderRadius: "6px",
-          display: "inline-block",
-        }}>
-          {ctaText}
-        </div>
-      </div>
-
       {/* Arrow icon next to title */}
       <svg
         style={{ position: "absolute", top: titleLines.length > 2 ? "340px" : "280px", right: "200px", zIndex: 10 }}
@@ -309,12 +287,12 @@ export default function Variant4({ variant, brandData, landingPageData }) {
       {/* Full-width Image */}
       <div style={{
         position: "absolute",
-        top: titleLines.length > 2 ? "420px" : "360px",
+        top: titleLines.length > 2 ? "340px" : "280px",
         left: "60px",
         right: "60px",
         bottom: "60px",
         borderRadius: "12px",
-        overflow: "visible",
+        overflow: "hidden",
         border: `10px solid ${secondaryColor}`,
       }}>
         {isVideo && !videoFailed && !isCapture ? (
@@ -338,7 +316,30 @@ export default function Variant4({ variant, brandData, landingPageData }) {
           />
         )}
 
-        {/* Link Description overlay at top left of image */}
+        {/* CTA Button - inside image at top left corner */}
+        <div style={{
+          position: "absolute",
+          top: "0",
+          left: "0",
+          zIndex: 20,
+        }}>
+          <div style={{
+            backgroundColor: primaryColor,
+            color: ctaTextColor,
+            fontSize: "22px",
+            fontWeight: "bold",
+            fontFamily: "Arial, sans-serif",
+            textTransform: "uppercase",
+            letterSpacing: "1px",
+            padding: "18px 36px",
+            borderRadius: "0 0 8px 0",
+            display: "inline-block",
+          }}>
+            {ctaText}
+          </div>
+        </div>
+
+        {/* Link Description overlay below CTA */}
         {linkDescription && (
           <div style={{
             position: "absolute",

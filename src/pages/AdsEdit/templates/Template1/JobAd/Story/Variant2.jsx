@@ -19,7 +19,7 @@ export default function JobAdStoryVariant2({ variant, brandData, landingPageData
           Job Ad - Variant 2
         </div>
         <div className="text-base font-medium text-gray-600 mb-3">
-          Story (9:16)
+          Vertical (9:16)
         </div>
         <div className="inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm font-semibold">
           Coming Soon

@@ -145,29 +145,29 @@ export default function Launch({ paramsId }) {
     // Reset initialization flag when adset changes
     pixelInitializedRef.current = false;
   }, [adSetKey]);
-  
+
   useEffect(() => {
     // Only auto-select if user hasn't manually changed the pixel
     if (touched.pixel) return;
     if (availablePixels.length === 0) return;
-    
+
     // Priority: 1. Saved in launchSettings, 2. LP's saved pixel, 3. Hirelab pixel, 4. First available
     const savedPixelId = summary?.launchSettings?.metaPixelId;
     const lpPixelId = summary?.metaPixelId;
     const savedPixel = savedPixelId ? availablePixels.find(p => p.id === savedPixelId) : null;
     const lpPixel = lpPixelId ? availablePixels.find(p => p.id === lpPixelId) : null;
     const hirelabPixel = availablePixels.find(p => p.name?.toLowerCase().includes('hirelab'));
-    
+
     // If we have a saved pixel from launchSettings, always use that
     if (savedPixel) {
       setSelectedPixel(savedPixel.id);
       pixelInitializedRef.current = true;
       return;
     }
-    
+
     // Only do the fallback selection once (to avoid overwriting when summary loads later)
     if (pixelInitializedRef.current) return;
-    
+
     const fallbackPixel = lpPixel?.id || hirelabPixel?.id || availablePixels[0]?.id;
     if (fallbackPixel) {
       setSelectedPixel(fallbackPixel);
@@ -1005,7 +1005,7 @@ export default function Launch({ paramsId }) {
       );
       return;
     }
-   
+
     if (!summary?.editorAds) {
       message.warning("No creatives available to launch");
       return;
@@ -1013,7 +1013,7 @@ export default function Launch({ paramsId }) {
     try {
       setLaunching(true);
       const editorAds = summary.editorAds;
-      
+
       // Get the correct creatives source - ad set-specific or campaign-level
       let creativesSource = editorAds;
       if (adSetKey) {
@@ -1023,7 +1023,7 @@ export default function Launch({ paramsId }) {
           creativesSource = adSet.creatives;
         }
       }
-      
+
       const ids = [];
       Object.keys(creativesSource || {}).forEach((adType) => {
         if (adType.startsWith("_")) return;
@@ -1785,22 +1785,22 @@ export default function Launch({ paramsId }) {
                   </div>
                 </Modal>
 
-        
 
-             
+
+
 
                 <Modal title="Add Keyword" open={isKeywordModalOpen} onOk={handleAddKeyword} onCancel={() => setIsKeywordModalOpen(false)}>
                   <Input placeholder="Enter keyword (e.g. Leadership)" value={newKeyword} onChange={(e) => setNewKeyword(e.target.value)} onPressEnter={handleAddKeyword} />
                 </Modal>
 
 
-              
+
               </div>
             )}
 
             {activeStep === "creatives" && (
-              <CreativesPreview 
-                editorAds={summary?.editorAds} 
+              <CreativesPreview
+                editorAds={summary?.editorAds}
                 lpId={lpId}
                 adSetKey={adSetKey}
               />
@@ -1816,9 +1816,9 @@ export default function Launch({ paramsId }) {
 function CreativesPreview({ editorAds, lpId, adSetKey }) {
   const [selectedFormat, setSelectedFormat] = useState("square");
   const [selectedVariant, setSelectedVariant] = useState(null);
-  
+
   const AD_FORMATS = [
-    { id: "story", label: "Story (9:16)", width: 1080, height: 1920 },
+    { id: "story", label: "Vertical (9:16)", width: 1080, height: 1920 },
     { id: "square", label: "Square (1:1)", width: 1080, height: 1080 },
     { id: "portrait", label: "Portrait (4:5)", width: 1080, height: 1350 },
   ];
@@ -1826,7 +1826,7 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
   // Get the correct creatives source - ad set-specific or campaign-level
   const creativesSource = React.useMemo(() => {
     if (!editorAds) return {};
-    
+
     // If we have an ad set key, look for ad set-specific creatives
     if (adSetKey) {
       const adSets = Array.isArray(editorAds._adSets) ? editorAds._adSets : [];
@@ -1835,7 +1835,7 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
         return adSet.creatives;
       }
     }
-    
+
     // Fall back to campaign-level creatives
     return editorAds;
   }, [editorAds, adSetKey]);
@@ -1905,7 +1905,7 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
         <div className="text-sm text-blue-800">
           <p className="font-medium mb-1">Creatives are linked to this ad set</p>
           <p className="text-blue-700">
-            These creatives were approved in the Ads Editor and are now linked to this ad set. 
+            These creatives were approved in the Ads Editor and are now linked to this ad set.
             If you need different creatives, create a new ad set with its own unique creatives.
           </p>
         </div>
@@ -1924,16 +1924,15 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
               const thumbImg = publishImages.square || publishImages.portrait || publishImages.story || v.publishImage || publishVideos.square || publishVideos.portrait || publishVideos.story || v.publishVideo;
               const isSelected = selectedVariant?.id === v.id;
               const formatCount = Object.keys(publishImages).length + Object.keys(publishVideos).length;
-              
+
               return (
                 <div
                   key={`${v.adType}-${v.id}`}
                   onClick={() => setSelectedVariant(v)}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                    isSelected 
-                      ? "bg-[#5207CD]/10 border-2 border-[#5207CD]" 
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${isSelected
+                      ? "bg-[#5207CD]/10 border-2 border-[#5207CD]"
                       : "bg-white border border-[#eaecf0] hover:border-[#5207CD]/50 hover:shadow-sm"
-                  }`}
+                    }`}
                 >
                   <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 shadow-sm">
                     {thumbImg ? (
@@ -1956,8 +1955,8 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
             })}
             {allVariants.length === 0 && (
               <div className="text-sm text-[#98a2b3] text-center py-8 bg-gray-50 rounded-lg">
-                No approved creatives found.<br/>
-                <span className="text-xs">Click "Approve creatives" in the Ads Editor first.</span><br/>
+                No approved creatives found.<br />
+                <span className="text-xs">Click "Approve creatives" in the Ads Editor first.</span><br />
                 <a href={`/lp-editor/${lpId}/ads`} className="text-[#5207CD] underline mt-2 inline-block">Go to Ads Editor</a>
               </div>
             )}
@@ -1974,11 +1973,10 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
                 <button
                   key={format.id}
                   onClick={() => setSelectedFormat(format.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
-                    selectedFormat === format.id
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${selectedFormat === format.id
                       ? "bg-[#5207CD] text-white"
                       : "bg-white text-[#344054] border border-[#d0d5dd] hover:border-[#5207CD]"
-                  }`}
+                    }`}
                 >
                   {format.label}
                 </button>
@@ -1988,14 +1986,14 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
 
           {/* Preview - supports both images and videos */}
           <div className="flex justify-center bg-[#f8f9fa] rounded-xl p-6 min-h-[520px] items-center">
-            <div 
+            <div
               className="rounded-lg overflow-hidden shadow-xl bg-white flex items-center justify-center"
               style={{ width: `${previewDims.width}px`, height: `${previewDims.height}px` }}
             >
               {currentImage ? (
                 /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(currentImage) ? (
-                  <video 
-                    src={currentImage} 
+                  <video
+                    src={currentImage}
                     controls
                     autoPlay
                     muted
@@ -2003,9 +2001,9 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <img 
-                    src={currentImage} 
-                    alt={selectedVariant?.title || "Preview"} 
+                  <img
+                    src={currentImage}
+                    alt={selectedVariant?.title || "Preview"}
                     className="w-full h-full object-contain"
                   />
                 )
@@ -2020,7 +2018,7 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
             </div>
           </div>
 
-        
+
         </div>
       </div>
     </div>

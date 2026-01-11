@@ -243,9 +243,9 @@ export default function Template1({ variant, brandData, landingPageData }) {
         )}
       </div>
 
-      {/* Arrow icon top right */}
+      {/* Arrow icon top right - fixed position aligned with logo */}
       <svg
-        style={{ position: "absolute", top: "100px", right: "55px", zIndex: 10 }}
+        style={{ position: "absolute", top: "40px", right: "55px", zIndex: 10 }}
         width="36"
         height="36"
         viewBox="0 0 36 36"
@@ -322,22 +322,22 @@ export default function Template1({ variant, brandData, landingPageData }) {
           )}
         </div>
 
-        {/* CTA Button at bottom left */}
+        {/* CTA Button - positioned in brand color bar below image */}
         <div style={{
           position: "absolute",
-          bottom: "30px",
+          bottom: "15px",
           left: "55px",
           zIndex: 20,
         }}>
           <div style={{
             backgroundColor: primaryColor,
             color: ctaTextColor,
-            fontSize: "16px",
+            fontSize: "22px",
             fontWeight: "bold",
             fontFamily: "Arial, sans-serif",
             textTransform: "uppercase",
             letterSpacing: "1px",
-            padding: "14px 28px",
+            padding: "18px 40px",
             borderRadius: "4px",
             display: "inline-block",
           }}>
@@ -347,7 +347,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
 
         {/* White chevrons at bottom right - pointing right */}
         <svg
-          style={{ position: "absolute", bottom: "25px", right: "55px", zIndex: 20 }}
+          style={{ position: "absolute", bottom: "20px", right: "55px", zIndex: 20 }}
           width="160"
           height="60"
           viewBox="0 0 160 60"

@@ -35,7 +35,7 @@ When no ads exist:
 
 ### **3. Live Preview** (Right Panel)
 - Real-time preview updates as you edit
-- Multiple formats: Story (9:16), Square (1:1), Landscape (16:9)
+- Multiple formats: Vertical (9:16), Square (1:1), Landscape (16:9)
 - Platform switcher: Facebook, Instagram, LinkedIn, TikTok
 - Pixel-perfect rendering matching Figma design
 

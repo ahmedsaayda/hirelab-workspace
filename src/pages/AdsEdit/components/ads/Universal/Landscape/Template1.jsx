@@ -240,9 +240,9 @@ export default function Variant2({ variant, brandData, landingPageData }) {
         )}
       </div>
 
-      {/* Arrow icon top right - aligned with title */}
+      {/* Arrow icon top right - fixed position aligned with logo */}
       <svg
-        style={{ position: "absolute", top: "120px", right: "55px", zIndex: 10 }}
+        style={{ position: "absolute", top: "50px", right: "55px", zIndex: 10 }}
         width="40"
         height="40"
         viewBox="0 0 36 36"

@@ -59,7 +59,7 @@ The system implements a sequential ad funnel based on audience warmth:
 
 ### 3. Format Support
 - **Square (1:1):** 400x400px - Universal format for feed posts
-- **Story (9:16):** 338x600px - Vertical format for Instagram/Facebook Stories
+- **Vertical (9:16):** 338x600px - Vertical format for Instagram/Facebook Stories
 - **Landscape (4:5):** 640x800px - Horizontal format for wide displays
 
 ### 4. Variant Management

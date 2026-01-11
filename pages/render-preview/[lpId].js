@@ -37,7 +37,7 @@ import RetargetingSquareVariant1 from "../../src/pages/AdsEdit/components/ads/Re
 import RetargetingLandscapeVariant1 from "../../src/pages/AdsEdit/components/ads/Retargeting/Landscape/Variant1";
 
 const AD_FORMATS = [
-  { id: "story", label: "Story (9:16)", width: 1080, height: 1920 },
+  { id: "story", label: "Vertical (9:16)", width: 1080, height: 1920 },
   { id: "square", label: "Square (1:1)", width: 1080, height: 1080 },
   { id: "portrait", label: "Portrait (4:5)", width: 1080, height: 1350 },
 ];
@@ -107,7 +107,7 @@ export default function RenderPreviewPage() {
       const decoded = JSON.parse(decodeURIComponent(encodedData));
       console.log("Render page: Data loaded", decoded);
       setPageData(decoded);
-      
+
       // Signal ready after component renders and video starts
       setTimeout(() => {
         setReady(true);
@@ -133,7 +133,7 @@ export default function RenderPreviewPage() {
     // Map adTypeId values to component keys
     const typeMap = {
       'job': 'jobAd',
-      'jobAd': 'jobAd', 
+      'jobAd': 'jobAd',
       'company': 'aboutCompany',
       'aboutCompany': 'aboutCompany',
       'testimonial': 'testimonial',
@@ -143,9 +143,9 @@ export default function RenderPreviewPage() {
     };
     const type = typeMap[rawType] || rawType;
     const variantNum = variant?.variantNumber || 1;
-    
+
     console.log("Render preview:", { rawType, type, variantNum, formatId });
-    
+
     const Component = getAdComponent(type, formatId, variantNum);
 
     if (!Component) {
