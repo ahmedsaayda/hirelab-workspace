@@ -151,19 +151,7 @@ const drawerStyles = `
     transition: all 0.3s ease;
   }
   
-  /* Prevent body scroll when drawer is open */
-  body.drawer-open {
-    overflow: hidden !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-  }
-  
-  /* Additional failsafe for any page-level scroll */
-  body.drawer-open, 
-  body.drawer-open html,
-  body.drawer-open #__next {
-    overflow: hidden !important;
-  }
+  /* Note: We intentionally don't lock body scroll to prevent scroll-to-top issues */
   
   /* Ensure smooth scrolling in content area */
   .candidate-profile-drawer .ant-tabs-tabpane {
@@ -472,6 +460,14 @@ const CandidateProfile = ({
 
   useEffect(() => {
     if (candidateId) {
+      // Reset state for new candidate to prevent stale data
+      setResumeUrl(null);
+      setLastCommunication(null);
+      setNotes([]);
+      setInterviewHistory([]);
+      setCandidate(null);
+      
+      // Load fresh data for the new candidate
       loadCandidateData();
       loadAllCandidates();
       loadInterviewHistory();
@@ -487,41 +483,15 @@ const CandidateProfile = ({
     console.log('📄 Resume URL state changed:', resumeUrl);
   }, [resumeUrl]);
 
-  // Manage body scroll when drawer is open/closed
+  // Manage body class when drawer is open/closed (for CSS styling only - no scroll manipulation)
   useEffect(() => {
     if (candidateId) {
-      // Lock body scroll
       document.body.classList.add('drawer-open');
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-
-      // Also lock any potential page containers
-      const nextRoot = document.getElementById('__next');
-      if (nextRoot) {
-        nextRoot.style.overflow = 'hidden';
-      }
     } else {
-      // Restore body scroll
       document.body.classList.remove('drawer-open');
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-
-      const nextRoot = document.getElementById('__next');
-      if (nextRoot) {
-        nextRoot.style.overflow = '';
-      }
     }
-
-    // Cleanup on unmount
     return () => {
       document.body.classList.remove('drawer-open');
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-
-      const nextRoot = document.getElementById('__next');
-      if (nextRoot) {
-        nextRoot.style.overflow = '';
-      }
     };
   }, [candidateId]);
 
@@ -645,10 +615,8 @@ const CandidateProfile = ({
           final: resumeUrlFromResponse
         });
 
-        // Only update resumeUrl if we found one, or if we don't have one currently
-        if (resumeUrlFromResponse || !resumeUrl) {
-          setResumeUrl(resumeUrlFromResponse);
-        }
+        // Always set resumeUrl to match current candidate's data (even if null)
+        setResumeUrl(resumeUrlFromResponse || null);
         loadCandidateNotes(candidateId);
       }
     } catch (error) {
@@ -2322,6 +2290,8 @@ const CandidateProfile = ({
       headerStyle={{ display: 'none' }}
       maskClosable={true}
       destroyOnClose={false}
+      push={false}
+      autoFocus={false}
       getContainer={() => document.body}
     >
       {/* Custom Header */}

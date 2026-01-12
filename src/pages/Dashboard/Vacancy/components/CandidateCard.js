@@ -308,7 +308,10 @@ const CandidateCard = ({
         w-full
         ${isDragging ? 'rotate-3 shadow-xl border-blue-300 z-50 scale-105' : ''}
       `}
-      onClick={onView}
+      onClick={(e) => {
+        e.preventDefault();
+        onView && onView();
+      }}
     >
       {/* Header with Avatar and Name */}
       <div className="flex items-start justify-between mb-3">

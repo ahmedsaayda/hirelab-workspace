@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 // Global CSS fix for ALL primary buttons to match brand-style-form.jsx hover behavior
@@ -584,6 +584,7 @@ const headerStyles = `
     display: flex;
     flex-direction: column;
     min-height: 0; /* Allow flex shrinking */
+    overflow-anchor: none; /* Prevent automatic scroll anchoring */
   }
   
   /* Droppable area styling */
@@ -591,9 +592,15 @@ const headerStyles = `
     flex: 1; /* Take remaining height */
     min-height: 0; /* Allow flex shrinking */
     overflow-x: hidden;
-    scroll-behavior: smooth;
+    scroll-behavior: auto; /* Prevent smooth scroll that can cause jumping */
     padding: 1rem;
     margin-bottom: 0; /* Remove bottom margin */
+    overflow-anchor: none; /* Prevent automatic scroll anchoring */
+  }
+  
+  /* Prevent scroll anchoring on all children */
+  .pipeline-droppable-area * {
+    overflow-anchor: none;
   }
   
   /* Mobile responsive adjustments */
@@ -729,19 +736,6 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     return { type: 'owner', id: user?._id };
   }, [user]);
   
-  // Lock page vertical scroll while ATS is mounted so columns handle their own scrolling
-  useEffect(() => {
-    try {
-      const prevHtmlOverflowY = document.documentElement.style.overflowY;
-      const prevBodyOverflowY = document.body.style.overflowY;
-      document.documentElement.style.overflowY = 'hidden';
-      document.body.style.overflowY = 'hidden';
-      return () => {
-        document.documentElement.style.overflowY = prevHtmlOverflowY || '';
-        document.body.style.overflowY = prevBodyOverflowY || '';
-      };
-    } catch (_) {}
-  }, []);
   
   // Debug: Log component props
   console.log('🔍 NewATS Component Props:', {
@@ -926,6 +920,33 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   const [addCandidateModal, setAddCandidateModal] = useState(false);
   const [selectedStageForAdd, setSelectedStageForAdd] = useState(null);
   const [candidateProfile, setCandidateProfile] = useState(null);
+  
+  // Ref to preserve scroll positions when opening candidate drawer
+  const columnScrollPositionsRef = useRef({});
+  
+  // Function to open candidate profile while preserving column scroll positions
+  const openCandidateProfile = useCallback((candidateId) => {
+    // Save all column scroll positions before opening drawer
+    const columns = document.querySelectorAll('.pipeline-droppable-area');
+    columns.forEach((col, idx) => {
+      columnScrollPositionsRef.current[idx] = col.scrollTop;
+    });
+    
+    // Open the drawer
+    setCandidateProfile(candidateId);
+    
+    // Restore scroll positions after React has rendered
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const cols = document.querySelectorAll('.pipeline-droppable-area');
+        cols.forEach((col, idx) => {
+          if (columnScrollPositionsRef.current[idx] !== undefined) {
+            col.scrollTop = columnScrollPositionsRef.current[idx];
+          }
+        });
+      });
+    });
+  }, []);
   const [assignmentModal, setAssignmentModal] = useState(false);
   const [selectedCandidateForAssignment, setSelectedCandidateForAssignment] = useState(null);
   const [reviewModal, setReviewModal] = useState(false);
@@ -2864,7 +2885,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                             <CandidateCard
                               candidate={candidate}
                               isDragging={snapshot.isDragging}
-                              onView={() => setCandidateProfile(candidate.id)}
+                              onView={() => openCandidateProfile(candidate.id)}
                               onEdit={() => {
                                 setSelectedStageForAdd(null);
                                 setAddCandidateModal({ editId: candidate.id });
@@ -3169,7 +3190,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                   key: 'view',
                   label: 'View Profile',
                   icon: <UserOutlined />,
-                  onClick: () => setCandidateProfile(record.id),
+                  onClick: () => openCandidateProfile(record.id),
                 },
                 {
                   key: 'edit',
@@ -3399,7 +3420,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
             }}
             onRow={(record) => ({
               onClick: () => {
-                setCandidateProfile(record.id);
+                openCandidateProfile(record.id);
               },
               style: { cursor: 'pointer' },
               title: `Click to view ${record.fullname || record.email}'s profile`
@@ -4129,7 +4150,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
             handleOptimisticStageUpdate(newCandidateId, targetStageId);
           } else if (newCandidateId) {
             // Navigate to different candidate
-            setCandidateProfile(newCandidateId);
+            openCandidateProfile(newCandidateId);
           } else {
             // Just refresh data
             loadATSData({ isBackgroundRefresh: true });
