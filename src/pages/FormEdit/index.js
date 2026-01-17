@@ -122,6 +122,12 @@ export default function FormEdit({ paramsId }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [device, setDevice] = useState("desktop");
 
+  // 🔥 Import Form Modal state
+  const [importFormModalVisible, setImportFormModalVisible] = useState(false);
+  const [availableLandingPages, setAvailableLandingPages] = useState([]);
+  const [loadingLandingPages, setLoadingLandingPages] = useState(false);
+  const [importSearchQuery, setImportSearchQuery] = useState("");
+
   // 🔥 NEW: Form-specific change detection state
   const [hasUnpublishedFormChanges, setHasUnpublishedFormChanges] = useState(false);
 
@@ -770,6 +776,84 @@ export default function FormEdit({ paramsId }) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // 🔥 Load landing pages for import form functionality
+  const loadLandingPagesForImport = useCallback(async () => {
+    if (!user?._id) return;
+    setLoadingLandingPages(true);
+    try {
+      const res = await PublicService.queryLandingPagesOfRecruiter({
+        page: 1,
+        limit: 100,
+        recruiterId: user._id,
+        includeUnpublished: true,
+        workspace: user.workspace || undefined
+      });
+      const pages = res?.data?.result || [];
+      // Filter out the current page and pages without forms
+      const filteredPages = pages.filter(
+        (page) => page._id !== lpId && page.form?.fields?.length > 0
+      );
+      setAvailableLandingPages(filteredPages);
+    } catch (err) {
+      console.error("Failed to load landing pages for import:", err);
+      message.error("Failed to load available forms");
+    } finally {
+      setLoadingLandingPages(false);
+    }
+  }, [user?._id, user?.workspace, lpId]);
+
+  // Open import modal and load pages
+  const openImportFormModal = useCallback(() => {
+    setImportFormModalVisible(true);
+    loadLandingPagesForImport();
+  }, [loadLandingPagesForImport]);
+
+  // Import form from selected landing page
+  const importFormFromPage = useCallback(async (sourcePage) => {
+    if (!sourcePage?.form) {
+      message.error("Selected page has no form to import");
+      return;
+    }
+
+    try {
+      // Deep clone the form to avoid reference issues
+      const importedForm = JSON.parse(JSON.stringify(sourcePage.form));
+
+      // Update form sections with imported fields
+      setFormSections(importedForm.fields || []);
+
+      // Update landing page data with form settings
+      setLandingPageData((prev) => ({
+        ...prev,
+        form: {
+          ...prev?.form,
+          ...importedForm,
+        },
+      }));
+
+      // Mark as having unsaved changes
+      setHasUnpublishedFormChanges(true);
+      sessionHasChangesRef.current = true;
+
+      setImportFormModalVisible(false);
+      message.success(`Form imported from "${sourcePage.vacancyTitle || 'Untitled'}"`);
+    } catch (err) {
+      console.error("Failed to import form:", err);
+      message.error("Failed to import form");
+    }
+  }, []);
+
+  // Filter landing pages by search query
+  const filteredLandingPages = useMemo(() => {
+    if (!importSearchQuery.trim()) return availableLandingPages;
+    const query = importSearchQuery.toLowerCase();
+    return availableLandingPages.filter(
+      (page) =>
+        page.vacancyTitle?.toLowerCase().includes(query) ||
+        page.companyName?.toLowerCase().includes(query)
+    );
+  }, [availableLandingPages, importSearchQuery]);
 
   // Settings helpers (minimal additive) - memoized to prevent re-renders
   const currentSettings = useMemo(() => {
@@ -2893,7 +2977,7 @@ export default function FormEdit({ paramsId }) {
               reload={fetchData}
               onOpenFormSettings={() => setSettingsDrawerOpen(true)}
               onNavigateAttemptAds={(href) => {
-                if(landingPageData?.published === false) return message.error("Please publish your page and form before creating ads");
+                if (landingPageData?.published === false) return message.error("Please publish your page and form before creating ads");
                 if (!hasUnpublishedChangesRef.current) {
                   router.push(href);
                   return;
@@ -3528,7 +3612,7 @@ export default function FormEdit({ paramsId }) {
                         </div>
 
                         {/* Always visible action buttons */}
-                        <div className="flex gap-2 mb-6">
+                        <div className="flex flex-wrap gap-2 mb-6">
                           <button
                             onClick={() => setQuestionModal(true)}
                             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 transition-colors hover:bg-gray-50"
@@ -3537,15 +3621,26 @@ export default function FormEdit({ paramsId }) {
                           </button>
                           <button
                             onClick={() => setAiFormModalVisible(true)}
-                            className="px-4 py-2 text-sm font-medium text-white rounded-lg shadow-md transition-transform hover:scale-105"
+                            className="px-4 py-2 text-sm font-medium text-white rounded-lg shadow-md transition-transform hover:scale-105 flex items-center gap-1.5"
                             style={{
                               background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
                             }}
                           >
-                            ⚡{" "}
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
                             {formSections.length > 0
                               ? "Regenerate with AI"
                               : "Generate with AI"}
+                          </button>
+                          <button
+                            onClick={openImportFormModal}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 transition-colors hover:bg-gray-50 flex items-center gap-1.5"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            Import Form
                           </button>
                         </div>
 
@@ -3602,7 +3697,7 @@ export default function FormEdit({ paramsId }) {
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                             strokeWidth={2}
-                                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                                           />
                                         </svg>
                                         Generate with AI
@@ -3625,6 +3720,25 @@ export default function FormEdit({ paramsId }) {
                                           />
                                         </svg>
                                         Add Manually
+                                      </button>
+                                      <button
+                                        onClick={openImportFormModal}
+                                        className="inline-flex gap-2 items-center px-6 py-3 font-semibold text-gray-700 bg-white rounded-lg border border-gray-300 transition-colors hover:bg-gray-50 hover:border-gray-400"
+                                      >
+                                        <svg
+                                          className="w-5 h-5"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                                          />
+                                        </svg>
+                                        Import Form
                                       </button>
                                     </div>
                                   </div>
@@ -4058,6 +4172,105 @@ export default function FormEdit({ paramsId }) {
           }}
         />
 
+        {/* Import Form Modal */}
+        <Modal
+          title={
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <span>Import Form from Another Page</span>
+            </div>
+          }
+          open={importFormModalVisible}
+          onCancel={() => {
+            setImportFormModalVisible(false);
+            setImportSearchQuery("");
+          }}
+          footer={null}
+          width={600}
+          bodyStyle={{ maxHeight: "60vh", overflowY: "auto" }}
+        >
+          <div className="space-y-4">
+            {/* Search Input */}
+            <Input
+              placeholder="Search by job title or company name..."
+              value={importSearchQuery}
+              onChange={(e) => setImportSearchQuery(e.target.value)}
+              prefix={
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              }
+              allowClear
+            />
+
+            {/* Loading State */}
+            {loadingLandingPages && (
+              <div className="flex justify-center py-8">
+                <Spin tip="Loading available forms..." />
+              </div>
+            )}
+
+            {/* No Results */}
+            {!loadingLandingPages && filteredLandingPages.length === 0 && (
+              <div className="py-8 text-center text-gray-500">
+                <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="font-medium">No forms available to import</p>
+                <p className="text-sm mt-1">Create forms in other pages first</p>
+              </div>
+            )}
+
+            {/* Landing Pages List */}
+            {!loadingLandingPages && filteredLandingPages.length > 0 && (
+              <div className="space-y-2">
+                {filteredLandingPages.map((page) => (
+                  <div
+                    key={page._id}
+                    className="p-4 border rounded-lg hover:border-gray-400 hover:bg-gray-50 cursor-pointer transition-all group"
+                    onClick={() => importFormFromPage(page)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 truncate">
+                          {page.vacancyTitle || "Untitled Job"}
+                        </h4>
+                        <p className="text-sm text-gray-500 truncate">
+                          {page.companyName || "No company"}
+                        </p>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                          <span className="flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            {page.form?.fields?.length || 0} fields
+                          </span>
+                          {page.form?.title && (
+                            <span className="truncate max-w-[200px]">
+                              "{page.form.title}"
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        className="opacity-0 group-hover:opacity-100 px-3 py-1.5 text-xs font-medium rounded-md transition-all"
+                        style={{
+                          background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+                          color: "white",
+                        }}
+                      >
+                        Import
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
+
         {/* Settings Drawer */}
         <Drawer
           open={settingsDrawerOpen}
@@ -4302,7 +4515,7 @@ export default function FormEdit({ paramsId }) {
       >
         <div className="flex flex-col gap-5">
           <Heading size="3xl" as="h3" className="!text-black-900_01">
-          Before creating ads, be sure to publish your page and form
+            Before creating ads, be sure to publish your page and form
           </Heading>
           <div className="flex gap-3 justify-end">
 

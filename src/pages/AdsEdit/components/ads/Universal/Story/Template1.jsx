@@ -70,7 +70,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
     const quoteFontSize = 28;
     const authorFontSize = 22;
 
-    return (
+  return (
       <div className="relative" style={{ width: "1080px", height: "1920px", backgroundColor: "#ffffff", overflow: "hidden" }}>
         {/* Title - positioned lower for safe zone */}
         <div style={{
@@ -220,18 +220,18 @@ export default function Variant4({ variant, brandData, landingPageData }) {
   // ===== REGULAR ADS (Job, Company, Retargeting) =====
   return (
     <div className="relative" style={{ width: "1080px", height: "1920px", backgroundColor: "#ffffff", overflow: "hidden" }}>
-      {/* Brand Logo */}
+  {/* Brand Logo */}
       <div style={{ position: "absolute", top: "60px", left: "60px", zIndex: 10 }}>
-        {brandLogo && !logoFailed ? (
-          <img
-            src={brandLogo}
-            alt={brandName}
-            onError={() => setLogoFailed(true)}
+  {brandLogo && !logoFailed ? (
+      <img
+        src={brandLogo}
+        alt={brandName}
+        onError={() => setLogoFailed(true)}
             style={{ height: "50px", width: "auto", objectFit: "contain" }}
           />
         ) : (
           <span style={{ fontSize: "28px", fontWeight: "bold", fontFamily: "Arial", color: secondaryColor }}>
-            {brandName}
+      {brandName}
           </span>
         )}
       </div>
@@ -259,15 +259,15 @@ export default function Variant4({ variant, brandData, landingPageData }) {
         zIndex: 10,
       }}>
         <div style={{
-          fontSize: `${titleFontSize}px`,
-          fontWeight: "900",
-          fontFamily: "Arial Black, Arial, sans-serif",
-          textTransform: "uppercase",
-          letterSpacing: "-1px",
+      fontSize: `${titleFontSize}px`,
+      fontWeight: "900",
+      fontFamily: "Arial Black, Arial, sans-serif",
+      textTransform: "uppercase",
+      letterSpacing: "-1px",
           color: primaryColor,
           lineHeight: "1.1",
         }}>
-          {titleLines.map((line, i) => (
+    {titleLines.map((line, i) => (
             <div key={i}>{line}</div>
           ))}
         </div>
@@ -295,23 +295,23 @@ export default function Variant4({ variant, brandData, landingPageData }) {
         overflow: "hidden",
         border: `10px solid ${secondaryColor}`,
       }}>
-        {isVideo && !videoFailed && !isCapture ? (
-          <video
-            src={videoUrl}
-            crossOrigin="anonymous"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            poster={heroImage}
-            onError={() => setVideoFailed(true)}
+                {isVideo && !videoFailed && !isCapture ? (
+                  <video
+                    src={videoUrl}
+                    crossOrigin="anonymous"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    poster={heroImage}
+                    onError={() => setVideoFailed(true)}
             style={{ width: "100%", height: "100%", objectFit: heroObjectFit, objectPosition: heroObjectPosition, borderRadius: "8px" }}
-          />
-        ) : (
-          <img
-            src={heroImage}
-            alt="Background"
+                  />
+                ) : (
+                  <img
+                    src={heroImage}
+                    alt="Background"
             style={{ width: "100%", height: "100%", objectFit: heroObjectFit, objectPosition: heroObjectPosition, borderRadius: "8px" }}
           />
         )}
@@ -379,7 +379,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
         <path d="M85 5L115 50L85 95" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         <path d="M125 5L155 50L125 95" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         <path d="M165 5L195 50L165 95" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      </svg>
+</svg>
     </div>
   );
 }
