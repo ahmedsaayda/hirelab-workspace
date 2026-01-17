@@ -161,19 +161,19 @@ const Layout = ({ children }) => {
     [theme]
   );
 
-  useEffect(() => {
-    console.log("user", user);
+  // useEffect(() => {
+  //   console.log("user", user);
 
-    if (user?._id)
-      Intercom({
-        app_id: 'h6drq6b2',
-        user_id: user?._id, // IMPORTANT: Replace "user?.id" with the variable you use to capture the user's ID
-        name: `${user?.firstName} ${user?.lastName}`, // IMPORTANT: Replace "user?.name" with the variable you use to capture the user's name
-        email: user?.email, // IMPORTANT: Replace "user?.email" with the variable you use to capture the user's email
-        created_at: user?.createdAt, // IMPORTANT: Replace "user?.createdAt" with the variable you use to capture the user's sign-up date in a Unix timestamp (in seconds) e.g. 1704067200
-      });
+  //   if (user?._id)
+  //     Intercom({
+  //       app_id: 'h6drq6b2',
+  //       user_id: user?._id, // IMPORTANT: Replace "user?.id" with the variable you use to capture the user's ID
+  //       name: `${user?.firstName} ${user?.lastName}`, // IMPORTANT: Replace "user?.name" with the variable you use to capture the user's name
+  //       email: user?.email, // IMPORTANT: Replace "user?.email" with the variable you use to capture the user's email
+  //       created_at: user?.createdAt, // IMPORTANT: Replace "user?.createdAt" with the variable you use to capture the user's sign-up date in a Unix timestamp (in seconds) e.g. 1704067200
+  //     });
 
-  }, [user]);
+  // }, [user]);
 
   // Load current team role from localStorage
   useEffect(() => {

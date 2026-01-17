@@ -777,6 +777,7 @@ export default function FormEdit({ paramsId }) {
     return {
       showProgressBar: true,
       collectPartialAnswers: false,
+      storeBeforeApplied: false,
       respondentEmail: {
         enabled: false,
         toFieldId: "contact.email",
@@ -1281,6 +1282,18 @@ export default function FormEdit({ paramsId }) {
               size="small"
               checked={!!s.collectPartialAnswers}
               onChange={(v) => updateSettings({ collectPartialAnswers: v })}
+            />
+          }
+        />
+
+        <SettingRow
+          title="Store Candidate Info Before Applied"
+          description="If on, we store contact details mid-form (Applying) so you can follow up even if they stop. If off, we only save after full submission."
+          extra={
+            <Switch
+              size="small"
+              checked={!!s.storeBeforeApplied}
+              onChange={(v) => updateSettings({ storeBeforeApplied: v })}
             />
           }
           divider={false}
