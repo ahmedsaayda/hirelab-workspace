@@ -531,7 +531,20 @@ const Template1 = ({ landingPageData, fetchData }) => {
       if (targetCard) {
         const containerRect = sliderRef.current.getBoundingClientRect();
         const cardRect = targetCard.getBoundingClientRect();
-        const scrollPosition = sliderRef.current.scrollLeft + (cardRect.left - containerRect.left);
+        
+        // On mobile (single item), center the card; on larger screens, align to start
+        const isMobile = window.innerWidth < 768;
+        let scrollPosition;
+        
+        if (isMobile) {
+          // Center the card in the viewport
+          const cardCenter = cardRect.left + cardRect.width / 2;
+          const containerCenter = containerRect.left + containerRect.width / 2;
+          scrollPosition = sliderRef.current.scrollLeft + (cardCenter - containerCenter);
+        } else {
+          // Align to start
+          scrollPosition = sliderRef.current.scrollLeft + (cardRect.left - containerRect.left);
+        }
         
         sliderRef.current.scrollTo({
           left: scrollPosition,
@@ -735,13 +748,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
            </div>
          </div>
 
-         {/* Testimonial Slider - with padding at beginning to prevent first item from being cropped */}
-         <div className="-mx-4 relative overflow-hidden">
+         {/* Testimonial Slider - Mobile uses snap-center for proper single-item centering */}
+         <div className="relative overflow-hidden">
          <div
            ref={sliderRef}
-           className={`flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 px-6 ${
-             finalTestimonials.length < 3 ? 'justify-center' : 'justify-start'
-           }`}
+           className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 px-4 md:px-6"
            style={{
              scrollbarWidth: "none",
              msOverflowStyle: "none",
@@ -765,8 +776,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                      {finalTestimonials.map((testimonial, index) => (
              <div
                key={testimonial.id}
-               className="flex-shrink-0 w-[calc(100%-2rem)] snap-start md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1rem)]"
-               style={{ scrollSnapAlign: "start" }}
+               className="flex-shrink-0 w-[85%] snap-center md:w-[calc(50%-1rem)] md:snap-start lg:w-[calc(33.333%-1rem)]"
                ref={el => cardRefs.current[index] = el}
              >
                <TestimonialCard testimonial={testimonial} index={index} />

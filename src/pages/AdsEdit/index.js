@@ -1349,15 +1349,15 @@ export default function AdsEdit({ paramsId }) {
       } else {
         // Check if there's a custom creative override for this format
         const customCreativeUrl = variant?.customCreatives?.[format?.id];
-        
+
         if (customCreativeUrl) {
           // Download custom creative directly
           message.loading({ content: "Downloading custom creative...", key: "download" });
-          
+
           const response = await fetch(customCreativeUrl);
           if (!response.ok) throw new Error("Failed to fetch custom creative");
           const blob = await response.blob();
-          
+
           // Create download link
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement("a");
@@ -1368,12 +1368,12 @@ export default function AdsEdit({ paramsId }) {
           link.click();
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
-          
+
           message.success({ content: "Custom creative downloaded!", key: "download" });
           setIsDownloading(false);
           return;
         }
-        
+
         // For image variants, render the full creative preview as PNG
         message.loading({ content: "Rendering creative...", key: "download" });
 
@@ -1683,10 +1683,10 @@ export default function AdsEdit({ paramsId }) {
           // For image variants: Render each format to PNG (existing flow)
           for (const format of AD_FORMATS) {
             currentStep += 1;
-            
+
             // Check if there's a custom creative override for this format
             const customCreativeUrl = v?.customCreatives?.[format.id];
-            
+
             if (customCreativeUrl) {
               // Use custom creative directly - no need to render
               appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} custom creative)`);
@@ -1695,7 +1695,7 @@ export default function AdsEdit({ paramsId }) {
               // eslint-disable-next-line no-continue
               continue;
             }
-            
+
             appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} image)`);
 
             // Switch to this format
@@ -2223,10 +2223,15 @@ export default function AdsEdit({ paramsId }) {
         </div>
         <div className="bg-white border border-[#eaecf0] rounded-xl h-full overflow-hidden flex">
           {/* Left Sidebar - Ad Types */}
-          <div className="bg-white border-r border-[#eceef5] flex flex-col items-center pt-8 pb-6 px-4 gap-6 flex-shrink-0">
-            <h2 className="text-xl font-semibold leading-5 text-black">
-              Ad Types
-            </h2>
+          <div className="bg-white border-r border-[#eceef5] flex flex-col items-center pb-6 px-4 flex-shrink-0">
+            {/* Header row - matches other sections */}
+            <div className="h-[52px] flex items-center justify-center w-full">
+              <h2 className="text-sm font-semibold text-[#344054]">
+                Ad Types
+              </h2>
+            </div>
+            {/* Divider */}
+            <div className="h-[1px] bg-[#eaecf0] w-full mb-5" />
 
             <div className="flex flex-col gap-2">
               {AD_TYPES.map((adType) => (
@@ -2247,28 +2252,28 @@ export default function AdsEdit({ paramsId }) {
 
           {/* Middle Section - Variants List */}
           <div className="w-[600px] bg-white border-r border-[#eceef5] flex flex-col h-full">
-            <div className="flex flex-col p-8 h-full">
+            <div className="flex flex-col px-8 h-full">
               {/* Header */}
-              <div className="flex flex-shrink-0 justify-between items-center mb-5">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-xl font-semibold leading-5 text-black capitalize">
+              <div className="h-[52px] flex flex-shrink-0 justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-semibold text-[#344054] capitalize">
                     {selectedAdType.toString()} Ads
                   </h2>
                   {/* Global Change Template Button */}
                   <button
                     onClick={() => setVariantPickerOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#5207CD] bg-[#F3F0FF] rounded-lg hover:bg-[#E4D9FF] transition-colors border border-[#5207CD]/20"
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#5207CD] bg-[#F3F0FF] rounded-md hover:bg-[#E4D9FF] transition-colors border border-[#5207CD]/20"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                     </svg>
                     Change Template
                   </button>
                 </div>
 
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-1.5 items-center">
                   <div className="w-2 h-2 bg-[#0a8f63] rounded-full" />
-                  <span className="font-semibold text-sm text-[#475467] leading-5">
+                  <span className="font-medium text-sm text-[#475467]">
                     {currentVariants.length} variants
                   </span>
                 </div>
@@ -2278,7 +2283,7 @@ export default function AdsEdit({ paramsId }) {
               <div className="h-[1px] bg-[#eaecf0] mb-5 flex-shrink-0" />
 
               {/* Variants List - Scrollable */}
-              <div className="overflow-y-auto flex-1 pr-2 space-y-4 min-h-0">
+              <div className="overflow-y-auto flex-1 pr-2 pb-6 space-y-4 min-h-0">
                 {currentVariants.map((variant) => (
                   <AdVariantCard
                     key={variant.id}
@@ -2339,16 +2344,12 @@ export default function AdsEdit({ paramsId }) {
 
           {/* Right Section - Live Preview */}
           <div className="flex overflow-hidden flex-col flex-1 h-full bg-white">
-            <div className="flex flex-col p-8 h-full">
+            <div className="flex flex-col px-8 h-full">
               {/* Header */}
-              <div className="flex flex-shrink-0 justify-between items-center mb-5">
-                <div className="flex flex-col gap-1.5">
-                  <h2 className="text-xl font-semibold leading-5 text-black capitalize">
-                    Live preview
-                  </h2>
-
-
-                </div>
+              <div className="h-[52px] flex flex-shrink-0 justify-between items-center">
+                <h2 className="text-base font-semibold text-[#344054]">
+                  Live Preview
+                </h2>
 
                 <div className="flex gap-2 items-center">
                   {AD_FORMATS.map((format) => {
@@ -2357,7 +2358,7 @@ export default function AdsEdit({ paramsId }) {
                       <button
                         key={format.id}
                         onClick={() => setSelectedFormat(format.id)}
-                        className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors border ${isActive
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors border ${isActive
                           ? "bg-[#5207CD] text-white border-[#5207CD]"
                           : "bg-[#F3F0FF] text-[#5207CD] border-transparent hover:bg-[#E4D9FF]"
                           }`}
@@ -2370,10 +2371,10 @@ export default function AdsEdit({ paramsId }) {
               </div>
 
               {/* Divider */}
-              <div className="h-[1px] bg-[#eaecf0] mb-8 flex-shrink-0" />
+              <div className="h-[1px] bg-[#eaecf0] mb-6 flex-shrink-0" />
 
               {/* Preview Container - Centered and Scrollable */}
-              <div className="flex overflow-y-auto flex-1 justify-center items-start min-h-0">
+              <div className="flex overflow-y-auto flex-1 justify-center items-start min-h-0 pb-6">
                 {variantForPreview && (
                   <AdPreview
                     refEl={captureRef}
