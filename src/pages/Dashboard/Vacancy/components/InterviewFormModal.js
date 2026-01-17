@@ -47,7 +47,8 @@ const InterviewFormModal = ({
   onCancel, 
   candidate,
   currentStage,
-  onInterviewComplete
+  onInterviewComplete,
+  onOpenTemplates
 }) => {
   const user = useSelector(selectUser);
   const [loading, setLoading] = useState(false);
@@ -463,17 +464,23 @@ const InterviewFormModal = ({
             <br />
             Create a template first to conduct interviews.
           </Typography.Text>
-          <div className="space-y-3">
-             <Button 
-               type="primary" 
-               size="large" 
-               onClick={onCancel}
-             >
-               Go Back
-             </Button>
-            <div className="text-sm text-gray-500">
-              You can create templates from the main ATS view or stage headers
-            </div>
+          <div className="flex flex-col items-center gap-3">
+            {onOpenTemplates && (
+              <Button 
+                type="primary" 
+                size="large" 
+                onClick={onOpenTemplates}
+              >
+                Create Interview Template
+              </Button>
+            )}
+            <Button 
+              type={onOpenTemplates ? "default" : "primary"}
+              size="large" 
+              onClick={onCancel}
+            >
+              Go Back
+            </Button>
           </div>
         </div>
       </Drawer>

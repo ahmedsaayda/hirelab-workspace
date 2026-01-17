@@ -587,6 +587,17 @@ const InterviewTemplatesModal = ({
           >
             Create Your First Template
           </Button>
+          
+          {/* How it works info */}
+          <div className="mt-8 p-4 bg-blue-50 rounded-lg text-left max-w-md mx-auto">
+            <Text strong className="text-blue-800 block mb-2">💡 How Interview Templates Work</Text>
+            <ul className="text-sm text-blue-700 space-y-1 mb-0 list-disc pl-4">
+              <li>Create templates with questions and skills for each stage</li>
+              <li>Assign templates to pipeline stages (e.g., "Phone Screen", "Technical")</li>
+              <li>When viewing a candidate, go to the Interview tab to conduct interviews</li>
+              <li>Results are automatically saved and scores are tracked</li>
+            </ul>
+          </div>
         </div>
       );
     }
@@ -606,6 +617,17 @@ const InterviewTemplatesModal = ({
             <Title level={3} className="mb-1">Interview Templates</Title>
             <Text type="secondary">
               {templates.length} template{templates.length !== 1 ? 's' : ''} across {Object.keys(templatesByStage).length} stage{Object.keys(templatesByStage).length !== 1 ? 's' : ''}
+            </Text>
+          </div>
+        </div>
+
+        {/* How it works info */}
+        <div className="p-3 bg-blue-50 rounded-lg flex items-start gap-3">
+          <QuestionCircleOutlined className="text-blue-500 mt-0.5" />
+          <div>
+            <Text strong className="text-blue-800 text-sm">How to use:</Text>
+            <Text className="text-sm text-blue-700 block">
+              Open any candidate card → go to the <strong>Interview</strong> tab → click <strong>New Interview</strong> to conduct an interview using these templates.
             </Text>
           </div>
         </div>
@@ -642,11 +664,11 @@ const InterviewTemplatesModal = ({
                     
                     <div className="flex justify-between items-center">
                       <div className="flex gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1 whitespace-nowrap">
                           <QuestionCircleOutlined /> 
                           {template.questions?.length || 0} questions
                         </span>
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1 whitespace-nowrap">
                           <StarOutlined /> 
                           {template.skills?.length || 0} skills
                         </span>

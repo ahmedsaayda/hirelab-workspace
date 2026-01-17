@@ -49,6 +49,7 @@ import FileViewer from '../../../../components/FileViewer';
 import { extractFileName, extractFileUrl, downloadFile } from '../../../../utils/fileViewerHelper';
 import { useRouter } from 'next/router';
 import InterviewFormModal from './InterviewFormModal';
+import InterviewTemplatesModal from './InterviewTemplatesModal';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../../redux/auth/selectors';
 
@@ -403,6 +404,7 @@ const CandidateProfile = ({
   const [fileViewerVisible, setFileViewerVisible] = useState(false);
   const [viewingFile, setViewingFile] = useState({ url: '', fileName: '', title: '' });
   const [interviewFormVisible, setInterviewFormVisible] = useState(false);
+  const [templatesModalVisible, setTemplatesModalVisible] = useState(false);
   const [interviewHistory, setInterviewHistory] = useState([]);
   const [loadingInterviews, setLoadingInterviews] = useState(false);
   const [updatingStage, setUpdatingStage] = useState(false);
@@ -466,7 +468,7 @@ const CandidateProfile = ({
       setNotes([]);
       setInterviewHistory([]);
       setCandidate(null);
-      
+
       // Load fresh data for the new candidate
       loadCandidateData();
       loadAllCandidates();
@@ -1837,6 +1839,17 @@ const CandidateProfile = ({
           >
             Conduct First Interview
           </Button>
+
+          {/* How it works info */}
+          <div className="mt-8 p-4 bg-blue-50 rounded-lg text-left max-w-sm mx-auto">
+            <Typography.Text strong className="text-blue-800 block mb-2">💡 How to Get Started</Typography.Text>
+            <ul className="text-sm text-blue-700 space-y-1 mb-0 list-disc pl-4">
+              <li>First, create interview templates in the <strong>Interview Templates</strong> panel (click the ? icon in the ATS header)</li>
+              <li>Add questions and skills to assess for each pipeline stage</li>
+              <li>Then come back here and click "Conduct First Interview"</li>
+              <li>Select a template and fill in the candidate's responses</li>
+            </ul>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
@@ -2345,7 +2358,20 @@ const CandidateProfile = ({
               </div>
             ),
           },
-
+          {
+            key: 'interview',
+            label: (
+              <div className="flex items-center gap-2">
+                <QuestionCircleOutlined />
+                <span>Interview</span>
+              </div>
+            ),
+            children: (
+              <div className="interview-tab-content">
+                {renderInterviewHistoryTab()}
+              </div>
+            ),
+          },
           {
             key: 'notes',
             label: (
@@ -2387,6 +2413,17 @@ const CandidateProfile = ({
           loadInterviewHistory();
           setInterviewFormVisible(false);
         }}
+        onOpenTemplates={() => {
+          setInterviewFormVisible(false);
+          setTemplatesModalVisible(true);
+        }}
+      />
+
+      {/* Interview Templates Modal */}
+      <InterviewTemplatesModal
+        visible={templatesModalVisible}
+        onCancel={() => setTemplatesModalVisible(false)}
+        stages={stages}
       />
     </Drawer>
   );
