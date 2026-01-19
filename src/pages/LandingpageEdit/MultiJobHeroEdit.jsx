@@ -1,210 +1,102 @@
-import React, { useState, useCallback } from "react";
-import { Input, Button, Collapse, message } from "antd";
-import { Sparkles, Image as ImageIcon, Type, FileText, MousePointerClick } from "lucide-react";
-import { useFocusContext } from "../../contexts/FocusContext.js";
-import AiService from "../../services/AiService.js";
-import ImageSelectionModal from "../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
-
-const { TextArea } = Input;
+import React from "react";
+import EditorRender from "./EditorRender";
+import ImageUploader from "./ImageUploader";
+import { useHover } from "../../contexts/HoverContext";
+import { Text } from "../Dashboard/Vacancies/components/components";
 
 /**
  * MultiJobHeroEdit - Editor for the multi-job hero section
+ * Uses the same EditorRender pattern as HeroSectionEdit for consistency
  */
-const MultiJobHeroEdit = ({
-  landingPageData,
-  setLandingPageData,
-  fetchData,
-}) => {
-  const { setFocusRef } = useFocusContext();
-  const [aiLoading, setAiLoading] = useState(false);
-  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+const MultiJobHeroEdit = ({ landingPageData, setLandingPageData, fetchData }) => {
+  const { setHoveredField, setScrollToSection } = useHover();
 
-  const updateField = useCallback((field, value) => {
-    setLandingPageData(prev => ({
+  const handleChange = (key, value) => {
+    document.dispatchEvent(new CustomEvent("HANDLE.CHANGED"));
+    setLandingPageData((prev) => ({
       ...prev,
-      [field]: value,
+      [key]: value,
     }));
-  }, [setLandingPageData]);
-
-  // AI Generate hero content
-  const handleAIGenerate = async () => {
-    setAiLoading(true);
-    try {
-      const companyName = landingPageData?.companyName || "our company";
-      const prompt = `Generate a compelling career page hero section for ${companyName}. 
-      Create an inspiring headline (max 6 words) and a brief description (max 150 characters) 
-      that would attract top talent to explore job opportunities.`;
-
-      const response = await AiService.generateSectionContent({
-        sectionType: "multiJobHero",
-        prompt,
-        language: landingPageData?.lang || "English",
-        context: {
-          companyName: landingPageData?.companyName,
-          industry: landingPageData?.industry,
-        }
-      });
-
-      if (response?.data?.content) {
-        const content = response.data.content;
-        if (content.title) {
-          updateField("multiJobHeroTitle", content.title);
-        }
-        if (content.description) {
-          updateField("heroDescription", content.description);
-        }
-        message.success("Content generated successfully!");
-      }
-    } catch (error) {
-      console.error("AI generation failed:", error);
-      message.error("Failed to generate content. Please try again.");
-    } finally {
-      setAiLoading(false);
-    }
   };
 
-  // Handle image selection from media library
-  const handleImageSelect = (imageUrl) => {
-    if (imageUrl) {
-      updateField("heroImage", imageUrl);
+  const handleClick = () => {
+    const lastItem = localStorage.getItem("lastItem");
+    if (lastItem !== "hero-section") {
+      setScrollToSection("hero-section");
+      localStorage.setItem("lastItem", "hero-section");
     }
-    setShowMediaLibrary(false);
   };
-
-  const heroTitle = landingPageData?.multiJobHeroTitle || landingPageData?.vacancyTitle || "";
-  const heroDescription = landingPageData?.heroDescription || "";
-  const heroImage = landingPageData?.heroImage || "";
-  const ctaText = landingPageData?.multiJobCtaText || "See Open Roles";
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Career Page Hero</h3>
-        <Button
-          type="primary"
-          icon={<Sparkles size={16} />}
-          onClick={handleAIGenerate}
-          loading={aiLoading}
-          className="flex items-center gap-2"
-        >
-          Generate with AI
-        </Button>
-      </div>
+    <div onClick={handleClick}>
+      <EditorRender
+        landingPageData={landingPageData}
+        setLandingPageData={setLandingPageData}
+        items={[
+          {
+            key: "multiJobHeroTitle",
+            label: "Headline",
+            max: 60,
+          },
+          {
+            key: "heroDescription",
+            label: "Description",
+            max: 680,
+            textarea: true,
+          },
+          {
+            key: "multiJobCtaText",
+            label: "Button Text",
+            max: 30,
+          },
+        ]}
+        renderMore={
+          <div className="flex flex-col gap-2 w-full">
+            {/* Tip for headline */}
+            <div className="px-2 -mt-2 mb-2">
+              <Text as="p" className="text-xs text-gray-400">
+                Tip: <span className="underline decoration-amber-400">Keep it short and inspiring (4-6 words work best)</span>
+              </Text>
+            </div>
 
-      {/* Title */}
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <Type size={14} className="text-gray-400" />
-          <label className="text-sm font-medium text-gray-700">Headline</label>
-          <span className="text-xs text-gray-400 ml-auto">{heroTitle.length}/60</span>
-        </div>
-        <Input
-          value={heroTitle}
-          onChange={(e) => updateField("multiJobHeroTitle", e.target.value)}
-          placeholder="Let Your Talent Be Rewarded"
-          maxLength={60}
-          className="rounded-lg"
-          onFocus={() => setFocusRef?.("multiJobHeroTitle")}
-        />
-        <p className="text-xs text-gray-400 mt-1">
-          Tip: Keep it short and inspiring (4-6 words work best)
-        </p>
-      </div>
-
-      {/* Description */}
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <FileText size={14} className="text-gray-400" />
-          <label className="text-sm font-medium text-gray-700">Description</label>
-          <span className="text-xs text-gray-400 ml-auto">{heroDescription.length}/200</span>
-        </div>
-        <TextArea
-          value={heroDescription}
-          onChange={(e) => updateField("heroDescription", e.target.value)}
-          placeholder="We are an employee-owned organization making a positive impact..."
-          maxLength={200}
-          rows={3}
-          className="rounded-lg"
-          onFocus={() => setFocusRef?.("heroDescription")}
-        />
-      </div>
-
-      {/* CTA Button Text */}
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <MousePointerClick size={14} className="text-gray-400" />
-          <label className="text-sm font-medium text-gray-700">Button Text</label>
-          <span className="text-xs text-gray-400 ml-auto">{ctaText.length}/30</span>
-        </div>
-        <Input
-          value={ctaText}
-          onChange={(e) => updateField("multiJobCtaText", e.target.value)}
-          placeholder="See Open Roles"
-          maxLength={30}
-          className="rounded-lg"
-          onFocus={() => setFocusRef?.("multiJobCtaText")}
-        />
-      </div>
-
-      {/* Hero Image */}
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <ImageIcon size={14} className="text-gray-400" />
-          <label className="text-sm font-medium text-gray-700">Hero Image</label>
-        </div>
-        
-        {heroImage ? (
-          <div className="relative group rounded-xl overflow-hidden border border-gray-200">
-            <img
-              src={heroImage}
-              alt="Hero"
-              className="w-full h-40 object-cover"
-            />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <Button 
-                type="primary" 
-                size="small"
-                onClick={() => setShowMediaLibrary(true)}
-              >
-                Change
-              </Button>
-              <Button 
-                size="small"
-                onClick={() => updateField("heroImage", "")}
-                danger
-              >
-                Remove
-              </Button>
+            {/* Hero Image */}
+            <div
+              onMouseEnter={() => setHoveredField("heroImage")}
+              onMouseLeave={() => setHoveredField(null)}
+              className="flex flex-col col-span-2 gap-2 px-2 mt-5 w-full"
+            >
+              <Text as="p" className="self-start !text-blue_gray-700 font-medium text-sm">
+                Hero Image
+              </Text>
+              <ImageUploader
+                defaultImage={landingPageData?.heroImage}
+                imageAdjustments={landingPageData?.imageAdjustment || {}}
+                fieldKey="heroImage"
+                isSettingDisabled={false}
+                onImageUpload={(url) => {
+                  handleChange("heroImage", url);
+                }}
+                onImageAdjustmentChange={(fieldKey, adjustments) => {
+                  setLandingPageData((d) => ({
+                    ...d,
+                    imageAdjustment: {
+                      ...(d.imageAdjustment || {}),
+                      [fieldKey]: adjustments,
+                    },
+                  }));
+                  document.dispatchEvent(new CustomEvent("HANDLE.CHANGED"));
+                }}
+                allowedTabs={["image"]}
+              />
+              <Text as="p" className="text-xs text-gray-400">
+                Images are pulled from Unsplash based on your company/industry
+              </Text>
             </div>
           </div>
-        ) : (
-          <div 
-            className="w-full h-40 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-gray-300 transition-colors"
-            onClick={() => setShowMediaLibrary(true)}
-          >
-            <ImageIcon size={24} className="text-gray-400 mb-2" />
-            <span className="text-sm text-gray-500">Click to add image</span>
-            <span className="text-xs text-gray-400 mt-1">Recommended: 800x600px</span>
-          </div>
-        )}
-        <p className="text-xs text-gray-400 mt-2">
-          Images are pulled from Unsplash based on your company/industry
-        </p>
-      </div>
-
-      {/* Image Selection Modal */}
-      <ImageSelectionModal
-        isOpen={showMediaLibrary}
-        onClose={() => setShowMediaLibrary(false)}
-        onImageSelected={handleImageSelect}
-        multiple={false}
-        maxFiles={1}
-        type="image"
+        }
       />
     </div>
   );
 };
 
 export default MultiJobHeroEdit;
-

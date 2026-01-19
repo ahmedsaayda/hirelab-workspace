@@ -110,6 +110,19 @@ export const sectionMap = {
   "Linked Jobs": "linked-jobs",
 };
 
+// Helper to extract base key from duplicate section keys (e.g., "Text Box_2" -> "Text Box")
+const getBaseKey = (key) => {
+  if (!key) return key;
+  const match = key.match(/^(.+?)_\d+$/);
+  return match ? match[1] : key;
+};
+
+// Get icon for a section key (handles duplicate sections)
+const getMenuItemIcon = (key) => {
+  const baseKey = getBaseKey(key);
+  return menuItems[baseKey] || menuItems[key];
+};
+
 export default function Sidebar17({
   items,
   removeSection,
@@ -173,17 +186,24 @@ export default function Sidebar17({
     if (key === "flexalign") {
       setScrollToSection("footer");
     }
-    // Map section keys to scroll section names
-
-    const section = sectionMap[key];
+    // Map section keys to scroll section names (use base key for duplicate sections)
+    const baseKey = getBaseKey(key);
+    const section = sectionMap[baseKey] || sectionMap[key];
     console.log("section!!", section)
     if (section) {
       setScrollToSection(section);
     }
   };
 
-  // Get display name for a section
+  // Get display name for a section (handles duplicate sections like "Text Box_2")
   const getSectionDisplayName = (key) => {
+    const baseKey = getBaseKey(key);
+    // Check if it's a duplicate section
+    const match = key.match(/^(.+?)_(\d+)$/);
+    if (match) {
+      const baseName = sectionDisplayNames[baseKey] || baseKey;
+      return `${baseName} ${match[2]}`;
+    }
     return sectionDisplayNames[key] || key;
   };
 
@@ -330,7 +350,7 @@ export default function Sidebar17({
                                 }
                               >
                                 <Img
-                                  src={menuItems?.[item.key]}
+                                  src={getMenuItemIcon(item.key)}
                                   alt={item.key}
                                   className="h-[16px] w-[16px] transition-all"
                                   style={

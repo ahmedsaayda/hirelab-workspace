@@ -1631,121 +1631,130 @@ const LinkedJobsEdit = (props) => {
   ];
 
   return (
-    <>
-      <EditorRender
-        {...props}
-        items={[
-          {
-            key: "jobsSectionTitle",
-            label: "Section Title",
-            max: 60,
-          },
-          {
-            key: "jobsSectionDescription",
-            label: "Section Description (optional)",
-            max: 200,
-            textarea: true,
-          },
-        ]}
-      />
-      
-      {/* Font Weight Selector */}
-      <div className="px-4 pb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Title Font Weight
-        </label>
-        <Select
-          value={landingPageData?.jobsSectionTitleWeight || "bold"}
-          onChange={(value) => setLandingPageData(prev => ({ ...prev, jobsSectionTitleWeight: value }))}
-          className="w-full"
-          options={fontWeightOptions}
-        />
-      </div>
-
-      {/* Linked Jobs Manager */}
-      <div className="mt-6 pt-4 border-t border-gray-100">
-        <Heading size="lg" className="text-gray-900 mb-3">
-          Linked Positions ({linkedCampaigns.length})
-        </Heading>
-
-        {/* Search */}
-        <div className="mb-4">
-          <Input
-            placeholder="Search positions..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="!rounded-lg"
-          />
-        </div>
-
-        {/* Jobs list */}
-        <div className="space-y-2 max-h-[300px] overflow-y-auto">
-          {loading ? (
-            <div className="flex justify-center py-4">
-              <Spin size="small" />
-            </div>
-          ) : filteredJobs.length === 0 ? (
-            <Text className="text-gray-500 text-sm text-center py-4">
-              No single-job campaigns found
+    <EditorRender
+      {...props}
+      hideFooter
+      items={[
+        {
+          key: "jobsSectionTitle",
+          label: "Section Title",
+          max: 60,
+        },
+        {
+          key: "jobsSectionDescription",
+          label: "Section Description (optional)",
+          max: 200,
+          textarea: true,
+        },
+      ]}
+      renderMore={
+        <div className="w-full">
+          {/* Font Weight Selector */}
+          <div className="px-2 py-2 hover:bg-gray-50 transition-colors duration-200 rounded">
+            <Text as="p" className="!text-blue_gray-700 font-medium text-sm mb-1">
+              Title Font Weight
             </Text>
-          ) : (
-            filteredJobs.map(job => {
-              const isLinked = linkedCampaigns.includes(job._id);
-              return (
-                <div
-                  key={job._id}
-                  onClick={() => toggleJob(job._id)}
-                  className={`
-                    flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all
-                    ${isLinked 
-                      ? 'bg-violet-50 border-2 border-violet-200' 
-                      : 'bg-white border border-gray-100 hover:border-violet-100'
-                    }
-                  `}
-                >
-                  {/* Thumbnail */}
-                  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                    {job.heroImage ? (
-                      <img src={job.heroImage} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
+            <Select
+              value={landingPageData?.jobsSectionTitleWeight || "bold"}
+              onChange={(value) => {
+                setLandingPageData(prev => ({ ...prev, jobsSectionTitleWeight: value }));
+                document.dispatchEvent(new CustomEvent("HANDLE.CHANGED"));
+              }}
+              className="w-full"
+              options={fontWeightOptions}
+            />
+          </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <Text className={`font-medium truncate block ${isLinked ? 'text-violet-900' : 'text-gray-900'}`}>
-                      {job.vacancyTitle || "Untitled"}
-                    </Text>
-                    {job.department && (
-                      <Text className={`text-xs truncate block ${isLinked ? 'text-violet-600' : 'text-gray-500'}`}>
-                        {job.department}
-                      </Text>
-                    )}
-                  </div>
+          {/* Linked Jobs Manager */}
+          <div className="px-2 mt-4">
+            <Text size="4xl" className="!text-light_blue-A700 mb-3 font-bold">
+              Linked Positions ({linkedCampaigns.length})
+            </Text>
 
-                  {/* Checkbox */}
-                  <div className={`
-                    w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0
-                    ${isLinked ? 'bg-violet-500 border-violet-500' : 'border-gray-300'}
-                  `}>
-                    {isLinked && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                    )}
-                  </div>
+            {/* Search */}
+            <div className="mb-3">
+              <Input
+                shape="round"
+                placeholder="Search positions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="border outline-none focus-within:border-light_blue-A700 text-sm"
+              />
+            </div>
+
+            {/* Jobs list */}
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+              {loading ? (
+                <div className="flex justify-center py-4">
+                  <Spin size="small" />
                 </div>
-              );
-            })
-          )}
+              ) : filteredJobs.length === 0 ? (
+                <Text className="text-gray-500 text-sm text-center py-4">
+                  No single-job campaigns found
+                </Text>
+              ) : (
+                filteredJobs.map(job => {
+                  const isLinked = linkedCampaigns.includes(job._id);
+                  return (
+                    <div
+                      key={job._id}
+                      onClick={() => {
+                        toggleJob(job._id);
+                        document.dispatchEvent(new CustomEvent("HANDLE.CHANGED"));
+                      }}
+                      className={`
+                        flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all
+                        ${isLinked 
+                          ? 'bg-violet-50 border border-violet-200' 
+                          : 'bg-white border border-gray-100 hover:border-violet-100 hover:bg-gray-50'
+                        }
+                      `}
+                    >
+                      {/* Thumbnail */}
+                      <div className="w-9 h-9 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
+                        {job.heroImage ? (
+                          <img src={job.heroImage} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <Text className={`font-medium truncate block text-sm ${isLinked ? 'text-violet-900' : 'text-gray-900'}`}>
+                          {job.vacancyTitle || "Untitled"}
+                        </Text>
+                        {job.department && (
+                          <Text className={`text-xs truncate block ${isLinked ? 'text-violet-600' : 'text-gray-500'}`}>
+                            {job.department}
+                          </Text>
+                        )}
+                      </div>
+
+                      {/* Checkbox */}
+                      <div className={`
+                        w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0
+                        ${isLinked ? 'bg-violet-500 border-violet-500' : 'border-gray-300'}
+                      `}>
+                        {isLinked && (
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </>
+      }
+    />
   );
 };
 

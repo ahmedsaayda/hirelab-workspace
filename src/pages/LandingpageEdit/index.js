@@ -84,8 +84,18 @@ export const renderSection = ({
   similarJobsLoading,
 }) => {
 
+  // Extract base key for duplicate sections (e.g., "Text Box_2" -> "Text Box")
+  const getBaseKey = (sectionKey) => {
+    if (!sectionKey) return sectionKey;
+    // Check if key ends with _N pattern (where N is a number)
+    const match = sectionKey.match(/^(.+?)_\d+$/);
+    return match ? match[1] : sectionKey;
+  };
+  
+  const baseKey = getBaseKey(section?.key);
+
   // This function should render the corresponding section based on its key.
-  switch (section?.key) {
+  switch (baseKey) {
     case "flexaligntop":
       // Use MultiJobHero for multi-job campaigns
       if (landingPageData?.campaignType === "multi") {
@@ -213,6 +223,16 @@ export const renderEditor = ({
   availableJobs,
   jobsLoading,
 }) => {
+  // Extract base key for duplicate sections (e.g., "Text Box_2" -> "Text Box")
+  const getBaseKey = (sectionKey) => {
+    if (!sectionKey) return sectionKey;
+    // Check if key ends with _N pattern (where N is a number)
+    const match = sectionKey.match(/^(.+?)_\d+$/);
+    return match ? match[1] : sectionKey;
+  };
+  
+  const baseKey = getBaseKey(section?.key);
+  
   // This function should render the corresponding section based on its key.
   const props = {
     fetchData,
@@ -220,10 +240,11 @@ export const renderEditor = ({
     setLandingPageData,
     availableJobs,
     jobsLoading,
+    sectionKey: section?.key, // Pass the original key for data storage
   };
-  console.log("render Editor the key is", section?.key)
+  console.log("render Editor the key is", section?.key, "baseKey is", baseKey)
   console.log("render Editor the section is", section)
-  switch (section?.key) {
+  switch (baseKey) {
     case "flexaligntop":
       // Use MultiJobHeroEdit for multi-job campaigns
       if (landingPageData?.campaignType === "multi") {
@@ -386,7 +407,8 @@ const categories = [
   },
 ];
 
-// Simplified categories for multi-job career pages
+// Multi-job categories - includes ALL single-job sections PLUS Linked Jobs
+// Users can add any section multiple times if desired (except Hero/Footer which are hardcoded)
 const multiJobCategories = [
   {
     title: "JOBS",
@@ -402,14 +424,39 @@ const multiJobCategories = [
     title: "PEOPLE",
     items: [
       {
+        key: "Employee Testimonials",
+        name: "Employee Testimonials",
+        icon: <img src="/icons2/users-01.svg" alt=" "></img>,
+      },
+      {
+        key: "Leader Introduction",
+        name: "Leader Introduction",
+        icon: <img src="/icons2/user-01.svg" alt=" "></img>,
+      },
+      {
         key: "Recruiter Contact",
         name: "Recruiter Contact",
         icon: <img src="/icons2/message-chat-circle.svg" alt=" "></img>,
       },
+    ],
+  },
+  {
+    title: "JOB EXPLANATION",
+    items: [
       {
-        key: "Employee Testimonials",
-        name: "Employee Testimonials",
-        icon: <img src="/icons2/users-01.svg" alt=" "></img>,
+        key: "Agenda",
+        name: "Agenda",
+        icon: <img src="/icons2/calendar.svg" alt=" "></img>,
+      },
+      {
+        key: "Job Specifications",
+        name: "Job Specifications",
+        icon: <img src="/icons2/briefcase-01.svg" alt=" "></img>,
+      },
+      {
+        key: "Job Description",
+        name: "Job Description",
+        icon: <img src="/icons2/edit-04.svg" alt=" "></img>,
       },
     ],
   },
@@ -422,9 +469,47 @@ const multiJobCategories = [
         icon: <img src="/icons2/intersect-circle.svg" alt=" "></img>,
       },
       {
+        key: "EVP / Mission",
+        name: "EVP / Mission",
+        icon: (
+          <svg
+            width="13"
+            height="17"
+            viewBox="0 0 13 17"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M10.833 6.125C10.833 7.55737 10.1461 8.82875 9.07951 9.62762L10.1295 11.0276C10.8917 10.4576 11.5103 9.71765 11.9362 8.86656C12.3622 8.01546 12.5836 7.07672 12.583 6.125H10.833ZM6.45801 1.75C7.61833 1.75 8.73113 2.21094 9.5516 3.03141C10.3721 3.85188 10.833 4.96468 10.833 6.125H12.583C12.583 4.50055 11.9377 2.94263 10.789 1.79397C9.64038 0.64531 8.08246 0 6.45801 0V1.75ZM2.08301 6.125C2.08301 4.96468 2.54394 3.85188 3.36442 3.03141C4.18489 2.21094 5.29769 1.75 6.45801 1.75V0C4.83356 0 3.27564 0.64531 2.12698 1.79397C0.97832 2.94263 0.333009 4.50055 0.333009 6.125H2.08301ZM3.83651 9.62762C3.2917 9.22063 2.84946 8.69203 2.54503 8.08393C2.2406 7.47583 2.08239 6.80504 2.08301 6.125H0.333009C0.332396 7.07672 0.553859 8.01546 0.979787 8.86656C1.40571 9.71765 2.02435 10.4576 2.78651 11.0276L3.83651 9.62762ZM5.58038 14.6501C5.55271 13.3159 5.27706 11.9985 4.76751 10.7651L3.15051 11.4345C3.57576 12.4644 3.80763 13.5669 3.83126 14.6869L5.58038 14.6501ZM7.63226 14.1846C7.26768 14.367 6.86564 14.4619 6.45801 14.4619C6.05037 14.4619 5.64834 14.367 5.28376 14.1846L4.50151 15.75C5.10898 16.0537 5.77883 16.2118 6.45801 16.2118C7.13718 16.2118 7.80703 16.0537 8.41451 15.75L7.63226 14.1846ZM8.14851 10.766C7.63876 11.999 7.36282 13.3162 7.33476 14.6501L9.08476 14.6869C9.10838 13.5669 9.34026 12.4644 9.76551 11.4345L8.14851 10.766ZM8.41451 15.75C8.61244 15.6506 8.77947 15.4991 8.89759 15.3117C9.01571 15.1244 9.08042 14.9083 9.08476 14.6869L7.33476 14.6501C7.33717 14.5528 7.36616 14.4579 7.4186 14.3759C7.47104 14.2938 7.54492 14.2277 7.63226 14.1846L8.41451 15.75ZM3.83126 14.6869C3.84001 15.1279 4.08851 15.5435 4.50151 15.75L5.28376 14.1846C5.37109 14.2277 5.44498 14.2938 5.49742 14.3759C5.54986 14.4579 5.57885 14.5528 5.58126 14.6501L3.83126 14.6869ZM2.78651 11.0276C2.91776 11.1274 2.99563 11.1851 3.04988 11.2289C3.10501 11.2744 3.09451 11.2726 3.07001 11.2411L4.45251 10.1684C4.28888 9.95662 4.03513 9.77637 3.83651 9.62762L2.78651 11.0276ZM4.76751 10.7651C4.69926 10.5997 4.61263 10.374 4.45251 10.1684L3.07001 11.2411C3.05863 11.2254 3.05601 11.2175 3.06738 11.2411C3.09531 11.3051 3.12273 11.3692 3.14963 11.4336L4.76751 10.7651ZM9.07951 9.62762C8.88088 9.77637 8.62626 9.9575 8.46263 10.1684L9.84601 11.2411C9.82238 11.2717 9.81101 11.2744 9.86613 11.2297C9.92038 11.1851 9.99738 11.1274 10.1295 11.0285L9.07951 9.62762ZM9.76551 11.4345L9.81801 11.3094L9.84863 11.2411C9.86001 11.2175 9.85738 11.2254 9.84601 11.2411L8.46263 10.1684C8.30251 10.3749 8.21676 10.5997 8.14851 10.766L9.76551 11.4345Z"
+              fill="#667085"
+            />
+            <path
+              d="M9.07584 11.375C8.30097 11.893 7.38988 12.1694 6.45784 12.1694C5.5258 12.1694 4.61471 11.893 3.83984 11.375"
+              stroke="#667085"
+              strokeWidth="1.66667"
+            />
+          </svg>
+        ),
+      },
+      {
         key: "Company Facts",
         name: "Company Facts",
         icon: <img src="/icons2/zap.svg" alt=" "></img>,
+      },
+    ],
+  },
+  {
+    title: "PROCESS",
+    items: [
+      {
+        key: "Candidate Process",
+        name: "Candidate Process",
+        icon: <img src="/icons2/list.svg" alt=" "></img>,
+      },
+      {
+        key: "Growth Path",
+        name: "Growth Path",
+        icon: <img src="/images/trend-up-01.svg" alt=" "></img>,
       },
     ],
   },
@@ -450,7 +535,7 @@ const multiJobCategories = [
   },
 ];
 
-const Category = ({ title, items, onClick, existingItems }) => (
+const Category = ({ title, items, onClick, existingItems, allowDuplicates = false }) => (
   <div className="mb-6 cursor-pointer">
     <h2 className="mb-2 text-[##475467] text-md ">{title}</h2>
     <div className="grid grid-cols-3 gap-6 mdx:grid-cols-2 smx:grid-cols-1">
@@ -459,24 +544,28 @@ const Category = ({ title, items, onClick, existingItems }) => (
         const isAlreadyAdded = existingItems.some(
           (existing) => existing.key === item.key || existing.key === item.name
         );
+        
+        // Count how many times this section was added
+        const addedCount = existingItems.filter(
+          (existing) => existing.key === item.key || existing.key === item.name
+        ).length;
 
         return (
           <button
             key={index}
             className={`flex justify-start items-center p-3 rounded border shadow-sm 
-              ${isAlreadyAdded
-                ? "bg-gray-100 opacity-60 cursor-not-allowed"
-                : "hover:bg-gray-100 focus:outline-none focus:ring"
-              }`}
-            onClick={() => !isAlreadyAdded && onClick(item.key)}
-            disabled={isAlreadyAdded}
-            title={isAlreadyAdded ? "This section is already added" : ""}
+              hover:bg-gray-100 focus:outline-none focus:ring
+              ${isAlreadyAdded ? "bg-violet-50 border-violet-200" : ""}`}
+            onClick={() => onClick(item.key)}
+            title={isAlreadyAdded ? "Click to add another instance of this section" : ""}
           >
             <span className="mr-2">{item.icon}</span>
             <span className="whitespace-nowrap text-nowrap">
               {item.name}
               {isAlreadyAdded && (
-                <span className="ml-1 text-xs text-gray-500">(added)</span>
+                <span className="ml-1 text-xs text-violet-500">
+                  ({addedCount})
+                </span>
               )}
             </span>
           </button>
@@ -1097,32 +1186,53 @@ export default function LandingpageEdit({ paramsId }) {
 
 
   const addSection = (key) => {
-    // Check if a section with this key already exists and is active
     const existingMenuItems = landingPageData?.menuItems ?? [];
-    const existingSectionIndex = existingMenuItems.findIndex(item => item.key === key);
+    
+    // Check if this section already exists and is active
+    const existingActiveSection = existingMenuItems.find(item => item.key === key && item.active);
+    
+    // Check if there's an inactive version we can reactivate
+    const existingInactiveIndex = existingMenuItems.findIndex(item => item.key === key && !item.active);
 
-    if (existingSectionIndex !== -1 && existingMenuItems[existingSectionIndex].active) {
-      // If section already exists and is active, show an error message
-      message.error(`This section is already active on the page.`);
-      return;
-    }
+    const getNextSortOrder = () => {
+      const maxSort = Math.max(...existingMenuItems.map(item => item.sort || 0), 0);
+      return maxSort + 1;
+    };
 
     let newMenuItems;
-    if (existingSectionIndex !== -1) {
+    let newKey = key;
+
+    if (existingActiveSection) {
+      // Section already exists and is active - create a new instance with unique key
+      // Generate unique key by adding a number suffix
+      const existingWithSameBase = existingMenuItems.filter(item => 
+        item.key === key || item.key.startsWith(`${key}_`)
+      );
+      const instanceNumber = existingWithSameBase.length + 1;
+      newKey = `${key}_${instanceNumber}`;
+      
+      const newItem = {
+        id: `${key.toLowerCase().replace(/\s+/g, '-')}-${instanceNumber}`,
+        key: newKey,
+        label: `${key} ${instanceNumber}`, // Label with instance number
+        active: true,
+        visible: true,
+        sort: getNextSortOrder()
+      };
+      newMenuItems = [...existingMenuItems, newItem];
+      
+      message.success(`Added another "${key}" section`);
+    } else if (existingInactiveIndex !== -1) {
       // Section exists but is inactive, activate it
       newMenuItems = existingMenuItems.map((item, index) =>
-        index === existingSectionIndex
+        index === existingInactiveIndex
           ? { ...item, active: true, visible: true }
           : item
       );
     } else {
       // Section doesn't exist, add it with proper defaults
-      const getNextSortOrder = () => {
-        const maxSort = Math.max(...existingMenuItems.map(item => item.sort || 0), 0);
-        return maxSort + 1;
-      };
-
       const newItem = {
+        id: key.toLowerCase().replace(/\s+/g, '-'),
         key,
         label: key, // Default label, will be overridden by AI translations
         active: true,
@@ -1137,9 +1247,11 @@ export default function LandingpageEdit({ paramsId }) {
       menuItems: newMenuItems,
     }));
 
-    setActiveKey(key);
+    setActiveKey(newKey);
     setAddMenuItem(false);
-    const sectionToScroll = sectionMap[key];
+    // Use base key for section scroll mapping
+    const baseKey = key.split('_')[0];
+    const sectionToScroll = sectionMap[baseKey] || sectionMap[key];
     setScrollToSection(sectionToScroll);
   };
 
@@ -1865,104 +1977,46 @@ export default function LandingpageEdit({ paramsId }) {
     sendRedux()
   }, [activeKey, activeSection])
 
-  // For multi-job campaigns, ensure all required sections are present
-  // Multi-job default sections: Linked Jobs → Recruiter Contact → About Company → Company Facts → Testimonials
+  // For multi-job campaigns, only fill in missing default data if not already set
+  // DON'T override menuItems from database - they're set correctly by MultiJobCampaignModal
   useEffect(() => {
     if (landingPageData?.campaignType === "multi" && !linkedJobsInitializedRef.current) {
-      const multiJobMenuItems = [
-        {
-          id: "linked-jobs",
-          key: "Linked Jobs",
-          label: "Our Open Positions",
-          active: true,
-          visible: true,
-          sort: 1
-        },
-        {
-          id: "recruiter-contact",
-          key: "Recruiter Contact",
-          label: "Meet the Team",
-          active: true,
-          visible: true,
-          sort: 2
-        },
-        {
-          id: "about-company",
-          key: "About The Company",
-          label: "About Us",
-          active: true,
-          visible: true,
-          sort: 3
-        },
-        {
-          id: "company-facts",
-          key: "Company Facts",
-          label: "Why Join Us",
-          active: true,
-          visible: true,
-          sort: 4
-        },
-        {
-          id: "testimonials",
-          key: "Employee Testimonials",
-          label: "What Our Team Says",
-          active: true,
-          visible: true,
-          sort: 5
-        },
-      ];
+      const companyName = landingPageData?.companyName || user?.companyName || "Our Company";
+      const updates = {};
 
-      // Check if we need to update menuItems (missing sections or only has linked jobs)
-      const currentActiveKeys = (landingPageData.menuItems || []).filter(item => item.active).map(item => item.key);
-      const requiredKeys = multiJobMenuItems.map(item => item.key);
-      const hasAllSections = requiredKeys.every(key => currentActiveKeys.includes(key));
+      // Only fill in missing data - don't touch menuItems!
+      // Add default data for sections that don't have content yet
+      if (!landingPageData?.aboutTheCompanyDescription && !landingPageData?.aboutTheCompanyTitle) {
+        updates.aboutTheCompanyTitle = "About Us";
+        updates.aboutTheCompanyDescription = `At ${companyName}, we believe in empowering our team members to do their best work. We're committed to creating an inclusive environment where everyone can thrive and grow their careers.`;
+      }
 
-      if (!hasAllSections) {
-        const companyName = landingPageData?.companyName || user?.companyName || "Our Company";
+      if (!landingPageData?.facts || landingPageData.facts.length === 0) {
+        updates.facts = [
+          { emoji: "🌍", title: "Global Team", description: "Work with talented people from around the world" },
+          { emoji: "📈", title: "Growth", description: "Continuous learning and career development opportunities" },
+          { emoji: "⚖️", title: "Work-Life Balance", description: "Flexible working arrangements" },
+          { emoji: "💡", title: "Innovation", description: "Be part of cutting-edge projects" },
+        ];
+      }
 
-        // Build update with default data for empty sections
-        const updates = {
-          menuItems: multiJobMenuItems,
-        };
+      // Only set empty arrays if completely missing
+      if (landingPageData?.testimonials === undefined) {
+        updates.testimonials = [];
+      }
 
-        // Add default data for sections that don't exist
-        if (!landingPageData?.aboutTheCompanyDescription && !landingPageData?.companyInfo) {
-          updates.aboutTheCompanyTitle = "About Us";
-          updates.aboutTheCompanyDescription = `At ${companyName}, we believe in empowering our team members to do their best work. We're committed to creating an inclusive environment where everyone can thrive and grow their careers.`;
-        }
+      if (landingPageData?.recruiters === undefined) {
+        updates.recruiters = [];
+      }
 
-        if (!landingPageData?.recruiters || landingPageData.recruiters.length === 0) {
-          updates.recruiterContactTitle = "Meet the Team";
-          updates.recruiterContactText = "Have questions? Our talent team is here to help you find your perfect role.";
-          updates.recruiters = user?.name || user?.fullName ? [
-            {
-              recruiterFullname: user?.fullName || user?.name || "",
-              recruiterRole: "Talent Acquisition",
-              recruiterEmail: user?.email || "",
-              recruiterPhone: "",
-              recruiterImage: user?.avatar || "",
-            }
-          ] : [];
-        }
-
-        if (!landingPageData?.facts || landingPageData.facts.length === 0) {
-          updates.facts = [
-            { emoji: "🌍", title: "Global Team", description: "Work with talented people from around the world" },
-            { emoji: "📈", title: "Growth", description: "Continuous learning and career development opportunities" },
-            { emoji: "⚖️", title: "Work-Life Balance", description: "Flexible working arrangements" },
-            { emoji: "💡", title: "Innovation", description: "Be part of cutting-edge projects" },
-          ];
-        }
-
-        if (!landingPageData?.testimonials) {
-          updates.testimonials = [];
-        }
-
+      // Only apply updates if there are any
+      if (Object.keys(updates).length > 0) {
         setLandingPageData(prev => ({
           ...prev,
           ...updates
         }));
       }
+
       linkedJobsInitializedRef.current = true;
     }
   }, [landingPageData?.campaignType]);

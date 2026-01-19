@@ -60,7 +60,7 @@ const LinkedJobs = ({
               const response = await CrudService.getSingle("LandingPageData", campaignId);
               job = response.data;
             } else {
-              const response = await PublicService.getOne(campaignId);
+              const response = await PublicService.getLP(campaignId);
               job = response.data;
             }
             if (job) jobs.push(job);

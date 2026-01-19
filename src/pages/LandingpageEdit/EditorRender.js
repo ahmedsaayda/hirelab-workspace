@@ -789,6 +789,8 @@ const EditorRender = React.memo(({
                   name="input_one"
                   textarea={a.textarea}
                   value={landingPageData?.[a.key] || ''}
+                  placeholder={a.placeholder || ''}
+                  rows={a.rows}
                   onChange={(value) => {
                     setLandingPageData((d) => ({
                       ...d,

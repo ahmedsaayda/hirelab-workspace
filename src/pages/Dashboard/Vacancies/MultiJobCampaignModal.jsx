@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Modal, Input, Select, message as antdMessage, Spin, Empty } from "antd";
+import { Modal, Select, message as antdMessage, Spin } from "antd";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
 import { selectUser } from "../../../redux/auth/selectors.js";
@@ -8,7 +8,6 @@ import AiService from "../../../services/AiService.js";
 import UploadService from "../../../services/UploadService.js";
 import { refreshUserData } from "../../../utils/userRefresh.js";
 
-const { TextArea } = Input;
 const { Option } = Select;
 
 // Language-specific default content for multi-job campaigns
@@ -30,6 +29,9 @@ const getMultiJobTranslations = (language, companyName) => {
             joinTeamDescription: `Join ${companyName} and be part of a team that values innovation, collaboration, and personal growth. We offer competitive benefits, flexible work arrangements, and the opportunity to make a real impact.`,
             footerTitle: "Ready to take the next step in your career?",
             footerDescription: "Explore our exciting job opportunities and apply today!",
+            // Application Process
+            applicationProcess: "Application Process",
+            howToJoinUs: "How to Join Us",
         },
         German: {
             ourOpenPositions: "Unsere Offenen Stellen",
@@ -47,6 +49,8 @@ const getMultiJobTranslations = (language, companyName) => {
             joinTeamDescription: `Werden Sie Teil von ${companyName} und einem Team, das Innovation, Zusammenarbeit und persönliches Wachstum schätzt. Wir bieten wettbewerbsfähige Vorteile, flexible Arbeitsregelungen und die Möglichkeit, echte Wirkung zu erzielen.`,
             footerTitle: "Bereit für den nächsten Karriereschritt?",
             footerDescription: "Entdecken Sie unsere spannenden Jobangebote und bewerben Sie sich noch heute!",
+            applicationProcess: "Bewerbungsprozess",
+            howToJoinUs: "Wie Sie uns beitreten",
         },
         Dutch: {
             ourOpenPositions: "Onze Openstaande Vacatures",
@@ -64,6 +68,8 @@ const getMultiJobTranslations = (language, companyName) => {
             joinTeamDescription: `Word onderdeel van ${companyName} en een team dat innovatie, samenwerking en persoonlijke groei waardeert. Wij bieden competitieve voordelen, flexibele werkregelingen en de kans om echt impact te maken.`,
             footerTitle: "Klaar voor de volgende stap in je carrière?",
             footerDescription: "Ontdek onze spannende vacatures en solliciteer vandaag nog!",
+            applicationProcess: "Sollicitatieproces",
+            howToJoinUs: "Hoe solliciteren",
         },
         French: {
             ourOpenPositions: "Nos Postes Ouverts",
@@ -81,6 +87,8 @@ const getMultiJobTranslations = (language, companyName) => {
             joinTeamDescription: `Rejoignez ${companyName} et faites partie d'une équipe qui valorise l'innovation, la collaboration et la croissance personnelle. Nous offrons des avantages compétitifs, des arrangements de travail flexibles et l'opportunité de faire un vrai impact.`,
             footerTitle: "Prêt à franchir la prochaine étape de votre carrière ?",
             footerDescription: "Découvrez nos offres d'emploi passionnantes et postulez dès aujourd'hui !",
+            applicationProcess: "Processus de candidature",
+            howToJoinUs: "Comment nous rejoindre",
         },
         Spanish: {
             ourOpenPositions: "Nuestras Posiciones Abiertas",
@@ -98,6 +106,8 @@ const getMultiJobTranslations = (language, companyName) => {
             joinTeamDescription: `Únete a ${companyName} y sé parte de un equipo que valora la innovación, la colaboración y el crecimiento personal. Ofrecemos beneficios competitivos, arreglos de trabajo flexibles y la oportunidad de hacer un impacto real.`,
             footerTitle: "¿Listo para dar el siguiente paso en tu carrera?",
             footerDescription: "¡Descubre nuestras emocionantes oportunidades de trabajo y aplica hoy!",
+            applicationProcess: "Proceso de solicitud",
+            howToJoinUs: "Cómo unirte a nosotros",
         },
         Italian: {
             ourOpenPositions: "Le Nostre Posizioni Aperte",
@@ -115,6 +125,8 @@ const getMultiJobTranslations = (language, companyName) => {
             joinTeamDescription: `Unisciti a ${companyName} e fai parte di un team che valorizza l'innovazione, la collaborazione e la crescita personale. Offriamo benefit competitivi, flessibilità lavorativa e l'opportunità di fare un impatto reale.`,
             footerTitle: "Pronto a fare il prossimo passo nella tua carriera?",
             footerDescription: "Scopri le nostre entusiasmanti opportunità di lavoro e candidati oggi!",
+            applicationProcess: "Processo di candidatura",
+            howToJoinUs: "Come unirti a noi",
         },
         Portuguese: {
             ourOpenPositions: "Nossas Vagas Abertas",
@@ -132,6 +144,8 @@ const getMultiJobTranslations = (language, companyName) => {
             joinTeamDescription: `Junte-se à ${companyName} e faça parte de uma equipe que valoriza inovação, colaboração e crescimento pessoal. Oferecemos benefícios competitivos, arranjos de trabalho flexíveis e a oportunidade de causar um impacto real.`,
             footerTitle: "Pronto para dar o próximo passo na sua carreira?",
             footerDescription: "Descubra nossas oportunidades de emprego e candidate-se hoje!",
+            applicationProcess: "Processo de candidatura",
+            howToJoinUs: "Como se juntar a nós",
         },
         Polish: {
             ourOpenPositions: "Nasze Otwarte Stanowiska",
@@ -149,6 +163,8 @@ const getMultiJobTranslations = (language, companyName) => {
             joinTeamDescription: `Dołącz do ${companyName} i stań się częścią zespołu, który ceni innowacje, współpracę i rozwój osobisty. Oferujemy konkurencyjne benefity, elastyczne warunki pracy i możliwość realnego wpływu.`,
             footerTitle: "Gotowy na następny krok w karierze?",
             footerDescription: "Odkryj nasze ekscytujące oferty pracy i aplikuj już dziś!",
+            applicationProcess: "Proces rekrutacji",
+            howToJoinUs: "Jak do nas dołączyć",
         },
     };
 
@@ -188,7 +204,6 @@ const MultiJobCampaignModal = ({
 
     // AI and loading states
     const [isLoading, setIsLoading] = useState(false);
-    const [aiGenerating, setAiGenerating] = useState(false);
     const [aiPrompt, setAiPrompt] = useState("");
 
     const languageOptions = [
@@ -254,116 +269,183 @@ const MultiJobCampaignModal = ({
         return availableCampaigns.filter(c => selectedCampaigns.includes(c._id));
     }, [availableCampaigns, selectedCampaigns]);
 
-    const handleAIGenerate = async () => {
-        if (!aiPrompt.trim()) {
-            antdMessage.warning("Please describe your company or hiring campaign");
-            return;
-        }
+    const generateAIContent = async () => {
+        const selectedJobTitles = selectedCampaignObjects.map(c => c.vacancyTitle).join(", ");
+        const departments = [...new Set(selectedCampaignObjects.map(c => c.department).filter(Boolean))];
+        const companyName = brandingDetails?.companyName || user?.companyName || "the company";
+        
+        // Analyze campaign type: departmental (single department) vs mixed (multiple departments)
+        const isDepartmental = departments.length === 1;
+        const departmentName = isDepartmental ? departments[0] : null;
+        const jobCategory = departments.length > 0 ? departments.join(", ") : "various roles";
 
-        setAiGenerating(true);
-        try {
-            const selectedJobTitles = selectedCampaignObjects.map(c => c.vacancyTitle).join(", ");
-            const departments = [...new Set(selectedCampaignObjects.map(c => c.department).filter(Boolean))].join(", ");
-            const companyName = brandingDetails?.companyName || user?.companyName || "the company";
-            const jobCategory = departments || "various roles";
+        // Map language name to native language name for clearer AI instructions
+        // IMPORTANT: Native instructions help the AI understand the target language better
+        const languageMap = {
+            "English": { native: "English", instruction: "Write in English", notLang: "Do NOT write in German, Dutch, or any other language" },
+            "German": { native: "Deutsch", instruction: "Schreiben Sie auf Deutsch", notLang: "Schreiben Sie NICHT auf Englisch, Niederländisch oder einer anderen Sprache" },
+            "Dutch": { native: "Nederlands", instruction: "Schrijf in het Nederlands", notLang: "Schrijf NIET in het Duits, Engels of een andere taal. Nederlands is NIET Duits!" },
+            "French": { native: "Français", instruction: "Écrivez en français", notLang: "N'écrivez PAS en allemand, anglais ou toute autre langue" },
+            "Spanish": { native: "Español", instruction: "Escribe en español", notLang: "NO escribas en alemán, inglés u otro idioma" },
+            "Italian": { native: "Italiano", instruction: "Scrivi in italiano", notLang: "NON scrivere in tedesco, inglese o in altre lingue" },
+            "Portuguese": { native: "Português", instruction: "Escreva em português", notLang: "NÃO escreva em alemão, inglês ou qualquer outro idioma" },
+            "Polish": { native: "Polski", instruction: "Pisz po polsku", notLang: "NIE pisz po niemiecku, angielsku ani w żadnym innym języku" },
+            "Turkish": { native: "Türkçe", instruction: "Türkçe yazın", notLang: "Almanca, İngilizce veya başka bir dilde YAZMAYIN" },
+            "Arabic": { native: "العربية", instruction: "اكتب بالعربية", notLang: "لا تكتب بالألمانية أو الإنجليزية أو أي لغة أخرى" },
+            "Chinese": { native: "中文", instruction: "请用中文写", notLang: "不要用德语、英语或其他任何语言书写" },
+            "Japanese": { native: "日本語", instruction: "日本語で書いてください", notLang: "ドイツ語、英語、または他の言語で書かないでください" }
+        };
+        const langInfo = languageMap[selectedLanguage] || { 
+            native: selectedLanguage, 
+            instruction: `Write in ${selectedLanguage}`,
+            notLang: `Do NOT write in German, English, or any other language - ONLY ${selectedLanguage}`
+        };
 
-            // Map language name to language code for clearer AI instructions
-            const languageMap = {
-                "English": "English (EN)",
-                "German": "Deutsch (DE)",
-                "Dutch": "Nederlands (NL)",
-                "French": "Français (FR)",
-                "Spanish": "Español (ES)",
-                "Italian": "Italiano (IT)",
-                "Portuguese": "Português (PT)",
-                "Polish": "Polski (PL)"
-            };
-            const targetLanguage = languageMap[selectedLanguage] || selectedLanguage;
+        // Build contextual prompt based on campaign type
+        const campaignTypeContext = isDepartmental 
+            ? `══════════════════════════════════════════════════════════════
+CAMPAIGN TYPE: DEPARTMENTAL (${departmentName.toUpperCase()} DEPARTMENT FOCUS)
+══════════════════════════════════════════════════════════════
+This is a DEDICATED ${departmentName} department careers page at ${companyName}.
 
-            const prompt = `You are a professional copywriter. Generate employer brand content for a multi-job career page.
+CONTENT STRATEGY FOR ${departmentName.toUpperCase()} DEPARTMENT:
+1. DEPARTMENT AS BACKBONE: Position the ${departmentName} team as crucial to ${companyName}'s success
+2. DEPARTMENT CULTURE: Highlight what makes ${departmentName} professionals uniquely valued
+3. GROWTH WITHIN DEPARTMENT: Emphasize career paths and development for ${departmentName} roles
+4. TEAM INVESTMENT: Show how ${companyName} specifically invests in their ${departmentName} people
+5. DEPARTMENT IMPACT: Explain how ${departmentName} drives business outcomes
 
-⚠️ MANDATORY LANGUAGE: ${targetLanguage}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-You MUST write ALL content in ${selectedLanguage}. This is non-negotiable.
-- If ${selectedLanguage} is English → Write in English only
-- If ${selectedLanguage} is German → Write in German only (Schreiben Sie auf Deutsch)
-- If ${selectedLanguage} is Dutch → Write in Dutch only (Schrijf in het Nederlands)
-- Do NOT use any other language. Every single word must be in ${selectedLanguage}.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TONE: Speak directly to ${departmentName} professionals - make them feel this page was created FOR THEM.
+The content should make a ${departmentName} professional think: "This company truly values and understands what I do."`
+            : `══════════════════════════════════════════════════════════════
+CAMPAIGN TYPE: MIXED DEPARTMENTS (GENERAL CAREERS PAGE)
+══════════════════════════════════════════════════════════════
+This is a general careers page showcasing opportunities across ${departments.length > 0 ? departments.length : 'multiple'} departments at ${companyName}.
+
+CONTENT STRATEGY FOR MIXED DEPARTMENT PAGE:
+1. COMPANY-WIDE APPEAL: Content should resonate with talent from ANY department
+2. DIVERSE OPPORTUNITIES: Highlight the variety of roles and career paths available
+3. UNIFIED CULTURE: Focus on company values that apply to ALL employees
+4. INCLUSIVE MESSAGE: Emphasize ${companyName}'s commitment to every team member
+
+Departments represented: ${jobCategory}
+TONE: Welcoming and inclusive - make ALL candidates feel they could belong here.`;
+
+        const prompt = `You are a professional copywriter. Generate employer brand content for a multi-job career page.
+
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║ ⚠️ LANGUAGE REQUIREMENT - CRITICAL - READ CAREFULLY ⚠️                         ║
+╠═══════════════════════════════════════════════════════════════════════════════╣
+║ OUTPUT LANGUAGE: ${selectedLanguage.toUpperCase()} (${langInfo.native})                                         
+║                                                                               ║
+║ ${langInfo.instruction}                                                       
+║ ${langInfo.notLang}                                                           
+║                                                                               ║
+║ EVERY SINGLE WORD must be in ${selectedLanguage} (${langInfo.native}).        
+║ If you write in the wrong language, the output is USELESS.                    ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+${campaignTypeContext}
 
 CONTENT RULES:
 - NEVER use placeholder text like "[Insert X here]", "[Company name]", "Example:"
 - Generate REAL, SPECIFIC, READY-TO-PUBLISH content
 - Write as the company's marketing team would
+- Be specific to the campaign type (departmental vs mixed)
 
 CONTEXT:
 - Company: ${companyName}
-- User's description: ${aiPrompt}
+${aiPrompt.trim() ? `- User's description: ${aiPrompt}` : ""}
 - Job focus: ${jobCategory}
 ${selectedJobTitles ? `- Open positions: ${selectedJobTitles}` : ""}
 
-GENERATE (in ${selectedLanguage}):
-1. heroTitle: Inspiring headline for ${jobCategory} careers at ${companyName} (max 60 chars)
-2. heroDescription: Compelling paragraph about why professionals should join (150-200 words)
+GENERATE (ALL TEXT MUST BE IN ${selectedLanguage.toUpperCase()}):
+1. heroTitle: ${isDepartmental ? `Inspiring headline for ${departmentName} careers` : "Inspiring headline for careers"} at ${companyName} (max 60 chars)
+2. heroDescription: ${isDepartmental ? `Compelling paragraph about why ${departmentName} professionals should join - focus on department importance and impact` : "Compelling paragraph about why professionals should join"} (150-200 words)
 3. jobsSectionTitle: Title for jobs listing section (max 40 chars)
 4. jobsSectionDescription: Brief intro for jobs section (1-2 sentences)
+5. aboutTheCompanyTitle: Title for About section (max 50 chars)
+6. aboutTheCompanyText: Short tagline about the company (max 100 chars)
+7. aboutTheCompanyDescription: ${isDepartmental ? `Description focusing on how ${departmentName} department drives company success` : "Description of the company culture and mission"} (150-200 words)
+8. companyFactsTitle: Title for Company Facts/Why Join Us section (max 40 chars)
+9. companyFacts: Array of 4 compelling facts about working at ${companyName}${isDepartmental ? `, specifically for ${departmentName} roles` : ""} (each with icon, title, description)
+10. candidateProcessTitle: Title for Application Process section (max 40 chars)
+11. candidateProcessSteps: Array of 4-5 steps describing the hiring process
 
-RESPOND IN JSON ONLY:
+RESPOND IN JSON ONLY (values in ${selectedLanguage}):
 {
-  "heroTitle": "[${selectedLanguage} text here]",
-  "heroDescription": "[${selectedLanguage} text here]",
-  "jobsSectionTitle": "[${selectedLanguage} text here]",
-  "jobsSectionDescription": "[${selectedLanguage} text here]"
-}
+  "heroTitle": "...",
+  "heroDescription": "...",
+  "jobsSectionTitle": "...",
+  "jobsSectionDescription": "...",
+  "aboutTheCompanyTitle": "...",
+  "aboutTheCompanyText": "...",
+  "aboutTheCompanyDescription": "...",
+  "companyFactsTitle": "...",
+  "companyFacts": [
+    {"icon": "star", "title": "...", "description": "..."},
+    {"icon": "users", "title": "...", "description": "..."},
+    {"icon": "trending-up", "title": "...", "description": "..."},
+    {"icon": "heart", "title": "...", "description": "..."}
+  ],
+  "candidateProcessTitle": "...",
+  "candidateProcessSteps": [
+    {"step": 1, "title": "...", "description": "..."},
+    {"step": 2, "title": "...", "description": "..."},
+    {"step": 3, "title": "...", "description": "..."},
+    {"step": 4, "title": "...", "description": "..."}
+  ]
+}`;
 
-REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
-
-            const response = await AiService.generateSectionContent({
-                sectionName: "multiJobHero",
-                prompt,
-                fields: [
-                    { key: "heroTitle", label: "Hero Title", type: "text", maxLength: 60 },
-                    { key: "heroDescription", label: "Hero Description", type: "textarea", maxLength: 500 },
-                    { key: "jobsSectionTitle", label: "Jobs Section Title", type: "text", maxLength: 40 },
-                    { key: "jobsSectionDescription", label: "Jobs Section Description", type: "text", maxLength: 150 }
-                ],
-                vacancyContext: {
-                    title: campaignTitle,
-                    companyInfo: brandingDetails?.companyName || user?.companyName,
-                }
-            });
-
-            let result = response.data?.data?.content || response.data?.content;
-            if (typeof result === "string") {
-                result = result.replace(/```json/g, "").replace(/```/g, "").trim();
-                const firstBrace = result.indexOf("{");
-                const lastBrace = result.lastIndexOf("}");
-                if (firstBrace >= 0 && lastBrace >= 0) {
-                    result = result.substring(firstBrace, lastBrace + 1);
-                }
-                result = JSON.parse(result);
+        const response = await AiService.generateSectionContent({
+            sectionName: "multiJobHero",
+            prompt,
+            language: selectedLanguage, // Top-level language for backend to use
+            fields: [
+                { key: "heroTitle", label: "Hero Title", type: "text", maxLength: 60 },
+                { key: "heroDescription", label: "Hero Description", type: "textarea", maxLength: 500 },
+                { key: "jobsSectionTitle", label: "Jobs Section Title", type: "text", maxLength: 40 },
+                { key: "jobsSectionDescription", label: "Jobs Section Description", type: "text", maxLength: 150 },
+                { key: "aboutTheCompanyTitle", label: "About Title", type: "text", maxLength: 50 },
+                { key: "aboutTheCompanyText", label: "About Text", type: "text", maxLength: 100 },
+                { key: "aboutTheCompanyDescription", label: "About Description", type: "textarea", maxLength: 500 },
+                { key: "companyFactsTitle", label: "Facts Title", type: "text", maxLength: 40 },
+                { key: "companyFacts", label: "Company Facts", type: "object" },
+                { key: "candidateProcessTitle", label: "Process Title", type: "text", maxLength: 40 },
+                { key: "candidateProcessSteps", label: "Process Steps", type: "object" }
+            ],
+            vacancyContext: {
+                title: campaignTitle,
+                companyInfo: brandingDetails?.companyName || user?.companyName,
+                isDepartmental,
+                departmentName,
+                language: selectedLanguage
             }
+        });
 
-            if (result.heroTitle) setHeroTitle(result.heroTitle);
-            if (result.heroDescription) setHeroDescription(result.heroDescription);
-            if (result.jobsSectionTitle) setJobsSectionTitle(result.jobsSectionTitle);
-            if (result.jobsSectionDescription) setJobsSectionDescription(result.jobsSectionDescription);
-
-            antdMessage.success("Content generated!");
-        } catch (error) {
-            console.error("AI generation error:", error);
-            antdMessage.error("Failed to generate content. Please try again.");
-        } finally {
-            setAiGenerating(false);
+        let result = response.data?.data?.content || response.data?.content;
+        if (typeof result === "string") {
+            result = result.replace(/```json/g, "").replace(/```/g, "").trim();
+            const firstBrace = result.indexOf("{");
+            const lastBrace = result.lastIndexOf("}");
+            if (firstBrace >= 0 && lastBrace >= 0) {
+                result = result.substring(firstBrace, lastBrace + 1);
+            }
+            result = JSON.parse(result);
         }
+
+        // Parse nested JSON strings if needed
+        if (typeof result.companyFacts === "string") {
+            try { result.companyFacts = JSON.parse(result.companyFacts); } catch (e) { result.companyFacts = []; }
+        }
+        if (typeof result.candidateProcessSteps === "string") {
+            try { result.candidateProcessSteps = JSON.parse(result.candidateProcessSteps); } catch (e) { result.candidateProcessSteps = []; }
+        }
+
+        return result;
     };
 
-    const handleCreateCampaign = async () => {
-        if (!campaignTitle.trim()) {
-            antdMessage.warning("Please enter a campaign title");
-            return;
-        }
-
+    const handleGenerateAndCreate = async () => {
         if (selectedCampaigns.length === 0) {
             antdMessage.warning("Please select at least one job campaign to link");
             return;
@@ -371,198 +453,232 @@ REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
 
         setIsLoading(true);
         try {
-            const companyName = brandingDetails?.companyName || user?.companyName || "Our Company";
-
-            // Get translations for the selected language
-            const t = getMultiJobTranslations(selectedLanguage, companyName);
-
-            // Multi-job campaign default sections with localized labels:
-            // Hero (Flexible) → Jobs Recommendation → Recruiter Contacts → About the Company → Company Facts → Testimonials
-            const multiJobMenuItems = [
-                {
-                    id: "linked-jobs",
-                    key: "Linked Jobs",
-                    label: t.ourOpenPositions,
-                    active: true,
-                    visible: true,
-                    sort: 1
-                },
-                {
-                    id: "recruiter-contact",
-                    key: "Recruiter Contact",
-                    label: t.meetTheTeam,
-                    active: true,
-                    visible: true,
-                    sort: 2
-                },
-                {
-                    id: "about-company",
-                    key: "About The Company",
-                    label: t.aboutUs,
-                    active: true,
-                    visible: true,
-                    sort: 3
-                },
-                {
-                    id: "company-facts",
-                    key: "Company Facts",
-                    label: t.whyJoinUs,
-                    active: true,
-                    visible: true,
-                    sort: 4
-                },
-                {
-                    id: "testimonials",
-                    key: "Employee Testimonials",
-                    label: t.whatOurTeamSays,
-                    active: true,
-                    visible: true,
-                    sort: 5
-                },
-            ];
-
-            // Fetch hero image from Unsplash based on campaign/company context
-            let heroImage = "";
-            let aboutTheCompanyImages = [];
-
+            // First generate AI content
+            let generatedContent = {};
             try {
-                // Search for hero image
-                const heroSearchQuery = `${campaignTitle} ${companyName} careers team office professional`.trim();
-                console.log(`MultiJobCampaignModal: Searching Unsplash for hero with query: "${heroSearchQuery}"`);
-
-                const heroImageResponse = await AiService.searchUnsplash(heroSearchQuery, 3);
-
-                if (heroImageResponse?.data?.success && heroImageResponse.data.data?.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * heroImageResponse.data.data.length);
-                    const selectedImage = heroImageResponse.data.data[randomIndex];
-
-                    console.log("MultiJobCampaignModal: Uploading hero image to Cloudinary...");
-                    const uploadRes = await UploadService.upload(selectedImage.url, 10);
-                    if (uploadRes?.data?.secure_url) {
-                        heroImage = uploadRes.data.secure_url;
-                        console.log("MultiJobCampaignModal: Hero image uploaded:", heroImage);
-                    }
-                }
-            } catch (imgError) {
-                console.error("MultiJobCampaignModal: Failed to fetch/upload hero image:", imgError);
+                generatedContent = await generateAIContent();
+                console.log("Generated AI content:", generatedContent);
+            } catch (error) {
+                console.error("AI generation error:", error);
+                // Continue with defaults if AI fails
             }
 
-            // Fetch "About Company" section images from Unsplash
-            try {
-                const aboutSearchQuery = `${companyName} modern office workplace team collaboration`.trim();
-                console.log(`MultiJobCampaignModal: Searching Unsplash for About section with query: "${aboutSearchQuery}"`);
-
-                const aboutImageResponse = await AiService.searchUnsplash(aboutSearchQuery, 6);
-
-                if (aboutImageResponse?.data?.success && aboutImageResponse.data.data?.length > 0) {
-                    const images = aboutImageResponse.data.data.slice(0, 4); // Get up to 4 images
-
-                    // Upload each image to Cloudinary
-                    console.log(`MultiJobCampaignModal: Uploading ${images.length} About section images...`);
-                    const uploadPromises = images.map(async (img) => {
-                        try {
-                            const uploadRes = await UploadService.upload(img.url, 10);
-                            return uploadRes?.data?.secure_url || null;
-                        } catch (e) {
-                            console.error("Failed to upload about image:", e);
-                            return null;
-                        }
-                    });
-
-                    const uploadedUrls = await Promise.all(uploadPromises);
-                    aboutTheCompanyImages = uploadedUrls.filter(Boolean);
-                    console.log(`MultiJobCampaignModal: Uploaded ${aboutTheCompanyImages.length} About section images`);
-                }
-            } catch (imgError) {
-                console.error("MultiJobCampaignModal: Failed to fetch/upload About section images:", imgError);
-            }
-
-            const campaignData = {
-                campaignType: "multi",
-                vacancyTitle: campaignTitle,
-                multiJobHeroTitle: heroTitle || campaignTitle,
-                heroDescription: heroDescription || t.joinTeamDescription,
-                heroImage, // Dynamic Unsplash image
-                jobsSectionTitle: jobsSectionTitle || t.exploreOpenPositions,
-                jobsSectionDescription: jobsSectionDescription || t.findTheRole,
-                linkedCampaigns: selectedCampaigns,
-                lang: selectedLanguage,
-                language: selectedLanguage,
-                templateId: selectedTemplate,
-                menuItems: multiJobMenuItems,
-                companyName,
-                companyUrl: brandingDetails?.companyUrl || user?.companyUrl,
-                companyLogo: brandingDetails?.companyLogo || user?.companyLogo,
-                primaryColor: brandingDetails?.primaryColor || user?.primaryColor,
-                secondaryColor: brandingDetails?.secondaryColor || user?.secondaryColor,
-                tertiaryColor: brandingDetails?.tertiaryColor || user?.tertiaryColor,
-                selectedFont: brandingDetails?.selectedFont || user?.selectedFont,
-                titleFont: brandingDetails?.titleFont || user?.titleFont,
-                subheaderFont: brandingDetails?.subheaderFont || user?.subheaderFont,
-                bodyFont: brandingDetails?.bodyFont || user?.bodyFont,
-                user_id: user?._id,
-                workspace: user?.isWorkspaceSession ? user.workspaceId : undefined,
-                // For multi-job campaigns, use URL apply type (candidates apply on individual job pages)
-                applyType: 'url',
-                cta2Link: '#linked-jobs',
-                // No form needed for multi-job career pages
-                form: { title: "", fields: [] },
-
-                // Default Recruiter Contact section (language-aware)
-                recruiterContactTitle: t.reachOutToUs,
-                recruiterContactText: t.haveQuestions,
-                recruiters: user?.fullName || user?.name ? [
-                    {
-                        recruiterFullname: user?.fullName || user?.name || "",
-                        recruiterRole: "Talent Acquisition",
-                        recruiterEmail: user?.email || "",
-                        recruiterPhone: "",
-                        recruiterImage: user?.avatar || "",
-                    }
-                ] : [],
-
-                // Default About Company section with Unsplash images (language-aware)
-                aboutTheCompanyTitle: t.discover,
-                aboutTheCompanyText: t.buildingSomethingSpecial,
-                aboutTheCompanyDescription: t.greatWorkHappens,
-                aboutTheCompanyImages: aboutTheCompanyImages, // Dynamic Unsplash images
-
-                // Company Facts section - empty by default (user fills in manually)
-                // This section is NOT auto-generated by AI
-                facts: [],
-                companyFactsTitle: t.whyJoinUs,
-                companyFactsDescription: "",
-
-                // Default Testimonials section (empty - to be filled)
-                testimonials: [],
-
-                // Footer section (language-aware)
-                footerTitle: t.footerTitle,
-                footerDescription: t.footerDescription,
-            };
-
-            // Use CrudService.create directly to ensure menuItems is not overwritten
-            const response = await CrudService.create("LandingPageData", campaignData);
-
-            antdMessage.success("Multi-job campaign created!");
-
-            await refreshUserData();
-            if (onRefresh) onRefresh();
-
-            router.push(`/edit-page/${response.data.result._id}`);
-
+            // Now create the campaign with all generated content
+            await createCampaignWithContent(generatedContent);
         } catch (error) {
             console.error("Error creating campaign:", error);
             antdMessage.error(error.response?.data?.message || "Failed to create campaign");
-        } finally {
             setIsLoading(false);
         }
     };
 
+    const createCampaignWithContent = async (generatedContent = {}) => {
+        const companyName = brandingDetails?.companyName || user?.companyName || "Our Company";
+        
+        // Extract generated content with fallbacks
+        const generatedHeroTitle = generatedContent.heroTitle || "";
+        const generatedHeroDescription = generatedContent.heroDescription || "";
+        const generatedJobsSectionTitle = generatedContent.jobsSectionTitle || "";
+        const generatedJobsSectionDescription = generatedContent.jobsSectionDescription || "";
+        const generatedAboutTitle = generatedContent.aboutTheCompanyTitle || "";
+        const generatedAboutText = generatedContent.aboutTheCompanyText || "";
+        const generatedAboutDescription = generatedContent.aboutTheCompanyDescription || "";
+        const generatedFactsTitle = generatedContent.companyFactsTitle || "";
+        const generatedFacts = Array.isArray(generatedContent.companyFacts) ? generatedContent.companyFacts : [];
+        const generatedProcessTitle = generatedContent.candidateProcessTitle || "";
+        const generatedProcessSteps = Array.isArray(generatedContent.candidateProcessSteps) ? generatedContent.candidateProcessSteps : [];
+
+        // Get translations for the selected language
+        const t = getMultiJobTranslations(selectedLanguage, companyName);
+
+        // Multi-job campaign default sections with localized labels:
+        // Hero (Flexible) → Jobs (carousel) → About the Company → Company Facts → Candidate Process → Footer
+        const multiJobMenuItems = [
+            {
+                id: "linked-jobs",
+                key: "Linked Jobs",
+                label: t.ourOpenPositions,
+                active: true,
+                visible: true,
+                sort: 1
+            },
+            {
+                id: "about-company",
+                key: "About The Company",
+                label: t.aboutUs,
+                active: true,
+                visible: true,
+                sort: 2
+            },
+            {
+                id: "company-facts",
+                key: "Company Facts",
+                label: t.whyJoinUs,
+                active: true,
+                visible: true,
+                sort: 3
+            },
+            {
+                id: "candidate-process",
+                key: "Candidate Process",
+                label: t.applicationProcess,
+                active: true,
+                visible: true,
+                sort: 4
+            },
+        ];
+
+        // Fetch hero image from Unsplash based on campaign/company context
+        let heroImage = "";
+        let aboutTheCompanyImages = [];
+
+        try {
+            // Search for hero image
+            const heroSearchQuery = `${campaignTitle} ${companyName} careers team office professional`.trim();
+            console.log(`MultiJobCampaignModal: Searching Unsplash for hero with query: "${heroSearchQuery}"`);
+
+            const heroImageResponse = await AiService.searchUnsplash(heroSearchQuery, 3);
+
+            if (heroImageResponse?.data?.success && heroImageResponse.data.data?.length > 0) {
+                const randomIndex = Math.floor(Math.random() * heroImageResponse.data.data.length);
+                const selectedImage = heroImageResponse.data.data[randomIndex];
+
+                console.log("MultiJobCampaignModal: Uploading hero image to Cloudinary...");
+                const uploadRes = await UploadService.upload(selectedImage.url, 10);
+                if (uploadRes?.data?.secure_url) {
+                    heroImage = uploadRes.data.secure_url;
+                    console.log("MultiJobCampaignModal: Hero image uploaded:", heroImage);
+                }
+            }
+        } catch (imgError) {
+            console.error("MultiJobCampaignModal: Failed to fetch/upload hero image:", imgError);
+        }
+
+        // Fetch "About Company" section images from Unsplash
+        try {
+            const aboutSearchQuery = `${companyName} modern office workplace team collaboration`.trim();
+            console.log(`MultiJobCampaignModal: Searching Unsplash for About section with query: "${aboutSearchQuery}"`);
+
+            const aboutImageResponse = await AiService.searchUnsplash(aboutSearchQuery, 6);
+
+            if (aboutImageResponse?.data?.success && aboutImageResponse.data.data?.length > 0) {
+                const images = aboutImageResponse.data.data.slice(0, 4); // Get up to 4 images
+
+                // Upload each image to Cloudinary
+                console.log(`MultiJobCampaignModal: Uploading ${images.length} About section images...`);
+                const uploadPromises = images.map(async (img) => {
+                    try {
+                        const uploadRes = await UploadService.upload(img.url, 10);
+                        return uploadRes?.data?.secure_url || null;
+                    } catch (e) {
+                        console.error("Failed to upload about image:", e);
+                        return null;
+                    }
+                });
+
+                const uploadedUrls = await Promise.all(uploadPromises);
+                aboutTheCompanyImages = uploadedUrls.filter(Boolean);
+                console.log(`MultiJobCampaignModal: Uploaded ${aboutTheCompanyImages.length} About section images`);
+            }
+        } catch (imgError) {
+            console.error("MultiJobCampaignModal: Failed to fetch/upload About section images:", imgError);
+        }
+
+        const campaignData = {
+            campaignType: "multi",
+            vacancyTitle: campaignTitle,
+            multiJobHeroTitle: generatedHeroTitle || campaignTitle,
+            heroDescription: generatedHeroDescription || t.joinTeamDescription,
+            heroImage, // Dynamic Unsplash image
+            jobsSectionTitle: generatedJobsSectionTitle || t.exploreOpenPositions,
+            jobsSectionDescription: generatedJobsSectionDescription || t.findTheRole,
+            linkedCampaigns: selectedCampaigns,
+            lang: selectedLanguage,
+            language: selectedLanguage,
+            templateId: selectedTemplate,
+            menuItems: multiJobMenuItems,
+            companyName,
+            companyUrl: brandingDetails?.companyUrl || user?.companyUrl,
+            companyLogo: brandingDetails?.companyLogo || user?.companyLogo,
+            primaryColor: brandingDetails?.primaryColor || user?.primaryColor,
+            secondaryColor: brandingDetails?.secondaryColor || user?.secondaryColor,
+            tertiaryColor: brandingDetails?.tertiaryColor || user?.tertiaryColor,
+            selectedFont: brandingDetails?.selectedFont || user?.selectedFont,
+            titleFont: brandingDetails?.titleFont || user?.titleFont,
+            subheaderFont: brandingDetails?.subheaderFont || user?.subheaderFont,
+            bodyFont: brandingDetails?.bodyFont || user?.bodyFont,
+            user_id: user?._id,
+            workspace: user?.isWorkspaceSession ? user.workspaceId : undefined,
+            // For multi-job campaigns, use URL apply type (candidates apply on individual job pages)
+            applyType: 'url',
+            cta2Link: '#linked-jobs',
+            // No form needed for multi-job career pages
+            form: { title: "", fields: [] },
+
+            // Default Recruiter Contact section (language-aware)
+            recruiterContactTitle: t.reachOutToUs,
+            recruiterContactText: t.haveQuestions,
+            recruiters: user?.fullName || user?.name ? [
+                {
+                    recruiterFullname: user?.fullName || user?.name || "",
+                    recruiterRole: "Talent Acquisition",
+                    recruiterEmail: user?.email || "",
+                    recruiterPhone: "",
+                    recruiterImage: user?.avatar || "",
+                }
+            ] : [],
+
+            // Default About Company section with Unsplash images (AI-generated or language-aware fallback)
+            aboutTheCompanyTitle: generatedAboutTitle || t.discover,
+            aboutTheCompanyText: generatedAboutText || t.buildingSomethingSpecial,
+            aboutTheCompanyDescription: generatedAboutDescription || t.greatWorkHappens,
+            aboutTheCompanyImages: aboutTheCompanyImages, // Dynamic Unsplash images
+
+            // Company Facts section (AI-generated)
+            companyFacts: generatedFacts.length > 0 ? generatedFacts.map((fact, idx) => ({
+                icon: fact.icon || ["star", "users", "trending-up", "heart"][idx % 4],
+                title: fact.title || "",
+                description: fact.description || ""
+            })) : [],
+            companyFactsTitle: generatedFactsTitle || t.whyJoinUs,
+            companyFactsDescription: "",
+
+            // Candidate Process section (AI-generated)
+            candidateProcessTitle: generatedProcessTitle || t.applicationProcess,
+            candidateProcessSteps: generatedProcessSteps.length > 0 ? generatedProcessSteps.map((step, idx) => ({
+                step: step.step || idx + 1,
+                title: step.title || "",
+                description: step.description || ""
+            })) : [
+                { step: 1, title: t.applicationProcess, description: "" },
+                { step: 2, title: "", description: "" },
+                { step: 3, title: "", description: "" },
+                { step: 4, title: "", description: "" }
+            ],
+
+            // Default Testimonials section (empty - to be filled by user)
+            testimonials: [],
+
+            // Footer section (language-aware)
+            footerTitle: t.footerTitle,
+            footerDescription: t.footerDescription,
+        };
+
+        // Use CrudService.create directly to ensure menuItems is not overwritten
+        const response = await CrudService.create("LandingPageData", campaignData);
+
+        antdMessage.success("Multi-job campaign created!");
+
+        await refreshUserData();
+        if (onRefresh) onRefresh();
+
+        router.push(`/edit-page/${response.data.result._id}`);
+        setIsLoading(false);
+    };
+
     const steps = [
         { id: 0, label: "Details" },
-        { id: 1, label: "Jobs" },
-        { id: 2, label: "Create" }
+        { id: 1, label: "Jobs" }
     ];
 
     const canProceed = () => {
@@ -609,7 +725,7 @@ REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
                 </Select>
             </div>
 
-            {/* AI Content Generator */}
+            {/* AI Context */}
             <div className="relative rounded-2xl bg-gradient-to-br from-violet-50/50 via-purple-50/30 to-fuchsia-50/40 p-5 border border-violet-100/60">
                 <div className="flex items-center gap-2 mb-3">
                     <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
@@ -621,61 +737,15 @@ REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
                 </div>
 
                 <textarea
-                    placeholder="Describe your company culture, values, or what makes you special..."
+                    placeholder="What would you like to highlight in this multi-job campaign? For example: generate a campaign page for our sales job opportunities..."
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
-                    rows={2}
-                    className="w-full px-4 py-3 text-sm rounded-xl border border-violet-100 bg-white/80 focus:border-violet-200 focus:ring-2 focus:ring-violet-50 outline-none transition-all resize-none mb-3"
+                    rows={3}
+                    className="w-full px-4 py-3 text-sm rounded-xl border border-violet-100 bg-white/80 focus:border-violet-200 focus:ring-2 focus:ring-violet-50 outline-none transition-all resize-none"
                 />
-
-                <button
-                    onClick={handleAIGenerate}
-                    disabled={aiGenerating || !aiPrompt.trim()}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-violet-500 text-white text-sm font-medium rounded-xl hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                >
-                    {aiGenerating ? (
-                        <>
-                            <Spin size="small" />
-                            <span>Generating...</span>
-                        </>
-                    ) : (
-                        <>
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                            </svg>
-                            Generate
-                        </>
-                    )}
-                </button>
-            </div>
-
-            {/* Hero Content */}
-            <div className="grid grid-cols-1 gap-5">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Hero headline
-                    </label>
-                    <input
-                        type="text"
-                        placeholder="Join Our Amazing Team"
-                        value={heroTitle}
-                        onChange={(e) => setHeroTitle(e.target.value)}
-                        className="w-full px-4 py-3 text-base rounded-xl border border-gray-200 bg-white focus:border-gray-400 focus:ring-2 focus:ring-gray-100 outline-none transition-all"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Description
-                    </label>
-                    <textarea
-                        placeholder="Describe why candidates should join your company..."
-                        value={heroDescription}
-                        onChange={(e) => setHeroDescription(e.target.value)}
-                        rows={3}
-                        className="w-full px-4 py-3 text-base rounded-xl border border-gray-200 bg-white focus:border-gray-400 focus:ring-2 focus:ring-gray-100 outline-none transition-all resize-none"
-                    />
-                </div>
+                <p className="text-xs text-violet-500 mt-2">
+                    This context will be used to generate your page content
+                </p>
             </div>
         </div>
     );
@@ -832,89 +902,12 @@ REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
         </div>
     );
 
-    // Step 3: Review & Create
-    const renderStep2 = () => (
-        <div className="space-y-6">
-            {/* Success Icon */}
-            <div className="text-center py-4">
-                <div className="w-16 h-16 rounded-full bg-violet-100 mx-auto flex items-center justify-center">
-                    <svg className="w-8 h-8 text-violet-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mt-4">Ready to create</h3>
-                <p className="text-gray-500 text-sm mt-1">Review your campaign details</p>
-            </div>
-
-            {/* Summary Card */}
-            <div className="bg-gray-50 rounded-2xl p-5 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm text-gray-500">Campaign Name</span>
-                    <span className="font-medium text-gray-900">{campaignTitle}</span>
-                </div>
-
-                <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <span className="text-sm text-gray-500">Language</span>
-                    <span className="font-medium text-gray-900">{selectedLanguage}</span>
-                </div>
-
-                <div className="pb-3 border-b border-gray-200">
-                    <span className="text-sm text-gray-500">Hero Title</span>
-                    <p className="font-medium text-gray-900 mt-1">{heroTitle || campaignTitle}</p>
-                </div>
-
-                <div>
-                    <span className="text-sm text-gray-500">Linked Jobs ({selectedCampaigns.length})</span>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                        {selectedCampaignObjects.slice(0, 4).map(campaign => (
-                            <span
-                                key={campaign._id}
-                                className="inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 text-xs px-2.5 py-1.5 rounded-lg"
-                            >
-                                <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
-                                </svg>
-                                {campaign.vacancyTitle?.substring(0, 20)}{campaign.vacancyTitle?.length > 20 ? '...' : ''}
-                            </span>
-                        ))}
-                        {selectedCampaigns.length > 4 && (
-                            <span className="text-xs text-gray-500 px-2.5 py-1.5">
-                                +{selectedCampaigns.length - 4} more
-                            </span>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Create Button */}
-            <button
-                onClick={handleCreateCampaign}
-                disabled={isLoading}
-                className="w-full py-4 bg-violet-500 text-white font-semibold rounded-xl hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-100 flex items-center justify-center gap-2"
-            >
-                {isLoading ? (
-                    <>
-                        <Spin size="small" />
-                        <span>Creating...</span>
-                    </>
-                ) : (
-                    <>
-                        <span>Create Career Page</span>
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                        </svg>
-                    </>
-                )}
-            </button>
-        </div>
-    );
-
     return (
         <Modal
             open={isOpen}
             onCancel={onClose}
             footer={null}
-            width={560}
+            width={480}
             centered
             destroyOnClose
             wrapClassName={darkMode ? "dark" : ""}
@@ -972,27 +965,46 @@ REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
                 </div>
 
                 {/* Step Content */}
-                <div className="min-h-[400px]">
+                <div className="min-h-[360px]">
                     {currentStep === 0 && renderStep0()}
                     {currentStep === 1 && renderStep1()}
-                    {currentStep === 2 && renderStep2()}
                 </div>
 
-                {/* Navigation - only show on steps 0 and 1 */}
-                {currentStep < 2 && (
-                    <div className="flex justify-end mt-6 pt-4 border-t border-gray-100">
+                {/* Navigation */}
+                <div className="flex justify-end mt-6 pt-4 border-t border-gray-100">
+                    {currentStep === 0 ? (
                         <button
-                            onClick={() => setCurrentStep(prev => prev + 1)}
+                            onClick={() => setCurrentStep(1)}
                             disabled={!canProceed()}
                             className="inline-flex items-center gap-2 px-6 py-3 bg-violet-500 text-white font-medium rounded-xl hover:bg-violet-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
                         >
-                            <span>{currentStep === 1 ? "Review" : "Continue"}</span>
+                            <span>Next</span>
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                             </svg>
                         </button>
-                    </div>
-                )}
+                    ) : (
+                        <button
+                            onClick={handleGenerateAndCreate}
+                            disabled={!canProceed() || isLoading}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-violet-500 text-white font-medium rounded-xl hover:bg-violet-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Spin size="small" />
+                                    <span>Generating...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                                    </svg>
+                                    <span>Generate</span>
+                                </>
+                            )}
+                        </button>
+                    )}
+                </div>
             </div>
         </Modal>
     );
