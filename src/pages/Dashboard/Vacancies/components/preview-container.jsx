@@ -658,7 +658,7 @@ export function PreviewContainer({
         <Heading
           size="4xl"
           as="h3"
-          className="!text-black-900_01 absolute left-3 px-2"
+          className="!text-[#000000]_01 absolute left-3 px-2"
         >
           Preview
         </Heading>
@@ -673,8 +673,8 @@ export function PreviewContainer({
               );
             }}
             className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "mobile"
-                ? "bg-[#5207CD] text-[#EFF8FF]"
-                : "text-[#5207CD] hover:bg-gray-100"
+              ? "bg-[#5207CD] text-[#EFF8FF]"
+              : "text-[#5207CD] hover:bg-gray-100"
               }`}
           >
             Mobile
@@ -688,8 +688,8 @@ export function PreviewContainer({
               );
             }}
             className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "desktop"
-                ? "bg-[#5207CD] text-[#EFF8FF]"
-                : "text-[#5207CD] hover:bg-gray-100"
+              ? "bg-[#5207CD] text-[#EFF8FF]"
+              : "text-[#5207CD] hover:bg-gray-100"
               }`}
           >
             Desktop
@@ -711,7 +711,7 @@ export function PreviewContainer({
         <Heading
           size="4xl"
           as="h3"
-          className="!text-black-900_01 absolute left-3 px-2"
+          className="!text-[#000000]_01 absolute left-3 px-2"
         >
           Preview
         </Heading>
@@ -726,8 +726,8 @@ export function PreviewContainer({
                 );
               }}
               className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "mobile"
-                  ? "bg-[#5207CD] text-[#EFF8FF]"
-                  : "text-[#5207CD] hover:bg-gray-100"
+                ? "bg-[#5207CD] text-[#EFF8FF]"
+                : "text-[#5207CD] hover:bg-gray-100"
                 }`}
             >
               Mobile
@@ -741,8 +741,8 @@ export function PreviewContainer({
                 );
               }}
               className={`h-[28px] px-3 rounded-md flex items-center justify-center font-medium transition ${device === "desktop"
-                  ? "bg-[#5207CD] text-[#EFF8FF]"
-                  : "text-[#5207CD] hover:bg-gray-100"
+                ? "bg-[#5207CD] text-[#EFF8FF]"
+                : "text-[#5207CD] hover:bg-gray-100"
                 }`}
             >
               Desktop

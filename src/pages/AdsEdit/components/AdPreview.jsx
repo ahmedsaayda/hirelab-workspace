@@ -161,7 +161,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
   const renderPreview = () => {
     // Determine if this is a story format
     const isStoryFormat = format?.id === 'story' || format?.aspectRatio === '9:16';
-    
+
     // Check if there's a custom creative override for this format
     const customCreativeUrl = variant?.customCreatives?.[format?.id];
 
@@ -256,7 +256,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
 
       return (
         <StoryOverlay brandData={brandData}>
-          <div className="w-full h-full flex items-center justify-center bg-black">
+          <div className="w-full h-full flex items-center justify-center bg-[#000000]">
             <div
               style={{
                 width: `${width}px`,

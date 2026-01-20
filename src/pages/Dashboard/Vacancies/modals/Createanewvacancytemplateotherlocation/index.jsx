@@ -20,7 +20,7 @@ export default function Createanewvacancytemplateotherlocation({
                 <Heading
                   size="7xl"
                   as="h1"
-                  className="self-end !text-black-900_01"
+                  className="self-end !text-[#000000]_01"
                 >
                   New vacancy: Senior Product Managerr
                 </Heading>

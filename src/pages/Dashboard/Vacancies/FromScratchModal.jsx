@@ -1046,7 +1046,7 @@ const FromScratchModal = ({ onClose, ongoBack, onRefresh }) => {
           <Heading
             size="7xl"
             as="h1"
-            className="!text-black-900_01 text-center"
+            className="!text-[#000000]_01 text-center"
           >{`Create vacancy for ${jobTitle || "New Position"}`}</Heading>
         )}
         <div className="flex flex-col gap-6">
@@ -1064,8 +1064,8 @@ const FromScratchModal = ({ onClose, ongoBack, onRefresh }) => {
                 <button
                   onClick={handleNext}
                   className={`py-2 px-4 text-white disabled:cursor-not-allowed disabled:opacity-50 ${selectedTemplate === -1
-                      ? "bg-blue-300 cursor-not-allowed"
-                      : "bg-blue-500 hover:bg-blue-600"
+                    ? "bg-blue-300 cursor-not-allowed"
+                    : "bg-blue-500 hover:bg-blue-600"
                     } rounded-md`}
                   disabled={selectedTemplate === -1 || selectedTemplate !== 1}
                 >

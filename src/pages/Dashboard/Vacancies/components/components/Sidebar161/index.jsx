@@ -19,7 +19,7 @@ export default function Sidebar161({ ...props }) {
       rootStyles={{ [`.${sidebarClasses.container}`]: { gap: 19 } }}
       className={`${props.className} flex flex-col h-screen pt-[33px] pl-4 pr-[5px] gap-[19px] top-0 smx:pt-5 border-blue_gray-50 border-r border-solid bg-white-A700 !sticky overflow-auto mdx:hidden`}
     >
-      <Heading size="4xl" as="h5" className="!text-black-900_01">
+      <Heading size="4xl" as="h5" className="!text-[#000000]_01">
         Sections
       </Heading>
       <Menu

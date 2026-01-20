@@ -2,7 +2,7 @@ import React from "react";
 import { default as ModalProvider } from "react-modal";
 const CloseSVG = ({ onClick, fillColor, height = 16, width = 16 }) => (
   <svg onClick={onClick} style={{ fill: fillColor, cursor: 'pointer' }} width={width} height={height} viewBox="0 0 24 24">
-    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
   </svg>
 );
 import { Button, Heading, Img, Input } from "../../components/components";
@@ -31,7 +31,7 @@ export default function Templates({ isOpen, ...props }) {
                   <Heading
                     size="7xl"
                     as="h1"
-                    className="mb-[7px] self-end !text-black-900_01"
+                    className="mb-[7px] self-end !text-[#000000]_01"
                   >
                     Add template
                   </Heading>

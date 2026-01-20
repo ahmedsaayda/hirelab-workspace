@@ -5,11 +5,11 @@ import moment from 'moment';
 
 const { Text, Title } = Typography;
 
-const InterviewSchedulingMessage = ({ 
-  message, 
-  isCandidate = false, 
+const InterviewSchedulingMessage = ({
+  message,
+  isCandidate = false,
   onSelectTime,
-  readOnly = false 
+  readOnly = false
 }) => {
   const { interviewSuggestions = [], senderType } = message;
 
@@ -39,7 +39,7 @@ const InterviewSchedulingMessage = ({
           {senderType === 'recruiter' ? 'Interview Time Options' : 'Interview Response'}
         </Title>
       </div>
-      
+
       <div className="space-y-2">
         {interviewSuggestions.map((suggestion, index) => (
           <Card
@@ -47,9 +47,9 @@ const InterviewSchedulingMessage = ({
             size="small"
             className={`
               transition-all duration-200 
-              ${suggestion.selected 
-                ? 'border-green-500 bg-green-50' 
-                : readOnly 
+              ${suggestion.selected
+                ? 'border-green-500 bg-green-50'
+                : readOnly
                   ? 'border-gray-200 cursor-default'
                   : 'border-gray-200 hover:border-purple-400 hover:bg-purple-25 cursor-pointer'
               }
@@ -58,8 +58,8 @@ const InterviewSchedulingMessage = ({
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ClockCircleOutlined 
-                  className={suggestion.selected ? 'text-green-500' : 'text-purple-500'} 
+                <ClockCircleOutlined
+                  className={suggestion.selected ? 'text-green-500' : 'text-purple-500'}
                 />
                 <div>
                   <Text className="font-medium block">
@@ -70,17 +70,17 @@ const InterviewSchedulingMessage = ({
                   </Text>
                 </div>
               </div>
-              
+
               {suggestion.selected && (
                 <div className="flex items-center gap-1 text-green-600">
                   <Text className="text-sm font-medium">Selected</Text>
                   <span className="text-green-500">✓</span>
                 </div>
               )}
-              
+
               {!readOnly && !suggestion.selected && isCandidate && !interviewSuggestions.some(s => s.selected) && (
-                <Button 
-                  size="small" 
+                <Button
+                  size="small"
                   type="primary"
                   className="!bg-purple-500 hover:!bg-purple-600 !border-purple-500 hover:!border-purple-600"
                   style={{
@@ -95,7 +95,7 @@ const InterviewSchedulingMessage = ({
           </Card>
         ))}
       </div>
-      
+
       {isCandidate && !readOnly && !interviewSuggestions.some(s => s.selected) && (
         <div className="mt-3 p-2 bg-purple-25 rounded text-sm">
           <Text className="text-purple-700">
@@ -103,10 +103,10 @@ const InterviewSchedulingMessage = ({
           </Text>
         </div>
       )}
-      
+
       {interviewSuggestions.some(s => s.selected) && (
         <div className="mt-3 p-2 bg-green-25 border border-green-200 rounded text-sm">
-          <Text className="text-black-900">
+          <Text className="text-[#000000]">
             ✅ Interview time confirmed! We'll send you the meeting details soon.
             {isCandidate && " Contact the recruiter if you need to change the time."}
           </Text>

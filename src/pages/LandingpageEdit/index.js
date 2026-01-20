@@ -91,7 +91,7 @@ export const renderSection = ({
     const match = sectionKey.match(/^(.+?)_\d+$/);
     return match ? match[1] : sectionKey;
   };
-  
+
   const baseKey = getBaseKey(section?.key);
 
   // This function should render the corresponding section based on its key.
@@ -230,9 +230,9 @@ export const renderEditor = ({
     const match = sectionKey.match(/^(.+?)_\d+$/);
     return match ? match[1] : sectionKey;
   };
-  
+
   const baseKey = getBaseKey(section?.key);
-  
+
   // This function should render the corresponding section based on its key.
   const props = {
     fetchData,
@@ -544,7 +544,7 @@ const Category = ({ title, items, onClick, existingItems, allowDuplicates = fals
         const isAlreadyAdded = existingItems.some(
           (existing) => existing.key === item.key || existing.key === item.name
         );
-        
+
         // Count how many times this section was added
         const addedCount = existingItems.filter(
           (existing) => existing.key === item.key || existing.key === item.name
@@ -1187,10 +1187,10 @@ export default function LandingpageEdit({ paramsId }) {
 
   const addSection = (key) => {
     const existingMenuItems = landingPageData?.menuItems ?? [];
-    
+
     // Check if this section already exists and is active
     const existingActiveSection = existingMenuItems.find(item => item.key === key && item.active);
-    
+
     // Check if there's an inactive version we can reactivate
     const existingInactiveIndex = existingMenuItems.findIndex(item => item.key === key && !item.active);
 
@@ -1205,12 +1205,12 @@ export default function LandingpageEdit({ paramsId }) {
     if (existingActiveSection) {
       // Section already exists and is active - create a new instance with unique key
       // Generate unique key by adding a number suffix
-      const existingWithSameBase = existingMenuItems.filter(item => 
+      const existingWithSameBase = existingMenuItems.filter(item =>
         item.key === key || item.key.startsWith(`${key}_`)
       );
       const instanceNumber = existingWithSameBase.length + 1;
       newKey = `${key}_${instanceNumber}`;
-      
+
       const newItem = {
         id: `${key.toLowerCase().replace(/\s+/g, '-')}-${instanceNumber}`,
         key: newKey,
@@ -1220,7 +1220,7 @@ export default function LandingpageEdit({ paramsId }) {
         sort: getNextSortOrder()
       };
       newMenuItems = [...existingMenuItems, newItem];
-      
+
       message.success(`Added another "${key}" section`);
     } else if (existingInactiveIndex !== -1) {
       // Section exists but is inactive, activate it
@@ -2172,8 +2172,8 @@ export default function LandingpageEdit({ paramsId }) {
         hasUnpublishedChanges={hasUnpublishedChanges}
         lpId={lpId}
         onNavigateAttemptAds={(href) => {
-          if(landingPageData?.published === false) return message.error("Please publish your page and form before creating ads");
-          if (!hasUnpublishedChangesRef.current ) {
+          if (landingPageData?.published === false) return message.error("Please publish your page and form before creating ads");
+          if (!hasUnpublishedChangesRef.current) {
             router.push(href);
             return;
           }
@@ -2206,7 +2206,7 @@ export default function LandingpageEdit({ paramsId }) {
             <div className="flex flex-col gap-[15px]  flex-grow lg:overflow-auto relative ">
               <div className="h-px bg-blue_gray-50" />
               <div className="flex gap-5 justify-between items-center pl-3 pr-3">
-                <Heading size="3xl" as="h1" className="!text-black-900_01">
+                <Heading size="3xl" as="h1" className="!text-[#000000]_01">
                   {activeSection?.key
                     ?.replace?.("flexaligntop", "Hero")
                     ?.replace?.("form-editor", "Form Editor")
@@ -2273,7 +2273,7 @@ export default function LandingpageEdit({ paramsId }) {
 
 
                     {isOpen && (
-                      <div className="flex fixed inset-0 z-50 justify-center items-center bg-opacity-80 bg-black-900">
+                      <div className="flex fixed inset-0 z-50 justify-center items-center bg-opacity-80 bg-[#000000]">
                         <div className="flex overflow-hidden flex-col w-full h-full bg-white rounded-lg shadow-lg md:w-4/5 md:h-4/5">
                           {/* Modal Header */}
                           <div className="flex justify-between items-center p-4 py-2 bg-gray-100 border-b border-gray-300">
@@ -2670,8 +2670,8 @@ export default function LandingpageEdit({ paramsId }) {
         }}
       >
         <div className="flex flex-col gap-5">
-          <Heading size="3xl" as="h3" className="!text-black-900_01">
-          Before creating ads, be sure to publish your page and form
+          <Heading size="3xl" as="h3" className="!text-[#000000]_01">
+            Before creating ads, be sure to publish your page and form
           </Heading>
           <div className="flex gap-3 justify-end">
 
@@ -2679,7 +2679,7 @@ export default function LandingpageEdit({ paramsId }) {
               type="button"
               className="px-4 py-2 text-gray-700 rounded-md border border-gray-300 hover:bg-gray-50"
               onClick={handleExitConfirm}
-              
+
             >
               No, keep editing
             </button>

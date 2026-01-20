@@ -17,7 +17,7 @@ export default function Startfromscratchjobdescriptionmobile({
             <div className="flex flex-col gap-[31px]">
               <div className="flex flex-col gap-8">
                 <div className="flex items-center justify-between gap-5">
-                  <Heading size="7xl" as="h1" className="!text-black-900_01">
+                  <Heading size="7xl" as="h1" className="!text-[#000000]_01">
                     Start from scratch
                   </Heading>
                   <Img
@@ -205,7 +205,7 @@ export default function Startfromscratchjobdescriptionmobile({
                 </TabList>
                 <div className="relative mt-[-27px] flex w-full flex-col gap-[30px]">
                   <div className="flex items-center justify-between gap-5">
-                    <Heading size="7xl" as="h2" className="!text-black-900_01">
+                    <Heading size="7xl" as="h2" className="!text-[#000000]_01">
                       Preview
                     </Heading>
                     <Img

@@ -18,30 +18,30 @@ import Calendar from "react-calendar";
 const Dotted2Agenda = ({ className, style }) => (
   <div className={className} style={style}>
     <svg width="50" height="50" viewBox="0 0 50 50" fill="currentColor">
-      <circle cx="5" cy="5" r="2"/>
-      <circle cx="15" cy="5" r="2"/>
-      <circle cx="25" cy="5" r="2"/>
-      <circle cx="35" cy="5" r="2"/>
-      <circle cx="45" cy="5" r="2"/>
-      <circle cx="5" cy="15" r="2"/>
-      <circle cx="15" cy="15" r="2"/>
-      <circle cx="25" cy="15" r="2"/>
-      <circle cx="35" cy="15" r="2"/>
-      <circle cx="45" cy="15" r="2"/>
+      <circle cx="5" cy="5" r="2" />
+      <circle cx="15" cy="5" r="2" />
+      <circle cx="25" cy="5" r="2" />
+      <circle cx="35" cy="5" r="2" />
+      <circle cx="45" cy="5" r="2" />
+      <circle cx="5" cy="15" r="2" />
+      <circle cx="15" cy="15" r="2" />
+      <circle cx="25" cy="15" r="2" />
+      <circle cx="35" cy="15" r="2" />
+      <circle cx="45" cy="15" r="2" />
     </svg>
   </div>
 );
 const DottedAgenda = ({ className, style }) => (
   <div className={className} style={style}>
     <svg width="50" height="50" viewBox="0 0 50 50" fill="currentColor">
-      <circle cx="10" cy="10" r="2"/>
-      <circle cx="20" cy="10" r="2"/>
-      <circle cx="30" cy="10" r="2"/>
-      <circle cx="40" cy="10" r="2"/>
-      <circle cx="10" cy="20" r="2"/>
-      <circle cx="20" cy="20" r="2"/>
-      <circle cx="30" cy="20" r="2"/>
-      <circle cx="40" cy="20" r="2"/>
+      <circle cx="10" cy="10" r="2" />
+      <circle cx="20" cy="10" r="2" />
+      <circle cx="30" cy="10" r="2" />
+      <circle cx="40" cy="10" r="2" />
+      <circle cx="10" cy="20" r="2" />
+      <circle cx="20" cy="20" r="2" />
+      <circle cx="30" cy="20" r="2" />
+      <circle cx="40" cy="20" r="2" />
     </svg>
   </div>
 );
@@ -116,7 +116,7 @@ const Template2 = ({ landingPageData, fetchData, setLandingPageData }) => {
 
           <div className="flex flex-col md:flex-row">
             <div className="w-full">
-              <div className="sm:w-full  text-black-900 p-5 pb-[70px]">
+              <div className="sm:w-full  text-[#000000] p-5 pb-[70px]">
                 <div className="bg-white md:w-[75%] mx-auto relative">
                   <div className="bg-white" style={{ zIndex: 9999 }}>
                     <Suspense fallback={<div>Loading feed...</div>}>
@@ -183,7 +183,7 @@ const Template3 = ({ landingPageData, fetchData, setLandingPageData }) => {
             (normalizedSelectedDate >= normalizedStartDate &&
               normalizedSelectedDate <= normalizedEndDate) ||
             normalizedSelectedDate.getTime() ===
-              normalizedStartDate.getTime() ||
+            normalizedStartDate.getTime() ||
             normalizedSelectedDate.getTime() === normalizedEndDate.getTime()
           );
         })) ||
@@ -237,7 +237,7 @@ const Template3 = ({ landingPageData, fetchData, setLandingPageData }) => {
             </div>
 
             <div className="w-full md:w-3/5">
-              <div className="sm:w-full text-black-900">
+              <div className="sm:w-full text-[#000000]">
                 <Suspense fallback={<div>Loading feed...</div>}>
                   <ScheduleOverview1
                     filteredSchedule={landingPageData.dailyScheduleList}
@@ -423,48 +423,48 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
   const agendaItems =
     landingPageData?.dailyScheduleList?.length > 0
       ? landingPageData.dailyScheduleList.map((item, index) => {
-          const icons = [
-            <CalendarIcon
-              className="w-5 h-5"
-              style={{ color: getColor("secondary", 500) }}
-            />,
-            <CheckSquare
-              className="w-5 h-5"
-              style={{ color: getColor("tertiary", 500) }}
-            />,
-            <Sun
-              className="w-5 h-5"
-              style={{ color: getColor("secondary", 500) }}
-            />,
-            <DollarSign
-              className="w-5 h-5"
-              style={{ color: getColor("tertiary", 500) }}
-            />,
-            <FileText
-              className="w-5 h-5"
-              style={{ color: getColor("secondary", 500) }}
-            />,
-          ];
+        const icons = [
+          <CalendarIcon
+            className="w-5 h-5"
+            style={{ color: getColor("secondary", 500) }}
+          />,
+          <CheckSquare
+            className="w-5 h-5"
+            style={{ color: getColor("tertiary", 500) }}
+          />,
+          <Sun
+            className="w-5 h-5"
+            style={{ color: getColor("secondary", 500) }}
+          />,
+          <DollarSign
+            className="w-5 h-5"
+            style={{ color: getColor("tertiary", 500) }}
+          />,
+          <FileText
+            className="w-5 h-5"
+            style={{ color: getColor("secondary", 500) }}
+          />,
+        ];
 
-          // Alternate accent colors
-          const accentColors = [
-            getColor("secondary", 500),
-            getColor("tertiary", 500),
-          ];
+        // Alternate accent colors
+        const accentColors = [
+          getColor("secondary", 500),
+          getColor("tertiary", 500),
+        ];
 
-          // Use simplified time format from the updated dateTimeSlot structure
-          const startTime = item.dateTimeSlot?.startTime || "9:00";
-          const endTime = item.dateTimeSlot?.endTime || "10:00";
+        // Use simplified time format from the updated dateTimeSlot structure
+        const startTime = item.dateTimeSlot?.startTime || "9:00";
+        const endTime = item.dateTimeSlot?.endTime || "10:00";
 
-          return {
-            timeRange: `${startTime} - ${endTime}`,
-            title: item.eventTitle || `Agenda Item ${index + 1}`,
-            description: item.description || "No description provided",
-            icon: icons[index % icons.length],
-            accentColor: accentColors[index % accentColors.length],
-            originalIndex: index, // Keep track of the original index for reference
-          };
-        })
+        return {
+          timeRange: `${startTime} - ${endTime}`,
+          title: item.eventTitle || `Agenda Item ${index + 1}`,
+          description: item.description || "No description provided",
+          icon: icons[index % icons.length],
+          accentColor: accentColors[index % accentColors.length],
+          originalIndex: index, // Keep track of the original index for reference
+        };
+      })
       : defaultAgendaItems;
 
   const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
@@ -474,7 +474,7 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
     // Get stable color values by directly using the color values instead of getColor function
     const tertiaryColor300 = landingPageData?.tertiaryColor || "#44b566";
     const tertiaryColor50 = `${tertiaryColor300}20`; // Add light transparency
-    
+
     return {
       gridColor: `${tertiaryColor300}80`, // Semi-transparent tertiary color
       gridLineColor: tertiaryColor50,
@@ -506,8 +506,8 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
         fontFamily: bodyFont?.family,
       }}
     >
-    
-      
+
+
       <div className="mx-auto max-w-3xl relative">
         <div className="mb-8 text-center">
           <h2
@@ -528,12 +528,12 @@ const Template1 = ({ landingPageData, fetchData, setLandingPageData }) => {
                 "Take a glimpse of how your day might look like.")?.replace?.(/\n/g, "<br>")
             }}
           >
-          </h3> 
+          </h3>
         </div>
 
         {/* Agenda Items */}
         <div className="space-y-4 relative">
-        {MemoizedGridPattern}
+          {MemoizedGridPattern}
           {agendaItems.map((item, index) => {
             const originalIndex =
               item.originalIndex !== undefined ? item.originalIndex : index;

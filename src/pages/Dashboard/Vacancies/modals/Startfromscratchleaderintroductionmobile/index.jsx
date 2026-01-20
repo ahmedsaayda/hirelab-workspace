@@ -22,7 +22,7 @@ export default function Startfromscratchleaderintroductionmobile({
         <div className="flex flex-1 flex-col gap-10 border-r border-solid border-blue_gray-50 px-[31px] pb-8 pt-[31px] md:self-stretch sm:p-5">
           <div className="flex flex-col gap-[31px]">
             <div className="flex items-center justify-between gap-5">
-              <Heading size="7xl" as="h1" className="!text-black-900_01">
+              <Heading size="7xl" as="h1" className="!text-[#000000]_01">
                 Start from scratch
               </Heading>
               <Img
@@ -278,7 +278,7 @@ export default function Startfromscratchleaderintroductionmobile({
                       <Heading
                         size="7xl"
                         as="h2"
-                        className="!text-black-900_01"
+                        className="!text-[#000000]_01"
                       >
                         Preview
                       </Heading>

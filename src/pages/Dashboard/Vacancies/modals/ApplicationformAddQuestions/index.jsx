@@ -74,7 +74,7 @@ export default function ApplicationformAddQuestions({
           <div className="flex flex-col gap-[31px]">
             <div className="flex flex-col gap-[30px]">
               <div className="flex items-center justify-between gap-5">
-                <Heading size="7xl" as="h1" className="!text-black-900_01">
+                <Heading size="7xl" as="h1" className="!text-[#000000]_01">
                   Add questions
                 </Heading>
                 <Img

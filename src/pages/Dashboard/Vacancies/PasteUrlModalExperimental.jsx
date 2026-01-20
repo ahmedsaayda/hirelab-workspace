@@ -48,18 +48,18 @@ const JsonViewer = ({ data }) => {
 
   const renderValue = (value, key, depth = 0) => {
     const indent = "  ".repeat(depth);
-    
+
     if (value === null) return <span className="text-gray-500">null</span>;
     if (typeof value === "boolean") return <span className="text-purple-600">{value.toString()}</span>;
     if (typeof value === "number") return <span className="text-blue-600">{value}</span>;
     if (typeof value === "string") return <span className="text-green-600">"{value}"</span>;
-    
+
     if (Array.isArray(value)) {
       const isCollapsedState = isCollapsed[key];
       return (
         <div>
-          <span 
-            className="cursor-pointer hover:text-blue-500" 
+          <span
+            className="cursor-pointer hover:text-blue-500"
             onClick={() => toggleCollapse(key)}
           >
             [{isCollapsedState ? '...' : ''}]
@@ -77,13 +77,13 @@ const JsonViewer = ({ data }) => {
         </div>
       );
     }
-    
+
     if (typeof value === "object") {
       const isCollapsedState = isCollapsed[key];
       return (
         <div>
-          <span 
-            className="cursor-pointer hover:text-blue-500" 
+          <span
+            className="cursor-pointer hover:text-blue-500"
             onClick={() => toggleCollapse(key)}
           >
             {'{'}
@@ -106,7 +106,7 @@ const JsonViewer = ({ data }) => {
         </div>
       );
     }
-    
+
     return <span>{String(value)}</span>;
   };
 
@@ -127,7 +127,7 @@ const PromptViewer = ({ prompt }) => {
       <div className={`bg-gray-50 p-4 rounded border border-gray-200 text-sm font-mono ${!isExpanded ? 'max-h-[100px]' : ''} overflow-y-auto`}>
         {prompt}
       </div>
-      <button 
+      <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="mt-2 text-blue-600 text-sm hover:text-blue-800"
       >
@@ -137,13 +137,13 @@ const PromptViewer = ({ prompt }) => {
   );
 };
 
-function PasteUrlModalExperimental({ onClose ,onRefresh}) {
+function PasteUrlModalExperimental({ onClose, onRefresh }) {
   const COMPONENT_NAME = 'PasteUrlModalExperimental';
-  
+
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
-  
+
   // Scraping state
   const [scrapingState, setScrapingState] = useState({
     loading: false,
@@ -366,16 +366,16 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
   const renderProcessingResult = (result, type) => {
     if (!result) return null;
 
-    const processingTime = processingState.startTime && processingState.endTime 
+    const processingTime = processingState.startTime && processingState.endTime
       ? `Processing time: ${(processingState.endTime - processingState.startTime) / 1000}s`
       : '';
 
     return (
-      <Card 
+      <Card
         title={`${type === 'scrape' ? 'Scrape' : 'Copy Text'} + GPT Result`}
-        className="mb-4" 
+        className="mb-4"
         extra={
-          <Button 
+          <Button
             type="primary"
             size="small"
             onClick={() => {
@@ -390,7 +390,7 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
         {processingTime && (
           <div className="mb-2 text-sm text-gray-500">{processingTime}</div>
         )}
-        
+
         <div className="mb-4">
           <h4 className="text-sm font-semibold mb-2">Raw Content:</h4>
           <div className="max-h-[200px] overflow-y-auto bg-gray-50 p-4 rounded border border-gray-200 text-sm font-mono">
@@ -420,7 +420,7 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
       footer={null}
     >
       <div className="mb-6">
-        <Heading size="7xl" as="h1" className="!text-black-900_01 text-center">
+        <Heading size="7xl" as="h1" className="!text-[#000000]_01 text-center">
           URL Analysis - Scrape + AI
         </Heading>
 
@@ -447,8 +447,8 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
 
         {activePreview ? (
           <div className="relative">
-            <Button 
-              type="link" 
+            <Button
+              type="link"
               className="absolute right-0 top-0 z-10"
               onClick={() => setActivePreview(null)}
             >
@@ -487,9 +487,9 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
                 </Button>
 
                 {scrapingState.error && (
-                  <Alert 
-                    type="error" 
-                    message={scrapingState.error} 
+                  <Alert
+                    type="error"
+                    message={scrapingState.error}
                     className="mt-4"
                     action={
                       <Button size="small" onClick={handleScrapeUrl}>
@@ -504,9 +504,9 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
             {/* Step 1: Show scraped content and AI processing options */}
             {currentStep === 1 && scrapingState.data && (
               <div>
-                <Alert 
-                  type="success" 
-                  message="Content scraped successfully!" 
+                <Alert
+                  type="success"
+                  message="Content scraped successfully!"
                   description={`Scrape content: ${scrapingState.data.scrapeContent?.length || 0} chars, Copy text content: ${scrapingState.data.copyTextContent?.length || 0} chars`}
                   className="mb-4"
                 />
@@ -560,9 +560,9 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
                 </div>
 
                 {processingState.error && (
-                  <Alert 
-                    type="error" 
-                    message={processingState.error} 
+                  <Alert
+                    type="error"
+                    message={processingState.error}
                     className="mt-4"
                     action={
                       <Button size="small" onClick={handleProcessWithAI}>
@@ -577,9 +577,9 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
             {/* Step 2: Show AI processing results */}
             {currentStep === 2 && processingState.data && (
               <div>
-                <Alert 
-                  type="success" 
-                  message="AI processing completed!" 
+                <Alert
+                  type="success"
+                  message="AI processing completed!"
                   className="mb-4"
                   action={
                     <Button size="small" onClick={handleStartOver}>
@@ -588,10 +588,10 @@ function PasteUrlModalExperimental({ onClose ,onRefresh}) {
                   }
                 />
 
-                {processingState.data.scrapeResult && 
+                {processingState.data.scrapeResult &&
                   renderProcessingResult(processingState.data.scrapeResult, 'scrape')}
-                
-                {processingState.data.copyTextResult && 
+
+                {processingState.data.copyTextResult &&
                   renderProcessingResult(processingState.data.copyTextResult, 'copyText')}
               </div>
             )}

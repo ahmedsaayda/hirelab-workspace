@@ -70,7 +70,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
     const quoteFontSize = 28;
     const authorFontSize = 22;
 
-  return (
+    return (
       <div className="relative" style={{ width: "1080px", height: "1920px", backgroundColor: "#ffffff", overflow: "hidden" }}>
         {/* Title - positioned lower for safe zone */}
         <div style={{
@@ -95,16 +95,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
           </div>
         </div>
 
-        {/* Arrow icon top right */}
-        <svg
-          style={{ position: "absolute", top: "180px", right: "60px", zIndex: 10 }}
-          width="45"
-          height="45"
-          viewBox="0 0 36 36"
-          fill="none"
-        >
-          <path d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z" fill={secondaryColor} />
-        </svg>
+
 
         {/* Full-width image */}
         <div style={{
@@ -115,7 +106,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
           bottom: "60px",
           borderRadius: "12px",
           overflow: "hidden",
-          border: `10px solid ${secondaryColor}`,
+          border: `10px solid ${primaryColor}`,
         }}>
           {/* Brand Logo on image */}
           <div style={{
@@ -181,7 +172,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
                 fontWeight: "500",
                 fontFamily: "Arial, sans-serif",
                 fontStyle: "italic",
-                color: secondaryColor,
+                color: primaryColor,
                 lineHeight: "1.4",
                 marginBottom: quoteAuthorName ? "16px" : "0",
               }}>
@@ -193,7 +184,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
                     fontSize: `${authorFontSize}px`,
                     fontWeight: "700",
                     fontFamily: "Arial, sans-serif",
-                    color: secondaryColor,
+                    color: primaryColor,
                   }}>
                     {quoteAuthorName}
                   </div>
@@ -202,7 +193,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
                       fontSize: `${authorFontSize - 2}px`,
                       fontWeight: "400",
                       fontFamily: "Arial, sans-serif",
-                      color: secondaryColor,
+                      color: primaryColor,
                       opacity: 0.7,
                     }}>
                       {quoteAuthorPosition}
@@ -220,35 +211,23 @@ export default function Variant4({ variant, brandData, landingPageData }) {
   // ===== REGULAR ADS (Job, Company, Retargeting) =====
   return (
     <div className="relative" style={{ width: "1080px", height: "1920px", backgroundColor: "#ffffff", overflow: "hidden" }}>
-  {/* Brand Logo */}
+      {/* Brand Logo */}
       <div style={{ position: "absolute", top: "60px", left: "60px", zIndex: 10 }}>
-  {brandLogo && !logoFailed ? (
-      <img
-        src={brandLogo}
-        alt={brandName}
-        onError={() => setLogoFailed(true)}
+        {brandLogo && !logoFailed ? (
+          <img
+            src={brandLogo}
+            alt={brandName}
+            onError={() => setLogoFailed(true)}
             style={{ height: "50px", width: "auto", objectFit: "contain" }}
           />
         ) : (
           <span style={{ fontSize: "28px", fontWeight: "bold", fontFamily: "Arial", color: secondaryColor }}>
-      {brandName}
+            {brandName}
           </span>
         )}
       </div>
 
-      {/* Chevrons top right - fixed position aligned with logo */}
-      <svg
-        style={{ position: "absolute", top: "55px", right: "60px", zIndex: 10 }}
-        width="160"
-        height="80"
-        viewBox="0 0 160 80"
-        fill="none"
-      >
-        <path d="M40 5L10 40L40 75" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <path d="M80 5L50 40L80 75" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <path d="M120 5L90 40L120 75" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <path d="M160 5L130 40L160 75" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      </svg>
+
 
       {/* Title */}
       <div style={{
@@ -259,30 +238,20 @@ export default function Variant4({ variant, brandData, landingPageData }) {
         zIndex: 10,
       }}>
         <div style={{
-      fontSize: `${titleFontSize}px`,
-      fontWeight: "900",
-      fontFamily: "Arial Black, Arial, sans-serif",
-      textTransform: "uppercase",
-      letterSpacing: "-1px",
+          fontSize: `${titleFontSize}px`,
+          fontWeight: "900",
+          fontFamily: "Arial Black, Arial, sans-serif",
+          textTransform: "uppercase",
+          letterSpacing: "-1px",
           color: primaryColor,
           lineHeight: "1.1",
         }}>
-    {titleLines.map((line, i) => (
+          {titleLines.map((line, i) => (
             <div key={i}>{line}</div>
           ))}
         </div>
       </div>
 
-      {/* Arrow icon next to title */}
-      <svg
-        style={{ position: "absolute", top: titleLines.length > 2 ? "340px" : "280px", right: "200px", zIndex: 10 }}
-        width="45"
-        height="45"
-        viewBox="0 0 36 36"
-        fill="none"
-      >
-        <path d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z" fill={secondaryColor} />
-      </svg>
 
       {/* Full-width Image */}
       <div style={{
@@ -293,25 +262,25 @@ export default function Variant4({ variant, brandData, landingPageData }) {
         bottom: "60px",
         borderRadius: "12px",
         overflow: "hidden",
-        border: `10px solid ${secondaryColor}`,
+        border: `30px solid ${primaryColor}`,
       }}>
-                {isVideo && !videoFailed && !isCapture ? (
-                  <video
-                    src={videoUrl}
-                    crossOrigin="anonymous"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    poster={heroImage}
-                    onError={() => setVideoFailed(true)}
+        {isVideo && !videoFailed && !isCapture ? (
+          <video
+            src={videoUrl}
+            crossOrigin="anonymous"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={heroImage}
+            onError={() => setVideoFailed(true)}
             style={{ width: "100%", height: "100%", objectFit: heroObjectFit, objectPosition: heroObjectPosition, borderRadius: "8px" }}
-                  />
-                ) : (
-                  <img
-                    src={heroImage}
-                    alt="Background"
+          />
+        ) : (
+          <img
+            src={heroImage}
+            alt="Background"
             style={{ width: "100%", height: "100%", objectFit: heroObjectFit, objectPosition: heroObjectPosition, borderRadius: "8px" }}
           />
         )}
@@ -324,7 +293,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
           zIndex: 20,
         }}>
           <div style={{
-            backgroundColor: primaryColor,
+            backgroundColor: secondaryColor,
             color: ctaTextColor,
             fontSize: "22px",
             fontWeight: "bold",
@@ -357,7 +326,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
                 fontSize: "28px",
                 fontWeight: "600",
                 fontFamily: "Arial, sans-serif",
-                color: secondaryColor,
+                color: primaryColor,
               }}>
                 {linkDescription}
               </span>
@@ -366,20 +335,7 @@ export default function Variant4({ variant, brandData, landingPageData }) {
         )}
       </div>
 
-      {/* Chevrons bottom left overlapping image - pointing right */}
-      <svg
-        style={{ position: "absolute", bottom: "80px", left: "20px", zIndex: 25 }}
-        width="200"
-        height="100"
-        viewBox="0 0 200 100"
-        fill="none"
-      >
-        <path d="M5 5L35 50L5 95" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <path d="M45 5L75 50L45 95" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <path d="M85 5L115 50L85 95" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <path d="M125 5L155 50L125 95" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <path d="M165 5L195 50L165 95" stroke={secondaryColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-</svg>
+
     </div>
   );
 }

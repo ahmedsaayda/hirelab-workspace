@@ -22,14 +22,14 @@ export default function MobileDeviceFrame({ children, mode = "light", isStory = 
           </div>
           <div className="flex items-center gap-1.5">
             <svg width="18" height="12" viewBox="0 0 18 12" fill="none" className={mode === "dark" ? "text-white" : "text-black"}>
-              <path d="M1 11C0.723858 11 0.5 10.7761 0.5 10.5V1.5C0.5 1.22386 0.723858 1 1 1H3C3.27614 1 3.5 1.22386 3.5 1.5V10.5C3.5 10.7761 3.27614 11 3 11H1Z" fill="currentColor"/>
-              <path d="M7 11C6.72386 11 6.5 10.7761 6.5 10.5V3.5C6.5 3.22386 6.72386 3 7 3H9C9.27614 3 9.5 3.22386 9.5 3.5V10.5C9.5 10.7761 9.27614 11 9 11H7Z" fill="currentColor"/>
-              <path d="M13 11C12.7239 11 12.5 10.7761 12.5 10.5V6.5C12.5 6.22386 12.7239 6 13 6H15C15.2761 6 15.5 6.22386 15.5 6.5V10.5C15.5 10.7761 15.2761 11 15 11H13Z" fill="currentColor"/>
+              <path d="M1 11C0.723858 11 0.5 10.7761 0.5 10.5V1.5C0.5 1.22386 0.723858 1 1 1H3C3.27614 1 3.5 1.22386 3.5 1.5V10.5C3.5 10.7761 3.27614 11 3 11H1Z" fill="currentColor" />
+              <path d="M7 11C6.72386 11 6.5 10.7761 6.5 10.5V3.5C6.5 3.22386 6.72386 3 7 3H9C9.27614 3 9.5 3.22386 9.5 3.5V10.5C9.5 10.7761 9.27614 11 9 11H7Z" fill="currentColor" />
+              <path d="M13 11C12.7239 11 12.5 10.7761 12.5 10.5V6.5C12.5 6.22386 12.7239 6 13 6H15C15.2761 6 15.5 6.22386 15.5 6.5V10.5C15.5 10.7761 15.2761 11 15 11H13Z" fill="currentColor" />
             </svg>
             <svg width="26" height="12" viewBox="0 0 26 12" fill="none" className={mode === "dark" ? "text-white" : "text-black"}>
-              <rect x="1" y="1" width="21" height="10" rx="2.5" stroke="currentColor" strokeWidth="1"/>
-              <path d="M24 4.5V7.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-              <rect x="3" y="3" width="17" height="6" rx="1.5" fill="currentColor"/>
+              <rect x="1" y="1" width="21" height="10" rx="2.5" stroke="currentColor" strokeWidth="1" />
+              <path d="M24 4.5V7.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+              <rect x="3" y="3" width="17" height="6" rx="1.5" fill="currentColor" />
             </svg>
           </div>
         </div>

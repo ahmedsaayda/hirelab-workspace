@@ -26,7 +26,7 @@ export default function Onboardingsuccess({ isOpen, ...props }) {
               <Heading
                 size="md"
                 as="h1"
-                className="!text-black-900 ml-[45%] smx:ml-0"
+                className="!text-[#000000] ml-[45%] smx:ml-0"
               >
                 Success!
               </Heading>
