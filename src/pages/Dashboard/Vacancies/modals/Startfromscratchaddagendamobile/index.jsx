@@ -32,7 +32,7 @@ export default function Startfromscratchaddagendamobile({ isOpen, ...props }) {
           <div className="flex flex-1 flex-col gap-[70px] border-r border-solid border-blue_gray-50 px-[30px] pb-8 pt-[30px] md:gap-[52px] md:self-stretch sm:gap-[35px] sm:p-5">
             <div className="flex flex-col gap-[31px]">
               <div className="flex items-center justify-between gap-5">
-                <Heading size="7xl" as="h1" className="!text-black-900_01">
+                <Heading size="7xl" as="h1" className="!text-[#000000]_01">
                   Start from scratch
                 </Heading>
                 <Img
@@ -167,7 +167,7 @@ export default function Startfromscratchaddagendamobile({ isOpen, ...props }) {
                       <Heading
                         size="3xl"
                         as="h2"
-                        className="!text-black-900_01"
+                        className="!text-[#000000]_01"
                       >
                         :
                       </Heading>
@@ -308,7 +308,7 @@ export default function Startfromscratchaddagendamobile({ isOpen, ...props }) {
             >
               <div className="flex items-start justify-between gap-5">
                 <div className="flex w-[69%] items-start justify-between gap-5">
-                  <Heading size="7xl" as="h2" className="!text-black-900_01">
+                  <Heading size="7xl" as="h2" className="!text-[#000000]_01">
                     Preview
                   </Heading>
                   <TabList className="flex flex-wrap gap-[26px] rounded-md bg-gray-100_01 px-[5px] pb-2 pt-[5px]">

@@ -12,7 +12,7 @@ export default function StartfromscratchEVPMissionmobile({ isOpen, ...props }) {
         <div className="flex flex-1 flex-col gap-[197px] border-r border-solid border-blue_gray-50 px-[31px] pb-8 pt-[31px] md:gap-[147px] md:self-stretch sm:gap-[98px] sm:p-5">
           <div className="flex flex-col gap-[31px]">
             <div className="flex items-center justify-between gap-5">
-              <Heading size="7xl" as="h1" className="!text-black-900_01">
+              <Heading size="7xl" as="h1" className="!text-[#000000]_01">
                 Start from scratch
               </Heading>
               <Img
@@ -210,7 +210,7 @@ export default function StartfromscratchEVPMissionmobile({ isOpen, ...props }) {
             </TabList>
             <div className="relative mt-[-27px] flex w-full flex-col gap-[30px] pb-[18px]">
               <div className="flex items-center justify-between gap-5">
-                <Heading size="7xl" as="h2" className="!text-black-900_01">
+                <Heading size="7xl" as="h2" className="!text-[#000000]_01">
                   Preview
                 </Heading>
                 <Img

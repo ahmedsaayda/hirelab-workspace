@@ -25,7 +25,7 @@ export default function Startfromscratchaddcategory({ isOpen, ...props }) {
           <Heading
             size="4xl"
             as="h1"
-            className="!font-semibold !text-black-900_f2"
+            className="!font-semibold !text-[#000000]_f2"
           >
             Sections
           </Heading>
@@ -73,7 +73,7 @@ export default function Startfromscratchaddcategory({ isOpen, ...props }) {
         <div className="flex w-[34%] flex-col gap-6 border-r border-solid border-blue_gray-50 px-[31px] pb-8 pt-[31px] md:w-full sm:p-5">
           <div className="flex flex-col gap-[31px]">
             <div className="flex items-center justify-between gap-5">
-              <Heading size="7xl" as="h2" className="!text-black-900_01">
+              <Heading size="7xl" as="h2" className="!text-[#000000]_01">
                 Start from scratch
               </Heading>
               <Img
@@ -316,7 +316,7 @@ export default function Startfromscratchaddcategory({ isOpen, ...props }) {
                 alt="vertical"
                 className="h-[20px] w-[20px]"
               />
-              <Heading size="7xl" as="h2" className="!text-black-900_01">
+              <Heading size="7xl" as="h2" className="!text-[#000000]_01">
                 Preview
               </Heading>
             </div>

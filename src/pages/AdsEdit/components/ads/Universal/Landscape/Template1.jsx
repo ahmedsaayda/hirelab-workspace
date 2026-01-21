@@ -92,16 +92,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
           </div>
         </div>
 
-        {/* Arrow icon top right */}
-        <svg
-          style={{ position: "absolute", top: "50px", right: "55px", zIndex: 10 }}
-          width="40"
-          height="40"
-          viewBox="0 0 36 36"
-          fill="none"
-        >
-          <path d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z" fill={secondaryColor} />
-        </svg>
+
 
         {/* Full-width image */}
         <div style={{
@@ -112,7 +103,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
           bottom: "55px",
           borderRadius: "10px",
           overflow: "hidden",
-          border: `8px solid ${secondaryColor}`,
+          border: `30px solid ${primaryColor}`,
         }}>
           {/* Brand Logo on image */}
           <div style={{
@@ -184,7 +175,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
                   fontWeight: "500",
                   fontFamily: "Arial, sans-serif",
                   fontStyle: "italic",
-                  color: secondaryColor,
+                  color: primaryColor,
                   lineHeight: "1.4",
                   marginBottom: quoteAuthorName ? "14px" : "0",
                 }}>
@@ -196,7 +187,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
                       fontSize: `${authorFontSize}px`,
                       fontWeight: "700",
                       fontFamily: "Arial, sans-serif",
-                      color: secondaryColor,
+                      color: primaryColor,
                     }}>
                       {quoteAuthorName}
                     </div>
@@ -205,7 +196,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
                         fontSize: `${authorFontSize - 2}px`,
                         fontWeight: "400",
                         fontFamily: "Arial, sans-serif",
-                        color: secondaryColor,
+                        color: primaryColor,
                         opacity: 0.7,
                       }}>
                         {quoteAuthorPosition}
@@ -240,16 +231,6 @@ export default function Variant2({ variant, brandData, landingPageData }) {
         )}
       </div>
 
-      {/* Arrow icon top right - fixed position aligned with logo */}
-      <svg
-        style={{ position: "absolute", top: "50px", right: "55px", zIndex: 10 }}
-        width="40"
-        height="40"
-        viewBox="0 0 36 36"
-        fill="none"
-      >
-        <path d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z" fill={secondaryColor} />
-      </svg>
 
       {/* Title */}
       <div style={{
@@ -283,7 +264,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
         bottom: "55px",
         borderRadius: "10px",
         overflow: "hidden",
-        border: `8px solid ${secondaryColor}`,
+        border: `30px solid ${primaryColor}`,
       }}>
         {isVideo && !videoFailed && !isCapture ? (
           <video
@@ -314,7 +295,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
           zIndex: 20,
         }}>
           <div style={{
-            backgroundColor: primaryColor,
+            backgroundColor: secondaryColor,
             color: ctaTextColor,
             fontSize: "18px",
             fontWeight: "bold",
@@ -347,7 +328,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
                 fontSize: "26px",
                 fontWeight: "600",
                 fontFamily: "Arial, sans-serif",
-                color: secondaryColor,
+                color: primaryColor,
               }}>
                 {linkDescription}
               </span>
@@ -355,19 +336,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
           </div>
         )}
 
-        {/* White chevrons at bottom right - pointing left */}
-        <svg
-          style={{ position: "absolute", bottom: "30px", right: "30px", zIndex: 20 }}
-          width="160"
-          height="80"
-          viewBox="0 0 160 80"
-          fill="none"
-        >
-          <path d="M40 5L10 40L40 75" stroke="white" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.7" />
-          <path d="M80 5L50 40L80 75" stroke="white" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.7" />
-          <path d="M120 5L90 40L120 75" stroke="white" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.7" />
-          <path d="M160 5L130 40L160 75" stroke="white" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.7" />
-        </svg>
+
       </div>
     </div>
   );

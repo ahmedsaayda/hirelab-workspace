@@ -3,7 +3,7 @@ import { default as ModalProvider } from "react-modal";
 // import { CloseSVG } from "../../assets/images";
 const CloseSVG = ({ onClick, fillColor }) => (
   <svg onClick={onClick} style={{ fill: fillColor, cursor: 'pointer' }} width="16" height="16" viewBox="0 0 24 24">
-    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
   </svg>
 );
 import { Button, Heading, Img, Input, Text, TextArea } from "../../components/components";
@@ -26,7 +26,7 @@ export default function AIcontentassistantgenerated({ isOpen, ...props }) {
             <div className="flex flex-col gap-[31px]">
               <div className="flex flex-col gap-8">
                 <div className="flex items-center justify-between gap-5">
-                  <Heading size="7xl" as="h1" className="!text-black-900_01">
+                  <Heading size="7xl" as="h1" className="!text-[#000000]_01">
                     AI Content assistant
                   </Heading>
                   <Img

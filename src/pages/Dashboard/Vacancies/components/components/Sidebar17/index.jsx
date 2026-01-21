@@ -135,7 +135,7 @@ export default function Sidebar17({
   ...props
 }) {
   const [draggingIdx, setDraggingIdx] = useState(null);
-  const { setScrollToSection,setLastScrollToSection } = useHover();
+  const { setScrollToSection, setLastScrollToSection } = useHover();
   const [isHovered, setIsHovered] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [sectionToDelete, setSectionToDelete] = useState(null);
@@ -169,12 +169,12 @@ export default function Sidebar17({
   const handleSectionClick = (key) => {
     console.log("key!!", key);
     console.log("key", key);
-    
+
     // Call the parent's setActiveKey function
     if (props.setActiveKey) {
       props.setActiveKey(key);
     }
-    
+
     //hero-section ,
     if (key === "flexaligntop") {
       setScrollToSection("hero-section");
@@ -241,7 +241,7 @@ export default function Sidebar17({
           paddingBlock: "4px !important",
           paddingInline: "0px !important",
           background: "transparent !important",
-          paddingLeft:"4px !important",
+          paddingLeft: "4px !important",
         }}
         className={`${props.className}  flex-shrink-0 min-w-[90px] flex flex-col justify-center items-left gap-[30px] top-0 border-blue_gray-50 border-r border-solid bg-transparent !sticky overflow-auto hover:!w-[140px]`}
         onMouseEnter={() => setIsHovered(true)}
@@ -253,7 +253,7 @@ export default function Sidebar17({
         <Heading
           size="2xl"
           as="h5"
-          className="!text-black-900_01 text-left pl-2"
+          className="!text-[#000000]_01 text-left pl-2"
         >
           Sections
         </Heading>
@@ -296,25 +296,24 @@ export default function Sidebar17({
                           opacity: 1,
                           ...(snapshot.isDragging
                             ? {
-                                padding: "8px",
-                                background: "#ffffff",
-                                borderRadius: "8px",
-                                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.15)",
-                                zIndex: 9999,
-                                height: "auto !important",
-                                width: "auto !important",
-                                minWidth: "40px",
-                                minHeight: "40px",
-                                overflow: "visible",
-                              }
+                              padding: "8px",
+                              background: "#ffffff",
+                              borderRadius: "8px",
+                              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.15)",
+                              zIndex: 9999,
+                              height: "auto !important",
+                              width: "auto !important",
+                              minWidth: "40px",
+                              minHeight: "40px",
+                              overflow: "visible",
+                            }
                             : {}),
                         }}
                         className={snapshot.isDragging ? "dragging" : ""}
                       >
                         <MenuItem
-                          className={`${
-                            item.key === activeKey ? "active" : ""
-                          } relative`}
+                          className={`${item.key === activeKey ? "active" : ""
+                            } relative`}
                           onClick={() => {
                             if (props.onClickAdd)
                               props.onClickAdd(item.key, idx);
@@ -327,9 +326,9 @@ export default function Sidebar17({
                           }}
                         >
                           <div className="flex flex-shrink-0 gap-2 items-center"
-                          onClick={()=>{
-                            setLastScrollToSection(null);
-                          }}
+                            onClick={() => {
+                              setLastScrollToSection(null);
+                            }}
                           >
                             <Tooltip
                               title={getSectionDisplayName(item.key)}
@@ -343,9 +342,9 @@ export default function Sidebar17({
                                 style={
                                   item.key === activeKey
                                     ? {
-                                        background: brandColor,
-                                        opacity: 0.6,
-                                      }
+                                      background: brandColor,
+                                      opacity: 0.6,
+                                    }
                                     : {}
                                 }
                               >
@@ -356,8 +355,8 @@ export default function Sidebar17({
                                   style={
                                     item.key === activeKey
                                       ? {
-                                          filter: "brightness(0) invert(1)",
-                                        }
+                                        filter: "brightness(0) invert(1)",
+                                      }
                                       : {}
                                   }
                                 />
@@ -368,53 +367,52 @@ export default function Sidebar17({
                             {!["flexaligntop", "flexalign", "search"].includes(
                               item.key
                             ) && (
-                              <div
-                                className={`flex gap-1 items-center transition-all duration-300 ${
-                                  isHovered ? "opacity-100" : "opacity-0"
-                                }`}
-                              >
                                 <div
-                                  {...provided.dragHandleProps}
-                                  className="cursor-grab active:cursor-grabbing"
+                                  className={`flex gap-1 items-center transition-all duration-300 ${isHovered ? "opacity-100" : "opacity-0"
+                                    }`}
                                 >
-                                  <FaGripVertical
-                                    className="text-gray-400 hover:text-gray-600"
-                                    size={14}
+                                  <div
+                                    {...provided.dragHandleProps}
+                                    className="cursor-grab active:cursor-grabbing"
+                                  >
+                                    <FaGripVertical
+                                      className="text-gray-400 hover:text-gray-600"
+                                      size={14}
+                                    />
+                                  </div>
+                                  {/* Visibility Toggle */}
+                                  {onSectionVisibilityUpdate && (
+                                    <div
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onSectionVisibilityUpdate(item.key, !(item.visible !== false));
+                                      }}
+                                      className="flex items-center cursor-pointer hover:bg-gray-100 p-1 rounded"
+                                      title={`${item.visible !== false ? 'Hide' : 'Show'} section for end users`}
+                                    >
+                                      {item.visible !== false ? (
+                                        <svg className="w-4 h-4 text-gray-600 hover:text-gray-800" fill="currentColor" viewBox="0 0 20 20">
+                                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                        </svg>
+                                      ) : (
+                                        <svg className="w-4 h-4 text-gray-400 hover:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
+                                          <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                                        </svg>
+                                      )}
+                                    </div>
+                                  )}
+                                  <Img
+                                    src="/images2/img_trash_01_red_700.svg"
+                                    alt="trash-01"
+                                    className="h-[18px] w-[18px] cursor-pointer ml-auto"
+                                    onClick={(e) =>
+                                      handleDeleteClick(e, idx, item.key)
+                                    }
                                   />
                                 </div>
-                                {/* Visibility Toggle */}
-                                {onSectionVisibilityUpdate && (
-                                  <div
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onSectionVisibilityUpdate(item.key, !(item.visible !== false));
-                                    }}
-                                    className="flex items-center cursor-pointer hover:bg-gray-100 p-1 rounded"
-                                    title={`${item.visible !== false ? 'Hide' : 'Show'} section for end users`}
-                                  >
-                                    {item.visible !== false ? (
-                                      <svg className="w-4 h-4 text-gray-600 hover:text-gray-800" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                      </svg>
-                                    ) : (
-                                      <svg className="w-4 h-4 text-gray-400 hover:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
-                                        <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-                                      </svg>
-                                    )}
-                                  </div>
-                                )}
-                                <Img
-                                  src="/images2/img_trash_01_red_700.svg"
-                                  alt="trash-01"
-                                  className="h-[18px] w-[18px] cursor-pointer ml-auto"
-                                  onClick={(e) =>
-                                    handleDeleteClick(e, idx, item.key)
-                                  }
-                                />
-                              </div>
-                            )}
+                              )}
                           </div>
                         </MenuItem>
                       </div>

@@ -2816,7 +2816,7 @@ export default function FormEdit({ paramsId }) {
             <Heading
               size="4xl"
               as="h3"
-              className="!text-black-900_01 absolute left-3 px-2"
+              className="!text-[#000000]_01 absolute left-3 px-2"
             >
               Preview
             </Heading>
@@ -3030,7 +3030,7 @@ export default function FormEdit({ paramsId }) {
                         <Heading
                           size="2xl"
                           as="h5"
-                          className="!text-black-900_01 text-left pl-2"
+                          className="!text-[#000000]_01 text-left pl-2"
                         >
                           <span className="hidden md:inline">Questions</span>
                           <span className="md:hidden">Q</span>
@@ -3927,7 +3927,7 @@ export default function FormEdit({ paramsId }) {
                           <Heading
                             size="4xl"
                             as="h3"
-                            className="!text-black-900_01 absolute left-3 px-2"
+                            className="!text-[#000000]_01 absolute left-3 px-2"
                           >
                             Preview
                           </Heading>
@@ -3982,7 +3982,7 @@ export default function FormEdit({ paramsId }) {
                           <Heading
                             size="4xl"
                             as="h3"
-                            className="!text-black-900_01 !text-lg md:!text-xl"
+                            className="!text-[#000000]_01 !text-lg md:!text-xl"
                           >
                             Preview
                           </Heading>
@@ -4514,7 +4514,7 @@ export default function FormEdit({ paramsId }) {
         width={420}
       >
         <div className="flex flex-col gap-5">
-          <Heading size="3xl" as="h3" className="!text-black-900_01">
+          <Heading size="3xl" as="h3" className="!text-[#000000]_01">
             Before creating ads, be sure to publish your page and form
           </Heading>
           <div className="flex gap-3 justify-end">

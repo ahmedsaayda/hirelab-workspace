@@ -12,7 +12,7 @@ export default function Chooseatemplate({ isOpen, ...props }) {
         <div className="rounded-[12px] py-8 pl-6 pr-[23px] smx:p-5">
           <div className="flex flex-col gap-[29px]">
             <div className="flex items-center justify-center w-full gap-5 mdx:pl-5">
-              <Heading size="7xl" as="h1" className="!text-black-900_01">
+              <Heading size="7xl" as="h1" className="!text-[#000000]_01">
                 Choose a template
               </Heading>
             </div>
@@ -44,11 +44,10 @@ export default function Chooseatemplate({ isOpen, ...props }) {
                 {new Array(6).fill(0).map((a, i) => (
                   <div
                     key={i}
-                    className={`flex w-full flex-col items-start gap-5 rounded-lg border px-3.5 py-4 cursor-pointer ${
-                      selected === i
+                    className={`flex w-full flex-col items-start gap-5 rounded-lg border px-3.5 py-4 cursor-pointer ${selected === i
                         ? "border-solid border-light_blue-A700 bg-gray-100_01"
                         : ""
-                    }`}
+                      }`}
                     onClick={() => setSelected(i)}
                   >
                     <Img
@@ -67,11 +66,10 @@ export default function Chooseatemplate({ isOpen, ...props }) {
                       <Button
                         size="3xl"
                         shape="round"
-                        className={`${
-                          selected === i
+                        className={`${selected === i
                             ? "bg-[#5207CD] text-[#FFFFFF]"
                             : "bg-[#EFF8FF] text-[#5207CD]"
-                        } w-full font-semibold smx:px-5 whitespace-nowrap`}
+                          } w-full font-semibold smx:px-5 whitespace-nowrap`}
                       >
                         Choose template
                       </Button>

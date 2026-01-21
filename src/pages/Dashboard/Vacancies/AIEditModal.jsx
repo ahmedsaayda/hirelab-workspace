@@ -439,33 +439,33 @@ const AIEditModal = ({
             <div className="overflow-y-auto max-h-60">
               {field.key === "specifications"
                 ? // Special handling for specifications
-                  value.map((spec, index) => (
-                    <div
-                      key={index}
-                      className="p-3 mb-3 bg-white rounded-md border border-gray-200"
-                    >
-                      <div className="text-base font-semibold text-gray-800">
-                        {spec.title}
-                      </div>
-                      <div className="mb-2 text-sm text-gray-600">
-                        {spec.description}
-                      </div>
-                      {spec.bulletPoints && spec.bulletPoints.length > 0 && (
-                        <ul className="pl-5 list-disc">
-                          {spec.bulletPoints.map((point, pointIndex) => (
-                            <li
-                              key={pointIndex}
-                              className="text-sm text-gray-700"
-                            >
-                              {point.bullet}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                value.map((spec, index) => (
+                  <div
+                    key={index}
+                    className="p-3 mb-3 bg-white rounded-md border border-gray-200"
+                  >
+                    <div className="text-base font-semibold text-gray-800">
+                      {spec.title}
                     </div>
-                  ))
+                    <div className="mb-2 text-sm text-gray-600">
+                      {spec.description}
+                    </div>
+                    {spec.bulletPoints && spec.bulletPoints.length > 0 && (
+                      <ul className="pl-5 list-disc">
+                        {spec.bulletPoints.map((point, pointIndex) => (
+                          <li
+                            key={pointIndex}
+                            className="text-sm text-gray-700"
+                          >
+                            {point.bullet}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))
                 : field.key === "companyFacts"
-                ? // Special handling for companyFacts
+                  ? // Special handling for companyFacts
                   value.map((fact, index) => (
                     <div
                       key={index}
@@ -479,47 +479,47 @@ const AIEditModal = ({
                       </div>
                     </div>
                   ))
-                : field.key === "candidateProcess"
-                ? // Special handling for candidateProcess
-                  value.map((process, index) => (
-                    <div
-                      key={index}
-                      className="p-3 mb-3 bg-white rounded-md border border-gray-200"
-                    >
-                      <div className="text-base font-semibold text-gray-800">
-                        {process.candidateProcessText}
+                  : field.key === "candidateProcess"
+                    ? // Special handling for candidateProcess
+                    value.map((process, index) => (
+                      <div
+                        key={index}
+                        className="p-3 mb-3 bg-white rounded-md border border-gray-200"
+                      >
+                        <div className="text-base font-semibold text-gray-800">
+                          {process.candidateProcessText}
+                        </div>
                       </div>
-                    </div>
-                  ))
-                : field.key === "growthPath"
-                ? // Special handling for growthPath
-                  value.map((path, index) => (
-                    <div
-                      key={index}
-                      className="p-3 mb-3 bg-white rounded-md border border-gray-200"
-                    >
-                      <div className="text-base font-semibold text-gray-800">
-                        {path.title}
-                      </div>
-                      <div className="mb-2 text-sm text-gray-600">
-                        {path.description}
-                      </div>
-                    </div>
-                  ))
-                : // Default array rendering for other object types
-                  value.map((item, index) => (
-                    <div
-                      key={index}
-                      className="p-2 mb-2 rounded border border-gray-200"
-                    >
-                      <div className="text-xs font-semibold">
-                        Item {index + 1}
-                      </div>
-                      <pre className="overflow-x-auto text-xs whitespace-pre-wrap">
-                        {JSON.stringify(item, null, 2)}
-                      </pre>
-                    </div>
-                  ))}
+                    ))
+                    : field.key === "growthPath"
+                      ? // Special handling for growthPath
+                      value.map((path, index) => (
+                        <div
+                          key={index}
+                          className="p-3 mb-3 bg-white rounded-md border border-gray-200"
+                        >
+                          <div className="text-base font-semibold text-gray-800">
+                            {path.title}
+                          </div>
+                          <div className="mb-2 text-sm text-gray-600">
+                            {path.description}
+                          </div>
+                        </div>
+                      ))
+                      : // Default array rendering for other object types
+                      value.map((item, index) => (
+                        <div
+                          key={index}
+                          className="p-2 mb-2 rounded border border-gray-200"
+                        >
+                          <div className="text-xs font-semibold">
+                            Item {index + 1}
+                          </div>
+                          <pre className="overflow-x-auto text-xs whitespace-pre-wrap">
+                            {JSON.stringify(item, null, 2)}
+                          </pre>
+                        </div>
+                      ))}
             </div>
           );
         } else if (typeof value === "object" && value !== null) {
@@ -827,153 +827,152 @@ const AIEditModal = ({
               <div className="p-3 mt-1 bg-gray-50 rounded-md">
                 {isObjectType
                   ? (() => {
-                      try {
-                        // Only try to parse if there's content
-                        if (!generatedContent?.[field.key]) {
-                          return (
-                            <div className="text-gray-500">
-                              No content generated
-                            </div>
-                          );
-                        }
-
-                        // Try to parse the JSON string safely
-                        const parsedData = JSON.parse(
-                          generatedContent[field.key]
-                        );
-
-                        // Handle different object types
-                        if (
-                          field.key === "specifications" &&
-                          Array.isArray(parsedData)
-                        ) {
-                          return (
-                            <div className="overflow-y-auto max-h-60">
-                              {parsedData.map((spec, index) => (
-                                <div
-                                  key={index}
-                                  className="p-3 mb-3 bg-white rounded-md border border-gray-200"
-                                >
-                                  <div className="text-base font-semibold text-gray-800">
-                                    {spec.title}
-                                  </div>
-                                  <div className="mb-2 text-sm text-gray-600">
-                                    {spec.description}
-                                  </div>
-                                  {spec.bulletPoints &&
-                                    spec.bulletPoints.length > 0 && (
-                                      <ul className="pl-5 list-disc">
-                                        {spec.bulletPoints.map(
-                                          (point, pointIndex) => (
-                                            <li
-                                              key={pointIndex}
-                                              className="text-sm text-gray-700"
-                                            >
-                                              {point.bullet}
-                                            </li>
-                                          )
-                                        )}
-                                      </ul>
-                                    )}
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        } else if (
-                          field.key === "companyFacts" &&
-                          Array.isArray(parsedData)
-                        ) {
-                          return (
-                            <div className="overflow-y-auto max-h-60">
-                              {parsedData.map((fact, index) => (
-                                <div
-                                  key={index}
-                                  className="p-3 mb-3 bg-white rounded-md border border-gray-200"
-                                >
-                                  <div className="text-base font-semibold text-gray-800">
-                                    {fact.headingText}
-                                  </div>
-                                  <div className="mb-2 text-sm text-gray-600">
-                                    {fact.descriptionText}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        } else if (
-                          field.key === "candidateProcess" &&
-                          Array.isArray(parsedData)
-                        ) {
-                          return (
-                            <div className="overflow-y-auto max-h-60">
-                              {parsedData.map((process, index) => (
-                                <div
-                                  key={index}
-                                  className="p-3 mb-3 bg-white rounded-md border border-gray-200"
-                                >
-                                  <div className="text-base font-semibold text-gray-800">
-                                    {process.candidateProcessText}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        } else if (
-                          field.key === "growthPath" &&
-                          Array.isArray(parsedData)
-                        ) {
-                          return (
-                            <div className="overflow-y-auto max-h-60">
-                              {parsedData.map((path, index) => (
-                                <div
-                                  key={index}
-                                  className="p-3 mb-3 bg-white rounded-md border border-gray-200"
-                                >
-                                  <div className="text-base font-semibold text-gray-800">
-                                    {path.title}
-                                  </div>
-                                  <div className="mb-2 text-sm text-gray-600">
-                                    {path.description}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        } else {
-                          // Generic array or object rendering
-                          return (
-                            <pre className="overflow-x-auto text-xs whitespace-pre-wrap">
-                              {JSON.stringify(parsedData, null, 2)}
-                            </pre>
-                          );
-                        }
-                      } catch (error) {
-                        console.error("Error parsing JSON:", error);
+                    try {
+                      // Only try to parse if there's content
+                      if (!generatedContent?.[field.key]) {
                         return (
-                          <div>
-                            <div className="mb-2 text-red-500">
-                              Error parsing JSON data
-                            </div>
-                            <details>
-                              <summary className="text-sm text-gray-600 cursor-pointer">
-                                View raw data
-                              </summary>
-                              <pre className="overflow-x-auto p-2 mt-2 text-xs whitespace-pre-wrap bg-gray-100 rounded border border-gray-200">
-                                {generatedContent?.[field.key]}
-                              </pre>
-                            </details>
+                          <div className="text-gray-500">
+                            No content generated
                           </div>
                         );
                       }
-                    })()
+
+                      // Try to parse the JSON string safely
+                      const parsedData = JSON.parse(
+                        generatedContent[field.key]
+                      );
+
+                      // Handle different object types
+                      if (
+                        field.key === "specifications" &&
+                        Array.isArray(parsedData)
+                      ) {
+                        return (
+                          <div className="overflow-y-auto max-h-60">
+                            {parsedData.map((spec, index) => (
+                              <div
+                                key={index}
+                                className="p-3 mb-3 bg-white rounded-md border border-gray-200"
+                              >
+                                <div className="text-base font-semibold text-gray-800">
+                                  {spec.title}
+                                </div>
+                                <div className="mb-2 text-sm text-gray-600">
+                                  {spec.description}
+                                </div>
+                                {spec.bulletPoints &&
+                                  spec.bulletPoints.length > 0 && (
+                                    <ul className="pl-5 list-disc">
+                                      {spec.bulletPoints.map(
+                                        (point, pointIndex) => (
+                                          <li
+                                            key={pointIndex}
+                                            className="text-sm text-gray-700"
+                                          >
+                                            {point.bullet}
+                                          </li>
+                                        )
+                                      )}
+                                    </ul>
+                                  )}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      } else if (
+                        field.key === "companyFacts" &&
+                        Array.isArray(parsedData)
+                      ) {
+                        return (
+                          <div className="overflow-y-auto max-h-60">
+                            {parsedData.map((fact, index) => (
+                              <div
+                                key={index}
+                                className="p-3 mb-3 bg-white rounded-md border border-gray-200"
+                              >
+                                <div className="text-base font-semibold text-gray-800">
+                                  {fact.headingText}
+                                </div>
+                                <div className="mb-2 text-sm text-gray-600">
+                                  {fact.descriptionText}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      } else if (
+                        field.key === "candidateProcess" &&
+                        Array.isArray(parsedData)
+                      ) {
+                        return (
+                          <div className="overflow-y-auto max-h-60">
+                            {parsedData.map((process, index) => (
+                              <div
+                                key={index}
+                                className="p-3 mb-3 bg-white rounded-md border border-gray-200"
+                              >
+                                <div className="text-base font-semibold text-gray-800">
+                                  {process.candidateProcessText}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      } else if (
+                        field.key === "growthPath" &&
+                        Array.isArray(parsedData)
+                      ) {
+                        return (
+                          <div className="overflow-y-auto max-h-60">
+                            {parsedData.map((path, index) => (
+                              <div
+                                key={index}
+                                className="p-3 mb-3 bg-white rounded-md border border-gray-200"
+                              >
+                                <div className="text-base font-semibold text-gray-800">
+                                  {path.title}
+                                </div>
+                                <div className="mb-2 text-sm text-gray-600">
+                                  {path.description}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      } else {
+                        // Generic array or object rendering
+                        return (
+                          <pre className="overflow-x-auto text-xs whitespace-pre-wrap">
+                            {JSON.stringify(parsedData, null, 2)}
+                          </pre>
+                        );
+                      }
+                    } catch (error) {
+                      console.error("Error parsing JSON:", error);
+                      return (
+                        <div>
+                          <div className="mb-2 text-red-500">
+                            Error parsing JSON data
+                          </div>
+                          <details>
+                            <summary className="text-sm text-gray-600 cursor-pointer">
+                              View raw data
+                            </summary>
+                            <pre className="overflow-x-auto p-2 mt-2 text-xs whitespace-pre-wrap bg-gray-100 rounded border border-gray-200">
+                              {generatedContent?.[field.key]}
+                            </pre>
+                          </details>
+                        </div>
+                      );
+                    }
+                  })()
                   : generatedContent?.[field.key]}
               </div>
               {field.maxLength && !isObjectType && (
                 <div className="mt-1 text-xs text-gray-500">
                   {field.maxLength
-                    ? `${generatedContent?.[field.key]?.length || 0}/${
-                        field.maxLength
-                      } characters`
+                    ? `${generatedContent?.[field.key]?.length || 0}/${field.maxLength
+                    } characters`
                     : ""}
                 </div>
               )}
@@ -1013,7 +1012,7 @@ const AIEditModal = ({
       width={600}
     >
       {" "}
-      <Heading size="7xl" as="h1" className="!text-black-900_01 text-center">
+      <Heading size="7xl" as="h1" className="!text-[#000000]_01 text-center">
         {sectionName}
       </Heading>
       {step === "input" ? renderInputStep() : renderReviewStep()}

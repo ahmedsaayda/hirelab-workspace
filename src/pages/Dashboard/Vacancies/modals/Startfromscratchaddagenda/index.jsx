@@ -46,7 +46,7 @@ export default function Startfromscratchaddagenda({ isOpen, ...props }) {
         <div className="flex w-[34%] flex-col gap-[46px] border-r border-solid border-blue_gray-50 px-[30px] pb-8 pt-[30px] md:w-full sm:p-5">
           <div className="flex flex-col gap-[31px]">
             <div className="flex items-center justify-between gap-5">
-              <Heading size="7xl" as="h1" className="!text-black-900_01">
+              <Heading size="7xl" as="h1" className="!text-[#000000]_01">
                 Start from scratch
               </Heading>
               <Img
@@ -178,7 +178,7 @@ export default function Startfromscratchaddagenda({ isOpen, ...props }) {
                         className="h-[24px] w-[24px]"
                       />
                     </div>
-                    <Heading size="3xl" as="h2" className="!text-black-900_01">
+                    <Heading size="3xl" as="h2" className="!text-[#000000]_01">
                       :
                     </Heading>
                     <div className="flex flex-1 flex-col items-center gap-1.5">
@@ -315,7 +315,7 @@ export default function Startfromscratchaddagenda({ isOpen, ...props }) {
                   <Heading
                     size="7xl"
                     as="h2"
-                    className="self-start !text-black-900_01"
+                    className="self-start !text-[#000000]_01"
                   >
                     Preview
                   </Heading>

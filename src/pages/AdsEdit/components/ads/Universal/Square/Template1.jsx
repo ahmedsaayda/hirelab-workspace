@@ -88,19 +88,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
           </div>
         </div>
 
-        {/* Arrow icon top right */}
-        <svg
-          style={{ position: "absolute", top: "40px", right: "55px", zIndex: 10 }}
-          width="36"
-          height="36"
-          viewBox="0 0 36 36"
-          fill="none"
-        >
-          <path
-            d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z"
-            fill={secondaryColor}
-          />
-        </svg>
+
 
         {/* Full-width image with border */}
         <div style={{
@@ -111,7 +99,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
           bottom: "55px",
           borderRadius: "8px",
           overflow: "hidden",
-          border: `8px solid ${secondaryColor}`,
+          border: `8px solid ${primaryColor}`,
         }}>
           {/* Brand Logo on image */}
           <div style={{
@@ -184,7 +172,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
                   fontWeight: "500",
                   fontFamily: "Arial, sans-serif",
                   fontStyle: "italic",
-                  color: secondaryColor,
+                  color: primaryColor,
                   lineHeight: "1.4",
                   marginBottom: quoteAuthorName ? "12px" : "0",
                 }}>
@@ -198,7 +186,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
                       fontSize: `${authorFontSize}px`,
                       fontWeight: "700",
                       fontFamily: "Arial, sans-serif",
-                      color: secondaryColor,
+                      color: primaryColor,
                     }}>
                       {quoteAuthorName}
                     </div>
@@ -207,7 +195,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
                         fontSize: `${authorFontSize - 2}px`,
                         fontWeight: "400",
                         fontFamily: "Arial, sans-serif",
-                        color: secondaryColor,
+                        color: primaryColor,
                         opacity: 0.7,
                       }}>
                         {quoteAuthorPosition}
@@ -243,19 +231,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
         )}
       </div>
 
-      {/* Arrow icon top right - fixed position aligned with logo */}
-      <svg
-        style={{ position: "absolute", top: "40px", right: "55px", zIndex: 10 }}
-        width="36"
-        height="36"
-        viewBox="0 0 36 36"
-        fill="none"
-      >
-        <path
-          d="M36 0V36H28.5V12L4.5 36L0 31.5L24 7.5H0V0H36Z"
-          fill={secondaryColor}
-        />
-      </svg>
+
 
       {/* Title */}
       <div style={{
@@ -287,7 +263,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
         left: "0",
         right: "0",
         bottom: "0",
-        backgroundColor: secondaryColor,
+        backgroundColor: primaryColor,
       }}>
         {/* Image with border - top aligned with brand color section */}
         <div style={{
@@ -298,7 +274,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
           bottom: "90px",
           borderRadius: "8px",
           overflow: "hidden",
-          border: `8px solid ${secondaryColor}`,
+          border: `8px solid ${primaryColor}`,
         }}>
           {isVideo && !videoFailed && !isCapture ? (
             <video
@@ -330,7 +306,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
           zIndex: 20,
         }}>
           <div style={{
-            backgroundColor: primaryColor,
+            backgroundColor: secondaryColor,
             color: ctaTextColor,
             fontSize: "22px",
             fontWeight: "bold",
@@ -345,20 +321,6 @@ export default function Template1({ variant, brandData, landingPageData }) {
           </div>
         </div>
 
-        {/* White chevrons at bottom right - pointing right */}
-        <svg
-          style={{ position: "absolute", bottom: "20px", right: "55px", zIndex: 20 }}
-          width="160"
-          height="60"
-          viewBox="0 0 160 60"
-          fill="none"
-        >
-          <path d="M5 5L25 30L5 55" stroke="white" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.5" />
-          <path d="M35 5L55 30L35 55" stroke="white" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.5" />
-          <path d="M65 5L85 30L65 55" stroke="white" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.5" />
-          <path d="M95 5L115 30L95 55" stroke="white" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.5" />
-          <path d="M125 5L145 30L125 55" stroke="white" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.5" />
-        </svg>
       </div>
     </div>
   );

@@ -65,7 +65,7 @@ export default function VideoCard({ videoUrl }) {
     if (videoRef.current) {
       videoRef.current.play();
       setIsPlaying(true);
-    }else{
+    } else {
       setIsPlaying(false)
     }
   };
@@ -112,7 +112,7 @@ export function MediaCard({
   _id,
   title,
   description,
-  tags=[],
+  tags = [],
   thumbnail,
   type,
   duration,
@@ -193,8 +193,8 @@ export function MediaCard({
             onSelect?.(_id);
           }}
           className={`absolute top-2 right-2 rounded-full border ${selected
-              ? "text-white bg-blue-500 border-blue-500 shadow"
-              : "text-gray-400 bg-white/80 border-transparent"
+            ? "text-white bg-blue-500 border-blue-500 shadow"
+            : "text-gray-400 bg-white/80 border-transparent"
             } transition-all duration-200 ease-in-out cursor-pointer hover:bg-blue-400 hover:text-white`}
         />
       </div>
@@ -250,7 +250,7 @@ export function MediaCard({
             <button
               title="More Options"
               onClick={(e) => e.preventDefault()}
-              className="flex w-full justify-center rounded-[14px] rounded-e-none bg-gray-50_01 hover:text-black-900 py-2"
+              className="flex w-full justify-center rounded-[14px] rounded-e-none bg-gray-50_01 hover:text-[#000000] py-2"
             >
               <Img
                 src="/images/more-vertical.svg"
@@ -263,7 +263,7 @@ export function MediaCard({
           <button
             title="View"
             onClick={() => setIsModalOpen(true)}
-            className="flex w-full justify-center bg-gray-50_01 hover:text-black-900 py-2"
+            className="flex w-full justify-center bg-gray-50_01 hover:text-[#000000] py-2"
           >
             <Eye className="h-4 w-4 text-gray-500 hover:text-black" />
           </button>
@@ -277,7 +277,7 @@ export function MediaCard({
                   onEdit(_id);
                 }
               }}
-              className="flex w-full justify-center rounded-[14px] rounded-s-none bg-gray-50_01 hover:text-black-900 py-2"
+              className="flex w-full justify-center rounded-[14px] rounded-s-none bg-gray-50_01 hover:text-[#000000] py-2"
             >
               <Pencil className="h-4 w-4 text-gray-500 hover:text-black" />
             </button>
@@ -375,12 +375,12 @@ export function MediaCard({
             />
           )}
           {templateData?.type === 'testimonial' && (
-              <TestimonialsForm
-                initialData={templateData}
-                onSave={handleSendTemplateParent}
-                isSaving={isSaving}
-              />
-            )}
+            <TestimonialsForm
+              initialData={templateData}
+              onSave={handleSendTemplateParent}
+              isSaving={isSaving}
+            />
+          )}
           {templateData?.type === "leaderIntro" && (
             <LeaderIntroductionForm
               initialData={templateData}

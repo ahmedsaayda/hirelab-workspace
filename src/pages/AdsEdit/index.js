@@ -880,7 +880,22 @@ export default function AdsEdit({ paramsId }) {
       }
       const res = await AdsService.publish(lpId, body);
       if (res?.data?.success) {
-        message.success("Publish request submitted");
+        // Check for partial failures - some ads created but others failed
+        if (res?.data?.warning && res?.data?.failedCount > 0) {
+          const failedItems = res?.data?.failedItems || [];
+          const firstError = failedItems[0];
+          const errorDetail = firstError?.errorTitle 
+            ? `${firstError.errorTitle}: ${firstError.error}`
+            : firstError?.error;
+          
+          message.warning(
+            `${res.data.successCount} ads created, but ${res.data.failedCount} failed. ${errorDetail || ""}`,
+            10
+          );
+          console.warn("[Publish] Partial failure:", res.data.failedItems);
+        } else {
+          message.success("Publish request submitted");
+        }
         // Treat current ads snapshot as "synced to Meta" baseline for prompting.
         // After fetchData() returns, we'll also reset baselines from server data.
         lastMetaSyncedAdsHashRef.current = serializeAdsData(adsData);
@@ -888,11 +903,19 @@ export default function AdsEdit({ paramsId }) {
         // Refresh to pick up publish metadata
         fetchData();
       } else {
-        message.error(res?.data?.message || "Failed to publish");
+        // Full failure - show detailed error message
+        const errorMsg = res?.data?.message || "Failed to publish";
+        message.error(errorMsg, 10);
+        console.error("[Publish] Full failure:", res?.data);
       }
     } catch (err) {
       console.error("Publish error", err);
-      message.error(err?.response?.data?.message || err.message || "Failed to publish");
+      // Extract user-friendly error from Meta API response
+      const metaError = err?.response?.data?.meta;
+      const errorMsg = metaError?.userMessage 
+        ? `${metaError.title || "Error"}: ${metaError.userMessage}`
+        : (err?.response?.data?.message || err.message || "Failed to publish");
+      message.error(errorMsg, 10);
     }
   };
 

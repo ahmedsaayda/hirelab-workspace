@@ -29,7 +29,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto border border-gray-950 shadow-lg ">
       {/* Backdrop: change the opacity by adjusting 'bg-opacity-XX' (0-100). e.g., bg-opacity-50 is 50% black. */}
       <div
-        className="fixed inset-0 bg-black-900 bg-opacity-70"
+        className="fixed inset-0 bg-[#000000] bg-opacity-70"
         onClick={onClose}
       />
 

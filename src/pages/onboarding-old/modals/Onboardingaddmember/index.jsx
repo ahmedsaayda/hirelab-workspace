@@ -30,7 +30,7 @@ export default function Onboardingaddmember({ isOpen, ...props }) {
           <div className="flex flex-col gap-[31px]">
             {/* member title row section */}
             <div className="flex items-center justify-between gap-5 pl-[330px] mdx:pl-5">
-              <Heading size="md" as="h1" className="!text-black-900">
+              <Heading size="md" as="h1" className="!text-[#000000]">
                 Add member
               </Heading>
               <Img

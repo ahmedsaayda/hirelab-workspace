@@ -53,7 +53,7 @@ export default function ScheduleOverview({ dailyScheduleList }) {
                 {schedules.map((schedule, idx) => (
                   <div
                     key={idx}
-                    className="flex justify-end items-center pr-4 h-16 text-sm border-b text-black-900"
+                    className="flex justify-end items-center pr-4 h-16 text-sm border-b text-[#000000]"
                   >
                     {schedule?.dateTimeSlot?.startTime &&
                       generateTimeLabel(

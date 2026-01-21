@@ -536,7 +536,7 @@ function JobDescriptionModal({ onClose, ongoBack, onRefresh }) {
             <Heading
               size="7xl"
               as="h1"
-              className="!text-black-900_01 text-center"
+              className="!text-[#000000]_01 text-center"
             >
               {getTranslation(language, 'pasteJobText')}
             </Heading>

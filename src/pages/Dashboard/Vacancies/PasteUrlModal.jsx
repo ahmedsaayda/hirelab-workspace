@@ -21,7 +21,7 @@ const languageOptions = Array.from(
   label: name,
 })).sort((a, b) => a.label.localeCompare(b.label));
 
-function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
+function PasteUrlModal({ onClose, ongoBack, onRefresh }) {
   const user = useSelector(selectUser);
   const { branding: brandingDetails } = useWorkspaceBranding();
   const router = useRouter();;
@@ -65,7 +65,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
 
   useEffect(() => {
     const saveProgress = () => {
-      const dataToSave = { 
+      const dataToSave = {
         url,
         department,
         lang: language,
@@ -139,7 +139,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
       // Step 1: Scrape the URL with Firecrawl
       const scrapeResponse = await AiService.scrapeUrl(url);
       console.log("scrapeResponse", scrapeResponse);
-      
+
       if (!scrapeResponse.data.success) {
         throw new Error(scrapeResponse.data.error || 'Failed to scrape URL');
       }
@@ -147,7 +147,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
       const { markdown, metadata } = scrapeResponse.data.data.content;
       console.log("markdown", markdown);
       console.log("metadata", metadata);
-      
+
       const jobTitle = metadata?.title || "Job Position";
 
       // Step 2: Process with AI
@@ -180,7 +180,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
         try {
           const imagesToUpload = imageResponse.data.data;
           console.log(`PasteUrlModal: Found ${imagesToUpload.length} images. Uploading them...`);
-          
+
           const uploadPromises = imagesToUpload.map(async (img) => {
             try {
               const res = await UploadService.upload(img.url, 10);
@@ -197,12 +197,12 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
           const results = await Promise.all(uploadPromises);
           uploadedImages = results.filter(url => url !== null);
           console.log(`PasteUrlModal: Successfully uploaded ${uploadedImages.length} images.`);
-          
+
         } catch (uploadError) {
           console.error("PasteUrlModal: Failed to upload Unsplash images:", uploadError);
         }
       } else {
-          console.log("PasteUrlModal: No images found from Unsplash search or search failed.");
+        console.log("PasteUrlModal: No images found from Unsplash search or search failed.");
       }
 
       // Get the AI-processed content
@@ -258,10 +258,10 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
 
 
       const res = await AiService.createVacancy(vacancyPayload);
-      
+
       // Clear session storage on successful creation
       sessionStorage.removeItem('vacancy_url_progress');
-      
+
       onRefresh();
       router.push(`/edit-page/${res.data.data.result._id}`);
 
@@ -286,9 +286,8 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
           </button>
           <button
             onClick={handleNextStep}
-            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${
-              isButtonDisabled() ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${isButtonDisabled() ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             disabled={isButtonDisabled()}
           >
             Next
@@ -309,9 +308,8 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
           </button>
           <button
             onClick={handleCreateVacancy}
-            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${
-              isButtonDisabled() ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 rounded-md ${isButtonDisabled() ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             disabled={isButtonDisabled()}
           >
             {isLoading ? (
@@ -358,7 +356,7 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
             <Heading
               size="7xl"
               as="h1"
-              className="!text-black-900_01 text-center"
+              className="!text-[#000000]_01 text-center"
             >
               Paste URL
             </Heading>
@@ -366,9 +364,8 @@ function PasteUrlModal({ onClose, ongoBack ,onRefresh}) {
               <>
                 <input
                   type="url"
-                  className={`w-full text-xs rounded-lg border ${
-                    urlError ? "border-red-500" : "border-gray-300"
-                  } dark:bg-gray-900 outline-gray-300 p-2 mt-4`}
+                  className={`w-full text-xs rounded-lg border ${urlError ? "border-red-500" : "border-gray-300"
+                    } dark:bg-gray-900 outline-gray-300 p-2 mt-4`}
                   placeholder="Enter Job Post URL"
                   value={url}
                   onChange={handleUrlChange}

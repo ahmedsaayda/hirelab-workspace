@@ -10,7 +10,7 @@ export default function SuccessPage({ onClose }) {
   return (
     <Modal open={true} onCancel={onClose} footer={null} width={425} centered>
       <div className="py-6">
-        <h2 className="mb-4 text-lg font-semibold text-center text-black-900">Success!</h2>
+        <h2 className="mb-4 text-lg font-semibold text-center text-[#000000]">Success!</h2>
         <div className=" text-center">
           <p className="text-gray-600">
             You have successfully finished onboarding!
