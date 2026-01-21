@@ -1122,15 +1122,39 @@ export default function Launch({ paramsId }) {
       console.log("[Launch] Full payload:", JSON.stringify(payload, null, 2));
       const res = await AdsService.publish(lpId, payload);
       if (res?.data?.success) {
-        message.success(adSetKey ? "Ad set launched successfully!" : "Campaign launched successfully!");
-        // Redirect to the Ads overview page after successful launch
+        // Check for partial failures - some ads created but others failed
+        if (res?.data?.warning && res?.data?.failedCount > 0) {
+          const failedItems = res?.data?.failedItems || [];
+          const firstError = failedItems[0];
+          const errorDetail = firstError?.errorTitle 
+            ? `${firstError.errorTitle}: ${firstError.error}`
+            : firstError?.error;
+          
+          // Show warning for partial success
+          message.warning(
+            `${res.data.successCount} ads launched, but ${res.data.failedCount} failed. ${errorDetail || ""}`,
+            10 // Show for 10 seconds
+          );
+          console.warn("[Launch] Partial failure:", res.data.failedItems);
+        } else {
+          message.success(adSetKey ? "Ad set launched successfully!" : "Campaign launched successfully!");
+        }
+        // Redirect to the Ads overview page after launch (even partial success)
         router.push(`/lp-editor/${lpId}/ads`);
       } else {
-        message.error(res?.data?.message || "Failed to launch campaign");
+        // Full failure - show detailed error message
+        const errorMsg = res?.data?.message || "Failed to launch campaign";
+        message.error(errorMsg, 10); // Show for 10 seconds
+        console.error("[Launch] Full failure:", res?.data);
       }
     } catch (err) {
       console.error("Launch error", err);
-      message.error(err?.response?.data?.message || err.message || "Failed to launch campaign");
+      // Extract user-friendly error from Meta API response
+      const metaError = err?.response?.data?.meta;
+      const errorMsg = metaError?.userMessage 
+        ? `${metaError.title || "Error"}: ${metaError.userMessage}`
+        : (err?.response?.data?.message || err.message || "Failed to launch campaign");
+      message.error(errorMsg, 10); // Show for 10 seconds
     } finally {
       setLaunching(false);
     }
