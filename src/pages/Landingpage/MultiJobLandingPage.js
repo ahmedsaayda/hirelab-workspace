@@ -174,10 +174,31 @@ const MultiJobHeroSection = ({ landingPageData, isEdit = false }) => {
                 </button>
               </div>
 
-              {/* Image - wider on mobile */}
-              <div className="relative w-full flex justify-center md:justify-end mt-4 md:mt-0">
+              {/* Mobile Image - no crop, centered, rounded corners */}
+              <div className="relative w-full flex justify-center mt-4 md:hidden">
+                <div className="relative w-[85%] max-w-[320px] rounded-3xl overflow-hidden">
+                  <Image
+                    src={heroImage}
+                    alt="Team collaboration"
+                    className="object-cover w-full h-full rounded-3xl"
+                    style={{
+                      objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
+                        ? landingPageData.imageAdjustment.heroImage.objectPosition.x + "% " + landingPageData.imageAdjustment.heroImage.objectPosition.y + "%"
+                        : "50% 25%"
+                    }}
+                    width={400}
+                    height={400}
+                    sizes="85vw"
+                    loading="eager"
+                    priority
+                  />
+                </div>
+              </div>
+
+              {/* Desktop Image - L-shaped crop, much bigger */}
+              <div className="hidden md:flex relative w-full justify-end">
                 <div
-                  className="relative w-[92%] max-w-[360px] md:max-w-[500px] lg:max-w-[550px]"
+                  className="relative w-full max-w-none lg:w-[600px] xl:w-[700px] 2xl:w-[800px]"
                   style={{
                     aspectRatio: "850 / 819",
                     clipPath: "url(#" + clipPathId + ")",
@@ -195,7 +216,7 @@ const MultiJobHeroSection = ({ landingPageData, isEdit = false }) => {
                     }}
                     width={850}
                     height={819}
-                    sizes="(max-width: 768px) 92vw, 50vw"
+                    sizes="(max-width: 1200px) 600px, 800px"
                     loading="eager"
                     priority
                   />
