@@ -343,7 +343,7 @@ const Template1 = React.memo(({ landingPageData, fetchData }) => {
     <div
       id="job-specifications"
       ref={sectionRef}
-      className="px-4 w-full bg-white md:px-8"
+      className="px-4 w-full bg-white md:px-8 pb-16 md:pb-24"
     >
       <div className="container mx-auto">
         {/* Decorative Elements */}
@@ -354,15 +354,15 @@ const Template1 = React.memo(({ landingPageData, fetchData }) => {
 
         <div className="relative">
           <div
-            className="absolute -top-[25px] left-1/4 w-16 h-16 rounded-lg opacity-30 smx:top-[-20px] smx:left-4 smx:w-12 smx:h-12"
+            className="absolute top-2 left-1/4 w-12 h-12 rounded-lg opacity-30 smx:top-2 smx:left-4 smx:w-10 smx:h-10"
             style={{ backgroundColor: getColor("tertiary", 200) }}
           ></div>
           <div
-            className="absolute -top-[30px] right-1/4 w-24 h-24 rounded-lg opacity-20 smx:top-[-30px] smx:right-6 smx:w-14 smx:h-14"
+            className="absolute top-0 right-1/4 w-16 h-16 rounded-lg opacity-20 smx:top-0 smx:right-6 smx:w-12 smx:h-12"
             style={{ backgroundColor: getColor("tertiary", 300) }}
           ></div>
           <div
-            className="absolute -top-[55px] left-1/2 w-20 h-20 rounded-lg opacity-25 smx:top-[-50px] smx:left-1/3 smx:w-16 smx:h-16"
+            className="absolute top-4 left-1/2 w-14 h-14 rounded-lg opacity-25 smx:top-4 smx:left-1/3 smx:w-12 smx:h-12"
             style={{ backgroundColor: getColor("tertiary", 200) }}
           ></div>
         </div>

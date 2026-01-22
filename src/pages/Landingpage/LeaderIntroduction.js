@@ -365,6 +365,13 @@ const Template1 = ({ data }) => {
               <div ref={refs.fullnameRef} className="mb-4 text-3xl font-script">
                 {data?.leaderIntroductionFullname || "John Smith"}
               </div>
+              <div
+                ref={refs.jobTitleRef}
+                className="text-sm text-gray-600"
+                style={{ fontFamily: bodyFont?.family }}
+              >
+                {data?.leaderIntroductionJobTitle || ""}
+              </div>
            
             </div>
           </div>
