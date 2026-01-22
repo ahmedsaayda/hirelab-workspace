@@ -548,16 +548,21 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
       
       let bookmarkMessage;
       if (isIOS) {
-        bookmarkMessage = getTranslation(landingPageData?.lang, 'bookmarkInstructionsIOS') || 'Tap the share button and select "Add to Home Screen" or "Add Bookmark"';
+        // iOS share icon is a square with an arrow pointing up
+        bookmarkMessage = getTranslation(landingPageData?.lang, 'bookmarkInstructionsIOS') || 
+          'To save this page: Tap the Share button [ ⬆ ] at the bottom of your browser, then select "Add to Home Screen" or "Add Bookmark"';
       } else if (isAndroid) {
-        bookmarkMessage = getTranslation(landingPageData?.lang, 'bookmarkInstructionsAndroid') || 'Tap the menu (⋮) and select "Add to Home Screen" or "Add Bookmark"';
+        // Android uses three dots menu
+        bookmarkMessage = getTranslation(landingPageData?.lang, 'bookmarkInstructionsAndroid') || 
+          'To save this page: Tap the menu icon [ ⋮ ] in your browser (top-right), then select "Add to Home screen" or "Bookmark"';
       } else {
         // Desktop: Detect Mac vs Windows/Linux
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-        const shortcut = isMac ? 'Cmd+D' : 'Ctrl+D';
-        bookmarkMessage = getTranslation(landingPageData?.lang, 'bookmarkInstructions') || `Press ${shortcut} to bookmark this page`;
+        const shortcut = isMac ? '⌘+D' : 'Ctrl+D';
+        bookmarkMessage = getTranslation(landingPageData?.lang, 'bookmarkInstructions') || 
+          `To save this page: Press ${shortcut} to bookmark it`;
       }
-      message.info(bookmarkMessage);
+      message.info(bookmarkMessage, 6);
     }
   };
 

@@ -73,9 +73,9 @@ const coreTranslations = {
     // Save/Bookmark
     save: "Save",
     bookmarkAdded: "Page bookmarked! Press Ctrl+D (Cmd+D on Mac) to save.",
-    bookmarkInstructions: "Press Ctrl+D (Cmd+D on Mac) to bookmark this page",
-    bookmarkInstructionsIOS: "Tap the share button and select \"Add to Home Screen\" or \"Add Bookmark\"",
-    bookmarkInstructionsAndroid: "Tap the menu (⋮) and select \"Add to Home Screen\" or \"Add Bookmark\""
+    bookmarkInstructions: "To save this page: Press ⌘+D (Mac) or Ctrl+D (Windows) to bookmark it",
+    bookmarkInstructionsIOS: "To save this page: Tap the Share button [ ⬆ ] at the bottom of your browser, then select \"Add to Home Screen\" or \"Add Bookmark\"",
+    bookmarkInstructionsAndroid: "To save this page: Tap the menu icon [ ⋮ ] in your browser (top-right), then select \"Add to Home screen\" or \"Bookmark\""
   },
   Dutch: {
     weAreHiring: " WE ZOEKEN PERSONEEL",
@@ -138,9 +138,9 @@ const coreTranslations = {
     // Save/Bookmark
     save: "Opslaan",
     bookmarkAdded: "Pagina opgeslagen! Druk op Ctrl+D (Cmd+D op Mac) om op te slaan.",
-    bookmarkInstructions: "Druk op Ctrl+D (Cmd+D op Mac) om deze pagina op te slaan",
-    bookmarkInstructionsIOS: "Tik op de deelknop en selecteer \"Zet op beginscherm\" of \"Voeg bladwijzer toe\"",
-    bookmarkInstructionsAndroid: "Tik op het menu (⋮) en selecteer \"Toevoegen aan startscherm\" of \"Bladwijzer toevoegen\""
+    bookmarkInstructions: "Om deze pagina op te slaan: Druk op ⌘+D (Mac) of Ctrl+D (Windows)",
+    bookmarkInstructionsIOS: "Om deze pagina op te slaan: Tik op de Deel-knop [ ⬆ ] onderaan je browser en selecteer \"Zet op beginscherm\" of \"Voeg bladwijzer toe\"",
+    bookmarkInstructionsAndroid: "Om deze pagina op te slaan: Tik op het menu-icoon [ ⋮ ] in je browser (rechtsboven) en selecteer \"Toevoegen aan startscherm\" of \"Bladwijzer\""
   },
   German: {
     weAreHiring: " WIR STELLEN EIN",
@@ -203,9 +203,9 @@ const coreTranslations = {
     // Save/Bookmark
     save: "Speichern",
     bookmarkAdded: "Seite gemerkt! Drücken Sie Strg+D (Cmd+D auf Mac) zum Speichern.",
-    bookmarkInstructions: "Drücken Sie Strg+D (Cmd+D auf Mac) um diese Seite zu speichern",
-    bookmarkInstructionsIOS: "Tippen Sie auf die Teilen-Schaltfläche und wählen Sie \"Zum Home-Bildschirm\" oder \"Lesezeichen hinzufügen\"",
-    bookmarkInstructionsAndroid: "Tippen Sie auf das Menü (⋮) und wählen Sie \"Zum Startbildschirm hinzufügen\" oder \"Lesezeichen hinzufügen\""
+    bookmarkInstructions: "Um diese Seite zu speichern: Drücken Sie ⌘+D (Mac) oder Strg+D (Windows)",
+    bookmarkInstructionsIOS: "Um diese Seite zu speichern: Tippen Sie auf die Teilen-Taste [ ⬆ ] unten im Browser und wählen Sie \"Zum Home-Bildschirm\" oder \"Lesezeichen hinzufügen\"",
+    bookmarkInstructionsAndroid: "Um diese Seite zu speichern: Tippen Sie auf das Menü-Symbol [ ⋮ ] oben rechts im Browser und wählen Sie \"Zum Startbildschirm hinzufügen\" oder \"Lesezeichen\""
   },
   French: {
     weAreHiring: " NOUS RECRUTONS",
@@ -238,9 +238,9 @@ const coreTranslations = {
     // Save/Bookmark
     save: "Enregistrer",
     bookmarkAdded: "Page enregistrée ! Appuyez sur Ctrl+D (Cmd+D sur Mac) pour sauvegarder.",
-    bookmarkInstructions: "Appuyez sur Ctrl+D (Cmd+D sur Mac) pour enregistrer cette page",
-    bookmarkInstructionsIOS: "Appuyez sur le bouton de partage et sélectionnez \"Sur l'écran d'accueil\" ou \"Ajouter un signet\"",
-    bookmarkInstructionsAndroid: "Appuyez sur le menu (⋮) et sélectionnez \"Ajouter à l'écran d'accueil\" ou \"Ajouter un favori\""
+    bookmarkInstructions: "Pour enregistrer cette page : Appuyez sur ⌘+D (Mac) ou Ctrl+D (Windows)",
+    bookmarkInstructionsIOS: "Pour enregistrer cette page : Appuyez sur le bouton Partager [ ⬆ ] en bas de votre navigateur, puis sélectionnez \"Sur l'écran d'accueil\" ou \"Ajouter un signet\"",
+    bookmarkInstructionsAndroid: "Pour enregistrer cette page : Appuyez sur l'icône menu [ ⋮ ] dans votre navigateur (en haut à droite), puis sélectionnez \"Ajouter à l'écran d'accueil\" ou \"Favori\""
   },
   Spanish: {
     weAreHiring: " ESTAMOS CONTRATANDO",
@@ -273,9 +273,9 @@ const coreTranslations = {
     // Save/Bookmark
     save: "Guardar",
     bookmarkAdded: "¡Página guardada! Presiona Ctrl+D (Cmd+D en Mac) para guardar.",
-    bookmarkInstructions: "Presiona Ctrl+D (Cmd+D en Mac) para guardar esta página",
-    bookmarkInstructionsIOS: "Toca el botón de compartir y selecciona \"Añadir a pantalla de inicio\" o \"Añadir marcador\"",
-    bookmarkInstructionsAndroid: "Toca el menú (⋮) y selecciona \"Añadir a pantalla de inicio\" o \"Añadir marcador\""
+    bookmarkInstructions: "Para guardar esta página: Presiona ⌘+D (Mac) o Ctrl+D (Windows)",
+    bookmarkInstructionsIOS: "Para guardar esta página: Toca el botón Compartir [ ⬆ ] en la parte inferior del navegador, luego selecciona \"Añadir a pantalla de inicio\" o \"Añadir marcador\"",
+    bookmarkInstructionsAndroid: "Para guardar esta página: Toca el icono de menú [ ⋮ ] en tu navegador (arriba a la derecha), luego selecciona \"Añadir a pantalla de inicio\" o \"Marcador\""
   },
   Italian: {
     weAreHiring: " STIAMO ASSUMENDO",
@@ -307,9 +307,9 @@ const coreTranslations = {
     readMore: "Leggi Di Più", readLess: "Leggi Di Meno",
     save: "Salva",
     bookmarkAdded: "Pagina salvata nei preferiti! Premi Ctrl+D (Cmd+D su Mac) per salvare.",
-    bookmarkInstructions: "Premi Ctrl+D (Cmd+D su Mac) per salvare questa pagina nei preferiti",
-    bookmarkInstructionsIOS: "Tocca il pulsante di condivisione e seleziona \"Aggiungi alla schermata Home\" o \"Aggiungi segnalibro\"",
-    bookmarkInstructionsAndroid: "Tocca il menu (⋮) e seleziona \"Aggiungi alla schermata Home\" o \"Aggiungi segnalibro\""
+    bookmarkInstructions: "Per salvare questa pagina: Premi ⌘+D (Mac) o Ctrl+D (Windows)",
+    bookmarkInstructionsIOS: "Per salvare questa pagina: Tocca il pulsante Condividi [ ⬆ ] in basso nel browser, poi seleziona \"Aggiungi alla schermata Home\" o \"Aggiungi segnalibro\"",
+    bookmarkInstructionsAndroid: "Per salvare questa pagina: Tocca l'icona menu [ ⋮ ] nel browser (in alto a destra), poi seleziona \"Aggiungi alla schermata Home\" o \"Segnalibro\""
   },
   Portuguese: {
     weAreHiring: " ESTAMOS CONTRATANDO",
@@ -341,9 +341,9 @@ const coreTranslations = {
     readMore: "Ler Mais", readLess: "Ler Menos",
     save: "Salvar",
     bookmarkAdded: "Página salva nos favoritos! Pressione Ctrl+D (Cmd+D no Mac) para salvar.",
-    bookmarkInstructions: "Pressione Ctrl+D (Cmd+D no Mac) para salvar esta página nos favoritos",
-    bookmarkInstructionsIOS: "Toque no botão de compartilhar e selecione \"Adicionar à Tela de Início\" ou \"Adicionar Favorito\"",
-    bookmarkInstructionsAndroid: "Toque no menu (⋮) e selecione \"Adicionar à tela inicial\" ou \"Adicionar aos favoritos\""
+    bookmarkInstructions: "Para salvar esta página: Pressione ⌘+D (Mac) ou Ctrl+D (Windows)",
+    bookmarkInstructionsIOS: "Para salvar esta página: Toque no botão Compartilhar [ ⬆ ] na parte inferior do navegador, depois selecione \"Adicionar à Tela de Início\" ou \"Adicionar Favorito\"",
+    bookmarkInstructionsAndroid: "Para salvar esta página: Toque no ícone de menu [ ⋮ ] no seu navegador (canto superior direito), depois selecione \"Adicionar à tela inicial\" ou \"Favorito\""
   },
   Norwegian: {
     weAreHiring: " VI ANSETTER",
@@ -374,9 +374,9 @@ const coreTranslations = {
     pasteJobTip: "Tips: Kopier (Ctrl+C) hele jobbutlysningen fra en nettside og lim den inn (Ctrl+V) her. Vår AI vil trekke ut all relevant informasjon.",
     save: "Lagre",
     bookmarkAdded: "Side lagret som bokmerke! Trykk Ctrl+D (Cmd+D på Mac) for å lagre.",
-    bookmarkInstructions: "Trykk Ctrl+D (Cmd+D på Mac) for å lagre denne siden som bokmerke",
-    bookmarkInstructionsIOS: "Trykk på del-knappen og velg \"Legg til på Hjem-skjerm\" eller \"Legg til bokmerke\"",
-    bookmarkInstructionsAndroid: "Trykk på menyen (⋮) og velg \"Legg til på startskjermen\" eller \"Legg til bokmerke\""
+    bookmarkInstructions: "For å lagre denne siden: Trykk ⌘+D (Mac) eller Ctrl+D (Windows)",
+    bookmarkInstructionsIOS: "For å lagre denne siden: Trykk på Del-knappen [ ⬆ ] nederst i nettleseren, velg deretter \"Legg til på Hjem-skjerm\" eller \"Legg til bokmerke\"",
+    bookmarkInstructionsAndroid: "For å lagre denne siden: Trykk på menyikonet [ ⋮ ] i nettleseren (øverst til høyre), velg deretter \"Legg til på startskjermen\" eller \"Bokmerke\""
   },
   // Strategic core languages for major language families
   Russian: {
