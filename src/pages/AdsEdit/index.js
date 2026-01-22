@@ -2318,6 +2318,8 @@ export default function AdsEdit({ paramsId }) {
                       if (v === null) {
                         setEditingVariant(null);
                       } else {
+                        // Select the variant so it shows in preview
+                        handleVariantSelect(variant.id);
                         setEditingVariant(variant);
                       }
                     }}

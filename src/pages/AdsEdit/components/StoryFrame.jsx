@@ -50,7 +50,7 @@ export default function StoryOverlay({ children, brandData }) {
             {/* Left: Profile Info */}
             <div className="flex items-center gap-2">
               {/* Profile Picture / Logo */}
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 p-0.5">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 p-0.5">
                 <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
                   {brandLogo ? (
                     <img 

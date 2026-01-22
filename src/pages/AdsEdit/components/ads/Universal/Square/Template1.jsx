@@ -15,6 +15,9 @@ export default function Template1({ variant, brandData, landingPageData }) {
   const quoteAuthorName = variant?.quoteAuthorName || "";
   const quoteAuthorPosition = variant?.quoteAuthorPosition || "";
 
+  // Use linkDescription only for non-quote ad types (subheadline on image)
+  const linkDescription = isQuoteAdType ? "" : (variant?.linkDescription ?? "");
+
   const heroImage = variant?.image || landingPageData?.heroImage || imgHeroDefault;
   const videoUrl = variant?.videoUrl || "";
   const isCapture = typeof window !== "undefined" && Boolean(window.__HL_ADS_CAPTURE__);
@@ -51,7 +54,8 @@ export default function Template1({ variant, brandData, landingPageData }) {
     return lines;
   };
 
-  const titleLines = wrapText(jobTitle, 18);
+  // With 40 char headline limit, use 20 chars per line = 2 lines max
+  const titleLines = wrapText(jobTitle, 20);
   const titleFontSize = 48;
   const titleLineHeight = titleFontSize * 1.1;
 
@@ -99,7 +103,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
           bottom: "55px",
           borderRadius: "8px",
           overflow: "hidden",
-          border: `8px solid ${primaryColor}`,
+          border: `30px solid ${primaryColor}`,
         }}>
           {/* Brand Logo on image */}
           <div style={{
@@ -212,7 +216,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
   }
 
   // ===== REGULAR ADS (Job, Company, Retargeting) =====
-  // Layout: Logo + Title on white top, Image with brand color bottom section, CTA at bottom
+  // Layout: Logo + Title on white top, Image with border, CTA in corner of image (consistent with Story)
   return (
     <div className="relative" style={{ width: "1080px", height: "1080px", backgroundColor: "#ffffff", overflow: "hidden" }}>
       {/* Brand Logo */}
@@ -222,7 +226,7 @@ export default function Template1({ variant, brandData, landingPageData }) {
             src={brandLogo}
             alt={brandName}
             onError={() => setLogoFailed(true)}
-            style={{ height: "45px", width: "auto", objectFit: "contain" }}
+            style={{ height: "50px", width: "auto", objectFit: "contain" }}
           />
         ) : (
           <span style={{ fontSize: "24px", fontWeight: "bold", fontFamily: "Arial", color: secondaryColor }}>
@@ -231,14 +235,12 @@ export default function Template1({ variant, brandData, landingPageData }) {
         )}
       </div>
 
-
-
       {/* Title */}
       <div style={{
         position: "absolute",
-        top: "100px",
+        top: "110px",
         left: "55px",
-        right: "120px",
+        right: "100px",
         zIndex: 10,
       }}>
         <div style={{
@@ -256,53 +258,43 @@ export default function Template1({ variant, brandData, landingPageData }) {
         </div>
       </div>
 
-      {/* Bottom section with brand color background */}
+      {/* Full-width Image with border */}
       <div style={{
         position: "absolute",
-        top: `${100 + (titleLines.length * 55) + 20}px`,
-        left: "0",
-        right: "0",
-        bottom: "0",
-        backgroundColor: primaryColor,
+        top: titleLines.length > 2 ? "280px" : "240px",
+        left: "55px",
+        right: "55px",
+        bottom: "55px",
+        borderRadius: "8px",
+        overflow: "hidden",
+        border: `30px solid ${primaryColor}`,
       }}>
-        {/* Image with border - top aligned with brand color section */}
+        {isVideo && !videoFailed && !isCapture ? (
+          <video
+            src={videoUrl}
+            crossOrigin="anonymous"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={heroImage}
+            onError={() => setVideoFailed(true)}
+            style={{ width: "100%", height: "100%", objectFit: heroObjectFit, objectPosition: heroObjectPosition }}
+          />
+        ) : (
+          <img
+            src={heroImage}
+            alt="Background"
+            style={{ width: "100%", height: "100%", objectFit: heroObjectFit, objectPosition: heroObjectPosition }}
+          />
+        )}
+
+        {/* CTA Button - inside image at top left corner */}
         <div style={{
           position: "absolute",
           top: "0",
-          left: "55px",
-          right: "55px",
-          bottom: "90px",
-          borderRadius: "8px",
-          overflow: "hidden",
-          border: `8px solid ${primaryColor}`,
-        }}>
-          {isVideo && !videoFailed && !isCapture ? (
-            <video
-              src={videoUrl}
-              crossOrigin="anonymous"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              poster={heroImage}
-              onError={() => setVideoFailed(true)}
-              style={{ width: "100%", height: "100%", objectFit: heroObjectFit, objectPosition: heroObjectPosition }}
-            />
-          ) : (
-            <img
-              src={heroImage}
-              alt="Background"
-              style={{ width: "100%", height: "100%", objectFit: heroObjectFit, objectPosition: heroObjectPosition }}
-            />
-          )}
-        </div>
-
-        {/* CTA Button - positioned in brand color bar below image */}
-        <div style={{
-          position: "absolute",
-          bottom: "15px",
-          left: "55px",
+          left: "0",
           zIndex: 20,
         }}>
           <div style={{
@@ -313,14 +305,39 @@ export default function Template1({ variant, brandData, landingPageData }) {
             fontFamily: "Arial, sans-serif",
             textTransform: "uppercase",
             letterSpacing: "1px",
-            padding: "18px 40px",
-            borderRadius: "4px",
+            padding: "18px 36px",
+            borderRadius: "0 0 8px 0",
             display: "inline-block",
           }}>
             {ctaText}
           </div>
         </div>
 
+        {/* Link Description overlay below CTA */}
+        {linkDescription && (
+          <div style={{
+            position: "absolute",
+            top: "100px",
+            left: "-8px",
+            zIndex: 20,
+          }}>
+            <div style={{
+              backgroundColor: "rgba(255,255,255,0.85)",
+              borderRadius: "0 6px 6px 0",
+              padding: "14px 24px 14px 28px",
+              display: "inline-block",
+            }}>
+              <span style={{
+                fontSize: "26px",
+                fontWeight: "600",
+                fontFamily: "Arial, sans-serif",
+                color: primaryColor,
+              }}>
+                {linkDescription}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

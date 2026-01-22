@@ -61,10 +61,12 @@ export default function Variant4({ variant, brandData, landingPageData }) {
     return lines;
   };
 
-  const titleLines = wrapText(jobTitle, 18);
+  // With 40 char headline limit, use 20 chars per line = 2 lines max
+  const titleLines = wrapText(jobTitle, 20);
   const titleFontSize = 56;
 
   // ===== QUOTE-BASED ADS (Testimonial / Employer Brand) =====
+  // Safe zone: Instagram story UI (progress bars + profile) takes ~280px from top
   if (isQuoteAdType) {
     const quoteLines = wrapText(quoteText, 35);
     const quoteFontSize = 28;
@@ -72,10 +74,26 @@ export default function Variant4({ variant, brandData, landingPageData }) {
 
     return (
       <div className="relative" style={{ width: "1080px", height: "1920px", backgroundColor: "#ffffff", overflow: "hidden" }}>
-        {/* Title - positioned lower for safe zone */}
+        {/* Brand Logo - positioned below Instagram story UI safe zone */}
+        <div style={{ position: "absolute", top: "300px", left: "60px", zIndex: 10 }}>
+          {brandLogo && !logoFailed ? (
+            <img
+              src={brandLogo}
+              alt={brandName}
+              onError={() => setLogoFailed(true)}
+              style={{ height: "70px", width: "auto", objectFit: "contain" }}
+            />
+          ) : (
+            <span style={{ fontSize: "32px", fontWeight: "bold", fontFamily: "Arial", color: secondaryColor }}>
+              {brandName}
+            </span>
+          )}
+        </div>
+
+        {/* Title - with breathing room below logo */}
         <div style={{
           position: "absolute",
-          top: "180px",
+          top: "400px",
           left: "60px",
           right: "120px",
           zIndex: 10
@@ -95,42 +113,17 @@ export default function Variant4({ variant, brandData, landingPageData }) {
           </div>
         </div>
 
-
-
-        {/* Full-width image */}
+        {/* Full-width image - moved down for breathing room */}
         <div style={{
           position: "absolute",
-          top: titleLines.length > 2 ? "400px" : "360px",
+          top: titleLines.length > 2 ? "620px" : "560px",
           left: "60px",
           right: "60px",
           bottom: "60px",
           borderRadius: "12px",
           overflow: "hidden",
-          border: `10px solid ${primaryColor}`,
+          border: `30px solid ${primaryColor}`,
         }}>
-          {/* Brand Logo on image */}
-          <div style={{
-            position: "absolute",
-            top: "80px",
-            left: "-10px",
-            zIndex: 20,
-            backgroundColor: "rgba(255,255,255,0.95)",
-            padding: "10px 20px 10px 34px",
-            borderRadius: "0 6px 6px 0",
-          }}>
-            {brandLogo && !logoFailed ? (
-              <img
-                src={brandLogo}
-                alt={brandName}
-                onError={() => setLogoFailed(true)}
-                style={{ height: "56px", width: "auto", objectFit: "contain" }}
-              />
-            ) : (
-              <span style={{ fontSize: "20px", fontWeight: "bold", fontFamily: "Arial", color: secondaryColor }}>
-                {brandName}
-              </span>
-            )}
-          </div>
 
           {/* Image/Video */}
           {isVideo && !videoFailed && !isCapture ? (
@@ -209,32 +202,31 @@ export default function Variant4({ variant, brandData, landingPageData }) {
   }
 
   // ===== REGULAR ADS (Job, Company, Retargeting) =====
+  // Safe zone: Instagram story UI (progress bars + profile) takes ~280px from top
   return (
     <div className="relative" style={{ width: "1080px", height: "1920px", backgroundColor: "#ffffff", overflow: "hidden" }}>
-      {/* Brand Logo */}
-      <div style={{ position: "absolute", top: "60px", left: "60px", zIndex: 10 }}>
+      {/* Brand Logo - positioned below Instagram story UI safe zone */}
+      <div style={{ position: "absolute", top: "300px", left: "60px", zIndex: 10 }}>
         {brandLogo && !logoFailed ? (
           <img
             src={brandLogo}
             alt={brandName}
             onError={() => setLogoFailed(true)}
-            style={{ height: "50px", width: "auto", objectFit: "contain" }}
+            style={{ height: "70px", width: "auto", objectFit: "contain" }}
           />
         ) : (
-          <span style={{ fontSize: "28px", fontWeight: "bold", fontFamily: "Arial", color: secondaryColor }}>
+          <span style={{ fontSize: "32px", fontWeight: "bold", fontFamily: "Arial", color: secondaryColor }}>
             {brandName}
           </span>
         )}
       </div>
 
-
-
-      {/* Title */}
+      {/* Title - with breathing room below logo */}
       <div style={{
         position: "absolute",
-        top: "140px",
+        top: "400px",
         left: "60px",
-        right: "200px",
+        right: "120px",
         zIndex: 10,
       }}>
         <div style={{
@@ -252,11 +244,10 @@ export default function Variant4({ variant, brandData, landingPageData }) {
         </div>
       </div>
 
-
-      {/* Full-width Image */}
+      {/* Full-width Image - moved down for breathing room */}
       <div style={{
         position: "absolute",
-        top: titleLines.length > 2 ? "340px" : "280px",
+        top: titleLines.length > 2 ? "620px" : "560px",
         left: "60px",
         right: "60px",
         bottom: "60px",

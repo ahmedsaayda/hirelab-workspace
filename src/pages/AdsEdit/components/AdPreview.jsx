@@ -157,11 +157,16 @@ export default function AdPreview({ variant, format, platform, brandData, landin
   // Check if this variant uses video (should show Creatomate preview)
   const useCreatomatPreview = shouldUseCreatomatPreview(variant);
 
+  // Calculate phone frame height based on ad's aspect ratio for story format
+  const isStoryFormat = format?.id === 'story' || format?.aspectRatio === '9:16';
+  const frameWidth = 375;
+  // For story: match ad's aspect ratio. For feed: use standard iPhone height
+  const frameHeight = isStoryFormat 
+    ? Math.round(frameWidth * (height / width))
+    : 812;
+
   // Render based on format
   const renderPreview = () => {
-    // Determine if this is a story format
-    const isStoryFormat = format?.id === 'story' || format?.aspectRatio === '9:16';
-
     // Check if there's a custom creative override for this format
     const customCreativeUrl = variant?.customCreatives?.[format?.id];
 
@@ -242,21 +247,13 @@ export default function AdPreview({ variant, format, platform, brandData, landin
     // But for now, let's wrap the content in the appropriate context
 
     if (isStoryFormat) {
-      // For stories, we want the creative to fit within the phone frame
-      // without any clipping. Scale based on the constraining dimension.
-      const frameWidth = 375;
-      const frameHeight = 812;
-
-      // Calculate scale factors for both dimensions
-      const scaleByWidth = frameWidth / width;
-      const scaleByHeight = frameHeight / height;
-
-      // Use the smaller scale to ensure content fits completely (contain behavior)
-      const contentScale = Math.min(scaleByWidth, scaleByHeight);
+      // Scale factor to fit the ad content exactly in the frame
+      // Frame width is 375px (defined at component level)
+      const contentScale = 375 / width;
 
       return (
         <StoryOverlay brandData={brandData}>
-          <div className="w-full h-full flex items-center justify-center bg-[#000000]">
+          <div className="w-full h-full flex items-center justify-center overflow-hidden">
             <div
               style={{
                 width: `${width}px`,
@@ -330,7 +327,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
             transform: `scale(${scale})`,
           }}
         >
-          <MobileDeviceFrame isStory={format?.id === 'story' || format?.aspectRatio === '9:16'}>
+          <MobileDeviceFrame isStory={isStoryFormat} height={frameHeight}>
             {renderPreview()}
           </MobileDeviceFrame>
         </div>

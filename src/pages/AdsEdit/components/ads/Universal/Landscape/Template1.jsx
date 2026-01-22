@@ -41,7 +41,7 @@ export default function Variant2({ variant, brandData, landingPageData }) {
   const ctaTextColor = getContrastColor(primaryColor);
 
   // Helper to wrap text into lines
-  const wrapText = (text, maxCharsPerLine = 18) => {
+  const wrapText = (text, maxCharsPerLine = 20) => {
     if (!text) return [];
     const words = text.split(' ');
     const lines = [];
@@ -58,7 +58,8 @@ export default function Variant2({ variant, brandData, landingPageData }) {
     return lines;
   };
 
-  const titleLines = wrapText(jobTitle, 18);
+  // With 40 char headline limit, use 20 chars per line = 2 lines max
+  const titleLines = wrapText(jobTitle, 20);
   const titleFontSize = 52;
 
   // ===== QUOTE-BASED ADS (Testimonial / Employer Brand) =====

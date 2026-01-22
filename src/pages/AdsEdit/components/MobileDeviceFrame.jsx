@@ -5,10 +5,15 @@ import React from "react";
  * 
  * Renders a realistic mobile device frame (notch, bezel, status bar).
  * Acts as a container for any mobile content (Story, Feed, etc.)
+ * 
+ * @param {number} height - Optional custom height (default: 812px for standard iPhone)
  */
-export default function MobileDeviceFrame({ children, mode = "light", isStory = false }) {
+export default function MobileDeviceFrame({ children, mode = "light", isStory = false, height = 812 }) {
   return (
-    <div className={`relative w-[375px] h-[812px] ${isStory ? 'bg-black' : 'bg-white'} rounded-[40px] border-[12px] border-[#1a1a1a] shadow-2xl overflow-hidden mx-auto flex-shrink-0 box-content`}>
+    <div 
+      className={`relative w-[375px] ${isStory ? 'bg-black' : 'bg-white'} rounded-[40px] border-[12px] border-[#1a1a1a] shadow-2xl overflow-hidden mx-auto flex-shrink-0 box-content`}
+      style={{ height: `${height}px` }}
+    >
       {/* Outer Rim / Buttons (Visual candy) */}
       <div className="absolute top-24 -left-[14px] w-[2px] h-8 bg-[#2a2a2a] rounded-l-sm" />
       <div className="absolute top-36 -left-[14px] w-[2px] h-14 bg-[#2a2a2a] rounded-l-sm" />
