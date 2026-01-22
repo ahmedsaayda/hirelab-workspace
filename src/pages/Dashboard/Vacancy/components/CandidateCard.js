@@ -10,7 +10,8 @@ import {
   ClockCircleOutlined,
   MessageOutlined,
   CalendarOutlined,
-  QuestionCircleOutlined
+  QuestionCircleOutlined,
+  InboxOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
 
@@ -117,6 +118,7 @@ const CandidateCard = ({
   onPhone,
   onChat,
   onDelete,
+  onArchive,
   onRatingUpdate,
   onAssign,
   onReview,
@@ -287,6 +289,15 @@ const CandidateCard = ({
     },
     {
       type: 'divider',
+    },
+    {
+      key: 'archive',
+      label: 'Archive',
+      icon: <InboxOutlined />,
+      onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        onArchive && onArchive();
+      },
     },
     {
       key: 'delete',

@@ -103,7 +103,8 @@ import {
   MessageOutlined,
   CheckOutlined,
   QuestionCircleOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  InboxOutlined
 } from '@ant-design/icons';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useRouter } from 'next/router';
@@ -773,6 +774,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     ratings: [], // array of rating values (1-5)
     dateRange: null, // { start: Date, end: Date }
     showRejected: false,
+    showArchived: true, // archived candidates show in list view by default
     assignees: [] // array of assignee user IDs
   });
   const [showFilters, setShowFilters] = useState(false);
@@ -1306,6 +1308,214 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
           .map(c => ({ id: c._id, name: c.formData?.firstname + ' ' + c.formData?.lastname, stageId: c.stageId })));
       }
       
+      const appliedStage = stages.find(s => s.name === 'Applied') || stages[0];
+      const stageNameById = new Map(stages.map(s => [s._id, s.name]));
+
+      const getStageForCandidate = (candidate) => {
+        if (candidate.stageId && stageNameById.has(candidate.stageId)) {
+          const stageName = stageNameById.get(candidate.stageId);
+          return { id: candidate.stageId, title: stageName };
+        }
+        // Default candidates without stage or with invalid stage to "Applied"
+        if (appliedStage) {
+          return { id: appliedStage._id, title: appliedStage.name };
+        }
+        return { id: candidate.stageId, title: candidate.stageId };
+      };
+
+      const buildCardData = (candidate, stage) => {
+        const formData = candidate.formData || {};
+
+        // Extract name from different possible field structures
+        console.log('🔍 Extracting name from formData:', Object.keys(formData));
+
+        let fullname = '';
+
+        // Method 1: Check for existing fullname
+        if (formData.fullname) {
+          fullname = formData.fullname;
+        }
+        // Method 2: Combine firstname + lastname
+        else if (formData.firstname && formData.lastname) {
+          fullname = `${formData.firstname} ${formData.lastname}`;
+        }
+        // Method 3: Handle dynamic contact field structure
+        else {
+          const contactFirstName = Object.keys(formData).find(key => key.includes('firstName'));
+          const contactLastName = Object.keys(formData).find(key => key.includes('lastName'));
+          if (contactFirstName && contactLastName) {
+            const firstName = formData[contactFirstName];
+            const lastName = formData[contactLastName];
+            if (firstName && lastName) {
+              fullname = `${firstName} ${lastName}`;
+            }
+          }
+        }
+
+        console.log('📝 Extracted fullname:', fullname);
+
+        // Extract email from different possible fields
+        let email = formData.email || '';
+        if (!email) {
+          const emailField = Object.keys(formData).find(key => key.includes('email'));
+          if (emailField) email = formData[emailField];
+        }
+        console.log('📧 Extracted email:', email);
+
+        // Extract phone from different possible fields  
+        let phone = formData.phone || '';
+        if (!phone) {
+          const phoneField = Object.keys(formData).find(key => key.includes('phone'));
+          if (phoneField) phone = formData[phoneField];
+        }
+        console.log('📞 Extracted phone:', phone);
+
+        // Extract avatar - for form submissions, there usually isn't an avatar
+        let avatar = null;
+        if (candidate.formData?.avatar && candidate.formData.avatar.trim()) {
+          avatar = candidate.formData.avatar;
+        } else {
+          // Check for image upload field
+          const imageField = Object.keys(formData).find(key => 
+            key.includes('image') || key.includes('photo') || key.includes('avatar')
+          );
+          if (imageField && formData[imageField] && formData[imageField].trim()) {
+            avatar = formData[imageField];
+          }
+        }
+
+        const cardData = {
+          id: candidate._id,
+          fullname: fullname || 'Unknown',
+          email: email,
+          phone: phone,
+          avatar: avatar, // null instead of empty string prevents broken image
+          stars: candidate.stars || 0,
+          createdAt: candidate.createdAt,
+          position: vacancyInfo?.name || 'Position',
+          stageId: stage?.id,
+          stage: stage?.title,
+          rejected: candidate.rejected || false,
+          archived: candidate.archived || false,
+          // Include original fields for vacancy matching (but not vacancyInfo unless needed)
+          LandingPageDataId: candidate.LandingPageDataId,
+          vacancyId: candidate.vacancyId,
+          // Assignment data
+          assignedTo: candidate.assignedTo,
+          assignedAt: candidate.assignedAt,
+          assignedBy: candidate.assignedBy,
+          // Status phase data
+          statusPhase: candidate.statusPhase || 'new',
+          statusPhaseUpdatedAt: candidate.statusPhaseUpdatedAt,
+          statusPhaseUpdatedBy: candidate.statusPhaseUpdatedBy
+        };
+
+        // ABSOLUTELY DO NOT add vacancyInfo in single-job view to prevent purple "Applied to" text
+        if (isMultiJobView && candidate.vacancyInfo) {
+          cardData.vacancyInfo = candidate.vacancyInfo;
+          console.log(`✅ Adding vacancyInfo to candidate ${candidate._id} in multi-job view:`, candidate.vacancyInfo);
+        } else {
+          console.log(`❌ NOT adding vacancyInfo to candidate ${candidate._id} - isMultiJobView: ${isMultiJobView}, hasVacancyInfo: ${!!candidate.vacancyInfo}`);
+        }
+
+        return cardData;
+      };
+
+      const passesNonStageFilters = (candidate) => {
+        const formData = candidate.formData || {};
+
+        // 1. Search filter
+        if (debouncedSearchTerm) {
+          const searchTermLower = debouncedSearchTerm.toLowerCase();
+
+          // Extract data for searching
+          let fullname = formData.fullname || formData.firstname || '';
+          if (!fullname && formData.firstname && formData.lastname) {
+            fullname = `${formData.firstname} ${formData.lastname}`;
+          }
+          const contactFirstName = Object.keys(formData).find(key => key.includes('firstName'));
+          const contactLastName = Object.keys(formData).find(key => key.includes('lastName'));
+          if (!fullname && contactFirstName && contactLastName) {
+            fullname = `${formData[contactFirstName]} ${formData[contactLastName]}`;
+          }
+
+          let email = formData.email || '';
+          if (!email) {
+            const emailField = Object.keys(formData).find(key => key.includes('email'));
+            if (emailField) email = formData[emailField];
+          }
+
+          let phone = formData.phone || '';
+          if (!phone) {
+            const phoneField = Object.keys(formData).find(key => key.includes('phone'));
+            if (phoneField) phone = formData[phoneField];
+          }
+
+          const matchesSearch = (
+            fullname?.toLowerCase().includes(searchTermLower) ||
+            email?.toLowerCase().includes(searchTermLower) ||
+            phone?.includes(debouncedSearchTerm) ||
+            candidate.searchIndex?.toLowerCase().includes(searchTermLower)
+          );
+
+          if (!matchesSearch) return false;
+        }
+
+        // 2. Rating filter
+        if (filters.ratings.length > 0) {
+          const candidateRating = candidate.stars || 0;
+          if (!filters.ratings.includes(candidateRating)) {
+            return false;
+          }
+        }
+
+        // 3. Date range filter
+        if (filters.dateRange) {
+          const candidateDate = new Date(candidate.createdAt);
+          const startDate = new Date(filters.dateRange.start);
+          const endDate = new Date(filters.dateRange.end);
+          endDate.setHours(23, 59, 59, 999); // Include end of day
+
+          if (candidateDate < startDate || candidateDate > endDate) {
+            return false;
+          }
+        }
+
+        // 4. Rejected filter
+        if (!filters.showRejected && candidate.rejected) {
+          return false;
+        }
+
+        // 5. Vacancy filter (for multi-job view)
+        if (isMultiJobView && filters.vacancies && filters.vacancies.length > 0) {
+          const candidateVacancy = candidate.vacancyInfo?.name;
+          if (!candidateVacancy || !filters.vacancies.includes(candidateVacancy)) {
+            return false;
+          }
+        }
+
+        // 6. Assignee filter
+        if (filters.assignees.length > 0) {
+          const candidateAssigneeId = candidate.assignedTo?._id || candidate.assignedTo;
+          const isUnassigned = !candidateAssigneeId;
+
+          // Check if "unassigned" is selected and candidate is unassigned
+          if (filters.assignees.includes('unassigned') && isUnassigned) {
+            // Allow unassigned candidates if "unassigned" is selected
+          }
+          // Check if candidate is assigned to a selected team member
+          else if (candidateAssigneeId && filters.assignees.includes(candidateAssigneeId)) {
+            // Allow assigned candidates if their assignee is selected
+          }
+          // Otherwise, filter out this candidate
+          else {
+            return false;
+          }
+        }
+
+        return true;
+      };
+
       const boardColumns = stages.map(stage => {
         // Skip stage if stage filter is active and this stage is not selected
         if (filters.stages.length > 0 && !filters.stages.includes(stage._id)) {
@@ -1343,98 +1553,8 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         
         // Apply comprehensive filters
         const filteredCandidates = stageCandidates.filter(candidate => {
-          const formData = candidate.formData || {};
-          
-          // 1. Search filter
-          if (debouncedSearchTerm) {
-            const searchTermLower = debouncedSearchTerm.toLowerCase();
-            
-            // Extract data for searching
-            let fullname = formData.fullname || formData.firstname || '';
-            if (!fullname && formData.firstname && formData.lastname) {
-              fullname = `${formData.firstname} ${formData.lastname}`;
-            }
-            const contactFirstName = Object.keys(formData).find(key => key.includes('firstName'));
-            const contactLastName = Object.keys(formData).find(key => key.includes('lastName'));
-            if (!fullname && contactFirstName && contactLastName) {
-              fullname = `${formData[contactFirstName]} ${formData[contactLastName]}`;
-            }
-            
-            let email = formData.email || '';
-            if (!email) {
-              const emailField = Object.keys(formData).find(key => key.includes('email'));
-              if (emailField) email = formData[emailField];
-            }
-            
-            let phone = formData.phone || '';
-            if (!phone) {
-              const phoneField = Object.keys(formData).find(key => key.includes('phone'));
-              if (phoneField) phone = formData[phoneField];
-            }
-            
-            const matchesSearch = (
-              fullname?.toLowerCase().includes(searchTermLower) ||
-              email?.toLowerCase().includes(searchTermLower) ||
-              phone?.includes(debouncedSearchTerm) ||
-              candidate.searchIndex?.toLowerCase().includes(searchTermLower)
-            );
-            
-            if (!matchesSearch) return false;
-          }
-          
-          // 2. Rating filter
-          if (filters.ratings.length > 0) {
-            const candidateRating = candidate.stars || 0;
-            if (!filters.ratings.includes(candidateRating)) {
-              return false;
-            }
-          }
-          
-          // 3. Date range filter
-          if (filters.dateRange) {
-            const candidateDate = new Date(candidate.createdAt);
-            const startDate = new Date(filters.dateRange.start);
-            const endDate = new Date(filters.dateRange.end);
-            endDate.setHours(23, 59, 59, 999); // Include end of day
-            
-            if (candidateDate < startDate || candidateDate > endDate) {
-              return false;
-            }
-          }
-          
-          // 4. Rejected filter
-          if (!filters.showRejected && candidate.rejected) {
-            return false;
-          }
-          
-          // 5. Vacancy filter (for multi-job view)
-          if (isMultiJobView && filters.vacancies && filters.vacancies.length > 0) {
-            const candidateVacancy = candidate.vacancyInfo?.name;
-            if (!candidateVacancy || !filters.vacancies.includes(candidateVacancy)) {
-              return false;
-            }
-          }
-          
-          // 6. Assignee filter
-          if (filters.assignees.length > 0) {
-            const candidateAssigneeId = candidate.assignedTo?._id || candidate.assignedTo;
-            const isUnassigned = !candidateAssigneeId;
-            
-            // Check if "unassigned" is selected and candidate is unassigned
-            if (filters.assignees.includes('unassigned') && isUnassigned) {
-              // Allow unassigned candidates if "unassigned" is selected
-            }
-            // Check if candidate is assigned to a selected team member
-            else if (candidateAssigneeId && filters.assignees.includes(candidateAssigneeId)) {
-              // Allow assigned candidates if their assignee is selected
-            }
-            // Otherwise, filter out this candidate
-            else {
-              return false;
-            }
-          }
-          
-          return true;
+          if (candidate.archived) return false;
+          return passesNonStageFilters(candidate);
         });
           
         console.log(`🔍 Stage "${stage.name}": ${stageCandidates.length} → ${filteredCandidates.length} candidates after filter`);
@@ -1443,101 +1563,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
           id: stage._id,
           title: stage.name,
           sort: stage.sort || 0,
-          cards: filteredCandidates.map(candidate => {
-            const formData = candidate.formData || {};
-            
-            // Extract name from different possible field structures
-            console.log('🔍 Extracting name from formData:', Object.keys(formData));
-            
-            let fullname = '';
-            
-            // Method 1: Check for existing fullname
-            if (formData.fullname) {
-              fullname = formData.fullname;
-            }
-            // Method 2: Combine firstname + lastname
-            else if (formData.firstname && formData.lastname) {
-              fullname = `${formData.firstname} ${formData.lastname}`;
-            }
-            // Method 3: Handle dynamic contact field structure
-            else {
-              const contactFirstName = Object.keys(formData).find(key => key.includes('firstName'));
-              const contactLastName = Object.keys(formData).find(key => key.includes('lastName'));
-              if (contactFirstName && contactLastName) {
-                const firstName = formData[contactFirstName];
-                const lastName = formData[contactLastName];
-                if (firstName && lastName) {
-                  fullname = `${firstName} ${lastName}`;
-                }
-              }
-            }
-            
-            console.log('📝 Extracted fullname:', fullname);
-            
-            // Extract email from different possible fields
-            let email = formData.email || '';
-            if (!email) {
-              const emailField = Object.keys(formData).find(key => key.includes('email'));
-              if (emailField) email = formData[emailField];
-            }
-            console.log('📧 Extracted email:', email);
-            
-            // Extract phone from different possible fields  
-            let phone = formData.phone || '';
-            if (!phone) {
-              const phoneField = Object.keys(formData).find(key => key.includes('phone'));
-              if (phoneField) phone = formData[phoneField];
-            }
-            console.log('📞 Extracted phone:', phone);
-
-            // Extract avatar - for form submissions, there usually isn't an avatar
-            let avatar = null;
-            if (candidate.formData?.avatar && candidate.formData.avatar.trim()) {
-              avatar = candidate.formData.avatar;
-            } else {
-              // Check for image upload field
-              const imageField = Object.keys(formData).find(key => 
-                key.includes('image') || key.includes('photo') || key.includes('avatar')
-              );
-              if (imageField && formData[imageField] && formData[imageField].trim()) {
-                avatar = formData[imageField];
-              }
-            }
-            
-            const cardData = {
-              id: candidate._id,
-              fullname: fullname || 'Unknown',
-              email: email,
-              phone: phone,
-              avatar: avatar, // null instead of empty string prevents broken image
-              stars: candidate.stars || 0,
-              createdAt: candidate.createdAt,
-              position: vacancyInfo?.name || 'Position',
-              stageId: stage._id,
-              rejected: candidate.rejected || false,
-              // Include original fields for vacancy matching (but not vacancyInfo unless needed)
-              LandingPageDataId: candidate.LandingPageDataId,
-              vacancyId: candidate.vacancyId,
-              // Assignment data
-              assignedTo: candidate.assignedTo,
-              assignedAt: candidate.assignedAt,
-              assignedBy: candidate.assignedBy,
-              // Status phase data
-              statusPhase: candidate.statusPhase || 'new',
-              statusPhaseUpdatedAt: candidate.statusPhaseUpdatedAt,
-              statusPhaseUpdatedBy: candidate.statusPhaseUpdatedBy
-            };
-            
-            // ABSOLUTELY DO NOT add vacancyInfo in single-job view to prevent purple "Applied to" text
-            if (isMultiJobView && candidate.vacancyInfo) {
-              cardData.vacancyInfo = candidate.vacancyInfo;
-              console.log(`✅ Adding vacancyInfo to candidate ${candidate._id} in multi-job view:`, candidate.vacancyInfo);
-            } else {
-              console.log(`❌ NOT adding vacancyInfo to candidate ${candidate._id} - isMultiJobView: ${isMultiJobView}, hasVacancyInfo: ${!!candidate.vacancyInfo}`);
-            }
-            
-            return cardData;
-          })
+          cards: filteredCandidates.map(candidate => buildCardData(candidate, { id: stage._id, title: stage.name }))
         };
       }).sort((a, b) => a.sort - b.sort);
       
@@ -1566,26 +1592,22 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         setPipelineData({ columns: safeColumns });
       }
       
-      // Flatten for table view
-      const flatCandidates = boardColumns.flatMap(col =>
-        col.cards.map(card => {
-          const baseCard = {
-            ...card,
-            stage: col.title,
-            stageId: col.id,
-            // Ensure vacancy reference fields are preserved for table view
-            LandingPageDataId: card.LandingPageDataId,
-            vacancyId: card.vacancyId
-          };
-          
-          // Only add vacancyInfo if we're in multi-job view
-          if (isMultiJobView && card.vacancyInfo) {
-            baseCard.vacancyInfo = card.vacancyInfo;
+      // Flatten for table view (use all candidates, including archived)
+      const flatCandidates = allCandidates
+        .filter(candidate => {
+          // Apply stage filter if selected
+          if (filters.stages.length > 0) {
+            const stageForCandidate = getStageForCandidate(candidate);
+            if (!filters.stages.includes(stageForCandidate.id)) {
+              return false;
+            }
           }
-          
-          return baseCard;
+          return passesNonStageFilters(candidate);
         })
-      );
+        .map(candidate => {
+          const stageForCandidate = getStageForCandidate(candidate);
+          return buildCardData(candidate, stageForCandidate);
+        });
       
       console.log('📊 Filtering results:', {
         totalCandidatesBeforeFilter: allCandidates.length,
@@ -2117,7 +2139,132 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     }
   };
 
+  // Archive candidate handler
+  const handleArchiveCandidate = async (candidateId) => {
+    const candidate = candidates.find(c => c.id === candidateId);
+    const candidateName = candidate?.fullname || 'this candidate';
+    
+    Modal.confirm({
+      title: 'Archive Candidate',
+      content: `Are you sure you want to archive ${candidateName}? They will be hidden from the pipeline view but can be unarchived later from the list view.`,
+      okText: 'Archive',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          console.log('📦 Archiving candidate:', candidateId);
+          await ATSService.archiveCandidate(candidateId);
+          
+          // Optimistic update - remove from pipeline view
+          setCandidates(prevCandidates => 
+            prevCandidates.map(c => c.id === candidateId ? { ...c, archived: true } : c)
+          );
+          setPipelineData(prevData => ({
+            ...prevData,
+            columns: prevData.columns.map(col => ({
+              ...col,
+              cards: col.cards.filter(card => card.id !== candidateId)
+            }))
+          }));
+          
+          message.success(`${candidateName} has been archived`);
+          loadATSData({ isBackgroundRefresh: true });
+        } catch (error) {
+          console.error('❌ Error archiving candidate:', error);
+          message.error('Failed to archive candidate');
+        }
+      }
+    });
+  };
 
+  // Unarchive candidate handler
+  const handleUnarchiveCandidate = async (candidateId) => {
+    try {
+      console.log('📦 Unarchiving candidate:', candidateId);
+      await ATSService.unarchiveCandidate(candidateId);
+      
+      // Update local state
+      setCandidates(prevCandidates => 
+        prevCandidates.map(c => c.id === candidateId ? { ...c, archived: false } : c)
+      );
+      
+      message.success('Candidate has been unarchived');
+      loadATSData({ isBackgroundRefresh: true });
+    } catch (error) {
+      console.error('❌ Error unarchiving candidate:', error);
+      message.error('Failed to unarchive candidate');
+    }
+  };
+
+  // Bulk archive candidates handler
+  const handleBulkArchive = async (candidateIds = selectedCandidates) => {
+    setBulkActionLoading(true);
+    try {
+      if (!candidateIds.length) {
+        message.warning('No candidates selected to archive');
+        setBulkActionLoading(false);
+        return;
+      }
+
+      console.log('📦 Bulk archiving candidates:', candidateIds);
+      
+      await ATSService.bulkArchiveCandidates(candidateIds);
+      
+      // Optimistic update - mark as archived and remove from pipeline
+      setCandidates(prevCandidates => 
+        prevCandidates.map(c => candidateIds.includes(c.id) ? { ...c, archived: true } : c)
+      );
+      setPipelineData(prevData => ({
+        ...prevData,
+        columns: prevData.columns.map(col => ({
+          ...col,
+          cards: col.cards.filter(card => !candidateIds.includes(card.id))
+        }))
+      }));
+      
+      message.success(`Successfully archived ${candidateIds.length} candidate${candidateIds.length !== 1 ? 's' : ''}`);
+      
+      setSelectedCandidates([]);
+      loadATSData({ isBackgroundRefresh: true });
+      
+    } catch (error) {
+      console.error('❌ Error bulk archiving candidates:', error);
+      message.error('Failed to archive some candidates. Please try again.');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  // Bulk unarchive candidates handler
+  const handleBulkUnarchive = async (candidateIds = selectedCandidates) => {
+    setBulkActionLoading(true);
+    try {
+      if (!candidateIds.length) {
+        message.warning('No candidates selected to unarchive');
+        setBulkActionLoading(false);
+        return;
+      }
+
+      console.log('📦 Bulk unarchiving candidates:', candidateIds);
+      
+      await ATSService.bulkUnarchiveCandidates(candidateIds);
+      
+      // Update local state
+      setCandidates(prevCandidates => 
+        prevCandidates.map(c => candidateIds.includes(c.id) ? { ...c, archived: false } : c)
+      );
+      
+      message.success(`Successfully unarchived ${candidateIds.length} candidate${candidateIds.length !== 1 ? 's' : ''}`);
+      
+      setSelectedCandidates([]);
+      loadATSData({ isBackgroundRefresh: true });
+      
+    } catch (error) {
+      console.error('❌ Error bulk unarchiving candidates:', error);
+      message.error('Failed to unarchive some candidates. Please try again.');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
 
   // Email candidate handler (open in-app composer)
   const handleEmailCandidate = (candidate) => {
@@ -2891,6 +3038,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                                 setAddCandidateModal({ editId: candidate.id });
                               }}
                               onDelete={() => handleDeleteCandidate(candidate.id)}
+                              onArchive={() => handleArchiveCandidate(candidate.id)}
                               onEmail={() => handleEmailCandidate(candidate)}
                               onPhone={() => handlePhoneCandidate(candidate)}
                               onChat={() => handleStartChatWithCandidate(candidate)}
@@ -3001,8 +3149,13 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
               size={window.innerWidth < 768 ? 32 : 40}
             />
             <div className="min-w-0 flex-1">
-              <div className="font-medium text-gray-900 text-sm truncate">
-                {record.fullname || record.email}
+              <div className="font-medium text-gray-900 text-sm truncate flex items-center gap-2">
+                <span className="truncate">{record.fullname || record.email}</span>
+                {record.archived && (
+                  <Tag color="default" className="text-[10px] px-2 py-0">
+                    Archived
+                  </Tag>
+                )}
               </div>
               <div className="text-xs text-gray-500 truncate hidden md:block">
                 {record.email}
@@ -3249,11 +3402,24 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 {
                   type: 'divider',
                 },
+                // Show archive or unarchive based on candidate's archived status
+                record.archived ? {
+                  key: 'unarchive',
+                  label: 'Unarchive',
+                  icon: <InboxOutlined />,
+                  onClick: () => handleUnarchiveCandidate(record.id),
+                } : {
+                  key: 'archive',
+                  label: 'Archive',
+                  icon: <InboxOutlined />,
+                  onClick: () => handleArchiveCandidate(record.id),
+                },
                 {
                   key: 'delete',
                   label: 'Delete',
                   icon: <DeleteOutlined />,
                   danger: true,
+                  onClick: () => handleDeleteCandidate(record.id),
                 },
               ],
             }}
@@ -3271,6 +3437,23 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
       },
     ];
 
+    // Filter candidates for list view - show/hide archived based on filter
+    const filteredCandidates = candidates.filter(c => {
+      if (!filters.showArchived && c.archived) {
+        return false;
+      }
+      return true;
+    });
+
+    const selectedArchivedIds = selectedCandidates.filter(id => {
+      const candidate = candidates.find(c => c.id === id);
+      return candidate?.archived;
+    });
+    const selectedActiveIds = selectedCandidates.filter(id => {
+      const candidate = candidates.find(c => c.id === id);
+      return candidate && !candidate.archived;
+    });
+
     return (
       <div className="flex-1 bg-gray-100 p-6">
         <div className="bg-white rounded-lg shadow-sm border">
@@ -3283,11 +3466,16 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                 </h3>
                 <div className="flex items-center gap-4">
                   <div className="text-sm text-gray-500">
-                    {candidates.length} candidate{candidates.length !== 1 ? 's' : ''} total
+                    {filteredCandidates.length} candidate{filteredCandidates.length !== 1 ? 's' : ''} total
+                    {!filters.showArchived && candidates.filter(c => c.archived).length > 0 && (
+                      <span className="text-gray-400 ml-1">
+                        ({candidates.filter(c => c.archived).length} archived)
+                      </span>
+                    )}
                   </div>
-                  {candidates.length > pageSize && (
+                  {filteredCandidates.length > pageSize && (
                     <div className="text-sm text-gray-400">
-                      Page {currentPage} of {Math.ceil(candidates.length / pageSize)} • {pageSize} per page
+                      Page {currentPage} of {Math.ceil(filteredCandidates.length / pageSize)} • {pageSize} per page
                     </div>
                   )}
                   {selectedCandidates.length > 0 && (
@@ -3315,12 +3503,12 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
 
           <Table
             columns={columns}
-            dataSource={candidates}
+            dataSource={filteredCandidates}
             rowKey="id"
             pagination={{
               current: currentPage,
               pageSize: pageSize,
-              total: candidates.length,
+              total: filteredCandidates.length,
               showSizeChanger: true,
               showQuickJumper: window.innerWidth >= 768,
               showTotal: (total, range) => {
@@ -3379,7 +3567,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                   key: 'all',
                   text: 'Select All',
                   onSelect: () => {
-                    setSelectedCandidates(candidates.map(c => c.id));
+                    setSelectedCandidates(filteredCandidates.map(c => c.id));
                   },
                 },
                 {
@@ -3416,7 +3604,8 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
               });
             }}
             rowClassName={(record, index) => {
-              return index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+              const base = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+              return `${base} ${record.archived ? 'opacity-60' : ''}`;
             }}
             onRow={(record) => ({
               onClick: () => {
@@ -3452,6 +3641,23 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                             label: stage.title,
                             onClick: () => handleBulkMoveStage(stage.id)
                           }))
+                        },
+                        {
+                          type: 'divider'
+                        },
+                        {
+                          key: 'archive',
+                          label: 'Archive Selected',
+                          icon: <InboxOutlined />,
+                          disabled: selectedActiveIds.length === 0,
+                          onClick: () => handleBulkArchive(selectedActiveIds)
+                        },
+                        {
+                          key: 'unarchive',
+                          label: 'Unarchive Selected',
+                          icon: <InboxOutlined />,
+                          disabled: selectedArchivedIds.length === 0,
+                          onClick: () => handleBulkUnarchive(selectedArchivedIds)
                         },
                         {
                           type: 'divider'
@@ -3696,6 +3902,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                       ratings: [],
                       dateRange: null,
                       showRejected: false,
+                      showArchived: true,
                       assignees: [],
                       ...(isMultiJobView && { vacancies: [] })
                     });
@@ -3883,6 +4090,15 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                     Show rejected candidates
                   </Checkbox>
                   
+                  {viewMode === 'list' && (
+                    <Checkbox
+                      checked={filters.showArchived}
+                      onChange={(e) => setFilters(prev => ({ ...prev, showArchived: e.target.checked }))}
+                    >
+                      Show archived candidates
+                    </Checkbox>
+                  )}
+                  
                   <div className="pt-2">
                     <Button
                       size="small"
@@ -3892,6 +4108,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                           ratings: [],
                           dateRange: null,
                           showRejected: false,
+                          showArchived: true,
                           assignees: [],
                           ...(isMultiJobView && { vacancies: [] })
                         });

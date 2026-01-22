@@ -129,6 +129,23 @@ class ATSService {
       newOwnerId,
     });
   }
+
+  // Archive methods
+  archiveCandidate(candidateId) {
+    return this.api.put("/archiveCandidate", { candidateId });
+  }
+
+  unarchiveCandidate(candidateId) {
+    return this.api.put("/unarchiveCandidate", { candidateId });
+  }
+
+  bulkArchiveCandidates(candidateIds) {
+    return this.api.put("/bulkArchiveCandidates", { candidateIds });
+  }
+
+  bulkUnarchiveCandidates(candidateIds) {
+    return this.api.put("/bulkUnarchiveCandidates", { candidateIds });
+  }
 }
 
 export default new ATSService(`${getBackendUrl()}/ats`);
