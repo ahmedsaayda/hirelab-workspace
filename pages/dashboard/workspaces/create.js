@@ -28,6 +28,11 @@ const WorkspaceCreatePage = () => {
   const [primaryColor, setPrimaryColor] = useState("#0066CC");
   const [secondaryColor, setSecondaryColor] = useState("#333333");
   const [tertiaryColor, setTertiaryColor] = useState("#666666");
+  
+  // Local state for font selections - form.getFieldValue() doesn't trigger re-renders!
+  const [titleFont, setTitleFont] = useState("");
+  const [subheaderFont, setSubheaderFont] = useState("");
+  const [bodyFont, setBodyFont] = useState("");
 
   // Compute remaining funnels from user data (if available)
   const planMaxFunnels = useMemo(() => {
@@ -509,7 +514,7 @@ const WorkspaceCreatePage = () => {
                             Title Style
                           </Typography.Text>
                           <Typography.Text className="block text-xs text-gray-500">
-                            {form.getFieldValue('titleFont') || "No font selected"}
+                            {titleFont || "No font selected"}
                           </Typography.Text>
                         </div>
                       </div>
@@ -534,7 +539,7 @@ const WorkspaceCreatePage = () => {
                             H2, H3 Style
                           </Typography.Text>
                           <Typography.Text className="block text-xs text-gray-500">
-                            {form.getFieldValue('subheaderFont') || "No font selected"}
+                            {subheaderFont || "No font selected"}
                           </Typography.Text>
                         </div>
                       </div>
@@ -559,7 +564,7 @@ const WorkspaceCreatePage = () => {
                             Body Style
                           </Typography.Text>
                           <Typography.Text className="block text-xs text-gray-500">
-                            {form.getFieldValue('bodyFont') || "No font selected"}
+                            {bodyFont || "No font selected"}
                           </Typography.Text>
                         </div>
                       </div>
@@ -586,27 +591,27 @@ const WorkspaceCreatePage = () => {
                           showSearch
                           value={
                             selectedFontStyle === "h1"
-                              ? form.getFieldValue('titleFont') || ""
+                              ? (titleFont || undefined)
                               : selectedFontStyle === "h2"
-                              ? form.getFieldValue('subheaderFont') || ""
-                              : form.getFieldValue('bodyFont') || ""
+                              ? (subheaderFont || undefined)
+                              : (bodyFont || undefined)
                           }
                           onChange={(value) => {
-                            const selectedFont = googleFonts.find(f => f.family === value) ||
-                                                fonts.find(f => f.family === value);
-
+                            // Update local state (triggers re-render)
                             if (selectedFontStyle === "h1") {
+                              setTitleFont(value);
                               form.setFieldsValue({
                                 titleFont: value,
                                 selectedFont: value
                               });
                             } else if (selectedFontStyle === "h2") {
+                              setSubheaderFont(value);
                               form.setFieldsValue({ subheaderFont: value });
                             } else {
+                              setBodyFont(value);
                               form.setFieldsValue({ bodyFont: value });
                             }
 
-                            // Mark form as modified
                             console.log(`Font ${selectedFontStyle} changed to:`, value);
                           }}
                           className="w-full"
@@ -617,44 +622,27 @@ const WorkspaceCreatePage = () => {
                               ? "subheaders"
                               : "body text"
                           }`}
-                          optionLabelProp="label"
-                          optionFilterProp="children"
                           filterOption={(input, option) =>
-                            (option?.label)
+                            (option?.label || option?.value || '')
+                              .toString()
                               .toLowerCase()
                               .includes(input.toLowerCase())
                           }
-                        >
-                          {Object.keys(fontCategories).map(category => (
-                            <Select.OptGroup key={category} label={category.charAt(0).toUpperCase() + category.slice(1)}>
-                              {fontCategories[category].map(font => (
-                                <Select.Option
-                                  key={font.family}
-                                  value={font.family}
-                                  label={font.family}
-                                >
-                                  <div style={{ fontFamily: font.family }}>
-                                    {font.family}
-                                  </div>
-                                </Select.Option>
-                              ))}
-                            </Select.OptGroup>
-                          ))}
-
-                          {fonts.filter((f) =>
-                            !googleFonts.some((gf) => gf.family === f.family)).length > 0 && (
-                            <Select.OptGroup label="Custom Fonts">
-                              {fonts
-                                .filter((f) =>
-                                  !googleFonts.some((gf) => gf.family === f.family))
-                                .map((font) => (
-                                  <Select.Option key={font.family} value={font.family} label={font.family}>
-                                    <div>{font.family}</div>
-                                  </Select.Option>
-                                ))}
-                            </Select.OptGroup>
-                          )}
-                        </Select>
+                          options={[
+                            ...Object.keys(fontCategories).flatMap(category => 
+                              fontCategories[category].map(font => ({
+                                value: font.family,
+                                label: font.family,
+                              }))
+                            ),
+                            ...fonts
+                              .filter(f => !googleFonts.some(gf => gf.family === f.family))
+                              .map(font => ({
+                                value: font.family,
+                                label: font.family,
+                              }))
+                          ]}
+                        />
                       </div>
                     )}
                   </div>

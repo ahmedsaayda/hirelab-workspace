@@ -45,6 +45,24 @@ const WorkspaceCreationWizard = ({
   const [fonts, setFonts] = useState([]);
   const [googleFonts, setGoogleFonts] = useState([]);
   const [fontCategories, setFontCategories] = useState({});
+  
+  // Separate state for font selections (like onboarding pattern) - fixes Select display issue
+  const [titleFontValue, setTitleFontValue] = useState("");
+  const [subheaderFontValue, setSubheaderFontValue] = useState("");
+  const [bodyFontValue, setBodyFontValue] = useState("");
+
+  // DEBUG: Track font value state changes
+  useEffect(() => {
+    console.log(`[FONT STATE DEBUG] titleFontValue changed to: "${titleFontValue}"`);
+  }, [titleFontValue]);
+  
+  useEffect(() => {
+    console.log(`[FONT STATE DEBUG] subheaderFontValue changed to: "${subheaderFontValue}"`);
+  }, [subheaderFontValue]);
+  
+  useEffect(() => {
+    console.log(`[FONT STATE DEBUG] bodyFontValue changed to: "${bodyFontValue}"`);
+  }, [bodyFontValue]);
 
   const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -135,6 +153,10 @@ const WorkspaceCreationWizard = ({
         atsAccess: editingWorkspace.atsAccess,
         customDomain: editingWorkspace.customDomain,
       });
+      // Set local font state values for Select display
+      setTitleFontValue(editingWorkspace.titleFont?.family || "");
+      setSubheaderFontValue(editingWorkspace.subheaderFont?.family || "");
+      setBodyFontValue(editingWorkspace.bodyFont?.family || "");
       form.setFieldsValue({
         name: editingWorkspace.name,
         clientName: editingWorkspace.clientName,
@@ -157,6 +179,10 @@ const WorkspaceCreationWizard = ({
     } else {
       setCurrentStep(1);
       setWorkspaceData({});
+      // Reset local font state values
+      setTitleFontValue("");
+      setSubheaderFontValue("");
+      setBodyFontValue("");
       form.resetFields();
     }
   }, [editingWorkspace, form]);
@@ -527,41 +553,47 @@ const WorkspaceCreationWizard = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">Typography</label>
 
-                  {/* Font Style Selector */}
-                  <div className="flex space-x-2 mb-4">
-                    <button
-                      type="button"
+                  {/* Font Style Selector Cards */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div
                       onClick={() => setSelectedFontStyle("h1")}
-                      className={`px-3 py-2 text-sm rounded-md border ${
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
                         selectedFontStyle === "h1"
-                          ? "bg-blue-100 border-blue-300 text-blue-700"
-                          : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-200 hover:border-purple-300"
                       }`}
                     >
-                      Titles (H1)
-                    </button>
-                    <button
-                      type="button"
+                      <div className="text-sm font-medium text-gray-900">Title Style</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {titleFontValue || "No font selected"}
+                      </div>
+                    </div>
+                    <div
                       onClick={() => setSelectedFontStyle("h2")}
-                      className={`px-3 py-2 text-sm rounded-md border ${
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
                         selectedFontStyle === "h2"
-                          ? "bg-blue-100 border-blue-300 text-blue-700"
-                          : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-200 hover:border-purple-300"
                       }`}
                     >
-                      Subheaders (H2)
-                    </button>
-                    <button
-                      type="button"
+                      <div className="text-sm font-medium text-gray-900">H2, H3 Style</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {subheaderFontValue || "No font selected"}
+                      </div>
+                    </div>
+                    <div
                       onClick={() => setSelectedFontStyle("h3")}
-                      className={`px-3 py-2 text-sm rounded-md border ${
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
                         selectedFontStyle === "h3"
-                          ? "bg-blue-100 border-blue-300 text-blue-700"
-                          : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-200 hover:border-purple-300"
                       }`}
                     >
-                      Body (H3)
-                    </button>
+                      <div className="text-sm font-medium text-gray-900">Body Style</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {bodyFontValue || "No font selected"}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Font Selector */}
@@ -575,18 +607,25 @@ const WorkspaceCreationWizard = ({
 
                     <Select
                       showSearch
-                      value={
-                        selectedFontStyle === "h1"
-                          ? workspaceData.titleFont?.family || ""
+                      key={`font-select-${selectedFontStyle}`}
+                      value={(() => {
+                        const val = selectedFontStyle === "h1"
+                          ? titleFontValue
                           : selectedFontStyle === "h2"
-                          ? workspaceData.subheaderFont?.family || ""
-                          : workspaceData.bodyFont?.family || ""
-                      }
+                          ? subheaderFontValue
+                          : bodyFontValue;
+                        console.log(`[FONT SELECT DEBUG] style=${selectedFontStyle}, value="${val}", titleFontValue="${titleFontValue}", subheaderFontValue="${subheaderFontValue}", bodyFontValue="${bodyFontValue}"`);
+                        return val || undefined;
+                      })()}
                       onChange={(value) => {
+                        console.log(`[FONT SELECT DEBUG] onChange called: style=${selectedFontStyle}, newValue="${value}"`);
                         const selectedFont = googleFonts.find(f => f.family === value) ||
                                             fonts.find(f => f.family === value);
+                        console.log(`[FONT SELECT DEBUG] selectedFont found:`, selectedFont);
 
                         if (selectedFontStyle === "h1") {
+                          console.log(`[FONT SELECT DEBUG] Setting titleFontValue to "${value}"`);
+                          setTitleFontValue(value);
                           setWorkspaceData(prev => ({
                             ...prev,
                             titleFont: {
@@ -599,6 +638,8 @@ const WorkspaceCreationWizard = ({
                             },
                           }));
                         } else if (selectedFontStyle === "h2") {
+                          console.log(`[FONT SELECT DEBUG] Setting subheaderFontValue to "${value}"`);
+                          setSubheaderFontValue(value);
                           setWorkspaceData(prev => ({
                             ...prev,
                             subheaderFont: {
@@ -607,6 +648,8 @@ const WorkspaceCreationWizard = ({
                             },
                           }));
                         } else {
+                          console.log(`[FONT SELECT DEBUG] Setting bodyFontValue to "${value}"`);
+                          setBodyFontValue(value);
                           setWorkspaceData(prev => ({
                             ...prev,
                             bodyFont: {
@@ -624,44 +667,27 @@ const WorkspaceCreationWizard = ({
                           ? "subheaders"
                           : "body text"
                       }`}
-                      optionLabelProp="label"
-                      optionFilterProp="children"
                       filterOption={(input, option) =>
-                        (option?.label)
+                        (option?.label || option?.value || '')
+                          .toString()
                           .toLowerCase()
                           .includes(input.toLowerCase())
                       }
-                    >
-                      {Object.keys(fontCategories).map(category => (
-                        <Select.OptGroup key={category} label={category.charAt(0).toUpperCase() + category.slice(1)}>
-                          {fontCategories[category].map(font => (
-                            <Select.Option
-                              key={font.family}
-                              value={font.family}
-                              label={font.family}
-                            >
-                              <div style={{ fontFamily: font.family }}>
-                                {font.family}
-                              </div>
-                            </Select.Option>
-                          ))}
-                        </Select.OptGroup>
-                      ))}
-
-                      {fonts.filter((f) =>
-                        !googleFonts.some((gf) => gf.family === f.family)).length > 0 && (
-                        <Select.OptGroup label="Custom Fonts">
-                          {fonts
-                            .filter((f) =>
-                              !googleFonts.some((gf) => gf.family === f.family))
-                            .map((font) => (
-                              <Select.Option key={font.family} value={font.family} label={font.family}>
-                                <div>{font.family}</div>
-                              </Select.Option>
-                            ))}
-                        </Select.OptGroup>
-                      )}
-                    </Select>
+                      options={[
+                        ...Object.keys(fontCategories).flatMap(category => 
+                          fontCategories[category].map(font => ({
+                            value: font.family,
+                            label: font.family,
+                          }))
+                        ),
+                        ...fonts
+                          .filter(f => !googleFonts.some(gf => gf.family === f.family))
+                          .map(font => ({
+                            value: font.family,
+                            label: font.family,
+                          }))
+                      ]}
+                    />
                   </div>
                 </div>
               </div>

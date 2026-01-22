@@ -38,6 +38,7 @@ import FormE from "../Landingpage/Form";
 import EditorRender from "../LandingpageEdit/EditorRender";
 import ApplyPagePreview from "./ApplyPagePreview";
 import { FaGripVertical, FaTrash } from "react-icons/fa";
+import { Copy as CopyIcon } from "lucide-react";
 import { IoTrashOutline } from "react-icons/io5";
 import {
   DragDropContext as BeautifulDragDropContext,
@@ -3625,43 +3626,28 @@ export default function FormEdit({ paramsId }) {
                               </div>
                             </div>
                           </div>
-                        </div>
-
-                        {/* Always visible action buttons */}
-                        <div className="flex flex-wrap items-center justify-end gap-2 mb-6">
-                          <button
-                            onClick={() => setAiFormModalVisible(true)}
-                            className="w-9 h-9 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center"
-                            title={formSections.length > 0 ? "Regenerate with AI" : "Generate with AI"}
-                            aria-label={formSections.length > 0 ? "Regenerate with AI" : "Generate with AI"}
-                          >
-                            <img
-                              src="/images/img_magic_wand_01.svg"
-                              alt=""
-                              className="w-4 h-4"
-                            />
-                          </button>
-                          <button
-                            onClick={openImportFormModal}
-                            className="w-9 h-9 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center"
-                            title="Import Form"
-                            aria-label="Import Form"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              viewBox="0 0 20 20"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
+                          <div className="flex flex-row items-center justify-end gap-3 pr-2">
+                            <button
+                              onClick={() => setAiFormModalVisible(true)}
+                              className="flex justify-center items-center p-1.5 rounded-md border border-gray-200 hover:bg-gray-50"
+                              title={formSections.length > 0 ? "Regenerate with AI" : "Generate with AI"}
+                              aria-label={formSections.length > 0 ? "Regenerate with AI" : "Generate with AI"}
                             >
-                              <path
-                                d="M4.16699 12.5H3.33366C2.89163 12.5 2.46771 12.3244 2.15515 12.0119C1.84259 11.6993 1.66699 11.2754 1.66699 10.8334V3.33335C1.66699 2.89133 1.84259 2.4674 2.15515 2.15484C2.46771 1.84228 2.89163 1.66669 3.33366 1.66669H10.8337C11.2757 1.66669 11.6996 1.84228 12.0122 2.15484C12.3247 2.4674 12.5003 2.89133 12.5003 3.33335V4.16669M9.16699 7.50002H16.667C17.5875 7.50002 18.3337 8.24621 18.3337 9.16669V16.6667C18.3337 17.5872 17.5875 18.3334 16.667 18.3334H9.16699C8.24652 18.3334 7.50033 17.5872 7.50033 16.6667V9.16669C7.50033 8.24621 8.24652 7.50002 9.16699 7.50002Z"
-                                stroke="#5207CD"
-                                strokeWidth="1.67"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                              <Img
+                                src="/images2/img_magic_wand_01.svg"
+                                alt="magicwandone"
+                                className="h-[18px] w-[18px] cursor-pointer"
                               />
-                            </svg>
-                          </button>
+                            </button>
+                            <button
+                              onClick={openImportFormModal}
+                              className="flex justify-center items-center rounded-md p-1.5 border border-gray-200 hover:bg-gray-50"
+                              title="Import Form"
+                              aria-label="Import Form"
+                            >
+                              <CopyIcon className="w-[18px] h-[18px] text-[#5207CD]" />
+                            </button>
+                          </div>
                         </div>
 
                         {isEditingForm ? (
