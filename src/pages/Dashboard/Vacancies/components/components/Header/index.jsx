@@ -729,26 +729,26 @@ export default function Header({
                 const currentLang = landingPageData?.lang || landingPageData?.language || "English";
                 setSelectedLanguage(currentLang);
               }}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              style={{ 
+                backgroundColor: 'transparent', 
+                borderColor: '#d9d9d9',
+                color: '#374151'
+              }}
             >
               Cancel
             </Button>
             <Button
+              type="primary"
               onClick={handleConfirmLanguageChange}
               disabled={isTranslating}
-              className={`px-4 py-2 rounded-md ${isTranslating
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-[#5207CD] text-white hover:bg-[#0C7CE6]'
-                }`}
+              loading={isTranslating}
+              style={{ 
+                backgroundColor: isTranslating ? '#7c3aed' : '#5207CD', 
+                borderColor: isTranslating ? '#7c3aed' : '#5207CD',
+                opacity: isTranslating ? 0.7 : 1
+              }}
             >
-              {isTranslating ? (
-                <>
-                  <Spin size="small" className="mr-2" />
-                  Translating...
-                </>
-              ) : (
-                'Translate & Apply'
-              )}
+              {isTranslating ? 'Translating...' : 'Translate & Apply'}
             </Button>
           </div>
         </div>
