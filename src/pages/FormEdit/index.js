@@ -810,38 +810,48 @@ export default function FormEdit({ paramsId }) {
   }, [loadLandingPagesForImport]);
 
   // Import form from selected landing page
-  const importFormFromPage = useCallback(async (sourcePage) => {
+  const importFormFromPage = useCallback((sourcePage) => {
     if (!sourcePage?.form) {
       message.error("Selected page has no form to import");
       return;
     }
 
-    try {
-      // Deep clone the form to avoid reference issues
-      const importedForm = JSON.parse(JSON.stringify(sourcePage.form));
+    const doImport = async () => {
+      try {
+        // Deep clone the form to avoid reference issues
+        const importedForm = JSON.parse(JSON.stringify(sourcePage.form));
 
-      // Update form sections with imported fields
-      setFormSections(importedForm.fields || []);
+        // Update form sections with imported fields
+        setFormSections(importedForm.fields || []);
 
-      // Update landing page data with form settings
-      setLandingPageData((prev) => ({
-        ...prev,
-        form: {
-          ...prev?.form,
-          ...importedForm,
-        },
-      }));
+        // Update landing page data with form settings
+        setLandingPageData((prev) => ({
+          ...prev,
+          form: {
+            ...prev?.form,
+            ...importedForm,
+          },
+        }));
 
-      // Mark as having unsaved changes
-      setHasUnpublishedFormChanges(true);
-      sessionHasChangesRef.current = true;
+        // Mark as having unsaved changes
+        setHasUnpublishedFormChanges(true);
+        sessionHasChangesRef.current = true;
 
-      setImportFormModalVisible(false);
-      message.success(`Form imported from "${sourcePage.vacancyTitle || 'Untitled'}"`);
-    } catch (err) {
-      console.error("Failed to import form:", err);
-      message.error("Failed to import form");
-    }
+        setImportFormModalVisible(false);
+        message.success(`Form imported from "${sourcePage.vacancyTitle || 'Untitled'}"`);
+      } catch (err) {
+        console.error("Failed to import form:", err);
+        message.error("Failed to import form");
+      }
+    };
+
+    Modal.confirm({
+      title: "Overwrite current form?",
+      content: "This will override your current form. Do you wish to continue?",
+      okText: "Yes",
+      cancelText: "No",
+      onOk: doImport,
+    });
   }, []);
 
   // Filter landing pages by search query
