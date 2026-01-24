@@ -143,6 +143,7 @@ export default function AdsEdit({ paramsId }) {
   const [reuseCampaign, setReuseCampaign] = useState(true);
   const [reuseAdSet, setReuseAdSet] = useState(false);
   const [preparingLaunch, setPreparingLaunch] = useState(false);
+  const [tabHiddenWarning, setTabHiddenWarning] = useState(false);
   const [preparedOnce, setPreparedOnce] = useState(false);
   const [preparedModalOpen, setPreparedModalOpen] = useState(false);
   const [preparedVariants, setPreparedVariants] = useState([]);
@@ -751,12 +752,69 @@ export default function AdsEdit({ paramsId }) {
     });
   }, []);
 
+  // Visibility-aware delay - pauses when tab is hidden (browsers throttle background tabs)
+  const visibilityAwareDelay = useCallback(async (ms) => {
+    return new Promise((resolve) => {
+      let remaining = ms;
+      let lastTime = Date.now();
+      
+      const tick = () => {
+        // If tab is hidden, wait for it to become visible
+        if (document.hidden) {
+          setTabHiddenWarning(true);
+          const onVisible = () => {
+            if (!document.hidden) {
+              document.removeEventListener('visibilitychange', onVisible);
+              setTabHiddenWarning(false);
+              lastTime = Date.now();
+              setTimeout(tick, Math.min(remaining, 100));
+            }
+          };
+          document.addEventListener('visibilitychange', onVisible);
+          return;
+        }
+        
+        const now = Date.now();
+        remaining -= (now - lastTime);
+        lastTime = now;
+        
+        if (remaining <= 0) {
+          resolve();
+        } else {
+          setTimeout(tick, Math.min(remaining, 100));
+        }
+      };
+      
+      tick();
+    });
+  }, []);
+
   // Wait until preview has content (and optionally matches expected aspect ratio)
+  // Now visibility-aware - pauses when tab is hidden
   const waitForPreviewRender = async (timeoutMs = 3000, expectedFormat = null) => {
     const start = Date.now();
     let lastNodeInfo = null;
+    let elapsedWhenVisible = 0;
 
-    while (Date.now() - start < timeoutMs) {
+    while (elapsedWhenVisible < timeoutMs) {
+      // If tab is hidden, wait for it to become visible (browsers throttle/pause background tabs)
+      if (document.hidden) {
+        setTabHiddenWarning(true);
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => {
+          const onVisible = () => {
+            if (!document.hidden) {
+              document.removeEventListener('visibilitychange', onVisible);
+              setTabHiddenWarning(false);
+              resolve();
+            }
+          };
+          document.addEventListener('visibilitychange', onVisible);
+        });
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+
       const node = captureRef.current;
       if (node && node.childNodes && node.childNodes.length > 0 && node.clientWidth > 0 && node.clientHeight > 0) {
         const actualW = node.clientWidth;
@@ -781,6 +839,7 @@ export default function AdsEdit({ paramsId }) {
       }
       // eslint-disable-next-line no-await-in-loop
       await new Promise((r) => setTimeout(r, 100));
+      elapsedWhenVisible += 100;
     }
 
     // Timeout - DO NOT proceed if we expected a specific format but got wrong dimensions
@@ -1689,11 +1748,11 @@ export default function AdsEdit({ paramsId }) {
             appendPrepareMessage(`Rendering poster for ${stepLabel} (${format.label})`);
             setSelectedFormat(format.id);
             // eslint-disable-next-line no-await-in-loop
-            await new Promise((r) => setTimeout(r, 1200));
+            await visibilityAwareDelay(1200);
             // eslint-disable-next-line no-await-in-loop
             await waitForPreviewRender(5000, format);
             // eslint-disable-next-line no-await-in-loop
-            await new Promise((r) => setTimeout(r, 400));
+            await visibilityAwareDelay(400);
             try {
               // eslint-disable-next-line no-await-in-loop
               const posterUrl = await renderCurrentPreviewToCloudinary(format);
@@ -1725,8 +1784,9 @@ export default function AdsEdit({ paramsId }) {
             setSelectedFormat(format.id);
 
             // IMPORTANT: Wait for React to process the format change before rendering.
+            // Uses visibility-aware delay to pause when tab is hidden (browsers throttle background tabs)
             // eslint-disable-next-line no-await-in-loop
-            await new Promise((r) => setTimeout(r, 1200));
+            await visibilityAwareDelay(1200);
 
             // Now wait for the preview to be fully rendered with correct dimensions
             // eslint-disable-next-line no-await-in-loop
@@ -1735,7 +1795,7 @@ export default function AdsEdit({ paramsId }) {
             if (!formatReady) {
               appendPrepareMessage(`⚠ ${format.label} dimensions not ready, retrying...`);
               // eslint-disable-next-line no-await-in-loop
-              await new Promise((r) => setTimeout(r, 2000));
+              await visibilityAwareDelay(2000);
               // eslint-disable-next-line no-await-in-loop
               const retryReady = await waitForPreviewRender(5000, format);
               if (!retryReady) {
@@ -1747,7 +1807,7 @@ export default function AdsEdit({ paramsId }) {
             }
 
             // eslint-disable-next-line no-await-in-loop
-            await new Promise((r) => setTimeout(r, 400));
+            await visibilityAwareDelay(400);
 
             // eslint-disable-next-line no-await-in-loop
             const url = await renderCurrentPreviewToCloudinary(format);
@@ -2224,7 +2284,29 @@ export default function AdsEdit({ paramsId }) {
             ← Back to ad sets
           </button>
           <button
-            onClick={() => approveCreativesForAdSet(activeAdSetId)}
+            onClick={() => {
+              Modal.confirm({
+                title: '⚠️ Keep this tab visible',
+                content: (
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">
+                      The approval process needs to capture images from your screen. 
+                      <strong> Please keep this browser tab open and visible</strong> until the process completes.
+                    </p>
+                    <p className="text-sm text-amber-600 font-medium">
+                      ⚠️ Switching to another tab will pause the process.
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Tip: You can resize this window to a corner of your screen if you need to do other work.
+                    </p>
+                  </div>
+                ),
+                okText: 'Start Approval',
+                cancelText: 'Cancel',
+                okButtonProps: { style: { backgroundColor: '#16A34A', borderColor: '#16A34A' } },
+                onOk: () => approveCreativesForAdSet(activeAdSetId),
+              });
+            }}
             disabled={preparingLaunch}
             className={`px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors ${preparingLaunch ? "bg-emerald-300 cursor-not-allowed" : "bg-[#16A34A] hover:bg-[#15803D]"
               }`}
@@ -2498,6 +2580,12 @@ export default function AdsEdit({ paramsId }) {
         <div className="fixed right-6 bottom-24 z-50 max-w-sm">
           <div className="rounded-lg bg-white shadow-lg border border-[#e5e7eb] px-4 py-3 text-xs text-[#111827] space-y-1">
             <div className="font-semibold text-[#111827]">Preparing creatives…</div>
+            {tabHiddenWarning && (
+              <div className="flex items-center gap-2 px-2 py-1.5 bg-amber-50 border border-amber-200 rounded text-amber-800 text-[11px] font-medium">
+                <span>⚠️</span>
+                <span>Paused - please keep this tab visible</span>
+              </div>
+            )}
             {prepareMessages.slice(-3).map((msg, idx) => (
               <div key={idx} className="text-[11px] text-[#4b5563]">
                 {msg}
