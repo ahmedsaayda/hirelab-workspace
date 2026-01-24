@@ -872,7 +872,9 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
     if (!areTabsOverflowing) return;
 
     if (direction === "left") {
-      container.scrollLeft -= scrollAmount;
+      // If we would scroll to less than 50px from start, just go to 0
+      const newPosition = container.scrollLeft - scrollAmount;
+      container.scrollLeft = newPosition < 50 ? 0 : newPosition;
     } else {
       container.scrollLeft += scrollAmount;
     }
@@ -1295,12 +1297,15 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
 
           <div
             ref={scrollRef}
-            className="flex items-center justify-center overflow-x-auto scrollbar-hide flex-1"
+            className="flex items-center overflow-x-auto scrollbar-hide flex-1"
             style={{
               scrollBehavior: "smooth",
               minWidth: 0,  // Allow flex item to shrink below its content size
               WebkitOverflowScrolling: "touch",  // Smooth scrolling on iOS
-              gap: "0.5rem"  // Add consistent spacing between items
+              gap: "0.5rem",  // Add consistent spacing between items
+              paddingLeft: areTabsOverflowing ? "24px" : "0",  // Add left padding when overflowing so first item clears the arrow button
+              paddingRight: areTabsOverflowing ? "24px" : "0",  // Add right padding as well for symmetry
+              justifyContent: areTabsOverflowing ? "flex-start" : "center"  // Start from left when overflowing
             }}
           >
             {
