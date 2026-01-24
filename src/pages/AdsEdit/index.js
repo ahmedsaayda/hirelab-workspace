@@ -166,6 +166,10 @@ export default function AdsEdit({ paramsId }) {
   // Track variant being edited for template change (null = new creative, variant = change template)
   const [templateChangeVariant, setTemplateChangeVariant] = useState(null);
 
+  // Preferred pixel checkbox state
+  const [isPreferredPixel, setIsPreferredPixel] = useState(false);
+  const [workspaceData, setWorkspaceData] = useState(null);
+
   // 🔥 Required setup: Meta Pixel ID before creating ad sets
   const [metaPixelDraft, setMetaPixelDraft] = useState("");
   const [metaPixelSaving, setMetaPixelSaving] = useState(false);
@@ -304,12 +308,32 @@ export default function AdsEdit({ paramsId }) {
     const adsPromise = AdsService.getAds(lpId);
 
     Promise.all([lpPromise, adsPromise])
-      .then(([lpRes, adsRes]) => {
+      .then(async ([lpRes, adsRes]) => {
         if (lpRes?.data) {
           setLandingPageData(lpRes.data);
           setMetaPixelDraft(lpRes.data?.metaPixelId || "");
           // Capture workspace for Meta connect state
-          if (lpRes.data?.workspace) setWorkspaceId(lpRes.data.workspace);
+          if (lpRes.data?.workspace) {
+            setWorkspaceId(lpRes.data.workspace);
+            // Fetch workspace data to check preferred pixel
+            try {
+              const wsRes = await CrudService.getSingle("Workspace", lpRes.data.workspace);
+              if (wsRes?.data) {
+                setWorkspaceData(wsRes.data);
+                // Check if current pixel matches workspace preferred pixel
+                const currentPixel = lpRes.data?.metaPixelId || "";
+                const preferredPixel = wsRes.data?.preferredMetaPixelId || "";
+                setIsPreferredPixel(currentPixel && currentPixel === preferredPixel);
+              }
+            } catch (e) {
+              console.error("Failed to fetch workspace data:", e);
+            }
+          } else {
+            // No workspace - check user's preferred pixel
+            const currentPixel = lpRes.data?.metaPixelId || "";
+            const userPreferredPixel = user?.preferredMetaPixelId || "";
+            setIsPreferredPixel(currentPixel && currentPixel === userPreferredPixel);
+          }
         }
         const adsPayload = adsRes?.data?.data || {};
         if (!adsPayload || Object.keys(adsPayload).length === 0) {
@@ -357,15 +381,66 @@ export default function AdsEdit({ paramsId }) {
     if (!lpId) return;
     try {
       setMetaPixelSaving(true);
+      // Save to landing page
       await CrudService.update("LandingPageData", lpId, { metaPixelId: value });
       setLandingPageData((prev) => ({ ...(prev || {}), metaPixelId: value }));
-      message.success("Meta Pixel ID saved");
+      
+      // Handle preferred pixel - workspace takes priority, then user
+      if (workspaceId) {
+        // Workspace context
+        if (isPreferredPixel) {
+          try {
+            await CrudService.update("Workspace", workspaceId, { preferredMetaPixelId: value });
+            setWorkspaceData((prev) => ({ ...(prev || {}), preferredMetaPixelId: value }));
+            message.success("Meta Pixel ID saved as workspace preferred pixel");
+          } catch (e) {
+            console.error("Failed to save preferred pixel:", e);
+            message.success("Meta Pixel ID saved (but failed to set as preferred)");
+          }
+        } else if (workspaceData?.preferredMetaPixelId === value) {
+          // Unchecked and this was the preferred pixel - clear it
+          try {
+            await CrudService.update("Workspace", workspaceId, { preferredMetaPixelId: "" });
+            setWorkspaceData((prev) => ({ ...(prev || {}), preferredMetaPixelId: "" }));
+            message.success("Meta Pixel ID saved (removed as preferred)");
+          } catch (e) {
+            console.error("Failed to clear preferred pixel:", e);
+            message.success("Meta Pixel ID saved");
+          }
+        } else {
+          message.success("Meta Pixel ID saved");
+        }
+      } else if (user?._id) {
+        // User context (no workspace)
+        if (isPreferredPixel) {
+          try {
+            await CrudService.update("User", user._id, { preferredMetaPixelId: value });
+            message.success("Meta Pixel ID saved as your preferred pixel");
+          } catch (e) {
+            console.error("Failed to save preferred pixel to user:", e);
+            message.success("Meta Pixel ID saved (but failed to set as preferred)");
+          }
+        } else if (user?.preferredMetaPixelId === value) {
+          // Unchecked and this was the preferred pixel - clear it
+          try {
+            await CrudService.update("User", user._id, { preferredMetaPixelId: "" });
+            message.success("Meta Pixel ID saved (removed as preferred)");
+          } catch (e) {
+            console.error("Failed to clear preferred pixel:", e);
+            message.success("Meta Pixel ID saved");
+          }
+        } else {
+          message.success("Meta Pixel ID saved");
+        }
+      } else {
+        message.success("Meta Pixel ID saved");
+      }
     } catch (e) {
       message.error("Failed to save Meta Pixel ID");
     } finally {
       setMetaPixelSaving(false);
     }
-  }, [metaPixelDraft, lpId]);
+  }, [metaPixelDraft, lpId, isPreferredPixel, workspaceId, workspaceData, user]);
 
   const loadLaunchSummary = useCallback(async (adSetIdOverride = null) => {
     if (!lpId) return;
@@ -2957,6 +3032,25 @@ export default function AdsEdit({ paramsId }) {
             />
             <div className="text-xs text-gray-500 mt-2">
               Find this in Meta Ads Manager → Events Manager → Pixels.
+            </div>
+            
+            {/* Preferred Pixel Checkbox */}
+            <label className="flex items-center gap-2 mt-4 select-none cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isPreferredPixel}
+                onChange={(e) => setIsPreferredPixel(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-[#5207CD] focus:ring-[#5207CD]"
+              />
+              <span className="text-sm text-gray-700">
+                Make this my preferred pixel
+              </span>
+            </label>
+            <div className="text-xs text-gray-500 mt-1 ml-6">
+              {workspaceId 
+                ? "New campaigns in this workspace will automatically use this pixel."
+                : "New campaigns will automatically use this pixel."
+              }
             </div>
           </div>
         </div>
