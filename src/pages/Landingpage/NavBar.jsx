@@ -1031,12 +1031,13 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
                 height: "40px",
                 width: "40px",
                 minWidth: "40px",
+                maxWidth: "40px",
               }}
-              className="md:w-auto md:min-w-0 md:px-4 flex items-center justify-center rounded-md border transition hover:opacity-70 shrink-0"
+              className="md:w-auto md:min-w-0 md:max-w-none md:px-4 flex items-center justify-center rounded-md border transition hover:opacity-70 shrink-0 overflow-hidden"
               onClick={handleBookmarkClick}
             >
-              <Bookmark size={18} />
-              <span className="hidden md:inline ml-2 text-sm">{getTranslation(landingPageData?.lang, 'save')}</span>
+              <Bookmark size={18} className="flex-shrink-0" />
+              <span className="hidden md:inline md:ml-2 md:text-sm whitespace-nowrap">{getTranslation(landingPageData?.lang, 'save')}</span>
             </button>
 
             {/* Share Button - Icon only on mobile, icon + text on desktop */}
@@ -1048,12 +1049,13 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
                 height: "40px",
                 width: "40px",
                 minWidth: "40px",
+                maxWidth: "40px",
               }}
-              className="md:w-auto md:min-w-0 md:px-4 flex items-center justify-center rounded-md border transition hover:opacity-70 shrink-0"
+              className="md:w-auto md:min-w-0 md:max-w-none md:px-4 flex items-center justify-center rounded-md border transition hover:opacity-70 shrink-0 overflow-hidden"
               onClick={handleShareClick}
             >
-              {shareIcon}
-              <span className="hidden md:inline ml-2 text-sm">{getTranslation(landingPageData?.lang, 'share')}</span>
+              <span className="flex items-center justify-center flex-shrink-0">{shareIcon}</span>
+              <span className="hidden md:inline md:ml-2 md:text-sm whitespace-nowrap">{getTranslation(landingPageData?.lang, 'share')}</span>
             </button>
 
             {!isMultiJob && (
