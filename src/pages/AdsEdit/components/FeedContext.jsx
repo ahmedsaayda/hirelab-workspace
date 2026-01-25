@@ -48,7 +48,22 @@ export default function FeedContext({ children, brandData, text, title, descript
           <div className="flex gap-2.5">
             <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border border-gray-100 flex-shrink-0">
               {brandLogo ? (
-                <img src={brandLogo} alt={brandName} className="w-full h-full object-cover" />
+                <img 
+                  src={brandLogo} 
+                  alt={brandName} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to initial letter if image fails to load
+                    e.target.style.display = 'none';
+                    const parent = e.target.parentElement;
+                    if (parent && !parent.querySelector('.fallback-initial')) {
+                      const fallback = document.createElement('div');
+                      fallback.className = 'w-full h-full flex items-center justify-center bg-blue-600 text-white font-bold text-lg fallback-initial';
+                      fallback.textContent = brandName.charAt(0).toUpperCase();
+                      parent.appendChild(fallback);
+                    }
+                  }}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-blue-600 text-white font-bold text-lg">
                   {brandName.charAt(0)}

@@ -2909,17 +2909,18 @@ export default function FormEdit({ paramsId }) {
                     ...landingPageData?.form,
                     fields: formSections,
                   },
+                  // Prioritize landing page branding (includes workspace branding), then fall back to user branding
                   primaryColor:
-                    userBrandData?.primaryColor || user?.primaryColor,
+                    landingPageData?.primaryColor || userBrandData?.primaryColor || user?.primaryColor,
                   secondaryColor:
-                    userBrandData?.secondaryColor || user?.secondaryColor,
+                    landingPageData?.secondaryColor || userBrandData?.secondaryColor || user?.secondaryColor,
                   tertiaryColor:
-                    userBrandData?.tertiaryColor || user?.tertiaryColor,
-                  titleFont: userBrandData?.titleFont || user?.titleFont,
-                  bodyFont: userBrandData?.bodyFont || user?.bodyFont,
+                    landingPageData?.tertiaryColor || userBrandData?.tertiaryColor || user?.tertiaryColor,
+                  titleFont: landingPageData?.titleFont || userBrandData?.titleFont || user?.titleFont,
+                  bodyFont: landingPageData?.bodyFont || userBrandData?.bodyFont || user?.bodyFont,
                   subheaderFont:
-                    userBrandData?.subheaderFont || user?.subheaderFont,
-                  companyLogo: userBrandData?.companyLogo || user?.companyLogo,
+                    landingPageData?.subheaderFont || userBrandData?.subheaderFont || user?.subheaderFont,
+                  companyLogo: landingPageData?.companyLogo || userBrandData?.companyLogo || user?.companyLogo,
                 }}
                 isPreviewMode={true}
                 currentStep={currentStep}
@@ -4081,24 +4082,31 @@ export default function FormEdit({ paramsId }) {
                                   ...landingPageData?.form,
                                   fields: formSections,
                                 },
-                                // 🎨 PASS BRAND DATA TO PREVIEW
+                                // 🎨 PASS BRAND DATA TO PREVIEW - prioritize landing page branding (includes workspace)
                                 primaryColor:
+                                  landingPageData?.primaryColor ||
                                   userBrandData?.primaryColor ||
                                   user?.primaryColor,
                                 secondaryColor:
+                                  landingPageData?.secondaryColor ||
                                   userBrandData?.secondaryColor ||
                                   user?.secondaryColor,
                                 tertiaryColor:
+                                  landingPageData?.tertiaryColor ||
                                   userBrandData?.tertiaryColor ||
                                   user?.tertiaryColor,
                                 titleFont:
+                                  landingPageData?.titleFont ||
                                   userBrandData?.titleFont || user?.titleFont,
                                 bodyFont:
+                                  landingPageData?.bodyFont ||
                                   userBrandData?.bodyFont || user?.bodyFont,
                                 subheaderFont:
+                                  landingPageData?.subheaderFont ||
                                   userBrandData?.subheaderFont ||
                                   user?.subheaderFont,
                                 companyLogo:
+                                  landingPageData?.companyLogo ||
                                   userBrandData?.companyLogo ||
                                   user?.companyLogo,
                               }}

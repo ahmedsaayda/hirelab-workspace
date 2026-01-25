@@ -40,7 +40,13 @@ class MetaService {
   }
 
   getPageLogo(workspaceId, forceRefresh = false) {
-    return this.api.get(`/page-logo`, { params: { workspaceId, forceRefresh } });
+    const params = { forceRefresh };
+    // Only include workspaceId if it's defined (not null/undefined)
+    // This ensures backend correctly falls back to user connection when no workspace
+    if (workspaceId !== null && workspaceId !== undefined) {
+      params.workspaceId = workspaceId;
+    }
+    return this.api.get(`/page-logo`, { params });
   }
 }
 

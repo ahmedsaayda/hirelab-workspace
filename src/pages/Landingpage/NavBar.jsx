@@ -1015,64 +1015,57 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
       className="px-4 z-50"
     >
       <ApplyCustomFont landingPageData={landingPageData} />
-      <header className={`flex items-center px-4 w-full sm:h-16 py-2 sm:py-0 sm:px-6 lg:px-8`}>
-        <div className="w-full mx-auto flex items-center">
-          <div className="flex items-center gap-5">
-            <img src={logo} alt="Logo" className="mr-10 w-auto h-8" />
+      <header className={`flex items-center px-3 md:px-4 w-full sm:h-16 py-2 sm:py-0 sm:px-6 lg:px-8`}>
+        <div className="w-full mx-auto flex items-center justify-between gap-2 min-w-0">
+          <div className="flex items-center shrink-0 min-w-0">
+            <img src={logo} alt="Logo" className="w-auto h-7 md:h-8 max-w-[100px] md:max-w-none object-contain" />
           </div>
-          <div className="flex gap-3 justify-end w-full flex-wrap">
+          <div className="flex gap-2 justify-end items-center flex-nowrap shrink-0">
 
-            {/* Save/Bookmark Button - Icon only on mobile */}
+            {/* Save/Bookmark Button - Icon only on mobile, icon + text on desktop */}
             <button
               style={{
                 color: getColor("primary", 800),
                 borderColor: getColor("primary", 800),
                 border: "1px solid",
-                height: "45px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px"
+                height: "40px",
+                width: "40px",
+                minWidth: "40px",
               }}
-              className="px-3 md:px-6 text-xs md:text-base whitespace-nowrap rounded-md border transition hover:opacity-50 flex items-center gap-2"
+              className="md:w-auto md:min-w-0 md:px-4 flex items-center justify-center rounded-md border transition hover:opacity-70 shrink-0"
               onClick={handleBookmarkClick}
             >
-              <span className="hidden md:inline">{getTranslation(landingPageData?.lang, 'save')}</span>
-              <Bookmark size={20} />
+              <Bookmark size={18} />
+              <span className="hidden md:inline ml-2 text-sm">{getTranslation(landingPageData?.lang, 'save')}</span>
             </button>
 
-            {/* Share Button - Icon only on mobile */}
+            {/* Share Button - Icon only on mobile, icon + text on desktop */}
             <button
               style={{
                 color: getColor("primary", 800),
                 borderColor: getColor("primary", 800),
                 border: "1px solid",
-                height: "45px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px"
+                height: "40px",
+                width: "40px",
+                minWidth: "40px",
               }}
-              className="px-3 md:px-6 text-xs md:text-base whitespace-nowrap rounded-md border transition hover:opacity-50 flex items-center gap-2"
+              className="md:w-auto md:min-w-0 md:px-4 flex items-center justify-center rounded-md border transition hover:opacity-70 shrink-0"
               onClick={handleShareClick}
             >
-              <span className="hidden md:inline">{getTranslation(landingPageData?.lang, 'share')}</span>
               {shareIcon}
+              <span className="hidden md:inline ml-2 text-sm">{getTranslation(landingPageData?.lang, 'share')}</span>
             </button>
-
 
             {!isMultiJob && (
               <button
-                className="px-6  text-xs md:text-base whitespace-nowrap  font-medium rounded-md transition hover:bg-yellow-300 smx:px-5 smx:py-0.5 "
+                className="px-3 md:px-6 text-xs md:text-base whitespace-nowrap font-medium rounded-md transition hover:opacity-90 shrink-0"
                 style={{
                   backgroundColor: getColor("primary", 500),
                   color: textColor,
-
-                  height: "45px",
+                  height: "40px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "8px"
                 }}
                 onClick={handleApplyClick}
               >

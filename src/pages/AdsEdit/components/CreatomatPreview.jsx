@@ -58,17 +58,22 @@ export default function CreatomatPreview({
       return;
     }
 
-    // Dynamically import the SDK
+    // Dynamically import the SDK using Function constructor to prevent static analysis
     const loadSDK = async () => {
       try {
-        const module = await import("@creatomate/preview");
-        if (module.Preview) {
+        // Use Function constructor to completely bypass Next.js/webpack static import analysis
+        const dynamicImport = new Function('modulePath', 'return import(modulePath)');
+        const module = await dynamicImport('@creatomate/preview');
+        if (module && module.Preview) {
           window.Creatomate = module;
           setSdkLoaded(true);
+        } else {
+          throw new Error('Module loaded but Preview not found');
         }
       } catch (err) {
         console.warn("Creatomate Preview SDK not available:", err.message);
-        setError("Creatomate SDK not available");
+        // Don't show error - just fallback to image preview
+        setSdkLoaded(false);
         setIsLoading(false);
       }
     };

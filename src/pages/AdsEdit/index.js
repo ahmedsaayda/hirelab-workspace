@@ -199,14 +199,15 @@ export default function AdsEdit({ paramsId }) {
     }
   }, []);
 
-  // Brand data
+  // Brand data - prioritize landing page branding (includes workspace), then user branding
   const [userBrandData, setUserBrandData] = useState(null);
-  const primaryColor = userBrandData?.primaryColor || user?.primaryColor || "#5207CD";
-  const secondaryColor = userBrandData?.secondaryColor || user?.secondaryColor || "#0C7CE6";
-  const tertiaryColor = userBrandData?.tertiaryColor || user?.tertiaryColor || "#6B46C1";
+  const primaryColor = landingPageData?.primaryColor || userBrandData?.primaryColor || user?.primaryColor || "#5207CD";
+  const secondaryColor = landingPageData?.secondaryColor || userBrandData?.secondaryColor || user?.secondaryColor || "#0C7CE6";
+  const tertiaryColor = landingPageData?.tertiaryColor || userBrandData?.tertiaryColor || user?.tertiaryColor || "#6B46C1";
   const isDev = process.env.NODE_ENV === "development";
+  // Merge with landing page data taking priority for branding
   const previewLandingPageData = isDev
-    ? { ...(landingPageData || {}), ...(userBrandData || {}) }
+    ? { ...(userBrandData || {}), ...(landingPageData || {}) }
     : landingPageData;
 
   // Generate ads from landing page content
@@ -314,6 +315,7 @@ export default function AdsEdit({ paramsId }) {
           setMetaPixelDraft(lpRes.data?.metaPixelId || "");
           // Capture workspace for Meta connect state
           if (lpRes.data?.workspace) {
+            console.log("[AdsEdit] Setting workspaceId from landing page:", lpRes.data.workspace);
             setWorkspaceId(lpRes.data.workspace);
             // Fetch workspace data to check preferred pixel
             try {
@@ -766,27 +768,67 @@ export default function AdsEdit({ paramsId }) {
   }, [user]);
 
   // Fetch Facebook Page logo (refreshes monthly, cached in backend)
+  // Force refresh when workspaceId changes to ensure we get the correct logo for the workspace
+  const [lastWorkspaceId, setLastWorkspaceId] = useState(null);
   useEffect(() => {
     if (!user) return;
+    // Wait for landing page data to load so we know if it has a workspace or not
+    if (!landingPageData) return;
 
     const fetchPageLogo = async () => {
       try {
-        const response = await MetaService.getPageLogo();
+        // Determine the effective workspaceId:
+        // - Use workspaceId from state (set when landing page loads)
+        // - Or use landing page's workspace directly if state not set yet
+        // - Only use workspace if landing page actually has one (not null/undefined)
+        const landingPageWorkspace = landingPageData?.workspace;
+        const effectiveWorkspaceId = workspaceId || (landingPageWorkspace ? String(landingPageWorkspace) : undefined);
+        
+        // Force refresh if workspace changed to ensure we get the correct logo
+        const workspaceChanged = lastWorkspaceId !== effectiveWorkspaceId;
+        const forceRefresh = workspaceChanged && effectiveWorkspaceId !== undefined;
+        
+        // Only pass workspaceId if landing page has a workspace
+        // If no workspace, pass undefined so backend uses user's Meta connection
+        console.log("[AdsEdit] Fetching page logo", { 
+          workspaceId, 
+          effectiveWorkspaceId,
+          landingPageWorkspace,
+          hasWorkspace: !!landingPageWorkspace,
+          forceRefresh
+        });
+        const response = await MetaService.getPageLogo(effectiveWorkspaceId, forceRefresh);
         const logoUrl = response?.data?.data?.logoUrl;
         if (logoUrl) {
           setUserBrandData(prev => ({
             ...prev,
             metaPageLogo: logoUrl,
           }));
+        } else {
+          // Log when no logo is returned to help debug
+          console.log("Meta page logo not available", { 
+            effectiveWorkspaceId, 
+            hasResponse: !!response?.data, 
+            message: response?.data?.data?.message,
+            pageId: response?.data?.data?.pageId 
+          });
+        }
+        
+        // Update last workspace ID after successful fetch
+        if (workspaceChanged) {
+          setLastWorkspaceId(effectiveWorkspaceId);
         }
       } catch (err) {
-        // Silent fail - will use fallback logo
-        console.log("Could not fetch Meta page logo:", err?.message);
+        // Log error for debugging
+        console.error("Could not fetch Meta page logo:", err?.response?.data || err?.message, { 
+          workspaceId, 
+          landingPageWorkspace: landingPageData?.workspace 
+        });
       }
     };
 
     fetchPageLogo();
-  }, [user]);
+  }, [user, workspaceId, lastWorkspaceId, landingPageData]);
 
   // Initialize ads data from landing page content
   const initializeAdsData = (lpData) => {
@@ -2563,7 +2605,14 @@ export default function AdsEdit({ paramsId }) {
                     variant={variantForPreview}
                     format={AD_FORMATS.find(f => f.id === selectedFormat)}
                     platform={selectedPlatform}
-                    brandData={userBrandData}
+                    brandData={{
+                      ...userBrandData,
+                      // Landing page branding takes priority (includes workspace branding)
+                      companyLogo: landingPageData?.companyLogo || userBrandData?.companyLogo,
+                      primaryColor: landingPageData?.primaryColor || userBrandData?.primaryColor,
+                      secondaryColor: landingPageData?.secondaryColor || userBrandData?.secondaryColor,
+                      tertiaryColor: landingPageData?.tertiaryColor || userBrandData?.tertiaryColor,
+                    }}
                     landingPageData={previewLandingPageData}
                     adType={selectedAdType}
                   />
@@ -2869,7 +2918,14 @@ export default function AdsEdit({ paramsId }) {
                         variant={v}
                         format={formatObj}
                         platform={selectedPlatform}
-                        brandData={userBrandData}
+                        brandData={{
+                          ...userBrandData,
+                          // Landing page branding takes priority (includes workspace branding)
+                          companyLogo: landingPageData?.companyLogo || userBrandData?.companyLogo,
+                          primaryColor: landingPageData?.primaryColor || userBrandData?.primaryColor,
+                          secondaryColor: landingPageData?.secondaryColor || userBrandData?.secondaryColor,
+                          tertiaryColor: landingPageData?.tertiaryColor || userBrandData?.tertiaryColor,
+                        }}
                         landingPageData={landingPageData}
                         adType={v.adTypeId}
                       />

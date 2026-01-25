@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import ColorThief from "colorthief";
 import { WandSparkles } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { Skeleton } from 'antd';

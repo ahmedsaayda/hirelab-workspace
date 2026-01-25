@@ -1,13 +1,15 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
-import { Form, Input, Button, Card, Typography, message, Steps, Divider, Modal, Radio, Spin, Select } from "antd";
-import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import { Form, Input, Button, Card, Typography, message, Steps, Divider, Modal, Radio, Spin, Select, Progress } from "antd";
+import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import ImageUploader from "../../../src/pages/LandingpageEdit/ImageUploader.js";
 import ColorPickerButton from "../../../src/pages/onboarding/components/ColorPickerButton.jsx";
 import Layout from "../layout";
 import { useWorkspace } from "../../../src/contexts/WorkspaceContext";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../../src/redux/auth/selectors";
+import scraperService from "../../../src/services/ScraperService.js";
+import AiService from "../../../src/services/AiService.js";
 
 const { Title, Text } = Typography;
 const { Step } = Steps;
@@ -33,6 +35,11 @@ const WorkspaceCreatePage = () => {
   const [titleFont, setTitleFont] = useState("");
   const [subheaderFont, setSubheaderFont] = useState("");
   const [bodyFont, setBodyFont] = useState("");
+
+  // Website scraping state
+  const [scraping, setScraping] = useState(false);
+  const [scrapeProgress, setScrapeProgress] = useState(0);
+  const [scrapeMessages, setScrapeMessages] = useState([]);
 
   // Compute remaining funnels from user data (if available)
   const planMaxFunnels = useMemo(() => {
@@ -62,6 +69,103 @@ const WorkspaceCreatePage = () => {
     console.log("Tertiary color changed to:", color);
     setTertiaryColor(color);
     form.setFieldsValue({ tertiaryColor: color });
+  }, [form]);
+
+  // Website scraping to extract brand info
+  const handleScrapeWebsite = useCallback(async () => {
+    const websiteUrl = form.getFieldValue('companyWebsite')?.trim();
+    if (!websiteUrl) {
+      message.warning("Please enter a company website URL first");
+      return;
+    }
+
+    // Format URL
+    let formattedUrl = websiteUrl;
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://' + formattedUrl;
+    }
+
+    setScraping(true);
+    setScrapeProgress(0);
+    setScrapeMessages(["Starting website scan..."]);
+
+    try {
+      setScrapeProgress(10);
+      setScrapeMessages(prev => [...prev, "Fetching website data..."]);
+      
+      const response = await scraperService.scrapeWebsiteOnboarding(formattedUrl);
+      let data = response.data;
+      console.log("Scraped data:", data);
+
+      setScrapeProgress(40);
+      setScrapeMessages(prev => [...prev, "Enhancing with AI..."]);
+
+      // Enhance with AI
+      try {
+        const aiResponse = await AiService.enhanceCompanyData({
+          url: formattedUrl,
+          scrapedData: data,
+        });
+        data = aiResponse?.data?.data || data;
+      } catch (aiError) {
+        console.error("AI enhancement failed:", aiError);
+      }
+
+      setScrapeProgress(60);
+      setScrapeMessages(prev => [...prev, "Extracting brand information..."]);
+
+      // Extract and apply company name
+      if (data.companyName && data.companyName.trim() !== "") {
+        form.setFieldsValue({ clientName: data.companyName });
+      }
+
+      // Extract and apply logo
+      if (data.companyLogo && data.companyLogo.trim() !== "") {
+        form.setFieldsValue({ companyLogo: data.companyLogo });
+      }
+
+      setScrapeProgress(80);
+      setScrapeMessages(prev => [...prev, "Extracting brand colors..."]);
+
+      // Extract and apply colors
+      if (data.brandColors && Array.isArray(data.brandColors) && data.brandColors.length > 0) {
+        const colors = data.brandColors;
+        if (colors[0]) {
+          setPrimaryColor(colors[0]);
+          form.setFieldsValue({ primaryColor: colors[0] });
+        }
+        if (colors[1]) {
+          setSecondaryColor(colors[1]);
+          form.setFieldsValue({ secondaryColor: colors[1] });
+        }
+        if (colors[2]) {
+          setTertiaryColor(colors[2]);
+          form.setFieldsValue({ tertiaryColor: colors[2] });
+        }
+      }
+
+      // Extract fonts if available
+      if (data.fonts && Array.isArray(data.fonts) && data.fonts.length > 0) {
+        const extractedFont = data.fonts[0];
+        setTitleFont(extractedFont);
+        form.setFieldsValue({ titleFont: extractedFont, selectedFont: extractedFont });
+      }
+
+      setScrapeProgress(100);
+      setScrapeMessages(prev => [...prev, "Website scan completed!"]);
+      message.success("Brand information extracted successfully!");
+
+    } catch (error) {
+      console.error("Scraping failed:", error);
+      setScrapeMessages(prev => [...prev, "Scan failed. Please enter information manually."]);
+      message.error("Failed to scan website. Please enter brand information manually.");
+    } finally {
+      setTimeout(() => {
+        setScraping(false);
+        setScrapeProgress(0);
+        setScrapeMessages([]);
+      }, 1500);
+    }
   }, [form]);
 
   const safeText = (val) => {
@@ -354,6 +458,33 @@ const WorkspaceCreatePage = () => {
                 </Form.Item>
               </div>
 
+              {/* Scan Website Button */}
+              <div className="mb-4">
+                <Button
+                  type="default"
+                  icon={<SearchOutlined />}
+                  onClick={handleScrapeWebsite}
+                  loading={scraping}
+                  disabled={scraping}
+                  className="border-purple-500 text-purple-600 hover:bg-purple-50"
+                >
+                  {scraping ? "Scanning..." : "Scan Website for Brand Info"}
+                </Button>
+                <Typography.Text type="secondary" className="ml-3 text-sm">
+                  Auto-extract logo, colors, and company name from the website
+                </Typography.Text>
+              </div>
+
+              {/* Scraping Progress */}
+              {scraping && (
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <Progress percent={scrapeProgress} size="small" status="active" />
+                  <div className="mt-2 text-sm text-gray-600">
+                    {scrapeMessages[scrapeMessages.length - 1]}
+                  </div>
+                </div>
+              )}
+
               <Form.Item label="Company Address" name="companyAddress">
                 <Input.TextArea
                   rows={3}
@@ -628,6 +759,20 @@ const WorkspaceCreatePage = () => {
                               .toLowerCase()
                               .includes(input.toLowerCase())
                           }
+                          optionRender={(option) => (
+                            <div className="flex items-center justify-between py-1">
+                              <span 
+                                style={{ fontFamily: option.value, fontSize: '16px' }}
+                              >
+                                {option.value}
+                              </span>
+                              <span 
+                                style={{ fontFamily: option.value, fontSize: '14px', color: '#666' }}
+                              >
+                                Aa Bb Cc
+                              </span>
+                            </div>
+                          )}
                           options={[
                             ...Object.keys(fontCategories).flatMap(category => 
                               fontCategories[category].map(font => ({

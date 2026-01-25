@@ -8,6 +8,7 @@
     "@ant-design/plots": "^2.1.15",
     "@cloudinary/react": "1.11.2",
     "@cloudinary/url-gen": "1.9.2",
+    "@creatomate/preview": "^1.6.0",
     "@emotion/styled": "^11.11.5",
     "@headlessui/react": "^2.2.0",
     "@hello-pangea/dnd": "^17.0.0",
