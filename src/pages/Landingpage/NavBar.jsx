@@ -1024,38 +1024,30 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
 
             {/* Save/Bookmark Button - Icon only on mobile, icon + text on desktop */}
             <button
+              className="flex items-center justify-center rounded-md border transition hover:opacity-70 shrink-0 h-10 w-10 md:w-auto md:min-w-0 md:px-4 md:overflow-visible overflow-hidden"
               style={{
                 color: getColor("primary", 800),
                 borderColor: getColor("primary", 800),
                 border: "1px solid",
-                height: "40px",
-                width: "40px",
-                minWidth: "40px",
-                maxWidth: "40px",
               }}
-              className="md:w-auto md:min-w-0 md:max-w-none md:px-4 flex items-center justify-center rounded-md border transition hover:opacity-70 shrink-0 overflow-hidden"
               onClick={handleBookmarkClick}
             >
               <Bookmark size={18} className="flex-shrink-0" />
-              <span className="hidden md:inline md:ml-2 md:text-sm whitespace-nowrap">{getTranslation(landingPageData?.lang, 'save')}</span>
+              <span className="hidden md:inline md:ml-2 text-sm whitespace-nowrap">{getTranslation(landingPageData?.lang, 'save')}</span>
             </button>
 
             {/* Share Button - Icon only on mobile, icon + text on desktop */}
             <button
+              className="flex items-center justify-center rounded-md border transition hover:opacity-70 shrink-0 h-10 w-10 md:w-auto md:min-w-0 md:px-4 md:overflow-visible overflow-hidden"
               style={{
                 color: getColor("primary", 800),
                 borderColor: getColor("primary", 800),
                 border: "1px solid",
-                height: "40px",
-                width: "40px",
-                minWidth: "40px",
-                maxWidth: "40px",
               }}
-              className="md:w-auto md:min-w-0 md:max-w-none md:px-4 flex items-center justify-center rounded-md border transition hover:opacity-70 shrink-0 overflow-hidden"
               onClick={handleShareClick}
             >
               <span className="flex items-center justify-center flex-shrink-0">{shareIcon}</span>
-              <span className="hidden md:inline md:ml-2 md:text-sm whitespace-nowrap">{getTranslation(landingPageData?.lang, 'share')}</span>
+              <span className="hidden md:inline md:ml-2 text-sm whitespace-nowrap">{getTranslation(landingPageData?.lang, 'share')}</span>
             </button>
 
             {!isMultiJob && (
