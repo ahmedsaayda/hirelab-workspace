@@ -766,6 +766,21 @@ export default function LandingpageEdit({ paramsId }) {
     };
   }, []);
 
+  // Listen for setActiveKey events from MultiJobLandingPage preview clicks
+  useEffect(() => {
+    const handleSetActiveKey = ({ key }) => {
+      console.log("setActiveKey event received:", key);
+      if (key) {
+        setActiveKey(key);
+      }
+    };
+
+    eventEmitter.on("setActiveKey", handleSetActiveKey);
+    return () => {
+      eventEmitter.off("setActiveKey", handleSetActiveKey);
+    };
+  }, []);
+
   const handleExitCancel = useCallback(() => {
     pendingNavigationRef.current = null;
     setIsExitModalVisible(false);
@@ -929,15 +944,17 @@ export default function LandingpageEdit({ paramsId }) {
       const response = await CrudService.update("LandingPageData", lpId, cleanData, "landing page edit");
 
       if (response?.data) {
-        // Update local state with fresh data from server
-        setLandingPageData(response.data);
-
+        // 🔥 FIX: Do NOT overwrite local state with server response
+        // This was causing race conditions where changes made during auto-save were lost
+        // The local state is the source of truth; server just persists it
+        // Only update specific server-generated fields if needed (e.g., _id, updatedAt)
+        
         // Clear immediate unsaved changes after successful auto-save
         setHasImmediateUnsavedChanges(false);
 
-        // Re-check for unpublished changes
+        // Re-check for unpublished changes using current data that was just saved
         setTimeout(() => {
-          checkForUnpublishedChanges(response.data);
+          checkForUnpublishedChanges(dataToSave);
         }, 100);
       }
 
@@ -1185,8 +1202,24 @@ export default function LandingpageEdit({ paramsId }) {
   );
 
 
+  // Mapping from section keys to their corresponding show* flag names (for multi-job pages)
+  const sectionKeyToShowFlag = {
+    "About The Company": "showAboutCompany",
+    "Company Facts": "showCompanyFacts",
+    "Candidate Process": "showCandidateProcess",
+    "Employee Testimonials": "showTestimonial",
+    "Recruiter Contact": "showRecruiterContact",
+    "Leader Introduction": "showLeaderIntroduction",
+    "Growth Path": "showGrowthPath",
+    "Video": "showVideo",
+    "Text Box": "showTextBox",
+    "Image Carousel": "showImageCarousel",
+    "EVP / Mission": "showEvpMission",
+  };
+
   const addSection = (key) => {
     const existingMenuItems = landingPageData?.menuItems ?? [];
+    const isMultiJob = landingPageData?.campaignType === "multi";
 
     // Check if this section already exists and is active
     const existingActiveSection = existingMenuItems.find(item => item.key === key && item.active);
@@ -1242,9 +1275,20 @@ export default function LandingpageEdit({ paramsId }) {
       newMenuItems = [...existingMenuItems, newItem];
     }
 
+    // For multi-job pages, also update the corresponding show* flag
+    const showFlagUpdates = {};
+    if (isMultiJob) {
+      const baseKey = key.split('_')[0];
+      const showFlag = sectionKeyToShowFlag[baseKey] || sectionKeyToShowFlag[key];
+      if (showFlag) {
+        showFlagUpdates[showFlag] = true;
+      }
+    }
+
     updateLandingPageData((d) => ({
       ...d,
       menuItems: newMenuItems,
+      ...showFlagUpdates,
     }));
 
     setActiveKey(newKey);
@@ -1258,6 +1302,7 @@ export default function LandingpageEdit({ paramsId }) {
   const removeSection = (i) => {
     const currentActiveMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
     const dynamicIndex = i - 1;
+    const isMultiJob = landingPageData?.campaignType === "multi";
 
     if (dynamicIndex < 0 || dynamicIndex >= currentActiveMenuItems.length) return;
 
@@ -1270,9 +1315,20 @@ export default function LandingpageEdit({ paramsId }) {
         : item
     );
 
+    // For multi-job pages, also update the corresponding show* flag to false
+    const showFlagUpdates = {};
+    if (isMultiJob && sectionToRemove) {
+      const baseKey = sectionToRemove.key.split('_')[0];
+      const showFlag = sectionKeyToShowFlag[baseKey] || sectionKeyToShowFlag[sectionToRemove.key];
+      if (showFlag) {
+        showFlagUpdates[showFlag] = false;
+      }
+    }
+
     updateLandingPageData((prevData) => ({
       ...prevData,
       menuItems: newMenuItems,
+      ...showFlagUpdates,
     }));
 
     // Update activeKey based on remaining active sections

@@ -92,9 +92,9 @@ const sectionDisplayNames = {
   // For other keys, use the key itself as the display name
 };
 export const sectionMap = {
-  "About The Company": "about-company",
+  "About The Company": "about-the-company",  // Fixed: was "about-company"
   "Leader Introduction": "leader-introduction",
-  "Employee Testimonials": "employer-testimonial",
+  "Employee Testimonials": "employee-testimonials",  // Fixed: was "employer-testimonial"
   "Company Facts": "company-facts",
   "Recruiter Contact": "recruiter-contact",
   "Job Description": "job-description",

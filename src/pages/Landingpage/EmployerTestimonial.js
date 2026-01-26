@@ -54,7 +54,7 @@ const useTestimonialHover = () => {
   }, [hoveredField]);
 
   useEffect(() => {
-    if (scrollToSection === "employer-testimonial" && sectionRef.current&&lastScrollToSection !== "employer-testimonial" ) {
+    if (scrollToSection === "employee-testimonials" && sectionRef.current&&lastScrollToSection !== "employee-testimonials" ) {
       scrollToElement(sectionRef.current);
       setLastScrollToSection("employer-testimonial")
     }

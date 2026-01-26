@@ -1050,13 +1050,33 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
               <span className="hidden md:inline md:ml-2 text-sm whitespace-nowrap">{getTranslation(landingPageData?.lang, 'share')}</span>
             </button>
 
-            {!isMultiJob && (
+
+            {isMultiJob ? (
               <button
-                className="px-3 md:px-6 text-xs md:text-base whitespace-nowrap font-medium rounded-md transition hover:opacity-90 shrink-0"
+                className="px-6 text-xs md:text-base whitespace-nowrap font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg smx:px-5"
+                style={{
+                  backgroundColor: getColor("tertiary", 400),
+                  color: calculateTextColor(getColor("tertiary", 400), landingPageData?.yiqThreshold),
+                  height: "45px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px"
+                }}
+                onClick={() => {
+                  const jobsSection = document.getElementById("linked-jobs");
+                  if (jobsSection) jobsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                {landingPageData?.multiJobCtaText || landingPageData?.ctaText || "See Open Roles"}
+              </button>
+            ) : (
+              <button
+                className="px-6 text-xs md:text-base whitespace-nowrap font-medium rounded-md transition hover:bg-yellow-300 smx:px-5 smx:py-0.5"
                 style={{
                   backgroundColor: getColor("primary", 500),
                   color: textColor,
-                  height: "40px",
+                  height: "45px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

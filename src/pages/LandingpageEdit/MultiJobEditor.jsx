@@ -346,7 +346,7 @@ REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
 
                 <nav className="flex-1 p-3 space-y-1">
                     <button
-                        onClick={() => setActiveSection("hero")}
+                        onClick={() => handleSectionClick("hero")}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "hero"
                             ? "bg-indigo-50 text-indigo-700"
                             : "text-gray-700 hover:bg-gray-50"
@@ -357,7 +357,7 @@ REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
                     </button>
 
                     <button
-                        onClick={() => setActiveSection("jobs")}
+                        onClick={() => handleSectionClick("jobs")}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "jobs"
                             ? "bg-indigo-50 text-indigo-700"
                             : "text-gray-700 hover:bg-gray-50"
@@ -371,7 +371,7 @@ REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
                     </button>
 
                     <button
-                        onClick={() => setActiveSection("recruiter")}
+                        onClick={() => handleSectionClick("recruiter")}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "recruiter"
                             ? "bg-indigo-50 text-indigo-700"
                             : "text-gray-700 hover:bg-gray-50"
@@ -382,7 +382,7 @@ REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
                     </button>
 
                     <button
-                        onClick={() => setActiveSection("about")}
+                        onClick={() => handleSectionClick("about")}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "about"
                             ? "bg-indigo-50 text-indigo-700"
                             : "text-gray-700 hover:bg-gray-50"
@@ -393,7 +393,7 @@ REMINDER: All values must be in ${selectedLanguage}. No exceptions.`;
                     </button>
 
                     <button
-                        onClick={() => setActiveSection("settings")}
+                        onClick={() => handleSectionClick("settings")}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSection === "settings"
                             ? "bg-indigo-50 text-indigo-700"
                             : "text-gray-700 hover:bg-gray-50"

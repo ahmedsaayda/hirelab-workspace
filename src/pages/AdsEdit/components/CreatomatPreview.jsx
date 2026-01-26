@@ -60,6 +60,13 @@ export default function CreatomatPreview({
 
     // Dynamically import the SDK using Function constructor to prevent static analysis
     const loadSDK = async () => {
+      // SDK package not installed - show placeholder
+      console.warn("Creatomate Preview SDK not installed");
+      setError("Creatomate SDK not installed");
+      setIsLoading(false);
+      return;
+      
+      /* Uncomment when @creatomate/preview is installed:
       try {
         // Use Function constructor to completely bypass Next.js/webpack static import analysis
         const dynamicImport = new Function('modulePath', 'return import(modulePath)');
@@ -76,6 +83,7 @@ export default function CreatomatPreview({
         setSdkLoaded(false);
         setIsLoading(false);
       }
+      */
     };
 
     loadSDK();
