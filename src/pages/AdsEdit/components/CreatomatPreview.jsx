@@ -58,15 +58,15 @@ export default function CreatomatPreview({
       return;
     }
 
-    // Dynamically import the SDK using Function constructor to prevent static analysis
+    // Dynamically import the SDK - Next.js will bundle this correctly
     const loadSDK = async () => {
       try {
-        // Use Function constructor to completely bypass Next.js/webpack static import analysis
-        const dynamicImport = new Function('modulePath', 'return import(modulePath)');
-        const module = await dynamicImport('@creatomate/preview');
+        // Use standard dynamic import - webpack/Next.js will handle this
+        const module = await import('@creatomate/preview');
         if (module && module.Preview) {
           window.Creatomate = module;
           setSdkLoaded(true);
+          console.log("✅ Creatomate Preview SDK loaded successfully");
         } else {
           throw new Error('Module loaded but Preview not found');
         }
@@ -138,6 +138,13 @@ export default function CreatomatPreview({
 
           await preview.setModifications(modifications);
           setIsLoading(false);
+          
+          // Autoplay the video since click events are blocked
+          try {
+            await preview.play();
+          } catch (playErr) {
+            console.warn("Autoplay failed (browser may require user interaction):", playErr);
+          }
         } catch (err) {
           console.error("Error loading Creatomate template:", err);
           setError("Failed to load template");
@@ -149,6 +156,14 @@ export default function CreatomatPreview({
         console.error("Creatomate preview error:", err);
         setError(err.message || "Preview error");
         setIsLoading(false);
+      };
+
+      // Loop video when it ends
+      preview.onStateChange = (state) => {
+        if (state === "ended") {
+          preview.setTime(0);
+          preview.play().catch(() => {});
+        }
       };
     } catch (err) {
       console.error("Error initializing Creatomate preview:", err);
