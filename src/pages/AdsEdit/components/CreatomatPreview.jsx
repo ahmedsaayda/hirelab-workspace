@@ -60,6 +60,13 @@ export default function CreatomatPreview({
 
     // Dynamically import the SDK - Next.js will bundle this correctly
     const loadSDK = async () => {
+      // SDK package not installed - show placeholder
+      console.warn("Creatomate Preview SDK not installed");
+      setError("Creatomate SDK not installed");
+      setIsLoading(false);
+      return;
+      
+      /* Uncomment when @creatomate/preview is installed:
       try {
         // Use standard dynamic import - webpack/Next.js will handle this
         const module = await import('@creatomate/preview');
@@ -76,6 +83,7 @@ export default function CreatomatPreview({
         setSdkLoaded(false);
         setIsLoading(false);
       }
+      */
     };
 
     loadSDK();

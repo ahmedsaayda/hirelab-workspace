@@ -93,6 +93,19 @@ class AiService {
   regenerateAdField({ lpId, field, currentValue, adTypeId, instruction, language }) {
     return this.api.post("/regenerate-ad-field", { lpId, field, currentValue, adTypeId, instruction, language });
   }
+
+  // Create multi-job campaign page with backend AI generation
+  // This moves AI generation to the backend like single job pages
+  createMultiVacanciesPage({ linkedCampaignIds, campaignTitle, language, templateId, brandingDetails, user_id }) {
+    return this.api.post("/create-multi-vacancies-page", {
+      linkedCampaignIds,
+      campaignTitle,
+      language,
+      templateId,
+      brandingDetails,
+      user_id
+    });
+  }
 }
 
 export default new AiService(`${getBackendUrl()}/ai`);

@@ -279,6 +279,53 @@ const MultiJobCampaignModal = ({
         const departmentName = isDepartmental ? departments[0] : null;
         const jobCategory = departments.length > 0 ? departments.join(", ") : "various roles";
 
+        // SAFELY extract existing company facts from linked campaigns for AI context
+        // This helps the AI generate consistent content based on what's already been created
+        const existingCompanyFacts = [];
+        const existingAboutContent = [];
+        
+        for (const campaign of selectedCampaignObjects) {
+            // Extract company facts that have actual content
+            if (Array.isArray(campaign.companyFacts)) {
+                for (const fact of campaign.companyFacts) {
+                    if (fact?.headingText?.trim() || fact?.title?.trim()) {
+                        existingCompanyFacts.push({
+                            icon: fact.icon || "star",
+                            title: fact.headingText || fact.title || "",
+                            description: fact.descriptionText || fact.description || ""
+                        });
+                    }
+                }
+            }
+            // Extract about company content if available
+            if (campaign.aboutTheCompanyDescription?.trim()) {
+                existingAboutContent.push(campaign.aboutTheCompanyDescription.substring(0, 200));
+            }
+        }
+
+        // Deduplicate facts by title
+        const uniqueFacts = existingCompanyFacts.reduce((acc, fact) => {
+            const titleLower = (fact.title || "").toLowerCase().trim();
+            if (titleLower && !acc.some(f => (f.title || "").toLowerCase().trim() === titleLower)) {
+                acc.push(fact);
+            }
+            return acc;
+        }, []).slice(0, 6); // Limit to 6 examples
+
+        // Build context string for AI (only if we have examples)
+        const existingContentContext = (uniqueFacts.length > 0 || existingAboutContent.length > 0) 
+            ? `
+EXISTING CONTENT FROM LINKED JOB PAGES (use as reference for consistency):
+${uniqueFacts.length > 0 ? `Company Facts Examples:
+${uniqueFacts.map(f => `- ${f.title}: ${f.description}`).join("\n")}` : ""}
+${existingAboutContent.length > 0 ? `
+About Company Examples:
+${existingAboutContent.map(a => `- ${a}...`).join("\n")}` : ""}
+
+IMPORTANT: Use these examples as inspiration to generate similar quality content. 
+Maintain the same tone, style, and type of information but create NEW unique content for this multi-job page.
+` : "";
+
         // Map language name to native language name for clearer AI instructions
         // IMPORTANT: Native instructions help the AI understand the target language better
         const languageMap = {
@@ -336,7 +383,7 @@ TONE: Welcoming and inclusive - make ALL candidates feel they could belong here.
 ╔═══════════════════════════════════════════════════════════════════════════════╗
 ║ ⚠️ LANGUAGE REQUIREMENT - CRITICAL - READ CAREFULLY ⚠️                         ║
 ╠═══════════════════════════════════════════════════════════════════════════════╣
-║ OUTPUT LANGUAGE: ${selectedLanguage.toUpperCase()} (${langInfo.native})                                         
+    ║ OUTPUT LANGUAGE: ${selectedLanguage.toUpperCase()} (${langInfo.native})                                         
 ║                                                                               ║
 ║ ${langInfo.instruction}                                                       
 ║ ${langInfo.notLang}                                                           
@@ -358,7 +405,7 @@ CONTEXT:
 ${aiPrompt.trim() ? `- User's description: ${aiPrompt}` : ""}
 - Job focus: ${jobCategory}
 ${selectedJobTitles ? `- Open positions: ${selectedJobTitles}` : ""}
-
+${existingContentContext}
 GENERATE (ALL TEXT MUST BE IN ${selectedLanguage.toUpperCase()}):
 1. heroTitle: ${isDepartmental ? `Inspiring headline for ${departmentName} careers` : "Inspiring headline for careers"} at ${companyName} (max 60 chars)
 2. heroDescription: ${isDepartmental ? `Compelling paragraph about why ${departmentName} professionals should join - focus on department importance and impact` : "Compelling paragraph about why professionals should join"} (150-200 words)
@@ -453,6 +500,59 @@ RESPOND IN JSON ONLY (values in ${selectedLanguage}):
 
         setIsLoading(true);
         try {
+            // Use the new backend endpoint for AI generation (like single job pages)
+            console.log("Creating multi-job campaign via backend...");
+            
+            const response = await AiService.createMultiVacanciesPage({
+                linkedCampaignIds: selectedCampaigns,
+                campaignTitle: campaignTitle,
+                language: selectedLanguage,
+                templateId: selectedTemplate,
+                brandingDetails: {
+                    companyName: brandingDetails?.companyName || user?.companyName,
+                    companyUrl: brandingDetails?.companyUrl || user?.companyUrl,
+                    companyLogo: brandingDetails?.companyLogo || user?.companyLogo,
+                    primaryColor: brandingDetails?.primaryColor || user?.primaryColor,
+                    secondaryColor: brandingDetails?.secondaryColor || user?.secondaryColor,
+                    tertiaryColor: brandingDetails?.tertiaryColor || user?.tertiaryColor,
+                    selectedFont: brandingDetails?.selectedFont || user?.selectedFont,
+                    titleFont: brandingDetails?.titleFont || user?.titleFont,
+                    subheaderFont: brandingDetails?.subheaderFont || user?.subheaderFont,
+                    bodyFont: brandingDetails?.bodyFont || user?.bodyFont,
+                },
+                user_id: user?._id,
+            });
+
+            if (response?.data?.success && response?.data?.data?.campaign) {
+                const newCampaign = response.data.data.campaign;
+                console.log("Multi-job campaign created successfully via backend:", newCampaign._id);
+                
+                antdMessage.success("Multi-job campaign created successfully!");
+                await refreshUserData();
+                if (onRefresh) onRefresh();
+                
+                // Navigate to editor (same as single job page)
+                router.push(`/edit-page/${newCampaign._id}`);
+                onClose();
+            } else {
+                throw new Error(response?.data?.error || "Failed to create campaign");
+            }
+        } catch (error) {
+            console.error("Error creating multi-job campaign:", error);
+            antdMessage.error(error.response?.data?.error || error.message || "Failed to create campaign");
+            setIsLoading(false);
+        }
+    };
+
+    // LEGACY: Keep the old frontend-based creation as fallback (can be removed later)
+    const handleGenerateAndCreateLegacy = async () => {
+        if (selectedCampaigns.length === 0) {
+            antdMessage.warning("Please select at least one job campaign to link");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
             // First generate AI content
             let generatedContent = {};
             try {
@@ -484,9 +584,31 @@ RESPOND IN JSON ONLY (values in ${selectedLanguage}):
         const generatedAboutText = generatedContent.aboutTheCompanyText || "";
         const generatedAboutDescription = generatedContent.aboutTheCompanyDescription || "";
         const generatedFactsTitle = generatedContent.companyFactsTitle || "";
-        const generatedFacts = Array.isArray(generatedContent.companyFacts) ? generatedContent.companyFacts : [];
+        let generatedFacts = Array.isArray(generatedContent.companyFacts) ? generatedContent.companyFacts : [];
         const generatedProcessTitle = generatedContent.candidateProcessTitle || "";
         const generatedProcessSteps = Array.isArray(generatedContent.candidateProcessSteps) ? generatedContent.candidateProcessSteps : [];
+
+        // FALLBACK: If AI didn't generate facts, try to use facts from linked campaigns
+        if (generatedFacts.length === 0 && selectedCampaignObjects.length > 0) {
+            console.log("AI didn't generate facts, checking linked campaigns for existing facts...");
+            for (const campaign of selectedCampaignObjects) {
+                if (Array.isArray(campaign.companyFacts) && campaign.companyFacts.length > 0) {
+                    // Check if any fact has actual content (headingText or descriptionText)
+                    const validFacts = campaign.companyFacts.filter(
+                        f => (f.headingText && f.headingText.trim()) || (f.descriptionText && f.descriptionText.trim())
+                    );
+                    if (validFacts.length > 0) {
+                        console.log(`Using ${validFacts.length} facts from linked campaign:`, campaign.vacancyTitle);
+                        generatedFacts = validFacts.map(f => ({
+                            icon: f.icon || "star",
+                            title: f.headingText || f.title || "",
+                            description: f.descriptionText || f.description || ""
+                        }));
+                        break; // Use facts from the first campaign that has them
+                    }
+                }
+            }
+        }
 
         // Get translations for the selected language
         const t = getMultiJobTranslations(selectedLanguage, companyName);
@@ -533,14 +655,15 @@ RESPOND IN JSON ONLY (values in ${selectedLanguage}):
         let aboutTheCompanyImages = [];
 
         try {
-            // Search for hero image
-            const heroSearchQuery = `${campaignTitle} ${companyName} careers team office professional`.trim();
+            // Search for hero image with generic career/team terms (more reliable than specific company names)
+            // Use simple terms that Unsplash will definitely have results for
+            const heroSearchQuery = "modern office team professional workplace";
             console.log(`MultiJobCampaignModal: Searching Unsplash for hero with query: "${heroSearchQuery}"`);
 
-            const heroImageResponse = await AiService.searchUnsplash(heroSearchQuery, 3);
+            const heroImageResponse = await AiService.searchUnsplash(heroSearchQuery, 6);
 
             if (heroImageResponse?.data?.success && heroImageResponse.data.data?.length > 0) {
-                const randomIndex = Math.floor(Math.random() * heroImageResponse.data.data.length);
+                const randomIndex = Math.floor(Math.random() * Math.min(heroImageResponse.data.data.length, 6));
                 const selectedImage = heroImageResponse.data.data[randomIndex];
 
                 console.log("MultiJobCampaignModal: Uploading hero image to Cloudinary...");
@@ -549,6 +672,8 @@ RESPOND IN JSON ONLY (values in ${selectedLanguage}):
                     heroImage = uploadRes.data.secure_url;
                     console.log("MultiJobCampaignModal: Hero image uploaded:", heroImage);
                 }
+            } else {
+                console.log("MultiJobCampaignModal: No hero images found from Unsplash, heroImage will be empty");
             }
         } catch (imgError) {
             console.error("MultiJobCampaignModal: Failed to fetch/upload hero image:", imgError);
@@ -556,10 +681,11 @@ RESPOND IN JSON ONLY (values in ${selectedLanguage}):
 
         // Fetch "About Company" section images from Unsplash
         try {
-            const aboutSearchQuery = `${companyName} modern office workplace team collaboration`.trim();
+            // Use generic terms that Unsplash will have good results for
+            const aboutSearchQuery = "team collaboration office workspace meeting";
             console.log(`MultiJobCampaignModal: Searching Unsplash for About section with query: "${aboutSearchQuery}"`);
 
-            const aboutImageResponse = await AiService.searchUnsplash(aboutSearchQuery, 6);
+            const aboutImageResponse = await AiService.searchUnsplash(aboutSearchQuery, 8);
 
             if (aboutImageResponse?.data?.success && aboutImageResponse.data.data?.length > 0) {
                 const images = aboutImageResponse.data.data.slice(0, 4); // Get up to 4 images
@@ -634,12 +760,19 @@ RESPOND IN JSON ONLY (values in ${selectedLanguage}):
             aboutTheCompanyDescription: generatedAboutDescription || t.greatWorkHappens,
             aboutTheCompanyImages: aboutTheCompanyImages, // Dynamic Unsplash images
 
-            // Company Facts section (AI-generated)
+            // Company Facts section (AI-generated with proper field names)
+            // The template expects headingText and descriptionText (not title/description)
             companyFacts: generatedFacts.length > 0 ? generatedFacts.map((fact, idx) => ({
                 icon: fact.icon || ["star", "users", "trending-up", "heart"][idx % 4],
-                title: fact.title || "",
-                description: fact.description || ""
-            })) : [],
+                headingText: fact.title || fact.headingText || "",
+                descriptionText: fact.description || fact.descriptionText || ""
+            })) : [
+                // Fallback: Create empty placeholders so the section shows
+                { icon: "star", headingText: "", descriptionText: "" },
+                { icon: "users", headingText: "", descriptionText: "" },
+                { icon: "trending-up", headingText: "", descriptionText: "" },
+                { icon: "heart", headingText: "", descriptionText: "" }
+            ],
             companyFactsTitle: generatedFactsTitle || t.whyJoinUs,
             companyFactsDescription: "",
 
@@ -662,6 +795,13 @@ RESPOND IN JSON ONLY (values in ${selectedLanguage}):
             // Footer section (language-aware)
             footerTitle: t.footerTitle,
             footerDescription: t.footerDescription,
+
+            // Explicit visibility flags for multi-job sections
+            showAboutCompany: true,
+            showCompanyFacts: true,
+            showCandidateProcess: true,
+            showTestimonial: false, // Empty by default, user can enable
+            showRecruiterContact: true,
         };
 
         // Use CrudService.create directly to ensure menuItems is not overwritten
@@ -672,6 +812,7 @@ RESPOND IN JSON ONLY (values in ${selectedLanguage}):
         await refreshUserData();
         if (onRefresh) onRefresh();
 
+        console.log("will redirect to edit page", response.data.result._id)
         router.push(`/edit-page/${response.data.result._id}`);
         setIsLoading(false);
     };

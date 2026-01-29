@@ -50,7 +50,7 @@ const useAboutCompanyHover = () => {
 
   useEffect(() => {
     if (
-      scrollToSection === "about-company" &&
+      scrollToSection === "about-the-company" &&
       sectionRef.current &&
       lastScrollToSection !== "about-company"
     ) {
