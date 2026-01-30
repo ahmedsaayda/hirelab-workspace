@@ -48,6 +48,24 @@ class MetaService {
     }
     return this.api.get(`/page-logo`, { params });
   }
+
+  // WhatsApp Business API methods
+  getWhatsAppStatus(workspaceId) {
+    return this.api.get(`/whatsapp/status`, { params: { workspaceId } });
+  }
+
+  listWhatsAppAssets(workspaceId) {
+    return this.api.get(`/whatsapp/assets`, { params: { workspaceId } });
+  }
+
+  saveWhatsAppPhone({ workspaceId, wabaId, phoneNumberId, displayPhoneNumber }) {
+    return this.api.post(`/whatsapp/save-phone`, {
+      workspaceId,
+      wabaId,
+      phoneNumberId,
+      displayPhoneNumber,
+    });
+  }
 }
 
 export default new MetaService(`${getBackendUrl()}/meta`);

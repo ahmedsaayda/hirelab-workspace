@@ -11,7 +11,8 @@ import {
   MessageOutlined,
   CalendarOutlined,
   QuestionCircleOutlined,
-  InboxOutlined
+  InboxOutlined,
+  WhatsAppOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
 
@@ -117,6 +118,7 @@ const CandidateCard = ({
   onEmail,
   onPhone,
   onChat,
+  onWhatsApp,
   onDelete,
   onArchive,
   onRatingUpdate,
@@ -276,6 +278,15 @@ const CandidateCard = ({
       onClick: (e) => {
         e?.domEvent?.stopPropagation();
         onChat && onChat();
+      },
+    },
+    {
+      key: 'whatsapp',
+      label: 'Send WhatsApp',
+      icon: <WhatsAppOutlined style={{ color: '#25D366' }} />,
+      onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        onWhatsApp && onWhatsApp();
       },
     },
     {

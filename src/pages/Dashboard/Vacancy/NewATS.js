@@ -104,7 +104,8 @@ import {
   CheckOutlined,
   QuestionCircleOutlined,
   ClockCircleOutlined,
-  InboxOutlined
+  InboxOutlined,
+  WhatsAppOutlined
 } from '@ant-design/icons';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useRouter } from 'next/router';
@@ -130,6 +131,7 @@ import InterviewTemplatesModal from './components/InterviewTemplatesModal';
 import InterviewFormModal from './components/InterviewFormModal';
 import ReviewBreakdownModal from './components/ReviewBreakdownModal';
 import VariableMessageBox from '../Message/VariableMessageBox.js';
+import VariableWhatsAppBox from '../Message/VariableWhatsAppBox.js';
 
 // Add table styles for enhanced sorting UI
 const tableStyles = `
@@ -970,6 +972,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   const [selectedCandidateForChat, setSelectedCandidateForChat] = useState(null);
   const [initialMessageLoading, setInitialMessageLoading] = useState(false);
   const [emailComposeCandidateId, setEmailComposeCandidateId] = useState(null);
+  const [whatsappCandidateId, setWhatsappCandidateId] = useState(null);
   const [addingColumn, setAddingColumn] = useState(false);
   const [editingColumnId, setEditingColumnId] = useState(null);
   const [newColumnTitle, setNewColumnTitle] = useState('');
@@ -2284,6 +2287,15 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
     }
   };
 
+  // WhatsApp candidate handler (open WhatsApp message composer)
+  const handleWhatsAppCandidate = (candidate) => {
+    if (candidate.phone) {
+      setWhatsappCandidateId(candidate.id);
+    } else {
+      message.warning('No phone number available for this candidate. WhatsApp requires a phone number.');
+    }
+  };
+
   // Assignment handlers
   const handleAssignCandidate = (candidate) => {
     setSelectedCandidateForAssignment(candidate);
@@ -3042,6 +3054,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                               onEmail={() => handleEmailCandidate(candidate)}
                               onPhone={() => handlePhoneCandidate(candidate)}
                               onChat={() => handleStartChatWithCandidate(candidate)}
+                              onWhatsApp={() => handleWhatsAppCandidate(candidate)}
                               onRatingUpdate={handleRatingUpdate}
                               onAssign={() => handleAssignCandidate(candidate)}
                               onReview={() => handleReviewCandidate(candidate)}
@@ -3392,6 +3405,12 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                   label: 'Start Chat',
                   icon: <MessageOutlined />,
                   onClick: () => handleStartChatWithCandidate(record),
+                },
+                {
+                  key: 'whatsapp',
+                  label: 'Send WhatsApp',
+                  icon: <WhatsAppOutlined style={{ color: '#25D366' }} />,
+                  onClick: () => handleWhatsAppCandidate(record),
                 },
                 {
                   key: 'schedule',
@@ -4358,6 +4377,28 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         )}
       </Modal>
 
+      {/* WhatsApp Compose Modal */}
+      <Modal
+        title="Send WhatsApp Message"
+        open={!!whatsappCandidateId}
+        onCancel={() => setWhatsappCandidateId(null)}
+        okButtonProps={{ style: { display: 'none' } }}
+        cancelButtonProps={{ style: { display: 'none' } }}
+        destroyOnClose
+        width={720}
+      >
+        {whatsappCandidateId && (
+          <VariableWhatsAppBox
+            candidateId={whatsappCandidateId}
+            workspaceId={user?.workspaceId}
+            onSend={() => {
+              setWhatsappCandidateId(null);
+              loadATSData({ isBackgroundRefresh: true });
+            }}
+          />
+        )}
+      </Modal>
+
       <CandidateProfile
         candidateId={candidateProfile}
         onClose={() => setCandidateProfile(null)}
@@ -4380,6 +4421,12 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
             console.debug('NewATS: onEmail fired from CandidateProfile', { id });
           } catch (_) {}
           setEmailComposeCandidateId(id);
+        }}
+        onWhatsApp={(id) => {
+          try {
+            console.debug('NewATS: onWhatsApp fired from CandidateProfile', { id });
+          } catch (_) {}
+          setWhatsappCandidateId(id);
         }}
         onStatusChange={(candidate) => handleStatusChange(candidate)}
         onShowReviewBreakdown={() => {
