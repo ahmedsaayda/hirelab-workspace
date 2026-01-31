@@ -38,8 +38,7 @@ import {
   NumberOutlined,
   GlobalOutlined,
   DownloadOutlined,
-  QuestionCircleOutlined,
-  WhatsAppOutlined
+  QuestionCircleOutlined
 } from '@ant-design/icons';
 import moment from 'moment';
 import CrudService from '../../../../services/CrudService';
@@ -388,7 +387,6 @@ const CandidateProfile = ({
   stages = [],
   allCandidateIds = [],
   onEmail,
-  onWhatsApp,
   onStatusChange,
   onShowReviewBreakdown,
 }) => {
@@ -978,24 +976,6 @@ const CandidateProfile = ({
           className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40 hover:text-white"
         >
           Call
-        </Button>
-
-        <Button
-          icon={<WhatsAppOutlined />}
-          onClick={() => {
-            if (candidate?.phone) {
-              if (onWhatsApp) {
-                onWhatsApp(candidate._id);
-              }
-            } else {
-              message.warning('No phone number available for WhatsApp');
-            }
-          }}
-          size="small"
-          className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40 hover:text-white"
-          style={{ color: '#25D366' }}
-        >
-          WhatsApp
         </Button>
 
         {/* 
