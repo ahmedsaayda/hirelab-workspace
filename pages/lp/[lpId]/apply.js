@@ -485,8 +485,8 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
 
   // Use real user colors - NO defaults if not loaded yet
   const primaryColor = stableColors.primary || landingPageData?.primaryColor;
-  const secondaryColor = primaryColor; // SAME as primary!
-  const tertiaryColor = primaryColor;
+  const secondaryColor = landingPageData?.secondaryColor || primaryColor;
+  const tertiaryColor = landingPageData?.tertiaryColor || primaryColor;
 
   // 🎨 ENHANCED DEBUG: Log all color sources in apply page
   console.log("🎨 APPLY PAGE REAL COLORS FROM DATABASE:", {
@@ -494,8 +494,8 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
     "landingPageData": !!landingPageData,
     "landingPageColors": {
       primary: landingPageData?.primaryColor,
-      secondary: landingPageData?.primaryColor,
-      tertiary: landingPageData?.primaryColor
+      secondary: landingPageData?.secondaryColor,
+      tertiary: landingPageData?.tertiaryColor
     },
     "expectedTurquoise": "#11dade",
     "expectedPink": "#e0237e",

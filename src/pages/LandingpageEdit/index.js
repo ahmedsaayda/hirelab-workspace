@@ -643,20 +643,58 @@ export default function LandingpageEdit({ paramsId }) {
   const activeSection = combinedSections.find(section => section.key === activeKey) || combinedSections[0];
   const activeIdx = combinedSections.findIndex(section => section.key === activeKey);
 
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback(async () => {
     console.log("will fetch data for id", lpId)
     if (!lpId) {
       return;
     }
     try {
       if (lpId) {
-        CrudService.getSingle("LandingPageData", lpId, "landing page edit").then((res) => {
+        CrudService.getSingle("LandingPageData", lpId, "landing page edit").then(async (res) => {
           if (res.data) {
             // Add showHirelabBranding flag based on user's subscription status
             const showHirelabBranding = !user?.subscription?.paid;
+            
+            // 🎨 Apply workspace branding if landing page belongs to a workspace
+            let workspaceBranding = {};
+            const landingPageWorkspaceId = res.data?.workspace;
+            console.log("🎨 Landing page workspace check:", { landingPageWorkspaceId });
+            if (landingPageWorkspaceId) {
+              try {
+                const WorkspaceService = (await import('../../services/WorkspaceService')).default;
+                const wsResponse = await WorkspaceService.getWorkspace(landingPageWorkspaceId);
+                const workspace = wsResponse?.data?.workspace || wsResponse?.data;
+                if (workspace) {
+                  workspaceBranding = {
+                    primaryColor: workspace.primaryColor,
+                    secondaryColor: workspace.secondaryColor,
+                    tertiaryColor: workspace.tertiaryColor,
+                    companyLogo: workspace.companyLogo,
+                    titleFont: workspace.titleFont,
+                    subheaderFont: workspace.subheaderFont,
+                    bodyFont: workspace.bodyFont,
+                  };
+                  console.log("🎨 Workspace branding loaded:", workspaceBranding);
+                }
+              } catch (err) {
+                console.error("Error fetching workspace branding:", err);
+              }
+            }
+            
+            // Merge workspace branding - workspace colors ALWAYS take precedence when in workspace session
             const landingPageDataWithBranding = {
               ...res.data,
-              showHirelabBranding
+              showHirelabBranding,
+              // Apply workspace colors - workspace branding overrides landing page colors
+              primaryColor: workspaceBranding.primaryColor || res.data.primaryColor,
+              secondaryColor: workspaceBranding.secondaryColor || res.data.secondaryColor,
+              tertiaryColor: workspaceBranding.tertiaryColor || res.data.tertiaryColor,
+              // Apply workspace logo if available
+              companyLogo: workspaceBranding.companyLogo || res.data.companyLogo,
+              // Apply workspace fonts if available
+              titleFont: workspaceBranding.titleFont || res.data.titleFont,
+              subheaderFont: workspaceBranding.subheaderFont || res.data.subheaderFont,
+              bodyFont: workspaceBranding.bodyFont || res.data.bodyFont,
             };
             setLandingPageData(landingPageDataWithBranding);
 

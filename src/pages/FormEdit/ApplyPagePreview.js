@@ -360,8 +360,8 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
 
   // Use real user colors - NO defaults if not loaded yet (SAME AS APPLY.JS)
   const primaryColor = stableColors.primary || landingPageData?.primaryColor;
-  const secondaryColor = primaryColor; // SAME as primary!
-  const tertiaryColor = primaryColor;
+  const secondaryColor = landingPageData?.secondaryColor || primaryColor;
+  const tertiaryColor = landingPageData?.tertiaryColor || primaryColor;
 
   // 🎨 Check if we have brand data loaded
   const hasBrandData = !!(landingPageData?.primaryColor);
@@ -372,8 +372,8 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
     "hasBrandData": hasBrandData,
     "landingPageColors": {
       primary: landingPageData?.primaryColor,
-      secondary: landingPageData?.primaryColor,
-      tertiary: landingPageData?.primaryColor
+      secondary: landingPageData?.secondaryColor,
+      tertiary: landingPageData?.tertiaryColor
     },
     "expectedTurquoise": "#11dade",
     "expectedPink": "#e0237e",
