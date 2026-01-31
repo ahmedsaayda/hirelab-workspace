@@ -9,7 +9,11 @@ export const middleField = (api) => {
   api.interceptors.response.use(
     (response) => {
       store.dispatch(setLoading(false));
-      if (response?.data?.message) message.success(response.data.message, [8]);
+      // Skip showing toast for generic/automated messages to avoid spam from background cleanup operations
+      const skipMessages = ["Deleted successfully"];
+      if (response?.data?.message && !skipMessages.includes(response.data.message)) {
+        message.success(response.data.message, [8]);
+      }
       return response;
     },
     (error) => {

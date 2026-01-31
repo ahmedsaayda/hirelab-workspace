@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 const formatDateKey = (year, monthIndex, day) => {
   // monthIndex is zero-based
@@ -39,7 +40,7 @@ const CalendarRangePicker = ({
     "July", "August", "September", "October", "November", "December"
   ];
 
-  const weekDays = ["Mo", "Tu", "We", "Th", "Fr", "Sat", "Su"];
+  const weekDays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
   const getDaysInMonth = (date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -79,6 +80,10 @@ const CalendarRangePicker = ({
     );
   };
 
+  const isWeekend = (dayIndex) => {
+    return dayIndex === 5 || dayIndex === 6; // Saturday or Sunday in our grid
+  };
+
   const handleDateClick = (day) => {
     const clickedDate = new Date(
       currentDate.getFullYear(),
@@ -101,10 +106,11 @@ const CalendarRangePicker = ({
     const daysInPrevMonth = prevMonth.getDate();
     
     for (let i = firstDay - 1; i >= 0; i--) {
+      const dayIndex = firstDay - 1 - i;
       days.push(
         <div
           key={`prev-${daysInPrevMonth - i}`}
-          className="flex items-center justify-center w-8 h-8 text-gray-400 text-sm cursor-pointer hover:bg-gray-100 hover:rounded-full"
+          className={`flex items-center justify-center w-9 h-9 text-gray-300 text-sm cursor-pointer rounded-xl transition-all duration-200 hover:bg-gray-50 ${isWeekend(dayIndex) ? 'text-gray-300' : ''}`}
         >
           {daysInPrevMonth - i}
         </div>
@@ -126,19 +132,26 @@ const CalendarRangePicker = ({
         day
       );
       const hasEvent = highlightedSet.has(dateKey);
+      const dayIndex = (firstDay + day - 1) % 7;
 
       let className =
-        "relative flex items-center justify-center w-8 h-8 text-sm cursor-pointer transition-colors ";
+        "relative flex items-center justify-center w-9 h-9 text-sm cursor-pointer transition-all duration-200 rounded-xl font-medium ";
 
       if (isSelected) {
         className +=
-          "bg-purple-600 text-white font-medium rounded-full ";
+          "bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-purple-200 scale-105 ";
       } else if (isCurrentDay) {
         className +=
-          "bg-gray-200 text-gray-900 font-medium rounded-full ";
+          "bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-100 ";
+      } else if (hasEvent) {
+        className +=
+          "bg-violet-50 text-violet-700 hover:bg-violet-100 ";
+      } else if (isWeekend(dayIndex)) {
+        className +=
+          "text-gray-400 hover:bg-gray-50 ";
       } else {
         className +=
-          "text-gray-700 hover:bg-gray-100 hover:rounded-full ";
+          "text-gray-700 hover:bg-gray-100 ";
       }
 
       days.push(
@@ -148,12 +161,8 @@ const CalendarRangePicker = ({
           className={className}
         >
           <span className="relative z-10">{day}</span>
-          {hasEvent && (
-            <span
-              className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${
-                isSelected ? "bg-white" : "bg-emerald-500"
-              }`}
-            />
+          {hasEvent && !isSelected && (
+            <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-violet-500" />
           )}
         </div>
       );
@@ -164,10 +173,11 @@ const CalendarRangePicker = ({
     const remainingCells = totalCells - (firstDay + daysInMonth);
     
     for (let day = 1; day <= remainingCells; day++) {
+      const dayIndex = (firstDay + daysInMonth + day - 1) % 7;
       days.push(
         <div
           key={`next-${day}`}
-          className="flex items-center justify-center w-8 h-8 text-gray-400 text-sm cursor-pointer hover:bg-gray-100 hover:rounded-full"
+          className={`flex items-center justify-center w-9 h-9 text-gray-300 text-sm cursor-pointer rounded-xl transition-all duration-200 hover:bg-gray-50 ${isWeekend(dayIndex) ? 'text-gray-300' : ''}`}
         >
           {day}
         </div>
@@ -178,44 +188,67 @@ const CalendarRangePicker = ({
   };
 
   return (
-    <div className="w-full bg-white p-4 rounded-lg">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={getPreviousMonth}
-          className="p-1 hover:bg-gray-100 rounded transition-colors"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15,18 9,12 15,6"></polyline>
-          </svg>
-        </button>
+    <div className="w-full">
+      {/* Modern Header with gradient accent */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl shadow-lg shadow-purple-200">
+            <Calendar className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </h2>
+        </div>
         
-        <h2 className="text-lg font-semibold text-gray-900">
-          {months[currentDate.getMonth()]} {currentDate.getFullYear()}
-        </h2>
-        
-        <button
-          onClick={getNextMonth}
-          className="p-1 hover:bg-gray-100 rounded transition-colors"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="9,18 15,12 9,6"></polyline>
-          </svg>
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={getPreviousMonth}
+            className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-600" />
+          </button>
+          <button
+            onClick={getNextMonth}
+            className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
+          >
+            <ChevronRight className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
       </div>
 
-      {/* Week days header */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {weekDays.map((day) => (
-          <div key={day} className="flex items-center justify-center h-8 text-sm font-medium text-gray-500">
+      {/* Week days header with modern styling */}
+      <div className="grid grid-cols-7 gap-1 mb-3">
+        {weekDays.map((day, index) => (
+          <div 
+            key={day} 
+            className={`flex items-center justify-center h-9 text-xs font-semibold uppercase tracking-wider ${
+              index >= 5 ? 'text-gray-400' : 'text-gray-500'
+            }`}
+          >
             {day}
           </div>
         ))}
       </div>
 
-      {/* Calendar grid */}
+      {/* Calendar grid with enhanced styling */}
       <div className="grid grid-cols-7 gap-1">
         {renderCalendarDays()}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-6 mt-5 pt-4 border-t border-gray-100">
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500" />
+          <span>Today</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-violet-500 to-purple-600" />
+          <span>Selected</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="w-3 h-3 rounded-full bg-violet-100 border-2 border-violet-300" />
+          <span>Event</span>
+        </div>
       </div>
     </div>
   );

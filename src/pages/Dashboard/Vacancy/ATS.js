@@ -642,6 +642,7 @@ const ATS = ({ VacancyId, vacancyInfo }) => {
                       closable: true,
                       onOk: async () => {
                         await ATSService.deleteStage(id);
+                        message.success("Stage deleted successfully");
                         setBoardColumns((cur) => {
                           const current = [...cur].filter((a) => a.id !== id);
                           return current;
