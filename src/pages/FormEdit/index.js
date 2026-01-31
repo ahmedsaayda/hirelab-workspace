@@ -1642,6 +1642,23 @@ export default function FormEdit({ paramsId }) {
     // updateFormData will handle setFormSections - force update for adding fields
     updateFormData(updatedSections, true);
     setQuestionModal(false);
+    
+    // Find the index of the newly added section in the updated array
+    const newSectionIndex = updatedSections.findIndex(s => s.id === newSection.id);
+    
+    // Select the newly added section and open its editor
+    setSelectedSection(newSection);
+    setCurrentStep(newSectionIndex + 1); // Steps are 1-based
+    setIsEditingForm(false); // Exit form list view
+    setIsEditingButtonSettings(false); // Exit button settings view - show field editor
+    
+    // Scroll to the new section after a short delay to allow DOM to update
+    setTimeout(() => {
+      const newSectionElement = document.getElementById(`form-section-${newSection.id}`);
+      if (newSectionElement) {
+        newSectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   };
 
   const handleRemoveSection = (sectionId) => {
@@ -3113,6 +3130,7 @@ export default function FormEdit({ paramsId }) {
                                     mouseEnterDelay={0.3}
                                   >
                                     <div
+                                      id={`form-section-${formSections.find(s => s.isLeadCapture)?.id}`}
                                       className={`w-full flex items-center p-2 rounded-lg cursor-pointer relative sidebar-item group ${currentStep === 1 &&
                                         formSections[0]?.isLeadCapture
                                         ? "bg-[#eff8ff]"
@@ -3259,6 +3277,7 @@ export default function FormEdit({ paramsId }) {
                                             } // Hide tooltip when dragging
                                           >
                                             <div
+                                              id={`form-section-${section.id}`}
                                               ref={provided.innerRef}
                                               {...provided.draggableProps}
                                               style={{
