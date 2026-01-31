@@ -1599,7 +1599,15 @@ export default function LandingpageEdit({ paramsId }) {
   const renderCopyPreview = (sectionKey, source) => {
     if (!sectionKey || !source) return null;
 
-    switch (sectionKey) {
+    // Extract base key for duplicate sections (e.g., "Text Box_2" -> "Text Box")
+    const getBaseKeyForPreview = (key) => {
+      if (!key) return key;
+      const match = key.match(/^(.+?)_\d+$/);
+      return match ? match[1] : key;
+    };
+    const baseKey = getBaseKeyForPreview(sectionKey);
+
+    switch (baseKey) {
       case "flexaligntop": {
         const locations = Array.isArray(source.location)
           ? source.location.join(", ")
@@ -1818,6 +1826,176 @@ export default function LandingpageEdit({ paramsId }) {
           </div>
         );
       }
+      case "Leader Introduction": {
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Leader Introduction from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.leaderIntroductionTitle && (
+              <div className="font-medium">{source.leaderIntroductionTitle}</div>
+            )}
+            {source.leaderIntroductionName && (
+              <div className="text-gray-600">
+                {source.leaderIntroductionName}
+                {source.leaderIntroductionRole && ` — ${source.leaderIntroductionRole}`}
+              </div>
+            )}
+            {source.leaderIntroductionQuote && (
+              <div className="text-gray-600 italic">"{truncate(source.leaderIntroductionQuote, 150)}"</div>
+            )}
+          </div>
+        );
+      }
+      case "EVP / Mission": {
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              EVP / Mission from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.evpMissionTitle && (
+              <div className="font-medium">{source.evpMissionTitle}</div>
+            )}
+            {source.evpMissionName && (
+              <div className="text-gray-600">
+                {source.evpMissionName}
+                {source.evpMissionRole && ` — ${source.evpMissionRole}`}
+              </div>
+            )}
+            {source.evpMissionQuote && (
+              <div className="text-gray-600 italic">"{truncate(source.evpMissionQuote, 150)}"</div>
+            )}
+          </div>
+        );
+      }
+      case "Employee Testimonials": {
+        const testimonials = source.testimonials || [];
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Testimonials from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.testimonialTitle && (
+              <div className="font-medium">{source.testimonialTitle}</div>
+            )}
+            {testimonials.length > 0 && (
+              <ul className="list-disc pl-4 space-y-0.5">
+                {testimonials.slice(0, 3).map((t, idx) => (
+                  <li key={idx}>
+                    <span className="font-medium">{t.testimonialName || "Employee"}</span>
+                    {t.testimonialRole && <span className="text-gray-600"> — {t.testimonialRole}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      }
+      case "Growth Path": {
+        const steps = source.growthPathSteps || [];
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Growth Path from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.growthPathTitle && (
+              <div className="font-medium">{source.growthPathTitle}</div>
+            )}
+            {steps.length > 0 && (
+              <ul className="list-disc pl-4 space-y-0.5">
+                {steps.slice(0, 4).map((s, idx) => (
+                  <li key={idx}>
+                    <span className="font-medium">{s.stepTitle || `Step ${idx + 1}`}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      }
+      case "Candidate Process": {
+        const process = source.candidateProcess || [];
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Candidate Process from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.candidateProcessTitle && (
+              <div className="font-medium">{source.candidateProcessTitle}</div>
+            )}
+            {process.length > 0 && (
+              <ul className="list-disc pl-4 space-y-0.5">
+                {process.slice(0, 4).map((p, idx) => (
+                  <li key={idx}>
+                    <span className="font-medium">{p.candidateProcessText || `Step ${idx + 1}`}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      }
+      case "Video": {
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Video from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.videoTitle && (
+              <div className="font-medium">{source.videoTitle}</div>
+            )}
+            {source.videoDescription && (
+              <div className="text-gray-600">{truncate(source.videoDescription, 150)}</div>
+            )}
+            {source.videoUrl && (
+              <div className="text-indigo-600 text-[10px]">{truncate(source.videoUrl, 50)}</div>
+            )}
+          </div>
+        );
+      }
+      case "Image Carousel": {
+        const images = source.photoImages || [];
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Image Carousel from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.photoTitle && (
+              <div className="font-medium">{source.photoTitle}</div>
+            )}
+            <div className="text-gray-600">{images.length} image(s)</div>
+          </div>
+        );
+      }
+      case "Text Box": {
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Text Box from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.textBoxTitle && (
+              <div className="font-medium">{source.textBoxTitle}</div>
+            )}
+            {source.textBoxDescription && (
+              <div className="text-gray-600 whitespace-pre-line">{truncate(source.textBoxDescription, 200)}</div>
+            )}
+          </div>
+        );
+      }
+      case "Linked Jobs": {
+        const jobs = source.recommendedJobs || [];
+        return (
+          <div className="mt-2 rounded-md bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="font-semibold text-gray-900">
+              Linked Jobs from: {source.vacancyTitle || "Untitled campaign"}
+            </div>
+            {source.linkedJobsTitle && (
+              <div className="font-medium">{source.linkedJobsTitle}</div>
+            )}
+            <div className="text-gray-600">{jobs.length} linked job(s)</div>
+          </div>
+        );
+      }
       default:
         return null;
     }
@@ -1829,7 +2007,15 @@ export default function LandingpageEdit({ paramsId }) {
 
     const next = { ...target };
 
-    switch (sectionKey) {
+    // Extract base key for duplicate sections (e.g., "Text Box_2" -> "Text Box")
+    const getBaseKeyForCopy = (key) => {
+      if (!key) return key;
+      const match = key.match(/^(.+?)_\d+$/);
+      return match ? match[1] : key;
+    };
+    const baseKey = getBaseKeyForCopy(sectionKey);
+
+    switch (baseKey) {
       case "flexaligntop": {
         next.vacancyTitle = source.vacancyTitle;
         next.heroDescription = source.heroDescription;
@@ -1894,8 +2080,67 @@ export default function LandingpageEdit({ paramsId }) {
         next.footerDescription = source.footerDescription;
         break;
       }
+      case "Leader Introduction": {
+        next.leaderIntroductionTitle = source.leaderIntroductionTitle;
+        next.leaderIntroductionName = source.leaderIntroductionName;
+        next.leaderIntroductionRole = source.leaderIntroductionRole;
+        next.leaderIntroductionQuote = source.leaderIntroductionQuote;
+        next.leaderIntroductionAvatar = source.leaderIntroductionAvatar;
+        break;
+      }
+      case "EVP / Mission": {
+        next.evpMissionTitle = source.evpMissionTitle;
+        next.evpMissionName = source.evpMissionName;
+        next.evpMissionRole = source.evpMissionRole;
+        next.evpMissionQuote = source.evpMissionQuote;
+        next.evpMissionAvatar = source.evpMissionAvatar;
+        break;
+      }
+      case "Employee Testimonials": {
+        next.testimonialTitle = source.testimonialTitle;
+        next.testimonialSubheader = source.testimonialSubheader;
+        next.testimonials = source.testimonials;
+        break;
+      }
+      case "Growth Path": {
+        next.growthPathTitle = source.growthPathTitle;
+        next.growthPathDescription = source.growthPathDescription;
+        next.growthPathSteps = source.growthPathSteps;
+        break;
+      }
+      case "Candidate Process": {
+        next.candidateProcessTitle = source.candidateProcessTitle;
+        next.candidateProcessDescription = source.candidateProcessDescription;
+        next.candidateProcess = source.candidateProcess;
+        break;
+      }
+      case "Video": {
+        next.videoTitle = source.videoTitle;
+        next.videoDescription = source.videoDescription;
+        next.videoUrl = source.videoUrl;
+        break;
+      }
+      case "Image Carousel": {
+        next.photoTitle = source.photoTitle;
+        next.photoDescription = source.photoDescription;
+        next.photoImages = source.photoImages;
+        break;
+      }
+      case "Text Box": {
+        next.textBoxTitle = source.textBoxTitle;
+        next.textBoxDescription = source.textBoxDescription;
+        next.textBoxImage = source.textBoxImage;
+        break;
+      }
+      case "Linked Jobs": {
+        next.linkedJobsTitle = source.linkedJobsTitle;
+        next.linkedJobsDescription = source.linkedJobsDescription;
+        next.recommendedJobs = source.recommendedJobs;
+        break;
+      }
       default:
         // For unsupported sections, just return target unchanged
+        console.warn(`[CopySection] Unsupported section key: ${sectionKey}`);
         return target;
     }
 
