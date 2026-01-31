@@ -1338,7 +1338,10 @@ export default function LandingpageEdit({ paramsId }) {
   };
 
   const removeSection = (i) => {
-    const currentActiveMenuItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
+    // IMPORTANT: Must sort to match the order in Sidebar17 which sorts by (a.sort || 0) - (b.sort || 0)
+    const currentActiveMenuItems = (landingPageData?.menuItems ?? [])
+      .filter(item => item.active)
+      .sort((a, b) => (a.sort || 0) - (b.sort || 0));
     const dynamicIndex = i - 1;
     const isMultiJob = landingPageData?.campaignType === "multi";
 
@@ -1370,12 +1373,12 @@ export default function LandingpageEdit({ paramsId }) {
     }));
 
     // Update activeKey based on remaining active sections
-    const removedSection = currentActiveMenuItems[i - 1];
+    const removedSection = currentActiveMenuItems[dynamicIndex];
 
     if (activeKey === removedSection?.key) {
       // If we're removing the currently active section, switch to hero section
-      if (i > 1) {
-        const previousSection = currentActiveMenuItems[i - 2];
+      if (dynamicIndex > 0) {
+        const previousSection = currentActiveMenuItems[dynamicIndex - 1];
         setActiveKey(previousSection?.key || "flexaligntop");
       } else {
         setActiveKey("flexaligntop");
@@ -1386,7 +1389,10 @@ export default function LandingpageEdit({ paramsId }) {
   const handleUp = (i) => {
     if (i <= 1) return;
 
-    const currentActiveItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
+    // IMPORTANT: Must sort to match the order in Sidebar17
+    const currentActiveItems = (landingPageData?.menuItems ?? [])
+      .filter(item => item.active)
+      .sort((a, b) => (a.sort || 0) - (b.sort || 0));
     if (i - 2 < 0 || i - 1 >= currentActiveItems.length) return;
 
     const currentItem = currentActiveItems[i - 1];
@@ -1406,7 +1412,10 @@ export default function LandingpageEdit({ paramsId }) {
   };
 
   const handleDown = (i) => {
-    const currentActiveItems = (landingPageData?.menuItems ?? []).filter(item => item.active);
+    // IMPORTANT: Must sort to match the order in Sidebar17
+    const currentActiveItems = (landingPageData?.menuItems ?? [])
+      .filter(item => item.active)
+      .sort((a, b) => (a.sort || 0) - (b.sort || 0));
     if (i >= currentActiveItems.length) return;
 
     const currentItem = currentActiveItems[i - 1];
