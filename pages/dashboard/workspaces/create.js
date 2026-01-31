@@ -117,11 +117,14 @@ const WorkspaceCreatePage = () => {
       // Extract and apply company name
       if (data.companyName && data.companyName.trim() !== "") {
         form.setFieldsValue({ clientName: data.companyName });
+        setScrapeMessages(prev => [...prev, `Found company name: ${data.companyName}`]);
       }
 
-      // Extract and apply logo
-      if (data.companyLogo && data.companyLogo.trim() !== "") {
-        form.setFieldsValue({ companyLogo: data.companyLogo });
+      // Extract and apply logo (backend returns "logo", AI enhancement may return "companyLogo")
+      const logoUrl = data.companyLogo || data.logo;
+      if (logoUrl && logoUrl.trim() !== "") {
+        form.setFieldsValue({ companyLogo: logoUrl });
+        setScrapeMessages(prev => [...prev, `Found logo`]);
       }
 
       setScrapeProgress(80);
@@ -142,18 +145,35 @@ const WorkspaceCreatePage = () => {
           setTertiaryColor(colors[2]);
           form.setFieldsValue({ tertiaryColor: colors[2] });
         }
+        setScrapeMessages(prev => [...prev, `Found ${colors.length} brand color(s)`]);
       }
 
       // Extract fonts if available
       if (data.fonts && Array.isArray(data.fonts) && data.fonts.length > 0) {
-        const extractedFont = data.fonts[0];
-        setTitleFont(extractedFont);
-        form.setFieldsValue({ titleFont: extractedFont, selectedFont: extractedFont });
+        const extractedFont = data.fonts[0]?.family || data.fonts[0];
+        if (extractedFont && typeof extractedFont === 'string') {
+          setTitleFont(extractedFont);
+          form.setFieldsValue({ titleFont: extractedFont, selectedFont: extractedFont });
+          setScrapeMessages(prev => [...prev, `Found font: ${extractedFont}`]);
+        }
       }
 
       setScrapeProgress(100);
-      setScrapeMessages(prev => [...prev, "Website scan completed!"]);
-      message.success("Brand information extracted successfully!");
+      
+      // Determine success level
+      const foundItems = [];
+      if (data.companyName) foundItems.push("company name");
+      if (logoUrl) foundItems.push("logo");
+      if (data.brandColors?.length > 0) foundItems.push("colors");
+      if (data.fonts?.length > 0) foundItems.push("fonts");
+
+      if (foundItems.length > 0) {
+        setScrapeMessages(prev => [...prev, `Website scan completed! Found: ${foundItems.join(", ")}`]);
+        message.success(`Brand information extracted: ${foundItems.join(", ")}`);
+      } else {
+        setScrapeMessages(prev => [...prev, "Scan completed, but couldn't extract much data. Try entering info manually."]);
+        message.warning("Couldn't extract brand info from this website. Please enter manually.");
+      }
 
     } catch (error) {
       console.error("Scraping failed:", error);
