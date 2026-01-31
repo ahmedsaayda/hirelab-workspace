@@ -326,7 +326,7 @@ const {  subheaderFont, bodyFont } = getFonts(landingPageData);
                 dangerouslySetInnerHTML={{
                   __html:
                     (landingPageData?.evpMissionDescription ||
-                      "With the Core App development team we are on our way to become the worlds user friendliest consumer app for job connections with employers. We are just missing one person. You!"
+                      ""
                     )?.replace?.(/\n/g, "<br>")
                 }}
               >

@@ -735,16 +735,15 @@ const Template1 = ({ landingPageData, fetchData }) => {
              </h2>
            </div>
            <div ref={refs.subheaderRef}>
-            <p
-               style={{
-                 fontFamily: subheaderFont?.family
-               }}
-               dangerouslySetInnerHTML={{
-                 __html: (landingPageData?.testimonialSubheader ||
-                   "You don't have to take our word for it.")?.replace?.(/\n/g, "<br>")
-               }}
-             >
-             </p>
+        <p
+              style={{
+                fontFamily: subheaderFont?.family
+              }}
+              dangerouslySetInnerHTML={{
+                __html: (landingPageData?.testimonialSubheader ?? "")?.replace?.(/\n/g, "<br>")
+              }}
+            >
+            </p>
            </div>
          </div>
 

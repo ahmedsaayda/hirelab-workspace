@@ -607,7 +607,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
             style={{ fontFamily: subheaderFont?.family }}
             dangerouslySetInnerHTML={{
               __html: (landingPageData?.growthPathDescription ||
-                "Take a glimpse of how your career might progress with us.")?.replace?.(/\n/g, "<br>")
+                "")?.replace?.(/\n/g, "<br>")
             }}
           >
           </h3>

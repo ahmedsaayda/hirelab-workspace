@@ -517,7 +517,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
             style={{ fontFamily: subheaderFont?.family }}
             dangerouslySetInnerHTML={{
               __html: landingPageData?.companyFactsDescription ||
-                "With the Core App development team we are on our way to become the worlds user friendliest consumer app for job connections with employers."
+                ""
             }}
           >
           </h3>
