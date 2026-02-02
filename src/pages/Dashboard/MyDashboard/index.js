@@ -470,7 +470,7 @@ const MyDashboard = () => {
     return "Good evening";
   };
 
-  const firstName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
+  const firstName = user?.firstName?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 p-2">
