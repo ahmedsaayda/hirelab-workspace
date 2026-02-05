@@ -103,11 +103,11 @@ export default function AdPreview({ variant, format, platform, brandData, landin
               playsInline
             />
           ) : (
-            <img
-              src={customCreativeUrl}
-              alt="Custom creative"
+          <img
+            src={customCreativeUrl}
+            alt="Custom creative"
               className="w-full h-full object-contain"
-            />
+          />
           )}
         </div>
       );

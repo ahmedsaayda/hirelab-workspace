@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import TemplateService from "../../../services/TemplateService";
 
 /**
  * Creatomate Preview Component
@@ -10,14 +11,52 @@ import React, { useEffect, useRef, useState } from "react";
  * And: NEXT_PUBLIC_CREATOMATE_PLAYER_TOKEN env variable
  */
 
-// "Clarity" Template IDs - MUST match TEMPLATES in videoRecordController.js
-const CREATOMATE_TEMPLATES = {
+// Fallback template IDs when API is unavailable
+const FALLBACK_TEMPLATES = {
   clarity: {
     story: "fd4d3d28-6a72-4f21-b350-939f99472840",
     portrait: "a8e33385-7b60-435d-b9d0-1e9b4c2de3d7",
     square: "af16c58d-96d5-4295-a183-b610b224887e",
   },
 };
+
+// Cache for templates
+let templatesCache = null;
+let templatesCacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Fetch templates from API with caching
+ */
+async function fetchTemplates() {
+  const now = Date.now();
+  
+  // Return cached templates if still valid
+  if (templatesCache && (now - templatesCacheTime) < CACHE_TTL) {
+    return templatesCache;
+  }
+  
+  try {
+    const response = await TemplateService.getActiveTemplates();
+    const dbTemplates = response.data;
+    
+    if (dbTemplates && dbTemplates.length > 0) {
+      const templates = {};
+      for (const t of dbTemplates) {
+        templates[t.templateId] = t.formats;
+      }
+      templatesCache = templates;
+      templatesCacheTime = now;
+      return templates;
+    }
+  } catch (error) {
+    console.warn("[CreatomatPreview] Failed to fetch templates, using fallback:", error.message);
+  }
+  
+  templatesCache = FALLBACK_TEMPLATES;
+  templatesCacheTime = now;
+  return FALLBACK_TEMPLATES;
+}
 
 // Default font family
 const DEFAULT_FONT_FAMILY = "Noto Sans";
@@ -110,6 +149,12 @@ export default function CreatomatPreview({
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [logoWidths, setLogoWidths] = useState(calculateLogoWidths(2)); // Default for wide logo
   const [isPlaying, setIsPlaying] = useState(false);
+  const [templates, setTemplates] = useState(FALLBACK_TEMPLATES);
+
+  // Fetch templates from API on mount
+  useEffect(() => {
+    fetchTemplates().then(setTemplates);
+  }, []);
 
   // Extract data
   // Check for video ONLY from variant.videoUrl - NOT from fallback sources
@@ -206,7 +251,7 @@ export default function CreatomatPreview({
       return;
     }
 
-    const templateSet = CREATOMATE_TEMPLATES[templateName] || CREATOMATE_TEMPLATES.clarity;
+    const templateSet = templates[templateName] || templates.clarity || FALLBACK_TEMPLATES.clarity;
     const templateId = templateSet[format] || templateSet.square;
 
     // Build modifications for Clarity template
@@ -317,7 +362,7 @@ export default function CreatomatPreview({
         previewRef.current = null;
       }
     };
-  }, [sdkLoaded, format, templateName, logoWidths]);
+  }, [sdkLoaded, format, templateName, logoWidths, templates]);
 
   // Handle click to play/pause video (only for video backgrounds)
   const handleClick = () => {

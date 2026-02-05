@@ -672,7 +672,7 @@ export default function Header({
                   <div className="flex flex-col gap-3 self-stretch">
                     <Button
                       onClick={() => {
-                        if (i !== 0) {
+                        if (i == 2) {
                           return;
                         }
                         setLandingPageData((d) => ({
@@ -685,9 +685,8 @@ export default function Header({
                         setSettingsDrawerOpen(false);
                         reload();
                       }}
-                      disabled={i !== 0}
                       shape="round"
-                      className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${i === 0
+                      className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${i === 0 || i === 1
                         ? landingPageData?.templateId === `${i + 1}`
                           ? "bg-blue-500 text-[#FFFFFF]"
                           : "bg-[#FFFFFF] text-blue_gray-800_01 border rounded-full border-solid border-blue_gray-100"

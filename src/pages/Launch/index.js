@@ -1991,7 +1991,7 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
                       thumbImg.toLowerCase().includes('.mp4') || thumbImg.toLowerCase().includes('.mov') || thumbImg.toLowerCase().includes('.webm') ? (
                         <video src={thumbImg} className="w-full h-full object-cover" muted playsInline />
                       ) : (
-                        <img src={thumbImg} alt={v.title} className="w-full h-full object-cover" />
+                      <img src={thumbImg} alt={v.title} className="w-full h-full object-cover" />
                       )
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[#98a2b3] text-xs">No img</div>
@@ -2032,21 +2032,21 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
                 const isGrayedOut = isPartialUpload && !isAvailable;
                 
                 return (
-                  <button
-                    key={format.id}
+                <button
+                  key={format.id}
                     onClick={() => !isGrayedOut && setSelectedFormat(format.id)}
                     disabled={isGrayedOut}
                     className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
                       isGrayedOut
                         ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed opacity-60"
                         : isSelected
-                          ? "bg-[#5207CD] text-white"
-                          : "bg-white text-[#344054] border border-[#d0d5dd] hover:border-[#5207CD]"
+                      ? "bg-[#5207CD] text-white"
+                      : "bg-white text-[#344054] border border-[#d0d5dd] hover:border-[#5207CD]"
                     }`}
                     title={isGrayedOut ? "No upload for this format - will be skipped" : ""}
-                  >
+                >
                     {format.label} {isGrayedOut && "⊘"}
-                  </button>
+                </button>
                 );
               })}
             </div>
@@ -2075,23 +2075,23 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
                 
                 if (shouldShowVideo) {
                   return (
-                    <video
-                      src={currentImage}
-                      controls
-                      autoPlay
-                      muted
-                      loop
+                  <video
+                    src={currentImage}
+                    controls
+                    autoPlay
+                    muted
+                    loop
                       playsInline
-                      className="w-full h-full object-contain"
-                    />
+                    className="w-full h-full object-contain"
+                  />
                   );
                 } else {
                   return (
-                    <img
-                      src={currentImage}
-                      alt={selectedVariant?.title || "Preview"}
-                      className="w-full h-full object-contain"
-                    />
+                  <img
+                    src={currentImage}
+                    alt={selectedVariant?.title || "Preview"}
+                    className="w-full h-full object-contain"
+                  />
                   );
                 }
               })()}
@@ -2107,13 +2107,13 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
                       Will be skipped in Meta
                     </span>
                   </div>
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-[#98a2b3]">
-                    <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-sm">{selectedVariant ? `No ${selectedFormat} preview` : "Select a creative"}</span>
-                  </div>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-[#98a2b3]">
+                  <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm">{selectedVariant ? `No ${selectedFormat} preview` : "Select a creative"}</span>
+                </div>
                 )
               )}
             </div>

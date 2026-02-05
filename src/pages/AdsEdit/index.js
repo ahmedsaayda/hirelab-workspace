@@ -2074,7 +2074,7 @@ export default function AdsEdit({ paramsId }) {
 
             try {
               // Use Creatomate API for image generation (same as video, but outputs PNG)
-              // eslint-disable-next-line no-await-in-loop
+            // eslint-disable-next-line no-await-in-loop
               const response = await AdsService.generateVideo(lpId, {
                 variantId: v.id,
                 variant: v,
@@ -2105,12 +2105,12 @@ export default function AdsEdit({ paramsId }) {
 
               // Wait for render to complete - 3 min timeout
               appendPrepareMessage(`⏳ ${format.label} rendering image...`);
-              // eslint-disable-next-line no-await-in-loop
+            // eslint-disable-next-line no-await-in-loop
               const generatedImageUrl = await AdsService.waitForRender(lpId, renderId, 180000);
 
               // Creatomate images are permanently hosted on Backblaze B2
               publishImages[format.id] = generatedImageUrl;
-              appendPrepareMessage(`✓ ${format.label} image ready for ${stepLabel}`);
+            appendPrepareMessage(`✓ ${format.label} image ready for ${stepLabel}`);
             } catch (imageError) {
               console.error(`[approveCreatives] Image generation failed for ${format.id}:`, imageError);
               appendPrepareMessage(`❌ ${format.label} failed for ${stepLabel} - ${imageError.message}`);
@@ -2777,8 +2777,8 @@ export default function AdsEdit({ paramsId }) {
                           willBeSkipped
                             ? "bg-gray-100 text-gray-400 border-transparent opacity-50 cursor-not-allowed"
                             : isActive
-                              ? "bg-[#5207CD] text-white border-[#5207CD]"
-                              : "bg-[#F3F0FF] text-[#5207CD] border-transparent hover:bg-[#E4D9FF]"
+                          ? "bg-[#5207CD] text-white border-[#5207CD]"
+                          : "bg-[#F3F0FF] text-[#5207CD] border-transparent hover:bg-[#E4D9FF]"
                           }`}
                         title={willBeSkipped ? "No custom upload - will be skipped during publishing" : ""}
                       >

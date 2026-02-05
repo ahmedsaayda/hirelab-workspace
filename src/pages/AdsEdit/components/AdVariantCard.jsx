@@ -506,7 +506,7 @@ export default function AdVariantCard({
                         {isVideo ? (
                           <video src={customUrl} className="w-full h-full object-cover" muted />
                         ) : (
-                          <img src={customUrl} alt={format.label} className="w-full h-full object-cover" />
+                        <img src={customUrl} alt={format.label} className="w-full h-full object-cover" />
                         )}
                         <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                           <span className="text-white text-[10px] font-medium">Change</span>
