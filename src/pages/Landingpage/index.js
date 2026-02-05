@@ -347,9 +347,12 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     };
   }, [lpId, recordActivity]);
 
-  // Add navbar height adjustment
+  // Add navbar height adjustment - skip for Template 2 which has header in hero
+  const isTemplate2 = landingPageData?.templateId === "2";
+  
   useEffect(() => {
-    const navbarHeight = 128;
+    // Template 2 has header built into hero, so no navbar padding needed
+    const navbarHeight = isTemplate2 ? 0 : 128;
     document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`);
     document.documentElement.style.setProperty('scroll-padding-top', `${navbarHeight}px`);
 
@@ -358,10 +361,10 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     style.textContent = `
       html {
         scroll-behavior: smooth;
-        scroll-padding-top: var(--navbar-height, 128px);
+        scroll-padding-top: var(--navbar-height, ${navbarHeight}px);
       }
       body {
-        padding-top: var(--navbar-height, 128px);
+        padding-top: var(--navbar-height, ${navbarHeight}px);
       }
     `;
     document.head.appendChild(style);
@@ -369,7 +372,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     return () => {
       document.head.removeChild(style);
     };
-  }, []);
+  }, [isTemplate2]);
 
   const fetchData = useCallback(() => {
     if (lpId && !defaultLandingPageData && !landingPageData) {

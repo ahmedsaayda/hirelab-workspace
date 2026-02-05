@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { Heading, Img, Text } from "./components";
 import { useHover } from "../../contexts/HoverContext";
+import { useFocusContext } from "../../contexts/FocusContext";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
 import { scrollToElement } from "./scrollUtils.js";
-// import { Heading, Img, Text } from "./ui";
 
 const decorativeElement = (position) => (
   <div
@@ -121,39 +121,320 @@ const useLeaderHover = () => {
 //   );
 // };
 
-const Template2 = ({ data }) => (
-  <div className="px-4 py-16 mx-auto bg-white">
-    <div className="flex flex-col gap-12 items-center mx-auto max-w-6xl md:flex-row">
-      <div className="space-y-6 md:w-1/2">
-        <Heading
-          as="h2"
-          className="text-[36px] font-semibold tracking-[-0.72px] text-[#0B4B3C]"
+const Template2 = ({ data }) => {
+  const refs = useLeaderHover();
+  const { handleItemClick } = useFocusContext();
+  const { titleFont, subheaderFont, bodyFont } = getFonts(data);
+
+  // Extract colors for Template 2 theme
+  const primaryColor = data?.primaryColor || "#0068D6";
+  const secondaryColor = data?.secondaryColor || "#f5590c";
+  const tertiaryColor = data?.tertiaryColor || "#3396FF";
+
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
+
+  // Parse description to get bold intro and regular text
+  const getDescriptionParts = () => {
+    const desc = data?.leaderIntroductionDescription || 
+      "With a passion for connecting exceptional talent with groundbreaking opportunities.\n\nJohn founded HireLab on the principle that the right people are the cornerstone of any successful organization. John's dedication to fostering a culture of excellence and his deep understanding of the evolving workforce.";
+    
+    const parts = desc.split('\n\n');
+    return {
+      intro: parts[0] || "",
+      body: parts.slice(1).join('\n\n') || "",
+    };
+  };
+
+  const descParts = getDescriptionParts();
+
+  return (
+    <div
+      ref={refs.sectionRef}
+      id="leader-introduction"
+      className="w-full relative overflow-x-clip"
+      style={{ 
+        fontFamily: bodyFont?.family || "Inter, sans-serif",
+        backgroundColor: "#ffffff",
+        minHeight: "900px",
+      }}
+    >
+      {/* Decorative Circular Arc - Top Right */}
+      <div 
+        className="absolute pointer-events-none hidden lg:block"
+        style={{
+          right: "-350px",
+          top: "-125px",
+          width: "700px",
+          height: "699px",
+          zIndex: 0,
+        }}
+      >
+        <svg width="100%" height="100%" viewBox="0 0 700 700" fill="none">
+          <circle
+            cx="350"
+            cy="350"
+            r="280"
+            stroke="url(#gradient1)"
+            strokeWidth="40"
+            fill="none"
+          />
+          <defs>
+            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="40%" stopColor={getColor("primary", 200)} />
+              <stop offset="100%" stopColor="#ffffff" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      {/* Decorative Circular Arc - Bottom Left */}
+      <div 
+        className="absolute pointer-events-none hidden lg:block"
+        style={{
+          left: "-350px",
+          bottom: "-200px",
+          width: "700px",
+          height: "699px",
+          zIndex: 0,
+        }}
+      >
+        <svg width="100%" height="100%" viewBox="0 0 700 700" fill="none">
+          <circle
+            cx="350"
+            cy="350"
+            r="280"
+            stroke="url(#gradient2)"
+            strokeWidth="40"
+            fill="none"
+          />
+          <defs>
+            <linearGradient id="gradient2" x1="100%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="40%" stopColor={getColor("primary", 200)} />
+              <stop offset="100%" stopColor="#ffffff" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      {/* Title Section */}
+      <div 
+        className="flex flex-col gap-[28px] items-center relative z-10 px-[72px] pt-[200px]"
+        style={{ width: "100%", maxWidth: "1440px", margin: "0 auto" }}
+      >
+        {/* Title with blue gradient highlight */}
+        <div className="relative inline-grid">
+          <div 
+            className="col-start-1 row-start-1 h-[24px] rounded-[8px]"
+            style={{
+              background: `linear-gradient(to right, ${getColor("primary", 200)}, transparent)`,
+              marginLeft: "121px",
+              marginTop: "20px",
+              width: "200px",
+            }}
+          />
+          <h2
+            ref={refs.titleRef}
+            onClick={() => handleItemClick("leaderIntroductionTitle")}
+            className="col-start-1 row-start-1 font-semibold cursor-pointer text-center"
+            style={{
+              fontFamily: titleFont?.family || "Inter, sans-serif",
+              fontSize: "48px",
+              lineHeight: "60px",
+              letterSpacing: "-1.44px",
+              color: "#292929",
+            }}
+          >
+            {data?.leaderIntroductionTitle || "Meet Our CEO"}
+          </h2>
+        </div>
+
+        {/* Subtitle */}
+        <p
+          className="text-center"
+          style={{
+            fontSize: "16px",
+            lineHeight: "24px",
+            color: "#7c7c7c",
+            fontFamily: subheaderFont?.family || "Inter, sans-serif",
+          }}
         >
-          {data?.meetCEOTitle || "Meet Our CEO"}
-        </Heading>
-        <Text className="text-[20px] text-[#475466] leading-[30px]">
-          {data?.leaderIntroductionDescription}
-        </Text>
-        <div>
-          <Text className="font-semibold">— {data?.ceoName}</Text>
-          <Text className="text-[#475466]">
-            CEO of {data?.companyName || "Hirelab"}
-          </Text>
+          Some text can be placed here....
+        </p>
+      </div>
+
+      {/* Main Container - Content Card + Image */}
+      <div 
+        className="relative z-10 mt-[80px] px-4 lg:px-0"
+        style={{ maxWidth: "1440px", margin: "80px auto 100px" }}
+      >
+        <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-start lg:pl-[72px]">
+          {/* Content Card (Left) */}
+          <div
+            className="bg-white flex flex-col gap-[48px] items-end justify-center overflow-hidden relative"
+            style={{
+              width: "100%",
+              maxWidth: "660px",
+              height: "auto",
+              minHeight: "460px",
+              padding: "40px 80px",
+              borderRadius: "24px",
+              zIndex: 2,
+            }}
+          >
+            {/* Background Pattern (subtle) */}
+            <div 
+              className="absolute inset-0 opacity-10 pointer-events-none"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23bdbdbd' stroke-width='0.5'%3E%3Cpath d='M0 20h40M20 0v40'/%3E%3C/g%3E%3C/svg%3E")`,
+                backgroundSize: "40px 40px",
+              }}
+            />
+
+            {/* Description */}
+            <div
+              ref={refs.descriptionRef}
+              onClick={() => handleItemClick("leaderIntroductionDescription")}
+              className="relative z-10 text-left w-full cursor-pointer"
+              style={{
+                fontSize: "16px",
+                lineHeight: "24px",
+                color: "#292929",
+                fontFamily: bodyFont?.family || "Inter, sans-serif",
+              }}
+            >
+              <p className="font-semibold mb-4">
+                {descParts.intro}
+              </p>
+              <p>
+                {descParts.body}
+              </p>
+            </div>
+
+            {/* Signature Section */}
+            <div className="flex flex-col gap-[16px] items-center relative z-10">
+              {/* Signature Image (handwritten style) */}
+              <div
+                ref={refs.fullnameRef}
+                onClick={() => handleItemClick("leaderIntroductionFullname")}
+                className="cursor-pointer"
+                style={{
+                  fontFamily: "'Allura', cursive",
+                  fontSize: "32px",
+                  color: getColor("secondary", 500),
+                  fontStyle: "italic",
+                }}
+              >
+                {data?.leaderIntroductionFullname || "John Smith"}
+              </div>
+
+              {/* Name and Role */}
+              <div className="flex flex-col gap-[12px] items-center text-center">
+                <p
+                  className="font-semibold"
+                  style={{
+                    fontSize: "16px",
+                    lineHeight: "24px",
+                    color: "#292929",
+                    fontFamily: titleFont?.family || "Inter, sans-serif",
+                  }}
+                >
+                  {data?.leaderIntroductionFullname || "John Smith"}
+                </p>
+                <p
+                  ref={refs.jobTitleRef}
+                  onClick={() => handleItemClick("leaderIntroductionJobTitle")}
+                  className="cursor-pointer"
+                  style={{
+                    fontSize: "14px",
+                    lineHeight: "20px",
+                    color: "#525252",
+                    fontFamily: bodyFont?.family || "Inter, sans-serif",
+                  }}
+                >
+                  {data?.leaderIntroductionJobTitle || "CEO of Hirelab"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Image Container (Right) */}
+          <div
+            ref={refs.avatarRef}
+            onClick={() => handleItemClick("leaderIntroductionAvatar")}
+            className="bg-white overflow-hidden relative cursor-pointer hidden lg:block"
+            style={{
+              width: "660px",
+              height: "460px",
+              borderRadius: "0 24px 24px 0",
+              marginLeft: "-24px", // Overlap with content card
+              zIndex: 1,
+            }}
+          >
+            <Img
+              src={data?.leaderIntroductionAvatar || "/dhwise-images/placeholder.png"}
+              alt={data?.leaderIntroductionFullname || "CEO"}
+              className="w-full h-full object-cover"
+              style={{
+                objectPosition: data?.imageAdjustment?.leaderIntroductionAvatar?.objectPosition
+                  ? `${data.imageAdjustment.leaderIntroductionAvatar.objectPosition.x}% ${data.imageAdjustment.leaderIntroductionAvatar.objectPosition.y}%`
+                  : "50% 50%",
+                objectFit: data?.imageAdjustment?.leaderIntroductionAvatar?.objectFit || "cover",
+              }}
+            />
+            {/* Dark gradient overlay on left edge */}
+            <div 
+              className="absolute top-0 left-0 h-full pointer-events-none"
+              style={{
+                width: "180px",
+                background: "linear-gradient(to right, rgba(0,0,0,0.25), transparent)",
+              }}
+            />
+          </div>
+
+          {/* Mobile Image (stacked below) */}
+          <div
+            ref={refs.avatarRef}
+            onClick={() => handleItemClick("leaderIntroductionAvatar")}
+            className="bg-white overflow-hidden relative cursor-pointer lg:hidden mt-4 w-full"
+            style={{
+              height: "300px",
+              borderRadius: "24px",
+            }}
+          >
+            <Img
+              src={data?.leaderIntroductionAvatar || "/dhwise-images/placeholder.png"}
+              alt={data?.leaderIntroductionFullname || "CEO"}
+              className="w-full h-full object-cover"
+              style={{
+                objectPosition: data?.imageAdjustment?.leaderIntroductionAvatar?.objectPosition
+                  ? `${data.imageAdjustment.leaderIntroductionAvatar.objectPosition.x}% ${data.imageAdjustment.leaderIntroductionAvatar.objectPosition.y}%`
+                  : "50% 50%",
+              }}
+            />
+          </div>
         </div>
       </div>
-      <div className="md:w-1/2">
-        <Img
-          src={
-            data?.leaderIntroductionAvatar ||
-            "/placeholder.svg?height=200&width=300"
-          }
-          alt={`${data?.leaderIntroductionFullname} - CEO of ${data?.companyName}`}
-          className="clip-path w-full rounded-lg"
-        />
-      </div>
+
+      {/* Google Font for signature */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Allura&display=swap');
+      `}</style>
     </div>
-  </div>
-);
+  );
+};
 
 const Template3 = ({ data }) => (
   <div className="  px-4 py-16 bg-[#F8FAFC]">

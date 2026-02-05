@@ -2449,7 +2449,7 @@ export default function LandingpageEdit({ paramsId }) {
                     setActiveKey("flexaligntop");
                   }}
                   style={{
-                    paddingTop: 40,
+                    paddingTop: landingPageData?.templateId === "2" ? 0 : 40,
                   }}
                 >
                   <HeroSection

@@ -622,9 +622,9 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       <path
                         d="M9.75 3.75C9.75 4.57843 7.90317 5.25 5.625 5.25C3.34683 5.25 1.5 4.57843 1.5 3.75M9.75 3.75C9.75 2.92157 7.90317 2.25 5.625 2.25C3.34683 2.25 1.5 2.92157 1.5 3.75M9.75 3.75V4.875M1.5 3.75V12.75C1.5 13.5784 3.34683 14.25 5.625 14.25M5.625 8.25C5.49859 8.25 5.37351 8.24793 5.25 8.24388C3.14756 8.17499 1.5 7.53246 1.5 6.75M5.625 11.25C3.34683 11.25 1.5 10.5784 1.5 9.75M16.5 8.625C16.5 9.45343 14.6532 10.125 12.375 10.125C10.0968 10.125 8.25 9.45343 8.25 8.625M16.5 8.625C16.5 7.79657 14.6532 7.125 12.375 7.125C10.0968 7.125 8.25 7.79657 8.25 8.625M16.5 8.625V14.25C16.5 15.0784 14.6532 15.75 12.375 15.75C10.0968 15.75 8.25 15.0784 8.25 14.25V8.625M16.5 11.4375C16.5 12.2659 14.6532 12.9375 12.375 12.9375C10.0968 12.9375 8.25 12.2659 8.25 11.4375"
                         stroke="#FAFAFA"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </svg>
                   </div>
@@ -770,9 +770,9 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     <path
                       d="M12 10.0308C14.6489 10.5516 16.5 11.741 16.5 13.125C16.5 14.989 13.1421 16.5 9 16.5C4.85786 16.5 1.5 14.989 1.5 13.125C1.5 11.741 3.35114 10.5516 6 10.0308M9 12.75V6.75M9 6.75C10.2426 6.75 11.25 5.74264 11.25 4.5C11.25 3.25736 10.2426 2.25 9 2.25C7.75736 2.25 6.75 3.25736 6.75 4.5C6.75 5.74264 7.75736 6.75 9 6.75Z"
                       stroke="#FAFAFA"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                   </svg>
                 </div>
@@ -943,9 +943,9 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           <path
                             d="M9.75 3.75C9.75 4.57843 7.90317 5.25 5.625 5.25C3.34683 5.25 1.5 4.57843 1.5 3.75M9.75 3.75C9.75 2.92157 7.90317 2.25 5.625 2.25C3.34683 2.25 1.5 2.92157 1.5 3.75M9.75 3.75V4.875M1.5 3.75V12.75C1.5 13.5784 3.34683 14.25 5.625 14.25M5.625 8.25C5.49859 8.25 5.37351 8.24793 5.25 8.24388C3.14756 8.17499 1.5 7.53246 1.5 6.75M5.625 11.25C3.34683 11.25 1.5 10.5784 1.5 9.75M16.5 8.625C16.5 9.45343 14.6532 10.125 12.375 10.125C10.0968 10.125 8.25 9.45343 8.25 8.625M16.5 8.625C16.5 7.79657 14.6532 7.125 12.375 7.125C10.0968 7.125 8.25 7.79657 8.25 8.625M16.5 8.625V14.25C16.5 15.0784 14.6532 15.75 12.375 15.75C10.0968 15.75 8.25 15.0784 8.25 14.25V8.625M16.5 11.4375C16.5 12.2659 14.6532 12.9375 12.375 12.9375C10.0968 12.9375 8.25 12.2659 8.25 11.4375"
                             stroke="#FAFAFA"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           />
                         </svg>
                       </div>
@@ -1012,8 +1012,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         cy="31"
                         r="9"
                         stroke="white"
-                        stroke-opacity="0.4"
-                        stroke-width="6"
+                        strokeOpacity="0.4"
+                        strokeWidth="6"
                       />
                       <path
                         d="M140 30.5L30 30.5L0.500003 0.99999"
@@ -1028,8 +1028,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           y2="30"
                           gradientUnits="userSpaceOnUse"
                         >
-                          <stop stop-color="white" stop-opacity="0" />
-                          <stop offset="1" stop-color="white" />
+                          <stop stopColor="white" stopOpacity="0" />
+                          <stop offset="1" stopColor="white" />
                         </linearGradient>
                       </defs>
                     </svg>
@@ -1062,9 +1062,9 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           <path
                             d="M12 10.0308C14.6489 10.5516 16.5 11.741 16.5 13.125C16.5 14.989 13.1421 16.5 9 16.5C4.85786 16.5 1.5 14.989 1.5 13.125C1.5 11.741 3.35114 10.5516 6 10.0308M9 12.75V6.75M9 6.75C10.2426 6.75 11.25 5.74264 11.25 4.5C11.25 3.25736 10.2426 2.25 9 2.25C7.75736 2.25 6.75 3.25736 6.75 4.5C6.75 5.74264 7.75736 6.75 9 6.75Z"
                             stroke="#FAFAFA"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           />
                         </svg>
                       </div>
@@ -1185,8 +1185,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         cy="31"
                         r="9"
                         stroke="white"
-                        stroke-opacity="0.4"
-                        stroke-width="6"
+                        strokeOpacity="0.4"
+                        strokeWidth="6"
                       />
                       <path
                         d="M12 30.5L151 30.5L180.5 0.999989"
@@ -1201,8 +1201,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           y2="30"
                           gradientUnits="userSpaceOnUse"
                         >
-                          <stop stop-color="white" stop-opacity="0" />
-                          <stop offset="1" stop-color="white" />
+                          <stop stopColor="white" stopOpacity="0" />
+                          <stop offset="1" stopColor="white" />
                         </linearGradient>
                       </defs>
                     </svg>
@@ -1312,8 +1312,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         cy="12"
                         r="9"
                         stroke="white"
-                        stroke-opacity="0.4"
-                        stroke-width="6"
+                        strokeOpacity="0.4"
+                        strokeWidth="6"
                       />
                       <path
                         d="M12.5 11.5L164 11.5"
@@ -1328,8 +1328,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           y2="11"
                           gradientUnits="userSpaceOnUse"
                         >
-                          <stop stop-color="white" stop-opacity="0" />
-                          <stop offset="1" stop-color="white" />
+                          <stop stopColor="white" stopOpacity="0" />
+                          <stop offset="1" stopColor="white" />
                         </linearGradient>
                       </defs>
                     </svg>
@@ -1567,246 +1567,599 @@ const Template3 = ({ landingPageData, fetchData }) => {
 };
 
 const Template2 = ({ landingPageData, fetchData }) => {
+  const menuItemsArray = landingPageData?.menuItems?.map((item) => item.key) || [];
+  const { handleItemClick } = useFocusContext();
+  const router = useRouter();
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(() => {
+    if (Array.isArray(landingPageData?.location)) {
+      if (landingPageData.location.includes("Hybrid")) return "Hybrid";
+      if (landingPageData.location.includes("Remote")) return "Remote";
+      return landingPageData.location[0];
+    }
+    return landingPageData?.location;
+  });
+  const [currentHash, setCurrentHash] = useState(
+    typeof window !== 'undefined' ? window.location.hash.slice(1) || "job-specifications" : "job-specifications"
+  );
+
   const refs = useHeroHover();
+  const navRef = useRef(null);
+  const titleContainerRef = useRef(null);
+
+  // Update selectedLocation when landingPageData.location changes
+  useEffect(() => {
+    if (Array.isArray(landingPageData?.location)) {
+      if (landingPageData.location.includes("Hybrid")) {
+        setSelectedLocation("Hybrid");
+      } else if (landingPageData.location.includes("Remote")) {
+        setSelectedLocation("Remote");
+      } else if (landingPageData.location.length > 0) {
+        setSelectedLocation(landingPageData.location[0]);
+      } else {
+        setSelectedLocation("");
+      }
+    } else if (landingPageData?.location) {
+      setSelectedLocation(landingPageData.location);
+    } else {
+      setSelectedLocation("");
+    }
+  }, [landingPageData?.location]);
+
+  // Listen for hash changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      setCurrentHash(hash || "job-specifications");
+    };
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
   const location = Array.isArray(landingPageData?.location)
-    ? landingPageData?.location.join(" ")
+    ? landingPageData?.location.join(", ")
     : landingPageData?.location || "";
 
-  const themeData = getThemeData(landingPageData?.theme);
+  // Extract colors for dependency tracking - Template 2 default blue theme
+  const primaryColor = landingPageData?.primaryColor || "#0068D6";
+  const secondaryColor = landingPageData?.secondaryColor || "#f5590c";
+  const tertiaryColor = landingPageData?.tertiaryColor || "#3396FF";
 
-  const { basePrimary, baseSecondary, baseTertiary } = themeData;
-  const { variantPl1, variantPl2, variantPl3, variantPl4 } = themeData;
-  const { variantPd1, variantPd2, variantPd3, variantPd4, variantPd5 } =
-    themeData;
-  const { variantSl1, variantSl2, variantSl3, variantSl4 } = themeData;
-  const { variantSd1, variantSd2, variantSd3, variantSd4, variantSd5 } =
-    themeData;
-  const { variantTl1, variantTl2, variantTl3, variantTl4 } = themeData;
-  const { variantTd1, variantTd2, variantTd3, variantTd4, variantTd5 } =
-    themeData;
-  const { textHeadingColor, textSubHeadingColor } = themeData;
+  // Use our template palette hook
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
 
   const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
 
+  // Responsive font size for title
+  const titleFontSize = useResponsiveFontSize(
+    landingPageData?.vacancyTitle,
+    titleContainerRef,
+    2,
+    80
+  );
+
+  // Split title to highlight second word
+  const titleWords = (landingPageData?.vacancyTitle || "Project Manager").split(" ");
+  const firstWord = titleWords[0] || "";
+  const restWords = titleWords.slice(1).join(" ") || "";
+
+  const handleNavigate = (id) => {
+    if (typeof window !== 'undefined') {
+      window.location.href = `#${id}`;
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
   return (
-    <div ref={refs.sectionRef} className="hero-section">
-      <div className="bg-white">
-        <div className="container flex flex-col gap-8 items-start px-4 py-8 mx-auto md:py-16 lg:flex-row lg:gap-16">
-          <div className="space-y-8 w-full lg:w-1/2">
-            <div className="space-y-4">
-              <div>
-                <h1
-                  ref={refs.vacancyTitleRef}
-                  className="text-4xl font-bold leading-tight text-gray-900 md:text-5xl lg:text-6xl"
-                  style={{
-                    color: variantPd5,
-                    fontFamily: titleFont?.family,
-                  }}
-                >
-                  {landingPageData?.vacancyTitle}
-                </h1>
+    <div className="bg-white w-full">
+      <div
+        ref={refs.sectionRef}
+        className="relative mx-auto w-full hero-section overflow-hidden"
+        style={{
+          fontFamily: bodyFont?.family || "Inter, sans-serif",
+        }}
+      >
+        {/* Main container with gradient background */}
+        <div
+          className="relative rounded-[24px] lg:rounded-[32px] overflow-hidden mx-4 lg:mx-0"
+          style={{
+            background: `linear-gradient(to bottom, ${getColor("primary", 100)}, ${getColor("primary", 50)})`,
+          }}
+        >
+          {/* Decorative ellipses */}
+          <div
+            className="absolute w-[106px] h-[106px] rounded-full opacity-30"
+            style={{
+              left: "40%",
+              top: "140px",
+              background: `radial-gradient(circle, ${getColor("primary", 200)} 0%, transparent 70%)`,
+            }}
+          />
+          <div
+            className="absolute w-[60px] h-[60px] rounded-full opacity-40"
+            style={{
+              left: "15%",
+              top: "75%",
+              background: `radial-gradient(circle, ${getColor("primary", 300)} 0%, transparent 70%)`,
+            }}
+          />
+          <div
+            className="absolute w-[271px] h-[271px] rounded-full opacity-20 hidden lg:block"
+            style={{
+              right: "-50px",
+              bottom: "50px",
+              background: `radial-gradient(circle, ${getColor("primary", 200)} 0%, transparent 70%)`,
+            }}
+          />
+          {/* Large decorative ellipse top-left */}
+          <div
+            className="absolute w-[500px] h-[500px] rounded-full opacity-10 hidden lg:block"
+            style={{
+              left: "-200px",
+              top: "-300px",
+              border: `2px solid ${getColor("primary", 300)}`,
+            }}
+          />
+          {/* Decorative ellipse bottom-center */}
+          <div
+            className="absolute w-[456px] h-[456px] rounded-full opacity-10 hidden lg:block"
+            style={{
+              left: "25%",
+              bottom: "-200px",
+              border: `2px solid ${getColor("primary", 300)}`,
+            }}
+          />
+
+          {/* Hero Image - Right side (Desktop only) */}
+          <div
+            className="absolute right-0 top-0 w-full lg:w-[48%] h-[300px] lg:h-full rounded-[24px] overflow-hidden hidden lg:block"
+            style={{
+              margin: "24px",
+              marginRight: "24px",
+              width: "calc(48% - 24px)",
+              height: "calc(100% - 48px)",
+              boxShadow: "0px 56px 72px 16px rgba(0,0,0,0.25), 0px 0px 72px 16px rgba(0,0,0,0.15)",
+            }}
+          >
+            <Image
+              src={landingPageData?.heroImage || "/dhwise-images/placeholder.png"}
+              alt="Hero"
+              className="object-cover w-full h-full"
+              style={{
+                objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
+                  ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
+                  : "50% 50%",
+                objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
+              }}
+              width={672}
+              height={744}
+              sizes="(max-width: 1024px) 100vw, 48vw"
+              loading="eager"
+              fetchPriority="high"
+            />
+          </div>
+
+          {/* Content Container */}
+          <div className="relative z-10 px-4 lg:px-12 pt-10 pb-8">
+            {/* Top Navigation Bar */}
+            <div className="flex justify-between items-center mb-8 lg:mb-20">
+              {/* Logo */}
+              <div className="h-4 lg:h-8">
+                {landingPageData?.companyLogo ? (
+                  <img
+                    src={landingPageData.companyLogo}
+                    alt="Company Logo"
+                    className="h-full w-auto object-contain"
+                  />
+                ) : (
+                  <svg width="103" height="24" viewBox="0 0 103 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 0.5H4.5V10.5H13.5V0.5H18V23.5H13.5V14.5H4.5V23.5H0V0.5Z" fill={getColor("primary", 700)}/>
+                    <path d="M21 0.5H25.5V23.5H21V0.5Z" fill={getColor("primary", 700)}/>
+                    <path d="M28.5 0.5H37.5C42 0.5 45 3.5 45 8C45 12.5 42 14.5 38.5 14.5L45.5 23.5H40L33.5 14.5H33V23.5H28.5V0.5ZM33 11H36.5C38.5 11 40.5 10 40.5 8C40.5 6 38.5 4.5 36.5 4.5H33V11Z" fill={getColor("primary", 700)}/>
+                    <path d="M47.5 0.5H63V4.5H52V10H61V14H52V19.5H63V23.5H47.5V0.5Z" fill={getColor("primary", 700)}/>
+                    <path d="M65.5 0.5H70V19.5H79V23.5H65.5V0.5Z" fill={getColor("primary", 700)}/>
+                    <path d="M84 0.5H89L97.5 23.5H92.5L91 19H82L80.5 23.5H75.5L84 0.5ZM86.5 6L83.5 15H89.5L86.5 6Z" fill={getColor("primary", 700)}/>
+                    <path d="M97 0.5H103.5C108 0.5 111 3.5 111 8C111 10.5 109.5 13 107.5 14L112 23.5H107L103 14.5H101.5V23.5H97V0.5ZM101.5 11H103C105 11 106.5 10 106.5 8C106.5 6 105 4.5 103 4.5H101.5V11Z" fill={getColor("secondary", 500)}/>
+                  </svg>
+                )}
               </div>
-              <div>
-                <p
-                  ref={refs.heroDescriptionRef}
-                  className="max-w-xl text-lg text-gray-600 md:text-xl"
+
+              {/* CTA Buttons - Top Right */}
+              <div className="flex gap-1.5 lg:gap-3 items-center">
+                <button
+                  ref={refs.cta1TitleRef}
+                  onClick={() => handleItemClick("cta1Title")}
+                  className="flex items-center justify-center gap-2 px-5 lg:px-7 py-2.5 lg:py-3 h-9 lg:h-auto rounded-full bg-white font-semibold text-sm lg:text-base transition-all hover:shadow-md"
                   style={{
-                    color: variantPd5,
-                    fontFamily: subheaderFont?.family,
+                    color: getColor("secondary", 500),
+                    fontFamily: bodyFont?.family,
                   }}
                 >
-                  {landingPageData?.heroDescription}
-                </p>
+                  {landingPageData?.cta1Title || "Share"}
+                </button>
+                <button
+                  ref={refs.cta2TitleRef}
+                  onClick={() => handleItemClick("cta2Title")}
+                  className="flex items-center justify-center gap-2 px-5 lg:px-7 py-2.5 lg:py-3 h-9 lg:h-auto rounded-full font-semibold text-sm lg:text-base text-white transition-all hover:shadow-md"
+                  style={{
+                    backgroundColor: getColor("secondary", 500),
+                    fontFamily: bodyFont?.family,
+                  }}
+                >
+                  {landingPageData?.cta2Title || getTranslation(landingPageData?.lang, 'applyNow')}
+                </button>
               </div>
             </div>
-            <div className="flex w-full items-center justify-center gap-5 rounded-[12px] border border-solid border-gray-300 bg-[#ffffff] p-[22px] mdx:w-full smx:flex-col smx:p-5">
-              {landingPageData?.salaryMin &&
-                !isNaN(landingPageData?.salaryMin) && (
-                  <>
-                    <div className="flex flex-1 gap-2 items-center smr:justify-center smx:justify-start smx:self-stretch">
-                      <Img
-                        src="/images3/img_coins_stacked_03.svg"
-                        alt="Coins Image"
-                        className="h-[18px] w-[18px]"
-                      />
-                      <div className="flex items-center">
+
+            {/* Title Section */}
+            <div className="max-w-[327px] lg:max-w-[600px] mb-6 lg:mb-8">
+              {/* Title with highlighted second word */}
+              <div className="relative inline-block">
+                <h1
+                  ref={(el) => {
+                    refs.vacancyTitleRef.current = el;
+                    titleContainerRef.current = el;
+                  }}
+                  onClick={() => handleItemClick("vacancyTitle")}
+                  className="font-semibold tracking-tight"
+                  style={{
+                    fontFamily: titleFont?.family || "Inter, sans-serif",
+                    fontSize: `clamp(36px, 8vw, ${titleFontSize}px)`,
+                    lineHeight: "48px",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  <span style={{ color: "#292929" }}>{firstWord} </span>
+                  <span className="relative">
+                    {/* Highlight background behind text */}
+                    <span
+                      className="absolute left-0 bottom-0 h-[24px] w-full rounded-lg -z-10"
+                      style={{
+                        background: `linear-gradient(to right, ${getColor("secondary", 200)}, transparent)`,
+                      }}
+                    />
+                    <span style={{ color: getColor("secondary", 500) }}>{restWords}</span>
+                  </span>
+                </h1>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div
+              ref={refs.heroDescriptionRef}
+              onClick={() => handleItemClick("heroDescription")}
+              className="max-w-[327px] lg:max-w-[459px] mb-9 lg:mb-12"
+            >
+              <p
+                className="text-base leading-6"
+                style={{
+                  color: "#464646",
+                  fontFamily: subheaderFont?.family || "Inter, sans-serif",
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: (landingPageData?.heroDescription ||
+                    "Provide a compelling description of the job and the company. This will be displayed in the hero section of the landing page.")?.replace?.(/\n/g, "<br>")
+                }}
+              />
+            </div>
+
+            {/* Info Badges */}
+            <div
+              className="grid grid-cols-2 lg:flex lg:flex-wrap gap-6 lg:gap-8 items-start lg:items-center pt-8 lg:pt-9 mb-8 lg:mb-16 w-full lg:max-w-[551px]"
+              style={{
+                borderTop: `1.5px solid ${getColor("primary", 300)}`,
+              }}
+            >
+              {/* Location Badge */}
+              <div className="flex gap-2.5 items-center">
+                <div
+                  className="flex items-center justify-center w-9 h-9 lg:w-11 lg:h-11 rounded-[13px] lg:rounded-2xl bg-white"
+                  style={{
+                    boxShadow: "0px 9.818px 29.455px 0px rgba(164, 196, 230, 0.5)",
+                  }}
+                >
+                  <svg className="w-5 h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill={getColor("secondary", 500)}/>
+                  </svg>
+                </div>
+                <div
+                  ref={refs.locationRef}
+                  onClick={() => {
+                    if (Array.isArray(landingPageData?.location) && landingPageData?.location.length > 1) {
+                      setShowLocationDropdown(!showLocationDropdown);
+                    }
+                    handleItemClick("location");
+                  }}
+                  className="flex flex-col gap-2.5 cursor-pointer relative"
+                >
+                  <span
+                    className="text-xs font-normal leading-5"
+                    style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                  >
+                    {getTranslation(landingPageData?.lang, 'location')?.toUpperCase()}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <span
+                      className="text-sm lg:text-base font-semibold leading-5 lg:leading-6"
+                      style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                    >
+                      {selectedLocation}
+                    </span>
+                    {Array.isArray(landingPageData?.location) && landingPageData?.location.length > 1 && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`transition-transform ${showLocationDropdown ? "rotate-180" : ""}`}
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    )}
+                  </div>
+                  {/* Location Dropdown */}
+                  {showLocationDropdown && Array.isArray(landingPageData?.location) && (
+                    <div
+                      className="absolute left-0 top-full z-[2000] mt-2 min-w-[200px] bg-white rounded-lg shadow-lg overflow-hidden"
+                      style={{ maxHeight: "220px", overflowY: "auto" }}
+                    >
+                      <div className="flex justify-between items-center px-4 py-2 border-b border-gray-100">
+                        <span className="text-xs font-medium text-gray-600">
+                          {getTranslation(landingPageData?.lang, 'locations')}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowLocationDropdown(false);
+                          }}
+                          className="p-1 rounded-full transition-colors hover:bg-gray-100"
+                        >
+                          <X size={16} className="text-gray-500" />
+                        </button>
+                      </div>
+                      {landingPageData?.location
+                        .filter((loc) => loc !== selectedLocation)
+                        .map((loc, index) => (
+                          <div
+                            key={index}
+                            className="px-4 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50"
+                            onClick={() => {
+                              setSelectedLocation(loc);
+                              setShowLocationDropdown(false);
+                            }}
+                            style={{ color: "#292929" }}
+                          >
+                            {loc}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Salary Badge */}
+              {(landingPageData?.salaryAvailable === false || landingPageData?.salaryMin) && (
+                <div className="flex gap-2.5 items-center">
+                  <div
+                    className="flex items-center justify-center w-9 h-9 lg:w-11 lg:h-11 rounded-[13px] lg:rounded-2xl bg-white"
+                    style={{
+                      boxShadow: "0px 9.818px 29.455px 0px rgba(164, 196, 230, 0.5)",
+                    }}
+                  >
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M11.8 10.9C9.53 10.31 8.8 9.7 8.8 8.75C8.8 7.66 9.81 6.9 11.5 6.9C13.28 6.9 13.94 7.75 14 9H16.21C16.14 7.28 15.09 5.7 13 5.19V3H10V5.16C8.06 5.58 6.5 6.84 6.5 8.77C6.5 11.08 8.41 12.23 11.2 12.9C13.7 13.5 14.2 14.38 14.2 15.31C14.2 16 13.71 17.1 11.5 17.1C9.44 17.1 8.63 16.18 8.52 15H6.32C6.44 17.19 8.08 18.42 10 18.83V21H13V18.85C14.95 18.48 16.5 17.35 16.5 15.3C16.5 12.46 14.07 11.49 11.8 10.9Z" fill={getColor("secondary", 500)}/>
+                    </svg>
+                  </div>
+                  <div className="flex flex-col gap-2.5">
+                    <span
+                      className="text-xs font-normal leading-5"
+                      style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                    >
+                      {getTranslation(landingPageData?.lang, 'salary')?.toUpperCase()}
+                    </span>
+                    {landingPageData?.salaryAvailable === false ? (
+                      <span
+                        ref={refs.salaryTextRef}
+                        onClick={() => handleItemClick("salaryText")}
+                        className="text-sm lg:text-base font-semibold leading-5 lg:leading-6"
+                        style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                      >
+                        {landingPageData?.salaryText || getTranslation(landingPageData?.lang, 'competitiveSalary')}
+                      </span>
+                    ) : (
+                      <span
+                        ref={refs.salaryRangeRef}
+                        onClick={() => handleItemClick("salaryMin")}
+                        className="text-sm lg:text-base font-semibold leading-5 lg:leading-6"
+                        style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                      >
+                        {landingPageData?.salaryCurrency || "$"}
                         {landingPageData?.salaryRange ? (
                           <>
-                            <div ref={refs.salaryMinRef} className="inline">
-                              {intToHumanReadablePrice(
-                                parseFloat(landingPageData?.salaryMin)
-                              )}
-                            </div>
-                            <span>-</span>
-                            <div ref={refs.salaryMaxRef} className="inline">
-                              {intToHumanReadablePrice(
-                                parseFloat(landingPageData?.salaryMax)
-                              )}
-                            </div>
-                            <div
-                              ref={refs.salaryCurrencyRef}
-                              className="inline"
-                            >
-                              {
-                                currencies.find(
-                                  (c) =>
-                                    c.iso === landingPageData?.salaryCurrency
-                                )?.symbol
-                              }
-                            </div>
-                            {" / "}
-                            <div
-                              ref={refs.salaryTimeRef}
-                              className="inline lowercase"
-                            >
-                              {landingPageData?.salaryTime}
-                            </div>
+                            <span ref={refs.salaryMinRef}>
+                              {intToHumanReadablePrice(landingPageData?.salaryMin)}
+                            </span>
+                            {landingPageData?.salaryMax && (
+                              <>
+                                -
+                                <span ref={refs.salaryMaxRef}>
+                                  {intToHumanReadablePrice(landingPageData?.salaryMax)}
+                                </span>
+                              </>
+                            )}
                           </>
                         ) : (
-                          <>
-                            <div ref={refs.salaryMinRef} className="inline">
-                              {intToHumanReadablePrice(
-                                parseFloat(landingPageData?.salaryMin)
-                              )}
-                            </div>
-                            <div
-                              ref={refs.salaryCurrencyRef}
-                              className="inline"
-                            >
-                              {
-                                currencies.find(
-                                  (c) =>
-                                    c.iso === landingPageData?.salaryCurrency
-                                )?.symbol
-                              }
-                            </div>
-                            {" / "}
-                            <div
-                              ref={refs.salaryTimeRef}
-                              className="inline lowercase"
-                            >
-                              {landingPageData?.salaryTime}
-                            </div>
-                          </>
+                          <span ref={refs.salaryMinRef}>
+                            {intToHumanReadablePrice(landingPageData?.salaryMin)}
+                          </span>
                         )}
-                      </div>
-                    </div>
-                    <div className="h-[8px] w-[8px] rounded bg-[#5207CD] smx:hidden" />
-                  </>
-                )}
+                        /
+                        <span ref={refs.salaryTimeRef}>
+                          {getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime)?.toLowerCase?.() || "month"}
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
-              <div className="flex gap-2 items-center smr:justify-center smx:justify-start smx:w-full">
-                <Img
-                  src="/images3/img_vertical_container.svg"
-                  alt="Location Image"
-                  className="h-[18px] w-[18px]"
-                />
-                <div className="flex items-center">{location}</div>
-              </div>
-              <div className="h-[8px] w-[8px] rounded bg-[#5207CD] smx:hidden" />
-              <div className="flex flex-1 gap-2 items-center smr:justify-center smx:justify-start smx:w-full smx:self-stretch">
-                <Img
-                  src="/images3/img_search.svg"
-                  alt="Search Image"
-                  className="h-[18px] w-[18px]"
-                />
-                <div className="flex items-center">
-                  {landingPageData?.hoursRange ? (
-                    <>
-                      <span>{landingPageData?.hoursMin}</span>
-                      <span>-</span>
-                      <div ref={refs.hoursMaxRef} className="inline">
-                        {landingPageData?.hoursMax}{" "}
-                      </div>
-                      {"hr / "}
-                      <div ref={refs.hoursUnitRef} className="inline">
-                        {landingPageData?.hoursUnit}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <span>{landingPageData?.hoursMin}</span>
-                      {" hr/ "}
-                      <div ref={refs.hoursUnitRef} className="inline">
-                        {landingPageData?.hoursUnit}
-                      </div>
-                    </>
-                  )}
+              {/* Working Hours Badge */}
+              <div className="flex gap-2.5 items-center col-span-2 lg:col-span-1">
+                <div
+                  className="flex items-center justify-center w-9 h-9 lg:w-11 lg:h-11 rounded-[13px] lg:rounded-2xl bg-white"
+                  style={{
+                    boxShadow: "0px 9.818px 29.455px 0px rgba(164, 196, 230, 0.5)",
+                  }}
+                >
+                  <svg className="w-5 h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12.5 7H11V13L16.2 16.2L17 14.9L12.5 12.2V7Z" fill={getColor("secondary", 500)}/>
+                  </svg>
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  <span
+                    className="text-xs font-normal leading-5"
+                    style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                  >
+                    {getTranslation(landingPageData?.lang, 'workingHours')?.toUpperCase()}
+                  </span>
+                  <span
+                    ref={refs.hoursRangeRef}
+                    className="text-sm lg:text-base font-semibold leading-5 lg:leading-6"
+                    style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                  >
+                    {landingPageData?.hoursRange ? (
+                      <>
+                        <span ref={refs.hoursMinRef} onClick={() => handleItemClick("hoursMin")}>
+                          {landingPageData?.hoursMin || "7"}
+                        </span>
+                        -
+                        <span ref={refs.hoursMaxRef} onClick={() => handleItemClick("hoursMax")}>
+                          {landingPageData?.hoursMax || "10"}
+                        </span>
+                      </>
+                    ) : (
+                      <span ref={refs.hoursMinRef} onClick={() => handleItemClick("hoursMin")}>
+                        {landingPageData?.hoursMin || "7"}
+                      </span>
+                    )}{" "}
+                    {getTranslation(landingPageData?.lang, 'hours')}/
+                    <span ref={refs.hoursUnitRef} onClick={() => handleItemClick("hoursUnit")}>
+                      {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit)?.toLowerCase?.() || "daily"}
+                    </span>
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <Button
-                color="light_blue_A700"
-                href={landingPageData?.cta1Link}
-                shape="round"
-                size="3xl"
+            {/* Mobile Hero Image - After info badges */}
+            <div
+              ref={refs.heroImageRef}
+              className="block lg:hidden mb-8 rounded-[24px] overflow-hidden"
+              style={{
+                boxShadow: "0px 56px 72px 16px rgba(0,0,0,0.4), 0px 0px 72px 16px rgba(0,0,0,0.15)",
+              }}
+            >
+              <Image
+                src={landingPageData?.heroImage || "/dhwise-images/placeholder.png"}
+                alt="Hero"
+                className="object-cover w-full"
                 style={{
-                  borderColor: variantPl2,
-                  backgroundColor: basePrimary,
-                  color: "#fff",
+                  height: "362px",
+                  objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
+                    ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
+                    : "50% 50%",
+                  objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
                 }}
-                className="min-w-[170px] gap-2 rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5"
-              >
-                <Share2 size={20} />
-              </Button>
-              <Button
-                color="light_blue_A700"
-                href={landingPageData?.cta2Link}
-                shape="round"
-                size="3xl"
-                style={{
-                  borderColor: variantPl2,
-                  backgroundColor: basePrimary,
-                  color: "#fff",
-                }}
-                className="min-w-[170px] gap-2 rounded-lg border border-solid border-[#5207CD] px-[33px] font-semibold smx:px-5"
-              >
-                {landingPageData?.cta2Title}
-                <ArrowRight size={20} />
-              </Button>
-            </div>
-          </div>
-
-          {/* Right Column - Image */}
-          <div className="relative w-full lg:w-1/2">
-            <div className="relative z-10">
-              <div
-                ref={refs.heroImageRef}
-                className="overflow-hidden rounded-full border-4 border-white shadow-xl aspect-square"
-              >
-                <img
-                  src={landingPageData?.heroImage}
-                  alt="Team collaboration"
-                  className="object-cover w-full h-full"
-                />
-              </div>
+                width={327}
+                height={362}
+                sizes="100vw"
+                loading="eager"
+                fetchPriority="high"
+              />
             </div>
 
-            {/* Decorative Elements */}
-            <div>
-              <div
-                className="absolute top-[0px] right-[0px] w-[150px] h-[150px] rounded-full opacity-50"
-                style={{ backgroundColor: variantPl1 }}
-              ></div>
-              <div
-                className="absolute bottom-[40px] left-[0px] w-[150px] h-[150px] rounded-full"
-                style={{ backgroundColor: variantPl2 }}
-              ></div>
-              <div
-                className="absolute top-[50px] left-[-30px] w-[80px] h-[80px] rounded-full opacity-30"
-                style={{ backgroundColor: variantPl3 }}
-              ></div>
-              <div
-                className="absolute bottom-[140px] right-[0px] w-[30px] h-[30px] rounded-full"
-                style={{ backgroundColor: variantPl4 }}
-              ></div>
+            {/* Bottom Navigation Menu */}
+            <div
+              ref={navRef}
+              className="flex items-center gap-6 py-4 px-6 rounded-full overflow-x-auto scrollbar-hide"
+              style={{
+                backgroundColor: getColor("primary", 200),
+                width: "fit-content",
+                maxWidth: "100%",
+                margin: "0 auto",
+              }}
+            >
+              {(() => {
+                // Calculate readable text color based on nav background
+                const navBgColor = getColor("primary", 200);
+                const navTextColor = calculateTextColor(navBgColor, landingPageData?.yiqThreshold);
+                const isLightBg = navTextColor === "#000000" || navTextColor === "black";
+                
+                return landingPageData?.menuItems
+                  ?.filter((tab) => !!tab?.active && !!tab?.visible && !!tab?.id)
+                  ?.sort((a, b) => (a.sort || 0) - (b.sort || 0))
+                  ?.map((tab, index) => (
+                    <button
+                      key={index}
+                      data-tab-id={tab.id}
+                      onClick={() => handleNavigate(tab.id || tab.key)}
+                      className="text-sm lg:text-base whitespace-nowrap transition-all flex-shrink-0"
+                      style={{
+                        color: currentHash === (tab.id || tab.key)
+                          ? (isLightBg ? getColor("primary", 900) : "#ffffff")
+                          : (isLightBg ? getColor("primary", 700) : "rgba(255,255,255,0.7)"),
+                        fontWeight: currentHash === (tab.id || tab.key) ? "600" : "400",
+                        fontFamily: bodyFont?.family,
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ));
+              })()}
             </div>
-            {/* <div className="absolute bottom-[-30px] right-[100px] w-[60px] h-[60px] rounded-full bg-blue-500 opacity-20"></div> */}
           </div>
         </div>
+
+        {/* Stacked background layers for depth effect */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 rounded-[32px] opacity-40 -z-10"
+          style={{
+            backgroundColor: getColor("primary", 100),
+            width: "96%",
+            height: "173px",
+            bottom: "-24px",
+          }}
+        />
+        <div
+          className="absolute left-1/2 -translate-x-1/2 rounded-[32px] opacity-20 -z-20"
+          style={{
+            backgroundColor: getColor("primary", 100),
+            width: "92%",
+            height: "173px",
+            bottom: "-48px",
+          }}
+        />
       </div>
     </div>
   );

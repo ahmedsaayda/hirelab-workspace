@@ -176,56 +176,8 @@ const Template3 = ({ landingPageData, onClickApply, isMultiJob = false }) => {
 };
 
 const Template2 = ({ landingPageData, onClickApply, isMultiJob = false }) => {
-  const [showApplyButton, setShowApplyButton] = useState(false);
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      setShowApplyButton(scrollPosition > 100);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-  const logo = landingPageData?.companyLogo || "/images3/Button.png";
-  return (
-    <header
-      className="sticky top-0 px-4 py-4 w-full bg-transparent sm:px-6 lg:px-8"
-      style={{ zIndex: 999, background: "rgba(0,0,0,0.8)" }}
-    >
-      <div className="container flex justify-between items-center mx-auto w-full">
-        <Link href="/" className="flex items-center">
-          <img src={logo} alt="Logo" className="mr-10 w-auto h-8" />
-        </Link>
-        <div>
-          <nav>
-            <ul className="flex items-center space-x-6">
-              {!isMultiJob && (
-                <div
-                  className={`transition-all duration-300 ease-in-out ${showApplyButton
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 -translate-y-4"
-                    }`}
-                >
-                  <Button
-                    {...({})}
-                    color="light_blue_A700"
-                    size="lg"
-                    className="w-full  rounded border border-solid border-[#5207CD] px-[19px] font-semibold whitespace-nowrap"
-                    onClick={() => { onClickApply && onClickApply(); }} // Open form editor when "Apply now" is clicked
-                  >
-                    {landingPageData?.ctaApply}
-                  </Button>
-                </div>
-              )}
-            </ul>
-          </nav>
-        </div>
-      </div>
-    </header>
-  );
+  // Template2 has the header/logo built into the hero section, so we don't render a separate navbar
+  return null;
 };
 
 

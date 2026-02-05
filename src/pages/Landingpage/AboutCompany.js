@@ -211,27 +211,38 @@ const Template3 = ({ landingPageData, fetchData }) => {
 };
 
 const Template2 = ({ landingPageData, fetchData }) => {
-  // Get the actual images from landingPageData
-  const actualImages = landingPageData?.aboutTheCompanyImages || [];
-  // Define the total number of image slots (default 5)
-  const totalSlots = 5;
-  // Default image URL (can be changed as needed)
-  const defaultImageUrl = "/dhwise-images/placeholder.png";
-  // Create an array that fills missing slots with the default image.
-  const finalImages =
-    actualImages.length < totalSlots
-      ? [
-          ...actualImages,
-          ...Array(totalSlots - actualImages.length).fill(defaultImageUrl),
-        ]
-      : actualImages;
-
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const scrollRef = useRef(null);
   const refs = useAboutCompanyHover();
-  
-  // Get image adjustments for aboutTheCompanyImages field (per-image adjustments)
+  const { handleItemClick } = useFocusContext();
+  const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
+
+  // Extract colors for Template 2 theme
+  const primaryColor = landingPageData?.primaryColor || "#0068D6";
+  const secondaryColor = landingPageData?.secondaryColor || "#f5590c";
+  const tertiaryColor = landingPageData?.tertiaryColor || "#3396FF";
+
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
+
+  // Get images from landingPageData
+  const actualImages = landingPageData?.aboutTheCompanyImages || [];
+  const defaultImageUrl = "/dhwise-images/placeholder.png";
+  const images = actualImages.length > 0 ? actualImages : [defaultImageUrl, defaultImageUrl];
+
+  // Get image adjustments
   const fieldAdjustments = landingPageData?.imageAdjustment?.aboutTheCompanyImages || {};
-  
-  // Helper function to get adjustments for a specific image
   const getImageAdjustments = (imageUrl) => {
     const adjustments = fieldAdjustments[imageUrl] || {};
     const objectPosition = adjustments.objectPosition
@@ -241,57 +252,145 @@ const Template2 = ({ landingPageData, fetchData }) => {
     return { objectPosition, objectFit };
   };
 
+  // Navigation handlers
+  const handlePrev = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -770, behavior: 'smooth' });
+    }
+    setCurrentIndex(Math.max(0, currentIndex - 1));
+  };
+
+  const handleNext = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 770, behavior: 'smooth' });
+    }
+    setCurrentIndex(Math.min(images.length - 1, currentIndex + 1));
+  };
+
+  // Get description text
+  const description = landingPageData?.aboutTheCompanyDescription || 
+    "Our company is a forward-thinking technology company specializing in AI-driven automation solutions designed to streamline business operations and elevate customer experiences.";
+  const words = description.split(" ");
+  const shouldTruncate = words.length > 32;
+  const truncatedDescription = shouldTruncate
+    ? words.slice(0, 32).join(" ") + "..."
+    : description;
+
+  // Split title into lines
+  const titleLines = React.useMemo(() => {
+    const title = landingPageData?.aboutTheCompanyTitle || "We Bring An Energetic Passion";
+    const words = title.split(" ");
+    const midpoint = Math.ceil(words.length / 2);
+    return {
+      firstLine: words.slice(0, midpoint).join(" "),
+      secondLine: words.slice(midpoint).join(" ")
+    };
+  }, [landingPageData?.aboutTheCompanyTitle]);
 
   return (
     <div
+      id="about-the-company"
       ref={refs.sectionRef}
-      className="bg-[#f8f9fb] container w-full mx-auto"
+      className="w-full bg-white pt-[200px] pb-[100px] px-4 md:px-8 lg:px-[72px]"
+      style={{ fontFamily: bodyFont?.family || "Inter, sans-serif" }}
     >
-      <div
-        className="relative h-[688px] bg-cover bg-no-repeat py-24 mdx:h-auto mdx:py-5"
-        style={{ backgroundImage: "url(/images3/img_group_17.png)" }}
-      >
-        <div className="ml-auto h-[254px] w-[254px] rounded-[126px] bg-[#5207CD33] blur-[200.00px] backdrop-opacity-[0.5]" />
-        <div className="container flex absolute top-0 right-0 bottom-0 left-0 justify-between items-center px-8 my-auto h-max mdx:relative mdx:flex-col mdx:gap-12 mdx:px-5">
-          <div className="w-[40%] mdx:w-full">
-            <div className="flex flex-col items-start gap-[22px]">
-              <div ref={refs.titleRef}>
-                <h2 className="text-[36px] font-semibold tracking-[-0.72px] text-[#0f1728] mdx:text-[34px] sm:text-[32px]">
-                  {landingPageData?.aboutTheCompanyTitle}
-                </h2>
-              </div>
-              <div ref={refs.textRef}>
-                <p className="text-[20px] font-normal text-[#475466]">
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: landingPageData?.aboutTheCompanyText?.replace(
-                        /\n/g,
-                        "<br>"
-                      ),
-                    }}
-                  />
-                </p>
-              </div>
-            </div>
+      <div className="flex flex-col gap-[64px] items-start max-w-[1440px] mx-auto">
+        {/* Header Section - Two columns */}
+        <div className="flex flex-col lg:flex-row justify-between items-start w-full gap-8">
+          {/* Left - Title */}
+          <div className="relative">
+            <h2
+              ref={refs.titleRef}
+              onClick={() => handleItemClick("aboutTheCompanyTitle")}
+              className="font-semibold cursor-pointer"
+              style={{
+                fontFamily: titleFont?.family || "Inter, sans-serif",
+                fontSize: "48px",
+                lineHeight: "60px",
+                letterSpacing: "-1.44px",
+                color: "#292929",
+              }}
+            >
+              <span>{titleLines.firstLine}</span>
+              <br />
+              <span className="relative">
+                {titleLines.secondLine}
+                {/* Blue gradient highlight behind second line */}
+                <span
+                  className="absolute left-[-6px] bottom-0 h-[24px] rounded-[8px] -z-10"
+                  style={{
+                    background: `linear-gradient(to right, ${getColor("primary", 200)}, transparent)`,
+                    width: "405px",
+                  }}
+                />
+              </span>
+            </h2>
           </div>
 
+          {/* Right - Description & Button */}
+          <div className="flex flex-col gap-[36px] items-start justify-center max-w-[636px]">
+            <p
+              ref={refs.textRef}
+              onClick={() => handleItemClick("aboutTheCompanyText")}
+              className="cursor-pointer"
+              style={{
+                fontSize: "16px",
+                lineHeight: "24px",
+                color: "#525252",
+                fontFamily: bodyFont?.family || "Inter, sans-serif",
+              }}
+            >
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: (showFullDescription ? description : truncatedDescription)?.replace?.(/\n/g, "<br>")
+                }}
+              />
+            </p>
+
+            <button
+              onClick={() => setShowFullDescription(!showFullDescription)}
+              className="flex items-center justify-center gap-[10px] h-[44px] px-[28px] rounded-[30px] font-semibold text-white transition-all hover:opacity-90"
+              style={{
+                backgroundColor: getColor("secondary", 500),
+                fontSize: "16px",
+                lineHeight: "24px",
+                fontFamily: bodyFont?.family || "Inter, sans-serif",
+              }}
+            >
+              {showFullDescription ? getTranslation(landingPageData?.lang, 'readLess') : getTranslation(landingPageData?.lang, 'readMore')}
+            </button>
+          </div>
+        </div>
+
+        {/* Images Section */}
+        <div className="flex flex-col gap-[32px] items-start w-full">
+          {/* Carousel Container */}
           <div
-            ref={refs.imagesRef}
-            className="relative w-[60%] h-[400px] mdx:w-full mdx:h-[500px]"
+            ref={scrollRef}
+            className="flex gap-[24px] items-center w-full overflow-x-auto"
+            style={{
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
           >
-            {finalImages.map((image, index) => {
+            {images.map((image, index) => {
               const { objectPosition, objectFit } = getImageAdjustments(image);
               return (
                 <div
                   key={index}
-                  className={`overflow-hidden absolute rounded-lg shadow-lg ${getImagePosition(
-                    index
-                  )}`}
+                  ref={index === 0 ? refs.imagesRef : undefined}
+                  onClick={() => handleItemClick("aboutTheCompanyImages")}
+                  className="flex-shrink-0 overflow-hidden rounded-[24px] cursor-pointer"
+                  style={{
+                    width: "746px",
+                    height: "460px",
+                    backgroundColor: "#ddd",
+                  }}
                 >
                   <img
                     src={image}
-                    alt={`Team member ${index + 1}`}
-                    className="w-full h-full"
+                    alt={`Company Image ${index + 1}`}
+                    className="w-full h-full object-cover"
                     style={{
                       objectFit: objectFit,
                       objectPosition: objectPosition,
@@ -301,6 +400,41 @@ const Template2 = ({ landingPageData, fetchData }) => {
                 </div>
               );
             })}
+          </div>
+
+          {/* Navigation Buttons */}
+          <div className="flex gap-[16px] items-start">
+            {/* Previous Button */}
+            <button
+              onClick={handlePrev}
+              className="flex items-center justify-center rounded-[28px] transition-all"
+              style={{
+                width: "44px",
+                height: "44px",
+                border: "1px solid #fbb693",
+                backdropFilter: "blur(4px)",
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke={getColor("secondary", 500)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            {/* Next Button */}
+            <button
+              onClick={handleNext}
+              className="flex items-center justify-center rounded-[28px] transition-all"
+              style={{
+                width: "44px",
+                height: "44px",
+                border: "1px solid #fbb693",
+                backdropFilter: "blur(4px)",
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke={getColor("secondary", 500)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>

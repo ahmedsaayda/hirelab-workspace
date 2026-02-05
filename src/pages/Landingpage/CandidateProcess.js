@@ -18,138 +18,292 @@ import { IconRenderer } from "../LandingpageEdit/IconsSelector.js";
 import { getFonts } from "./getFonts.js";
 
 const Template2 = ({ landingPageData, fetchData }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const stepsPerPage = 4;
+  const { handleItemClick } = useFocusContext();
+  const { sectionRef, titleRef, descriptionRef, processStepRefs } =
+    useCandidateProcessHover();
 
-  const themeData = getThemeData(landingPageData?.theme);
+  const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
 
-  const { basePrimary, baseSecondary, baseTertiary } = themeData;
-  const { variantPl1, variantPl2, variantPl3, variantPl4 } = themeData;
-  const { variantPd1, variantPd2, variantPd3, variantPd4, variantPd5 } =
-    themeData;
-  const { variantSl1, variantSl2, variantSl3, variantSl4 } = themeData;
-  const { variantSd1, variantSd2, variantSd3, variantSd4, variantSd5 } =
-    themeData;
-  const { variantTl1, variantTl2, variantTl3, variantTl4 } = themeData;
-  const { variantTd1, variantTd2, variantTd3, variantTd4, variantTd5 } =
-    themeData;
-  const { textHeadingColor, textSubHeadingColor } = themeData;
+  // Extract colors for Template 2 theme
+  const primaryColor = landingPageData?.primaryColor || "#0068D6";
+  const secondaryColor = landingPageData?.secondaryColor || "#f5590c";
+  const tertiaryColor = landingPageData?.tertiaryColor || "#3396FF";
 
-  useEffect(() => {
-    const checkMobile = () =>
-      setIsMobile(window.matchMedia("(max-width: 768px)").matches);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
 
-  const handlePrev = () => {
-    setCurrentIndex((prevIndex) =>
-      Math.max(prevIndex - (isMobile ? 1 : stepsPerPage), 0)
-    );
-  };
+  // Default process steps with icons
+  const defaultSteps = [
+    {
+      candidateProcessText: "Receive Application",
+      description: "We welcome applications through our online career portal",
+      candidateProcessIcon: "Mail",
+    },
+    {
+      candidateProcessText: "CV Screening",
+      description: "Our experienced recruiters meticulously review applications",
+      candidateProcessIcon: "FileText",
+    },
+    {
+      candidateProcessText: "Interview",
+      description: "Candidates will be invited to participate in interviews",
+      candidateProcessIcon: "Users",
+    },
+    {
+      candidateProcessText: "Negotiation",
+      description: "We are open to discussing the offer with you",
+      candidateProcessIcon: "Tag",
+    },
+  ];
 
-  const handleNext = () => {
-    setCurrentIndex((prevIndex) =>
-      Math.min(
-        prevIndex + (isMobile ? 1 : stepsPerPage),
-        landingPageData?.candidateProcess?.length -
-          (isMobile ? 1 : stepsPerPage)
-      )
-    );
-  };
+  const processSteps = landingPageData?.candidateProcess?.length > 0
+    ? landingPageData.candidateProcess
+    : defaultSteps;
 
-  
+  // Icon images from Figma
+  const iconImages = [
+    "http://localhost:3845/assets/3f8905d8398ec52fa2a792a4d4d214948b2aaba2.png",
+    "http://localhost:3845/assets/7337b135ad2af19a4a9933e3cd1859de23d181e4.png",
+    "http://localhost:3845/assets/fc23afe609dc51c1e8a305fecbc36b3540db1d88.png",
+    "http://localhost:3845/assets/ddd5e5e53e438588a6aeab694f2b0fa51094027a.png",
+  ];
+
+  // Vertical line SVG
+  const imgLine3 = "http://localhost:3845/assets/ae49b4987db90f6ea1042272bbc7c2b410624209.svg";
+
+  // Parse title for gradient highlight
+  const title = landingPageData?.candidateProcessTitle || "Our Application Process";
+  const titleWords = title.split(" ");
+  const lastWord = titleWords[titleWords.length - 1];
+  const restWords = titleWords.slice(0, -1).join(" ");
+
   return (
     <div
-      className="flex flex-col justify-center items-center py-24 mdx:py-5"
-      style={{ backgroundColor: variantPl4 }}
+      ref={sectionRef}
+      id="candidate-process"
+      className="w-full bg-white pt-[200px] pb-[100px] px-[72px]"
+      style={{ fontFamily: bodyFont?.family || "Inter, sans-serif" }}
     >
-      <div className="container flex flex-col items-center gap-[46px] px-8 mdx:px-5">
-        {/* Header Section */}
-        <div className="flex flex-col gap-3.5 items-center">
-          <Heading
-            as="h2"
-            className="text-[36px] font-semibold tracking-[-0.72px]  mdx:text-[34px] smx:text-[32px]"
-            style={{ color: variantPd5 }}
+      {/* Title Section */}
+      <div className="flex flex-col gap-[28px] items-center mb-[64px]">
+        {/* Title with blue gradient highlight */}
+        <div className="relative inline-grid">
+          <div
+            className="col-start-1 row-start-1 h-[24px] rounded-[8px]"
+            style={{
+              background: `linear-gradient(to right, ${getColor("primary", 200)}, transparent)`,
+              marginLeft: "347px",
+              marginTop: "20px",
+              width: "187px",
+            }}
+          />
+          <h2
+            ref={titleRef}
+            onClick={() => handleItemClick("candidateProcessTitle")}
+            className="col-start-1 row-start-1 font-semibold cursor-pointer text-center"
+            style={{
+              fontFamily: titleFont?.family || "Inter, sans-serif",
+              fontSize: "48px",
+              lineHeight: "60px",
+              letterSpacing: "-1.44px",
+              color: "#292929",
+            }}
           >
-            {landingPageData?.candidateProcessTitle}
-          </Heading>
-          <Text
-            size="text_xl_regular"
-            as="p"
-            className="text-[20px] font-normal "
-            style={{ color: variantPd5 }}
-          >
-            {landingPageData?.candidateProcessDescription}
-          </Text>
+            {title}
+          </h2>
         </div>
+        {/* Subtitle */}
+        <p
+          ref={descriptionRef}
+          onClick={() => handleItemClick("candidateProcessDescription")}
+          className="cursor-pointer text-center"
+          style={{
+            fontSize: "16px",
+            lineHeight: "24px",
+            color: "#7c7c7c",
+            fontFamily: subheaderFont?.family || "Inter, sans-serif",
+          }}
+        >
+          {landingPageData?.candidateProcessDescription || "Take a glimpse of how our application process looks like."}
+        </p>
+      </div>
 
-        {/* Desktop View - Hidden on mobile */}
-        <div className="hidden flex-row gap-6 self-stretch md:flex">
-          <Suspense fallback={<div>Loading...</div>}>
-            {landingPageData?.candidateProcess
-              ?.slice(currentIndex, currentIndex + stepsPerPage)
-              ?.map?.((d, index) => (
-                <ApplicationSubmission
-                  {...d}
-                  headingText={("0" + (currentIndex + index + 1)).slice(-2)}
-                  key={"desktop" + index}
-                  className="flex-1 bg-[#F5F5F2] flex flex-col justify-end"
-                  textColor="#000000"
-                />
-              ))}
-          </Suspense>
-        </div>
+      {/* Process Cards Container */}
+      <div className="flex flex-col items-center gap-[20px]">
+        {processSteps.map((step, index) => {
+          const stepNumber = ("0" + (index + 1)).slice(-2);
+          const isEven = index % 2 === 1; // 0-indexed, so odd indices are even steps (2, 4)
+          const iconSrc = iconImages[index % iconImages.length];
 
-        {/* Mobile View - Hidden on desktop */}
-        {/* <div className="flex w-full md:hidden">
-          <Suspense fallback={<div>Loading...</div>}>
-            {landingPageData?.candidateProcess
-              ?.slice(currentIndex, currentIndex + 1)
-              ?.map?.((d, index) => (
-                <ApplicationSubmission
-                  {...d}
-                  headingText={("0" + (currentIndex + index + 1)).slice(-2)}
-                  key={"mobile" + index}
-                  className="w-full bg-[#F5F5F2] flex flex-col justify-end"
-                  textColor="#000000"
-                />
-              ))}
-          </Suspense>
-        </div> */}
-
-        {/* Navigation Buttons - Show on both views */}
-        {/* {landingPageData?.candidateProcess?.length > 1 && (
-          <div className="flex justify-between mt-4 w-full">
-            <button
-              onClick={handlePrev}
-              disabled={currentIndex === 0}
-              className="px-4 py-2 rounded border disabled:opacity-50"
+          return (
+            <div
+              key={index}
+              className="relative flex items-center overflow-hidden rounded-[24px] h-[176px] w-[636px]"
+              style={{
+                marginLeft: isEven ? "64px" : "0",
+                boxShadow: "0px 32.88px 50.815px 11.956px rgba(0,0,0,0.03)",
+              }}
             >
-              Previous
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={
-                currentIndex + 1 >= landingPageData?.candidateProcess?.length
-              }
-              className="px-4 py-2 rounded border disabled:opacity-50"
+              {/* Orange sidebar - Left for odd steps (1, 3), Right for even steps (2, 4) */}
+              {!isEven && (
+                <>
+                  <div className="h-[176px] w-[64px] shrink-0" style={{ backgroundColor: getColor("secondary", 500) }} />
+                  <div
+                    className="absolute left-[40px] top-0 h-[177px] w-[47px] mix-blend-soft-light opacity-50"
+                    style={{
+                      background: "linear-gradient(to left, rgba(0,0,0,0.3), rgba(0,0,0,0))",
+                    }}
+                  />
+                </>
+              )}
+
+              {/* White Body */}
+              <div className="bg-white flex gap-[32px] h-[176px] items-center px-[40px] py-[24px] rounded-[24px] w-[572px]">
+                {/* Step Number */}
+                <div className="flex flex-col gap-[12px] items-center justify-center w-[64px] shrink-0 text-center">
+                  <p
+                    className="font-normal text-[20px] leading-[24px] text-[#7c7c7c]"
+                    style={{ fontFamily: bodyFont?.family }}
+                  >
+                    STEP
+                  </p>
+                  <p
+                    className="font-semibold text-[48px] leading-[60px] tracking-[-1.44px] text-black"
+                    style={{ fontFamily: titleFont?.family }}
+                  >
+                    {stepNumber}
+                  </p>
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="flex items-center justify-center h-full shrink-0">
+                  <div className="w-[1px] h-[128px] bg-[#efefef]" />
+                </div>
+
+                {/* Content */}
+                <div className="flex gap-[32px] items-center flex-1">
+                  {/* Icon */}
+                  <div
+                    ref={(el) => {
+                      processStepRefs.current[`candidateProcess[${index}].icon`] = el;
+                    }}
+                    onClick={() => handleItemClick(`candidateProcess[${index}].icon`)}
+                    className="shrink-0 w-[80px] h-[80px] cursor-pointer"
+                  >
+                    <img
+                      src={iconSrc}
+                      alt={step.candidateProcessText}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Text */}
+                  <div className="flex flex-col gap-[20px] flex-1">
+                    <p
+                      ref={(el) => {
+                        processStepRefs.current[`candidateProcess[${index}].candidateProcessText`] = el;
+                      }}
+                      onClick={() => handleItemClick(`candidateProcess[${index}].candidateProcessText`)}
+                      className="font-semibold text-[24px] leading-[32px] text-[#292929] cursor-pointer"
+                      style={{ fontFamily: subheaderFont?.family }}
+                    >
+                      {step.candidateProcessText || `Step ${index + 1}`}
+                    </p>
+                    <p
+                      ref={(el) => {
+                        processStepRefs.current[`candidateProcess[${index}].description`] = el;
+                      }}
+                      onClick={() => handleItemClick(`candidateProcess[${index}].description`)}
+                      className="font-normal text-[16px] leading-[24px] text-[#525252] cursor-pointer"
+                      style={{ fontFamily: bodyFont?.family }}
+                    >
+                      {step.description || "Description goes here"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Orange sidebar - Right for even steps (2, 4) */}
+              {isEven && (
+                <>
+                  <div className="h-[176px] w-[64px] shrink-0" style={{ backgroundColor: getColor("secondary", 500) }} />
+                  <div
+                    className="absolute right-[40px] top-0 h-[177px] w-[47px] mix-blend-soft-light opacity-50"
+                    style={{
+                      background: "linear-gradient(to right, rgba(0,0,0,0.3), rgba(0,0,0,0))",
+                    }}
+                  />
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Mobile View */}
+      <div className="flex flex-col items-center gap-[16px] md:hidden mt-8">
+        {processSteps.map((step, index) => {
+          const stepNumber = ("0" + (index + 1)).slice(-2);
+          const iconSrc = iconImages[index % iconImages.length];
+
+          return (
+            <div
+              key={index}
+              className="relative flex items-center overflow-hidden rounded-[16px] w-full max-w-[400px]"
+              style={{
+                boxShadow: "0px 16px 32px 8px rgba(0,0,0,0.03)",
+              }}
             >
-              Next
-            </button>
-          </div>
-        )} */}
-        <div className="min-h-[auto] w-full bg-gray-100  md:hidden">
-          <div className="">
-            <CustomCarousel
-              themeData={themeData}
-              data={landingPageData?.candidateProcess}
-              ApplicationSubmission={ApplicationSubmission}
-            />
-          </div>
-        </div>
+              {/* Orange sidebar */}
+              <div className="h-full min-h-[140px] w-[48px] shrink-0" style={{ backgroundColor: getColor("secondary", 500) }} />
+
+              {/* White Body */}
+              <div className="bg-white flex flex-col gap-[16px] p-[20px] flex-1">
+                <div className="flex items-center gap-[16px]">
+                  {/* Step Number */}
+                  <div className="flex flex-col items-center">
+                    <p className="text-[12px] text-[#7c7c7c]">STEP</p>
+                    <p className="font-semibold text-[32px] leading-[40px] text-black">
+                      {stepNumber}
+                    </p>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="w-[1px] h-[60px] bg-[#efefef]" />
+
+                  {/* Icon */}
+                  <div className="w-[48px] h-[48px]">
+                    <img
+                      src={iconSrc}
+                      alt={step.candidateProcessText}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+
+                {/* Text */}
+                <div className="flex flex-col gap-[8px]">
+                  <p className="font-semibold text-[18px] leading-[24px] text-[#292929]">
+                    {step.candidateProcessText || `Step ${index + 1}`}
+                  </p>
+                  <p className="font-normal text-[14px] leading-[20px] text-[#525252]">
+                    {step.description || "Description goes here"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

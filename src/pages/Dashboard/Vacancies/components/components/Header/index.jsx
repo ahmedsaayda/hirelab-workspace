@@ -694,7 +694,7 @@ export default function Header({
                         : "bg-gray-200  cursor-not-allowed"
                         }`}
                     >
-                      {i === 0 ? "Choose Template" : "Coming Soon"}
+                      {(i === 0 || i === 1) ? "Choose Template" : "Coming Soon"}
                     </Button>
                   </div>
                 </div>

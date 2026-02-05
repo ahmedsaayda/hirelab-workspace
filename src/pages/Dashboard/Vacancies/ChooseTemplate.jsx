@@ -73,7 +73,7 @@ function ChooseTemplate({ onChooseTemplate, selectedTemplate }) {
                       onClick={() => onChooseTemplate(i + 1)}
                       size="2xl"
                       shape="round"
-                      disabled={i !== 0}
+                      disabled={(i !== 0 && i !== 1)}
                       className={`${
                         selectedTemplate === i + 1
                           ? "bg-[#5207CD] text-[#FFFFFF]"
@@ -81,7 +81,7 @@ function ChooseTemplate({ onChooseTemplate, selectedTemplate }) {
                       } w-full font-semibold smx:px-5 whitespace-nowrap`}
                     >
                       {/* Choose template */}
-                      {i === 0 ? "Select Template" : "Coming Soon"}
+                      {(i === 0 || i === 1) ? "Select Template" : "Coming Soon"}
                     </Button>
                   </div>
                 </div>

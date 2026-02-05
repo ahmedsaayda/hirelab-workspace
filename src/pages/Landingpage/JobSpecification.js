@@ -183,81 +183,246 @@ const Template3 = ({ landingPageData, fetchData }) => {
   );
 };
 
-const Template2 = ({ landingPageData, fetchData }) => {
-  const specifications = (landingPageData.specifications ?? []).filter(
-    (spec) => spec.enabled
+const Template2 = React.memo(({ landingPageData, fetchData }) => {
+  const router = useRouter();
+  const { handleItemClick } = useFocusContext();
+  const { hoveredField } = useHover();
+
+  const { sectionRef, titleRef, textRef, specificationsRefs } = useJobSpecificationHover();
+
+  // Memoize colors - Template 2 blue theme
+  const colors = useMemo(() => ({
+    primaryColor: landingPageData?.primaryColor || "#0068D6",
+    secondaryColor: landingPageData?.secondaryColor || "#f5590c",
+    tertiaryColor: landingPageData?.tertiaryColor || "#3396FF"
+  }), [landingPageData?.primaryColor, landingPageData?.secondaryColor, landingPageData?.tertiaryColor]);
+
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    colors
   );
+
+  const specifications = useMemo(() =>
+    landingPageData?.specifications?.filter((spec) => spec.enabled) || [],
+    [landingPageData?.specifications]
+  );
+
+  const gridColumns = useMemo(() => {
+    if (specifications.length === 1) return "md:grid-cols-1";
+    if (specifications.length === 2) return "md:grid-cols-2";
+    return "md:grid-cols-3";
+  }, [specifications.length]);
+
+  const { titleFont, subheaderFont, bodyFont } = useMemo(() =>
+    getFonts(landingPageData),
+    [landingPageData]
+  );
+
+  // Default fallback icons for the category headers
+  const fallBackCategoryIcons = useMemo(() => ["Zap", "ClipboardList", "Target"], []);
+  const fallBackCategoryLabels = useMemo(() => ["Benefits", "Tasks", "Requirements"], []);
+
+  // Split title to highlight second word
+  const titleParts = useMemo(() => {
+    const title = landingPageData?.jobSpecificationTitle || "Job Summary";
+    const words = title.split(" ");
+    return {
+      firstWord: words[0] || "",
+      restWords: words.slice(1).join(" ") || ""
+    };
+  }, [landingPageData?.jobSpecificationTitle]);
+
   return (
-    <>
-      <div className="flex flex-col items-center justify-center bg-[#f9fafb] py-5 mdx:py-5">
-        <div className="container flex flex-col gap-0.5 mt-4 mdx:px-5">
-          <div className="mx-[252px] flex flex-col items-center gap-3.5 mdx:mx-0">
-            <Heading
-              as="h2"
-              className="text-[36px] font-semibold tracking-[-0.72px] text-[#0f1728] mdx:text-[34px] sm:text-[32px]"
+    <div
+      id="job-specifications"
+      ref={sectionRef}
+      className="px-4 w-full bg-white md:px-8 py-16 md:py-24"
+      style={{ fontFamily: bodyFont?.family || "Inter, sans-serif" }}
+    >
+      <div className="container mx-auto max-w-[1296px]">
+        {/* Header Section */}
+        <div className="mb-16 text-center">
+          {/* Title with highlighted second word */}
+          <div className="relative inline-block mb-7">
+            <h2
+              ref={titleRef}
+              onClick={() => handleItemClick("jobSpecificationTitle")}
+              className="text-4xl md:text-5xl font-semibold tracking-tight cursor-pointer"
+              style={{
+                fontFamily: titleFont?.family || "Inter, sans-serif",
+                letterSpacing: "-0.03em",
+                lineHeight: 1.25,
+              }}
             >
-              {landingPageData?.jobSpecificationTitle}
-            </Heading>
-            <Text
-              size="text_xl_regular"
-              as="p"
-              className="text-[20px] font-normal text-[#475466]"
-            >
-              {landingPageData?.jobSpecificationDescription}
-            </Text>
+              <span style={{ color: "#292929" }}>{titleParts.firstWord} </span>
+              <span className="relative">
+                {/* Gradient highlight behind text */}
+                <span
+                  className="absolute left-0 bottom-1 h-[24px] w-full rounded-lg -z-10"
+                  style={{
+                    background: `linear-gradient(to right, ${getColor("primary", 200)}, transparent)`,
+                  }}
+                />
+                <span style={{ color: "#292929" }}>{titleParts.restWords}</span>
+              </span>
+            </h2>
           </div>
-          <div className="px-8 sm:px-5">
-            <div className="flex flex-col flex-1 items-end m-auto">
-              <div className="mr-72 h-[54px] w-[254px] rounded-[126px] bg-[#5207CD0f] blur-[200.00px] backdrop-opacity-[0.5] mdx:mr-0" />
-              <Suspense fallback={<div>Loading feed...</div>}>
-                <div
-                  // className="flex gap-8 self-stretch h-full mdx:flex-col"
-                  className="flex gap-2 justify-center w-full mdx:flex-col mdx:gap-10"
-                >
-                  {/* <BenefitsOverview
-                    headingText={landingPageData?.benefitsTitle}
-                    benefits={landingPageData?.benefits ?? []}
-                    icon="/images3/zap-fast.png"
-                    buttonApplyNow={landingPageData?.cta2Title}
-                    buttonApplyNowLink={landingPageData?.cta2Link}
+
+          {/* Description */}
+          <p
+            ref={textRef}
+            onClick={() => handleItemClick("jobSpecificationDescription")}
+            className="text-base max-w-2xl mx-auto cursor-pointer"
+            style={{
+              color: "#7c7c7c",
+              fontFamily: subheaderFont?.family || "Inter, sans-serif",
+              lineHeight: 1.5,
+            }}
+          >
+            {landingPageData?.jobSpecificationDescription || "We are seeking a talented and creative Project Manager to join our dynamic team."}
+          </p>
+        </div>
+
+        {/* Cards Grid */}
+        <div className={`grid gap-6 justify-center items-stretch mx-auto ${gridColumns}`}>
+          {specifications.map((spec, index) => (
+            <div
+              key={index}
+              className="flex flex-col rounded-3xl overflow-hidden max-w-[416px] mx-auto w-full"
+              style={{
+                boxShadow: "0px 44px 68px 16px rgba(0, 0, 0, 0.03)",
+              }}
+            >
+              {/* Category Header Tab */}
+              <div
+                className="flex items-center gap-4 px-8 py-4"
+                style={{ backgroundColor: getColor("primary", 100) }}
+              >
+                {/* Icon */}
+                <div className="w-9 h-9 flex items-center justify-center">
+                  <IconRenderer
+                    icon={spec?.icon || fallBackCategoryIcons[index % 3]}
+                    className="w-9 h-9"
+                    style={{ color: getColor("primary", 900) }}
                   />
-                  <BenefitsOverview
-                    headingText={landingPageData?.responsibilitiesTitle}
-                    benefits={landingPageData?.responsibilities ?? []}
-                    icon="/images3/edit-05.png"
-                    buttonApplyNow={landingPageData?.cta2Title}
-                    buttonApplyNowLink={landingPageData?.cta2Link}
-                  />
-                  <BenefitsOverview
-                    headingText={landingPageData?.tasksTitle}
-                    benefits={landingPageData?.tasks ?? []}
-                    icon="/images3/route.png"
-                    buttonApplyNow={landingPageData?.cta2Title}
-                    buttonApplyNowLink={landingPageData?.cta2Link}
-                  /> */}
-                  {specifications?.map((spec, index) => {
-                    return (
-                      <BenefitsOverview
-                        key={index}
-                        headingText={spec?.title}
-                        benefits={spec?.bulletPoints
-                          ?.map((bullet) => bullet?.bullet)
-                          ?.filter((bullet) => bullet !== "")}
-                        icon={spec?.icon}
-                        buttonApplyNow={landingPageData?.cta2Title}
-                        buttonApplyNowLink={landingPageData?.cta2Link}
-                      />
-                    );
-                  })}
                 </div>
-              </Suspense>
+                {/* Category Label - uses spec.title as header label */}
+                <span
+                  ref={(el) => {
+                    specificationsRefs.current[`specifications[${index}].title`] = el;
+                  }}
+                  onClick={() => handleItemClick(`specifications[${index}].title`)}
+                  className="text-xl font-semibold cursor-pointer"
+                  style={{
+                    color: getColor("primary", 900),
+                    fontFamily: subheaderFont?.family,
+                  }}
+                >
+                  {spec?.title || fallBackCategoryLabels[index % 3]}
+                </span>
+              </div>
+
+              {/* Card Body - with blue left border */}
+              <div
+                className="flex flex-col flex-grow bg-white px-8 py-10 rounded-3xl"
+                style={{
+                  marginTop: "-12px",
+                  borderLeft: `4px solid ${getColor("primary", 400)}`,
+                }}
+              >
+                {/* Card Title - uses spec.description as body title */}
+                <h3
+                  ref={(el) => {
+                    specificationsRefs.current[`specifications[${index}].description`] = el;
+                  }}
+                  onClick={() => handleItemClick(`specifications[${index}].description`)}
+                  className="text-2xl font-semibold mb-8 cursor-pointer"
+                  style={{
+                    color: "#000000",
+                    fontFamily: titleFont?.family,
+                    lineHeight: 1.33,
+                  }}
+                >
+                  {spec?.description || spec?.title}
+                </h3>
+
+                {/* Divider */}
+                <div
+                  className="w-full h-px mb-8"
+                  style={{ backgroundColor: "#dcdcdc" }}
+                />
+
+                {/* Bullet Points List */}
+                <ul className="flex-grow space-y-4 mb-8">
+                  {spec?.bulletPoints?.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      {/* Checkmark Icon */}
+                      <div className="flex-shrink-0 mt-0.5">
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+                            fill="#525252"
+                          />
+                        </svg>
+                      </div>
+                      {/* Bullet Text */}
+                      <span
+                        ref={(el) => {
+                          specificationsRefs.current[`specifications[${index}].bulletPoints[${idx}]`] = el;
+                        }}
+                        onClick={() => handleItemClick(`specifications[${index}].bulletPoints[${idx}]`)}
+                        className="text-base cursor-pointer"
+                        style={{
+                          color: "#525252",
+                          fontFamily: bodyFont?.family,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {item.bullet}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Divider */}
+                <div
+                  className="w-full h-px mb-8"
+                  style={{ backgroundColor: "#dcdcdc" }}
+                />
+
+                {/* Apply Now Button */}
+                <button
+                  onClick={() => {
+                    if (landingPageData?.cta2Link) {
+                      window.location.href = landingPageData.cta2Link;
+                    }
+                  }}
+                  className="w-full py-3 rounded-full font-semibold text-base text-white transition-all hover:opacity-90"
+                  style={{
+                    backgroundColor: getColor("secondary", 500),
+                    fontFamily: bodyFont?.family,
+                  }}
+                >
+                  {landingPageData?.cta2Title || "Apply Now"}
+                </button>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
-    </>
+    </div>
   );
-};
+});
 
 const Template1 = React.memo(({ landingPageData, fetchData }) => {
   const router = useRouter();

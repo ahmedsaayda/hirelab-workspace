@@ -335,65 +335,266 @@ const Template3 = ({ landingPageData, fetchData }) => {
 };
 
 const Template2 = ({ landingPageData, fetchData }) => {
-  const refs = useRecruiterContactHover();
+  const { handleItemClick } = useFocusContext();
+  const { recruitersRefs, sectionRef, textRef, titleRef } = useRecruiterContactHover();
+  const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
+
+  // Extract colors for Template 2 blue theme
+  const primaryColor = landingPageData?.primaryColor || "#0068D6";
+  const secondaryColor = landingPageData?.secondaryColor || "#f5590c";
+  const tertiaryColor = landingPageData?.tertiaryColor || "#3396FF";
+
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
+
+  // Get recruiters data
+  const recruiters = landingPageData?.recruiters || [];
+
+  // Split title to highlight last words
+  const titleParts = React.useMemo(() => {
+    const title = landingPageData?.recruiterContactTitle || "Reach Out To Us!";
+    const words = title.split(" ");
+    const midpoint = Math.ceil(words.length / 2);
+    return {
+      firstPart: words.slice(0, midpoint).join(" "),
+      lastPart: words.slice(midpoint).join(" ")
+    };
+  }, [landingPageData?.recruiterContactTitle]);
+
+  // Determine grid columns based on number of recruiters
+  const getGridClass = () => {
+    if (recruiters.length === 1) return "justify-center";
+    if (recruiters.length === 2) return "justify-center";
+    return "justify-center";
+  };
 
   return (
-    <>
-      <div ref={refs.sectionRef}>
-        <div className="flex flex-col items-center gap-[52px] bg-[#f8f9fb] py-[22px] sm:gap-[26px] sm:py-5">
-          <div className="container mt-[72px] flex flex-col items-center px-14 mdx:px-5">
-            <div className="flex flex-col gap-3.5 items-center">
-              <div ref={refs.titleRef}>
-                <Heading
-                  as="h2"
-                  className="text-[36px] font-semibold tracking-[-0.72px] text-[#0f1728] mdx:text-[34px] sm:text-[32px]"
-                >
-                  {landingPageData?.recruiterContactTitle}
-                </Heading>
-              </div>
-              <div ref={refs.textRef}>
-                <Text
-                  size="text_xl_regular"
-                  as="p"
-                  className="text-[20px] font-normal text-[#475466]"
-                >
-                  {landingPageData?.recruiterContactText}
-                </Text>
-              </div>
-            </div>
+    <div
+      id="recruiter-contact"
+      ref={sectionRef}
+      className="w-full bg-white py-16 md:py-24 px-4 md:px-8"
+      style={{ fontFamily: bodyFont?.family || "Inter, sans-serif" }}
+    >
+      <div className="container mx-auto max-w-[1296px]">
+        {/* Header Section */}
+        <div className="mb-16 md:mb-20 text-center">
+          {/* Title with highlighted last part */}
+          <div className="relative inline-block mb-7">
+            <h2
+              ref={titleRef}
+              onClick={() => handleItemClick("recruiterContactTitle")}
+              className="text-4xl md:text-5xl font-semibold tracking-tight cursor-pointer"
+              style={{
+                fontFamily: titleFont?.family || "Inter, sans-serif",
+                letterSpacing: "-0.03em",
+                lineHeight: 1.25,
+              }}
+            >
+              <span style={{ color: "#292929" }}>{titleParts.firstPart} </span>
+              <span className="relative">
+                {/* Gradient highlight behind text */}
+                <span
+                  className="absolute left-0 bottom-1 h-[24px] w-full rounded-lg -z-10"
+                  style={{
+                    background: `linear-gradient(to right, ${getColor("primary", 200)}, transparent)`,
+                  }}
+                />
+                <span style={{ color: "#292929" }}>{titleParts.lastPart}</span>
+              </span>
+            </h2>
           </div>
-          <div className="flex items-start self-stretch mdx:flex-col">
-            <div className="flex flex-1 justify-center items-start px-14 mb-7 mdx:flex-col mdx:self-stretch mdx:px-5">
-              <div className="h-[68px] w-[68px] self-end rounded-[34px] bg-[#5207CD33] mdx:self-auto" />
-              <div className="mb-11 ml-[42px] mt-2.5 flex w-[86%] gap-16 mdx:ml-0 mdx:w-full mdx:flex-col">
-                {landingPageData?.recruiters?.map?.((recruiter, index) => (
-                  <UserProfile
-                    key={index}
-                    index={index}
-                    userName={recruiter?.recruiterFullname}
-                    userRole={recruiter?.recruiterRole}
-                    userEmail={recruiter?.recruiterEmail}
-                    userPhoneNumber={recruiter?.recruiterPhone}
-                    userImage={
-                      recruiter?.recruiterAvatar ||
-                      "/public/images/img_avatar.png"
-                    }
-                    recruiterEmailEnabled={recruiter?.recruiterEmailEnabled}
-                    recruiterPhoneEnabled={recruiter?.recruiterPhoneEnabled}
-                  />
-                ))}
+
+          {/* Description */}
+          <p
+            ref={textRef}
+            onClick={() => handleItemClick("recruiterContactText")}
+            className="text-base max-w-2xl mx-auto cursor-pointer"
+            style={{
+              color: "#7c7c7c",
+              fontFamily: subheaderFont?.family || "Inter, sans-serif",
+              lineHeight: 1.5,
+            }}
+          >
+            {landingPageData?.recruiterContactText || "Some text can be placed here...."}
+          </p>
+        </div>
+
+        {/* Recruiter Cards */}
+        <div className={`flex flex-wrap gap-6 ${getGridClass()}`}>
+          {recruiters.map((recruiter, index) => {
+            const name = recruiter?.recruiterFullname || "Contact Name";
+            const role = recruiter?.recruiterRole || "Role";
+            const phone = recruiter?.recruiterPhone || "+1 (000) 000-0000";
+            const email = recruiter?.recruiterEmail || "email@example.com";
+            const image = recruiter?.recruiterAvatar || "/dhwise-images/placeholder.png";
+            const phoneEnabled = recruiter?.recruiterPhoneEnabled !== false;
+            const emailEnabled = recruiter?.recruiterEmailEnabled !== false;
+
+            return (
+              <div
+                key={index}
+                className="flex flex-col items-center bg-white rounded-3xl overflow-hidden w-full max-w-[416px] pt-10 px-6"
+                style={{
+                  boxShadow: "0px 44px 68px 16px rgba(0, 0, 0, 0.03)",
+                }}
+              >
+                {/* Profile Image with Orange Arc Ring */}
+                <div className="mb-12">
+                  <div
+                    className="relative flex items-center justify-center"
+                    style={{
+                      width: "236px",
+                      height: "236px",
+                    }}
+                  >
+                    {/* Full orange ring */}
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        border: `1.5px solid ${getColor("secondary", 500)}`,
+                      }}
+                    />
+                    {/* Inner image container with shadow */}
+                    <div
+                      className="relative overflow-hidden rounded-full"
+                      style={{
+                        width: "180px",
+                        height: "180px",
+                        boxShadow: "0px 44px 68px 16px rgba(0, 0, 0, 0.1)",
+                      }}
+                    >
+                      <img
+                        src={image}
+                        alt={name}
+                        className="w-full h-full object-cover"
+                        ref={(el) => {
+                          recruitersRefs.current[`recruiters[${index}].recruiterAvatar`] = el;
+                        }}
+                        onClick={() => handleItemClick(`recruiters[${index}].recruiterAvatar`)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Name and Role */}
+                <div className="text-center mb-8">
+                  <h3
+                    ref={(el) => {
+                      recruitersRefs.current[`recruiters[${index}].recruiterFullname`] = el;
+                    }}
+                    onClick={() => handleItemClick(`recruiters[${index}].recruiterFullname`)}
+                    className="text-[32px] font-semibold mb-5 cursor-pointer leading-[36px]"
+                    style={{
+                      color: "#292929",
+                      fontFamily: titleFont?.family,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {name}
+                  </h3>
+                  <p
+                    ref={(el) => {
+                      recruitersRefs.current[`recruiters[${index}].recruiterRole`] = el;
+                    }}
+                    onClick={() => handleItemClick(`recruiters[${index}].recruiterRole`)}
+                    className="text-base cursor-pointer leading-6"
+                    style={{
+                      color: "#7c7c7c",
+                      fontFamily: bodyFont?.family,
+                    }}
+                  >
+                    {role}
+                  </p>
+                </div>
+
+                {/* Contact Buttons */}
+                <div className="flex flex-col gap-4 w-[320px]">
+                  {phoneEnabled && (
+                    <a
+                      href={`tel:${phone}`}
+                      ref={(el) => {
+                        recruitersRefs.current[`recruiters[${index}].recruiterPhone`] = el;
+                      }}
+                      onClick={() => handleItemClick(`recruiters[${index}].recruiterPhone`)}
+                      className="flex items-center justify-center gap-3 px-5 py-4 rounded-full transition-all hover:shadow-md cursor-pointer"
+                      style={{
+                        backgroundColor: "rgba(255, 255, 255, 0.6)",
+                        backdropFilter: "blur(34px)",
+                        border: "1px solid #dcdcdc",
+                      }}
+                    >
+                      <Phone
+                        size={24}
+                        strokeWidth={2}
+                        style={{ color: "#292929" }}
+                      />
+                      <span
+                        className="font-semibold text-base leading-6"
+                        style={{
+                          color: "#292929",
+                          fontFamily: bodyFont?.family,
+                        }}
+                      >
+                        {phone}
+                      </span>
+                    </a>
+                  )}
+
+                  {emailEnabled && (
+                    <a
+                      href={`mailto:${email}`}
+                      ref={(el) => {
+                        recruitersRefs.current[`recruiters[${index}].recruiterEmail`] = el;
+                      }}
+                      onClick={() => handleItemClick(`recruiters[${index}].recruiterEmail`)}
+                      className="flex items-center justify-center gap-3 px-5 py-4 rounded-full transition-all hover:shadow-md cursor-pointer"
+                      style={{
+                        backgroundColor: "rgba(255, 255, 255, 0.6)",
+                        backdropFilter: "blur(34px)",
+                        border: "1px solid #dcdcdc",
+                      }}
+                    >
+                      <Mail
+                        size={24}
+                        strokeWidth={2}
+                        style={{ color: "#292929" }}
+                      />
+                      <span
+                        className="font-semibold text-base leading-6"
+                        style={{
+                          color: "#292929",
+                          fontFamily: bodyFont?.family,
+                        }}
+                      >
+                        {email}
+                      </span>
+                    </a>
+                  )}
+                </div>
+
+                {/* Bottom Blue Accent Bar */}
+                <div
+                  className="w-[320px] h-3 rounded-t-2xl mt-12"
+                  style={{
+                    backgroundColor: getColor("primary", 200),
+                  }}
+                />
               </div>
-              <div className="ml-7 h-[22px] w-[22px] rounded-[10px] bg-[#5207CD33] mdx:ml-0" />
-            </div>
-            <Img
-              src="/images3/img_ellipse_6.png"
-              alt="Ellipse Image"
-              className="h-[50px] w-[2%] self-end object-contain mdx:w-full mdx:self-auto"
-            />
-          </div>
+            );
+          })}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
