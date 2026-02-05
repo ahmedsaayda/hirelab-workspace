@@ -749,6 +749,78 @@ export default function AdsEdit({ paramsId }) {
     });
   };
 
+  // Duplicate ad set - creates a copy with fresh creatives (no approved status, no Meta sync, no results)
+  const handleDuplicateAdSet = async (adSetId) => {
+    const adSetToDuplicate = (adsData?._adSets || []).find((s) => s.id === adSetId);
+    if (!adSetToDuplicate) return;
+
+    try {
+      message.loading({ key: "duplicate-adset", content: "Duplicating ad set...", duration: 0 });
+
+      // Deep clone the ad set
+      const duplicatedAdSet = JSON.parse(JSON.stringify(adSetToDuplicate));
+
+      // Generate new unique ID
+      duplicatedAdSet.id = `adset-${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Update the name
+      duplicatedAdSet.name = `${adSetToDuplicate.name || "Ad Set"} (Copy)`;
+
+      // Reset to draft state
+      duplicatedAdSet.state = "draft";
+
+      // Remove Meta sync data
+      delete duplicatedAdSet.metaAdSetId;
+      delete duplicatedAdSet.metaCampaignId;
+      delete duplicatedAdSet.metaAdId;
+      delete duplicatedAdSet.approvedAt;
+      delete duplicatedAdSet.approvedFormat;
+      delete duplicatedAdSet.approvedVariantIds;
+      delete duplicatedAdSet.launchedAt;
+
+      // Reset creatives - remove approval status and generated URLs
+      if (duplicatedAdSet.creatives) {
+        Object.keys(duplicatedAdSet.creatives).forEach((adType) => {
+          if (adType.startsWith('_')) return; // Skip meta fields
+          const group = duplicatedAdSet.creatives[adType];
+          if (!group?.variants) return;
+          group.variants = group.variants.map((v) => ({
+            ...v,
+            id: `${adType}-variant-${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 5)}`,
+            approved: false,
+            // Keep the content but clear generated URLs
+            approvedImageUrl: undefined,
+            approvedVideoUrl: undefined,
+            cloudinaryUrl: undefined,
+          }));
+        });
+        // Clear publish metadata from creatives
+        delete duplicatedAdSet.creatives._publish;
+        delete duplicatedAdSet.creatives._adSets;
+      }
+
+      // Add to ad sets list
+      const nextData = {
+        ...(adsData || {}),
+        _adSets: [...(Array.isArray(adsData?._adSets) ? adsData._adSets : []), duplicatedAdSet],
+      };
+
+      setAdsData(nextData);
+      await AdsService.saveAds(lpId, nextData);
+      lastSavedAdsHashRef.current = serializeAdsData(nextData);
+
+      message.destroy("duplicate-adset");
+      message.success("Ad set duplicated!");
+
+      // Refresh launch summary
+      await loadLaunchSummary();
+    } catch (e) {
+      message.destroy("duplicate-adset");
+      message.error("Failed to duplicate ad set");
+      console.error("Duplicate ad set error:", e);
+    }
+  };
+
   // Set brand data
   useEffect(() => {
     if (user) {
@@ -1181,6 +1253,23 @@ export default function AdsEdit({ paramsId }) {
     return currentVariants.find(v => v.selected) || currentVariants[0];
   }, [currentVariants, selectedVariant]);
 
+  // Auto-switch to available format when current format becomes unavailable (custom upload mode)
+  useEffect(() => {
+    if (!variantForPreview) return;
+    
+    const hasAnyCustomCreatives = Object.values(variantForPreview?.customCreatives || {}).some(Boolean);
+    if (!hasAnyCustomCreatives) return; // Not in custom upload mode, all formats available
+    
+    const hasCustomForCurrentFormat = !!variantForPreview?.customCreatives?.[selectedFormat];
+    if (hasCustomForCurrentFormat) return; // Current format has custom upload, stay on it
+    
+    // Current format doesn't have custom upload, find one that does
+    const availableFormat = AD_FORMATS.find(f => !!variantForPreview?.customCreatives?.[f.id]);
+    if (availableFormat && availableFormat.id !== selectedFormat) {
+      setSelectedFormat(availableFormat.id);
+    }
+  }, [variantForPreview, variantForPreview?.customCreatives, selectedFormat]);
+
   const hasApprovedCreatives = useMemo(() => {
     try {
       return Object.keys(adsData || {}).some((adType) =>
@@ -1429,6 +1518,39 @@ export default function AdsEdit({ paramsId }) {
     });
   };
 
+  // Handle variant duplicate
+  const handleVariantDuplicate = async (variantId) => {
+    const variantToDuplicate = currentVariants.find(v => v.id === variantId);
+    if (!variantToDuplicate) return;
+
+    // Create a deep copy with new ID
+    const duplicatedVariant = {
+      ...JSON.parse(JSON.stringify(variantToDuplicate)),
+      id: `${selectedAdType}-variant-${Date.now().toString(36)}`,
+      approved: false, // Reset approval status
+      selected: true,
+    };
+
+    // Add the duplicated variant and select it
+    const updatedVariants = [
+      ...currentVariants.map((v) => ({ ...v, selected: false })),
+      duplicatedVariant,
+    ];
+    const nextData = updateVariantsInData(updatedVariants);
+    setAdsData(nextData);
+    setSelectedVariant(duplicatedVariant.id);
+
+    // Save to backend
+    try {
+      await AdsService.saveAds(lpId, nextData);
+      lastSavedAdsHashRef.current = serializeAdsData(nextData);
+      message.success("Creative duplicated");
+    } catch (err) {
+      console.error("Failed to save after duplicate:", err);
+      message.error("Creative duplicated locally but failed to save to server");
+    }
+  };
+
   // Handle variant replace (open library)
   const handleVariantReplace = (variantId) => {
     setSelectedVariant(variantId);
@@ -1503,18 +1625,27 @@ export default function AdsEdit({ paramsId }) {
         // For video variants: Generate video with Creatomate (video + overlays burned in)
         message.loading({ content: "Generating video... This may take a minute.", key: "download", duration: 0 });
 
-        // Start video generation
+        // Start video generation - pass complete landing page data for branding
         const genResponse = await AdsService.generateVideo(lpId, {
           variantId: variant.id,
           variant: variant,
           landingPage: {
+            // Company info
             companyName: landingPageData?.companyName,
-            logo: landingPageData?.logo,
+            // Logo - check multiple sources (same as Template1.jsx uses brandData)
+            companyLogo: landingPageData?.companyLogo || landingPageData?.logo || userBrandData?.companyLogo || userBrandData?.logo,
+            logo: landingPageData?.logo || landingPageData?.companyLogo,
+            // Colors - same priority as useAdPalette hook
+            primaryColor: landingPageData?.primaryColor || userBrandData?.primaryColor,
+            secondaryColor: landingPageData?.secondaryColor || userBrandData?.secondaryColor,
             buttonColor: landingPageData?.buttonColor,
-            primaryColor: landingPageData?.primaryColor,
             accentColor: landingPageData?.accentColor,
+            // Font settings
+            selectedFont: landingPageData?.selectedFont || userBrandData?.selectedFont,
+            titleFont: landingPageData?.titleFont || userBrandData?.titleFont,
           },
           format: format?.id || 'story',
+          templateName: variant?.templateId || 'clarity',
         });
 
         const renderId = genResponse?.data?.data?.renderId;
@@ -1522,10 +1653,10 @@ export default function AdsEdit({ paramsId }) {
           throw new Error("Failed to start video generation");
         }
 
-        message.loading({ content: "Rendering video... Please wait.", key: "download", duration: 0 });
+        message.loading({ content: "Rendering creative... Please wait (up to 3 min).", key: "download", duration: 0 });
 
-        // Wait for render to complete
-        const videoUrl = await AdsService.waitForRender(lpId, renderId, 120000);
+        // Wait for render to complete - 3 minute timeout
+        const videoUrl = await AdsService.waitForRender(lpId, renderId, 180000);
 
         message.loading({ content: "Downloading video...", key: "download" });
 
@@ -1573,30 +1704,61 @@ export default function AdsEdit({ paramsId }) {
           return;
         }
 
-        // For image variants, render the full creative preview as PNG
-        message.loading({ content: "Rendering creative...", key: "download" });
+        // For image variants: also use Creatomate to generate a professional image
+        // Creatomate will output JPG for image backgrounds
+        message.loading({ content: "Generating image...", key: "download", duration: 0 });
 
-        // Ensure the variant is selected and showing in preview
-        setSelectedVariant(variant.id);
+        // Start image generation with Creatomate
+        const genResponse = await AdsService.generateVideo(lpId, {
+          variantId: variant.id,
+          variant: variant,
+          landingPage: {
+            companyName: landingPageData?.companyName,
+            companyLogo: landingPageData?.companyLogo || landingPageData?.logo || userBrandData?.companyLogo || userBrandData?.logo,
+            logo: landingPageData?.logo || landingPageData?.companyLogo,
+            primaryColor: landingPageData?.primaryColor || userBrandData?.primaryColor,
+            secondaryColor: landingPageData?.secondaryColor || userBrandData?.secondaryColor,
+            buttonColor: landingPageData?.buttonColor,
+            accentColor: landingPageData?.accentColor,
+            selectedFont: landingPageData?.selectedFont || userBrandData?.selectedFont,
+            titleFont: landingPageData?.titleFont || userBrandData?.titleFont,
+          },
+          format: format?.id || 'story',
+          templateName: variant?.templateId || 'clarity',
+        });
 
-        // Wait for preview to render
-        await waitForPreviewRender(4000);
+        const renderId = genResponse?.data?.data?.renderId;
+        if (!renderId) {
+          throw new Error("Failed to start image generation");
+        }
 
-        // Render to blob
-        const blob = await renderPreviewToBlob(format);
+        message.loading({ content: "Rendering image...", key: "download", duration: 0 });
+
+        // Wait for render to complete
+        const imageUrl = await AdsService.waitForRender(lpId, renderId, 180000);
+
+        message.loading({ content: "Downloading image...", key: "download" });
+
+        // Download the image
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) throw new Error("Failed to fetch image");
+        const blob = await imageResponse.blob();
+
+        // Determine extension from URL or default to png
+        const ext = imageUrl.match(/\.(jpg|jpeg|png)(\?.*)?$/i)?.[1] || 'png';
 
         // Create download link
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `${safeName}_${formatName}_${Date.now()}.png`;
+        link.download = `${safeName}_${formatName}_${Date.now()}.${ext}`;
 
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        message.success({ content: "Creative downloaded!", key: "download" });
+        message.success({ content: "Image downloaded!", key: "download" });
       }
     } catch (error) {
       console.error("Download failed:", error);
@@ -1653,13 +1815,14 @@ export default function AdsEdit({ paramsId }) {
   const handleVariantPickerSelect = (templateSelection) => {
     if (!adsData || !templateSelection) return;
 
-    const { templateNumber, templateName, mediaType } = templateSelection;
+    const { templateNumber, templateId, templateName, mediaType } = templateSelection;
 
     // Apply template to ALL variants in the current ad type
     // This is a GLOBAL setting for the ad set
     const updatedVariants = currentVariants.map((v) => ({
       ...v,
       templateNumber,
+      templateId: templateId || "clarity", // Creatomate template ID
       variantNumber: templateNumber, // Legacy support
       template: `template-${templateNumber}`,
       mediaType: mediaType || v.mediaType,
@@ -1802,7 +1965,10 @@ export default function AdsEdit({ paramsId }) {
         const v = variantsToPrepare[index];
         const stepLabel = `${v.adTypeId} · ${v.title || v.id}`;
 
-        // Check if this is a video variant
+        // Check if this variant is in "custom upload mode" (has any custom creatives)
+        const hasCustomCreatives = Object.values(v?.customCreatives || {}).some(Boolean);
+        
+        // Check if this is a video variant (either videoUrl or custom video upload)
         const videoUrl = v?.videoUrl || "";
         const isVideoVariant = !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
 
@@ -1813,7 +1979,35 @@ export default function AdsEdit({ paramsId }) {
         const publishImages = {};
         const publishVideos = {};
 
-        if (isVideoVariant) {
+        // CUSTOM UPLOAD MODE: Only process formats that have custom uploads
+        if (hasCustomCreatives) {
+          appendPrepareMessage(`🎨 Custom creatives mode for ${stepLabel}`);
+          
+          for (const format of AD_FORMATS) {
+            currentStep += 1;
+            const customCreativeUrl = v?.customCreatives?.[format.id];
+            
+            if (!customCreativeUrl) {
+              // Skip formats without custom uploads
+              appendPrepareMessage(`⏭ Skipping ${format.label} (no custom upload)`);
+              // eslint-disable-next-line no-continue
+              continue;
+            }
+            
+            // Check if custom creative is a video
+            const isCustomVideo = /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(customCreativeUrl);
+            
+            if (isCustomVideo) {
+              appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} custom video)`);
+              publishVideos[format.id] = customCreativeUrl;
+              appendPrepareMessage(`✓ ${format.label} custom video ready for ${stepLabel}`);
+            } else {
+              appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} custom image)`);
+              publishImages[format.id] = customCreativeUrl;
+              appendPrepareMessage(`✓ ${format.label} custom image ready for ${stepLabel}`);
+            }
+          }
+        } else if (isVideoVariant) {
           appendPrepareMessage(`📹 Video creative detected for ${stepLabel}`);
 
           // For video variants: Generate videos with overlays via Creatomate (same method as download)
@@ -1829,13 +2023,22 @@ export default function AdsEdit({ paramsId }) {
                 variantId: v.id,
                 variant: v,
                 landingPage: {
+                  // Company info
                   companyName: landingPageData?.companyName,
-                  logo: landingPageData?.logo,
+                  // Logo - check multiple sources (same as download)
+                  companyLogo: landingPageData?.companyLogo || landingPageData?.logo || userBrandData?.companyLogo || userBrandData?.logo,
+                  logo: landingPageData?.logo || landingPageData?.companyLogo,
+                  // Colors - same priority as useAdPalette hook
+                  primaryColor: landingPageData?.primaryColor || userBrandData?.primaryColor,
+                  secondaryColor: landingPageData?.secondaryColor || userBrandData?.secondaryColor,
                   buttonColor: landingPageData?.buttonColor,
-                  primaryColor: landingPageData?.primaryColor,
                   accentColor: landingPageData?.accentColor,
+                  // Font settings
+                  selectedFont: landingPageData?.selectedFont || userBrandData?.selectedFont,
+                  titleFont: landingPageData?.titleFont || userBrandData?.titleFont,
                 },
                 format: format.id,
+                templateName: v?.templateId || 'clarity',
               });
 
               // Get renderId - MUST exist for Creatomate
@@ -1844,10 +2047,10 @@ export default function AdsEdit({ paramsId }) {
                 throw new Error("Failed to start video generation - no renderId");
               }
 
-              // ALWAYS wait for render to complete (same as download)
+              // ALWAYS wait for render to complete (same as download) - 3 min timeout
               appendPrepareMessage(`⏳ ${format.label} rendering video...`);
               // eslint-disable-next-line no-await-in-loop
-              const generatedVideoUrl = await AdsService.waitForRender(lpId, renderId, 120000);
+              const generatedVideoUrl = await AdsService.waitForRender(lpId, renderId, 180000);
 
               // Creatomate videos are permanently hosted on Backblaze B2 - no need to re-upload
               publishVideos[format.id] = generatedVideoUrl;
@@ -1860,77 +2063,58 @@ export default function AdsEdit({ paramsId }) {
             }
           }
 
-          // Also render a poster image (thumbnail) for each format
-          for (const format of AD_FORMATS) {
-            appendPrepareMessage(`Rendering poster for ${stepLabel} (${format.label})`);
-            setSelectedFormat(format.id);
-            // eslint-disable-next-line no-await-in-loop
-            await visibilityAwareDelay(1200);
-            // eslint-disable-next-line no-await-in-loop
-            await waitForPreviewRender(5000, format);
-            // eslint-disable-next-line no-await-in-loop
-            await visibilityAwareDelay(400);
-            try {
-              // eslint-disable-next-line no-await-in-loop
-              const posterUrl = await renderCurrentPreviewToCloudinary(format);
-              publishImages[format.id] = posterUrl;
-            } catch {
-              // Poster failed, not critical
-            }
-          }
+          // Note: For video variants, we don't generate separate poster images
+          // Video players can extract frames from the video URL directly
         } else {
-          // For image variants: Render each format to PNG (existing flow)
+          // For image variants: Render each format to PNG via Creatomate API
           for (const format of AD_FORMATS) {
             currentStep += 1;
 
-            // Check if there's a custom creative override for this format
-            const customCreativeUrl = v?.customCreatives?.[format.id];
+            appendPrepareMessage(`Generating ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} image)`);
 
-            if (customCreativeUrl) {
-              // Use custom creative directly - no need to render
-              appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} custom creative)`);
-              publishImages[format.id] = customCreativeUrl;
-              appendPrepareMessage(`✓ ${format.label} custom creative ready for ${stepLabel}`);
-              // eslint-disable-next-line no-continue
-              continue;
-            }
-
-            appendPrepareMessage(`Preparing ${currentStep}/${totalSteps}: ${stepLabel} (${format.label} image)`);
-
-            // Switch to this format
-            setSelectedFormat(format.id);
-
-            // IMPORTANT: Wait for React to process the format change before rendering.
-            // Uses visibility-aware delay to pause when tab is hidden (browsers throttle background tabs)
-            // eslint-disable-next-line no-await-in-loop
-            await visibilityAwareDelay(1200);
-
-            // Now wait for the preview to be fully rendered with correct dimensions
-            // eslint-disable-next-line no-await-in-loop
-            const formatReady = await waitForPreviewRender(8000, format);
-
-            if (!formatReady) {
-              appendPrepareMessage(`⚠ ${format.label} dimensions not ready, retrying...`);
+            try {
+              // Use Creatomate API for image generation (same as video, but outputs PNG)
               // eslint-disable-next-line no-await-in-loop
-              await visibilityAwareDelay(2000);
-              // eslint-disable-next-line no-await-in-loop
-              const retryReady = await waitForPreviewRender(5000, format);
-              if (!retryReady) {
-                appendPrepareMessage(`❌ ${format.label} failed for ${stepLabel} - skipping`);
-                console.error(`[approveCreatives] Format ${format.id} failed to render correctly for variant ${v.id}`);
-                // eslint-disable-next-line no-continue
-                continue;
+              const response = await AdsService.generateVideo(lpId, {
+                variantId: v.id,
+                variant: v,
+                landingPage: {
+                  // Company info
+                  companyName: landingPageData?.companyName,
+                  // Logo - check multiple sources (same as download)
+                  companyLogo: landingPageData?.companyLogo || landingPageData?.logo || userBrandData?.companyLogo || userBrandData?.logo,
+                  logo: landingPageData?.logo || landingPageData?.companyLogo,
+                  // Colors - same priority as useAdPalette hook
+                  primaryColor: landingPageData?.primaryColor || userBrandData?.primaryColor,
+                  secondaryColor: landingPageData?.secondaryColor || userBrandData?.secondaryColor,
+                  buttonColor: landingPageData?.buttonColor,
+                  accentColor: landingPageData?.accentColor,
+                  // Font settings
+                  selectedFont: landingPageData?.selectedFont || userBrandData?.selectedFont,
+                  titleFont: landingPageData?.titleFont || userBrandData?.titleFont,
+                },
+                format: format.id,
+                templateName: v?.templateId || 'clarity',
+              });
+
+              // Get renderId from Creatomate
+              const renderId = response?.data?.data?.renderId;
+              if (!renderId) {
+                throw new Error("Failed to start image generation - no renderId");
               }
+
+              // Wait for render to complete - 3 min timeout
+              appendPrepareMessage(`⏳ ${format.label} rendering image...`);
+              // eslint-disable-next-line no-await-in-loop
+              const generatedImageUrl = await AdsService.waitForRender(lpId, renderId, 180000);
+
+              // Creatomate images are permanently hosted on Backblaze B2
+              publishImages[format.id] = generatedImageUrl;
+              appendPrepareMessage(`✓ ${format.label} image ready for ${stepLabel}`);
+            } catch (imageError) {
+              console.error(`[approveCreatives] Image generation failed for ${format.id}:`, imageError);
+              appendPrepareMessage(`❌ ${format.label} failed for ${stepLabel} - ${imageError.message}`);
             }
-
-            // eslint-disable-next-line no-await-in-loop
-            await visibilityAwareDelay(400);
-
-            // eslint-disable-next-line no-await-in-loop
-            const url = await renderCurrentPreviewToCloudinary(format);
-
-            publishImages[format.id] = url;
-            appendPrepareMessage(`✓ ${format.label} image ready for ${stepLabel}`);
           }
         }
 
@@ -2206,9 +2390,15 @@ export default function AdsEdit({ paramsId }) {
                             setActiveAdSetId(set.id);
                           },
                         };
+                        const duplicateItem = {
+                          key: "duplicate",
+                          label: "Duplicate ad set",
+                          onClick: () => handleDuplicateAdSet(set.id),
+                        };
                         return [
                           openLauncherItem,
                           openResultsItem,
+                          duplicateItem,
                           ...(isMeta ? [pauseItem, resumeItem, deleteItem] : []),
                           // Only show local delete for HireLab ad sets NOT synced to Meta
                           ...(isHireLab && !set.metaAdSetId ? [deleteLocalItem] : []),
@@ -2403,31 +2593,25 @@ export default function AdsEdit({ paramsId }) {
           <button
             onClick={() => {
               Modal.confirm({
-                title: '⚠️ Keep this tab visible',
+                title: "Approve Creatives",
                 content: (
-                  <div className="space-y-3">
-                    <p className="text-sm text-gray-600">
-                      The approval process needs to capture images from your screen. 
-                      <strong> Please keep this browser tab open and visible</strong> until the process completes.
-                    </p>
-                    <p className="text-sm text-amber-600 font-medium">
-                      ⚠️ Switching to another tab will pause the process.
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Tip: You can resize this window to a corner of your screen if you need to do other work.
-                    </p>
+                  <div className="text-sm text-gray-600">
+                    <p className="mb-2">This will generate final images/videos for all creatives using Creatomate.</p>
+                    <p>The process takes a few moments per creative. Are you ready to continue?</p>
                   </div>
                 ),
-                okText: 'Start Approval',
-                cancelText: 'Cancel',
-                okButtonProps: { style: { backgroundColor: '#16A34A', borderColor: '#16A34A' } },
-                onOk: () => approveCreativesForAdSet(activeAdSetId),
+                okText: "Start Approval",
+                cancelText: "Cancel",
+                okButtonProps: { className: "bg-[#16A34A] hover:bg-[#15803D]" },
+                onOk: () => {
+                  approveCreativesForAdSet(activeAdSetId);
+                },
               });
             }}
             disabled={preparingLaunch}
             className={`px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors ${preparingLaunch ? "bg-emerald-300 cursor-not-allowed" : "bg-[#16A34A] hover:bg-[#15803D]"
               }`}
-            title="Approves creatives and generates final images. Next you’ll configure launch settings."
+            title="Approves creatives and generates final images. Next you'll configure launch settings."
           >
             {preparingLaunch ? "Approving…" : "Approve creatives"}
           </button>
@@ -2544,6 +2728,7 @@ export default function AdsEdit({ paramsId }) {
                       setAdsData(updateVariantsInData(updatedVariants));
                     }}
                     onDelete={() => handleVariantDelete(variant.id)}
+                    onDuplicate={() => handleVariantDuplicate(variant.id)}
                     onDownload={() => handleVariantDownload(variant)}
                     isDownloading={isDownloading}
                     onReplace={() => handleVariantReplace(variant.id)}
@@ -2578,16 +2763,29 @@ export default function AdsEdit({ paramsId }) {
                 <div className="flex gap-2 items-center">
                   {AD_FORMATS.map((format) => {
                     const isActive = selectedFormat === format.id;
+                    // Check if variant is in custom upload mode and this format will be skipped
+                    const hasAnyCustomCreatives = Object.values(variantForPreview?.customCreatives || {}).some(Boolean);
+                    const hasCustomForThisFormat = !!variantForPreview?.customCreatives?.[format.id];
+                    const willBeSkipped = hasAnyCustomCreatives && !hasCustomForThisFormat;
+                    
                     return (
                       <button
                         key={format.id}
-                        onClick={() => setSelectedFormat(format.id)}
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors border ${isActive
-                          ? "bg-[#5207CD] text-white border-[#5207CD]"
-                          : "bg-[#F3F0FF] text-[#5207CD] border-transparent hover:bg-[#E4D9FF]"
+                        onClick={() => !willBeSkipped && setSelectedFormat(format.id)}
+                        disabled={willBeSkipped}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors border flex items-center gap-1 ${
+                          willBeSkipped
+                            ? "bg-gray-100 text-gray-400 border-transparent opacity-50 cursor-not-allowed"
+                            : isActive
+                              ? "bg-[#5207CD] text-white border-[#5207CD]"
+                              : "bg-[#F3F0FF] text-[#5207CD] border-transparent hover:bg-[#E4D9FF]"
                           }`}
+                        title={willBeSkipped ? "No custom upload - will be skipped during publishing" : ""}
                       >
                         {format.label}
+                        {willBeSkipped && (
+                          <span className="text-[10px]">⊘</span>
+                        )}
                       </button>
                     );
                   })}
@@ -2615,6 +2813,7 @@ export default function AdsEdit({ paramsId }) {
                     }}
                     landingPageData={previewLandingPageData}
                     adType={selectedAdType}
+                    templateName={variantForPreview?.templateId || "clarity"}
                   />
                 )}
               </div>
@@ -2703,13 +2902,7 @@ export default function AdsEdit({ paramsId }) {
       {prepareMessages.length > 0 && (
         <div className="fixed right-6 bottom-24 z-50 max-w-sm">
           <div className="rounded-lg bg-white shadow-lg border border-[#e5e7eb] px-4 py-3 text-xs text-[#111827] space-y-1">
-            <div className="font-semibold text-[#111827]">Preparing creatives…</div>
-            {tabHiddenWarning && (
-              <div className="flex items-center gap-2 px-2 py-1.5 bg-amber-50 border border-amber-200 rounded text-amber-800 text-[11px] font-medium">
-                <span>⚠️</span>
-                <span>Paused - please keep this tab visible</span>
-              </div>
-            )}
+            <div className="font-semibold text-[#111827]">Generating creatives with Creatomate…</div>
             {prepareMessages.slice(-3).map((msg, idx) => (
               <div key={idx} className="text-[11px] text-[#4b5563]">
                 {msg}
@@ -2928,6 +3121,7 @@ export default function AdsEdit({ paramsId }) {
                         }}
                         landingPageData={landingPageData}
                         adType={v.adTypeId}
+                        templateName={v.templateId || "clarity"}
                       />
                     </div>
                   </div>

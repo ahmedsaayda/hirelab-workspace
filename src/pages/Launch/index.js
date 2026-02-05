@@ -1898,6 +1898,34 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
     return publishVideos[format] || publishImages[format] || variant.publishVideo || variant.publishImage;
   };
 
+  // Check which formats are available for the selected variant
+  const getAvailableFormats = (variant) => {
+    if (!variant) return { story: false, square: false, portrait: false };
+    const publishVideos = variant.publishVideos || {};
+    const publishImages = variant.publishImages || {};
+    return {
+      story: !!(publishVideos.story || publishImages.story),
+      square: !!(publishVideos.square || publishImages.square),
+      portrait: !!(publishVideos.portrait || publishImages.portrait),
+    };
+  };
+
+  const availableFormats = getAvailableFormats(selectedVariant);
+  const hasAnyFormat = availableFormats.story || availableFormats.square || availableFormats.portrait;
+  const isPartialUpload = hasAnyFormat && !(availableFormats.story && availableFormats.square && availableFormats.portrait);
+
+  // Auto-switch to available format if current one is unavailable
+  React.useEffect(() => {
+    if (!selectedVariant) return;
+    const available = getAvailableFormats(selectedVariant);
+    if (!available[selectedFormat]) {
+      // Current format not available, switch to first available
+      if (available.square) setSelectedFormat("square");
+      else if (available.portrait) setSelectedFormat("portrait");
+      else if (available.story) setSelectedFormat("story");
+    }
+  }, [selectedVariant, selectedFormat]);
+
   const currentImage = selectedVariant ? getImageForFormat(selectedVariant, selectedFormat) : null;
 
   const getStatusInfo = (v) => {
@@ -1960,7 +1988,11 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
                 >
                   <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 shadow-sm">
                     {thumbImg ? (
-                      <img src={thumbImg} alt={v.title} className="w-full h-full object-cover" />
+                      thumbImg.toLowerCase().includes('.mp4') || thumbImg.toLowerCase().includes('.mov') || thumbImg.toLowerCase().includes('.webm') ? (
+                        <video src={thumbImg} className="w-full h-full object-cover" muted playsInline />
+                      ) : (
+                        <img src={thumbImg} alt={v.title} className="w-full h-full object-cover" />
+                      )
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[#98a2b3] text-xs">No img</div>
                     )}
@@ -1993,51 +2025,96 @@ function CreativesPreview({ editorAds, lpId, adSetKey }) {
             <div className="text-sm font-semibold text-[#101828]">Preview</div>
             {/* Format Switcher */}
             <div className="flex gap-2">
-              {AD_FORMATS.map((format) => (
-                <button
-                  key={format.id}
-                  onClick={() => setSelectedFormat(format.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${selectedFormat === format.id
-                      ? "bg-[#5207CD] text-white"
-                      : "bg-white text-[#344054] border border-[#d0d5dd] hover:border-[#5207CD]"
+              {AD_FORMATS.map((format) => {
+                const isAvailable = availableFormats[format.id];
+                const isSelected = selectedFormat === format.id;
+                // If partial upload, gray out unavailable formats
+                const isGrayedOut = isPartialUpload && !isAvailable;
+                
+                return (
+                  <button
+                    key={format.id}
+                    onClick={() => !isGrayedOut && setSelectedFormat(format.id)}
+                    disabled={isGrayedOut}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
+                      isGrayedOut
+                        ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed opacity-60"
+                        : isSelected
+                          ? "bg-[#5207CD] text-white"
+                          : "bg-white text-[#344054] border border-[#d0d5dd] hover:border-[#5207CD]"
                     }`}
-                >
-                  {format.label}
-                </button>
-              ))}
+                    title={isGrayedOut ? "No upload for this format - will be skipped" : ""}
+                  >
+                    {format.label} {isGrayedOut && "⊘"}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Preview - supports both images and videos */}
           <div className="flex justify-center bg-[#f8f9fa] rounded-xl p-6 min-h-[520px] items-center">
             <div
-              className="rounded-lg overflow-hidden shadow-xl bg-white flex items-center justify-center"
+              className={`rounded-lg overflow-hidden shadow-xl bg-white flex items-center justify-center ${
+                isPartialUpload && !availableFormats[selectedFormat] ? "opacity-60" : ""
+              }`}
               style={{ width: `${previewDims.width}px`, height: `${previewDims.height}px` }}
             >
-              {currentImage ? (
-                /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(currentImage) ? (
-                  <video
-                    src={currentImage}
-                    controls
-                    autoPlay
-                    muted
-                    loop
-                    className="w-full h-full object-contain"
-                  />
+              {currentImage && (() => {
+                // Check if this is a video URL - use simple string matching for reliability
+                const urlLower = currentImage.toLowerCase();
+                const isVideoUrl = urlLower.includes('.mp4') || 
+                  urlLower.includes('.mov') || 
+                  urlLower.includes('.webm') || 
+                  urlLower.includes('.mkv') ||
+                  urlLower.includes('video.creatomate.com') ||
+                  urlLower.includes('/video/upload/');
+                // Also check if this variant has video in publishVideos for this format
+                const hasVideoForFormat = !!selectedVariant?.publishVideos?.[selectedFormat];
+                const shouldShowVideo = isVideoUrl || hasVideoForFormat;
+                
+                if (shouldShowVideo) {
+                  return (
+                    <video
+                      src={currentImage}
+                      controls
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="w-full h-full object-contain"
+                    />
+                  );
+                } else {
+                  return (
+                    <img
+                      src={currentImage}
+                      alt={selectedVariant?.title || "Preview"}
+                      className="w-full h-full object-contain"
+                    />
+                  );
+                }
+              })()}
+              {!currentImage && (
+                isPartialUpload && !availableFormats[selectedFormat] ? (
+                  // Grayed out format - will be skipped
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-400">
+                    <svg className="w-16 h-16 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                    <span className="text-sm font-medium">No Upload</span>
+                    <span className="text-xs text-amber-500 mt-2 bg-amber-50 px-3 py-1 rounded-full">
+                      Will be skipped in Meta
+                    </span>
+                  </div>
                 ) : (
-                  <img
-                    src={currentImage}
-                    alt={selectedVariant?.title || "Preview"}
-                    className="w-full h-full object-contain"
-                  />
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-[#98a2b3]">
+                    <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm">{selectedVariant ? `No ${selectedFormat} preview` : "Select a creative"}</span>
+                  </div>
                 )
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-[#98a2b3]">
-                  <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-sm">{selectedVariant ? `No ${selectedFormat} preview` : "Select a creative"}</span>
-                </div>
               )}
             </div>
           </div>

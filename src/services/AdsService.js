@@ -43,23 +43,26 @@ class AdsService {
   }
 
   /**
-   * Generate video with Creatomate (used for both download and approve creatives)
+   * Generate creative with Creatomate (image or video)
+   * Used for both download and approve creatives
    * @param {string} lpId - Landing page ID
    * @param {Object} params - Generation parameters
    * @param {string} params.variantId - Variant ID
    * @param {Object} params.variant - Full variant object with title, linkDescription, videoUrl, etc.
-   * @param {Object} params.landingPage - Landing page data with buttonColor, primaryColor, etc.
+   * @param {Object} params.landingPage - Landing page data with colors, logo, fonts, etc.
    * @param {string} params.format - 'story' | 'square' | 'portrait'
-   * @returns {Promise<{renderId: string, status: string, videoUrl?: string}>}
+   * @param {string} params.templateName - Creatomate template name (default: 'clarity')
+   * @returns {Promise<{renderId: string, status: string, url?: string, isVideo: boolean}>}
    */
-  generateVideo(lpId, { variantId, variant, landingPage, format = 'story' }) {
+  generateVideo(lpId, { variantId, variant, landingPage, format = 'story', templateName = 'clarity' }) {
     return this.api.post(`/landingpage/${lpId}/ads/record-video`, {
       variantId,
       variant,
       landingPage,
       format,
+      templateName,
     }, {
-      timeout: 60000,
+      timeout: 60000, // Initial request timeout
     });
   }
 
@@ -67,39 +70,47 @@ class AdsService {
    * Check Creatomate render status
    * @param {string} lpId - Landing page ID
    * @param {string} renderId - Creatomate render ID
-   * @returns {Promise<{status: string, videoUrl?: string}>}
+   * @returns {Promise<{status: string, url?: string, progress?: number}>}
    */
   getRenderStatus(lpId, renderId) {
     return this.api.get(`/landingpage/${lpId}/ads/render-status/${renderId}`);
   }
 
   /**
-   * Wait for video render to complete
+   * Wait for creative render to complete (image or video)
    * @param {string} lpId - Landing page ID
    * @param {string} renderId - Creatomate render ID
-   * @param {number} maxWaitMs - Maximum wait time
-   * @returns {Promise<string>} - Video URL
+   * @param {number} maxWaitMs - Maximum wait time (default 3 minutes)
+   * @returns {Promise<string>} - Asset URL
    */
-  async waitForRender(lpId, renderId, maxWaitMs = 120000) {
+  async waitForRender(lpId, renderId, maxWaitMs = 180000) {
     const startTime = Date.now();
-    const pollInterval = 2000;
+    const pollInterval = 1500; // Poll every 1.5 seconds
 
     while (Date.now() - startTime < maxWaitMs) {
       const response = await this.getRenderStatus(lpId, renderId);
       const data = response?.data?.data;
 
-      if (data?.status === 'succeeded' && data?.videoUrl) {
-        return data.videoUrl;
+      // Check for `url` (new backend) or `videoUrl` (legacy)
+      const assetUrl = data?.url || data?.videoUrl;
+      
+      if (data?.status === 'succeeded' && assetUrl) {
+        return assetUrl;
       }
 
       if (data?.status === 'failed') {
-        throw new Error(data?.errorMessage || 'Video render failed');
+        throw new Error(data?.errorMessage || 'Render failed');
+      }
+
+      // Log progress for debugging
+      if (data?.progress) {
+        console.log(`[AdsService] Render ${renderId}: ${Math.round(data.progress * 100)}%`);
       }
 
       await new Promise(r => setTimeout(r, pollInterval));
     }
 
-    throw new Error('Video render timed out');
+    throw new Error('Render timed out after ' + Math.round(maxWaitMs / 1000) + ' seconds');
   }
 }
 

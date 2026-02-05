@@ -1,25 +1,28 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Modal } from "antd";
 
 /**
- * Configuration for all available templates.
+ * Configuration for all available Creatomate templates.
  * Universal templates that work for ALL ad types.
  * mediaType: "image" | "video" | "both" - controls what media can be uploaded
  * 
- * When user selects "video" as media, we use Creatomate for preview/render.
- * When user selects "image" as media, we use our coded React component.
+ * All previews and exports now use Creatomate - handles both image and video backgrounds.
+ * - If background is video → exports as video (mp4)
+ * - If background is image → exports as image (jpg)
  */
 export const UNIVERSAL_TEMPLATES = [
     {
         templateNumber: 1,
-        name: "Industrial",
-        description: "Clean, modern layout with strong typography",
+        templateId: "clarity", // Matches backend TEMPLATES key
+        name: "Clarity",
+        description: "Clean, modern layout with strong typography and a prominent CTA",
         mediaType: "both", // Supports both image and video
-        previewImage: null, // Will use live component preview
+        previewImage: null, // Will use Creatomate preview
     },
     // Future templates can be added here:
     // {
     //     templateNumber: 2,
+    //     templateId: "bold",
     //     name: "Bold",
     //     description: "Eye-catching design with vibrant colors",
     //     mediaType: "both",
@@ -51,57 +54,21 @@ export function getTemplateByNumber(templateNumber) {
     return UNIVERSAL_TEMPLATES.find((t) => t.templateNumber === templateNumber) || UNIVERSAL_TEMPLATES[0];
 }
 
+import CreatomatPreview from "./CreatomatPreview";
+
 // Placeholder image for preview
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=60";
 
-// Raw template preview - renders just the ad component without phone frames
-// Uses Universal templates for all ad types
-function RawTemplatePreview({ templateNumber, variant, brandData, landingPageData }) {
-    const [TemplateComponent, setTemplateComponent] = useState(null);
-
-    useEffect(() => {
-        // Dynamically load the square variant component from Universal templates
-        const loadComponent = async () => {
-            try {
-                let module;
-                // Load square format for consistent preview - all templates from Universal folder
-                switch (templateNumber) {
-                        case 1:
-                        module = await import("./ads/Universal/Square/Template1.jsx");
-                            break;
-                    // Future templates:
-                    // case 2:
-                    //     module = await import("./ads/Universal/Square/Template2.jsx");
-                    //     break;
-                        default:
-                        module = await import("./ads/Universal/Square/Template1.jsx");
-                }
-
-                if (module?.default) {
-                    setTemplateComponent(() => module.default);
-                }
-            } catch (err) {
-                console.warn("Failed to load template preview:", err);
-            }
-        };
-
-        loadComponent();
-    }, [templateNumber]);
-
-    if (!TemplateComponent) {
-        return (
-            <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
-                <div className="text-gray-400 text-sm">Loading...</div>
-            </div>
-        );
-    }
-
+// Raw template preview - uses Creatomate preview for all templates
+function RawTemplatePreview({ templateId, variant, brandData, landingPageData }) {
     return (
-        <TemplateComponent
+        <CreatomatPreview
+            format="square" // Use square for consistent preview in modal
             variant={variant}
             brandData={brandData}
             landingPageData={landingPageData}
-            showStoryChrome={false}
+            templateName={templateId || "clarity"}
+            className="w-full h-full"
         />
     );
 }
@@ -172,6 +139,7 @@ export default function VariantPickerModal({
         // The parent will apply this to all creatives in the ad set
         const templateSelection = {
             templateNumber: selectedTemplate.templateNumber,
+            templateId: selectedTemplate.templateId || "clarity", // Creatomate template ID
             templateName: selectedTemplate.name,
             mediaType: selectedTemplate.mediaType,
         };
@@ -253,24 +221,14 @@ export default function VariantPickerModal({
                                     Current
                                 </div>
                             )}
-                            {/* Raw template preview - no phone frame */}
-                            <div className="relative overflow-hidden aspect-square">
-                                <div
-                                    className="absolute"
-                                    style={{
-                                        width: "1080px",
-                                        height: "1080px",
-                                        transform: "scale(0.25)",
-                                        transformOrigin: "top left",
-                                    }}
-                                >
-                                    <RawTemplatePreview
-                                        templateNumber={template.templateNumber}
-                                        variant={previewVariant}
-                                        brandData={previewBrandData}
-                                        landingPageData={previewLandingPageData}
-                                    />
-                                </div>
+                            {/* Template preview using Creatomate */}
+                            <div className="relative overflow-hidden aspect-square bg-gray-100">
+                                <RawTemplatePreview
+                                    templateId={template.templateId}
+                                    variant={previewVariant}
+                                    brandData={previewBrandData}
+                                    landingPageData={previewLandingPageData}
+                                />
                             </div>
 
                             {/* Info bar */}

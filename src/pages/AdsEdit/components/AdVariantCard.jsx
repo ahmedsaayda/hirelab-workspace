@@ -22,6 +22,7 @@ export default function AdVariantCard({
   onSelect,
   onEdit,
   onDelete,
+  onDuplicate,
   onDownload,
   onReplace,
   isEditing,
@@ -479,27 +480,52 @@ export default function AdVariantCard({
               { id: 'portrait', label: 'Portrait (4:5)', size: '1080×1350' },
             ].map((format) => {
               const customUrl = editData.customCreatives?.[format.id];
+              const isVideo = customUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(customUrl);
+              // Check if other formats have uploads (to show "will be skipped" for empty ones)
+              const otherFormatsHaveUploads = ['story', 'square', 'portrait']
+                .filter(f => f !== format.id)
+                .some(f => editData.customCreatives?.[f]);
+              const willBeSkipped = !customUrl && otherFormatsHaveUploads;
+              
               return (
                 <div key={format.id} className="flex flex-col">
-                  <label className="text-[10px] font-medium text-[#344054] mb-1">{format.label}</label>
+                  <label className={`text-[10px] font-medium mb-1 ${willBeSkipped ? 'text-gray-400' : 'text-[#344054]'}`}>
+                    {format.label}
+                  </label>
                   <button
                     type="button"
                     onClick={() => setCustomCreativePickerFormat(format.id)}
-                    className="relative w-full aspect-square border border-dashed border-[#d0d5dd] rounded-lg overflow-hidden hover:bg-gray-50 transition-colors flex items-center justify-center"
+                    className={`relative w-full aspect-square border border-dashed rounded-lg overflow-hidden transition-colors flex items-center justify-center ${
+                      willBeSkipped 
+                        ? 'border-gray-200 bg-gray-50 opacity-60' 
+                        : 'border-[#d0d5dd] hover:bg-gray-50'
+                    }`}
                   >
                     {customUrl ? (
                       <>
-                        <img src={customUrl} alt={format.label} className="w-full h-full object-cover" />
+                        {isVideo ? (
+                          <video src={customUrl} className="w-full h-full object-cover" muted />
+                        ) : (
+                          <img src={customUrl} alt={format.label} className="w-full h-full object-cover" />
+                        )}
                         <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                           <span className="text-white text-[10px] font-medium">Change</span>
                         </div>
+                        {isVideo && (
+                          <div className="absolute top-1 right-1 bg-black/60 rounded px-1">
+                            <span className="text-white text-[8px] font-medium">VIDEO</span>
+                          </div>
+                        )}
                       </>
                     ) : (
                       <div className="flex flex-col items-center">
-                        <svg className="w-5 h-5 text-gray-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <svg className={`w-5 h-5 mb-1 ${willBeSkipped ? 'text-gray-300' : 'text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                         </svg>
-                        <span className="text-[9px] text-[#667085]">{format.size}</span>
+                        <span className={`text-[9px] ${willBeSkipped ? 'text-gray-400' : 'text-[#667085]'}`}>{format.size}</span>
+                        {willBeSkipped && (
+                          <span className="text-[8px] text-amber-500 mt-0.5">Skipped</span>
+                        )}
                       </div>
                     )}
                   </button>
@@ -526,13 +552,23 @@ export default function AdVariantCard({
               );
             })}
           </div>
+          
+          {/* Info message about partial uploads */}
+          {hasAnyCustomCreative && !['story', 'square', 'portrait'].every(f => editData.customCreatives?.[f]) && (
+            <p className="text-[10px] text-amber-600 mt-2 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Formats without uploads will be skipped during publishing
+            </p>
+          )}
 
           {/* Custom Creative Picker Modal */}
           <ImageSelectionModal
             isOpen={!!customCreativePickerFormat}
             onClose={() => setCustomCreativePickerFormat(null)}
-            type="image"
-            accept="image/*"
+            type="all"
+            accept="image/*,video/*"
             multiple={false}
             autosave={true}
             maxFiles={1}
@@ -1040,6 +1076,22 @@ export default function AdVariantCard({
             </svg>
           )}
           <span className="hidden sm:inline">{isDownloading ? "Recording..." : "Download"}</span>
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onDuplicate?.();
+          }}
+          title="Duplicate"
+          className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-[#344054] bg-white hover:bg-gray-50 border-t border-b border-l border-[#d0d5dd] transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+          </svg>
+          <span className="hidden sm:inline">Duplicate</span>
         </button>
 
         <button
