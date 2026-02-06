@@ -133,7 +133,10 @@ export const Template2 = React.memo(({
         onClickApply();
       }
     } else {
-      if (lpId) {
+      // Check if external apply link is set
+      if (landingPageData?.externalApplyLink) {
+        window.open(landingPageData.externalApplyLink, '_blank', 'noopener,noreferrer');
+      } else if (lpId) {
         const formUrl = `/lp/${lpId}/apply`;
         router.push(formUrl);
       }
@@ -760,8 +763,10 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
         onClickApply();
       }
     } else {
-      // Public view - redirect to application form
-      if (lpId) {
+      // Public view - check if external apply link is set
+      if (landingPageData?.externalApplyLink) {
+        window.open(landingPageData.externalApplyLink, '_blank', 'noopener,noreferrer');
+      } else if (lpId) {
         const formUrl = `/lp/${lpId}/apply`;
         router.push(formUrl);
       }

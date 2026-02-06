@@ -693,7 +693,12 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
             } catch (e) {
               console.error('❌ NAVBAR: Hirelab.FormView event failed:', e);
             }
-            setShowFormEditor(true);
+            // Check if external apply link is set
+            if (landingPageData?.externalApplyLink) {
+              window.open(landingPageData.externalApplyLink, '_blank', 'noopener,noreferrer');
+            } else {
+              setShowFormEditor(true);
+            }
           }}
           fullscreen={fullscreen}
           showBackToEditButton={showBackToEditButton}
@@ -716,7 +721,14 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
         <Footer
           landingPageData={landingPageData}
           fetchData={fetchData}
-          onClickApply={() => setShowFormEditor(true)}
+          onClickApply={() => {
+            // Check if external apply link is set
+            if (landingPageData?.externalApplyLink) {
+              window.open(landingPageData.externalApplyLink, '_blank', 'noopener,noreferrer');
+            } else {
+              setShowFormEditor(true);
+            }
+          }}
           lpId={lpId}
           isEdit={false}
           isMultiJob={isMultiJobCampaign}

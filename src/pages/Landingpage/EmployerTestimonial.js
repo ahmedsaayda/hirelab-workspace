@@ -941,8 +941,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
     }, 10);
   };
 
-  // Check if navigation should be shown
-  const showNavigation = finalTestimonials.length > 1;
+  // Check if navigation should be shown (only for 3+ cards since 1-2 are centered)
+  const showNavigation = finalTestimonials.length > 2;
 
   // TestimonialCard component - with auto height adjustment
   const TestimonialCard = ({ testimonial, index }) => {
@@ -1055,31 +1055,39 @@ const Template1 = ({ landingPageData, fetchData }) => {
          <div className="relative overflow-hidden">
          <div
            ref={sliderRef}
-           className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 px-4 md:px-6"
+           className={`flex gap-4 px-4 md:px-6 ${
+             finalTestimonials.length <= 2 
+               ? 'justify-center flex-wrap' 
+               : 'overflow-x-auto snap-x snap-mandatory scroll-smooth'
+           }`}
            style={{
              scrollbarWidth: "none",
              msOverflowStyle: "none",
              WebkitOverflowScrolling: "touch",
-             scrollSnapType: "x mandatory",
+             ...(finalTestimonials.length > 2 && { scrollSnapType: "x mandatory" }),
            }}
           onScroll={() => {
-            if (!isProgrammaticScroll) {
+            if (!isProgrammaticScroll && finalTestimonials.length > 2) {
               handleScrollImmediate();
               debouncedHandleScroll();
             }
           }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleDragEnd}
-          onMouseLeave={handleDragEnd}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleDragEnd}
+          onMouseDown={finalTestimonials.length > 2 ? handleMouseDown : undefined}
+          onMouseMove={finalTestimonials.length > 2 ? handleMouseMove : undefined}
+          onMouseUp={finalTestimonials.length > 2 ? handleDragEnd : undefined}
+          onMouseLeave={finalTestimonials.length > 2 ? handleDragEnd : undefined}
+          onTouchStart={finalTestimonials.length > 2 ? handleTouchStart : undefined}
+          onTouchMove={finalTestimonials.length > 2 ? handleTouchMove : undefined}
+          onTouchEnd={finalTestimonials.length > 2 ? handleDragEnd : undefined}
         >
                      {finalTestimonials.map((testimonial, index) => (
              <div
                key={testimonial.id}
-               className="flex-shrink-0 w-[85%] snap-center md:w-[calc(50%-1rem)] md:snap-start lg:w-[calc(33.333%-1rem)]"
+               className={`${
+                 finalTestimonials.length <= 2
+                   ? 'w-full max-w-[400px] md:w-[calc(50%-1rem)] md:max-w-none'
+                   : 'flex-shrink-0 w-[85%] snap-center md:w-[calc(50%-1rem)] md:snap-start lg:w-[calc(33.333%-1rem)]'
+               }`}
                ref={el => cardRefs.current[index] = el}
              >
                <TestimonialCard testimonial={testimonial} index={index} />

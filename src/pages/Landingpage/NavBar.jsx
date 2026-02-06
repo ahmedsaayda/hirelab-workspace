@@ -255,6 +255,12 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
 
 
   const handleApplyClick = () => {
+    // If external apply link is set, always open it in a new tab (both edit and public view)
+    if (landingPageData?.externalApplyLink) {
+      window.open(landingPageData.externalApplyLink, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     if (isEdit) {
       // In edit mode, check if form exists, if not show simplified creation modal
       if (!landingPageData?.form?.fields || landingPageData.form.fields.length === 0) {
@@ -265,7 +271,7 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
         handleOpenFormEditor();
       }
     } else {
-      // Public view - always redirect to custom form
+      // Public view - use built-in form
       const formUrl = `/lp/${lpId}/apply`;
       router.push(formUrl);
     }

@@ -2000,13 +2000,15 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
           <div>
             {flowFields[currentStep - 1] && (
               <div>
-                {/* WhatsApply Button - shown on first step when enabled */}
-                {currentStep === 1 && settings?.whatsApply?.enabled !== false && (
+                {/* WhatsApply Button - shown on first step when enabled AND phone number is configured */}
+                {currentStep === 1 && settings?.whatsApply?.enabled && settings?.whatsApply?.phoneNumber && (
                   <div className="mb-6">
                     <div
                       onClick={() => {
                         // Build the WhatsApp message with variables replaced
-                        const WHATSAPPLY_PHONE = '4916095100306'; // Global WhatsApp number for WhatsApply
+                        // Clean phone number: remove spaces, dashes, and non-digit chars except leading +
+                        const rawPhone = settings?.whatsApply?.phoneNumber || '';
+                        const cleanPhone = rawPhone.replace(/[^\d+]/g, '').replace(/^\+/, '');
                         const messageTemplate = settings?.whatsApply?.messageTemplate || 'Hi, I saw the vacancy {{url}} and I want to apply for {{jobTitle}} at {{companyName}}.';
                         const currentUrl = typeof window !== 'undefined' ? window.location.href.replace('/apply', '') : '';
                         
@@ -2016,7 +2018,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
                           .replace('{{companyName}}', landingPageData?.companyName || '');
                         
                         const encodedMessage = encodeURIComponent(message);
-                        const whatsappUrl = `https://wa.me/${WHATSAPPLY_PHONE}?text=${encodedMessage}`;
+                        const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
                         window.open(whatsappUrl, '_blank');
                       }}
                       className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-semibold text-lg cursor-pointer"

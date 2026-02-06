@@ -63,6 +63,10 @@ export default function Header({
   const [metaPixelDraft, setMetaPixelDraft] = useState("");
   const [metaPixelSaving, setMetaPixelSaving] = useState(false);
 
+  // 🔗 External Apply Link states
+  const [externalApplyLinkDraft, setExternalApplyLinkDraft] = useState("");
+  const [externalApplyLinkSaving, setExternalApplyLinkSaving] = useState(false);
+
   // Initialize CTA link from landingPageData
   useEffect(() => {
     if (landingPageData) {
@@ -81,6 +85,11 @@ export default function Header({
   useEffect(() => {
     setMetaPixelDraft(landingPageData?.metaPixelId || "");
   }, [landingPageData?.metaPixelId]);
+
+  // Initialize External Apply Link from landingPageData
+  useEffect(() => {
+    setExternalApplyLinkDraft(landingPageData?.externalApplyLink || "");
+  }, [landingPageData?.externalApplyLink]);
 
   // Save Meta Pixel ID
   const saveMetaPixelId = useCallback(async () => {
@@ -101,6 +110,27 @@ export default function Header({
       setMetaPixelSaving(false);
     }
   }, [metaPixelDraft, lpId, setLandingPageData]);
+
+  // Save External Apply Link
+  const saveExternalApplyLink = useCallback(async () => {
+    const value = (externalApplyLinkDraft || "").trim();
+    // Validate URL format if provided
+    if (value && !value.match(/^https?:\/\/.+/i)) {
+      message.error("Please enter a valid URL starting with http:// or https://");
+      return;
+    }
+    if (!lpId) return;
+    try {
+      setExternalApplyLinkSaving(true);
+      await CrudService.update("LandingPageData", lpId, { externalApplyLink: value || null });
+      setLandingPageData((prev) => ({ ...(prev || {}), externalApplyLink: value || null }));
+      message.success(value ? "External apply link saved" : "External apply link removed (using internal form)");
+    } catch (e) {
+      message.error("Failed to save external apply link");
+    } finally {
+      setExternalApplyLinkSaving(false);
+    }
+  }, [externalApplyLinkDraft, lpId, setLandingPageData]);
 
   const handleSave = async () => {
     console.log("landingPageData", landingPageData?.companyLogo);
@@ -631,6 +661,40 @@ export default function Header({
             </div>
             <p className="text-xs text-gray-500 mt-2">
               Find this in Meta Ads Manager → Events Manager → Pixels.
+            </p>
+          </div>
+
+          {/* External Apply Link Section */}
+          <div className="py-4">
+            <h3 className="text-lg font-semibold mb-2 text-gray-800">External Apply Link</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Redirect the "Apply Now" button to an external URL instead of the built-in application form.
+            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              External URL (optional)
+            </label>
+            <div className="flex gap-2">
+              <Input
+                value={externalApplyLinkDraft}
+                onChange={(e) => setExternalApplyLinkDraft(e.target.value)}
+                placeholder="https://yoursite.com/apply"
+                className="flex-1"
+              />
+              <button
+                type="button"
+                onClick={saveExternalApplyLink}
+                disabled={externalApplyLinkSaving}
+                className={`px-4 py-2 text-sm font-semibold rounded-md text-white whitespace-nowrap ${
+                  externalApplyLinkSaving ? "bg-[#5207CD]/70 cursor-not-allowed" : "bg-[#5207CD] hover:bg-[#4506A6]"
+                }`}
+              >
+                {externalApplyLinkSaving ? "Saving..." : "Save"}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {externalApplyLinkDraft ? 
+                "When set, clicking \"Apply Now\" will open this link in a new tab." : 
+                "Leave empty to use the built-in application form."}
             </p>
           </div>
 
