@@ -448,7 +448,7 @@ export const generateVariants = (lpData) => {
       const withVideo = videoUrl && videoPoster && image === videoPoster;
       variants.push(createVariant("company", i, image, withVideo ? { videoUrl } : {}));
     }
-    ads.company = { variants, enabled: false };
+    ads.company = { variants, enabled: true };
   }
 
   // EMPLOYER BRAND (EVP, Leader, Mission)
@@ -575,7 +575,8 @@ export const generateVariants = (lpData) => {
       );
     }
     // If no valid testimonials, ads.testimonial will have empty variants array
-    ads.testimonial = { variants, enabled: variants.length > 0 };
+    // Testimonial ads are disabled by default - user must enable manually
+    ads.testimonial = { variants, enabled: false };
   }
 
   // RETARGETING (messaging-driven)
@@ -586,7 +587,7 @@ export const generateVariants = (lpData) => {
     for (let i = 0; i < counts.retargeting; i++) {
       variants.push(createVariant("retargeting", i, imgs[i % imgs.length], videoUrl ? { videoUrl } : {}));
     }
-    ads.retargeting = { variants, enabled: false };
+    ads.retargeting = { variants, enabled: true };
   }
 
   return ads;

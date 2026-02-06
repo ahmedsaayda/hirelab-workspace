@@ -165,6 +165,9 @@ export default function AdsEdit({ paramsId }) {
   const [variantPickerOpen, setVariantPickerOpen] = useState(false);
   // Track variant being edited for template change (null = new creative, variant = change template)
   const [templateChangeVariant, setTemplateChangeVariant] = useState(null);
+  
+  // Add category modal (for enabling/disabling ad types)
+  const [addCategoryModalOpen, setAddCategoryModalOpen] = useState(false);
 
   // Preferred pixel checkbox state
   const [isPreferredPixel, setIsPreferredPixel] = useState(false);
@@ -1208,6 +1211,94 @@ export default function AdsEdit({ paramsId }) {
     return adsData?.[selectedAdType]?.variants || [];
   }, [adsData, selectedAdType, activeAdSetId]);
 
+  // Check if an ad type is enabled (for ad set or campaign level)
+  const isAdTypeEnabled = useCallback((adTypeId) => {
+    // Find the active ad set if one is selected
+    const activeSet = activeAdSetId
+      ? (Array.isArray(adsData?._adSets) ? adsData._adSets : []).find((s) => s.id === activeAdSetId)
+      : null;
+
+    // Check ad set creatives first
+    if (activeSet?.creatives?.[adTypeId]) {
+      return activeSet.creatives[adTypeId].enabled !== false;
+    }
+
+    // Fall back to campaign-level
+    return adsData?.[adTypeId]?.enabled !== false;
+  }, [adsData, activeAdSetId]);
+
+  // Toggle ad type enabled/disabled
+  const toggleAdTypeEnabled = useCallback(async (adTypeId) => {
+    if (!adsData) return;
+    
+    // Required ad types cannot be disabled
+    const requiredTypes = ['job', 'company', 'retargeting'];
+    if (requiredTypes.includes(adTypeId)) return;
+    
+    const currentlyEnabled = isAdTypeEnabled(adTypeId);
+    const newEnabled = !currentlyEnabled;
+    
+    let updatedAds = { ...adsData };
+    
+    // Find the active ad set if one is selected
+    if (activeAdSetId) {
+      const adSets = Array.isArray(updatedAds._adSets) ? [...updatedAds._adSets] : [];
+      const setIdx = adSets.findIndex((s) => s.id === activeAdSetId);
+      if (setIdx >= 0 && adSets[setIdx]?.creatives) {
+        adSets[setIdx] = {
+          ...adSets[setIdx],
+          creatives: {
+            ...adSets[setIdx].creatives,
+            [adTypeId]: {
+              ...adSets[setIdx].creatives[adTypeId],
+              enabled: newEnabled,
+            },
+          },
+        };
+        updatedAds._adSets = adSets;
+      }
+    } else {
+      // Update campaign-level
+      updatedAds = {
+        ...updatedAds,
+        [adTypeId]: {
+          ...updatedAds[adTypeId],
+          enabled: newEnabled,
+        },
+      };
+    }
+    
+    setAdsData(updatedAds);
+    
+    // If disabling the currently selected ad type, switch to an enabled one
+    if (!newEnabled && selectedAdType === adTypeId) {
+      const firstEnabled = AD_TYPES.find(at => {
+        if (at.id === adTypeId) return false;
+        // Check if this type is enabled in the updated data
+        if (activeAdSetId) {
+          const adSets = Array.isArray(updatedAds._adSets) ? updatedAds._adSets : [];
+          const activeSet = adSets.find(s => s.id === activeAdSetId);
+          if (activeSet?.creatives?.[at.id]) {
+            return activeSet.creatives[at.id].enabled !== false;
+          }
+        }
+        return updatedAds?.[at.id]?.enabled !== false;
+      });
+      if (firstEnabled) {
+        setSelectedAdType(firstEnabled.id);
+      }
+    }
+    
+    // Save to backend
+    try {
+      await AdsService.saveAds(lpId, updatedAds);
+      lastSavedAdsHashRef.current = serializeAdsData(updatedAds);
+      message.success(`${adTypeId} ads ${newEnabled ? 'enabled' : 'disabled'}`);
+    } catch (err) {
+      console.error("Failed to save after toggle:", err);
+    }
+  }, [adsData, activeAdSetId, isAdTypeEnabled, lpId, selectedAdType]);
+
   const hasAnyVariants = useMemo(() => {
     try {
       // Check ad set creatives if viewing an ad set
@@ -1931,17 +2022,30 @@ export default function AdsEdit({ paramsId }) {
       const creativesSource = adSet?.creatives || updatedAds;
 
       // Mark variants approved + collect them for image rendering
+      // Skip disabled ad categories
       const variantsToPrepare = [];
+      const skippedCategories = [];
       Object.keys(creativesSource).forEach((adType) => {
         if (adType.startsWith('_')) return; // Skip meta fields like _adSets, _publish
         const group = creativesSource[adType];
         if (!group?.variants || !Array.isArray(group.variants)) return;
+        
+        // Check if this ad type is enabled
+        if (group.enabled === false) {
+          skippedCategories.push(adType);
+          return; // Skip disabled ad categories
+        }
+        
         group.variants = group.variants.map((v) => {
           const approvedVariant = { ...v, approved: true };
           variantsToPrepare.push({ ...approvedVariant, adTypeId: adType });
           return approvedVariant;
         });
       });
+      
+      if (skippedCategories.length > 0) {
+        appendPrepareMessage(`⏭ Skipping disabled categories: ${skippedCategories.join(', ')}`);
+      }
 
       // Update the creatives source back to ad set if applicable
       if (adSet?.creatives && adSetIdx >= 0) {
@@ -2640,19 +2744,47 @@ export default function AdsEdit({ paramsId }) {
             <div className="h-[1px] bg-[#eaecf0] w-full mb-5" />
 
             <div className="flex flex-col gap-2">
-              {AD_TYPES.map((adType) => (
-                <Tooltip key={adType.id} title={adType.description} placement="right">
+              {AD_TYPES.filter(adType => {
+                // Required types always show
+                const requiredTypes = ['job', 'company', 'retargeting'];
+                if (requiredTypes.includes(adType.id)) return true;
+                // Optional types only show if enabled
+                return isAdTypeEnabled(adType.id);
+              }).map((adType) => (
+                <Tooltip 
+                  key={adType.id} 
+                  title={
+                    <div>
+                      <div className="font-medium">{adType.label}</div>
+                      <div className="text-xs opacity-80">{adType.description}</div>
+                    </div>
+                  } 
+                  placement="right"
+                >
                   <button
                     onClick={() => setSelectedAdType(adType.id)}
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${selectedAdType === adType.id
-                      ? "bg-[#eff8ff]"
-                      : "hover:bg-gray-50"
-                      }`}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                      selectedAdType === adType.id
+                        ? "bg-[#eff8ff]"
+                        : "hover:bg-gray-50"
+                    }`}
                   >
                     <AdTypeIcon type={adType.id} active={selectedAdType === adType.id} />
                   </button>
                 </Tooltip>
               ))}
+              
+              {/* Add Category Button */}
+              <Tooltip title="Add or remove ad categories" placement="right">
+                <button
+                  onClick={() => setAddCategoryModalOpen(true)}
+                  className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors hover:bg-gray-50 border border-dashed border-gray-300 mt-2"
+                >
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+              </Tooltip>
             </div>
           </div>
 
@@ -3047,6 +3179,68 @@ export default function AdsEdit({ paramsId }) {
                 No Pages found. Click "Create a Facebook Page", then "Refresh assets".
               </div>
             )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Add Category Modal */}
+      <Modal
+        open={addCategoryModalOpen}
+        onCancel={() => setAddCategoryModalOpen(false)}
+        footer={null}
+        title="Manage Ad Categories"
+        destroyOnClose
+      >
+        <div className="py-4">
+          <p className="text-sm text-gray-500 mb-4">
+            Enable or disable ad categories. Disabled categories will be skipped during approval.
+          </p>
+          <div className="grid grid-cols-1 gap-3">
+            {AD_TYPES.map((adType) => {
+              const isRequired = ['job', 'company', 'retargeting'].includes(adType.id);
+              // Required types are always enabled, optional types check the state
+              const isEnabled = isRequired ? true : isAdTypeEnabled(adType.id);
+              return (
+                <button
+                  key={adType.id}
+                  onClick={() => {
+                    if (!isRequired) {
+                      toggleAdTypeEnabled(adType.id);
+                    }
+                  }}
+                  disabled={isRequired}
+                  className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                    isEnabled
+                      ? "bg-violet-50 border-violet-200"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  } ${isRequired ? "cursor-default" : "cursor-pointer"}`}
+                >
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    isEnabled ? "bg-violet-100" : "bg-gray-100"
+                  }`}>
+                    <AdTypeIcon type={adType.id} active={isEnabled} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-medium text-sm text-gray-900">{adType.label}</div>
+                    <div className="text-xs text-gray-500">{adType.description}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isRequired && (
+                      <span className="text-xs text-gray-400 px-2 py-1 bg-gray-100 rounded">Required</span>
+                    )}
+                    {isEnabled ? (
+                      <svg className="w-5 h-5 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </Modal>

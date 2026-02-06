@@ -157,14 +157,14 @@ export default function CreatomatPreview({
   }, []);
 
   // Extract data
-  // Check for video ONLY from variant.videoUrl - NOT from fallback sources
+  // Check for video from variant.videoUrl OR if variant.image is actually a video URL
   const videoUrl = variant?.videoUrl || "";
   const heroImage = variant?.image || landingPageData?.heroImage || "";
+  const imageIsVideo = !!variant?.image && (isVideoUrl(variant.image) || String(variant.image).includes("/video/upload/"));
   const backgroundSource = videoUrl || heroImage;
   
-  // IMPORTANT: isVideo should only be true if the variant's videoUrl is set and is a video
-  // NOT if the fallback heroImage happens to be a video
-  const isVideo = !!videoUrl && isVideoUrl(videoUrl);
+  // isVideo should be true if videoUrl is set OR if the image field contains a video URL
+  const isVideo = (!!videoUrl && isVideoUrl(videoUrl)) || imageIsVideo;
   
   // Keep ref in sync to avoid stale closures
   isVideoRef.current = isVideo;

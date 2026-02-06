@@ -1,5 +1,5 @@
 import React, { useRef, useState, useMemo, useCallback } from "react";
-import { Input, message, Tooltip, Popover } from "antd";
+import { Input, message, Tooltip, Popover, Modal } from "antd";
 import ImageSelectionModal from "../../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
 import AiService from "../../../services/AiService.js";
 
@@ -118,6 +118,61 @@ export default function AdVariantCard({
     }
   }, [lpId, editData, variant?.adTypeId, landingPageData?.language, emitDraft]);
 
+  // State for regenerating all fields
+  const [isRegeneratingAll, setIsRegeneratingAll] = useState(false);
+
+  // Regenerate all text fields for this variant using AI
+  const regenerateAllFields = useCallback(async () => {
+    if (!lpId) {
+      message.error("Cannot regenerate: Landing page ID not available");
+      return;
+    }
+
+    setIsRegeneratingAll(true);
+
+    try {
+      // Import AiService's generateAdsCopy for batch regeneration
+      const response = await AiService.generateAdsCopy({
+        lpId,
+        variants: [{
+          id: variant?.id,
+          adTypeId: variant?.adTypeId || "job",
+          variantNumber: variant?.variantNumber,
+          source: variant?.source,
+        }],
+        language: landingPageData?.language || "English",
+      });
+
+      const filled = response?.data?.data?.variants || [];
+      const ai = filled[0];
+
+      if (ai) {
+        const next = {
+          ...editData,
+          title: ai.title ?? editData.title,
+          description: ai.description ?? editData.description,
+          linkDescription: ai.linkDescription ?? editData.linkDescription,
+          callToAction: ai.callToAction ?? editData.callToAction,
+          metaHeadline: ai.metaHeadline ?? editData.metaHeadline,
+          metaDescription: ai.metaDescription ?? editData.metaDescription,
+          quoteText: ai.quoteText ?? editData.quoteText,
+          quoteAuthorName: ai.quoteAuthorName ?? editData.quoteAuthorName,
+          quoteAuthorPosition: ai.quoteAuthorPosition ?? editData.quoteAuthorPosition,
+        };
+        setEditData(next);
+        emitDraft(next);
+        message.success("All text fields regenerated!");
+      } else {
+        throw new Error("No data returned from AI");
+      }
+    } catch (error) {
+      console.error("Regenerate all error:", error);
+      message.error(`Failed to regenerate: ${error.message}`);
+    } finally {
+      setIsRegeneratingAll(false);
+    }
+  }, [lpId, variant, editData, landingPageData?.language, emitDraft]);
+
   // Render magic pencil button for a field
   const renderMagicPencilButton = (field, disabled = false) => {
     const isRegenerating = regeneratingField === field;
@@ -233,6 +288,45 @@ export default function AdVariantCard({
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
             <h3 className="font-semibold text-base text-[#101828]">Edit Variant</h3>
+            {/* AI Generate All Button */}
+            <Tooltip title="Regenerate all text fields with AI">
+              <button
+                type="button"
+                onClick={() => {
+                  Modal.confirm({
+                    title: "Regenerate All Text?",
+                    content: (
+                      <div className="text-sm text-gray-600">
+                        <p className="mb-2">This will regenerate all text fields for this creative using AI.</p>
+                        <p className="text-orange-600 font-medium">⚠️ This will overwrite existing content.</p>
+                      </div>
+                    ),
+                    okText: "Regenerate",
+                    cancelText: "Cancel",
+                    okButtonProps: { className: "bg-[#5207CD] hover:bg-[#4106a3]" },
+                    onOk: regenerateAllFields,
+                  });
+                }}
+                disabled={isRegeneratingAll || !lpId}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors border ${
+                  isRegeneratingAll || !lpId
+                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "text-[#5207CD] bg-[#F3F0FF] hover:bg-[#E4D9FF] border-[#5207CD]/20"
+                }`}
+              >
+                <svg className={`w-3.5 h-3.5 ${isRegeneratingAll ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {isRegeneratingAll ? (
+                    <>
+                      <circle cx="12" cy="12" r="10" strokeWidth="2" strokeOpacity="0.25" />
+                      <path d="M12 2a10 10 0 0 1 10 10" strokeWidth="2" strokeLinecap="round" />
+                    </>
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  )}
+                </svg>
+                {isRegeneratingAll ? "Generating..." : "AI Generate All"}
+              </button>
+            </Tooltip>
           </div>
           <button
             onClick={() => onEdit(null)}
@@ -927,40 +1021,59 @@ export default function AdVariantCard({
     >
       {/* Content Container */}
       <div className="flex gap-3 items-start mb-4">
-        {/* Image Thumbnail - Larger size */}
+        {/* Image/Video Thumbnail - Larger size */}
         <div className="relative w-[100px] h-[100px] flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
-          {variant.image ? (
-            <img
-              src={variant.image}
-              alt={variant.title}
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <div className="flex justify-center items-center w-full h-full text-gray-400">
-              <svg
-                className="w-10 h-10"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          {(() => {
+            // Check if image URL is actually a video
+            const imageIsVideo = variant.image && (isLikelyVideoUrl(variant.image) || String(variant.image).includes("/video/upload/"));
+            const hasVideo = variant.videoUrl || imageIsVideo;
+            const videoSrc = variant.videoUrl || (imageIsVideo ? variant.image : null);
+            const imageSrc = imageIsVideo ? null : variant.image;
+            
+            if (videoSrc) {
+              return (
+                <>
+                  <video
+                    src={videoSrc}
+                    className="object-cover w-full h-full"
+                    muted
+                    loop
+                    autoPlay
+                    playsInline
+                  />
+                  <div className="absolute top-1 right-1 bg-black/60 rounded px-1">
+                    <span className="text-white text-[8px] font-medium">VIDEO</span>
+                  </div>
+                </>
+              );
+            } else if (imageSrc) {
+              return (
+                <img
+                  src={imageSrc}
+                  alt={variant.title}
+                  className="object-cover w-full h-full"
                 />
-              </svg>
-            </div>
-          )}
-          {variant.videoUrl ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 rounded-full bg-black/55 flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="white" aria-hidden="true">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
-            </div>
-          ) : null}
+              );
+            } else {
+              return (
+                <div className="flex justify-center items-center w-full h-full text-gray-400">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+              );
+            }
+          })()}
         </div>
 
         {/* Text Content */}
