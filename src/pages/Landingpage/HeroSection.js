@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { currencies } from "../../data/currencies.js";
 import { Button, Heading, Img, Text } from "../../dhwise-components/index.jsx";
+import { MediaRenderer, isVideoUrl } from "./components";
 import { useHover } from "../../contexts/HoverContext.js";
 import { scrollToElement } from "./scrollUtils.js";
 import { Share2, ArrowRight, X } from "lucide-react";
@@ -877,40 +878,60 @@ const Template1 = ({ landingPageData, fetchData }) => {
               {/* Image Container */}
               <div className="relative mx-auto max-w-3xl shadow-xl">
                <div className="relative">
-                <Image
-                  src={
-                    landingPageData?.heroImage ||
-                    "/dhwise-images/placeholder.png"
-                  }
-                  alt="Project Manager candidate"
-                  className="object-cover  aspect-[200/140] w-full lg:w-[50vw] xl:w-[75vw] xl:mb-0 max-h-[450px] smx:max-h-[300px] rounded-t-[64px] max-w-[684px] mx-auto"
-                  style={{
-                    border: "10px solid transparent" /*2*/,
-
-                    background: `linear-gradient(90deg, ${getColor(
-                      "primary",
-                      800
-                    )}, ${getColor("primary", 950)}) border-box` /*3*/,
-                    mask: `
-                        "linear-gradient(#000 0 0) padding-box", 
-                        "linear-gradient(#000 0 0)",
-                      "mask-composite": "exclude",`,
-                       objectPosition: landingPageData?.imageAdjustment
-                        ?.heroImage?.objectPosition
-                        ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
-                        : "50% 50%",
+                {isVideoUrl(landingPageData?.heroImage) ? (
+                  <video
+                    src={landingPageData?.heroImage}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="object-cover aspect-[200/140] w-full lg:w-[50vw] xl:w-[75vw] xl:mb-0 max-h-[450px] smx:max-h-[300px] rounded-t-[64px] max-w-[684px] mx-auto"
+                    style={{
+                      border: "10px solid transparent",
+                      background: `linear-gradient(90deg, ${getColor(
+                        "primary",
+                        800
+                      )}, ${getColor("primary", 950)}) border-box`,
                       objectFit:
                         landingPageData?.imageAdjustment?.heroImage
                           ?.objectFit || "cover",
-                      transition: "object-position 0.3s ease-in-out",
-                  }}    
-                  width={500}
-                  height={500}
-                  sizes="(max-width: 768px) 100vw, 33vw"	
-                  loading="eager"
-                  fetchPriority="high"
-                />
+                    }}
+                  />
+                ) : (
+                  <Image
+                    src={
+                      landingPageData?.heroImage ||
+                      "/dhwise-images/placeholder.png"
+                    }
+                    alt="Project Manager candidate"
+                    className="object-cover  aspect-[200/140] w-full lg:w-[50vw] xl:w-[75vw] xl:mb-0 max-h-[450px] smx:max-h-[300px] rounded-t-[64px] max-w-[684px] mx-auto"
+                    style={{
+                      border: "10px solid transparent" /*2*/,
 
+                      background: `linear-gradient(90deg, ${getColor(
+                        "primary",
+                        800
+                      )}, ${getColor("primary", 950)}) border-box` /*3*/,
+                      mask: `
+                          "linear-gradient(#000 0 0) padding-box", 
+                          "linear-gradient(#000 0 0)",
+                        "mask-composite": "exclude",`,
+                        objectPosition: landingPageData?.imageAdjustment
+                          ?.heroImage?.objectPosition
+                          ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
+                          : "50% 50%",
+                        objectFit:
+                          landingPageData?.imageAdjustment?.heroImage
+                            ?.objectFit || "cover",
+                        transition: "object-position 0.3s ease-in-out",
+                    }}    
+                    width={500}
+                    height={500}
+                    sizes="(max-width: 768px) 100vw, 33vw"	
+                    loading="eager"
+                    fetchPriority="high"
+                  />
+                )}
                 </div>
 
                 {/* Info Badges - Only visible on medium screens and up */}
@@ -1737,15 +1758,28 @@ const Template2 = ({ landingPageData, fetchData }) => {
               boxShadow: "0px 56px 72px 16px rgba(0,0,0,0.25), 0px 0px 72px 16px rgba(0,0,0,0.15)",
             }}
           >
-            <Image
-              src={landingPageData?.heroImage || "/dhwise-images/placeholder.png"}
-              alt="Hero"
-              className="object-cover w-full h-full"
-              style={{
-                objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
-                  ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
-                  : "50% 50%",
-                objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
+            {isVideoUrl(landingPageData?.heroImage) ? (
+              <video
+                src={landingPageData?.heroImage}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="object-cover w-full h-full"
+                style={{
+                  objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
+                }}
+              />
+            ) : (
+              <Image
+                src={landingPageData?.heroImage || "/dhwise-images/placeholder.png"}
+                alt="Hero"
+                className="object-cover w-full h-full"
+                style={{
+                  objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
+                    ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
+                    : "50% 50%",
+                  objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
               }}
               width={672}
               height={744}
@@ -1753,6 +1787,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
               loading="eager"
               fetchPriority="high"
             />
+            )}
           </div>
 
           {/* Content Container */}
@@ -2080,23 +2115,38 @@ const Template2 = ({ landingPageData, fetchData }) => {
                 boxShadow: "0px 56px 72px 16px rgba(0,0,0,0.4), 0px 0px 72px 16px rgba(0,0,0,0.15)",
               }}
             >
-              <Image
-                src={landingPageData?.heroImage || "/dhwise-images/placeholder.png"}
-                alt="Hero"
-                className="object-cover w-full"
-                style={{
-                  height: "362px",
-                  objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
-                    ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
-                    : "50% 50%",
-                  objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
-                }}
-                width={327}
-                height={362}
-                sizes="100vw"
-                loading="eager"
-                fetchPriority="high"
-              />
+              {isVideoUrl(landingPageData?.heroImage) ? (
+                <video
+                  src={landingPageData?.heroImage}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="object-cover w-full"
+                  style={{
+                    height: "362px",
+                    objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
+                  }}
+                />
+              ) : (
+                <Image
+                  src={landingPageData?.heroImage || "/dhwise-images/placeholder.png"}
+                  alt="Hero"
+                  className="object-cover w-full"
+                  style={{
+                    height: "362px",
+                    objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
+                      ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
+                      : "50% 50%",
+                    objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
+                  }}
+                  width={327}
+                  height={362}
+                  sizes="100vw"
+                  loading="eager"
+                  fetchPriority="high"
+                />
+              )}
             </div>
 
             {/* Bottom Navigation Menu */}

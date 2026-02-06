@@ -86,9 +86,9 @@ const AboutCompanyEdit = (props) => {
           },
           {
             key: "aboutTheCompanyImages",
-            label: "Images (up to 5 images)",
+            label: "Media (up to 5 images/videos)",
             type: "image",
-            accept: "image/*",
+            accept: "image/*,video/*",
             multiple: true,
             maxFiles: 5,
           },
@@ -129,9 +129,9 @@ const LeaderIntroductionEdit = (props) => {
           },
           {
             key: "leaderIntroductionAvatar",
-            label: "Image",
+            label: "Image / Video",
             type: "image",
-            accept: "image/*"
+            accept: "image/*,video/*"
           },
         ]}
       />
@@ -285,9 +285,9 @@ const EVPMissionEdit = (props) => {
           },
           {
             key: "evpMissionAvatar",
-            label: "Image",
+            label: "Image / Video",
             type: "image",
-            accept: "image/*"
+            accept: "image/*,video/*"
           },
         ]}
       />
@@ -349,6 +349,7 @@ const EmployerTestimonialEdit = (props) => {
                 key: "avatar",
                 label: "Image",
                 type: "image",
+                accept: "image/*",
                 toggle: true,
                 toggleKey: "avatarEnabled",
               },
@@ -1172,14 +1173,14 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
               </Collapse.Panel>
             </Collapse>
 
-            {/* Image */}
+            {/* Image / Video */}
             <div
               onMouseEnter={() => setHoveredField("heroImage")}
               onMouseLeave={() => setHoveredField(null)}
               className="flex flex-col col-span-2 gap-2 px-2 mt-5 w-full"
             >
               <label as="p" className="self-start !text-blue_gray-700">
-                Image
+                Image / Video
               </label>
               {/* @ts-ignore */}
               <ImageUploader
@@ -1187,6 +1188,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                 imageAdjustments={landingPageData?.imageAdjustment || {}}
                 fieldKey="heroImage"
                 isSettingDisabled={false}
+                accept="image/*,video/*"
                 onImageUpload={(url) => {
                   handleChange("heroImage", url);
                   document.dispatchEvent(new CustomEvent("HANDLE.CHANGED"));
@@ -1201,7 +1203,7 @@ const HeroSectionEdit = ({ landingPageData, setLandingPageData }) => {
                   }));
                   document.dispatchEvent(new CustomEvent("HANDLE.CHANGED"));
                 }}
-                allowedTabs={["image"]}
+                allowedTabs={["all", "image", "video"]}
               />
             </div>
           </div>
@@ -1236,9 +1238,9 @@ const JobDescriptionEdit = (props) => {
           },
           {
             key: "jobDescriptionImage",
-            label: "Image",
+            label: "Image / Video",
             type: "image",
-            accept: "image/*"
+            accept: "image/*,video/*"
           },
         ]}
       />
@@ -1429,9 +1431,9 @@ const PhotosEdit = (props) => {
           },
           {
             key: "photoImages",
-            label: "Images (up to 12 images)",
+            label: "Media (up to 12 images/videos)",
             type: "image",
-            accept: "image/*",
+            accept: "image/*,video/*",
             multiple: true,
             maxFiles: 12,
           },
@@ -1510,7 +1512,7 @@ const RecruiterContactEdit = (props) => {
                 key: "recruiterAvatar",
                 label: "Image",
                 type: "image",
-
+                accept: "image/*",
                 // ref: setFocusRef("recruiterAvatar"),
               },
             ].map((item, dx) => {
@@ -1553,8 +1555,9 @@ const TextBoxEdit = (props) => {
           },
           {
             key: "textBoxImage",
-            label: "Image",
+            label: "Image / Video",
             type: "image",
+            accept: "image/*,video/*",
           },
         ]}
       />

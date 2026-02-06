@@ -1,5 +1,5 @@
 import React, { useRef, useLayoutEffect, useEffect, useState } from "react";
-import { Heading, Img, Slider, Text } from "./components";
+import { Heading, Img, Slider, Text, MediaRenderer, isVideoUrl } from "./components";
 import placholder from "../../assets/img/placeholder.png";
 import { useHover } from "../../contexts/HoverContext";
 import { useFocusContext } from "../../contexts/FocusContext";

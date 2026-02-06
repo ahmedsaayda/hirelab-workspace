@@ -242,9 +242,9 @@ const EditorRenderArray = React.memo(({
                         setLandingPageData(url, a.key);
                         setChanged(true);
                       }}
-                      accept={isVideoSection ? "video/*" : "image/*"}
-                      type={isVideoSection ? "video" : "image"}
-                      allowedTabs={isVideoSection ? ["video"] : ["image"]}
+                      accept={a.accept || (isVideoSection ? "video/*" : "image/*,video/*")}
+                      type={isVideoSection ? "video" : "all"}
+                      allowedTabs={isVideoSection ? ["video"] : ["all", "image", "video"]}
                     />
                   )}
                 </>

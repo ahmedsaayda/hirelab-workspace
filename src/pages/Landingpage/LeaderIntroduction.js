@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Heading, Img, Text } from "./components";
+import { Heading, Img, Text, MediaRenderer, isVideoUrl } from "./components";
 import { useHover } from "../../contexts/HoverContext";
 import { useFocusContext } from "../../contexts/FocusContext";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
@@ -383,7 +383,7 @@ const Template2 = ({ data }) => {
               zIndex: 1,
             }}
           >
-            <Img
+            <MediaRenderer
               src={data?.leaderIntroductionAvatar || "/dhwise-images/placeholder.png"}
               alt={data?.leaderIntroductionFullname || "CEO"}
               className="w-full h-full object-cover"
@@ -414,7 +414,7 @@ const Template2 = ({ data }) => {
               borderRadius: "24px",
             }}
           >
-            <Img
+            <MediaRenderer
               src={data?.leaderIntroductionAvatar || "/dhwise-images/placeholder.png"}
               alt={data?.leaderIntroductionFullname || "CEO"}
               className="w-full h-full object-cover"
@@ -669,7 +669,7 @@ const Template1 = ({ data }) => {
               >
                 {/* Main Image */}
                 <div className="overflow-hidden absolute inset-0 rounded-3xl">
-                  <Img
+                  <MediaRenderer
                     src={
                       data?.leaderIntroductionAvatar ||
                       "/dhwise-images/placeholder.png"

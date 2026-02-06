@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button, Heading, Img, Text } from "./components";
+import { Button, Heading, Img, Text, MediaRenderer, isVideoUrl } from "./components";
 import { motion } from "framer-motion";
 import { useHover } from "../../contexts/HoverContext";
 import { useFocusContext } from "../../contexts/FocusContext";
@@ -99,7 +99,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                 transition={{ duration: 0.5 }}
                 className="h-[326px] w-[42%] rounded overflow-hidden mdx:w-full"
               >
-                <Img
+                <MediaRenderer
                   src={currentImage}
                   alt={`Company Image ${currentImageIndex + 1}`}
                   className="w-full h-full rounded"
@@ -229,7 +229,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                 transition={{ duration: 0.5 }}
                 className="h-[326px] w-[42%] rounded overflow-hidden mdx:w-full"
               >
-                <Img
+                <MediaRenderer
                   src={currentImage}
                   alt={`Company Image ${currentImageIndex + 1}`}
                   className="w-full h-full rounded"
@@ -547,7 +547,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       height: "400px",
                     }}
                   >
-                    <Img
+                    <MediaRenderer
                       src={imageUrl}
                       alt={`Company Image ${index + 1}`}
                       className="rounded"

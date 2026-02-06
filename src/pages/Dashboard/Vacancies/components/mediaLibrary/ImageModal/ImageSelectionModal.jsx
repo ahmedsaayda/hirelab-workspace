@@ -29,7 +29,7 @@ const ImageSelectionModal = ({
   existingFiles = [],
   multiple,
   maxFiles,
-  accept = "image/*",
+  accept = "image/*,video/*",
   type = "all",
   autosave = false,
   currentSectionLimits = Infinity,
@@ -494,16 +494,36 @@ const ImageSelectionModal = ({
   };
 
 
+  // Helper to check if URL is a video
+  const isVideoUrl = (url) => {
+    if (!url || typeof url !== "string") return false;
+    const videoExtensions = [".mp4", ".webm", ".mov", ".avi", ".mkv", ".m4v", ".ogv"];
+    const lowercaseUrl = url.toLowerCase();
+    if (videoExtensions.some((ext) => lowercaseUrl.includes(ext))) return true;
+    if (lowercaseUrl.includes("/video/upload/")) return true;
+    if (lowercaseUrl.includes("resource_type=video")) return true;
+    return false;
+  };
+
   const renderPreview = (file) => (
     <div key={file.url} className="flex items-center p-2 mb-2 bg-white rounded border">
-      <img
-        src={file.url}
-        alt="Preview"
-        className="object-cover mr-2 w-10 h-10 rounded sm:w-12 sm:h-12 sm:mr-3"
-        onError={(e) => {
-          (e.target).style.display = "none";
-        }}
-      />
+      {isVideoUrl(file.url) ? (
+        <video
+          src={file.url}
+          className="object-cover mr-2 w-10 h-10 rounded sm:w-12 sm:h-12 sm:mr-3"
+          muted
+          playsInline
+        />
+      ) : (
+        <img
+          src={file.url}
+          alt="Preview"
+          className="object-cover mr-2 w-10 h-10 rounded sm:w-12 sm:h-12 sm:mr-3"
+          onError={(e) => {
+            (e.target).style.display = "none";
+          }}
+        />
+      )}
       <div className="flex-1 min-w-0">
         <p className="text-xs truncate sm:text-sm">
           {file.url.split("/").pop()?.split("?")[0]}
@@ -674,7 +694,7 @@ const ImageSelectionModal = ({
                         disabled={isUploading || files.length === 0}
                         className="flex-shrink-0 px-4 py-2 w-full text-white bg-blue-500 rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 lg:w-auto"
                       >
-                        {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : "Video"}`}
+                        {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : type === "video" ? "Video" : "Media"}`}
                       </button>
                     </div>
                   )}
@@ -768,10 +788,10 @@ const ImageSelectionModal = ({
 
             {activeOption === "link" && (
               <div className="flex flex-col p-4 mx-auto space-y-4 max-w-md">
-                <h4 className="mb-4 text-lg font-medium">Add {type === "video" ? "Video" : "Image"} from URL</h4>
+                <h4 className="mb-4 text-lg font-medium">Add {type === "video" ? "Video" : type === "image" ? "Image" : "Media"} from URL</h4>
                 <input
                   type="text"
-                  placeholder={`https://example.com/${type === "video" ? "video.mp4" : "image.jpg"}`}
+                  placeholder={`https://example.com/${type === "video" ? "video.mp4" : type === "image" ? "image.jpg" : "media.jpg"}`}
                   className="px-4 py-2 w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onChange={(e) => setLinkValue(e.target.value)}
                   value={linkValue}
@@ -780,7 +800,7 @@ const ImageSelectionModal = ({
                   className="px-4 py-2 w-full text-white bg-blue-500 rounded hover:bg-blue-600 sm:w-auto"
                   onClick={handleLinkAdd}
                 >
-                  Add {type === "video" ? "Video" : "Image"}
+                  Add {type === "video" ? "Video" : type === "image" ? "Image" : "Media"}
                 </button>
               </div>
             )}
@@ -831,7 +851,7 @@ const ImageSelectionModal = ({
                         disabled={isUploading || files.length === 0}
                         className="flex-shrink-0 px-4 py-2 w-full text-white bg-blue-500 rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 lg:w-auto"
                       >
-                        {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : "Video"}`}
+                        {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : type === "video" ? "Video" : "Media"}`}
                       </button>
                     </div>
                   )}

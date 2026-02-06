@@ -22,6 +22,17 @@ import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import ImageSelectionModal from "../Dashboard/Vacancies/components/mediaLibrary/ImageModal/ImageSelectionModal.jsx";
 import { message } from "antd";
 
+// Helper function to determine if a URL points to a video file
+const isVideoFile = (url) => {
+  if (!url || typeof url !== "string") return false;
+  const videoExtensions = [".mp4", ".webm", ".mov", ".avi", ".mkv", ".m4v", ".ogv"];
+  const lowercaseUrl = url.toLowerCase();
+  if (videoExtensions.some((ext) => lowercaseUrl.includes(ext))) return true;
+  if (lowercaseUrl.includes("/video/upload/")) return true;
+  if (lowercaseUrl.includes("resource_type=video")) return true;
+  return false;
+};
+
 const ImageUploader = ({
   onImageUpload,
   accept = "image/*",
@@ -60,8 +71,12 @@ const ImageUploader = ({
   const [isImageOpen, setIsImageOpen] = useState(false);
   const uploadRef = useRef();
 
-  // Force type based on accept prop
-  const mediaType = accept.includes("video") ? "video" : "image";
+  // Force type based on accept prop - "all" when both image and video are accepted
+  const mediaType = accept.includes("video") && accept.includes("image") 
+    ? "all" 
+    : accept.includes("video") 
+      ? "video" 
+      : "image";
 
   // Calculate uploads left
   const uploadsLeft = multiple
@@ -473,9 +488,9 @@ const ImageUploader = ({
 
           <div
             className={`flex-shrink-0 overflow-hidden rounded aspect-square flex items-center justify-center
-            ${url?.includes("video") ? "w-32" : "w-24"}`}
+            ${isVideoFile(url) ? "w-32" : "w-24"}`}
           >
-            {url?.includes("video") ? (
+            {isVideoFile(url) ? (
               <video
                 src={url}
                 controls

@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef } from "react";
-import { Heading, Img, Text } from "./components";
+import { Heading, Img, Text, MediaRenderer, isVideoUrl } from "./components";
 
 import { useHover } from "../../contexts/HoverContext";
 import { useFocusContext } from "../../contexts/FocusContext";
@@ -87,15 +87,12 @@ const Template1 = ({ landingPageData, fetchData }) => {
           <div className="flex justify-center items-start px-14 w-full mdx:flex-col mdx:px-5">
             <div className="relative w-[58%] mdx:w-full">
               <div className="flex w-[76%] flex-col items-start gap-6">
-                {landingPageData?.textBoxImage || (
-                  <Img
-                    src={landingPageData?.textBoxImage || "https://res.cloudinary.com/dvq0ouupb/image/upload/v1742810526/f8adpqdf3bhfp3bqgauk.png"}
-                    alt="Ceo Image"
-                    className="h-[344px] w-full self-end rounded object-contain mdx:w-full mdx:self-auto"
-                    onClick={() => handleItemClick("textBoxImage")}
-                    ref={imageRef}
-                  />
-                )}
+                  <MediaRenderer
+                  src={landingPageData?.textBoxImage || "https://res.cloudinary.com/dvq0ouupb/image/upload/v1742810526/f8adpqdf3bhfp3bqgauk.png"}
+                  alt="Text Box Media"
+                  className="h-[344px] w-full self-end rounded object-contain mdx:w-full mdx:self-auto"
+                  onClick={() => handleItemClick("textBoxImage")}
+                />
                 <h2
                   onClick={() => handleItemClick("textBoxTitle")}
                   ref={titleRef}
@@ -238,15 +235,14 @@ const Template3 = ({ landingPageData, fetchData }) => {
       <div className="relative aspect-[1/1] w-full h-full">
         {/* Main Image with clip-path */}
         <div className="overflow-hidden absolute inset-0 rounded-3xl">
-                      <Img
+                      <MediaRenderer
                         src={
                           landingPageData?.textBoxImage ||
                           "/dhwise-images/placeholder.png"
                         }
-                        alt="Ceo Image"
+                        alt="Text Box Media"
                         className="clip-path object-cover w-full h-full"
                         onClick={() => handleItemClick("textBoxImage")}
-                        ref={imageRef}
                         style={{
                           objectPosition: landingPageData?.imageAdjustment?.textBoxImage?.objectPosition
                             ? `${landingPageData.imageAdjustment.textBoxImage.objectPosition.x}% ${landingPageData.imageAdjustment.textBoxImage.objectPosition.y}%`

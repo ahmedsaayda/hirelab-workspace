@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button, Heading, Img, Text } from "./components/index.jsx";
+import { Button, Heading, Img, Text, MediaRenderer, isVideoUrl } from "./components/index.jsx";
 import { getThemeData } from "../../utils/destructureTheme.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import { useHover } from "../../contexts/HoverContext.js";
@@ -267,7 +267,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
             }}
           >
             <div className="w-full h-full overflow-hidden rounded-[12px]">
-              <Img
+              <MediaRenderer
                 src={landingPageData?.jobDescriptionImage || "/dhwise-images/placeholder.png"}
                 alt="Job Description"
                 className="w-full h-full object-cover"
@@ -303,7 +303,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
             }}
           >
             <div className="w-full aspect-square overflow-hidden rounded-[12px]">
-              <Img
+              <MediaRenderer
                 src={landingPageData?.jobDescriptionImage || "/dhwise-images/placeholder.png"}
                 alt="Job Description"
                 className="w-full h-full object-cover"
@@ -602,7 +602,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
                 {/* Main Image */}
                 <div className="overflow-hidden absolute inset-0 rounded-3xl">
-                  <Img
+                  <MediaRenderer
                     src={
                       landingPageData?.jobDescriptionImage ||
                       "/dhwise-images/placeholder.png"
