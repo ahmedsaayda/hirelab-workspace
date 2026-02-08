@@ -410,12 +410,17 @@ export default function Header({
               </div>
             )}
           </div>
-          <Switch
-            className="ml-3.5"
-            size="small"
-            checked={landingPageData?.published}
-            onChange={(e) => setPublished(e)}
-          />
+{
+  !isAdsEditor && (
+    <Switch
+    className="ml-3.5"
+    size="small"
+    checked={landingPageData?.published}
+    onChange={(e) => setPublished(e)}
+  />
+  )
+}
+  
           {!hideSettings &&
             <Img
             src="/images/settings-02.svg"

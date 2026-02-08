@@ -1034,29 +1034,53 @@ Respond with json that adheres to the following jsonschema:
   };
 
   const onDuplicate = async (landingPage) => {
-    try {
-      // Use dedicated ATS service to duplicate landing page including stages
-      const res = await ATSService.duplicateLandingPage({
-        landingPageId: landingPage._id,
-      });
+    // Check if this landing page has ads
+    const hasAds = landingPage?.ads && Object.keys(landingPage.ads || {}).some(
+      (k) => !k.startsWith("_") && landingPage.ads[k]?.variants?.length > 0
+    );
 
-      antdmessage.success("Vacancy duplicated successfully");
+    const doDuplicate = async () => {
+      try {
+        // Use dedicated ATS service to duplicate landing page including stages
+        const res = await ATSService.duplicateLandingPage({
+          landingPageId: landingPage._id,
+        });
 
-      // Refresh list and user usage
-      await fetchData();
-      await refreshUserData();
+        antdmessage.success("Vacancy duplicated successfully" + (hasAds ? " (ads were not copied)" : ""));
 
-      // Navigate directly to the editor for the new copy
-      const newId = res?.data?.landingPage?._id;
-      if (newId) {
-        router.push(`/edit-page/${newId}`);
+        // Refresh list and user usage
+        await fetchData();
+        await refreshUserData();
+
+        // Navigate directly to the editor for the new copy
+        const newId = res?.data?.landingPage?._id;
+        if (newId) {
+          router.push(`/edit-page/${newId}`);
+        }
+      } catch (error) {
+        console.error("Error duplicating vacancy:", error);
+        antdmessage.error(
+          error?.response?.data?.message ||
+          "Failed to duplicate vacancy. Please try again."
+        );
       }
-    } catch (error) {
-      console.error("Error duplicating vacancy:", error);
-      antdmessage.error(
-        error?.response?.data?.message ||
-        "Failed to duplicate vacancy. Please try again."
-      );
+    };
+
+    if (hasAds) {
+      Modal.confirm({
+        title: "Duplicate funnel",
+        content: (
+          <div className="text-sm text-gray-600">
+            <p>Ad creatives and Meta ad campaigns will <strong>not</strong> be copied to the new funnel.</p>
+            <p className="mt-2 text-gray-500">You'll need to create new ads for the duplicated funnel.</p>
+          </div>
+        ),
+        okText: "Duplicate",
+        cancelText: "Cancel",
+        onOk: doDuplicate,
+      });
+    } else {
+      await doDuplicate();
     }
   };
 

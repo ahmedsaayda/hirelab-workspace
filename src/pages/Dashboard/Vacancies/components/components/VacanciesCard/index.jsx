@@ -1,5 +1,5 @@
 import { MegaphoneIcon } from "@heroicons/react/20/solid";
-import { Button, Dropdown, Popconfirm, Switch, message } from "antd";
+import { Button, Dropdown, Popconfirm, Switch, Modal, message } from "antd";
 import React, { useState } from "react";
 import { IoIosMegaphone } from "react-icons/io";
 import { IoMegaphoneSharp } from "react-icons/io5";
@@ -177,9 +177,64 @@ export default function VacanciesCard({
                   key: "99",
                   label: <div>Delete</div>,
                   danger: true,
-                  onClick: async () => {
-                    await CrudService.delete("LandingPageData", record._id);
-                    await fetchData();
+                  onClick: () => {
+                    // Check if this landing page has ads data (could have active Meta campaigns)
+                    const hasAds = record?.ads && Object.keys(record.ads || {}).some(
+                      (k) => !k.startsWith("_") && record.ads[k]?.variants?.length > 0
+                    );
+                    const hasPublishedAds = record?.ads?._adSets?.some(
+                      (s) => s?.metaAdSetId || s?.metaCampaignId
+                    ) || record?.ads?._publish?.campaignId;
+
+                    if (hasPublishedAds) {
+                      Modal.confirm({
+                        title: "⚠️ This funnel has published Meta ads",
+                        content: (
+                          <div className="text-sm text-gray-600">
+                            <p className="mb-2">
+                              Deleting this funnel will also <strong>delete the associated Meta ad campaigns</strong>.
+                            </p>
+                            <p className="text-orange-600 font-medium">
+                              All running ads will be stopped and removed from Meta.
+                            </p>
+                          </div>
+                        ),
+                        okText: "Delete Funnel & Ads",
+                        okType: "danger",
+                        cancelText: "Cancel",
+                        onOk: async () => {
+                          await CrudService.delete("LandingPageData", record._id);
+                          await fetchData();
+                          message.success("Funnel and associated Meta campaigns deleted");
+                        },
+                      });
+                    } else if (hasAds) {
+                      Modal.confirm({
+                        title: "Delete funnel with ad creatives?",
+                        content: "This funnel has ad creatives. They will be permanently deleted.",
+                        okText: "Delete",
+                        okType: "danger",
+                        cancelText: "Cancel",
+                        onOk: async () => {
+                          await CrudService.delete("LandingPageData", record._id);
+                          await fetchData();
+                          message.success("Funnel deleted");
+                        },
+                      });
+                    } else {
+                      Modal.confirm({
+                        title: "Delete funnel?",
+                        content: "This action cannot be undone.",
+                        okText: "Delete",
+                        okType: "danger",
+                        cancelText: "Cancel",
+                        onOk: async () => {
+                          await CrudService.delete("LandingPageData", record._id);
+                          await fetchData();
+                          message.success("Funnel deleted");
+                        },
+                      });
+                    }
                   },
                 },
               ].filter((a) => !a?.hide),
