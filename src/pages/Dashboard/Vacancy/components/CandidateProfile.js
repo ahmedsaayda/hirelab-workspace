@@ -1246,13 +1246,7 @@ const CandidateProfile = ({
           </div>
         </div>
 
-        {candidate.form?.description && (
-          <div className="mb-6 p-4  rounded-lg border border-indigo-100">
-            <Text className="text-indigo-700 text-sm">
-              {candidate.form.description}
-            </Text>
-          </div>
-        )}
+
 
         <div className="space-y-4">
           {formAnswers.map((item, index) => (
