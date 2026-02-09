@@ -87,7 +87,7 @@ const TemplateManagement = () => {
         templateId: values.templateId,
         name: values.name,
         description: values.description,
-        previewImage: previewUrl || values.previewImage,
+        previewImage: previewUrl || "",
         formats: {
           story: values.storyId,
           portrait: values.portraitId,

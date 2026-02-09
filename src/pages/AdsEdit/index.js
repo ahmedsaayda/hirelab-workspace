@@ -1903,7 +1903,7 @@ export default function AdsEdit({ paramsId }) {
 
   // Handle selection from variant picker modal
   // GLOBAL template selection - applies to ALL creatives in the ad set
-  const handleVariantPickerSelect = (templateSelection) => {
+  const handleVariantPickerSelect = async (templateSelection) => {
     if (!adsData || !templateSelection) return;
 
     const { templateNumber, templateId, templateName, mediaType } = templateSelection;
@@ -1922,7 +1922,16 @@ export default function AdsEdit({ paramsId }) {
     const nextData = updateVariantsInData(updatedVariants);
     setAdsData(nextData);
     setTemplateChangeVariant(null);
-    message.success(`Template "${templateName}" applied to all creatives`);
+
+    // Save to backend
+    try {
+      await AdsService.saveAds(lpId, nextData);
+      lastSavedAdsHashRef.current = serializeAdsData(nextData);
+      message.success(`Template "${templateName}" applied to all creatives`);
+    } catch (err) {
+      console.error("Failed to save template change:", err);
+      message.success(`Template "${templateName}" applied locally (save failed)`);
+    }
   };
 
   // Handle approve all – now also prepares Cloudinary images for launch (but does NOT publish)
