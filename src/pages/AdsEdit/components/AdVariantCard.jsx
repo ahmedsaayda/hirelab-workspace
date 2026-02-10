@@ -699,8 +699,8 @@ export default function AdVariantCard({
                 <label className="text-xs font-medium text-[#344054]">Headline</label>
                 {renderMagicPencilButton("title")}
               </div>
-              <span className={`text-xs ${editData.title.length > 40 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
-                {editData.title.length}/40
+              <span className={`text-xs ${editData.title.length > 35 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                {editData.title.length}/35
               </span>
             </div>
             <TextArea
@@ -710,7 +710,7 @@ export default function AdVariantCard({
                 setEditData(next);
                 emitDraft(next);
               }}
-              maxLength={40}
+              maxLength={35}
               rows={2}
               className="text-sm"
               placeholder="Enter headline for image overlay..."
@@ -804,8 +804,8 @@ export default function AdVariantCard({
                   <label className="text-xs font-medium text-[#344054]">Subheadline</label>
                   {renderMagicPencilButton("linkDescription")}
                 </div>
-                <span className={`text-xs ${editData.linkDescription.length > 30 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
-                  {editData.linkDescription.length}/30
+                <span className={`text-xs ${editData.linkDescription.length > 85 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                  {editData.linkDescription.length}/85
                 </span>
               </div>
               <TextArea
@@ -815,7 +815,7 @@ export default function AdVariantCard({
                   setEditData(next);
                   emitDraft(next);
                 }}
-                maxLength={30}
+                maxLength={85}
                 rows={2}
                 className="text-sm"
                 placeholder="Enter subheadline..."

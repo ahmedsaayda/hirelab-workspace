@@ -4,9 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 const TRANSPARENT_PNG =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
 
-// Meta constraints
-const MAX_HEADLINE_LENGTH = 40;
-const MAX_DESC_LENGTH = 30;
+// Overlay text constraints
+const MAX_HEADLINE_LENGTH = 35;
+const MAX_DESC_LENGTH = 85;
 const OPTIMAL_PRIMARY_TEXT_LENGTH = 125;
 
 // Helper to strip placeholder boilerplate like "[Insert ...]" and "Example:"
@@ -318,7 +318,7 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
   return {
     title: finalTitle,
     description: finalDescription,
-    linkDescription: linkDescription.slice(0, 30),
+    linkDescription: linkDescription.slice(0, 85),
     cta: finalCta,
     source,
     metaHeadline: metaHeadline.slice(0, 40),
