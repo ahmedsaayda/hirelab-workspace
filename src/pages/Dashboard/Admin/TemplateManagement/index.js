@@ -96,6 +96,11 @@ const TemplateManagement = () => {
         mediaType: values.mediaType,
         order: values.order || 0,
         isActive: values.isActive !== false,
+        dynamicColors: {
+          headlineFillColor: values.dynamicHeadlineColor !== false,
+          subheadlineFillColor: values.dynamicSubheadlineColor !== false,
+          ctaBackgroundColor: values.dynamicCtaColor !== false,
+        },
       };
 
       if (editingTemplate) {
@@ -186,6 +191,9 @@ const TemplateManagement = () => {
       mediaType: template.mediaType,
       order: template.order,
       isActive: template.isActive,
+      dynamicHeadlineColor: template.dynamicColors?.headlineFillColor !== false,
+      dynamicSubheadlineColor: template.dynamicColors?.subheadlineFillColor !== false,
+      dynamicCtaColor: template.dynamicColors?.ctaBackgroundColor !== false,
     });
     setIsModalVisible(true);
   };
@@ -199,6 +207,9 @@ const TemplateManagement = () => {
       mediaType: "both",
       order: templates.length,
       isActive: true,
+      dynamicHeadlineColor: true,
+      dynamicSubheadlineColor: true,
+      dynamicCtaColor: true,
     });
     setIsModalVisible(true);
   };
@@ -512,6 +523,44 @@ const TemplateManagement = () => {
                 className="mb-0"
               >
                 <Input placeholder="Creatomate template ID for square format" className="font-mono text-sm" />
+              </Form.Item>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 p-4 rounded-lg mb-4">
+            <h4 className="font-medium mb-3 text-blue-700">Dynamic Color Variables</h4>
+            <p className="text-xs text-blue-600 mb-3">
+              When enabled, the color is set dynamically from the user's brand colors. When disabled, the template's built-in color is used.
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              <Form.Item
+                name="dynamicHeadlineColor"
+                label={<span className="text-xs">Headline Fill Color</span>}
+                valuePropName="checked"
+                initialValue={true}
+                className="mb-0"
+              >
+                <Switch size="small" />
+              </Form.Item>
+
+              <Form.Item
+                name="dynamicSubheadlineColor"
+                label={<span className="text-xs">Subheadline Fill Color</span>}
+                valuePropName="checked"
+                initialValue={true}
+                className="mb-0"
+              >
+                <Switch size="small" />
+              </Form.Item>
+
+              <Form.Item
+                name="dynamicCtaColor"
+                label={<span className="text-xs">CTA Background Color</span>}
+                valuePropName="checked"
+                initialValue={true}
+                className="mb-0"
+              >
+                <Switch size="small" />
               </Form.Item>
             </div>
           </div>

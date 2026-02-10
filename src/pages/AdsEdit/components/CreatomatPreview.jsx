@@ -43,7 +43,10 @@ async function fetchTemplates() {
     if (dbTemplates && dbTemplates.length > 0) {
       const templates = {};
       for (const t of dbTemplates) {
-        templates[t.templateId] = t.formats;
+        templates[t.templateId] = {
+          ...t.formats,
+          dynamicColors: t.dynamicColors || { headlineFillColor: true, subheadlineFillColor: true, ctaBackgroundColor: true },
+        };
       }
       templatesCache = templates;
       templatesCacheTime = now;
@@ -254,7 +257,10 @@ export default function CreatomatPreview({
     const templateSet = templates[templateName] || templates.clarity || FALLBACK_TEMPLATES.clarity;
     const templateId = templateSet[format] || templateSet.square;
 
-    // Build modifications for Clarity template
+    // Get dynamic color settings from template (default: all dynamic)
+    const dynamicColors = templateSet.dynamicColors || { headlineFillColor: true, subheadlineFillColor: true, ctaBackgroundColor: true };
+
+    // Build modifications - only include color overrides if the template marks them as dynamic
     const modifications = {
       "Background.source": backgroundSource || "",
       "Background.x_alignment": `${bgX}%`,
@@ -265,13 +271,13 @@ export default function CreatomatPreview({
       "LogoBackground.width": logoWidths.logoBackgroundWidth,
       "Headline.text": title,
       "Headline.font_family": fontFamily,
-      "Headline.fill_color": primaryColor,
+      ...(dynamicColors.headlineFillColor !== false && { "Headline.fill_color": primaryColor }),
       "Subheadline.text": linkDescription,
       "Subheadline.font_family": fontFamily,
-      "Subheadline.fill_color": primaryColor,
+      ...(dynamicColors.subheadlineFillColor !== false && { "Subheadline.fill_color": primaryColor }),
       "CTA.text": ctaText,
       "CTA.font_family": fontFamily,
-      "CTA.background_color": secondaryColor,
+      ...(dynamicColors.ctaBackgroundColor !== false && { "CTA.background_color": secondaryColor }),
     };
 
     try {
@@ -381,6 +387,10 @@ export default function CreatomatPreview({
   useEffect(() => {
     if (!previewRef.current || isLoading || error) return;
 
+    // Get dynamic color settings from current template
+    const templateSet = templates[templateName] || templates.clarity || FALLBACK_TEMPLATES.clarity;
+    const dynamicColorsUpdate = templateSet.dynamicColors || { headlineFillColor: true, subheadlineFillColor: true, ctaBackgroundColor: true };
+
     const modifications = {
       "Background.source": backgroundSource || "",
       "Background.x_alignment": `${bgX}%`,
@@ -391,13 +401,13 @@ export default function CreatomatPreview({
       "LogoBackground.width": logoWidths.logoBackgroundWidth,
       "Headline.text": title,
       "Headline.font_family": fontFamily,
-      "Headline.fill_color": primaryColor,
+      ...(dynamicColorsUpdate.headlineFillColor !== false && { "Headline.fill_color": primaryColor }),
       "Subheadline.text": linkDescription,
       "Subheadline.font_family": fontFamily,
-      "Subheadline.fill_color": primaryColor,
+      ...(dynamicColorsUpdate.subheadlineFillColor !== false && { "Subheadline.fill_color": primaryColor }),
       "CTA.text": ctaText,
       "CTA.font_family": fontFamily,
-      "CTA.background_color": secondaryColor,
+      ...(dynamicColorsUpdate.ctaBackgroundColor !== false && { "CTA.background_color": secondaryColor }),
     };
 
     previewRef.current.setModifications(modifications)
