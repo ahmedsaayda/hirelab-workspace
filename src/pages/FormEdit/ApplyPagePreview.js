@@ -537,7 +537,8 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
         if (currentField.firstName?.required && !formData[`${currentField.id}_firstName`]?.trim()) hasError = true;
         if (currentField.lastName?.required && !formData[`${currentField.id}_lastName`]?.trim()) hasError = true;
         if (currentField.email?.required && !formData[`${currentField.id}_email`]?.trim()) hasError = true;
-        if (currentField.phone?.required && !formData[`${currentField.id}_phone`]?.trim()) hasError = true;
+        // Phone is ALWAYS required when visible (regardless of stored required flag)
+        if (currentField.phone?.visible !== false && !formData[`${currentField.id}_phone`]?.trim()) hasError = true;
 
         if (hasError) {
           message.warning('Please fill in all required contact fields');
@@ -693,7 +694,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
               <div>
                 <label className="block mb-1 font-semibold text-xs text-gray-600">
                   {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
-                  {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
+                  <span className="ml-1 text-red-500">*</span>
                 </label>
                 <Input
                   type="tel"
@@ -850,7 +851,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
               <div>
                 <label className="block mb-1 font-semibold text-sm">
                   {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
-                  {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
+                  <span className="ml-1 text-red-500">*</span>
                 </label>
                 <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                   <CustomInput

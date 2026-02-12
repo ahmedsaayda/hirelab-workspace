@@ -991,7 +991,8 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
             return;
           }
         }
-        if (currentField.phone?.required && !phoneValue?.trim()) {
+        // Phone is ALWAYS required when visible (regardless of stored required flag)
+        if (currentField.phone?.visible !== false && !phoneValue?.trim()) {
           message.warning(currentField.phone?.label ? `${currentField.phone.label} is required` : 'Phone is required');
           return;
         }
@@ -1332,7 +1333,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
               <div>
                 <label className="block mb-1 font-semibold text-xs text-gray-600">
                   {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
-                  {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
+                  <span className="ml-1 text-red-500">*</span>
                 </label>
                 <Input
                   type="tel"
@@ -1512,7 +1513,7 @@ export default function ApplyPage({ defaultLandingPageData = null }) {
               <div>
                 <label className="block mb-1 font-semibold text-sm">
                   {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
-                  {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
+                  <span className="ml-1 text-red-500">*</span>
                 </label>
                 <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                   <CustomInput
