@@ -304,7 +304,8 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
   const finalTitle = truncateByWords(title, MAX_HEADLINE_LENGTH);
   // Primary text can be long, but keep it within Meta limits
   const finalDescription = String(description || "").slice(0, 2200);
-  const finalCta = (cta === "Learn More" || cta === "Apply Now") ? cta : "Learn More";
+  // Creative overlay CTA - free text (max 35 chars)
+  const finalCta = String(cta || "Apply Now").slice(0, 35);
 
   // Generate subheadline for image overlay (short, punchy)
   const linkDescription = location ? `${location}` : (company ? `Join ${company}` : "");
@@ -315,6 +316,9 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
   // metaDescription: should describe the opportunity, NOT just the location
   const metaDescription = vacancy ? `Apply for ${vacancy}` : `Exciting opportunity awaits`;
 
+  // Meta CTA - fixed dropdown value (Apply Now / Learn More)
+  const metaCTA = (cta === "Learn More") ? "Learn More" : "Apply Now";
+
   return {
     title: finalTitle,
     description: finalDescription,
@@ -323,6 +327,7 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
     source,
     metaHeadline: metaHeadline.slice(0, 40),
     metaDescription: metaDescription.slice(0, 30),
+    metaCTA,
   };
 };
 

@@ -52,6 +52,7 @@ export default function AdVariantCard({
     description: variant?.description || "", // Meta Primary Text (2200, hook 125)
     metaHeadline: variant?.metaHeadline || "", // Meta Headline (40)
     metaDescription: variant?.metaDescription || "", // Meta Description (30)
+    metaCTA: variant?.metaCTA || "Apply Now", // Meta CTA (Apply Now / Learn More)
     // Media
     image: variant?.image || "",
     videoUrl: variant?.videoUrl || "",
@@ -825,29 +826,23 @@ export default function AdVariantCard({
 
           {/* CTA */}
           <div>
-            <label className="text-xs font-medium text-[#344054] block mb-1.5">Call to Action</label>
-            <div className="flex gap-2">
-              {["Apply Now", "Learn More"].map((cta) => {
-                const active = editData.callToAction === cta;
-                return (
-                  <button
-                    key={cta}
-                    type="button"
-                    onClick={() => {
-                      const next = { ...editData, callToAction: cta };
-                      setEditData(next);
-                      emitDraft(next);
-                    }}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${active
-                      ? "bg-[#5207CD] text-white border-[#5207CD]"
-                      : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
-                      }`}
-                  >
-                    {cta}
-                  </button>
-                );
-              })}
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="text-xs font-medium text-[#344054]">Call to Action</label>
+              <span className={`text-xs ${(editData.callToAction?.length || 0) > 35 ? "text-amber-600 font-medium" : "text-[#667085]"}`}>
+                {editData.callToAction?.length || 0}/35
+              </span>
             </div>
+            <Input
+              value={editData.callToAction || ""}
+              onChange={(e) => {
+                const next = { ...editData, callToAction: e.target.value };
+                setEditData(next);
+                emitDraft(next);
+              }}
+              maxLength={35}
+              className="text-sm"
+              placeholder="e.g. Apply Now, Join Us..."
+            />
           </div>
         </div>
         )}
@@ -934,6 +929,33 @@ export default function AdVariantCard({
                 className="text-sm"
                 placeholder="Meta description..."
               />
+            </div>
+          </div>
+
+          {/* Meta CTA */}
+          <div className="mt-3">
+            <label className="text-xs font-medium text-[#344054] block mb-1.5">Call to Action</label>
+            <div className="flex gap-2">
+              {["Apply Now", "Learn More"].map((cta) => {
+                const active = editData.metaCTA === cta;
+                return (
+                  <button
+                    key={cta}
+                    type="button"
+                    onClick={() => {
+                      const next = { ...editData, metaCTA: cta };
+                      setEditData(next);
+                      emitDraft(next);
+                    }}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${active
+                      ? "bg-[#5207CD] text-white border-[#5207CD]"
+                      : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-gray-50"
+                      }`}
+                  >
+                    {cta}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

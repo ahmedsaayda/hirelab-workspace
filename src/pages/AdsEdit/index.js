@@ -267,6 +267,7 @@ export default function AdsEdit({ paramsId }) {
                 description: ai.description ?? v.description,
                 metaHeadline: ai.metaHeadline ?? v.metaHeadline,
                 metaDescription: ai.metaDescription ?? v.metaDescription,
+                metaCTA: ai.metaCTA ?? v.metaCTA,
               };
             });
           });
