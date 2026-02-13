@@ -7,12 +7,15 @@ import { Heading, Img } from "..";
 import { ChartPieIcon, HomeIcon, UsersIcon, UserGroupIcon, ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import { EyeOutlined, LinkOutlined, LoadingOutlined } from "@ant-design/icons";
 
+import { useSelector } from "react-redux";
 import CrudService from "../../../../../../services/CrudService";
 import { message } from "antd";
 import LandingPageService from "../../../../../../services/landingPageService";
 import { Button } from "../../../../../Landing/Button";
 import AiService from "../../../../../../services/AiService";
 import languages from "../../../lang.json";
+import { selectUser } from "../../../../../../redux/auth/selectors";
+import featureFlags from "../../../../../../config/featureFlags";
 
 // Convert the language object to array of options and remove duplicates (same as FromScratchModal)
 const languageOptions = Array.from(new Set(Object.values(languages)))
@@ -41,6 +44,9 @@ export default function Header({
   ...props
 }) {
   const router = useRouter();
+  const currentUser = useSelector(selectUser);
+  const isAdmin = currentUser?.role === "admin";
+  const isTemplate2Available = featureFlags.TEMPLATE_2_PUBLIC || isAdmin;
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
   const [previewMode, setPreviewMode] = useState("desktop");
@@ -741,9 +747,8 @@ export default function Header({
                   <div className="flex flex-col gap-3 self-stretch">
                     <Button
                       onClick={() => {
-                        if (i == 2) {
-                          return;
-                        }
+                        const canSelect = i === 0 || (i === 1 && isTemplate2Available);
+                        if (!canSelect) return;
                         setLandingPageData((d) => ({
                           ...d,
                           templateId: `${i + 1}`,
@@ -755,14 +760,15 @@ export default function Header({
                         reload();
                       }}
                       shape="round"
-                      className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${i === 0 || i === 1
+                      className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${
+                        i === 0 || (i === 1 && isTemplate2Available)
                         ? landingPageData?.templateId === `${i + 1}`
                           ? "bg-blue-500 text-[#FFFFFF]"
                           : "bg-[#FFFFFF] text-blue_gray-800_01 border rounded-full border-solid border-blue_gray-100"
                         : "bg-gray-200  cursor-not-allowed"
                         }`}
                     >
-                      {(i === 0 || i === 1) ? "Choose Template" : "Coming Soon"}
+                      {i === 0 ? "Choose Template" : (i === 1 && isTemplate2Available) ? "Choose Template" : "Coming Soon"}
                     </Button>
                   </div>
                 </div>
