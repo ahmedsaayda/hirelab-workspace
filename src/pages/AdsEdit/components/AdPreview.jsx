@@ -201,7 +201,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
           text={variant?.description || ""}
           title={variant?.metaHeadline || ""}
           description={variant?.metaDescription || ""}
-          ctaText={variant?.callToAction || "Learn More"}
+          ctaText={variant?.metaCTA || "Apply Now"}
         >
           <div
             className="relative w-full"
