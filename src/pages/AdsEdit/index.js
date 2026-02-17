@@ -3044,7 +3044,7 @@ export default function AdsEdit({ paramsId }) {
       {prepareMessages.length > 0 && (
         <div className="fixed right-6 bottom-24 z-50 max-w-sm">
           <div className="rounded-lg bg-white shadow-lg border border-[#e5e7eb] px-4 py-3 text-xs text-[#111827] space-y-1">
-            <div className="font-semibold text-[#111827]">Generating creatives with Creatomate…</div>
+            <div className="font-semibold text-[#111827]">Generating creatives</div>
             {prepareMessages.slice(-3).map((msg, idx) => (
               <div key={idx} className="text-[11px] text-[#4b5563]">
                 {msg}
