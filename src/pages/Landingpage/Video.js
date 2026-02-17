@@ -132,23 +132,22 @@ const Template3 = ({
                   alt="Lens Image"
                   className="h-[4px] w-[4px]"
                 />
-                <div className="relative mb-2 h-[316px] content-center self-stretch mdx:h-auto">
+                <div className="relative mb-2 h-[316px] content-center self-stretch mdx:h-auto cursor-pointer" onClick={togglePlay}>
                   {landingPageData.myVideo && (
                     <video
                       ref={videoRef}
                       src={landingPageData.myVideo}
                       className="mx-auto h-[316px] w-full flex-1 object-cover"
-                      onClick={togglePlay}
                       onTimeUpdate={handleTimeUpdate}
                       autoPlay={landingPageData.videoAutoPlay}
                       muted={isMuted}
                     />
                   )}
                   {!isPlaying && (
-                    <div className="flex absolute inset-0 justify-center items-center">
+                    <div className="flex absolute inset-0 justify-center items-center pointer-events-none">
                       <button
                         onClick={togglePlay}
-                        className="p-4 bg-white bg-opacity-50 rounded-full transition-opacity hover:bg-opacity-75"
+                        className="p-4 bg-white bg-opacity-50 rounded-full transition-opacity hover:bg-opacity-75 pointer-events-auto"
                       >
                         <Img
                           src="/images3/img_text_input.svg"
@@ -158,7 +157,7 @@ const Template3 = ({
                       </button>
                     </div>
                   )}
-                  <div className="absolute bottom-[8.23px] left-0 right-0 m-auto flex flex-1 flex-col items-center px-2">
+                  <div className="absolute bottom-[8.23px] left-0 right-0 m-auto flex flex-1 flex-col items-center px-2" onClick={(e) => e.stopPropagation()}>
                     <div
                       ref={progressBarRef}
                       className="relative mt-[60px] h-[5px] w-full cursor-pointer"
@@ -187,46 +186,20 @@ const Template3 = ({
                       </Heading>
                     </div>
                   </div>
-                  <div className="flex absolute top-0 right-0 gap-2 justify-center items-center p-2">
+                  <div className="flex absolute top-0 right-0 gap-2 justify-center items-center p-2 z-10">
                     <button
-                      onClick={toggleMute}
-                      className="top-2 right-2 p-1 bg-white bg-opacity-50 rounded-full hover:bg-opacity-75"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMute();
+                      }}
+                      className="p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
                     >
-                      {isMuted ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="size-6"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="size-6"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z"
-                          />
-                        </svg>
-                      )}
+                      {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
                     </button>
                     <button
-                      className="top-2 right-2 p-2 bg-white bg-opacity-50 rounded-full hover:bg-opacity-75"
-                      onClick={() => {
+                      className="p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         const videoElement = videoRef.current;
                         if (videoElement !== null) {
                           if (videoElement.requestFullscreen) {
@@ -238,8 +211,9 @@ const Template3 = ({
                           }
                         }
                       }}
+                      aria-label="Fullscreen"
                     >
-                      <ExpandOutlined width={"40px"} />
+                      <Maximize size={20} />
                     </button>
                   </div>
                 </div>
@@ -435,7 +409,7 @@ const Template2 = ({
             </div>
           )}
 
-          {/* Play Button Overlay */}
+          {/* Play Button Overlay - click anywhere to toggle play/pause */}
           <div
             className="absolute inset-0 flex items-center justify-center cursor-pointer"
             onClick={togglePlay}
@@ -449,6 +423,20 @@ const Template2 = ({
                 />
               </div>
             )}
+          </div>
+
+          {/* Fullscreen button - always visible in top right */}
+          <div className="absolute top-2 right-2 z-10">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFullscreen();
+              }}
+              className="p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+              aria-label="Fullscreen"
+            >
+              <Maximize size={20} />
+            </button>
           </div>
 
           {/* Video Controls (when playing) */}
@@ -483,7 +471,10 @@ const Template2 = ({
                     {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                   </button>
                   <button
-                    onClick={handleFullscreen}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFullscreen();
+                    }}
                     className="p-1.5 text-white rounded-full hover:bg-white/20"
                   >
                     <Maximize size={18} />
@@ -570,7 +561,7 @@ const Template1 = ({
 
         <div className="overflow-hidden relative rounded-2xl shadow-lg aspect-video">
           {/* Video or Thumbnail */}
-          <div className="absolute inset-0 bg-black">
+          <div className="absolute inset-0 bg-black cursor-pointer" onClick={togglePlay}>
             {landingPageData.myVideo ? (
               <video
                 ref={videoRef}
@@ -592,9 +583,9 @@ const Template1 = ({
 
           {/* Play Button (when paused) */}
           {!isPlaying && (
-            <div className="flex absolute inset-0 justify-center items-center">
+            <div className="flex absolute inset-0 justify-center items-center pointer-events-none">
               <button
-                className="flex justify-center items-center w-16 h-16 bg-white bg-opacity-80 rounded-full transition-transform md:w-20 md:h-20 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                className="flex justify-center items-center w-16 h-16 bg-white bg-opacity-80 rounded-full transition-transform md:w-20 md:h-20 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-opacity-50 pointer-events-auto"
                 style={{ boxShadow: `0 0 0 2px ${getColor("primary", 500)}` }}
                 aria-label="Play video"
                 onClick={togglePlay}
@@ -607,9 +598,32 @@ const Template1 = ({
             </div>
           )}
 
+          {/* Fullscreen button - always visible in top right */}
+          <div className="absolute top-2 right-2 z-10">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const videoElement = videoRef.current;
+                if (videoElement) {
+                  if (videoElement.requestFullscreen) {
+                    videoElement.requestFullscreen();
+                  } else if (videoElement.mozRequestFullScreen) {
+                    videoElement.mozRequestFullScreen();
+                  } else if (videoElement.webkitRequestFullScreen) {
+                    videoElement.webkitRequestFullScreen();
+                  }
+                }
+              }}
+              className="p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+              aria-label="Fullscreen"
+            >
+              <Maximize size={20} />
+            </button>
+          </div>
+
           {/* Video Controls (when playing) */}
           {isPlaying && (
-            <div className="absolute right-0 bottom-0 left-0 p-4 bg-gradient-to-t to-transparent from-black/70">
+            <div className="absolute right-0 bottom-0 left-0 p-4 bg-gradient-to-t to-transparent from-black/70" onClick={(e) => e.stopPropagation()}>
               {/* Progress bar */}
               <div
                 ref={progressBarRef}
@@ -639,7 +653,8 @@ const Template1 = ({
                     {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       const videoElement = videoRef.current;
                       if (videoElement) {
                         if (videoElement.requestFullscreen) {
