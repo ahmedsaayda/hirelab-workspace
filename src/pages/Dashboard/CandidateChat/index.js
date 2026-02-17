@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { selectUser, selectDarkMode } from "../../../redux/auth/selectors";
 import CandidateChatService from "../../../services/CandidateChatService";
 import { Input, Button, Avatar, Spin, message } from "antd";
-import { SendOutlined, UserOutlined, CalendarOutlined, SearchOutlined, MailOutlined, PhoneOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import { SendOutlined, UserOutlined, CalendarOutlined, SearchOutlined, MailOutlined, PhoneOutlined, ClockCircleOutlined, CloseOutlined } from "@ant-design/icons";
 import moment from "moment";
 import { useRouter } from "next/router";
 import { LinkifiedText } from "../../../utils/linkUtils";
@@ -680,7 +680,32 @@ const CandidateChat = () => {
         {/* Left Sidebar - Chat List */}
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
           <div className="p-6 border-b border-gray-200">
-            <h1 className="text-xl font-semibold text-gray-900">Communication</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-semibold text-gray-900">Communication</h1>
+              <Button
+                type="text"
+                icon={<CloseOutlined />}
+                onClick={() => {
+                  // Navigate back to ATS/Kanban of the respective vacancy
+                  // Try multiple sources for the landing page ID
+                  const lpId = currentChat?.landingPageId || 
+                               currentChat?.candidateId?.LandingPageDataId ||
+                               currentChat?.vacancyId;
+                  // Handle both ObjectId objects and string IDs
+                  const landingPageId = typeof lpId === 'object' ? (lpId?._id || lpId) : lpId;
+                  
+                  console.log('Navigating to ATS with landingPageId:', landingPageId, 'from chat:', currentChat);
+                  
+                  if (landingPageId) {
+                    router.push(`/dashboard/ats?id=${landingPageId}`);
+                  } else {
+                    router.push('/dashboard/ats');
+                  }
+                }}
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                title="Back to ATS Overview"
+              />
+            </div>
           </div>
           
           <div className="p-4 border-b border-gray-200">
