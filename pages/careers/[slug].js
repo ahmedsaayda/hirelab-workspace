@@ -236,7 +236,7 @@ const CategoryPage = () => {
           <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="text-center">
               <Text type="secondary">
-                © 2024 {category.companyName}. Powered by HireLab
+                © 2024 {category.companyName}. Created with Hirelab
               </Text>
             </div>
           </div>

@@ -1326,7 +1326,7 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
             {/* Show "Created by Hirelab" for free users on both public pages and edit mode */}
             {landingPageData?.showHirelabBranding && (
               <Text as="p" className="text-[14px] font-normal text-[#98a1b2] mt-2">
-                Created by{" "}
+                Created with{" "}
                 <a 
                   href={isEdit?"#":"https://hirelab.io/"} 
                   target="_blank" 
