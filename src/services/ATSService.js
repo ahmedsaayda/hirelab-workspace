@@ -146,6 +146,16 @@ class ATSService {
   bulkUnarchiveCandidates(candidateIds) {
     return this.api.put("/bulkUnarchiveCandidates", { candidateIds });
   }
+
+  sendBulkEmail({ candidateIds, subject, body, markAsRejected, rejectionReason }) {
+    return this.api.post("/sendBulkEmail", { 
+      candidateIds, 
+      subject, 
+      body, 
+      markAsRejected, 
+      rejectionReason 
+    });
+  }
 }
 
 export default new ATSService(`${getBackendUrl()}/ats`);

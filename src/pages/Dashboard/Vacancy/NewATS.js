@@ -124,6 +124,7 @@ import CandidateProfile from './components/CandidateProfile';
 import AssignmentModal from './components/AssignmentModal';
 import InterviewSchedulingModal from './components/InterviewSchedulingModal';
 import InitialMessageModal from './components/InitialMessageModal';
+import BulkMessageModal from './components/BulkMessageModal';
 import StageReviewModal from './components/StageReviewModal';
 import StatusChangeModal from './components/StatusChangeModal';
 import InterviewTemplatesModal from './components/InterviewTemplatesModal';
@@ -757,6 +758,7 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
   
   // Bulk action states
   const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
+  const [bulkMessageModal, setBulkMessageModal] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   
   // Granular loading states for better UX
@@ -3639,6 +3641,12 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
                     menu={{
                       items: [
                         {
+                          key: 'message',
+                          label: 'Send Message',
+                          icon: <MailOutlined />,
+                          onClick: () => setBulkMessageModal(true)
+                        },
+                        {
                           key: 'move',
                           label: 'Move to Stage',
                           icon: <EditOutlined />,
@@ -4481,6 +4489,22 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
         onSend={handleSendInitialMessage}
         candidate={selectedCandidateForChat}
         loading={initialMessageLoading}
+      />
+
+      <BulkMessageModal
+        visible={bulkMessageModal}
+        onCancel={() => setBulkMessageModal(false)}
+        onSuccess={(result) => {
+          // Clear selection after successful bulk action
+          setSelectedCandidates([]);
+          // Refresh candidates if any were marked as rejected
+          if (result?.markedAsRejected) {
+            reloadStages({ noLoadingDisplay: true });
+          }
+        }}
+        selectedCandidates={selectedCandidates}
+        candidates={candidates}
+        vacancyInfo={vacancyInfo}
       />
     </div>
   );
