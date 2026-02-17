@@ -1657,8 +1657,153 @@ export default function BrandStyleForm() {
         ]);
       }
 
-      // Extract fonts
+      // Extract and apply logo
+      setProgress(75);
+      setScrapeMessages((prev) => [...prev, "Extracting logo..."]);
+      if (data.logo && data.logo?.trim() !== "") {
+        setCompanyLogo(data.logo);
+        setLandingPageData((prevData) => ({
+          ...prevData,
+          companyLogo: data.logo,
+        }));
+        setScrapeMessages((prev) => [...prev, "Logo extracted successfully"]);
+      } else {
+        setScrapeMessages((prev) => [
+          ...prev,
+          "No logo found, please upload manually...",
+        ]);
+      }
+
+      // Extract and apply fonts
       setProgress(80);
+      setScrapeMessages((prev) => [...prev, "Extracting fonts..."]);
+      if (data.fonts && data.fonts.length > 0) {
+        // Find the first valid font that's in our available fonts list
+        const availableFonts = [
+          "Roboto", "Open Sans", "Google Sans", "Noto Sans JP", "Inter",
+          "Montserrat", "Poppins", "Lato", "Source Sans 3", "Source Sans Pro",
+          "Raleway", "Nunito", "Playfair Display", "Merriweather", "Ubuntu"
+        ];
+        
+        // Find matching fonts from extracted fonts
+        const matchedFonts = data.fonts
+          .map(f => {
+            const match = availableFonts.find(af => 
+              af.toLowerCase() === f.family?.toLowerCase() ||
+              f.family?.toLowerCase().includes(af.toLowerCase())
+            );
+            return match || f.family;
+          })
+          .filter(Boolean);
+        
+        // Use first font for titles, second for subheaders (or first if only one), third for body (or first)
+        const titleFontName = matchedFonts[0] || data.fonts[0]?.family;
+        const subheaderFontName = matchedFonts[1] || matchedFonts[0] || data.fonts[0]?.family;
+        const bodyFontName = matchedFonts[2] || matchedFonts[0] || data.fonts[0]?.family;
+        
+        if (titleFontName) {
+          // Set all font styles
+          setTitleFont(titleFontName);
+          setSelectedFont(titleFontName);
+          setSubheaderFont(subheaderFontName);
+          setBodyFont(bodyFontName);
+          
+          setLandingPageData((prevData) => ({
+            ...prevData,
+            titleFont: { family: titleFontName, src: "" },
+            selectedFont: { family: titleFontName, src: "" },
+            subheaderFont: { family: subheaderFontName, src: "" },
+            bodyFont: { family: bodyFontName, src: "" },
+          }));
+          
+          const fontNames = [...new Set([titleFontName, subheaderFontName, bodyFontName])];
+          setScrapeMessages((prev) => [...prev, `Font(s) "${fontNames.join(", ")}" applied to all styles`]);
+        }
+      } else {
+        setScrapeMessages((prev) => [
+          ...prev,
+          "No fonts found, using default...",
+        ]);
+      }
+
+      // Extract and apply brand colors
+      setProgress(90);
+      setScrapeMessages((prev) => [...prev, "Extracting brand colors..."]);
+      if (data.brandColors && data.brandColors.length > 0) {
+        setBrandColors(data.brandColors);
+        
+        // Set the primary color from the first brand color
+        if (data.brandColors[0]) {
+          const colorScheme = generateColorPalette(data.brandColors[0]);
+          setPrimaryColor(colorScheme.primary);
+          setLandingPageData((prevData) => ({
+            ...prevData,
+            primaryColor: colorScheme.primary,
+            brandColors: data.brandColors,
+          }));
+        }
+        setScrapeMessages((prev) => [...prev, `${data.brandColors.length} brand colors extracted`]);
+      } else {
+        setScrapeMessages((prev) => [
+          ...prev,
+          "No brand colors found, please set manually...",
+        ]);
+      }
+
+      // Save all extracted data to backend
+      setProgress(95);
+      setScrapeMessages((prev) => [...prev, "Saving brand data..."]);
+      try {
+        const updateData = {};
+        if (data.logo && data.logo.trim() !== "") {
+          updateData.companyLogo = data.logo;
+        }
+        if (data.brandColors && data.brandColors.length > 0) {
+          updateData.brandColors = data.brandColors;
+          updateData.primaryColor = data.brandColors[0];
+        }
+        if (data.fonts && data.fonts.length > 0) {
+          // Get font families (use same logic as above)
+          const availableFonts = [
+            "Roboto", "Open Sans", "Google Sans", "Noto Sans JP", "Inter",
+            "Montserrat", "Poppins", "Lato", "Source Sans 3", "Source Sans Pro",
+            "Raleway", "Nunito", "Playfair Display", "Merriweather", "Ubuntu"
+          ];
+          
+          const matchedFonts = data.fonts
+            .map(f => {
+              const match = availableFonts.find(af => 
+                af.toLowerCase() === f.family?.toLowerCase() ||
+                f.family?.toLowerCase().includes(af.toLowerCase())
+              );
+              return match || f.family;
+            })
+            .filter(Boolean);
+          
+          const titleFontName = matchedFonts[0] || data.fonts[0]?.family;
+          const subheaderFontName = matchedFonts[1] || matchedFonts[0] || data.fonts[0]?.family;
+          const bodyFontName = matchedFonts[2] || matchedFonts[0] || data.fonts[0]?.family;
+          
+          if (titleFontName) {
+            updateData.titleFont = { family: titleFontName, src: "" };
+            updateData.selectedFont = { family: titleFontName, src: "" };
+            updateData.subheaderFont = { family: subheaderFontName, src: "" };
+            updateData.bodyFont = { family: bodyFontName, src: "" };
+          }
+        }
+        
+        if (Object.keys(updateData).length > 0) {
+          await AuthService.updateMe(updateData);
+          // Refresh user data in Redux store
+          const me = await AuthService.me();
+          if (me?.data?.me) {
+            store.dispatch(login(me.data.me));
+          }
+        }
+      } catch (saveError) {
+        console.error("Error saving scraped data:", saveError);
+        // Don't show error to user, data is still in local state
+      }
 
       setProgress(100);
       setScrapeMessages((prev) => [
