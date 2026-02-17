@@ -178,19 +178,24 @@ const CandidateCard = ({
     const diff = now.diff(appliedAt);
 
     const duration = moment.duration(diff);
+    const days = Math.floor(duration.asDays());
+    const hours = Math.floor(duration.asHours());
+    const minutes = Math.floor(duration.asMinutes());
 
-    if (duration.asMonths() >= 1) {
-      return `${Math.floor(duration.asMonths())}mo`;
-    } else if (duration.asWeeks() >= 1) {
-      return `${Math.floor(duration.asWeeks())}w`;
-    } else if (duration.asDays() >= 1) {
-      return `${Math.floor(duration.asDays())}d`;
-    } else if (duration.asHours() >= 1) {
-      return `${Math.floor(duration.asHours())}h`;
-    } else if (duration.asMinutes() >= 1) {
-      return `${Math.floor(duration.asMinutes())}m`;
+    if (days >= 30) {
+      const months = Math.floor(days / 30);
+      return `${months} month${months > 1 ? 's' : ''}`;
+    } else if (days >= 7) {
+      const weeks = Math.floor(days / 7);
+      return `${weeks} week${weeks > 1 ? 's' : ''}`;
+    } else if (days >= 1) {
+      return `${days} day${days > 1 ? 's' : ''}`;
+    } else if (hours >= 1) {
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    } else if (minutes >= 1) {
+      return `${minutes} minute${minutes > 1 ? 's' : ''}`;
     } else {
-      return 'now';
+      return 'just now';
     }
   };
 
@@ -432,7 +437,18 @@ const CandidateCard = ({
         </div>
       )}
 
-      {/* Footer with Rating and Time */}
+      {/* Application Date */}
+      <div className="mb-2 flex items-center gap-1 text-gray-500">
+        <ClockCircleOutlined className="text-xs" />
+        <span className="text-xs">
+          {getTimeAgo() === 'just now' ? 'Applied just now' : `Applied ${getTimeAgo()} ago`}
+        </span>
+        <span className="text-xs text-gray-400">
+          ({moment(candidate.createdAt).format('MMM D, YYYY')})
+        </span>
+      </div>
+
+      {/* Footer with Rating */}
       <div className="flex items-center justify-between">
         {/* Rating */}
         <div
@@ -477,12 +493,6 @@ const CandidateCard = ({
             <div className="text-green-500 text-xs">✓</div>
           )}
         </div>
-
-        {/* Time Applied */}
-        {/*     <div className="flex items-center gap-1 text-gray-400">
-          <ClockCircleOutlined className="text-xs" />
-          <span className="text-xs font-medium">{getTimeAgo()}</span>
-        </div> */}
       </div>
 
       {/* Additional Info */}

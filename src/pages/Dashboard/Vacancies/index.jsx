@@ -2345,7 +2345,7 @@ salaryTime: { type: String, default: "Month" },
 hoursRange: { type: Boolean, default: false },
 hoursMin: { type: String, default: 7 },
 hoursMax: { type: String, default: 10 },
-hoursUnit: { type: String, default: "Hours" },
+hoursUnit: { type: String, default: "Week" },
 published: { type: Boolean, default: true },
 location: { type: [String], default: [] },
 menuItems: {

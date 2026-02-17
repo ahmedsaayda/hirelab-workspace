@@ -44,7 +44,7 @@ const HeroForm = ({initialData, onSave, isSaving}) => {
         hoursRange: initialData?.hoursRange || false,
         hoursMin: initialData?.hoursMin || "",
         hoursMax: initialData?.hoursMax || "",
-        hoursUnit: initialData?.hoursUnit || "Daily",
+        hoursUnit: initialData?.hoursUnit || "Weekly",
         location: initialData?.location || [],
         heroImage: initialData?.heroImage || "",
         type:'hero'

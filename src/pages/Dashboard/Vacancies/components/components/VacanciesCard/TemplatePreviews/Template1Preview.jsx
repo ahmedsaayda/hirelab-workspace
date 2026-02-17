@@ -94,7 +94,7 @@ export default function Template1Preview  ({ landingPageData }){
             {landingPageData.salaryMin}-{landingPageData.salaryMax}
             {landingPageData.salaryCurrency}
           </span>
-          <span>/{landingPageData.salaryTime}</span>
+          <span>/{landingPageData.salaryTime || "Month"}</span>
         </div>
         <div className="flex justify-start gap-1">
           <div className="flex items-center gap-1 text-[5px] text-gray-600">
@@ -105,7 +105,7 @@ export default function Template1Preview  ({ landingPageData }){
             <Clock className="w-1.5 h-1.5" />
             <span>
               {landingPageData.hoursMin}-{landingPageData.hoursMax}/
-              {landingPageData.hoursUnit}
+              {landingPageData.hoursUnit || "Week"}
             </span>
           </div>
         </div>

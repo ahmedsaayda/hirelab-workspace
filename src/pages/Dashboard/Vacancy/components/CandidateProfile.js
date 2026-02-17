@@ -1599,6 +1599,46 @@ const CandidateProfile = ({
             </div>
           </div>
 
+          {/* Last Booked Meeting Field */}
+          {candidate?.interviewMeetingTimestamp && (
+            <div className="flex items-center gap-3 p-2 bg-purple-50 rounded hover:bg-purple-100 transition-colors border border-purple-200">
+              <CalendarOutlined className="text-purple-500 text-sm" />
+              <div className="flex-1">
+                <div className='min-w-[100px] flex flex-1'>
+                  <Text className="text-xs text-purple-600 font-medium">Last Booked Meeting</Text>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Text className="text-sm font-medium text-gray-900">
+                    {moment(candidate.interviewMeetingTimestamp).format('DD.MM.YYYY')}
+                  </Text>
+                  <Text className="text-xs text-purple-600">
+                    ({moment(candidate.interviewMeetingTimestamp).format('h:mm A')})
+                  </Text>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Apply Date Field */}
+          {candidate?.createdAt && (
+            <div className="flex items-center gap-3 p-2 bg-blue-50 rounded hover:bg-blue-100 transition-colors border border-blue-200">
+              <CalendarOutlined className="text-blue-500 text-sm" />
+              <div className="flex-1">
+                <div className='min-w-[100px] flex flex-1'>
+                  <Text className="text-xs text-blue-600 font-medium">Applied</Text>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Text className="text-sm font-medium text-gray-900">
+                    {moment(candidate.createdAt).format('DD.MM.YYYY')}
+                  </Text>
+                  <Text className="text-xs text-blue-600">
+                    ({moment().diff(moment(candidate.createdAt), 'days')} days ago)
+                  </Text>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 

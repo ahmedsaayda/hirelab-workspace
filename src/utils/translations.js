@@ -1055,10 +1055,11 @@ export const getTranslation = (language, key) => {
   return coreTranslations.English[key] || key;
 };
 
-// Get time unit translation
+// Get time unit translation (default: week)
 export const getTimeUnitTranslation = (language, unit) => {
   const unitMap = {
     Days: 'day',
+    Day: 'day',
     Week: 'week',
     Month: 'month',
     daily: 'daily',
@@ -1068,11 +1069,11 @@ export const getTimeUnitTranslation = (language, unit) => {
     Year: 'year'
   };
 
-  const translationKey = unitMap[unit] || 'day';
+  const translationKey = unitMap[unit] || 'week';
   return getTranslation(language, translationKey);
 };
 
-// Get salary time translation
+// Get salary time translation (default: month)
 export const getSalaryTimeTranslation = (language, time) => {
   const timeMap = {
     Year: 'year',
@@ -1081,7 +1082,7 @@ export const getSalaryTimeTranslation = (language, time) => {
     Day: 'day'
   };
 
-  const translationKey = timeMap[time] || 'year';
+  const translationKey = timeMap[time] || 'month';
   return getTranslation(language, translationKey);
 };
 

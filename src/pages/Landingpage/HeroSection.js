@@ -657,7 +657,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           intToHumanReadablePrice(landingPageData?.salaryMax)}
                         {landingPageData?.salaryCurrency &&
                           ` ${landingPageData?.salaryCurrency}`}
-                        /{getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime)?.toLowerCase?.() || getSalaryTimeTranslation(landingPageData?.lang, "Year")?.toLowerCase?.()}
+                        /{getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime || "Month")?.toLowerCase?.()}
                       </p>
                     )}
                   </div>
@@ -741,7 +741,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       color: textColor
                     }}
                   >
-                    {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit)}
+                    {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit || "Week")}
                   </span>
                 </span>
               </div>
@@ -1014,7 +1014,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                               color:textColor
                             }}
                           >
-                            {getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime)?.toLowerCase?.() || getSalaryTimeTranslation(landingPageData?.lang, "Month")?.toLowerCase?.()}
+                            {getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime || "Month")?.toLowerCase?.()}
                           </span>
                         </span>
                       )}
@@ -1314,7 +1314,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                             color:textColor
                           }}
                         >
-                          {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit)}
+                          {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit || "Week")}
                         </span>
                       </span>
                     </div>
@@ -1470,7 +1470,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                             ref={refs.salaryTimeRef}
                             className="inline lowercase"
                           >
-                            {landingPageData?.salaryTime}
+                            {landingPageData?.salaryTime || "Month"}
                           </div>
                         </>
                       ) : (
@@ -1492,7 +1492,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                             ref={refs.salaryTimeRef}
                             className="inline lowercase"
                           >
-                            {landingPageData?.salaryTime}
+                            {landingPageData?.salaryTime || "Month"}
                           </div>
                         </>
                       )}
@@ -1534,7 +1534,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                     </div>
                     {"hr / "}
                     <div ref={refs.hoursUnitRef} className="inline">
-                      {landingPageData?.hoursUnit}
+                      {landingPageData?.hoursUnit || "Week"}
                     </div>
                   </>
                 ) : (
@@ -1542,7 +1542,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                     <span>{landingPageData?.hoursMin}</span>
                     {" hr/ "}
                     <div ref={refs.hoursUnitRef} className="inline">
-                      {landingPageData?.hoursUnit}
+                      {landingPageData?.hoursUnit || "Week"}
                     </div>
                   </>
                 )}
@@ -2051,7 +2051,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                         )}
                         /
                         <span ref={refs.salaryTimeRef}>
-                          {getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime)?.toLowerCase?.() || "month"}
+                          {getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime || "Month")?.toLowerCase?.()}
                         </span>
                       </span>
                     )}
@@ -2100,7 +2100,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                     )}{" "}
                     {getTranslation(landingPageData?.lang, 'hours')}/
                     <span ref={refs.hoursUnitRef} onClick={() => handleItemClick("hoursUnit")}>
-                      {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit)?.toLowerCase?.() || "daily"}
+                      {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit || "Week")?.toLowerCase?.()}
                     </span>
                   </span>
                 </div>

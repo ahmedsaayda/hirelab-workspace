@@ -1407,7 +1407,13 @@ const NewATS = ({ VacancyId, vacancyInfo, isMultiJobView = false }) => {
           // Status phase data
           statusPhase: candidate.statusPhase || 'new',
           statusPhaseUpdatedAt: candidate.statusPhaseUpdatedAt,
-          statusPhaseUpdatedBy: candidate.statusPhaseUpdatedBy
+          statusPhaseUpdatedBy: candidate.statusPhaseUpdatedBy,
+          // Meeting/Interview data
+          meetingScheduled: candidate.meetingScheduled || false,
+          interviewMeetingTimestamp: candidate.interviewMeetingTimestamp,
+          interviewMeetingTimestampEnd: candidate.interviewMeetingTimestampEnd,
+          interviewMeetingLink: candidate.interviewMeetingLink,
+          interviewMeetingTimezone: candidate.interviewMeetingTimezone
         };
 
         // ABSOLUTELY DO NOT add vacancyInfo in single-job view to prevent purple "Applied to" text

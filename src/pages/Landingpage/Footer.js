@@ -1067,7 +1067,7 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
               {job.hoursRange
                 ? `${job.hoursMin}-${job.hoursMax}`
                 : `${job.hoursMin}`}{" "}
-              / {job.hoursUnit}
+              / {job.hoursUnit || "Week"}
             </div>
           </div>
 
