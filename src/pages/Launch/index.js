@@ -703,6 +703,7 @@ export default function Launch({ paramsId }) {
   }, [summary]);
 
   // Auto-save draft settings to our DB for this ad set (or campaign-level if not in ad-set mode).
+  // Also sync budget/schedule changes to Meta if campaign is already launched.
   useEffect(() => {
     if (!lpId) return;
     // Only autosave after the page has been initialized and the user has interacted.
@@ -754,11 +755,51 @@ export default function Launch({ paramsId }) {
     // Prevent duplicate / out-of-order autosaves from overwriting newer values.
     const payloadKey = JSON.stringify(payload);
     if (lastAutoSavePayloadRef.current === payloadKey) return;
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       lastAutoSavePayloadRef.current = payloadKey;
+      
+      // Save to HireLab DB
       AdsLaunchService.saveLaunchSettings(lpId, payload).catch(() => {
         // Silent fail; user will still be able to launch using current in-memory values
       });
+      
+      // If campaign is already launched on Meta, sync budget/schedule changes immediately
+      const hasLiveAdSets = Array.isArray(summary?.adSets) && summary.adSets.length > 0;
+      if (hasLiveAdSets && (touched.budget || touched.schedule)) {
+        try {
+          // Update all live Meta ad sets with the new budget/schedule
+          for (const adSet of summary.adSets) {
+            if (!adSet?.id) continue;
+            
+            const metaPayload = { id: adSet.id };
+            
+            // Sync budget if changed
+            if (touched.budget && launchDailyBudget != null && Number(launchDailyBudget) > 0) {
+              const budgetMinor = Math.max(1, Math.floor(Number(launchDailyBudget) * 100));
+              metaPayload.daily_budget = String(budgetMinor);
+            }
+            
+            // Sync schedule if changed
+            if (touched.schedule) {
+              if (scheduleOverride.start) {
+                metaPayload.start_time = scheduleOverride.start.toISOString();
+              }
+              if (scheduleOverride.end) {
+                metaPayload.end_time = scheduleOverride.end.toISOString();
+              }
+            }
+            
+            // Only call Meta API if we have something to update
+            if (metaPayload.daily_budget || metaPayload.start_time || metaPayload.end_time) {
+              await AdsLaunchService.updateAdSet(lpId, metaPayload);
+            }
+          }
+          message.success("Changes synced to Meta");
+        } catch (err) {
+          console.error("Failed to sync to Meta:", err);
+          message.warning("Changes saved locally. Click 'Launch' to sync with Meta.");
+        }
+      }
     }, 800);
     return () => clearTimeout(timer);
   }, [
@@ -777,6 +818,7 @@ export default function Launch({ paramsId }) {
     touched.optimization,
     touched.pacing,
     touched.pixel,
+    summary?.adSets,
   ]);
 
   if (!lpId || loading) {
