@@ -4,6 +4,17 @@ import { useHover } from "../../contexts/HoverContext";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
 import { scrollToElement } from "./scrollUtils.js";
+
+// Helper function to get image transform styles (zoom, mirror)
+const getImageTransform = (adjustments) => {
+  if (!adjustments) return 'none';
+  const zoom = adjustments.zoom || 100;
+  const mirrorX = adjustments.mirrorX || false;
+  const mirrorY = adjustments.mirrorY || false;
+  if (zoom === 100 && !mirrorX && !mirrorY) return 'none';
+  return `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+};
+
 const useEvpHover = () => {
   const { hoveredField, scrollToSection ,setLastScrollToSection,lastScrollToSection} = useHover();
   const sectionRef = useRef();
@@ -375,7 +386,8 @@ const {  subheaderFont, bodyFont } = getFonts(landingPageData);
                         : "50% 50%",
                       objectFit:
                         landingPageData?.imageAdjustment?.evpMissionAvatar?.objectFit || "cover",
-                      transition: "object-position 0.3s ease-in-out",
+                      transform: getImageTransform(landingPageData?.imageAdjustment?.evpMissionAvatar),
+                      transition: "object-position 0.3s ease-in-out, transform 0.3s ease-in-out",
                     }}
                   />
 

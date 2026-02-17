@@ -6,6 +6,16 @@ import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
 import { scrollToElement } from "./scrollUtils.js";
 
+// Helper function to get image transform styles (zoom, mirror)
+const getImageTransform = (adjustments) => {
+  if (!adjustments) return 'none';
+  const zoom = adjustments.zoom || 100;
+  const mirrorX = adjustments.mirrorX || false;
+  const mirrorY = adjustments.mirrorY || false;
+  if (zoom === 100 && !mirrorX && !mirrorY) return 'none';
+  return `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+};
+
 const decorativeElement = (position) => (
   <div
     className={`absolute ${position} w-[200px] h-[200px] rounded-full bg-[#E5F1FF] opacity-50`}
@@ -392,6 +402,7 @@ const Template2 = ({ data }) => {
                   ? `${data.imageAdjustment.leaderIntroductionAvatar.objectPosition.x}% ${data.imageAdjustment.leaderIntroductionAvatar.objectPosition.y}%`
                   : "50% 50%",
                 objectFit: data?.imageAdjustment?.leaderIntroductionAvatar?.objectFit || "cover",
+                transform: getImageTransform(data?.imageAdjustment?.leaderIntroductionAvatar),
               }}
             />
             {/* Dark gradient overlay on left edge */}
@@ -422,6 +433,7 @@ const Template2 = ({ data }) => {
                 objectPosition: data?.imageAdjustment?.leaderIntroductionAvatar?.objectPosition
                   ? `${data.imageAdjustment.leaderIntroductionAvatar.objectPosition.x}% ${data.imageAdjustment.leaderIntroductionAvatar.objectPosition.y}%`
                   : "50% 50%",
+                transform: getImageTransform(data?.imageAdjustment?.leaderIntroductionAvatar),
               }}
             />
           </div>
@@ -684,7 +696,8 @@ const Template1 = ({ data }) => {
                       objectFit:
                         data?.imageAdjustment?.leaderIntroductionAvatar
                           ?.objectFit || "cover",
-                      transition: "object-position 0.3s ease-in-out",
+                      transform: getImageTransform(data?.imageAdjustment?.leaderIntroductionAvatar),
+                      transition: "object-position 0.3s ease-in-out, transform 0.3s ease-in-out",
                     }}
                   />
                   <div

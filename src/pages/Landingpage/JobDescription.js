@@ -9,6 +9,16 @@ import { calculateTextColor } from "./utils.js";
 import { getTranslation } from "../../utils/translations.js";
 import { scrollToElement } from "./scrollUtils.js";
 
+// Helper function to get image transform styles (zoom, mirror)
+const getImageTransform = (adjustments) => {
+  if (!adjustments) return 'none';
+  const zoom = adjustments.zoom || 100;
+  const mirrorX = adjustments.mirrorX || false;
+  const mirrorY = adjustments.mirrorY || false;
+  if (zoom === 100 && !mirrorX && !mirrorY) return 'none';
+  return `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+};
+
 const useJobDescriptionHover = () => {
   const {
     hoveredField,
@@ -276,6 +286,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                     ? `${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.x}% ${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.y}%`
                     : "50% 50%",
                   objectFit: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectFit || "cover",
+                  transform: getImageTransform(landingPageData?.imageAdjustment?.jobDescriptionImage),
                 }}
               />
             </div>
@@ -312,6 +323,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                     ? `${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.x}% ${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.y}%`
                     : "50% 50%",
                   objectFit: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectFit || "cover",
+                  transform: getImageTransform(landingPageData?.imageAdjustment?.jobDescriptionImage),
                 }}
               />
             </div>
@@ -576,7 +588,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       : "50% 50%",
                     objectFit:
                       landingPageData?.imageAdjustment?.jobDescriptionImage?.objectFit || "cover",
-                    transition: "object-position 0.3s ease-in-out",
+                    transform: getImageTransform(landingPageData?.imageAdjustment?.jobDescriptionImage),
+                    transition: "object-position 0.3s ease-in-out, transform 0.3s ease-in-out",
                   }}
                 />
                 {/* <div className={`absolute inset-0 pointer-events-none z-10 bg-gradient-to-t from-[${secondaryColor}] from-30% to-transparent to-50%`}></div> */}
@@ -615,7 +628,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         : "50% 50%",
                       objectFit:
                         landingPageData?.imageAdjustment?.jobDescriptionImage?.objectFit || "cover",
-                      transition: "object-position 0.3s ease-in-out",
+                      transform: getImageTransform(landingPageData?.imageAdjustment?.jobDescriptionImage),
+                      transition: "object-position 0.3s ease-in-out, transform 0.3s ease-in-out",
                     }}
                   />
 

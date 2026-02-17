@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Skeleton } from "antd";
 import Image from "next/image.js";
 import NavBar from "./NavBar.jsx";
@@ -21,6 +21,16 @@ import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import ApplyCustomFont from "./ApplyCustomFont.jsx";
 import MetaPixel from "./MetaPixel.jsx";
 import eventEmitter from "../../utils/eventEmitter.js";
+
+// Helper function to get image transform styles (zoom, mirror)
+const getImageTransform = (adjustments) => {
+  if (!adjustments) return 'none';
+  const zoom = adjustments.zoom || 100;
+  const mirrorX = adjustments.mirrorX || false;
+  const mirrorY = adjustments.mirrorY || false;
+  if (zoom === 100 && !mirrorX && !mirrorY) return 'none';
+  return `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+};
 
 // Responsive title sizing, capped at 2 lines (based on HeroSection.js behavior)
 const useResponsiveTitleSize = (text, containerRef, maxLines = 2, initialSize = 56) => {
@@ -294,7 +304,8 @@ const MultiJobHeroSection = ({ landingPageData, isEdit = false }) => {
                     style={{
                       objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
                         ? landingPageData.imageAdjustment.heroImage.objectPosition.x + "% " + landingPageData.imageAdjustment.heroImage.objectPosition.y + "%"
-                        : "50% 25%"
+                        : "50% 25%",
+                      transform: getImageTransform(landingPageData?.imageAdjustment?.heroImage),
                     }}
                     width={400}
                     height={400}
@@ -322,7 +333,8 @@ const MultiJobHeroSection = ({ landingPageData, isEdit = false }) => {
                     style={{
                       objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
                         ? landingPageData.imageAdjustment.heroImage.objectPosition.x + "% " + landingPageData.imageAdjustment.heroImage.objectPosition.y + "%"
-                        : "50% 25%"
+                        : "50% 25%",
+                      transform: getImageTransform(landingPageData?.imageAdjustment?.heroImage),
                     }}
                     width={850}
                     height={819}

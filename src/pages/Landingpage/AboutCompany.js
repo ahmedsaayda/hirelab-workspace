@@ -97,7 +97,11 @@ const Template3 = ({ landingPageData, fetchData }) => {
       ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
       : "50% 50%";
     const objectFit = adjustments.objectFit || "cover";
-    return { objectPosition, objectFit };
+    const zoom = adjustments.zoom || 100;
+    const mirrorX = adjustments.mirrorX || false;
+    const mirrorY = adjustments.mirrorY || false;
+    const transform = `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+    return { objectPosition, objectFit, transform };
   };
 
   const handlePrevious = () => {
@@ -118,7 +122,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
             <div ref={refs.imagesRef} className="w-[42%] mdx:w-full overflow-hidden">
               {(() => {
                 const currentImage = images[currentImageIndex] ?? "/dhwise-images/placeholder.png";
-                const { objectPosition, objectFit } = getImageAdjustments(currentImage);
+                const { objectPosition, objectFit, transform } = getImageAdjustments(currentImage);
                 return (
                   <Img
                     src={currentImage}
@@ -127,6 +131,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                     style={{
                       objectFit: objectFit,
                       objectPosition: objectPosition,
+                      transform: transform,
                     }}
                   />
                 );
@@ -249,7 +254,11 @@ const Template2 = ({ landingPageData, fetchData }) => {
       ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
       : "50% 50%";
     const objectFit = adjustments.objectFit || "cover";
-    return { objectPosition, objectFit };
+    const zoom = adjustments.zoom || 100;
+    const mirrorX = adjustments.mirrorX || false;
+    const mirrorY = adjustments.mirrorY || false;
+    const transform = `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+    return { objectPosition, objectFit, transform };
   };
 
   // Navigation handlers
@@ -374,7 +383,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
             }}
           >
             {images.map((image, index) => {
-              const { objectPosition, objectFit } = getImageAdjustments(image);
+              const { objectPosition, objectFit, transform } = getImageAdjustments(image);
               return (
                 <div
                   key={index}
@@ -394,6 +403,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                     style={{
                       objectFit: objectFit,
                       objectPosition: objectPosition,
+                      transform: transform,
                     }}
                     onError={(e) => (e.target.src = defaultImageUrl)}
                   />
@@ -459,7 +469,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
       ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
       : "50% 50%";
     const objectFit = adjustments.objectFit || "cover";
-    return { objectPosition, objectFit };
+    const zoom = adjustments.zoom || 100;
+    const mirrorX = adjustments.mirrorX || false;
+    const mirrorY = adjustments.mirrorY || false;
+    const transform = `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+    return { objectPosition, objectFit, transform };
   };
 
   // Extract colors for dependency tracking
@@ -642,7 +656,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
         <div ref={refs.imagesRef} className="hidden gap-4 md:flex">
           {images.map((image, index) => {
             const isOdd = index % 2 === 0;
-            const { objectPosition, objectFit } = getImageAdjustments(image.src);
+            const { objectPosition, objectFit, transform } = getImageAdjustments(image.src);
             return (
               <div
                 key={index}
@@ -658,6 +672,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                   style={{
                     objectPosition: objectPosition,
                     objectFit: objectFit,
+                    transform: transform,
                     transition: "object-position 0.3s ease-in-out",
                   }}
                   onError={(e) => (e.target.src = "/dhwise-images/placeholder.png")}
@@ -680,7 +695,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
             }}
           >
             {images.map((image, index) => {
-              const { objectPosition, objectFit } = getImageAdjustments(image.src);
+              const { objectPosition, objectFit, transform } = getImageAdjustments(image.src);
               return (
                 <div
                   key={index}
@@ -694,6 +709,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       style={{
                         objectFit: objectFit,
                         objectPosition: objectPosition,
+                        transform: transform,
                       }}
                       onError={(e) =>
                         (e.target.src = "/dhwise-images/placeholder.png")

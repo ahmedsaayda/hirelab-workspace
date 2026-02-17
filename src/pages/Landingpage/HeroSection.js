@@ -24,6 +24,17 @@ import { getTranslation, getTimeUnitTranslation, getSalaryTimeTranslation } from
 import Image from "next/image.js";
 // hirelab-frontend\src\pages\Landingpage\HeroSection.js
 // hirelab-frontend\src\utils\destructureTheme.js
+
+// Helper function to get image transform styles (zoom, mirror)
+const getImageTransform = (adjustments) => {
+  if (!adjustments) return 'none';
+  const zoom = adjustments.zoom || 100;
+  const mirrorX = adjustments.mirrorX || false;
+  const mirrorY = adjustments.mirrorY || false;
+  if (zoom === 100 && !mirrorX && !mirrorY) return 'none';
+  return `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+};
+
 //
 export function intToHumanReadablePrice(price) {
   if (typeof Number(price) !== "number" || isNaN(price)) {
@@ -923,7 +934,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         objectFit:
                           landingPageData?.imageAdjustment?.heroImage
                             ?.objectFit || "cover",
-                        transition: "object-position 0.3s ease-in-out",
+                        transform: getImageTransform(landingPageData?.imageAdjustment?.heroImage),
+                        transition: "object-position 0.3s ease-in-out, transform 0.3s ease-in-out",
                     }}    
                     width={500}
                     height={500}
@@ -1780,6 +1792,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                     ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
                     : "50% 50%",
                   objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
+                  transform: getImageTransform(landingPageData?.imageAdjustment?.heroImage),
               }}
               width={672}
               height={744}
@@ -2139,6 +2152,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                       ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
                       : "50% 50%",
                     objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
+                    transform: getImageTransform(landingPageData?.imageAdjustment?.heroImage),
                   }}
                   width={327}
                   height={362}

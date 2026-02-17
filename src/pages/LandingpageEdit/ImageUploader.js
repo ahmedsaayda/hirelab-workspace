@@ -391,6 +391,9 @@ const ImageUploader = ({
   const [imageSettings, setImageSettings] = useState({
     objectPosition: { x: 50, y: 50 },
     objectFit: "cover",
+    zoom: 100,
+    mirrorX: false,
+    mirrorY: false,
   });
 
   const handleSettingsClick = (url) => {
@@ -400,12 +403,31 @@ const ImageUploader = ({
     } else {
       setSelectedImage(url);
       // Get adjustments for this specific image URL
+      // For single images, adjustments are stored directly at imageAdjustments[fieldKey]
+      // For multiple images, adjustments are stored at imageAdjustments[fieldKey][url]
       const fieldAdjustments = imageAdjustments[fieldKey] || {};
-      const currentAdjustments = fieldAdjustments[url] || {
-        objectPosition: { x: 50, y: 50 },
-        objectFit: "cover",
+      // Check if fieldAdjustments has objectPosition (single image) or is keyed by URL (multiple images)
+      const isSingleImage = fieldAdjustments.objectPosition !== undefined || 
+                            fieldAdjustments.objectFit !== undefined ||
+                            fieldAdjustments.zoom !== undefined;
+      const currentAdjustments = isSingleImage 
+        ? fieldAdjustments 
+        : (fieldAdjustments[url] || {
+            objectPosition: { x: 50, y: 50 },
+            objectFit: "cover",
+            zoom: 100,
+            mirrorX: false,
+            mirrorY: false,
+          });
+      // Ensure all properties have defaults
+      const normalizedAdjustments = {
+        objectPosition: currentAdjustments.objectPosition || { x: 50, y: 50 },
+        objectFit: currentAdjustments.objectFit || "cover",
+        zoom: currentAdjustments.zoom || 100,
+        mirrorX: currentAdjustments.mirrorX || false,
+        mirrorY: currentAdjustments.mirrorY || false,
       };
-      setImageSettings(currentAdjustments);
+      setImageSettings(normalizedAdjustments);
       setIsSettingsOpen(true);
     }
   };
@@ -459,8 +481,13 @@ const ImageUploader = ({
     console.log("isLogo", isLogo);
     const isUploadingFile = uploadingFiles[fileMetadata[url]?.name];
     // Get adjustments for this specific image URL
+    // For single images, adjustments are stored directly at imageAdjustments[fieldKey]
+    // For multiple images, adjustments are stored at imageAdjustments[fieldKey][url]
     const fieldAdjustments = imageAdjustments[fieldKey] || {};
-    const adjustments = fieldAdjustments[url] || {};
+    const isSingleImage = fieldAdjustments.objectPosition !== undefined || 
+                          fieldAdjustments.objectFit !== undefined ||
+                          fieldAdjustments.zoom !== undefined;
+    const adjustments = isSingleImage ? fieldAdjustments : (fieldAdjustments[url] || {});
     const isSelected = selectedImage === url;
     const isMaxFilesReached = multiple && multipleFiles.length >= maxFiles;
 
@@ -505,7 +532,7 @@ const ImageUploader = ({
                   objectPosition: positionString,
                   objectFit: isLogo ? "fill" : adjustments.objectFit || "cover",
                   height: isLogo ? "auto" : "100%",
-
+                  transform: `scale(${(adjustments.zoom || 100) / 100}) ${adjustments.mirrorX ? 'scaleX(-1)' : ''} ${adjustments.mirrorY ? 'scaleY(-1)' : ''}`,
                 }}
               />
             )}
@@ -541,7 +568,7 @@ const ImageUploader = ({
               </div>
             )}
           </div>
-          {!isSettingDisabled && (
+          {!isSettingDisabled && !isVideoFile(url) && (
             <div className="flex gap-2">
               <button
                 onClick={(e) => {
@@ -575,10 +602,10 @@ const ImageUploader = ({
 
         </div>
 
-        {isSelected && (
+        {isSelected && !isVideoFile(url) && (
           <div className="mb-4 p-3 bg-white rounded-lg border border-[#e4e7ec]">
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-xs font-medium text-[#344054]">Adjust focal point</label>
+            <div className="flex justify-between items-center mb-3">
+              <label className="text-xs font-medium text-[#344054]">Image Settings</label>
               <button
                 onClick={() => {
                   setIsSettingsOpen(false);
@@ -591,45 +618,162 @@ const ImageUploader = ({
                 </svg>
               </button>
             </div>
-            <div
-              role="button"
-              tabIndex={0}
-              onPointerDown={handleImagePointerDown}
-              onPointerMove={handleImagePointerMove}
-              onPointerUp={handleImagePointerUp}
-              onPointerCancel={handleImagePointerUp}
-              className={`relative w-full h-32 rounded-lg overflow-hidden border select-none border-[#e4e7ec] hover:border-[#98a2b3] ${imageDragRef.current?.dragging ? "cursor-grabbing" : "cursor-grab"}`}
-              style={{ touchAction: "none" }}
-              title="Drag to adjust focal point"
-            >
-              <img
-                src={url}
-                alt="Preview"
-                className="w-full h-full pointer-events-none"
-                draggable={false}
-                style={{
-                  objectPosition: `${imageSettings.objectPosition?.x ?? 50}% ${imageSettings.objectPosition?.y ?? 50}%`,
-                  objectFit: imageSettings.objectFit || "cover",
-                }}
-              />
-              {/* Focal point indicator */}
+
+            {/* Focal Point Section */}
+            <div className="mb-4">
+              <label className="text-[10px] font-medium text-[#667085] uppercase tracking-wide mb-1 block">Focal Point</label>
               <div
-                style={{
-                  position: "absolute",
-                  left: `${imageSettings.objectPosition?.x ?? 50}%`,
-                  top: `${imageSettings.objectPosition?.y ?? 50}%`,
-                  transform: "translate(-50%, -50%)",
-                  width: 14,
-                  height: 14,
-                  borderRadius: 9999,
-                  border: "2px solid white",
-                  boxShadow: "0 0 0 2px rgba(82, 7, 205, 0.7)",
-                  background: "rgba(82, 7, 205, 0.35)",
+                role="button"
+                tabIndex={0}
+                onPointerDown={handleImagePointerDown}
+                onPointerMove={handleImagePointerMove}
+                onPointerUp={handleImagePointerUp}
+                onPointerCancel={handleImagePointerUp}
+                className={`relative w-full h-28 rounded-lg overflow-hidden border select-none border-[#e4e7ec] hover:border-[#98a2b3] ${imageDragRef.current?.dragging ? "cursor-grabbing" : "cursor-grab"}`}
+                style={{ touchAction: "none" }}
+                title="Drag to adjust focal point"
+              >
+                <img
+                  src={url}
+                  alt="Preview"
+                  className="w-full h-full pointer-events-none"
+                  draggable={false}
+                  style={{
+                    objectPosition: `${imageSettings.objectPosition?.x ?? 50}% ${imageSettings.objectPosition?.y ?? 50}%`,
+                    objectFit: imageSettings.objectFit || "cover",
+                    transform: `scale(${(imageSettings.zoom || 100) / 100}) ${imageSettings.mirrorX ? 'scaleX(-1)' : ''} ${imageSettings.mirrorY ? 'scaleY(-1)' : ''}`,
+                  }}
+                />
+                {/* Focal point indicator */}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: `${imageSettings.objectPosition?.x ?? 50}%`,
+                    top: `${imageSettings.objectPosition?.y ?? 50}%`,
+                    transform: "translate(-50%, -50%)",
+                    width: 14,
+                    height: 14,
+                    borderRadius: 9999,
+                    border: "2px solid white",
+                    boxShadow: "0 0 0 2px rgba(82, 7, 205, 0.7)",
+                    background: "rgba(82, 7, 205, 0.35)",
+                  }}
+                />
+              </div>
+              <div className="mt-1 text-[10px] text-[#667085] text-center">
+                Drag to position • {Math.round(imageSettings.objectPosition?.x ?? 50)}%, {Math.round(imageSettings.objectPosition?.y ?? 50)}%
+              </div>
+            </div>
+
+            {/* Zoom Control */}
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-[10px] font-medium text-[#667085] uppercase tracking-wide">Zoom</label>
+                <span className="text-[10px] text-[#667085]">{imageSettings.zoom || 100}%</span>
+              </div>
+              <Slider
+                min={50}
+                max={200}
+                value={imageSettings.zoom || 100}
+                onChange={(value) => {
+                  const newSettings = { ...imageSettings, zoom: value };
+                  setImageSettings(newSettings);
+                  if (selectedImage && onImageAdjustmentChange) {
+                    onImageAdjustmentChange(fieldKey, newSettings, selectedImage);
+                  }
                 }}
+                trackStyle={{ backgroundColor: '#7c3aed' }}
+                handleStyle={{ borderColor: '#7c3aed' }}
               />
             </div>
-            <div className="mt-2 text-[10px] text-[#667085] text-center">
-              Drag to position • {Math.round(imageSettings.objectPosition?.x ?? 50)}%, {Math.round(imageSettings.objectPosition?.y ?? 50)}%
+
+            {/* Fit Mode (Cover/Contain) */}
+            <div className="mb-4">
+              <label className="text-[10px] font-medium text-[#667085] uppercase tracking-wide mb-2 block">Fit Mode</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const newSettings = { ...imageSettings, objectFit: "cover" };
+                    setImageSettings(newSettings);
+                    if (selectedImage && onImageAdjustmentChange) {
+                      onImageAdjustmentChange(fieldKey, newSettings, selectedImage);
+                    }
+                  }}
+                  className={`flex-1 py-1.5 px-3 text-xs rounded-md border transition-colors ${
+                    (imageSettings.objectFit || "cover") === "cover"
+                      ? "bg-purple-100 border-purple-500 text-purple-700"
+                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  Cover
+                </button>
+                <button
+                  onClick={() => {
+                    const newSettings = { ...imageSettings, objectFit: "contain" };
+                    setImageSettings(newSettings);
+                    if (selectedImage && onImageAdjustmentChange) {
+                      onImageAdjustmentChange(fieldKey, newSettings, selectedImage);
+                    }
+                  }}
+                  className={`flex-1 py-1.5 px-3 text-xs rounded-md border transition-colors ${
+                    imageSettings.objectFit === "contain"
+                      ? "bg-purple-100 border-purple-500 text-purple-700"
+                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  Contain
+                </button>
+              </div>
+              <div className="mt-1 text-[10px] text-[#667085]">
+                {(imageSettings.objectFit || "cover") === "cover" 
+                  ? "Image fills the area (may crop)" 
+                  : "Full image visible (may have gaps)"}
+              </div>
+            </div>
+
+            {/* Mirror Controls */}
+            <div>
+              <label className="text-[10px] font-medium text-[#667085] uppercase tracking-wide mb-2 block">Mirror</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const newSettings = { ...imageSettings, mirrorX: !imageSettings.mirrorX };
+                    setImageSettings(newSettings);
+                    if (selectedImage && onImageAdjustmentChange) {
+                      onImageAdjustmentChange(fieldKey, newSettings, selectedImage);
+                    }
+                  }}
+                  className={`flex-1 py-1.5 px-3 text-xs rounded-md border transition-colors flex items-center justify-center gap-1 ${
+                    imageSettings.mirrorX
+                      ? "bg-purple-100 border-purple-500 text-purple-700"
+                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 3v18M9 6l-6 6 6 6M15 6l6 6-6 6" />
+                  </svg>
+                  Horizontal
+                </button>
+                <button
+                  onClick={() => {
+                    const newSettings = { ...imageSettings, mirrorY: !imageSettings.mirrorY };
+                    setImageSettings(newSettings);
+                    if (selectedImage && onImageAdjustmentChange) {
+                      onImageAdjustmentChange(fieldKey, newSettings, selectedImage);
+                    }
+                  }}
+                  className={`flex-1 py-1.5 px-3 text-xs rounded-md border transition-colors flex items-center justify-center gap-1 ${
+                    imageSettings.mirrorY
+                      ? "bg-purple-100 border-purple-500 text-purple-700"
+                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 12h18M6 9l6-6 6 6M6 15l6 6 6-6" />
+                  </svg>
+                  Vertical
+                </button>
+              </div>
             </div>
           </div>
         )}

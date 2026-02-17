@@ -68,7 +68,11 @@ const Template3 = ({ landingPageData, fetchData }) => {
       ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
       : "50% 50%";
     const objectFit = adjustments.objectFit || "cover";
-    return { objectPosition, objectFit };
+    const zoom = adjustments.zoom || 100;
+    const mirrorX = adjustments.mirrorX || false;
+    const mirrorY = adjustments.mirrorY || false;
+    const transform = `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+    return { objectPosition, objectFit, transform };
   };
 
   const handlePrevious = () => {
@@ -89,7 +93,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
         <div className="container flex gap-5 justify-between px-8 mdx:flex-col mdx:px-5">
           {(() => {
             const currentImage = images[currentImageIndex] ?? "/dhwise-images/placeholder.png";
-            const { objectPosition, objectFit } = getImageAdjustments(currentImage);
+            const { objectPosition, objectFit, transform } = getImageAdjustments(currentImage);
             return (
               <motion.div
                 key={currentImageIndex}
@@ -106,6 +110,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                   style={{
                     objectFit: objectFit,
                     objectPosition: objectPosition,
+                    transform: transform,
                   }}
                 />
               </motion.div>
@@ -199,7 +204,11 @@ const Template2 = ({ landingPageData, fetchData }) => {
       ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
       : "50% 50%";
     const objectFit = adjustments.objectFit || "cover";
-    return { objectPosition, objectFit };
+    const zoom = adjustments.zoom || 100;
+    const mirrorX = adjustments.mirrorX || false;
+    const mirrorY = adjustments.mirrorY || false;
+    const transform = `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+    return { objectPosition, objectFit, transform };
   };
 
   const handlePrevious = () => {
@@ -219,7 +228,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
         <div className="container flex gap-5 justify-between px-8 mdx:flex-col mdx:px-5">
           {(() => {
             const currentImage = images[currentImageIndex] ?? "/dhwise-images/placeholder.png";
-            const { objectPosition, objectFit } = getImageAdjustments(currentImage);
+            const { objectPosition, objectFit, transform } = getImageAdjustments(currentImage);
             return (
               <motion.div
                 key={currentImageIndex}
@@ -236,6 +245,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
                   style={{
                     objectFit: objectFit,
                     objectPosition: objectPosition,
+                    transform: transform,
                   }}
                 />
               </motion.div>
@@ -330,7 +340,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
       ? `${adjustments.objectPosition.x}% ${adjustments.objectPosition.y}%`
       : "50% 50%";
     const objectFit = adjustments.objectFit || "cover";
-    return { objectPosition, objectFit };
+    const zoom = adjustments.zoom || 100;
+    const mirrorX = adjustments.mirrorX || false;
+    const mirrorY = adjustments.mirrorY || false;
+    const transform = `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+    return { objectPosition, objectFit, transform };
   };
 
   // Extract colors for dependency tracking
@@ -535,7 +549,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 const imageHeight = isLargeImage ? "320px" : "240px";
                 const imageWidth = isLargeImage ? "320px" : "240px";
                 const imageUrl = img ?? "/dhwise-images/placeholder.png";
-                const { objectPosition, objectFit } = getImageAdjustments(imageUrl);
+                const { objectPosition, objectFit, transform } = getImageAdjustments(imageUrl);
                 
                 return (
                   <div
@@ -556,6 +570,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         height: imageHeight,
                         objectFit: objectFit,
                         objectPosition: objectPosition,
+                        transform: transform,
                       }}
                     />
                   </div>
