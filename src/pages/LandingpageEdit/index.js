@@ -2743,17 +2743,14 @@ export default function LandingpageEdit({ paramsId }) {
                     </div>
                     {[
                       // { key: "flexaligntop" },
-                      ...(landingPageData?.menuItems ?? [])?.sort((a, b) => a.sort - b.sort),
+                      ...(landingPageData?.menuItems ?? [])
+                        ?.filter(section => section.active && section.visible !== false)
+                        ?.sort((a, b) => a.sort - b.sort),
                       { key: "flexalign", id: "footer", visible: true, active: true, sort: 1000, },
                       { key: "search", id: "search", visible: true, active: true, sort: 1001, },
                     ].map((section, idx) => {
                       const isHidden = section.visible === false;
                       console.log("section===>", section);
-                      const isActive = section.active;
-                      if (!isActive) {
-                        console.log("section", section);
-                        return null;
-                      }
                       return (
                         <div
                           key={`section-${idx}`}
