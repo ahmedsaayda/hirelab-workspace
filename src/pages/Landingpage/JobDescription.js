@@ -499,7 +499,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
   function layoutAdjustment() {
     return (<>
       <h2
-        className="text-[2.5rem] font-bold mb-2"
+        className="text-[1.75rem] sm:text-[2rem] md:text-[2.5rem] font-bold mb-2 break-words"
         style={{ fontFamily: subheaderFont?.family }}
         ref={jobDescriptionTitleRef}
         onClick={() => handleItemClick("jobDescriptionTitle")}
@@ -513,7 +513,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
         </span>
       </h2>
       <h3
-        className="mb-8"
+        className="mb-8 break-words"
         ref={jobDescriptionSubheaderRef}
         onClick={() => handleItemClick("jobDescriptionSubheader")}
         style={{ fontFamily: subheaderFont?.family }}
@@ -548,9 +548,9 @@ const Template1 = ({ landingPageData, fetchData }) => {
         />
       </svg>
 
-      <div className="mx-auto mb-24 max-w-6xl md:my-8">
+      <div className="mx-auto mb-24 max-w-6xl md:my-8 overflow-hidden">
         <div className="grid gap-8 items-start md:grid-cols-2 md:gap-16">
-          <div className="lg:hidden">
+          <div className="lg:hidden min-w-0 overflow-hidden">
             {layoutAdjustment()}
 
           </div>
@@ -691,14 +691,14 @@ const Template1 = ({ landingPageData, fetchData }) => {
           </div>
 
           {/* Content Section */}
-          <div>
+          <div className="min-w-0 overflow-hidden">
             <div className="hidden lg:block">
               {layoutAdjustment()}
 
             </div>
             <div className="space-y-6">
               <p
-                className="leading-relaxed"
+                className="leading-relaxed break-words"
                 ref={jobDescriptionRef}
                 onClick={() => handleItemClick("jobDescription")}
                 style={{ fontFamily: bodyFont?.family }}
