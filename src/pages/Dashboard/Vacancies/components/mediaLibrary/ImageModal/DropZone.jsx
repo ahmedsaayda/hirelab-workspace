@@ -6,7 +6,7 @@ const DropZone = ({
   onFilesSelected, 
   isUploading = false,
   multiple = false,
-  accept = 'image/*'
+  accept = 'image/*,video/*'
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -65,7 +65,11 @@ const DropZone = ({
           <p className="text-base sm:text-lg font-medium text-gray-700">Drag & Drop</p>
           <p className="text-xs sm:text-sm font-medium text-gray-500">Click Here to Upload</p>
           <p className="text-xs text-gray-400 px-2">
-            {accept.includes('video') ? 'Videos' : 'Images'} • Max {multiple ? 'multiple files' : '1 file'}
+            {accept.includes('video') && accept.includes('image') 
+              ? 'Images & Videos' 
+              : accept.includes('video') 
+                ? 'Videos' 
+                : 'Images'} • Max {multiple ? 'multiple files' : '1 file'}
           </p>
           
           <input

@@ -1,5 +1,5 @@
 import React, { useRef, useLayoutEffect, useEffect } from "react";
-import { Heading, Img, Text } from "./components";
+import { Heading, Img, Text, MediaRenderer, isVideoUrl } from "./components";
 import { useHover } from "../../contexts/HoverContext";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette";
 import { getFonts } from "./getFonts";
@@ -138,7 +138,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
               <div className="absolute left-0 top-0 m-auto h-[156px] w-[156px] rounded-[78px] bg-gradient-to-b from-[#83c0fd19] to-[#5207CD19]" />
             </div>
             {landingPageData?.evpMissionAvatar && (
-              <Img
+              <MediaRenderer
                 src={landingPageData?.evpMissionAvatar}
                 alt="Ceo Image"
                 className="h-[344px] w-[28%] self-end rounded object-contain mdx:w-full mdx:self-auto"
@@ -243,7 +243,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
               <div className="absolute left-0 top-0 m-auto h-[156px] w-[156px] rounded-[78px] bg-gradient-to-b from-[#83c0fd19] to-[#5207CD19]" />
             </div>
             {landingPageData?.evpMissionAvatar && (
-              <Img
+              <MediaRenderer
                 src={landingPageData?.evpMissionAvatar}
                 alt="Ceo Image"
                 className="h-[344px] w-[28%] self-end rounded object-contain mdx:w-full mdx:self-auto"
@@ -362,7 +362,7 @@ const {  subheaderFont, bodyFont } = getFonts(landingPageData);
               
               {/* Main Image */}
               <div className="overflow-hidden absolute inset-0 rounded-3xl">
-                  <Img
+                  <MediaRenderer
                     src={
                       landingPageData?.evpMissionAvatar ||
                        "/dhwise-images/placeholder.png"

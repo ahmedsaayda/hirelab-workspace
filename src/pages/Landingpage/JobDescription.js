@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button, Heading, Img, Text } from "./components/index.jsx";
+import { Button, Heading, Img, Text, MediaRenderer, isVideoUrl } from "./components/index.jsx";
 import { getThemeData } from "../../utils/destructureTheme.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import { useHover } from "../../contexts/HoverContext.js";
@@ -67,6 +67,33 @@ const useJobDescriptionHover = () => {
 
 const Template2 = ({ landingPageData, fetchData }) => {
   const [showMore, setShowMore] = useState(false);
+  const { handleItemClick } = useFocusContext();
+  const {
+    jobDescriptionSectionRef,
+    jobDescriptionTitleRef,
+    jobDescriptionSubheaderRef,
+    jobDescriptionRef,
+  } = useJobDescriptionHover();
+  const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
+
+  // Extract colors for Template 2 theme
+  const primaryColor = landingPageData?.primaryColor || "#0068D6";
+  const secondaryColor = landingPageData?.secondaryColor || "#f5590c";
+  const tertiaryColor = landingPageData?.tertiaryColor || "#3396FF";
+
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
+
   const aboutTheJobText = landingPageData?.jobDescription?.replace?.(
     /\n/g,
     "<br>"
@@ -76,80 +103,238 @@ const Template2 = ({ landingPageData, fetchData }) => {
       ? aboutTheJobText.split(" ").slice(0, 50).join(" ") + "..."
       : aboutTheJobText;
 
-  const themeData = getThemeData(landingPageData?.theme);
-
-  const { basePrimary, baseSecondary, baseTertiary } = themeData;
-  const { variantPl1, variantPl2, variantPl3, variantPl4 } = themeData;
-  const { variantPd1, variantPd2, variantPd3, variantPd4, variantPd5 } =
-    themeData;
-  const { variantSl1, variantSl2, variantSl3, variantSl4 } = themeData;
-  const { variantSd1, variantSd2, variantSd3, variantSd4, variantSd5 } =
-    themeData;
-  const { variantTl1, variantTl2, variantTl3, variantTl4 } = themeData;
-  const { variantTd1, variantTd2, variantTd3, variantTd4, variantTd5 } =
-    themeData;
-  const { textHeadingColor, textSubHeadingColor } = themeData;
+  // Split title: first word separate, rest gets highlight
+  const titleParts = React.useMemo(() => {
+    const title = landingPageData?.jobDescriptionTitle || "About The Job";
+    const words = title.split(" ");
+    return {
+      firstWord: words[0] || "",
+      restWords: words.slice(1).join(" ")
+    };
+  }, [landingPageData?.jobDescriptionTitle]);
 
   return (
-    <>
-      <div
-        className="flex h-[510px] items-center justify-center  bg-cover bg-no-repeat py-24 mdx:h-auto mdx:py-5"
-        style={{
-          backgroundImage: "url(/images3/img_recruiter_contact.png)",
-          backgroundColor: variantPl4,
-          color: textHeadingColor,
-        }}
-      >
-        <div className="container flex justify-center px-8 max-w-4xl mdx:px-5">
-          <div className="flex w-full flex-col gap-[30px]">
-            <div className="flex flex-col gap-[30px]">
-              <div className="flex flex-col items-start gap-[22px]">
-                <Heading
-                  as="h2"
-                  className="text-[36px] font-semibold tracking-[-0.72px] text-[#0f1728] mdx:text-[34px] sm:text-[32px]"
-                >
-                  {landingPageData?.jobDescriptionTitle}
-                </Heading>
-                <Heading
-                  as="h4"
-                  className="text-[16px] font-normal tracking-[-0.72px] text-[#0f1728] mdx:text-[34px] sm:text-[32px]"
-                >
-                  {landingPageData?.jobDescriptionSubheader}
-                </Heading>
-                <Text
-                  size="text_xl_regular"
-                  as="p"
-                  className="text-[20px] font-normal text-[#475466]"
-                >
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: showMore ? aboutTheJobText : truncatedText,
-                    }}
-                  ></span>
-                  {aboutTheJobText?.split(" ").length > 50 && (
-                    <button
-                      onClick={() => setShowMore(!showMore)}
-                      style={{
-                        display: "inline",
-                        marginLeft: "5px",
-                        color: "#5207CD",
-                        textDecoration: "underline",
-                        textDecorationThickness: "2px",
-                        textUnderlineOffset: "4px",
-                        cursor: "pointer",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {showMore ? getTranslation(landingPageData?.lang, 'readLess') : getTranslation(landingPageData?.lang, 'readMore')}
-                    </button>
-                  )}
-                </Text>
-              </div>
+    <div
+      id="job-description"
+      ref={jobDescriptionSectionRef}
+      className="w-full bg-white pt-[200px] pb-[100px] px-4 md:px-8 lg:px-[72px] overflow-visible"
+      style={{ fontFamily: bodyFont?.family || "Inter, sans-serif" }}
+    >
+      <div className="flex flex-col lg:flex-row gap-[64px] items-center max-w-[1440px] mx-auto">
+        {/* Left Content */}
+        <div className="flex-1 flex flex-col gap-[64px] min-w-0">
+          {/* Title Section */}
+          <div className="flex flex-col gap-[28px] items-start">
+            {/* Title with highlighted part - matching Figma exactly */}
+            <div className="relative inline-grid">
+              {/* Blue gradient highlight - positioned behind "The Job" */}
+              <div 
+                className="col-start-1 row-start-1 h-[20px] rounded-[8px]"
+                style={{
+                  background: `linear-gradient(to right, ${getColor("primary", 200)}, transparent)`,
+                  marginLeft: "141.5px",
+                  marginTop: "38px",
+                  width: "160px",
+                }}
+              />
+              <h2
+                ref={jobDescriptionTitleRef}
+                onClick={() => handleItemClick("jobDescriptionTitle")}
+                className="col-start-1 row-start-1 font-semibold cursor-pointer text-center"
+                style={{
+                  fontFamily: titleFont?.family || "Inter, sans-serif",
+                  fontSize: "48px",
+                  lineHeight: "60px",
+                  letterSpacing: "-1.44px",
+                  color: "#292929",
+                }}
+              >
+                {landingPageData?.jobDescriptionTitle || "About The Job"}
+              </h2>
+            </div>
+
+            {/* Subheader */}
+            <p
+              ref={jobDescriptionSubheaderRef}
+              onClick={() => handleItemClick("jobDescriptionSubheader")}
+              className="cursor-pointer text-center"
+              style={{
+                fontSize: "16px",
+                lineHeight: "24px",
+                color: "#7c7c7c",
+                fontFamily: subheaderFont?.family || "Inter, sans-serif",
+              }}
+            >
+              {landingPageData?.jobDescriptionSubheader || "Some text can be placed here...."}
+            </p>
+          </div>
+
+          {/* Description Text */}
+          <div className="flex flex-col gap-[36px] items-start w-full">
+            <div
+              ref={jobDescriptionRef}
+              onClick={() => handleItemClick("jobDescription")}
+              className="cursor-pointer w-full"
+              style={{
+                fontSize: "16px",
+                lineHeight: "24px",
+                color: "#292929",
+                fontFamily: bodyFont?.family || "Inter, sans-serif",
+              }}
+            >
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: showMore ? aboutTheJobText : truncatedText,
+                }}
+              />
+            </div>
+
+            {/* Read More Button */}
+            <button
+              onClick={() => setShowMore(!showMore)}
+              className="flex items-center justify-center gap-[10px] h-[44px] px-[28px] rounded-[30px] font-semibold text-white transition-all hover:opacity-90"
+              style={{
+                backgroundColor: getColor("secondary", 500),
+                fontSize: "16px",
+                lineHeight: "24px",
+                fontFamily: bodyFont?.family || "Inter, sans-serif",
+              }}
+            >
+              {showMore ? getTranslation(landingPageData?.lang, 'readLess') : getTranslation(landingPageData?.lang, 'readMore')}
+            </button>
+          </div>
+        </div>
+
+        {/* Right Image Section - Grid layout matching Figma */}
+        <div 
+          className="relative shrink-0 hidden lg:grid overflow-visible"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "max-content",
+            gridTemplateRows: "max-content",
+          }}
+        >
+          {/* Large orange arc - positioned to right of image */}
+          <div 
+            className="col-start-1 row-start-1 flex items-center justify-center overflow-visible"
+            style={{
+              width: "300px",
+              height: "300px",
+              marginLeft: "420px",
+              marginTop: "220px",
+            }}
+          >
+            <svg 
+              width="300" 
+              height="300" 
+              viewBox="0 0 300 300" 
+              fill="none"
+              style={{ overflow: "visible" }}
+            >
+              {/* Three-quarter arc from top to bottom-left */}
+              <path
+                d="M 150 0 A 150 150 0 1 1 0 150"
+                stroke={getColor("secondary", 500)}
+                strokeWidth="36"
+                strokeLinecap="round"
+                fill="none"
+              />
+            </svg>
+          </div>
+
+          {/* Small orange/peach filled circle - top left */}
+          <div 
+            className="col-start-1 row-start-1 rounded-full"
+            style={{
+              width: "148px",
+              height: "148px",
+              marginLeft: "0",
+              marginTop: "27px",
+              background: "linear-gradient(180deg, #fcd5c0 0%, #fae0d2 100%)",
+            }}
+          />
+
+          {/* Main Image with white border */}
+          <div
+            className="col-start-1 row-start-1 bg-white overflow-hidden rounded-[16px]"
+            style={{
+              width: "480px",
+              height: "480px",
+              marginLeft: "103px",
+              marginTop: "0",
+              padding: "20px",
+              boxShadow: "0px 32.88px 50.815px 11.956px rgba(0, 0, 0, 0.03)",
+            }}
+          >
+            <div className="w-full h-full overflow-hidden rounded-[12px]">
+              <MediaRenderer
+                src={landingPageData?.jobDescriptionImage || "/dhwise-images/placeholder.png"}
+                alt="Job Description"
+                className="w-full h-full object-cover"
+                style={{
+                  objectPosition: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectPosition
+                    ? `${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.x}% ${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.y}%`
+                    : "50% 50%",
+                  objectFit: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectFit || "cover",
+                }}
+              />
             </div>
           </div>
         </div>
+
+        {/* Mobile Image Section - Simplified version */}
+        <div className="relative shrink-0 lg:hidden">
+          {/* Small orange circle - top left */}
+          <div 
+            className="absolute -left-4 -top-4 w-[80px] h-[80px] rounded-full z-0"
+            style={{
+              background: "linear-gradient(180deg, #fcd5c0 0%, #fae0d2 100%)",
+            }}
+          />
+
+          {/* Main Image with white border */}
+          <div
+            className="relative z-10 bg-white overflow-hidden rounded-[16px]"
+            style={{
+              width: "100%",
+              maxWidth: "350px",
+              padding: "16px",
+              boxShadow: "0px 32.88px 50.815px 11.956px rgba(0, 0, 0, 0.03)",
+            }}
+          >
+            <div className="w-full aspect-square overflow-hidden rounded-[12px]">
+              <MediaRenderer
+                src={landingPageData?.jobDescriptionImage || "/dhwise-images/placeholder.png"}
+                alt="Job Description"
+                className="w-full h-full object-cover"
+                style={{
+                  objectPosition: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectPosition
+                    ? `${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.x}% ${landingPageData.imageAdjustment.jobDescriptionImage.objectPosition.y}%`
+                    : "50% 50%",
+                  objectFit: landingPageData?.imageAdjustment?.jobDescriptionImage?.objectFit || "cover",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Orange arc - right side */}
+          <svg 
+            className="absolute -right-8 top-1/2 -translate-y-1/2 z-0"
+            width="100" 
+            height="200" 
+            viewBox="0 0 100 200" 
+            fill="none"
+          >
+            <path
+              d="M100 100C100 155.228 55.228 200 0 200C0 144.772 0 55.228 0 0C55.228 0 100 44.772 100 100"
+              stroke={getColor("secondary", 500)}
+              strokeWidth="2"
+              fill="none"
+            />
+          </svg>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
@@ -417,7 +602,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
                 {/* Main Image */}
                 <div className="overflow-hidden absolute inset-0 rounded-3xl">
-                  <Img
+                  <MediaRenderer
                     src={
                       landingPageData?.jobDescriptionImage ||
                       "/dhwise-images/placeholder.png"

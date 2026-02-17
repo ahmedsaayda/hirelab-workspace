@@ -890,7 +890,8 @@ export default function FormEdit({ paramsId }) {
         required: false
       },
       whatsApply: {
-        enabled: true,
+        enabled: false,
+        phoneNumber: "",
         messageTemplate: "Hi, I saw the vacancy {{url}} and I want to apply for {{jobTitle}} at {{companyName}}.",
       },
       autoJumpToNext: false,
@@ -902,7 +903,7 @@ export default function FormEdit({ paramsId }) {
         }, ...(base?.respondentEmail || {})
       },
       optIn: { ...{ enabled: false, showMessage: true, messagePlacement: "contact", header: "", description: "", required: false }, ...(base?.optIn || {}) },
-      whatsApply: { ...{ enabled: true, messageTemplate: "Hi, I saw the vacancy {{url}} and I want to apply for {{jobTitle}} at {{companyName}}." }, ...(base?.whatsApply || {}) },
+      whatsApply: { ...{ enabled: false, phoneNumber: "", messageTemplate: "Hi, I saw the vacancy {{url}} and I want to apply for {{jobTitle}} at {{companyName}}." }, ...(base?.whatsApply || {}) },
     };
   }, [landingPageData?.form?.settings]);
 
@@ -1184,13 +1185,31 @@ export default function FormEdit({ paramsId }) {
           extra={
             <Switch
               size="small"
-              checked={s.whatsApply?.enabled !== false}
+              checked={!!s.whatsApply?.enabled && !!s.whatsApply?.phoneNumber}
               onChange={(v) => updateSettings({ whatsApply: { ...s.whatsApply, enabled: v } })}
             />
           }
         >
-          {s.whatsApply?.enabled !== false && (
+          {s.whatsApply?.enabled && (
             <div className="mt-3 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+              <div>
+                <div className="text-xs text-gray-600 mb-1">WhatsApp Phone Number <span className="text-red-500">*</span></div>
+                <Input
+                  placeholder="+31 6 12345678"
+                  value={s.whatsApply?.phoneNumber || ""}
+                  onChange={(e) =>
+                    updateSettings({ whatsApply: { ...s.whatsApply, phoneNumber: e.target.value } })
+                  }
+                />
+                <div className="text-xs text-gray-400 mt-1">
+                  Enter your WhatsApp number with country code (e.g., +31 for Netherlands)
+                </div>
+                {!s.whatsApply?.phoneNumber && (
+                  <div className="text-xs text-orange-500 mt-1">
+                    ⚠️ WhatsApply will be disabled until a phone number is provided
+                  </div>
+                )}
+              </div>
               <div>
                 <div className="text-xs text-gray-600 mb-1">Initial Message Template</div>
                 <TextArea

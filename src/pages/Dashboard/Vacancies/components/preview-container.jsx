@@ -250,7 +250,8 @@ export function PreviewContainer({
   const [styles, setStyles] = useState("");
   const [fontStyles, setFontStyles] = useState("");
 
-  // Memoize base styles since they don't change
+  // Memoize base styles - depends on templateId for navbar padding
+  const isTemplate2 = landingPageData?.templateId === "2";
   const baseStyles = React.useMemo(() => {
     const styleSheets = Array.from(document.styleSheets);
     const stylesArray = styleSheets.map((sheet) => {
@@ -263,17 +264,20 @@ export function PreviewContainer({
       }
     });
 
+    // Template2 has header built into hero, so no body padding needed
+    const navbarPadding = isTemplate2 ? '0px' : 'var(--navbar-height, 128px)';
+
     return stylesArray.join("\n") + `
       
       html {
         scroll-behavior: smooth;
-        scroll-padding-top: var(--navbar-height, 128px);
+        scroll-padding-top: ${navbarPadding};
         height: auto !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
       }
       body {
-        padding-top: var(--navbar-height, 128px);
+        padding-top: ${navbarPadding};
         min-height: 100%;
         height: auto !important;
         overflow-y: auto !important;
@@ -445,7 +449,7 @@ export function PreviewContainer({
       
     
     `;
-  }, []);
+  }, [isTemplate2]);
 
   useEffect(() => {
     setStyles(baseStyles);

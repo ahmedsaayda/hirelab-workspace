@@ -1067,7 +1067,7 @@ const FromScratchModal = ({ onClose, ongoBack, onRefresh }) => {
                     ? "bg-blue-300 cursor-not-allowed"
                     : "bg-blue-500 hover:bg-blue-600"
                     } rounded-md`}
-                  disabled={selectedTemplate === -1 || selectedTemplate !== 1}
+                  disabled={selectedTemplate === -1 || (selectedTemplate !== 1 && selectedTemplate !== 2)}
                 >
                   Next
                 </button>

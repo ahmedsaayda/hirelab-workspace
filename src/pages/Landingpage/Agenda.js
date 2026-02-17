@@ -64,83 +64,343 @@ import { Divider } from "antd";
 import { GridPattern } from "./HeroSection.js";
 
 const Template2 = ({ landingPageData, fetchData, setLandingPageData }) => {
-  const [dailyScheduleList, setDailyScheduleList] = useState(
-    landingPageData?.dailyScheduleList || []
+  const { handleItemClick } = useFocusContext();
+  const { sectionRef, titleRef, descriptionRef, agendaItemRefs } = useAgendaHover();
+  const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
+
+  // Extract colors for Template 2 theme
+  const primaryColor = landingPageData?.primaryColor || "#0068D6";
+  const secondaryColor = landingPageData?.secondaryColor || "#f5590c";
+  const tertiaryColor = landingPageData?.tertiaryColor || "#3396FF";
+
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
   );
 
-  useEffect(() => {
-    setDailyScheduleList(landingPageData?.dailyScheduleList);
-  }, [dailyScheduleList, landingPageData, setLandingPageData]);
+  // Default agenda items matching the Figma design
+  const defaultAgendaItems = [
+    {
+      type: "warmup",
+      label: "WARM UP",
+      title: "Morning Check-In & Team Sync",
+      description: "Team updates and announcements",
+      startTime: "9.00",
+      endTime: "10.00",
+      startPeriod: "AM",
+      endPeriod: "AM",
+      duration: "1 hr",
+      icon: "📍",
+    },
+    {
+      type: "working",
+      label: "WORKING",
+      title: "Review Project Timelines & Milestones",
+      description: "Discuss current project progress",
+      startTime: "10.00",
+      endTime: "1.00",
+      startPeriod: "AM",
+      endPeriod: "PM",
+      duration: "3 hr",
+      icon: "💻",
+    },
+    {
+      type: "break",
+      label: "BREAK",
+      title: "Lunch Break",
+      description: "Break for lunch time",
+      startTime: "1.00",
+      endTime: "2.00",
+      startPeriod: "PM",
+      endPeriod: "PM",
+      duration: "1 hr",
+      icon: "🍔",
+    },
+    {
+      type: "working",
+      label: "WORKING",
+      title: "Budget Review & Resource Allocation",
+      description: "Review current project budget expenditures.",
+      startTime: "2.00",
+      endTime: "5.30",
+      startPeriod: "PM",
+      endPeriod: "PM",
+      duration: "3 hr 30 min",
+      icon: "💻",
+    },
+    {
+      type: "wrapup",
+      label: "WRAP UP",
+      title: "End-of-Day Wrap-Up",
+      description: "Summarize key decisions and action items.",
+      startTime: "5.30",
+      endTime: "6.00",
+      startPeriod: "PM",
+      endPeriod: "PM",
+      duration: "30 min",
+      icon: "📍",
+    },
+  ];
 
-  const themeData = getThemeData(landingPageData?.theme);
+  // Map dailyScheduleList to agenda format if available
+  const agendaItems = landingPageData?.dailyScheduleList?.length > 0
+    ? landingPageData.dailyScheduleList.map((item, index) => {
+        const types = ["warmup", "working", "break", "working", "wrapup"];
+        const labels = ["WARM UP", "WORKING", "BREAK", "WORKING", "WRAP UP"];
+        const icons = ["📍", "💻", "🍔", "💻", "📍"];
+        
+        return {
+          type: types[index % types.length],
+          label: labels[index % labels.length],
+          title: item.eventTitle || `Agenda Item ${index + 1}`,
+          description: item.description || "No description provided",
+          startTime: item.dateTimeSlot?.startTime || "9.00",
+          endTime: item.dateTimeSlot?.endTime || "10.00",
+          startPeriod: "AM",
+          endPeriod: "AM",
+          duration: "1 hr",
+          icon: icons[index % icons.length],
+          originalIndex: index,
+        };
+      })
+    : defaultAgendaItems;
 
-  const { basePrimary, baseSecondary, baseTertiary } = themeData;
-  const { variantPl1, variantPl2, variantPl3, variantPl4 } = themeData;
-  const { variantPd1, variantPd2, variantPd3, variantPd4, variantPd5 } =
-    themeData;
-  const { variantSl1, variantSl2, variantSl3, variantSl4 } = themeData;
-  const { variantSd1, variantSd2, variantSd3, variantSd4, variantSd5 } =
-    themeData;
-  const { variantTl1, variantTl2, variantTl3, variantTl4 } = themeData;
-  const { variantTd1, variantTd2, variantTd3, variantTd4, variantTd5 } =
-    themeData;
-  const { textHeadingColor, textSubHeadingColor } = themeData;
+  // Get colors based on type
+  const getTypeColors = (type) => {
+    if (type === "working") {
+      return {
+        bg: getColor("secondary", 100),
+        text: getColor("secondary", 700),
+      };
+    }
+    return {
+      bg: getColor("primary", 200),
+      text: getColor("primary", 700),
+    };
+  };
 
   return (
-    <>
-      <div>
-        <div className="relative" style={{ backgroundColor: variantPl3 }}>
-          <div className="hidden absolute md:block">
-            <DottedAgenda
-              className="w-50 h-50"
-              style={{ backgroundColor: variantPl3 }}
+    <div
+      id="agenda"
+      ref={sectionRef}
+      className="w-full bg-white pt-[200px] pb-[100px] px-4 md:px-8 lg:px-[72px]"
+      style={{ fontFamily: bodyFont?.family || "Inter, sans-serif" }}
+    >
+      <div className="flex flex-col gap-[64px] items-center max-w-[1296px] mx-auto">
+        {/* Title Section */}
+        <div className="flex flex-col gap-[28px] items-center w-full">
+          {/* Title with blue gradient highlight */}
+          <div className="relative inline-grid">
+            <div 
+              className="col-start-1 row-start-1 h-[24px] rounded-[8px]"
+              style={{
+                background: `linear-gradient(to right, ${getColor("primary", 200)}, transparent)`,
+                marginLeft: "0",
+                marginTop: "32px",
+                width: "191px",
+              }}
             />
-          </div>
-          <div className="flex flex-col gap-3.5 items-center px-14 py-2 d-none mdx:px-5">
-            <Heading
-              as="h2"
-              className="text-[36px] font-semibold tracking-[-0.72px] text-[#000] mdx:text-[34px] smx:text-[32px]"
-              style={{ color: variantPd5 }}
+            <h2
+              ref={titleRef}
+              onClick={() => handleItemClick("agendaTitle")}
+              className="col-start-1 row-start-1 font-semibold cursor-pointer text-center"
+              style={{
+                fontFamily: titleFont?.family || "Inter, sans-serif",
+                fontSize: "48px",
+                lineHeight: "60px",
+                letterSpacing: "-1.44px",
+                color: "#292929",
+              }}
             >
-              {landingPageData?.agendaTitle}
-            </Heading>
-            <Text
-              size="text_xl_regular"
-              as="p"
-              className="text-[20px] font-normal text-[#000]"
-              style={{ color: variantPd5 }}
-            >
-              {landingPageData?.agendaDescription}
-            </Text>
+              {landingPageData?.agendaTitle || "Agenda"}
+            </h2>
           </div>
 
-          <div className="flex flex-col md:flex-row">
-            <div className="w-full">
-              <div className="sm:w-full  text-[#000000] p-5 pb-[70px]">
-                <div className="bg-white md:w-[75%] mx-auto relative">
-                  <div className="bg-white" style={{ zIndex: 9999 }}>
-                    <Suspense fallback={<div>Loading feed...</div>}>
-                      <ScheduleOverview dailyScheduleList={dailyScheduleList} />
-                    </Suspense>
+          {/* Subtitle */}
+          <p
+            ref={descriptionRef}
+            onClick={() => handleItemClick("agendaDescription")}
+            className="cursor-pointer text-center"
+            style={{
+              fontSize: "16px",
+              lineHeight: "24px",
+              color: "#7c7c7c",
+              fontFamily: subheaderFont?.family || "Inter, sans-serif",
+            }}
+          >
+            {landingPageData?.agendaDescription || "Take a glimpse of how your agenda might look like."}
+          </p>
+        </div>
+
+        {/* Agenda Cards List */}
+        <div className="flex flex-col gap-[20px] items-center w-full max-w-[636px]">
+          {agendaItems.map((item, index) => {
+            const colors = getTypeColors(item.type);
+            const originalIndex = item.originalIndex !== undefined ? item.originalIndex : index;
+            
+            return (
+              <div
+                key={index}
+                className="flex items-stretch w-full overflow-hidden rounded-[24px]"
+                style={{
+                  backgroundColor: colors.bg,
+                  boxShadow: "0px 44px 68px 16px rgba(0, 0, 0, 0.03)",
+                }}
+              >
+                {/* Left Colored Sidebar with Vertical Text */}
+                <div
+                  className="relative flex-shrink-0 overflow-hidden"
+                  style={{
+                    width: "58px",
+                    minHeight: "196px",
+                    backgroundColor: colors.bg,
+                  }}
+                >
+                  {/* Vertical Text */}
+                  <div 
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
+                    style={{ width: "12px", height: "78px" }}
+                  >
+                    <p
+                      className="font-semibold text-center whitespace-nowrap"
+                      style={{
+                        transform: "rotate(-90deg)",
+                        fontSize: "16px",
+                        lineHeight: "24px",
+                        color: colors.text,
+                        fontFamily: bodyFont?.family || "Inter, sans-serif",
+                      }}
+                    >
+                      {item.label}
+                    </p>
+                  </div>
+                  
+                  {/* Gradient shadow overlay */}
+                  <div
+                    className="absolute top-0 h-full"
+                    style={{
+                      left: "33px",
+                      width: "47px",
+                      background: "linear-gradient(to left, rgba(0,0,0,0.08), rgba(0,0,0,0))",
+                      mixBlendMode: "soft-light",
+                    }}
+                  />
+                </div>
+
+                {/* White Body */}
+                <div
+                  className="flex flex-col gap-[32px] flex-1 bg-white p-[24px] rounded-[24px] overflow-hidden"
+                  style={{ width: "578px" }}
+                >
+                  {/* Content Row */}
+                  <div className="flex gap-[24px] items-center">
+                    {/* Icon */}
+                    <div
+                      className="flex items-center justify-center shrink-0 bg-white rounded-[16px]"
+                      style={{
+                        width: "64px",
+                        height: "64px",
+                        boxShadow: "0px 12px 36px 0px rgba(0, 0, 0, 0.07)",
+                      }}
+                    >
+                      <span style={{ fontSize: "32px" }}>{item.icon}</span>
+                    </div>
+
+                    {/* Text */}
+                    <div className="flex flex-col gap-[12px] flex-1">
+                      <p
+                        ref={(el) => {
+                          agendaItemRefs.current[`dailyScheduleList[${originalIndex}].eventTitle`] = el;
+                        }}
+                        onClick={() => handleItemClick(`dailyScheduleList[${originalIndex}].eventTitle`)}
+                        className="font-semibold cursor-pointer"
+                        style={{
+                          fontSize: "20px",
+                          lineHeight: "24px",
+                          color: "#292929",
+                          fontFamily: titleFont?.family || "Inter, sans-serif",
+                        }}
+                      >
+                        {item.title}
+                      </p>
+                      
+                      <div className="flex gap-[12px] items-center">
+                        {/* Arrow icon */}
+                        <svg width="32" height="16" viewBox="0 0 32 16" fill="none">
+                          <path d="M0 8H28M28 8L22 2M28 8L22 14" stroke="#7abaff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/>
+                        </svg>
+                        <p
+                          ref={(el) => {
+                            agendaItemRefs.current[`dailyScheduleList[${originalIndex}].description`] = el;
+                          }}
+                          onClick={() => handleItemClick(`dailyScheduleList[${originalIndex}].description`)}
+                          className="cursor-pointer"
+                          style={{
+                            fontSize: "16px",
+                            lineHeight: "24px",
+                            color: "#525252",
+                            fontFamily: bodyFont?.family || "Inter, sans-serif",
+                          }}
+                        >
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div
-                    className="flex absolute justify-end"
-                    style={{
-                      zIndex: -1,
-                      bottom: "-14%",
-                      right: "-5%",
-                    }}
-                  >
-                    <Dotted2Agenda className="text-blue-500 w-50 h-50" />
+                  {/* Divider */}
+                  <div 
+                    className="w-full" 
+                    style={{ 
+                      height: "1px", 
+                      background: "#efefef",
+                    }} 
+                  />
+
+                  {/* Time Info Row */}
+                  <div className="flex items-center justify-between w-full">
+                    {/* Time */}
+                    <div 
+                      ref={(el) => {
+                        agendaItemRefs.current[`dailyScheduleList[${originalIndex}].dateTimeSlot`] = el;
+                      }}
+                      onClick={() => handleItemClick(`dailyScheduleList[${originalIndex}].dateTimeSlot`)}
+                      className="flex gap-[12px] items-center cursor-pointer"
+                    >
+                      {/* Clock icon */}
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="8" stroke="#292929" strokeWidth="1.5"/>
+                        <path d="M10 6V10L13 12" stroke="#292929" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                      <p style={{ fontSize: "16px", lineHeight: "24px", color: "#292929" }}>
+                        <span className="font-semibold">{item.startTime}</span>
+                        <span> {item.startPeriod} - </span>
+                        <span className="font-semibold">{item.endTime}</span>
+                        <span> {item.endPeriod}</span>
+                      </p>
+                    </div>
+
+                    {/* Duration */}
+                    <p style={{ fontSize: "16px", lineHeight: "24px", color: "#292929" }}>
+                      <span style={{ color: "#7c7c7c" }}>During:</span>
+                      <span> {item.duration}</span>
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

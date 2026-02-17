@@ -23,17 +23,31 @@ export default function HeroThumbnail({ landingPageData }) {
   const objectFit =
     landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover";
 
+  const isVideo = heroImage && (
+    /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(heroImage) ||
+    heroImage.includes("/video/upload/")
+  );
+
   return (
     <div className="w-full h-full overflow-hidden bg-white">
-      <img
-        src={heroImage}
-        alt={landingPageData?.vacancyTitle || "Vacancy hero image"}
-        className="w-full h-full object-cover"
-        style={{
-          objectFit,
-          objectPosition,
-        }}
-      />
+      {isVideo ? (
+        <video
+          src={heroImage}
+          className="w-full h-full object-cover"
+          style={{ objectFit, objectPosition }}
+          muted
+          autoPlay
+          loop
+          playsInline
+        />
+      ) : (
+        <img
+          src={heroImage}
+          alt={landingPageData?.vacancyTitle || "Vacancy hero image"}
+          className="w-full h-full object-cover"
+          style={{ objectFit, objectPosition }}
+        />
+      )}
     </div>
   );
 }

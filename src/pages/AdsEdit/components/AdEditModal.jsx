@@ -17,6 +17,7 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
     image: "",
     videoUrl: "",
     callToAction: "Apply Now",
+    metaCTA: "Apply Now",
   });
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
 
@@ -29,6 +30,7 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
         image: variant.image || "",
         videoUrl: variant.videoUrl || "",
         callToAction: variant.callToAction || "Apply Now",
+        metaCTA: variant.metaCTA || "Apply Now",
       });
     }
   }, [variant]);
@@ -154,14 +156,29 @@ export default function AdEditModal({ open, onClose, variant, onSave, landingPag
           />
         </div>
 
-        {/* Call to Action */}
+        {/* Call to Action (creative overlay - free text) */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Call to Action
+            Call to Action (max 35 characters)
+          </label>
+          <Input
+            value={formData.callToAction}
+            onChange={(e) => setFormData({ ...formData, callToAction: e.target.value })}
+            placeholder="e.g. Apply Now, Join Us..."
+            maxLength={35}
+            showCount
+            size="large"
+          />
+        </div>
+
+        {/* Meta CTA (dropdown) */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Meta Ad CTA Button
           </label>
           <Select
-            value={formData.callToAction}
-            onChange={(value) => setFormData({ ...formData, callToAction: value })}
+            value={formData.metaCTA}
+            onChange={(value) => setFormData({ ...formData, metaCTA: value })}
             className="w-full"
             size="large"
           >

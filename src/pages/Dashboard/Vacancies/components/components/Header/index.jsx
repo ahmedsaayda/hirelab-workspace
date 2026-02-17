@@ -7,12 +7,15 @@ import { Heading, Img } from "..";
 import { ChartPieIcon, HomeIcon, UsersIcon, UserGroupIcon, ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import { EyeOutlined, LinkOutlined, LoadingOutlined } from "@ant-design/icons";
 
+import { useSelector } from "react-redux";
 import CrudService from "../../../../../../services/CrudService";
 import { message } from "antd";
 import LandingPageService from "../../../../../../services/landingPageService";
 import { Button } from "../../../../../Landing/Button";
 import AiService from "../../../../../../services/AiService";
 import languages from "../../../lang.json";
+import { selectUser } from "../../../../../../redux/auth/selectors";
+import featureFlags from "../../../../../../config/featureFlags";
 
 // Convert the language object to array of options and remove duplicates (same as FromScratchModal)
 const languageOptions = Array.from(new Set(Object.values(languages)))
@@ -41,6 +44,9 @@ export default function Header({
   ...props
 }) {
   const router = useRouter();
+  const currentUser = useSelector(selectUser);
+  const isAdmin = currentUser?.role === "admin";
+  const isTemplate2Available = featureFlags.TEMPLATE_2_PUBLIC || isAdmin;
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
   const [previewMode, setPreviewMode] = useState("desktop");
@@ -63,6 +69,10 @@ export default function Header({
   const [metaPixelDraft, setMetaPixelDraft] = useState("");
   const [metaPixelSaving, setMetaPixelSaving] = useState(false);
 
+  // 🔗 External Apply Link states
+  const [externalApplyLinkDraft, setExternalApplyLinkDraft] = useState("");
+  const [externalApplyLinkSaving, setExternalApplyLinkSaving] = useState(false);
+
   // Initialize CTA link from landingPageData
   useEffect(() => {
     if (landingPageData) {
@@ -81,6 +91,11 @@ export default function Header({
   useEffect(() => {
     setMetaPixelDraft(landingPageData?.metaPixelId || "");
   }, [landingPageData?.metaPixelId]);
+
+  // Initialize External Apply Link from landingPageData
+  useEffect(() => {
+    setExternalApplyLinkDraft(landingPageData?.externalApplyLink || "");
+  }, [landingPageData?.externalApplyLink]);
 
   // Save Meta Pixel ID
   const saveMetaPixelId = useCallback(async () => {
@@ -101,6 +116,27 @@ export default function Header({
       setMetaPixelSaving(false);
     }
   }, [metaPixelDraft, lpId, setLandingPageData]);
+
+  // Save External Apply Link
+  const saveExternalApplyLink = useCallback(async () => {
+    const value = (externalApplyLinkDraft || "").trim();
+    // Validate URL format if provided
+    if (value && !value.match(/^https?:\/\/.+/i)) {
+      message.error("Please enter a valid URL starting with http:// or https://");
+      return;
+    }
+    if (!lpId) return;
+    try {
+      setExternalApplyLinkSaving(true);
+      await CrudService.update("LandingPageData", lpId, { externalApplyLink: value || null });
+      setLandingPageData((prev) => ({ ...(prev || {}), externalApplyLink: value || null }));
+      message.success(value ? "External apply link saved" : "External apply link removed (using internal form)");
+    } catch (e) {
+      message.error("Failed to save external apply link");
+    } finally {
+      setExternalApplyLinkSaving(false);
+    }
+  }, [externalApplyLinkDraft, lpId, setLandingPageData]);
 
   const handleSave = async () => {
     console.log("landingPageData", landingPageData?.companyLogo);
@@ -380,12 +416,17 @@ export default function Header({
               </div>
             )}
           </div>
-          <Switch
-            className="ml-3.5"
-            size="small"
-            checked={landingPageData?.published}
-            onChange={(e) => setPublished(e)}
-          />
+{
+  !isAdsEditor && (
+    <Switch
+    className="ml-3.5"
+    size="small"
+    checked={landingPageData?.published}
+    onChange={(e) => setPublished(e)}
+  />
+  )
+}
+  
           {!hideSettings &&
             <Img
             src="/images/settings-02.svg"
@@ -634,6 +675,40 @@ export default function Header({
             </p>
           </div>
 
+          {/* External Apply Link Section */}
+          <div className="py-4">
+            <h3 className="text-lg font-semibold mb-2 text-gray-800">External Apply Link</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Redirect the "Apply Now" button to an external URL instead of the built-in application form.
+            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              External URL (optional)
+            </label>
+            <div className="flex gap-2">
+              <Input
+                value={externalApplyLinkDraft}
+                onChange={(e) => setExternalApplyLinkDraft(e.target.value)}
+                placeholder="https://yoursite.com/apply"
+                className="flex-1"
+              />
+              <button
+                type="button"
+                onClick={saveExternalApplyLink}
+                disabled={externalApplyLinkSaving}
+                className={`px-4 py-2 text-sm font-semibold rounded-md text-white whitespace-nowrap ${
+                  externalApplyLinkSaving ? "bg-[#5207CD]/70 cursor-not-allowed" : "bg-[#5207CD] hover:bg-[#4506A6]"
+                }`}
+              >
+                {externalApplyLinkSaving ? "Saving..." : "Save"}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {externalApplyLinkDraft ? 
+                "When set, clicking \"Apply Now\" will open this link in a new tab." : 
+                "Leave empty to use the built-in application form."}
+            </p>
+          </div>
+
           {/* Template Selection Section */}
           <div className="py-4">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Choose Template</h3>
@@ -672,9 +747,8 @@ export default function Header({
                   <div className="flex flex-col gap-3 self-stretch">
                     <Button
                       onClick={() => {
-                        if (i !== 0) {
-                          return;
-                        }
+                        const canSelect = i === 0 || (i === 1 && isTemplate2Available);
+                        if (!canSelect) return;
                         setLandingPageData((d) => ({
                           ...d,
                           templateId: `${i + 1}`,
@@ -685,16 +759,16 @@ export default function Header({
                         setSettingsDrawerOpen(false);
                         reload();
                       }}
-                      disabled={i !== 0}
                       shape="round"
-                      className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${i === 0
+                      className={`w-full font-semibold  rounded-full smx:px-5 whitespace-nowrap ${
+                        i === 0 || (i === 1 && isTemplate2Available)
                         ? landingPageData?.templateId === `${i + 1}`
                           ? "bg-blue-500 text-[#FFFFFF]"
                           : "bg-[#FFFFFF] text-blue_gray-800_01 border rounded-full border-solid border-blue_gray-100"
                         : "bg-gray-200  cursor-not-allowed"
                         }`}
                     >
-                      {i === 0 ? "Choose Template" : "Coming Soon"}
+                      {i === 0 ? "Choose Template" : (i === 1 && isTemplate2Available) ? "Choose Template" : "Coming Soon"}
                     </Button>
                   </div>
                 </div>

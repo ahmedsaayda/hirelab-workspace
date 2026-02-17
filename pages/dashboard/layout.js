@@ -353,15 +353,20 @@ const Layout = ({ children }) => {
           href: "/dashboard/admin/users",
           icon: UsersIcon,
         },
+        {
+          name: "Ad Templates",
+          href: "/dashboard/admin/templates",
+          icon: SettingsrIcon,
+        },
+        {
+          name: "Statistics",
+          href: "/dashboard/admin/statistics",
+          icon: ChartPieIcon,
+        },
         // {
         //   name: "Role Management",
         //   href: "/dashboard/admin/roles",
         //   icon: SettingsrIcon,
-        // },
-        // {
-        //   name: "Analytics",
-        //   href: "/dashboard/admin/analytics",
-        //   icon: ChartPieIcon,
         // },
 
       ],

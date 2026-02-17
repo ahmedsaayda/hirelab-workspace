@@ -94,6 +94,11 @@ class AiService {
     return this.api.post("/regenerate-ad-field", { lpId, field, currentValue, adTypeId, instruction, language });
   }
 
+  // Generate image with DALL-E AI
+  generateImage({ prompt, size = "1024x1024" }) {
+    return this.api.post("/generate-image", { prompt, size }, { timeout: 60000 });
+  }
+
   // Create multi-job campaign page with backend AI generation
   // This moves AI generation to the backend like single job pages
   createMultiVacanciesPage({ linkedCampaignIds, campaignTitle, language, templateId, brandingDetails, user_id }) {

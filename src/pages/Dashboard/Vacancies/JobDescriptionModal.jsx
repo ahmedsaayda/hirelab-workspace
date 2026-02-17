@@ -174,7 +174,7 @@ function JobDescriptionModal({ onClose, ongoBack, onRefresh }) {
   const isButtonDisabled =
     step === 0
       ? !jobTitle || !department || !language || !jobDescription || jobDescription.length < 1 || isLoading
-      : selectedTemplate === -1 || selectedTemplate !== 1;
+      : selectedTemplate === -1 || (selectedTemplate !== 1 && selectedTemplate !== 2);
 
   const renderButton = () => {
     if (step === 0) {

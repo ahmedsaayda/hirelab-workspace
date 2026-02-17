@@ -4,9 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 const TRANSPARENT_PNG =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
 
-// Meta constraints
-const MAX_HEADLINE_LENGTH = 40;
-const MAX_DESC_LENGTH = 30;
+// Overlay text constraints
+const MAX_HEADLINE_LENGTH = 35;
+const MAX_DESC_LENGTH = 85;
 const OPTIMAL_PRIMARY_TEXT_LENGTH = 125;
 
 // Helper to strip placeholder boilerplate like "[Insert ...]" and "Example:"
@@ -304,7 +304,8 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
   const finalTitle = truncateByWords(title, MAX_HEADLINE_LENGTH);
   // Primary text can be long, but keep it within Meta limits
   const finalDescription = String(description || "").slice(0, 2200);
-  const finalCta = (cta === "Learn More" || cta === "Apply Now") ? cta : "Learn More";
+  // Creative overlay CTA - free text (max 35 chars)
+  const finalCta = String(cta || "Apply Now").slice(0, 35);
 
   // Generate subheadline for image overlay (short, punchy)
   const linkDescription = location ? `${location}` : (company ? `Join ${company}` : "");
@@ -315,14 +316,18 @@ export const generateCopyForAdType = (adType, lpData, variantIndex = 0) => {
   // metaDescription: should describe the opportunity, NOT just the location
   const metaDescription = vacancy ? `Apply for ${vacancy}` : `Exciting opportunity awaits`;
 
+  // Meta CTA - fixed dropdown value (Apply Now / Learn More)
+  const metaCTA = (cta === "Learn More") ? "Learn More" : "Apply Now";
+
   return {
     title: finalTitle,
     description: finalDescription,
-    linkDescription: linkDescription.slice(0, 30),
+    linkDescription: linkDescription.slice(0, 85),
     cta: finalCta,
     source,
     metaHeadline: metaHeadline.slice(0, 40),
     metaDescription: metaDescription.slice(0, 30),
+    metaCTA,
   };
 };
 
@@ -448,7 +453,7 @@ export const generateVariants = (lpData) => {
       const withVideo = videoUrl && videoPoster && image === videoPoster;
       variants.push(createVariant("company", i, image, withVideo ? { videoUrl } : {}));
     }
-    ads.company = { variants, enabled: false };
+    ads.company = { variants, enabled: true };
   }
 
   // EMPLOYER BRAND (EVP, Leader, Mission)
@@ -575,7 +580,8 @@ export const generateVariants = (lpData) => {
       );
     }
     // If no valid testimonials, ads.testimonial will have empty variants array
-    ads.testimonial = { variants, enabled: variants.length > 0 };
+    // Testimonial ads are disabled by default - user must enable manually
+    ads.testimonial = { variants, enabled: false };
   }
 
   // RETARGETING (messaging-driven)
@@ -586,7 +592,7 @@ export const generateVariants = (lpData) => {
     for (let i = 0; i < counts.retargeting; i++) {
       variants.push(createVariant("retargeting", i, imgs[i % imgs.length], videoUrl ? { videoUrl } : {}));
     }
-    ads.retargeting = { variants, enabled: false };
+    ads.retargeting = { variants, enabled: true };
   }
 
   return ads;

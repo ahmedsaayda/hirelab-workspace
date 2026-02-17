@@ -48,10 +48,13 @@ const RegisterInner = () => {
           captchaToken: latestToken
         });
 
+        // reCAPTCHA v3 tokens are single-use — generate a fresh one for login
+        const loginToken = await executeRecaptcha("login");
+
         const result = await AuthService.login({
           email,
           password,
-          captchaToken: latestToken
+          captchaToken: loginToken
         });
 
         console.log(result);

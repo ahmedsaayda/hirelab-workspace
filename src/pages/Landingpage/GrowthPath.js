@@ -198,44 +198,243 @@ const useGrowthPathHover = () => {
 };
 
 const Template2 = ({ landingPageData, fetchData }) => {
+  const { handleItemClick } = useFocusContext();
+  const { sectionRef, titleRef, descriptionRef, growthStepRefs } =
+    useGrowthPathHover();
 
-  const themeData = getThemeData(landingPageData?.theme);
+  const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
 
-  const { basePrimary, baseSecondary, baseTertiary } = themeData;
-  const { variantPl1, variantPl2, variantPl3, variantPl4 } = themeData;
-  const { variantPd1, variantPd2, variantPd3, variantPd4, variantPd5 } =
-    themeData;
-  const { variantSl1, variantSl2, variantSl3, variantSl4 } = themeData;
-  const { variantSd1, variantSd2, variantSd3, variantSd4, variantSd5 } =
-    themeData;
-  const { variantTl1, variantTl2, variantTl3, variantTl4 } = themeData;
-  const { variantTd1, variantTd2, variantTd3, variantTd4, variantTd5 } =
-    themeData;
-  const { textHeadingColor, textSubHeadingColor } = themeData;
+  // Extract colors for Template 2 theme
+  const primaryColor = landingPageData?.primaryColor || "#0068D6";
+  const secondaryColor = landingPageData?.secondaryColor || "#f5590c";
+  const tertiaryColor = landingPageData?.tertiaryColor || "#3396FF";
+
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
+
+  // Arrow connector SVG
+  const imgVector1 = "http://localhost:3845/assets/1ea4458b74e6c8bec9161c6e0cccdc5aef8be3af.svg";
+
+  // Default growth path steps
+  const defaultSteps = [
+    { title: "Project Coordinator" },
+    { title: "Associate Project Manager" },
+    { title: "Senior Project Manager" },
+    { title: "VP of Project Management" },
+  ];
+
+  const growthPath = landingPageData?.growthPath?.length > 0
+    ? landingPageData.growthPath
+    : defaultSteps;
+
+  // Parse title for gradient highlight
+  const title = landingPageData?.growthPathTitle || "Growth Path";
+
+  // Card positions for staircase layout (ascending from bottom-left to top-right)
+  const getCardPosition = (index, total) => {
+    const baseLeft = 72;
+    const baseTop = 759;
+    const horizontalStep = 257; // ~257px between each card horizontally
+    const verticalStep = 137; // ~137px between each card vertically (going up)
+
+    return {
+      left: baseLeft + index * horizontalStep,
+      top: baseTop - index * verticalStep,
+    };
+  };
+
+  // Arrow positions (between cards)
+  const getArrowPosition = (index) => {
+    const arrowPositions = [
+      { left: 202, top: 671 },
+      { left: 459, top: 534 },
+      { left: 715, top: 397 },
+    ];
+    return arrowPositions[index] || { left: 0, top: 0 };
+  };
 
   return (
-    <>
-      <div style={{ backgroundColor: variantPl4 }}>
-        <div>
-          <div className="mb-12 text-center">
-            <h2 className="mb-2 text-2xl font-semibold text-gray-800">
-              Growth path
-            </h2>
-            <p className="text-gray-600">
-              Take a glimpse of how our application process looks like.
-            </p>
-          </div>
-
-          <div className="relative h-[400px] w-full">
-            <ResponsiveSVGWithPoints
-              circleMiddle={variantPl3}
-              strokeColor={basePrimary}
-              growthPath={landingPageData?.growthPath}
-            />
-          </div>
+    <div
+      ref={sectionRef}
+      id="growth-path"
+      className="w-full bg-white relative"
+      style={{ fontFamily: bodyFont?.family || "Inter, sans-serif" }}
+    >
+      {/* Title Section */}
+      <div className="flex flex-col gap-[28px] items-center pt-[200px] pb-[64px]">
+        {/* Title with blue gradient highlight */}
+        <div className="relative inline-grid">
+          <div
+            className="col-start-1 row-start-1 h-[24px] rounded-[8px]"
+            style={{
+              background: `linear-gradient(to right, ${getColor("primary", 200)}, transparent)`,
+              marginLeft: "0",
+              marginTop: "20px",
+              width: "288px",
+            }}
+          />
+          <h2
+            ref={titleRef}
+            onClick={() => handleItemClick("growthPathTitle")}
+            className="col-start-1 row-start-1 font-semibold cursor-pointer text-center"
+            style={{
+              fontFamily: titleFont?.family || "Inter, sans-serif",
+              fontSize: "48px",
+              lineHeight: "60px",
+              letterSpacing: "-1.44px",
+              color: "#292929",
+            }}
+          >
+            {title}
+          </h2>
         </div>
+        {/* Subtitle */}
+        <p
+          ref={descriptionRef}
+          onClick={() => handleItemClick("growthPathDescription")}
+          className="cursor-pointer text-center"
+          style={{
+            fontSize: "16px",
+            lineHeight: "24px",
+            color: "#7c7c7c",
+            fontFamily: subheaderFont?.family || "Inter, sans-serif",
+          }}
+        >
+          {landingPageData?.growthPathDescription || "You don't have to take our word for it."}
+        </p>
       </div>
-    </>
+
+      {/* Desktop Staircase Layout */}
+      <div className="hidden lg:block relative h-[600px] w-full max-w-[1440px] mx-auto overflow-hidden">
+        {/* Cards */}
+        {growthPath.map((step, index) => {
+          const { left, top } = getCardPosition(index, growthPath.length);
+          const stepNumber = ("0" + (index + 1)).slice(-2);
+
+          return (
+            <div
+              key={index}
+              className="absolute bg-white rounded-[24px] h-[113px] w-[526px]"
+              style={{
+                left: `${left}px`,
+                top: `${top - 348}px`, // Offset to fit in container
+                boxShadow: "0px 32.88px 50.815px 0px rgba(0,0,0,0.03)",
+              }}
+            >
+              {/* Blue gradient number box */}
+              <div
+                className="absolute bottom-0 left-[56px] flex flex-col items-center justify-center overflow-hidden rounded-tl-[24px] rounded-tr-[24px] w-[148px] h-[133px]"
+                style={{
+                  background: `linear-gradient(to bottom, ${getColor("primary", 200)}, ${getColor("primary", 300)})`,
+                }}
+              >
+                <p
+                  className="font-semibold text-[48px] leading-[60px] tracking-[-1.44px] text-center"
+                  style={{
+                    color: "#004fa3",
+                    fontFamily: titleFont?.family || "Inter, sans-serif",
+                  }}
+                >
+                  {stepNumber}
+                </p>
+              </div>
+
+              {/* Title text */}
+              <p
+                ref={(el) => {
+                  growthStepRefs.current[`growthPath[${index}].title`] = el;
+                }}
+                onClick={() => handleItemClick(`growthPath[${index}].title`)}
+                className="absolute left-[248px] top-1/2 -translate-y-1/2 font-semibold text-[24px] leading-[32px] text-[#292929] w-[224px] whitespace-pre-wrap cursor-pointer"
+                style={{ fontFamily: subheaderFont?.family || "Inter, sans-serif" }}
+              >
+                {step.title || `Level ${index + 1}`}
+              </p>
+            </div>
+          );
+        })}
+
+        {/* Arrow connectors */}
+        {growthPath.length > 1 && growthPath.slice(0, -1).map((_, index) => {
+          const { left, top } = getArrowPosition(index);
+          return (
+            <div
+              key={`arrow-${index}`}
+              className="absolute flex items-center justify-center w-[115px] h-[56px]"
+              style={{
+                left: `${left}px`,
+                top: `${top - 348}px`, // Offset to fit in container
+                transform: "scaleY(-1)",
+              }}
+            >
+              <img
+                alt="Arrow"
+                className="block max-w-none w-full h-full"
+                src={imgVector1}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Mobile/Tablet Vertical Layout */}
+      <div className="lg:hidden flex flex-col items-center gap-[24px] px-4 pb-[100px]">
+        {growthPath.map((step, index) => {
+          const stepNumber = ("0" + (index + 1)).slice(-2);
+
+          return (
+            <div
+              key={index}
+              className="relative bg-white rounded-[24px] w-full max-w-[400px] flex items-center"
+              style={{
+                boxShadow: "0px 16px 32px 0px rgba(0,0,0,0.05)",
+                minHeight: "100px",
+              }}
+            >
+              {/* Blue gradient number box */}
+              <div
+                className="flex flex-col items-center justify-center rounded-l-[24px] w-[80px] h-full min-h-[100px]"
+                style={{
+                  background: `linear-gradient(to bottom, ${getColor("primary", 200)}, ${getColor("primary", 300)})`,
+                }}
+              >
+                <p
+                  className="font-semibold text-[32px] leading-[40px] tracking-[-1px] text-center"
+                  style={{
+                    color: "#004fa3",
+                    fontFamily: titleFont?.family || "Inter, sans-serif",
+                  }}
+                >
+                  {stepNumber}
+                </p>
+              </div>
+
+              {/* Title text */}
+              <p
+                ref={(el) => {
+                  growthStepRefs.current[`growthPath[${index}].title`] = el;
+                }}
+                onClick={() => handleItemClick(`growthPath[${index}].title`)}
+                className="flex-1 px-[20px] font-semibold text-[18px] leading-[24px] text-[#292929] cursor-pointer"
+                style={{ fontFamily: subheaderFont?.family || "Inter, sans-serif" }}
+              >
+                {step.title || `Level ${index + 1}`}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 

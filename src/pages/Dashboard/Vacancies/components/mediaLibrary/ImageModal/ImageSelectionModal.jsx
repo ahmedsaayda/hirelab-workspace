@@ -5,7 +5,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import Modal from "../Modal/Modal.jsx";
 import SidebarOption from "./SidebarOption.jsx";
 import DropZone from "./DropZone.jsx";
-import { Film, Upload as UploadIcon, Link, Image, Palette } from "lucide-react";
+import { Film, Upload as UploadIcon, Link, Image, Palette, Sparkles } from "lucide-react";
 import UploadService from "../../../../../../services/UploadService.js";
 import StockImageBrowser from "./StockImageBrowse.jsx";
 import CrudService from "../../../../../../services/CrudService.js";
@@ -29,7 +29,7 @@ const ImageSelectionModal = ({
   existingFiles = [],
   multiple,
   maxFiles,
-  accept = "image/*",
+  accept = "image/*,video/*",
   type = "all",
   autosave = false,
   currentSectionLimits = Infinity,
@@ -52,6 +52,12 @@ const ImageSelectionModal = ({
   });
   const [searchValue, setSearchValue] = useState("");
   const [linkValue, setLinkValue] = useState("");
+
+  // AI Image Generation
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiGeneratedImage, setAiGeneratedImage] = useState(null);
+  const [aiSize, setAiSize] = useState("1024x1024");
 
   // Unsplash (via backend proxy)
   const [unsplashQuery, setUnsplashQuery] = useState("");
@@ -494,16 +500,36 @@ const ImageSelectionModal = ({
   };
 
 
+  // Helper to check if URL is a video
+  const isVideoUrl = (url) => {
+    if (!url || typeof url !== "string") return false;
+    const videoExtensions = [".mp4", ".webm", ".mov", ".avi", ".mkv", ".m4v", ".ogv"];
+    const lowercaseUrl = url.toLowerCase();
+    if (videoExtensions.some((ext) => lowercaseUrl.includes(ext))) return true;
+    if (lowercaseUrl.includes("/video/upload/")) return true;
+    if (lowercaseUrl.includes("resource_type=video")) return true;
+    return false;
+  };
+
   const renderPreview = (file) => (
     <div key={file.url} className="flex items-center p-2 mb-2 bg-white rounded border">
-      <img
-        src={file.url}
-        alt="Preview"
-        className="object-cover mr-2 w-10 h-10 rounded sm:w-12 sm:h-12 sm:mr-3"
-        onError={(e) => {
-          (e.target).style.display = "none";
-        }}
-      />
+      {isVideoUrl(file.url) ? (
+        <video
+          src={file.url}
+          className="object-cover mr-2 w-10 h-10 rounded sm:w-12 sm:h-12 sm:mr-3"
+          muted
+          playsInline
+        />
+      ) : (
+        <img
+          src={file.url}
+          alt="Preview"
+          className="object-cover mr-2 w-10 h-10 rounded sm:w-12 sm:h-12 sm:mr-3"
+          onError={(e) => {
+            (e.target).style.display = "none";
+          }}
+        />
+      )}
       <div className="flex-1 min-w-0">
         <p className="text-xs truncate sm:text-sm">
           {file.url.split("/").pop()?.split("?")[0]}
@@ -636,6 +662,12 @@ const ImageSelectionModal = ({
                 active={activeOption === "unsplash"}
                 onClick={() => setActiveOption("unsplash")}
               />
+              <SidebarOption
+                icon={<Sparkles size={20} className="text-orange-500" />}
+                label="AI Generate"
+                active={activeOption === "ai-generate"}
+                onClick={() => setActiveOption("ai-generate")}
+              />
             </div>
           </div>
 
@@ -674,7 +706,7 @@ const ImageSelectionModal = ({
                         disabled={isUploading || files.length === 0}
                         className="flex-shrink-0 px-4 py-2 w-full text-white bg-blue-500 rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 lg:w-auto"
                       >
-                        {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : "Video"}`}
+                        {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : type === "video" ? "Video" : "Media"}`}
                       </button>
                     </div>
                   )}
@@ -768,10 +800,10 @@ const ImageSelectionModal = ({
 
             {activeOption === "link" && (
               <div className="flex flex-col p-4 mx-auto space-y-4 max-w-md">
-                <h4 className="mb-4 text-lg font-medium">Add {type === "video" ? "Video" : "Image"} from URL</h4>
+                <h4 className="mb-4 text-lg font-medium">Add {type === "video" ? "Video" : type === "image" ? "Image" : "Media"} from URL</h4>
                 <input
                   type="text"
-                  placeholder={`https://example.com/${type === "video" ? "video.mp4" : "image.jpg"}`}
+                  placeholder={`https://example.com/${type === "video" ? "video.mp4" : type === "image" ? "image.jpg" : "media.jpg"}`}
                   className="px-4 py-2 w-full rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onChange={(e) => setLinkValue(e.target.value)}
                   value={linkValue}
@@ -780,7 +812,7 @@ const ImageSelectionModal = ({
                   className="px-4 py-2 w-full text-white bg-blue-500 rounded hover:bg-blue-600 sm:w-auto"
                   onClick={handleLinkAdd}
                 >
-                  Add {type === "video" ? "Video" : "Image"}
+                  Add {type === "video" ? "Video" : type === "image" ? "Image" : "Media"}
                 </button>
               </div>
             )}
@@ -802,6 +834,153 @@ const ImageSelectionModal = ({
                   currentSectionLimits={currentSectionLimits}
                   allowedTabs={allowedTabs}
                 />
+              </div>
+            )}
+
+            {activeOption === "ai-generate" && (
+              <div className="flex flex-col gap-4 w-full h-full lg:flex-row">
+                {/* Left: AI Generation form */}
+                <div className="lg:w-[45%] w-full">
+                  <div className="flex flex-col p-4 h-full bg-gray-50 rounded-lg border-2 border-gray-300">
+                    <h4 className="mb-1 text-sm font-semibold">Generate Image with AI</h4>
+                    <p className="mb-4 text-xs text-gray-500">
+                      Describe the image you want and DALL-E will create it for you.
+                    </p>
+
+                    <label className="mb-1.5 text-xs font-medium text-gray-700">Prompt</label>
+                    <textarea
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      placeholder="e.g., A modern office with diverse team members collaborating around a table, bright natural lighting, professional photography style"
+                      className="p-3 mb-3 w-full text-sm rounded-lg border resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={4}
+                    />
+
+                    <label className="mb-1.5 text-xs font-medium text-gray-700">Size</label>
+                    <div className="flex gap-2 mb-4">
+                      {[
+                        { value: "1024x1024", label: "Square" },
+                        { value: "1792x1024", label: "Landscape" },
+                        { value: "1024x1792", label: "Portrait" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setAiSize(opt.value)}
+                          className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                            aiSize === opt.value
+                              ? "bg-blue-500 text-white border-blue-500"
+                              : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!aiPrompt.trim()) {
+                          message.error("Please enter a prompt");
+                          return;
+                        }
+                        setAiGenerating(true);
+                        setAiGeneratedImage(null);
+                        try {
+                          const resp = await AiService.generateImage({ prompt: aiPrompt.trim(), size: aiSize });
+                          const data = resp?.data?.data;
+                          if (data?.url) {
+                            setAiGeneratedImage(data);
+                            message.success("Image generated!");
+                            // Refresh media library
+                            fetchRecent(searchValue);
+                          } else {
+                            throw new Error("No image returned");
+                          }
+                        } catch (err) {
+                          console.error("AI generate error:", err);
+                          message.error(err?.response?.data?.error || err.message || "Failed to generate image");
+                        } finally {
+                          setAiGenerating(false);
+                        }
+                      }}
+                      disabled={aiGenerating || !aiPrompt.trim()}
+                      className="flex justify-center items-center gap-2 px-4 py-2.5 w-full text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {aiGenerating ? (
+                        <>
+                          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25" />
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          </svg>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={16} />
+                          Generate Image
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right: Generated result */}
+                <div className="w-full lg:w-[55%] h-full flex flex-col overflow-hidden">
+                  <h4 className="flex-shrink-0 mb-2 text-sm font-semibold">Generated Result</h4>
+
+                  {aiGenerating ? (
+                    <div className="flex flex-col flex-1 justify-center items-center text-gray-400">
+                      <svg className="mb-3 w-10 h-10 animate-spin text-purple-500" fill="none" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25" />
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                      <p className="text-sm">Generating your image with AI...</p>
+                      <p className="text-xs text-gray-400">This may take 10-20 seconds</p>
+                    </div>
+                  ) : aiGeneratedImage ? (
+                    <div className="flex flex-col flex-1 overflow-hidden">
+                      <div className="overflow-hidden flex-1 bg-gray-100 rounded-lg">
+                        <img
+                          src={aiGeneratedImage.url}
+                          alt="AI Generated"
+                          className="object-contain w-full h-full"
+                        />
+                      </div>
+                      {aiGeneratedImage.revisedPrompt && (
+                        <p className="mt-2 text-xs text-gray-500 line-clamp-2">
+                          <span className="font-medium">AI interpretation:</span> {aiGeneratedImage.revisedPrompt}
+                        </p>
+                      )}
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onImageSelected([aiGeneratedImage.url]);
+                            onClose();
+                          }}
+                          className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+                        >
+                          Use This Image
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAiGeneratedImage(null)}
+                          className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+                        >
+                          Discard
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col flex-1 justify-center items-center text-gray-400">
+                      <Sparkles size={40} className="mb-3 opacity-30" />
+                      <p className="text-sm">No image generated yet</p>
+                      <p className="text-xs">Enter a prompt and click Generate</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -831,7 +1010,7 @@ const ImageSelectionModal = ({
                         disabled={isUploading || files.length === 0}
                         className="flex-shrink-0 px-4 py-2 w-full text-white bg-blue-500 rounded-md shadow-sm hover:bg-blue-600 disabled:bg-gray-400 lg:w-auto"
                       >
-                        {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : "Video"}`}
+                        {isUploading ? "Uploading..." : `Insert ${type === "image" ? "Image" : type === "video" ? "Video" : "Media"}`}
                       </button>
                     </div>
                   )}

@@ -703,6 +703,7 @@ const EditorRender = React.memo(({
                     defaultImage={landingPageData?.[a.key]}
                     imageAdjustments={landingPageData?.imageAdjustment || {}}
                     fieldKey={a.key}
+                    accept={a.accept || "image/*,video/*"}
                     onImageUpload={(url) => {
                       setLandingPageData((d) => ({
                         ...d,
@@ -724,7 +725,7 @@ const EditorRender = React.memo(({
                       }));
                       handleChanged();
                     }}
-                    allowedTabs={["image"]}
+                    allowedTabs={a.accept?.includes("video") ? ["all", "image", "video"] : ["all", "image", "video"]}
                   />
                 </>
               ) : a.type === "video" ? (

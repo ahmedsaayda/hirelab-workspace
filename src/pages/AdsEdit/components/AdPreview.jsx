@@ -2,9 +2,28 @@ import React from "react";
 import StoryOverlay from "./StoryFrame";
 import FeedContext from "./FeedContext";
 import MobileDeviceFrame from "./MobileDeviceFrame";
-import CreatomatPreview, { shouldUseCreatomatPreview } from "./CreatomatPreview";
+import CreatomatPreview from "./CreatomatPreview";
 
-export default function AdPreview({ variant, format, platform, brandData, landingPageData, adType, refEl }) {
+/**
+ * Check if URL is a video
+ */
+function isVideoUrl(url) {
+  if (!url) return false;
+  return /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(url);
+}
+
+/**
+ * AdPreview - Renders ad creative preview using Creatomate
+ * 
+ * ALL previews now use CreatomatPreview component which renders
+ * the Creatomate template (Clarity). No more Template1.jsx.
+ * 
+ * The actual exported image/video comes from Creatomate API.
+ * 
+ * Custom uploads are also supported - if a custom creative exists
+ * for the current format, it will be shown instead of Creatomate.
+ */
+export default function AdPreview({ variant, format, platform, brandData, landingPageData, adType, templateName = "clarity", refEl }) {
   if (!variant) return null;
 
   const { width, height, aspectRatio } = format;
@@ -17,24 +36,18 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       const container = document.querySelector('.ad-preview-container');
       if (!container) return 0.2;
 
-      // Target height should be relatively large to show phone frame properly
       const containerHeight = container.clientHeight - 64;
-      // Phone frame height is fixed at 812px (logic in MobileDeviceFrame is 812px)
       const targetHeight = 812;
-
-      // Scale based on available height vs phone frame height
       let calculatedScale = containerHeight / targetHeight;
 
       return Math.min(Math.max(calculatedScale, 0.3), 1);
     };
 
-    // Initial calculation
     const timer = setTimeout(() => {
       const newScale = calculateScale();
       setScale(newScale);
-    }, 100); // Small delay to ensure container is rendered
+    }, 100);
 
-    // Recalculate on window resize
     const handleResize = () => {
       const newScale = calculateScale();
       setScale(newScale);
@@ -46,101 +59,6 @@ export default function AdPreview({ variant, format, platform, brandData, landin
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Handle async component loading for custom templates
-  const [TemplateComponent, setTemplateComponent] = React.useState(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  // Normalize helpers
-  const normalizeAdTypeId = (raw) => {
-    if (!raw) return null;
-    const s = String(raw).toLowerCase();
-    // common aliases -> canonical keys used in componentMap
-    if (s === 'employerbrand' || s === 'employer_brand') return 'employer-brand';
-    if (s === 'testimonials') return 'testimonial';
-    if (s === 'aboutcompany' || s === 'about_company' || s === 'about-company') return 'company';
-    return s;
-  };
-
-  const normalizedAdTypeId = normalizeAdTypeId(
-    variant?.adTypeId || adType?.id || adType?.slug || adType
-  );
-
-  // Some callers label 4:5 as "portrait"; map to our landscape path bucket
-  const normalizedFormatId = (format?.id === 'portrait' ? 'landscape' : format?.id);
-
-  React.useEffect(() => {
-    // IMPORTANT: don't reload the template component on every variant edit (e.g. dragging focal point).
-    // Only reload when the template identity changes: adType + format + variantNumber.
-    if (!normalizedAdTypeId || !normalizedFormatId) {
-      setTemplateComponent(null);
-      setIsLoading(false);
-      return;
-    }
-
-    const variantNumber = variant?.variantNumber || 1; // Default to variant 1
-    const componentLoader = getComponentLoader(normalizedAdTypeId, variantNumber, normalizedFormatId);
-    if (!componentLoader) {
-      console.warn(`No component found for: ${normalizedAdTypeId}/${normalizedFormatId}/${variantNumber}`);
-      setTemplateComponent(null);
-      setIsLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setIsLoading(true);
-    (async () => {
-      try {
-        const component = await componentLoader();
-        if (!cancelled) setTemplateComponent(() => component);
-      } catch (error) {
-        console.error('Error loading template component:', error, {
-          adTypeId: normalizedAdTypeId,
-          formatId: normalizedFormatId,
-          variantNumber,
-        });
-        if (!cancelled) setTemplateComponent(null);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [normalizedAdTypeId, normalizedFormatId, variant?.variantNumber]);
-
-  // Get component loader for specific ad type, variant, and format
-  // Uses Universal templates for ALL ad types - single source of truth
-  const getComponentLoader = (adTypeId, templateNumber, formatId) => {
-    // Universal template loaders - used for all ad types
-    const universalTemplates = {
-      story: {
-        1: () => import('./ads/Universal/Story/Template1.jsx').then(m => m.default),
-        // Future templates can be added here:
-        // 2: () => import('./ads/Universal/Story/Template2.jsx').then(m => m.default),
-      },
-      square: {
-        1: () => import('./ads/Universal/Square/Template1.jsx').then(m => m.default),
-      },
-      landscape: {
-        1: () => import('./ads/Universal/Landscape/Template1.jsx').then(m => m.default),
-      },
-      portrait: {
-        1: () => import('./ads/Universal/Landscape/Template1.jsx').then(m => m.default),
-      },
-    };
-
-    const templatesForFormat = universalTemplates[formatId];
-    if (!templatesForFormat) return null;
-
-    // Direct match for template number
-    const direct = templatesForFormat[templateNumber];
-    if (direct) return direct;
-
-    // Fallback to template 1 if requested template doesn't exist
-    return templatesForFormat[1] || null;
-  };
 
   // Get ad type label
   const AD_TYPE_LABELS = {
@@ -154,70 +72,70 @@ export default function AdPreview({ variant, format, platform, brandData, landin
   const adTypeLabel = adType?.label || AD_TYPE_LABELS[adType?.id] || 'Ad';
   const formatLabel = format.label;
 
-  // Check if this variant uses video (should show Creatomate preview)
-  const useCreatomatPreview = shouldUseCreatomatPreview(variant);
-
   // Calculate phone frame height based on ad's aspect ratio for story format
   const isStoryFormat = format?.id === 'story' || format?.aspectRatio === '9:16';
   const frameWidth = 375;
-  // For story: match ad's aspect ratio. For feed: use standard iPhone height
   const frameHeight = isStoryFormat 
     ? Math.round(frameWidth * (height / width))
     : 812;
 
-  // Render based on format
+  // Render preview using Creatomate
   const renderPreview = () => {
     // Check if there's a custom creative override for this format
     const customCreativeUrl = variant?.customCreatives?.[format?.id];
+    // Check if variant is in "custom upload mode" (has any custom creatives)
+    const hasAnyCustomCreatives = Object.values(variant?.customCreatives || {}).some(Boolean);
 
     let content;
 
-    // If custom creative exists, show it instead of template
+    // If custom creative exists for this format, show it (supports both image and video)
     if (customCreativeUrl) {
+      const isVideo = isVideoUrl(customCreativeUrl);
       content = (
-        <div className="w-full h-full relative">
+        <div className="w-full h-full relative bg-gray-100">
+          {isVideo ? (
+            <video
+              src={customCreativeUrl}
+              className="w-full h-full object-contain"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          ) : (
           <img
             src={customCreativeUrl}
             alt="Custom creative"
-            className="w-full h-full object-contain bg-gray-100"
+              className="w-full h-full object-contain"
           />
+          )}
         </div>
       );
-    } else if (isLoading && !useCreatomatPreview) {
+    } else if (hasAnyCustomCreatives) {
+      // Variant is in custom upload mode but this format doesn't have a custom upload
+      // Show a greyed out placeholder indicating this format will be skipped
       content = (
-        <div className="w-full h-full bg-gray-100 flex items-center justify-center rounded-lg">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-            <div className="text-sm text-gray-600">Loading ad...</div>
+        <div className="w-full h-full bg-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300">
+          <div className="text-center p-6 opacity-60">
+            <div className="mb-4">
+              <svg className="w-12 h-12 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+            </div>
+            <div className="text-sm font-medium text-gray-500 mb-1">
+              No Custom Upload
+            </div>
+            <div className="text-xs text-gray-400">
+              {formatLabel}
+            </div>
+            <div className="text-[10px] text-amber-500 mt-2 bg-amber-50 px-2 py-1 rounded-full inline-block">
+              Will be skipped
+            </div>
           </div>
         </div>
       );
-    } else if (useCreatomatPreview) {
-      // Use Creatomate Preview SDK for video backgrounds
-      // This shows the exact preview that will be rendered by Creatomate
-      content = (
-        <CreatomatPreview
-          format={format?.id === 'portrait' ? 'portrait' : format?.id || 'square'}
-          variant={variant}
-          brandData={brandData}
-          landingPageData={landingPageData}
-          className="w-full h-full"
-        />
-      );
-    } else if (TemplateComponent && typeof TemplateComponent === 'function') {
-      // Use our coded React template for image backgrounds
-      content = (
-        <TemplateComponent
-          variant={variant}
-          brandData={brandData}
-          landingPageData={landingPageData}
-          // We render shared StoryFrame chrome in preview for story formats.
-          // Individual templates should hide any built-in chrome when this is false.
-          showStoryChrome={!isStoryFormat}
-        />
-      );
-    } else {
-      // Show clean placeholder for all unimplemented variants
+    } else if (!variant?.image && !variant?.videoUrl && !landingPageData?.heroImage) {
+      // No background media - show placeholder
       content = (
         <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300">
           <div className="text-center p-6">
@@ -233,22 +151,26 @@ export default function AdPreview({ variant, format, platform, brandData, landin
               {formatLabel}
             </div>
             <div className="text-xs text-gray-500 bg-white px-3 py-1.5 rounded-full inline-block">
-              {width} × {height}px ({aspectRatio})
+              Add image or video
             </div>
           </div>
         </div>
       );
+    } else {
+      // Use Creatomate Preview for ALL templates
+      content = (
+        <CreatomatPreview
+          format={format?.id === 'portrait' ? 'portrait' : format?.id || 'square'}
+          variant={variant}
+          brandData={brandData}
+          landingPageData={landingPageData}
+          templateName={templateName}
+          className="w-full h-full"
+        />
+      );
     }
 
-    // Capture ref should be on the actual content div if we want to capture the ad image
-    // However, here we are wrapping it in device frames which we DON'T want to capture as part of the ad image
-    // We need to figure out where to put refEl.
-    // Ideally, refEl should be on the div wrapping 'content' that is inside the frame but has the correct dimensions
-    // But for now, let's wrap the content in the appropriate context
-
     if (isStoryFormat) {
-      // Scale factor to fit the ad content exactly in the frame
-      // Frame width is 375px (defined at component level)
       const contentScale = 375 / width;
 
       return (
@@ -264,7 +186,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
                 userSelect: "none",
               }}
             >
-              <div ref={refEl} style={{ width: `${width}px`, height: `${height}px`, pointerEvents: "none" }}>
+              <div ref={refEl} style={{ width: `${width}px`, height: `${height}px` }}>
                 {content}
               </div>
             </div>
@@ -276,21 +198,11 @@ export default function AdPreview({ variant, format, platform, brandData, landin
         <FeedContext
           key={`feed-${format?.id}-${variant?.id || variant?.title}`}
           brandData={brandData}
-          // Primary Text (above media) - from Meta Ad Copy only
           text={variant?.description || ""}
-          // Headline (below media) - from Meta Ad Copy only, no fallback to text overlay
           title={variant?.metaHeadline || ""}
-          // Description (below headline) - from Meta Ad Copy only, no fallback to text overlay
           description={variant?.metaDescription || ""}
-          // CTA button
-          ctaText={variant?.callToAction || "Learn More"}
+          ctaText={variant?.metaCTA || "Apply Now"}
         >
-          {/* 
-             We need to ensure the ad content (1080x1080 or 1080x1350) scales to fit 
-             inside the FeedContext content area (which is ~375px wide).
-             The TemplateComponent renders at full resolution (e.g. 1080px).
-             We need to scale it down.
-          */}
           <div
             className="relative w-full"
             style={{
@@ -304,8 +216,7 @@ export default function AdPreview({ variant, format, platform, brandData, landin
               style={{
                 width: `${width}px`,
                 height: `${height}px`,
-                transform: `scale(${375 / width})`, // Scale to fit phone width
-                pointerEvents: "none",
+                transform: `scale(${375 / width})`,
               }}
             >
               <div ref={refEl} style={{ width: `${width}px`, height: `${height}px` }}>

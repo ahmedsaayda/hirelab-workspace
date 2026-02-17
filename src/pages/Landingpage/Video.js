@@ -271,22 +271,32 @@ const Template2 = ({
   isMuted,
   toggleMute,
 }) => {
-  const { sectionRef } = useVideoHover();
-  const themeData = getThemeData(landingPageData?.theme);
+  const { handleItemClick } = useFocusContext();
+  const { sectionRef, titleRef, textRef } = useVideoHover();
 
-  const { basePrimary, baseSecondary, baseTertiary } = themeData;
-  const { variantPl1, variantPl2, variantPl3, variantPl4 } = themeData;
-  const { variantPd1, variantPd2, variantPd3, variantPd4, variantPd5 } =
-    themeData;
-  const { variantSl1, variantSl2, variantSl3, variantSl4 } = themeData;
-  const { variantSd1, variantSd2, variantSd3, variantSd4, variantSd5 } =
-    themeData;
-  const { variantTl1, variantTl2, variantTl3, variantTl4 } = themeData;
-  const { variantTd1, variantTd2, variantTd3, variantTd4, variantTd5 } =
-    themeData;
-  const { textHeadingColor, textSubHeadingColor } = themeData;
+  const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
 
-  
+  // Extract colors for Template 2 theme
+  const primaryColor = landingPageData?.primaryColor || "#0068D6";
+  const secondaryColor = landingPageData?.secondaryColor || "#f5590c";
+  const tertiaryColor = landingPageData?.tertiaryColor || "#3396FF";
+
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
+
+  // SVG assets - imgButton for play button styling
+  const imgButton = "http://localhost:3845/assets/1c8792e292d37f873bcac7c79b633075a4178ffb.svg";
+
   useEffect(() => {
     if (landingPageData.videoAutoPlay && videoRef?.current) {
       videoRef.current.play();
@@ -305,186 +315,186 @@ const Template2 = ({
       }
     }
   };
+
+  // Parse title for gradient highlight
+  const title = landingPageData?.videoTitle || "Interview Tips";
+
   return (
-    <>
-      <div
-        className="bg-no-repeat bg-cover bg-gradient-to-b from-gray-50 to-gray-100"
+    <div
+      ref={sectionRef}
+      id="video"
+      className="w-full bg-white relative overflow-hidden"
+      style={{ fontFamily: bodyFont?.family || "Inter, sans-serif" }}
+    >
+      {/* Large decorative gradient arc - background */}
+      <div 
+        className="absolute left-1/2 -translate-x-1/2 pointer-events-none hidden lg:flex items-center justify-center"
         style={{
-          backgroundImage: "url(/images3/img_group_20.png)",
+          top: "-962px",
+          width: "1756px",
+          height: "1754px",
+          transform: "translateX(-50%) rotate(-90deg) scaleY(-1)",
         }}
-        ref={sectionRef}
-        id="video"
       >
-        <section className="flex overflow-hidden relative flex-col justify-center items-center px-4 py-12 w-full">
-          {/* Background elements */}
-          {/* <div className="absolute left-[10%] top-1/4 h-[180px] w-[180px] rotate-[15deg] rounded-[90px] bg-blue-400/20 blur-[50px]" />
-          <div className="absolute right-[15%] bottom-1/4 h-[220px] w-[220px] rounded-full bg-indigo-300/20 blur-[80px]" />
-          <div className="absolute top-[10%] right-[20%] h-[30px] w-[30px] rotate-[15deg] rounded-[14px] bg-blue-400/30" /> */}
-
-          {/* Background elements */}
-          {/* <div
-            className="absolute left-[10%] top-1/4 h-[180px] w-[180px] rotate-[15deg] rounded-[90px]"
-            style={{ background: `${variantPl1}`, filter: 'blur(50px)' }}
-          /> */}
-          {/* <div
-            className="absolute right-[15%] bottom-1/4 h-[220px] w-[220px] rounded-full"
-            style={{ background: `${variantPl2}`, filter: 'blur(80px)' }}
-          /> */}
-          <div
-            className="absolute top-[10%] right-[20%] h-[30px] w-[30px] rotate-[15deg] rounded-[14px]"
-            style={{ background: `${variantPl3}` }}
+        <svg width="100%" height="100%" viewBox="0 0 1756 1754" fill="none">
+          <circle
+            cx="878"
+            cy="877"
+            r="800"
+            stroke="url(#videoGradient)"
+            strokeWidth="80"
+            fill="none"
           />
+          <defs>
+            <linearGradient id="videoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="50%" stopColor={getColor("primary", 200)} />
+              <stop offset="100%" stopColor="#ffffff" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
 
-          {/* Content container */}
-          <div className="container z-10 mx-auto max-w-6xl">
-            {/* Header section */}
+      {/* Title Section */}
+      <div className="flex flex-col gap-[28px] items-center pt-[200px] pb-[64px] relative z-10">
+        {/* Title with blue gradient highlight */}
+        <div className="relative inline-grid">
+          <div
+            className="col-start-1 row-start-1 h-[24px] rounded-[8px]"
+            style={{
+              background: `linear-gradient(to right, ${getColor("primary", 200)}, transparent)`,
+              marginLeft: "0",
+              marginTop: "20px",
+              width: "324px",
+            }}
+          />
+          <h2
+            ref={titleRef}
+            onClick={() => handleItemClick("videoTitle")}
+            className="col-start-1 row-start-1 font-semibold cursor-pointer text-center"
+            style={{
+              fontFamily: titleFont?.family || "Inter, sans-serif",
+              fontSize: "48px",
+              lineHeight: "60px",
+              letterSpacing: "-1.44px",
+              color: "#292929",
+            }}
+          >
+            {title}
+          </h2>
+        </div>
+        {/* Subtitle */}
+        <p
+          ref={textRef}
+          onClick={() => handleItemClick("videoDescription")}
+          className="cursor-pointer text-center"
+          style={{
+            fontSize: "16px",
+            lineHeight: "24px",
+            color: "#7c7c7c",
+            fontFamily: subheaderFont?.family || "Inter, sans-serif",
+          }}
+        >
+          {landingPageData?.videoDescription || "Mastering the Interview: Essential Tips for Success"}
+        </p>
+      </div>
 
-            <div className="flex flex-col items-center self-stretch mb-1">
-              <div className="container flex flex-col gap-2 items-center px-14 mdx:px-5">
-                <Heading
-                  as="h1"
-                  className="text-[36px] font-semibold tracking-[-0.72px] text-[#0f1728] mdx:text-[34px] sm:text-[32px]"
-                >
-                  {landingPageData?.videoTitle}
-                </Heading>
-                <Text
-                  size="text_xl_regular"
-                  as="p"
-                  className="text-[20px] font-normal text-[#475466]"
-                >
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: landingPageData?.videoDescription?.replace?.(
-                        /\n/g,
-                        "<br></br>"
-                      ),
-                    }}
-                  />{" "}
-                </Text>
-              </div>
+      {/* Video Player Container */}
+      <div className="relative z-10 flex justify-center pb-[100px] px-4">
+        {/* Video Player */}
+        <div
+          className="relative overflow-hidden rounded-[24px]"
+          style={{
+            width: "960px",
+            maxWidth: "100%",
+            height: "auto",
+            aspectRatio: "960 / 540",
+            border: "20px solid #ffffff",
+            boxShadow: "0px 32.88px 50.815px 11.956px rgba(0,0,0,0.03)",
+          }}
+        >
+          {/* Video or Thumbnail */}
+          {landingPageData.myVideo ? (
+            <video
+              ref={videoRef}
+              src={landingPageData.myVideo}
+              className="w-full h-full object-cover"
+              onTimeUpdate={handleTimeUpdate}
+              autoPlay={landingPageData.videoAutoPlay}
+              muted={isMuted}
+              playsInline
+              poster={landingPageData?.videoThumbnail}
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <img
+                src={landingPageData?.videoThumbnail || "/dhwise-images/placeholder.png"}
+                alt="Video thumbnail"
+                className="w-full h-full object-cover"
+              />
             </div>
+          )}
 
-            {/* Video player */}
-            <div className="relative pt-20 mx-auto w-full max-w-4xl">
-              <div className="bg-[#5207CD] bg-opacity-20 h-[150px] w-[150px] rounded-full absolute left-[-60px] top-[30px]"></div>
-              <div className="relative aspect-video rounded-xl  shadow-2xl bg-gray-400  border-[1rem] border-white">
-                {/* Video element */}
-                {landingPageData.myVideo && (
-                  <video
-                    ref={videoRef}
-                    src={landingPageData.myVideo}
-                    className="object-cover w-full h-full"
-                    onTimeUpdate={handleTimeUpdate}
-                    autoPlay={landingPageData.videoAutoPlay}
-                    muted={isMuted}
-                    playsInline
-                  />
-                )}
-
-                {/* Overlay for controls */}
-                <div
-                  className="absolute inset-0 hover:opacity-100"
-                  onClick={togglePlay}
-                >
-                  {/* Play button (only shown when paused) */}
-                  {!isPlaying && (
-                    <div className="flex absolute inset-0 justify-center items-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          togglePlay();
-                        }}
-                        className="p-2 rounded-full backdrop-blur-sm transition-all duration-300 transform bg-white/30 hover:bg-white/50 hover:scale-105"
-                      >
-                        {/* <Play size={32} className="text-white fill-white" /> */}
-                        <Img
-                          src="/images3/img_text_input.svg"
-                          alt="Play button"
-                          width={60}
-                          height={60}
-                        />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Bottom controls bar */}
-                  <div className="absolute right-0 bottom-0 left-0 p-4 transition-transform duration-300 smx:p-1">
-                    {/* Progress bar */}
-                    <div
-                      ref={progressBarRef}
-                      className="relative mb-3 w-full h-2 cursor-pointer group"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleProgressBarClick(e);
-                      }}
-                    >
-                      <div className="absolute inset-0 rounded-full bg-gray-300/50"></div>
-                      <div
-                        className="absolute inset-y-0 left-0 bg-white rounded-full"
-                        style={{ width: `${(currentTime / duration) * 100}%` }}
-                      ></div>
-                      <div
-                        className="absolute w-4 h-4 bg-white rounded-full opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                        style={{
-                          left: `calc(${
-                            (currentTime / duration) * 100
-                          }% - 8px)`,
-                          top: "-4px",
-                        }}
-                      ></div>
-                    </div>
-
-                    {/* Time and controls */}
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm font-medium text-white">
-                        {formatTime(currentTime)} / {formatTime(duration)}
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        {/* Mute button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleMute();
-                          }}
-                          className="p-2 rounded-full transition-colors hover:bg-white/20"
-                        >
-                          {isMuted ? (
-                            <VolumeX size={20} className="text-white" />
-                          ) : (
-                            <Volume2 size={20} className="text-white" />
-                          )}
-                        </button>
-
-                        {/* Fullscreen button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleFullscreen();
-                          }}
-                          className="p-2 rounded-full transition-colors hover:bg-white/20"
-                        >
-                          <Maximize size={20} className="text-white" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+          {/* Play Button Overlay */}
+          <div
+            className="absolute inset-0 flex items-center justify-center cursor-pointer"
+            onClick={togglePlay}
+          >
+            {!isPlaying && (
+              <div className="w-[96px] h-[96px] transition-transform hover:scale-110">
+                <img
+                  alt="Play button"
+                  className="block max-w-none w-full h-full"
+                  src={imgButton}
+                />
               </div>
-              <div className="absolute  right-0 w-[254px] h-[254px] z-[-1]">
+            )}
+          </div>
+
+          {/* Video Controls (when playing) */}
+          {isPlaying && (
+            <div 
+              className="absolute right-0 bottom-0 left-0 p-4 bg-gradient-to-t to-transparent from-black/70"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Progress bar */}
+              <div
+                ref={progressBarRef}
+                className="relative mb-3 w-full h-1.5 cursor-pointer"
+                onClick={handleProgressBarClick}
+              >
+                <div className="absolute inset-0 rounded-full bg-gray-300/50"></div>
                 <div
-                  className="absolute inset-0 rounded-full filter blur-[200px]"
-                  style={{
-                    background:
-                      "radial-gradient(circle, #5207CD 100%, transparent 100%)",
-                  }}
+                  className="absolute inset-y-0 left-0 bg-white rounded-full"
+                  style={{ width: `${(currentTime / duration) * 100}%` }}
                 ></div>
               </div>
+
+              {/* Controls */}
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-white">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={toggleMute}
+                    className="p-1.5 text-white rounded-full hover:bg-white/20"
+                  >
+                    {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                  </button>
+                  <button
+                    onClick={handleFullscreen}
+                    className="p-1.5 text-white rounded-full hover:bg-white/20"
+                  >
+                    <Maximize size={18} />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </section>
+          )}
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 

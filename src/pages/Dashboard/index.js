@@ -74,6 +74,7 @@ import MyMediaLibrary from "./Vacancies/components/mediaLibrary/index.jsx";
 import Vacancies from "./Vacancies/index.jsx";
 import UserManagement from "./Admin/UserManagement/index.js";
 import RoleManagement from "./Admin/RoleManagement/index.js";
+import TemplateManagement from "./Admin/TemplateManagement/index.js";
 import WorkspaceManagement from "./Workspaces/index.js";
 import WorkspaceReturnButton from "../../components/WorkspaceReturnButton.js";
 import Integrations from "./Integrations.js";
@@ -238,6 +239,12 @@ const Dashboard = () => {
           component: <UserManagement />, // You'll need to create this component
           href: "/dashboard/admin/users",
           icon: UsersIcon,
+        },
+        {
+          name: "Ad Templates",
+          component: <TemplateManagement />,
+          href: "/dashboard/admin/templates",
+          icon: SettingsrIcon,
         },
         // {
         //   name: "Role Management",
@@ -575,6 +582,7 @@ const Dashboard = () => {
             {me?.role === "admin" && (
               <>
                 <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/templates" element={<TemplateManagement />} />
                 {/* <Route path="/admin/roles" element={<RoleManagement />} /> */}
                 {/* <Route path="/admin/analytics" element={<StatsDashboard />} /> */}
               </>

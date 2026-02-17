@@ -537,7 +537,8 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
         if (currentField.firstName?.required && !formData[`${currentField.id}_firstName`]?.trim()) hasError = true;
         if (currentField.lastName?.required && !formData[`${currentField.id}_lastName`]?.trim()) hasError = true;
         if (currentField.email?.required && !formData[`${currentField.id}_email`]?.trim()) hasError = true;
-        if (currentField.phone?.required && !formData[`${currentField.id}_phone`]?.trim()) hasError = true;
+        // Phone is ALWAYS required when visible (regardless of stored required flag)
+        if (currentField.phone?.visible !== false && !formData[`${currentField.id}_phone`]?.trim()) hasError = true;
 
         if (hasError) {
           message.warning('Please fill in all required contact fields');
@@ -693,7 +694,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
               <div>
                 <label className="block mb-1 font-semibold text-xs text-gray-600">
                   {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
-                  {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
+                  <span className="ml-1 text-red-500">*</span>
                 </label>
                 <Input
                   type="tel"
@@ -850,7 +851,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
               <div>
                 <label className="block mb-1 font-semibold text-sm">
                   {field.phone?.label || getTranslation(landingPageData?.lang || 'en', 'phone') || 'Phone'}
-                  {field.phone?.required && <span className="ml-1 text-red-500">*</span>}
+                  <span className="ml-1 text-red-500">*</span>
                 </label>
                 <div className="border border-solid border-blue_gray-100 rounded-[15px] overflow-hidden focus-within:border-light_blue-A700">
                   <CustomInput
@@ -1292,13 +1293,15 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
             <div className="flex-1 flex flex-col">
               {flowFields[currentStep - 1] && (
                 <div className="flex-1 flex flex-col">
-                  {/* WhatsApply Button - shown on first step when enabled */}
-                  {currentStep === 1 && settings?.whatsApply?.enabled !== false && (
+                  {/* WhatsApply Button - shown on first step when enabled AND phone number is configured */}
+                  {currentStep === 1 && settings?.whatsApply?.enabled && settings?.whatsApply?.phoneNumber && (
                     <div className="mb-4">
                       <div
                         onClick={() => {
                           // Build the WhatsApp message with variables replaced
-                          const WHATSAPPLY_PHONE = '4916095100306'; // Global WhatsApp number for WhatsApply
+                          // Clean phone number: remove spaces, dashes, and non-digit chars except leading +
+                          const rawPhone = settings?.whatsApply?.phoneNumber || '';
+                          const cleanPhone = rawPhone.replace(/[^\d+]/g, '').replace(/^\+/, '');
                           const messageTemplate = settings?.whatsApply?.messageTemplate || 'Hi, I saw the vacancy {{url}} and I want to apply for {{jobTitle}} at {{companyName}}.';
                           const currentUrl = typeof window !== 'undefined' ? window.location.href.replace('/form-editor', '/lp').replace(/\/apply.*$/, '') : '';
                           
@@ -1308,7 +1311,7 @@ export default function ApplyPagePreview({ landingPageData, currentStep = 0, isP
                             .replace('{{companyName}}', landingPageData?.companyName || '');
                           
                           const encodedMessage = encodeURIComponent(message);
-                          const whatsappUrl = `https://wa.me/${WHATSAPPLY_PHONE}?text=${encodedMessage}`;
+                          const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
                           window.open(whatsappUrl, '_blank');
                         }}
                         className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm cursor-pointer"

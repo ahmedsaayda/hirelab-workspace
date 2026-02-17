@@ -88,7 +88,7 @@ function PasteUrlModal({ onClose, ongoBack, onRefresh }) {
   console.log("selectedTemplate===", selectedTemplate);
   const isButtonDisabled = () => {
     //if selected template is not 1 return true to disable the button
-    if (selectedTemplate !== 1) return true;
+    if (selectedTemplate !== 1&&selectedTemplate !== 2) return true;
     if (step === 0) return !url || !department || !language || isLoading;
     if (step === 1) return selectedTemplate === -1 || isLoading;
     return false;

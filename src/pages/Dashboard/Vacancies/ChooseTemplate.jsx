@@ -1,8 +1,16 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import { Button, Heading, Img } from "./components/components/index.jsx";
 import { PlusOutlined, EyeOutlined, LoadingOutlined } from "@ant-design/icons";
 import { Modal } from "antd";
+import { selectUser } from "../../../redux/auth/selectors";
+import featureFlags from "../../../config/featureFlags";
+
 function ChooseTemplate({ onChooseTemplate, selectedTemplate }) {
+  const user = useSelector(selectUser);
+  const isAdmin = user?.role === "admin";
+  // Template 2 is available to everyone when the flag is true, or to admins only when false
+  const isTemplate2Available = featureFlags.TEMPLATE_2_PUBLIC || isAdmin;
 
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
@@ -28,8 +36,8 @@ function ChooseTemplate({ onChooseTemplate, selectedTemplate }) {
                       : ""
                   }`}
                   onClick={() => {
-                    // setSelectedTemplate(i);
-                    onChooseTemplate(i + 1);
+                    const canSelect = i === 0 || (i === 1 && isTemplate2Available);
+                    if (canSelect) onChooseTemplate(i + 1);
                   }}
                 >
                   {/* <Img
@@ -73,15 +81,16 @@ function ChooseTemplate({ onChooseTemplate, selectedTemplate }) {
                       onClick={() => onChooseTemplate(i + 1)}
                       size="2xl"
                       shape="round"
-                      disabled={i !== 0}
+                      disabled={i === 0 ? false : i === 1 ? !isTemplate2Available : true}
                       className={`${
                         selectedTemplate === i + 1
                           ? "bg-[#5207CD] text-[#FFFFFF]"
-                          : "bg-[#EFF8FF] text-[#5207CD]"
+                          : (i === 0 || (i === 1 && isTemplate2Available))
+                            ? "bg-[#EFF8FF] text-[#5207CD]"
+                            : "bg-gray-200 text-gray-500 cursor-not-allowed"
                       } w-full font-semibold smx:px-5 whitespace-nowrap`}
                     >
-                      {/* Choose template */}
-                      {i === 0 ? "Select Template" : "Coming Soon"}
+                      {i === 0 ? "Select Template" : (i === 1 && isTemplate2Available) ? "Select Template" : "Coming Soon"}
                     </Button>
                   </div>
                 </div>

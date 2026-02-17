@@ -1,49 +1,200 @@
 import React, { useEffect, useRef, useState } from "react";
+import TemplateService from "../../../services/TemplateService";
 
 /**
- * Creatomate Preview SDK wrapper for video ad previews
- * Used when a creative has a video background instead of an image
+ * Creatomate Preview Component
  * 
- * @see https://github.com/Creatomate/creatomate-preview
+ * Uses the Creatomate Preview SDK to show a live preview of the ad template.
+ * This is the SAME preview that will be rendered when exported.
+ * 
+ * Requires: npm install @creatomate/preview
+ * And: NEXT_PUBLIC_CREATOMATE_PLAYER_TOKEN env variable
  */
 
-// Template IDs from backend - should match TEMPLATES in videoRecordController.js
-const CREATOMATE_TEMPLATES = {
-  story: process.env.NEXT_PUBLIC_CREATOMATE_TEMPLATE_STORY || "fc4da16f-0589-4b63-add5-748cebc5352c",
-  square: process.env.NEXT_PUBLIC_CREATOMATE_TEMPLATE_SQUARE || "cab95b2c-5ebe-484e-b28e-d9c862e9c56e",
-  portrait: process.env.NEXT_PUBLIC_CREATOMATE_TEMPLATE_PORTRAIT || "6eb4dec1-21b3-4d2e-b282-b40055a73f1a",
+// Fallback template IDs when API is unavailable
+const FALLBACK_TEMPLATES = {
+  clarity: {
+    story: "fd4d3d28-6a72-4f21-b350-939f99472840",
+    portrait: "a8e33385-7b60-435d-b9d0-1e9b4c2de3d7",
+    square: "af16c58d-96d5-4295-a183-b610b224887e",
+  },
 };
 
-// Video player token for preview SDK (read-only, different from API key)
+// Cache for templates
+let templatesCache = null;
+let templatesCacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Fetch templates from API with caching
+ */
+async function fetchTemplates() {
+  const now = Date.now();
+  
+  // Return cached templates if still valid
+  if (templatesCache && (now - templatesCacheTime) < CACHE_TTL) {
+    return templatesCache;
+  }
+  
+  try {
+    const response = await TemplateService.getActiveTemplates();
+    const dbTemplates = response.data;
+    
+    if (dbTemplates && dbTemplates.length > 0) {
+      const templates = {};
+      for (const t of dbTemplates) {
+        templates[t.templateId] = {
+          ...t.formats,
+          dynamicColors: t.dynamicColors || { headlineFillColor: true, subheadlineFillColor: true, ctaBackgroundColor: true },
+        };
+      }
+      templatesCache = templates;
+      templatesCacheTime = now;
+      return templates;
+    }
+  } catch (error) {
+    console.warn("[CreatomatPreview] Failed to fetch templates, using fallback:", error.message);
+  }
+  
+  templatesCache = FALLBACK_TEMPLATES;
+  templatesCacheTime = now;
+  return FALLBACK_TEMPLATES;
+}
+
+// Default font family
+const DEFAULT_FONT_FAMILY = "Noto Sans";
+
+// Player token for Creatomate Preview SDK
 const CREATOMATE_PLAYER_TOKEN = process.env.NEXT_PUBLIC_CREATOMATE_PLAYER_TOKEN || "";
 
+/**
+ * Get font family from landing page or brand data
+ */
+function getFontFamily(landingPageData, brandData) {
+  if (landingPageData?.selectedFont?.family) {
+    return landingPageData.selectedFont.family;
+  }
+  if (landingPageData?.titleFont?.family) {
+    return landingPageData.titleFont.family;
+  }
+  if (brandData?.selectedFont?.family) {
+    return brandData.selectedFont.family;
+  }
+  return DEFAULT_FONT_FAMILY;
+}
+
+/**
+ * Check if URL is a video
+ */
+function isVideoUrl(url) {
+  if (!url) return false;
+  return /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(url);
+}
+
+/**
+ * Calculate logo width percentages based on aspect ratio
+ * Must match the logic in videoRecordController.js
+ */
+function calculateLogoWidths(aspectRatio) {
+  const targetLogoHeight = 6;
+  const horizontalPadding = 4;
+  
+  if (!aspectRatio || aspectRatio <= 0) {
+    aspectRatio = 2; // Default to moderately wide
+  }
+  
+  let logoWidth = targetLogoHeight * aspectRatio;
+  const minWidth = 8;
+  const maxWidth = 40;
+  logoWidth = Math.max(minWidth, Math.min(maxWidth, logoWidth));
+  
+  const bgWidth = logoWidth + horizontalPadding;
+  
+  return {
+    logoWidth: `${logoWidth.toFixed(2)}%`,
+    logoBackgroundWidth: `${bgWidth.toFixed(2)}%`,
+  };
+}
+
+/**
+ * Get image dimensions from URL (client-side)
+ */
+function getImageAspectRatio(url) {
+  return new Promise((resolve) => {
+    if (!url) {
+      resolve(null);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      resolve(img.width / img.height);
+    };
+    img.onerror = () => {
+      resolve(null);
+    };
+    img.src = url;
+  });
+}
+
 export default function CreatomatPreview({
-  format = "square", // "story" | "square" | "portrait"
+  format = "square",
   variant,
   brandData,
   landingPageData,
+  templateName = "clarity",
   className = "",
 }) {
   const containerRef = useRef(null);
   const previewRef = useRef(null);
+  const isVideoRef = useRef(false); // Ref to avoid stale closures
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sdkLoaded, setSdkLoaded] = useState(false);
+  const [logoWidths, setLogoWidths] = useState(calculateLogoWidths(2)); // Default for wide logo
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [templates, setTemplates] = useState(FALLBACK_TEMPLATES);
 
-  // Extract video and other data from variant
+  // Fetch templates from API on mount
+  useEffect(() => {
+    fetchTemplates().then(setTemplates);
+  }, []);
+
+  // Extract data
+  // Check for video from variant.videoUrl OR if variant.image is actually a video URL
   const videoUrl = variant?.videoUrl || "";
   const heroImage = variant?.image || landingPageData?.heroImage || "";
+  const imageIsVideo = !!variant?.image && (isVideoUrl(variant.image) || String(variant.image).includes("/video/upload/"));
+  const backgroundSource = videoUrl || heroImage;
+  
+  // isVideo should be true if videoUrl is set OR if the image field contains a video URL
+  const isVideo = (!!videoUrl && isVideoUrl(videoUrl)) || imageIsVideo;
+  
+  // Keep ref in sync to avoid stale closures
+  isVideoRef.current = isVideo;
+  
+  
   const title = variant?.title || landingPageData?.vacancyTitle || "";
   const linkDescription = variant?.linkDescription || "";
-  const primaryColor = landingPageData?.primaryColor || brandData?.primaryColor || "#5207CD";
-  const logo = landingPageData?.logo || brandData?.companyLogo || "";
+  const ctaText = variant?.callToAction || "Apply Now";
+  
+  // Brand colors
+  const primaryColor = landingPageData?.primaryColor || brandData?.primaryColor || "#2a29fc";
+  const secondaryColor = landingPageData?.secondaryColor || brandData?.secondaryColor || primaryColor || "#00990d";
+  
+  // Logo
+  const logo = landingPageData?.companyLogo || 
+               landingPageData?.logo || 
+               brandData?.companyLogo || 
+               brandData?.logo || "";
+  
+  // Font family
+  const fontFamily = getFontFamily(landingPageData, brandData);
 
-  // Get image adjustment settings
+  // Image adjustment settings
   const heroImageAdjustment =
     variant?.imageAdjustment?.heroImage ||
     landingPageData?.imageAdjustment?.jobDescriptionImage ||
-    landingPageData?.imageAdjustment?.heroImage ||
-    {};
+    landingPageData?.imageAdjustment?.heroImage || {};
   const bgX = heroImageAdjustment?.objectPosition?.x ?? 50;
   const bgY = heroImageAdjustment?.objectPosition?.y ?? 50;
   const bgFit = heroImageAdjustment?.objectFit || "cover";
@@ -58,57 +209,85 @@ export default function CreatomatPreview({
       return;
     }
 
-    // Dynamically import the SDK - Next.js will bundle this correctly
+    // Dynamically import the SDK
     const loadSDK = async () => {
-      // SDK package not installed - show placeholder
-      console.warn("Creatomate Preview SDK not installed");
-      setError("Creatomate SDK not installed");
-      setIsLoading(false);
-      return;
-      
-      /* Uncomment when @creatomate/preview is installed:
       try {
-        // Use standard dynamic import - webpack/Next.js will handle this
-        const module = await import('@creatomate/preview');
+        const module = await import("@creatomate/preview");
         if (module && module.Preview) {
           window.Creatomate = module;
           setSdkLoaded(true);
-          console.log("✅ Creatomate Preview SDK loaded successfully");
+          console.log("✅ Creatomate Preview SDK loaded");
         } else {
-          throw new Error('Module loaded but Preview not found');
+          throw new Error("Preview not found in module");
         }
       } catch (err) {
-        console.warn("Creatomate Preview SDK not available:", err.message);
-        // Don't show error - just fallback to image preview
-        setSdkLoaded(false);
+        console.error("❌ Failed to load Creatomate Preview SDK:", err.message);
+        setError("Install @creatomate/preview: npm install @creatomate/preview");
         setIsLoading(false);
       }
-      */
     };
 
     loadSDK();
   }, []);
 
+  // Calculate logo dimensions when logo URL changes
+  useEffect(() => {
+    if (!logo) {
+      setLogoWidths(calculateLogoWidths(2)); // Default
+      return;
+    }
+    
+    getImageAspectRatio(logo).then((ar) => {
+      if (ar) {
+        setLogoWidths(calculateLogoWidths(ar));
+      }
+    });
+  }, [logo]);
+
   // Initialize preview when SDK is loaded
   useEffect(() => {
-    if (!sdkLoaded || !containerRef.current || !CREATOMATE_PLAYER_TOKEN) {
-      if (!CREATOMATE_PLAYER_TOKEN) {
-        setError("Missing Creatomate player token");
-        setIsLoading(false);
-      }
+    if (!sdkLoaded || !containerRef.current) return;
+
+    if (!CREATOMATE_PLAYER_TOKEN) {
+      setError("Missing NEXT_PUBLIC_CREATOMATE_PLAYER_TOKEN");
+      setIsLoading(false);
       return;
     }
 
-    const templateId = CREATOMATE_TEMPLATES[format] || CREATOMATE_TEMPLATES.square;
+    const templateSet = templates[templateName] || templates.clarity || FALLBACK_TEMPLATES.clarity;
+    const templateId = templateSet[format] || templateSet.square;
+
+    // Get dynamic color settings from template (default: all dynamic)
+    const dynamicColors = templateSet.dynamicColors || { headlineFillColor: true, subheadlineFillColor: true, ctaBackgroundColor: true };
+
+    // Build modifications - only include color overrides if the template marks them as dynamic
+    const modifications = {
+      "Background.source": backgroundSource || "",
+      "Background.x_alignment": `${bgX}%`,
+      "Background.y_alignment": `${bgY}%`,
+      "Background.fit": bgFit,
+      "Logo.source": logo,
+      "Logo.width": logoWidths.logoWidth,
+      "LogoBackground.width": logoWidths.logoBackgroundWidth,
+      "Headline.text": title,
+      "Headline.font_family": fontFamily,
+      ...(dynamicColors.headlineFillColor !== false && { "Headline.fill_color": primaryColor }),
+      "Subheadline.text": linkDescription,
+      "Subheadline.font_family": fontFamily,
+      ...(dynamicColors.subheadlineFillColor !== false && { "Subheadline.fill_color": primaryColor }),
+      "CTA.text": ctaText,
+      "CTA.font_family": fontFamily,
+      ...(dynamicColors.ctaBackgroundColor !== false && { "CTA.background_color": secondaryColor }),
+    };
 
     try {
-      // Clean up previous instance
+      // Cleanup previous instance
       if (previewRef.current) {
         previewRef.current.dispose?.();
         previewRef.current = null;
       }
 
-      // Create new preview instance
+      // Create Creatomate Preview instance
       const preview = new window.Creatomate.Preview(
         containerRef.current,
         "player",
@@ -117,121 +296,147 @@ export default function CreatomatPreview({
 
       previewRef.current = preview;
 
-      // Set up event handlers
       preview.onReady = async () => {
         try {
-          // Load the template
           await preview.loadTemplate(templateId);
-
-          // Apply modifications based on variant data
-          const modifications = {
-            "Background.source": videoUrl || heroImage || "",
-            "Logo.source": logo,
-            "Headline.text": title,
-            "Subheadline.text": linkDescription,
-            "Background.x_alignment": `${bgX}%`,
-            "Background.y_alignment": `${bgY}%`,
-            "Background.fit": bgFit,
-          };
-
-          // Apply primary color gradient if template supports it
-          if (primaryColor) {
-            // Calculate gradient end color (darker version)
-            const gradientEnd = darkenColor(primaryColor, 20);
-            modifications["PrimaryColorShape.fill_color"] = [
-              { offset: "0%", color: primaryColor },
-              { offset: "100%", color: gradientEnd },
-            ];
-          }
-
           await preview.setModifications(modifications);
-          setIsLoading(false);
           
-          // Autoplay the video since click events are blocked
-          try {
-            await preview.play();
-          } catch (playErr) {
-            console.warn("Autoplay failed (browser may require user interaction):", playErr);
+          
+          setIsLoading(false);
+          setIsPlaying(false);
+          
+          // For images, seek to end and PAUSE to show static final state
+          // The template has animations, but for static images we want to show the final frame frozen
+          if (!isVideoRef.current) {
+            setTimeout(async () => {
+              console.log("[CreatomatPreview] IMAGE - seeking to end and pausing");
+              try {
+                // Disable looping
+                if (preview.setLoop) await preview.setLoop(false);
+                // Seek to end of animation
+                await preview.setTime(2.99);
+                // PAUSE to freeze on final frame
+                if (preview.pause) await preview.pause();
+                console.log("[CreatomatPreview] ✓ Image preview paused at final frame");
+              } catch (e) {
+                console.log("[CreatomatPreview] pause failed:", e?.message || e);
+              }
+            }, 300);
           }
         } catch (err) {
-          console.error("Error loading Creatomate template:", err);
+          console.error("Creatomate template error:", err);
           setError("Failed to load template");
           setIsLoading(false);
         }
       };
 
       preview.onError = (err) => {
-        console.error("Creatomate preview error:", err);
+        console.error("Creatomate error:", err);
         setError(err.message || "Preview error");
         setIsLoading(false);
       };
 
-      // Loop video when it ends
+      // Track playback state
       preview.onStateChange = (state) => {
-        if (state === "ended") {
-          preview.setTime(0);
-          preview.play().catch(() => {});
+        // For images: forcibly pause if somehow started playing
+        if (!isVideoRef.current && state === "playing") {
+          console.log("[CreatomatPreview] IMAGE started playing - forcing pause");
+          preview.pause?.().catch(() => {});
+          preview.setTime?.(2.99).catch(() => {});
+          return;
+        }
+        
+        if (state === "playing") {
+          setIsPlaying(true);
+        } else if (state === "paused" || state === "ended") {
+          setIsPlaying(false);
+          // Loop video when ended (only for actual videos)
+          if (state === "ended" && isVideoRef.current) {
+            preview.setTime(0);
+          }
         }
       };
     } catch (err) {
-      console.error("Error initializing Creatomate preview:", err);
-      setError(err.message || "Failed to initialize preview");
+      console.error("Creatomate init error:", err);
+      setError(err.message);
       setIsLoading(false);
     }
 
-    // Cleanup on unmount
     return () => {
       if (previewRef.current) {
         previewRef.current.dispose?.();
         previewRef.current = null;
       }
     };
-  }, [sdkLoaded, format, videoUrl, heroImage, title, linkDescription, logo, primaryColor, bgX, bgY, bgFit]);
+  }, [sdkLoaded, format, templateName, logoWidths, templates]);
+
+  // Handle click to play/pause video (only for video backgrounds)
+  const handleClick = () => {
+    if (!previewRef.current || isLoading || error || !isVideo) return;
+    
+    if (isPlaying) {
+      previewRef.current.pause?.().catch(() => {});
+      setIsPlaying(false);
+    } else {
+      previewRef.current.play?.().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
 
   // Update modifications when data changes
   useEffect(() => {
     if (!previewRef.current || isLoading || error) return;
 
-    const updateModifications = async () => {
-      try {
-        await previewRef.current.setModifications({
-          "Background.source": videoUrl || heroImage || "",
-          "Headline.text": title,
-          "Subheadline.text": linkDescription,
-          "Background.x_alignment": `${bgX}%`,
-          "Background.y_alignment": `${bgY}%`,
-        });
-      } catch (err) {
-        console.warn("Error updating Creatomate modifications:", err);
-      }
+    // Get dynamic color settings from current template
+    const templateSet = templates[templateName] || templates.clarity || FALLBACK_TEMPLATES.clarity;
+    const dynamicColorsUpdate = templateSet.dynamicColors || { headlineFillColor: true, subheadlineFillColor: true, ctaBackgroundColor: true };
+
+    const modifications = {
+      "Background.source": backgroundSource || "",
+      "Background.x_alignment": `${bgX}%`,
+      "Background.y_alignment": `${bgY}%`,
+      "Background.fit": bgFit,
+      "Logo.source": logo,
+      "Logo.width": logoWidths.logoWidth,
+      "LogoBackground.width": logoWidths.logoBackgroundWidth,
+      "Headline.text": title,
+      "Headline.font_family": fontFamily,
+      ...(dynamicColorsUpdate.headlineFillColor !== false && { "Headline.fill_color": primaryColor }),
+      "Subheadline.text": linkDescription,
+      "Subheadline.font_family": fontFamily,
+      ...(dynamicColorsUpdate.subheadlineFillColor !== false && { "Subheadline.fill_color": primaryColor }),
+      "CTA.text": ctaText,
+      "CTA.font_family": fontFamily,
+      ...(dynamicColorsUpdate.ctaBackgroundColor !== false && { "CTA.background_color": secondaryColor }),
     };
 
-    updateModifications();
-  }, [videoUrl, heroImage, title, linkDescription, bgX, bgY, isLoading, error]);
+    previewRef.current.setModifications(modifications)
+      .then(async () => {
+        // After modifications are applied, handle positioning
+        if (!isVideoRef.current) {
+          // Image: seek to end of animation and PAUSE (static preview)
+          try {
+            await previewRef.current.setTime?.(2.99);
+            await previewRef.current.pause?.();
+          } catch (e) {
+            console.warn("[CreatomatPreview] setTime/pause after mods failed:", e);
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn("Error updating modifications:", err);
+      });
+  }, [backgroundSource, title, linkDescription, ctaText, logo, logoWidths, primaryColor, secondaryColor, fontFamily, bgX, bgY, bgFit, isLoading, error, isVideo]);
 
-  // Helper to darken a hex color
-  const darkenColor = (hex, percent) => {
-    const num = parseInt(hex.replace("#", ""), 16);
-    const amt = Math.round(2.55 * percent);
-    const R = Math.max(0, (num >> 16) - amt);
-    const G = Math.max(0, ((num >> 8) & 0x00ff) - amt);
-    const B = Math.max(0, (num & 0x0000ff) - amt);
-    return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
-  };
-
-  // Render fallback if SDK not available or no video
-  if (error || !CREATOMATE_PLAYER_TOKEN) {
+  // Error state - show instructions
+  if (error) {
     return (
-      <div className={`flex items-center justify-center bg-gray-100 ${className}`}>
-        <div className="text-center p-4">
-          <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-          <p className="text-sm text-gray-500">
-            {error || "Video preview unavailable"}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Video will render correctly when published
+      <div className={`flex items-center justify-center bg-gray-900 text-white ${className}`}>
+        <div className="text-center p-6">
+          <div className="text-4xl mb-4">⚠️</div>
+          <p className="text-sm font-medium mb-2">Creatomate Preview SDK Required</p>
+          <p className="text-xs text-gray-400 font-mono bg-gray-800 p-2 rounded">
+            {error}
           </p>
         </div>
       </div>
@@ -239,32 +444,54 @@ export default function CreatomatPreview({
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div 
+      className={`relative w-full h-full ${isVideo ? 'cursor-pointer' : ''} ${className}`}
+      onClick={isVideo ? handleClick : undefined}
+    >
       {/* Loading overlay */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5207CD] mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Loading video preview...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2" />
+            <p className="text-sm text-gray-600">Loading Creatomate preview...</p>
           </div>
         </div>
       )}
 
-      {/* Creatomate preview container */}
+
+      {/* 
+        FOR IMAGES: Block ALL interaction with the Creatomate SDK 
+        The SDK has built-in play controls that we need to disable for static images
+      */}
+      {!isVideo && !isLoading && (
+        <div className="absolute inset-0 z-20" style={{ pointerEvents: 'auto' }} />
+      )}
+
+      {/* Creatomate Preview SDK container */}
       <div
         ref={containerRef}
         className="w-full h-full"
-        style={{ minHeight: "200px" }}
+        style={{ 
+          minHeight: "200px",
+          // For images, block SDK interactions
+          pointerEvents: isVideo ? 'auto' : 'none'
+        }}
       />
     </div>
   );
 }
 
 /**
- * Check if a variant should use Creatomate preview (has video)
+ * Always use Creatomate preview
  */
-export function shouldUseCreatomatPreview(variant) {
+export function shouldUseCreatomatPreview() {
+  return true;
+}
+
+/**
+ * Check if variant has video background
+ */
+export function hasVideoBackground(variant) {
   const videoUrl = variant?.videoUrl || "";
   return !!videoUrl && /\.(mp4|mov|webm|mkv)(\?.*)?$/i.test(videoUrl);
 }
-

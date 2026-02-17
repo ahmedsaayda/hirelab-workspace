@@ -86,68 +86,304 @@ const useCompanyFactsHover = () => {
 };
 
 const Template2 = ({ landingPageData, fetchData }) => {
+  const { sectionRef, titleRef, descriptionRef, factItemRefs } = useCompanyFactsHover();
+  const { handleItemClick } = useFocusContext();
+  const { titleFont, subheaderFont, bodyFont } = getFonts(landingPageData);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  const themeData = getThemeData(landingPageData?.theme);
+  // Extract colors for Template 2 theme
+  const primaryColor = landingPageData?.primaryColor || "#0068D6";
+  const secondaryColor = landingPageData?.secondaryColor || "#f5590c";
+  const tertiaryColor = landingPageData?.tertiaryColor || "#3396FF";
 
-  const { basePrimary, baseSecondary, baseTertiary } = themeData;
-  const { variantPl1, variantPl2, variantPl3, variantPl4 } = themeData;
-  const { variantPd1, variantPd2, variantPd3, variantPd4, variantPd5 } =
-    themeData;
-  const { variantSl1, variantSl2, variantSl3, variantSl4 } = themeData;
-  const { variantSd1, variantSd2, variantSd3, variantSd4, variantSd5 } =
-    themeData;
-  const { variantTl1, variantTl2, variantTl3, variantTl4 } = themeData;
-  const { variantTd1, variantTd2, variantTd3, variantTd4, variantTd5 } =
-    themeData;
-  const { textHeadingColor, textSubHeadingColor } = themeData;
+  const { getColor } = useTemplatePalette(
+    {
+      primaryColor: "#0068D6",
+      secondaryColor: "#f5590c",
+      tertiaryColor: "#3396FF",
+    },
+    {
+      primaryColor,
+      secondaryColor,
+      tertiaryColor,
+    }
+  );
 
-  // Apply the same 3 or 6 facts filtering logic
+  // Get facts from landingPageData
   const companyFacts = landingPageData?.companyFacts || [];
-  let facts = companyFacts;
-  if (companyFacts.length >= 6) {
-    facts = companyFacts.slice(0, 6);
-  } else if (companyFacts.length >= 3) {
-    facts = companyFacts.slice(0, 3);
-  }
+
+  // Default facts if none are provided
+  const defaultFacts = [
+    {
+      headingText: "Community Engagement",
+      descriptionText: "Active in social responsibility initiatives.",
+      icon: "Zap",
+    },
+    {
+      headingText: "Global Presence",
+      descriptionText: "Serving clients in over 20 countries.",
+      icon: "Globe",
+    },
+    {
+      headingText: "Innovation Leaders",
+      descriptionText: "Recruitment marketing automation.",
+      icon: "BarChart",
+    },
+    {
+      headingText: "Employee-Centric",
+      descriptionText: "Recognized for our employee benefits.",
+      icon: "MessageCircle",
+    },
+    {
+      headingText: "Award-Winning",
+      descriptionText: "Recipient of multiple industry awards.",
+      icon: "Award",
+    },
+  ];
+
+  const facts = companyFacts.length > 0 ? companyFacts : defaultFacts;
+
+  // Navigation handlers
+  const handlePrev = () => {
+    setActiveIndex((prev) => (prev > 0 ? prev - 1 : facts.length - 1));
+  };
+
+  const handleNext = () => {
+    setActiveIndex((prev) => (prev < facts.length - 1 ? prev + 1 : 0));
+  };
+
+  // Get visible cards (5 cards: -2, -1, 0, +1, +2)
+  const getVisibleCards = () => {
+    const cards = [];
+    for (let offset = -2; offset <= 2; offset++) {
+      let index = activeIndex + offset;
+      // Wrap around
+      if (index < 0) index = facts.length + index;
+      if (index >= facts.length) index = index - facts.length;
+      cards.push({
+        ...facts[index],
+        originalIndex: index,
+        offset,
+      });
+    }
+    return cards;
+  };
+
+  const visibleCards = getVisibleCards();
+
+  // Card positions based on offset
+  const getCardStyle = (offset) => {
+    const isActive = offset === 0;
+    const isAdjacent = Math.abs(offset) === 1;
+    const isOuter = Math.abs(offset) === 2;
+
+    // Position from center
+    let left = "50%";
+    let transform = "translateX(-50%)";
+    
+    if (offset === -2) {
+      left = "calc(50% - 660px)";
+    } else if (offset === -1) {
+      left = "calc(50% - 330px)";
+    } else if (offset === 1) {
+      left = "calc(50% + 330px)";
+    } else if (offset === 2) {
+      left = "calc(50% + 660px)";
+    }
+
+    return {
+      position: "absolute",
+      left,
+      transform,
+      top: isAdjacent ? "0px" : "72px",
+      width: "306px",
+      backgroundColor: isActive ? getColor("primary", 200) : getColor("primary", 50),
+      borderRadius: "24px",
+      padding: "48px 24px",
+      boxShadow: isActive ? "0px 32.88px 50.815px 11.956px rgba(0, 0, 0, 0.03)" : "none",
+      zIndex: isActive ? 10 : isAdjacent ? 5 : 1,
+      opacity: isOuter ? 0.7 : 1,
+    };
+  };
+
+  const getIconContainerStyle = (offset) => {
+    const isActive = offset === 0;
+    return {
+      width: "160px",
+      height: "160px",
+      borderRadius: "24px",
+      backgroundColor: isActive ? getColor("primary", 100) : getColor("primary", 50),
+      boxShadow: isActive 
+        ? `0px 44px 84px 0px ${getColor("primary", 300)}` 
+        : `0px 44px 84px 0px ${getColor("primary", 100)}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    };
+  };
 
   return (
     <div
-      className="container mx-auto w-full"
-      style={{
-        backgroundColor: variantPl4,
-        color: textHeadingColor,
-      }}
+      id="company-facts"
+      ref={sectionRef}
+      className="w-full bg-white relative overflow-hidden"
+      style={{ fontFamily: bodyFont?.family || "Inter, sans-serif" }}
     >
-      <div className=" relative self-stretch h-[842px] py-[72px] mdx:py-5">
-        <Img
-          src="/images3/img_ellipse_2.png"
-          alt="Secondary Image"
-          className="absolute right-[6%] top-[9%] m-auto h-[452px] w-[28%] object-contain"
-        />
-        {/* <IconRenderer/> */}
-        <div className="container flex absolute top-0 right-0 bottom-0 left-0 gap-8 justify-center items-start px-8 my-auto h-max mdx:relative mdx:flex-col mdx:px-5">
-          <div className="flex w-[38%] flex-col items-start gap-5 mdx:w-full">
-            <Heading
-              as="h2"
-              className="text-[36px] font-semibold tracking-[-0.72px] text-[#0f1728] mdx:text-[34px] sm:text-[32px]"
+      <div className="flex flex-col gap-[64px] items-center pt-[200px] pb-[100px]">
+        {/* Title Section */}
+        <div className="flex flex-col gap-[28px] items-center">
+          {/* Title with blue gradient highlight */}
+          <div className="relative inline-grid">
+            <div 
+              className="col-start-1 row-start-1 h-[24px] rounded-[8px]"
+              style={{
+                background: `linear-gradient(to right, ${getColor("primary", 200)}, transparent)`,
+                marginLeft: "302px",
+                marginTop: "20px",
+                width: "143px",
+              }}
+            />
+            <h2
+              ref={titleRef}
+              onClick={() => handleItemClick("companyFactsTitle")}
+              className="col-start-1 row-start-1 font-semibold cursor-pointer text-center"
+              style={{
+                fontFamily: titleFont?.family || "Inter, sans-serif",
+                fontSize: "48px",
+                lineHeight: "60px",
+                letterSpacing: "-1.44px",
+                color: "#292929",
+              }}
             >
-              {landingPageData?.companyFactsTitle}
-            </Heading>
-            <Text
-              size="text_xl_regular"
-              as="p"
-              className="w-full text-[20px] font-normal leading-[30px] text-[#475466]"
-            >
-              {landingPageData?.companyFactsDescription}
-            </Text>
+              {landingPageData?.companyFactsTitle || "Our Company Facts"}
+            </h2>
           </div>
-          <div className={`grid flex-1 gap-8 self-center ml-8 mdx:ml-0 mdx:grid-cols-1 mdx:self-stretch ${facts.length === 6 ? 'grid-cols-3' : facts.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-            <Suspense fallback={<div>Loading feed...</div>}>
-              {facts?.map?.((d, index) => {
-                return <RenderFact {...d} key={"gridTemplate" + index} />;
-              })}
-            </Suspense>
+
+          {/* Subtitle */}
+          <p
+            ref={descriptionRef}
+            onClick={() => handleItemClick("companyFactsDescription")}
+            className="cursor-pointer text-center max-w-[554px]"
+            style={{
+              fontSize: "16px",
+              lineHeight: "24px",
+              color: "#7c7c7c",
+              fontFamily: subheaderFont?.family || "Inter, sans-serif",
+            }}
+          >
+            {landingPageData?.companyFactsDescription || "With the Core App development team we are on our way to become the worlds user friendliest consumer app for job connections with employers."}
+          </p>
+        </div>
+
+        {/* Cards Carousel */}
+        <div className="relative w-full h-[469px] overflow-hidden">
+          <div className="absolute inset-0" style={{ width: "1440px", left: "50%", transform: "translateX(-50%)" }}>
+            {visibleCards.map((fact, idx) => {
+              const offset = fact.offset;
+              const isActive = offset === 0;
+
+              return (
+                <div
+                  key={`${fact.originalIndex}-${offset}`}
+                  className="flex flex-col gap-[64px] items-center overflow-hidden transition-all duration-300"
+                  style={getCardStyle(offset)}
+                >
+                  {/* Icon Container */}
+                  <div
+                    ref={(el) => {
+                      if (isActive) {
+                        factItemRefs.current[`companyFacts[${fact.originalIndex}].icon`] = el;
+                      }
+                    }}
+                    onClick={() => isActive && handleItemClick(`companyFacts[${fact.originalIndex}].icon`)}
+                    style={getIconContainerStyle(offset)}
+                    className={isActive ? "cursor-pointer" : ""}
+                  >
+                    <IconRenderer
+                      icon={fact.icon}
+                      className="w-[96px] h-[96px]"
+                      style={{ color: "#3396ff" }}
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex flex-col gap-[24px] items-center text-center w-full">
+                    <p
+                      ref={(el) => {
+                        if (isActive) {
+                          factItemRefs.current[`companyFacts[${fact.originalIndex}].headingText`] = el;
+                        }
+                      }}
+                      onClick={() => isActive && handleItemClick(`companyFacts[${fact.originalIndex}].headingText`)}
+                      className={`font-semibold ${isActive ? "cursor-pointer" : ""}`}
+                      style={{
+                        fontSize: "24px",
+                        lineHeight: "32px",
+                        color: "#004fa3",
+                        fontFamily: titleFont?.family || "Inter, sans-serif",
+                      }}
+                    >
+                      {fact.headingText}
+                    </p>
+                    <p
+                      ref={(el) => {
+                        if (isActive) {
+                          factItemRefs.current[`companyFacts[${fact.originalIndex}].descriptionText`] = el;
+                        }
+                      }}
+                      onClick={() => isActive && handleItemClick(`companyFacts[${fact.originalIndex}].descriptionText`)}
+                      className={isActive ? "cursor-pointer" : ""}
+                      style={{
+                        fontSize: "16px",
+                        lineHeight: "24px",
+                        color: "#004fa3",
+                        fontFamily: bodyFont?.family || "Inter, sans-serif",
+                      }}
+                    >
+                      {fact.descriptionText}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex gap-[16px] items-center justify-center">
+          {/* Previous Button */}
+          <button
+            onClick={handlePrev}
+            className="flex items-center justify-center rounded-full transition-all"
+            style={{
+              width: "44px",
+              height: "44px",
+              border: "1px solid #fbb693",
+              backdropFilter: "blur(4px)",
+              backgroundColor: "transparent",
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke={getColor("secondary", 500)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
+          {/* Next Button */}
+          <button
+            onClick={handleNext}
+            className="flex items-center justify-center rounded-full transition-all"
+            style={{
+              width: "44px",
+              height: "44px",
+              border: "1px solid #fbb693",
+              backdropFilter: "blur(4px)",
+              backgroundColor: "transparent",
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke={getColor("secondary", 500)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
