@@ -603,7 +603,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
               {landingPageData?.candidateProcessTitle
                 ?.split(" ")
                 .slice(1)
-                .join(" ") || "Process"}
+                .join(" ") || ""}
             </span>
           </h2>
         <h3

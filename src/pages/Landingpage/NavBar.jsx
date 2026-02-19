@@ -1022,8 +1022,7 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
                   gap: "8px"
                 }}
                 onClick={() => {
-                  const jobsSection = document.getElementById("linked-jobs");
-                  if (jobsSection) jobsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                  handleNavigate("linked-jobs");
                 }}
               >
                 {landingPageData?.multiJobCtaText || landingPageData?.ctaText || "See Open Roles"}

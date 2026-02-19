@@ -15,12 +15,16 @@ import Video from "./Video.js";
 import TextBox from "./TextBox.js";
 import Photos from "./Photos.js";
 import EVPMission from "./EVPMission.js";
+import Agenda from "./Agenda.js";
+import JobSpecification from "./JobSpecification.js";
+import JobDescription from "./JobDescription.js";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils.js";
 import useTemplatePalette from "../../../pages/hooks/useTemplatePalette.js";
 import ApplyCustomFont from "./ApplyCustomFont.jsx";
 import MetaPixel from "./MetaPixel.jsx";
 import eventEmitter from "../../utils/eventEmitter.js";
+import { scrollToElement } from "./scrollUtils.js";
 
 // Helper function to get image transform styles (zoom, mirror)
 const getImageTransform = (adjustments) => {
@@ -52,13 +56,17 @@ const useResponsiveTitleSize = (text, containerRef, maxLines = 2, initialSize = 
         if (textLength <= 18) currentSize = 32;
         else if (textLength <= 30) currentSize = 28;
         else if (textLength <= 45) currentSize = 24;
-        else currentSize = 20;
+        else if (textLength <= 60) currentSize = 20;
+        else if (textLength <= 80) currentSize = 18;
+        else currentSize = 16;
       } else {
         if (textLength <= 18) currentSize = 64;
         else if (textLength <= 30) currentSize = 56;
         else if (textLength <= 45) currentSize = 48;
         else if (textLength <= 60) currentSize = 42;
-        else currentSize = 36;
+        else if (textLength <= 80) currentSize = 36;
+        else if (textLength <= 100) currentSize = 32;
+        else currentSize = 28;
       }
 
       const containerWidth = Math.max(0, container.offsetWidth - 20);
@@ -212,7 +220,24 @@ const MultiJobHeroSection = ({ landingPageData, isEdit = false }) => {
 
   const scrollToJobs = () => {
     const jobsSection = document.getElementById("linked-jobs");
-    if (jobsSection) jobsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (jobsSection) {
+      scrollToElement(jobsSection, 128, 24);
+      return;
+    }
+
+    // Fallback for editor previews rendered inside iframes.
+    const iframes = document.querySelectorAll("iframe");
+    for (const iframe of iframes) {
+      try {
+        const target = iframe?.contentDocument?.getElementById("linked-jobs");
+        if (target) {
+          scrollToElement(target, 128, 24);
+          return;
+        }
+      } catch (_) {
+        // Ignore cross-origin/iframe access issues.
+      }
+    }
   };
 
   const clipPathId = "hero-l-shape-" + (landingPageData?._id || "default");
@@ -260,10 +285,8 @@ const MultiJobHeroSection = ({ landingPageData, isEdit = false }) => {
                     color: titleColor,
                     fontSize: `${titleFontSize}px`,
                     lineHeight: 1.1,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden"
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word"
                   }}
                 >
                   {heroTitle}
@@ -354,152 +377,119 @@ const MultiJobHeroSection = ({ landingPageData, isEdit = false }) => {
 
 // Compute actual visible menu items for multi-job page based on rendered sections
 const computeMultiJobMenuItems = (landingPageData) => {
-  const items = [];
-  let sort = 1;
-
-  // LinkedJobs is always shown
-  items.push({
-    id: "linked-jobs",
-    key: "Linked Jobs",
-    label: landingPageData?.jobsSectionTitle || "Open Positions",
-    active: true,
-    visible: true,
-    sort: sort++
-  });
-
-  // AboutCompany - uses id="about-the-company"
-  if (landingPageData?.showAboutCompany !== false) {
-    items.push({
-      id: "about-the-company",
+  const sourceItems = Array.isArray(landingPageData?.menuItems) ? landingPageData.menuItems : [];
+  const sourceByKey = new Map(sourceItems.map((item) => [item?.key, item]));
+  const supported = [
+    {
+      key: "Linked Jobs",
+      id: "linked-jobs",
+      fallbackLabel: landingPageData?.jobsSectionTitle || "Open Positions",
+      fallbackVisible: true,
+    },
+    {
       key: "About The Company",
-      label: landingPageData?.aboutTheCompanyTitle || "About Us",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
-
-  // CompanyFacts - uses id="company-facts"
-  if (landingPageData?.showCompanyFacts !== false) {
-    items.push({
-      id: "company-facts",
+      id: "about-the-company",
+      fallbackLabel: landingPageData?.aboutTheCompanyTitle || "About Us",
+      fallbackVisible: landingPageData?.showAboutCompany !== false,
+    },
+    {
       key: "Company Facts",
-      label: landingPageData?.companyFactsTitle || "Why Join Us",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
-
-  // CandidateProcess - uses id="candidate-process"
-  if (landingPageData?.showCandidateProcess !== false) {
-    items.push({
-      id: "candidate-process",
+      id: "company-facts",
+      fallbackLabel: landingPageData?.companyFactsTitle || "Why Join Us",
+      fallbackVisible: landingPageData?.showCompanyFacts !== false,
+    },
+    {
       key: "Candidate Process",
-      label: landingPageData?.candidateProcessTitle || "Application Process",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
-
-  // EmployerTestimonial - hidden by default, must be explicitly enabled
-  if (landingPageData?.showTestimonial === true) {
-    items.push({
-      id: "employee-testimonials",
+      id: "candidate-process",
+      fallbackLabel: landingPageData?.candidateProcessTitle || "Application Process",
+      fallbackVisible: landingPageData?.showCandidateProcess !== false,
+    },
+    {
       key: "Employee Testimonials",
-      label: landingPageData?.testimonialTitle || "Testimonials",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
-
-  // LeaderIntroduction - hidden by default
-  if (landingPageData?.showLeaderIntroduction === true) {
-    items.push({
-      id: "leader-introduction",
+      id: "employee-testimonials",
+      fallbackLabel: landingPageData?.testimonialTitle || "Testimonials",
+      fallbackVisible: landingPageData?.showTestimonial === true,
+    },
+    {
       key: "Leader Introduction",
-      label: landingPageData?.leaderIntroductionTitle || "Meet Our Leader",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
-
-  // GrowthPath - hidden by default
-  if (landingPageData?.showGrowthPath === true) {
-    items.push({
-      id: "growth-path",
-      key: "Growth Path",
-      label: landingPageData?.growthPathTitle || "Career Growth",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
-
-  // Video - hidden by default
-  if (landingPageData?.showVideo === true) {
-    items.push({
-      id: "video",
-      key: "Video",
-      label: landingPageData?.videoTitle || "Video",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
-
-  // TextBox - hidden by default
-  if (landingPageData?.showTextBox === true) {
-    items.push({
-      id: "text-box",
-      key: "Text Box",
-      label: landingPageData?.textBoxTitle || "Discover More",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
-
-  // ImageCarousel - hidden by default
-  if (landingPageData?.showImageCarousel === true) {
-    items.push({
-      id: "image-carousel",
-      key: "Image Carousel",
-      label: landingPageData?.photoTitle || "Gallery",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
-
-  // EvpMission - hidden by default
-  if (landingPageData?.showEvpMission === true) {
-    items.push({
-      id: "evp-mission",
-      key: "EVP / Mission",
-      label: landingPageData?.evpMissionTitle || "Our Mission",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
-
-  // RecruiterContact - uses id="recruiter-contact"
-  if (landingPageData?.showRecruiterContact !== false) {
-    items.push({
-      id: "recruiter-contact",
+      id: "leader-introduction",
+      fallbackLabel: landingPageData?.leaderIntroductionTitle || "Meet Our Leader",
+      fallbackVisible: landingPageData?.showLeaderIntroduction === true,
+    },
+    {
       key: "Recruiter Contact",
-      label: landingPageData?.recruiterContactTitle || "Contact",
-      active: true,
-      visible: true,
-      sort: sort++
-    });
-  }
+      id: "recruiter-contact",
+      fallbackLabel: landingPageData?.recruiterContactTitle || "Contact",
+      fallbackVisible: landingPageData?.showRecruiterContact !== false,
+    },
+    {
+      key: "Agenda",
+      id: "agenda",
+      fallbackLabel: landingPageData?.agendaTitle || "Agenda",
+      fallbackVisible: false,
+    },
+    {
+      key: "Job Specifications",
+      id: "job-specifications",
+      fallbackLabel: landingPageData?.jobSpecificationTitle || "Job Specifications",
+      fallbackVisible: false,
+    },
+    {
+      key: "Job Description",
+      id: "job-description",
+      fallbackLabel: landingPageData?.jobDescriptionTitle || "Job Description",
+      fallbackVisible: false,
+    },
+    {
+      key: "EVP / Mission",
+      id: "evp-mission",
+      fallbackLabel: landingPageData?.evpMissionTitle || "Our Mission",
+      fallbackVisible: landingPageData?.showEvpMission === true,
+    },
+    {
+      key: "Growth Path",
+      id: "growth-path",
+      fallbackLabel: landingPageData?.growthPathTitle || "Career Growth",
+      fallbackVisible: landingPageData?.showGrowthPath === true,
+    },
+    {
+      key: "Image Carousel",
+      id: "image-carousel",
+      fallbackLabel: landingPageData?.photoTitle || "Gallery",
+      fallbackVisible: landingPageData?.showImageCarousel === true,
+    },
+    {
+      key: "Video",
+      id: "video",
+      fallbackLabel: landingPageData?.videoTitle || "Video",
+      fallbackVisible: landingPageData?.showVideo === true,
+    },
+    {
+      key: "Text Box",
+      id: "text-box",
+      fallbackLabel: landingPageData?.textBoxTitle || "Discover More",
+      fallbackVisible: landingPageData?.showTextBox === true,
+    },
+  ];
 
-  return items;
+  const normalized = supported
+    .map((entry, idx) => {
+      const source = sourceByKey.get(entry.key);
+      const active = source ? source.active !== false : entry.fallbackVisible;
+      const visible = source ? source.visible !== false : entry.fallbackVisible;
+      const sort = Number.isFinite(source?.sort) ? source.sort : idx + 1;
+      return {
+        id: entry.id,
+        key: entry.key,
+        label: source?.label || entry.fallbackLabel,
+        active,
+        visible,
+        sort,
+      };
+    })
+    .filter((item) => item.active && item.visible);
+
+  return normalized.sort((a, b) => (a.sort || 0) - (b.sort || 0));
 };
 
 // Wrapper component for sections to handle click sync in edit mode
@@ -542,6 +532,7 @@ const MultiJobLandingPage = ({ landingPageData, isEdit = false, fullscreen = fal
 
   // Compute the actual visible menu items based on rendered sections
   const computedMenuItems = computeMultiJobMenuItems(landingPageData);
+  const visibleSections = new Set(computedMenuItems.map((item) => item.key));
   
   // Create a modified landingPageData with correct menuItems for NavBar
   const navLandingPageData = {
@@ -563,67 +554,91 @@ const MultiJobLandingPage = ({ landingPageData, isEdit = false, fullscreen = fal
         <LinkedJobs landingPageData={landingPageData} isEdit={isEdit} />
       </MultiJobSectionWrapper>
       
-      {landingPageData?.showAboutCompany !== false && (
+      {visibleSections.has("About The Company") && (
         <MultiJobSectionWrapper sectionKey="About The Company" isEdit={isEdit}>
           <AboutCompany landingPageData={landingPageData} />
         </MultiJobSectionWrapper>
       )}
       
-      {landingPageData?.showCompanyFacts !== false && (
+      {visibleSections.has("Company Facts") && (
         <MultiJobSectionWrapper sectionKey="Company Facts" isEdit={isEdit}>
           <CompanyFacts landingPageData={landingPageData} />
         </MultiJobSectionWrapper>
       )}
       
-      {landingPageData?.showCandidateProcess !== false && (
+      {visibleSections.has("Candidate Process") && (
         <MultiJobSectionWrapper sectionKey="Candidate Process" isEdit={isEdit}>
           <CandidateProcess landingPageData={landingPageData} />
         </MultiJobSectionWrapper>
       )}
+
+      {visibleSections.has("Agenda") && (
+        <div id="agenda">
+          <MultiJobSectionWrapper sectionKey="Agenda" isEdit={isEdit}>
+            <Agenda landingPageData={landingPageData} />
+          </MultiJobSectionWrapper>
+        </div>
+      )}
+
+      {visibleSections.has("Job Specifications") && (
+        <div id="job-specifications">
+          <MultiJobSectionWrapper sectionKey="Job Specifications" isEdit={isEdit}>
+            <JobSpecification landingPageData={landingPageData} />
+          </MultiJobSectionWrapper>
+        </div>
+      )}
+
+      {visibleSections.has("Job Description") && (
+        <div id="job-description">
+          <MultiJobSectionWrapper sectionKey="Job Description" isEdit={isEdit}>
+            <JobDescription landingPageData={landingPageData} />
+          </MultiJobSectionWrapper>
+        </div>
+      )}
       
-      {landingPageData?.showTestimonial === true && (
+      {visibleSections.has("Employee Testimonials") && (
         <MultiJobSectionWrapper sectionKey="Employee Testimonials" isEdit={isEdit}>
           <EmployerTestimonial landingPageData={landingPageData} />
         </MultiJobSectionWrapper>
       )}
       
-      {landingPageData?.showLeaderIntroduction === true && (
+      {visibleSections.has("Leader Introduction") && (
         <MultiJobSectionWrapper sectionKey="Leader Introduction" isEdit={isEdit}>
           <LeaderIntroduction landingPageData={landingPageData} />
         </MultiJobSectionWrapper>
       )}
       
-      {landingPageData?.showGrowthPath === true && (
+      {visibleSections.has("Growth Path") && (
         <MultiJobSectionWrapper sectionKey="Growth Path" isEdit={isEdit}>
           <GrowthPath landingPageData={landingPageData} />
         </MultiJobSectionWrapper>
       )}
       
-      {landingPageData?.showVideo === true && (
+      {visibleSections.has("Video") && (
         <MultiJobSectionWrapper sectionKey="Video" isEdit={isEdit}>
           <Video landingPageData={landingPageData} />
         </MultiJobSectionWrapper>
       )}
       
-      {landingPageData?.showTextBox === true && (
+      {visibleSections.has("Text Box") && (
         <MultiJobSectionWrapper sectionKey="Text Box" isEdit={isEdit}>
           <TextBox landingPageData={landingPageData} />
         </MultiJobSectionWrapper>
       )}
       
-      {landingPageData?.showImageCarousel === true && (
+      {visibleSections.has("Image Carousel") && (
         <MultiJobSectionWrapper sectionKey="Image Carousel" isEdit={isEdit}>
           <Photos landingPageData={landingPageData} />
         </MultiJobSectionWrapper>
       )}
       
-      {landingPageData?.showEvpMission === true && (
+      {visibleSections.has("EVP / Mission") && (
         <MultiJobSectionWrapper sectionKey="EVP / Mission" isEdit={isEdit}>
           <EVPMission landingPageData={landingPageData} />
         </MultiJobSectionWrapper>
       )}
       
-      {landingPageData?.showRecruiterContact !== false && (
+      {visibleSections.has("Recruiter Contact") && (
         <MultiJobSectionWrapper sectionKey="Recruiter Contact" isEdit={isEdit}>
           <RecruiterContact landingPageData={landingPageData} />
         </MultiJobSectionWrapper>

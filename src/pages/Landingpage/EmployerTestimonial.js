@@ -795,7 +795,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
   ];
 
   const finalTestimonials =
-    testimonials.length > 0 ? testimonials : defaultTestimonials;
+    testimonials.length > 0 ? testimonials : [];
 
   // Detect number of visible items based on screen size
   useEffect(() => {
