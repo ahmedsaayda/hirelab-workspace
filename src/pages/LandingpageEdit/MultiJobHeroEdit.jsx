@@ -41,7 +41,7 @@ const MultiJobHeroEdit = ({ landingPageData, setLandingPageData, fetchData }) =>
           {
             key: "heroDescription",
             label: "Description",
-            max: 680,
+            max: 120,
             textarea: true,
           },
           {
