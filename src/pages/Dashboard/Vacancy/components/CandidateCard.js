@@ -175,6 +175,7 @@ const CandidateCard = ({
   const getTimeAgo = () => {
     const now = moment();
     const appliedAt = moment(candidate.createdAt);
+    if (!appliedAt.isValid()) return null;
     const diff = now.diff(appliedAt);
 
     const duration = moment.duration(diff);
@@ -198,6 +199,11 @@ const CandidateCard = ({
       return 'just now';
     }
   };
+
+  const appliedAtMoment = moment(candidate.createdAt);
+  const appliedAtIsValid = appliedAtMoment.isValid();
+  const timeAgo = getTimeAgo();
+  const appliedFor = candidate.position?.trim() || candidate.vacancyInfo?.name || null;
 
   const menuItems = [
     {
@@ -360,6 +366,82 @@ const CandidateCard = ({
         </Dropdown>
       </div>
 
+      {/* Rating (never wraps) + Applied timestamp */}
+      <div className="mb-2 space-y-1">
+        {/* Rating */}
+        <div
+          className={`flex items-center gap-2 flex-nowrap px-1 py-0.5 rounded transition-all duration-300 ${recentlyUpdated ? 'bg-green-50 scale-105' : ''
+            }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Tooltip title="Aggregated rating from stage reviews. Click the question mark to see breakdown by stage.">
+            <div className="flex items-center gap-1 flex-nowrap whitespace-nowrap">
+              <Rate
+                value={candidate.stars || 0}
+                style={{
+                  fontSize: '14px',
+                  opacity: 0.8,
+                  pointerEvents: 'none',
+                  whiteSpace: 'nowrap'
+                }}
+                className="candidate-card-rating whitespace-nowrap"
+                disabled={true}
+                allowHalf={false}
+              />
+            </div>
+          </Tooltip>
+          {onShowReviewBreakdown && (
+            <Tooltip title="View rating breakdown by stage">
+              <Button
+                type="text"
+                size="small"
+                icon={<QuestionCircleOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowReviewBreakdown();
+                }}
+                className="text-gray-400 hover:text-gray-600 p-0 h-3 w-3 flex items-center justify-center ml-1"
+                style={{ fontSize: '10px' }}
+              />
+            </Tooltip>
+          )}
+          {isUpdatingRating && (
+            <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          )}
+          {recentlyUpdated && (
+            <div className="text-green-500 text-xs">✓</div>
+          )}
+        </div>
+
+        {/* Applied meta (relative + exact date) */}
+        <Tooltip
+          title={
+            appliedAtIsValid
+              ? appliedAtMoment.format('MMMM D, YYYY')
+              : undefined
+          }
+        >
+          <div
+            className="flex items-center justify-between gap-2 text-gray-500"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-1 min-w-0">
+              <ClockCircleOutlined className="text-xs shrink-0" />
+              <span className="text-xs truncate">
+                {!appliedAtIsValid
+                  ? 'Applied —'
+                  : timeAgo === 'just now'
+                    ? 'Applied just now'
+                    : `Applied ${timeAgo} ago`}
+              </span>
+            </div>
+            <span className="text-xs text-gray-400 whitespace-nowrap shrink-0">
+              {appliedAtIsValid ? appliedAtMoment.format('MMM D, YYYY') : '—'}
+            </span>
+          </div>
+        </Tooltip>
+      </div>
+
       {/* Contact Info */}
 
 
@@ -437,71 +519,13 @@ const CandidateCard = ({
         </div>
       )}
 
-      {/* Application Date */}
-      <div className="mb-2 flex items-center gap-1 text-gray-500">
-        <ClockCircleOutlined className="text-xs" />
-        <span className="text-xs">
-          {getTimeAgo() === 'just now' ? 'Applied just now' : `Applied ${getTimeAgo()} ago`}
-        </span>
-        <span className="text-xs text-gray-400">
-          ({moment(candidate.createdAt).format('MMM D, YYYY')})
-        </span>
-      </div>
-
-      {/* Footer with Rating */}
-      <div className="flex items-center justify-between">
-        {/* Rating */}
-        <div
-          className={`flex items-center gap-2 px-1 py-0.5 rounded transition-all duration-300 ${recentlyUpdated ? 'bg-green-50 scale-105' : ''
-            }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Tooltip title="Aggregated rating from stage reviews. Click the question mark to see breakdown by stage.">
-            <div className="flex items-center gap-1">
-              <Rate
-                value={candidate.stars || 0}
-                style={{
-                  fontSize: '14px',
-                  opacity: 0.8,
-                  pointerEvents: 'none'
-                }}
-                className="candidate-card-rating"
-                disabled={true}
-                allowHalf={false}
-              />
-            </div>
-          </Tooltip>
-          {onShowReviewBreakdown && (
-            <Tooltip title="View rating breakdown by stage">
-              <Button
-                type="text"
-                size="small"
-                icon={<QuestionCircleOutlined />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onShowReviewBreakdown();
-                }}
-                className="text-gray-400 hover:text-gray-600 p-0 h-3 w-3 flex items-center justify-center ml-1"
-                style={{ fontSize: '10px' }}
-              />
-            </Tooltip>
-          )}
-          {isUpdatingRating && (
-            <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          )}
-          {recentlyUpdated && (
-            <div className="text-green-500 text-xs">✓</div>
-          )}
-        </div>
-      </div>
-
       {/* Additional Info */}
-      {candidate.position && (
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <span className="text-xs text-gray-500">Applied for: </span>
-          <span className="text-xs font-medium text-gray-700">{candidate.position}</span>
-        </div>
-      )}
+      <div className="mt-2 pt-2 border-t border-gray-100">
+        <span className="text-xs text-gray-500">Applied for: </span>
+        <span className={`text-xs font-medium ${appliedFor ? 'text-gray-700' : 'text-gray-400'}`}>
+          {appliedFor || '—'}
+        </span>
+      </div>
     </div>
   );
 };
