@@ -14,8 +14,8 @@ const SECTION_CONFIGS = {
     fields: [
       {
         key: "heroDescription",
-        label: "Headline",
-        type: "headline",
+        label: "Description",
+        type: "description",
         maxLength: 120,
       },
     ],
@@ -1050,7 +1050,7 @@ fields to be edited by Ai Base on section
 Another version of the mapping but each item has a key and a label for the customer to understand what they are editing
 
 ##Hero :
-    - heroDescription (Headline)
+    - heroDescription (Description)
     
 ##Employer Testimonial : 
         - testimonialTitle (Header)
@@ -1122,7 +1122,7 @@ Another version of the mapping but each item has a key and a label for the custo
 Fields to be edited by Ai  (From editor page)based on section
 
 ##Hero :
-    - heroDescription (Headline)
+    - heroDescription (Description)
     
 ##Employer Testimonial : 
         -  (Header)
