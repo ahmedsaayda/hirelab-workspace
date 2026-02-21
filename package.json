@@ -106,7 +106,8 @@
     "yaqrcode": "^0.2.1"
   },
   "resolutions": {
-    "@babel/plugin-proposal-private-property-in-object": "x.x.x"
+    "@babel/plugin-proposal-private-property-in-object": "x.x.x",
+    "stylis": "4.3.6"
   },
   "overrides": {
     "@react-three/fiber": "8.16.8",
@@ -122,7 +123,8 @@
     }
   },
   "scripts": {
-    "dev": "next dev --turbopack --port 3001",
+    "dev": "next dev --port 3001",
+    "dev:turbo": "next dev --turbopack --port 3001",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
