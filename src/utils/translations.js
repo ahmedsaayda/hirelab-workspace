@@ -1079,7 +1079,8 @@ export const getSalaryTimeTranslation = (language, time) => {
     Year: 'year',
     Month: 'month',
     Week: 'week',
-    Day: 'day'
+    Day: 'day',
+    Hour: 'hour'
   };
 
   const translationKey = timeMap[time] || 'month';

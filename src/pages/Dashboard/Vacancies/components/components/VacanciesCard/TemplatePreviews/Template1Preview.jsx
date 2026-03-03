@@ -94,7 +94,7 @@ export default function Template1Preview  ({ landingPageData }){
             {landingPageData.salaryMin}-{landingPageData.salaryMax}
             {landingPageData.salaryCurrency}
           </span>
-          <span>/{landingPageData.salaryTime || "Month"}</span>
+          <span>/{landingPageData.salaryTime?.toLowerCase?.() || "month"}</span>
         </div>
         <div className="flex justify-start gap-1">
           <div className="flex items-center gap-1 text-[5px] text-gray-600">
