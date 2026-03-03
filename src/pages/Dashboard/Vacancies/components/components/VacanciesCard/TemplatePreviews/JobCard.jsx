@@ -11,7 +11,8 @@ export default function JobCard({ landingPageData }) {
     heroDescription = "Are you a dynamic and experienced project manager...",
     location = "Offenbach",
     salary = "$2,500",
-    salaryPeriod = "month",
+    salaryPeriod,
+    salaryTime,
     hours = "7 Hours",
     hoursPeriod = "daily",
     heroImage = "/placeholder.svg",
@@ -19,6 +20,8 @@ export default function JobCard({ landingPageData }) {
     secondaryColor = "#e1ce11",
     tertiaryColor = "#e1ce11",
   } = landingPageData || {};
+
+  const displaySalaryPeriod = salaryPeriod || salaryTime?.toLowerCase?.() || "month";
 
   // Call the palette hook
   const { getColor } = useTemplatePalette(
@@ -92,7 +95,7 @@ console.log("backgroundddddddddddddddddddColor", backgroundColor);
           {/* Badges */}
           {salary && (
             <div className="absolute top-3 left-3">
-              <Badge icon={<DollarSign size={8} />} text={`${salary} / ${salaryPeriod}`} primaryColor={getColor("primaryColor")} />
+              <Badge icon={<DollarSign size={8} />} text={`${salary} / ${displaySalaryPeriod}`} primaryColor={getColor("primaryColor")} />
             </div>
           )}
           {location && (

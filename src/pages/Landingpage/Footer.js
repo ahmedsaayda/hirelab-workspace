@@ -421,8 +421,9 @@ export const Template2 = React.memo(({
                     : "Onsite";
                 
                 // Format salary
+                const salaryUnit = job.salaryTime?.toLowerCase?.() || "month";
                 const salaryText = job.salaryMin 
-                  ? `${job.currency || "$"}${job.salaryMin}${job.salaryMax ? ` - ${job.currency || "$"}${job.salaryMax}` : ""} / month`
+                  ? `${job.currency || "$"}${job.salaryMin}${job.salaryMax ? ` - ${job.currency || "$"}${job.salaryMax}` : ""} / ${salaryUnit}`
                   : "Competitive";
                 
                 // Format hours
@@ -1015,7 +1016,7 @@ const Template1 = React.memo(({ landingPageData, jobPostingsList, jobListings, s
                 </svg>
                 {intToHumanReadablePrice(job.salaryMin)} -{" "}
                 {intToHumanReadablePrice(job.salaryMax)}/
-                {landingPageData?.salaryTime?.toLowerCase?.() || "Month"}
+                {job.salaryTime?.toLowerCase?.() || "month"}
               </div>
             )}
             <div
