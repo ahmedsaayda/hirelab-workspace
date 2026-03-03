@@ -175,9 +175,23 @@ const Template3 = ({ landingPageData, onClickApply, isMultiJob = false }) => {
   );
 };
 
-const Template2 = ({ landingPageData, onClickApply, isMultiJob = false }) => {
-  // Template2 has the header/logo built into the hero section, so we don't render a separate navbar
-  return null;
+const Template2 = (props) => {
+  const { landingPageData } = props;
+  // Render the shared header (like Template1), but keep Template2's default palette
+  // in case colors aren't stored on the landingPageData yet.
+  const landingPageDataWithTemplate2Defaults = {
+    primaryColor: "#0068D6",
+    secondaryColor: "#f5590c",
+    tertiaryColor: "#3396FF",
+    ...(landingPageData || {}),
+  };
+
+  return (
+    <Template1
+      {...props}
+      landingPageData={landingPageDataWithTemplate2Defaults}
+    />
+  );
 };
 
 
@@ -1013,8 +1027,16 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
               <button
                 className="px-6 text-xs md:text-base whitespace-nowrap font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg smx:px-5"
                 style={{
-                  backgroundColor: getColor("tertiary", 400),
-                  color: calculateTextColor(getColor("tertiary", 400), landingPageData?.yiqThreshold),
+                  backgroundColor:
+                    landingPageData?.templateId === "2"
+                      ? getColor("secondary", 400)
+                      : getColor("tertiary", 400),
+                  color: calculateTextColor(
+                    landingPageData?.templateId === "2"
+                      ? getColor("secondary", 400)
+                      : getColor("tertiary", 400),
+                    landingPageData?.yiqThreshold
+                  ),
                   height: "45px",
                   display: "flex",
                   alignItems: "center",
@@ -1031,8 +1053,16 @@ const Template1 = ({ landingPageData, onClickApply, showBackToEditButton, fullsc
               <button
                 className="px-6 text-xs md:text-base whitespace-nowrap font-medium rounded-md transition hover:bg-yellow-300 smx:px-5 smx:py-0.5"
                 style={{
-                  backgroundColor: getColor("primary", 500),
-                  color: textColor,
+                  backgroundColor:
+                    landingPageData?.templateId === "2"
+                      ? getColor("secondary", 500)
+                      : getColor("primary", 500),
+                  color: calculateTextColor(
+                    landingPageData?.templateId === "2"
+                      ? getColor("secondary", 500)
+                      : getColor("primary", 500),
+                    landingPageData?.yiqThreshold
+                  ),
                   height: "45px",
                   display: "flex",
                   alignItems: "center",
@@ -1342,6 +1372,13 @@ const NavBar = ({ landingPageData, onClickApply, showBackToEditButton, fullscree
       <Template2
         landingPageData={landingPageData}
         onClickApply={onClickApply}
+        showBackToEditButton={showBackToEditButton}
+        fullscreen={fullscreen}
+        setFullscreen={setFullscreen}
+        lpId={lpId}
+        isEdit={isEdit}
+        setLandingPageData={setLandingPageData}
+        isMovilePreview={isMovilePreview}
         isMultiJob={isMultiJob}
       />
     );

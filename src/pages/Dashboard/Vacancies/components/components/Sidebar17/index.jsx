@@ -234,7 +234,7 @@ export default function Sidebar17({
       <Sidebar
         {...props}
         width="90px !important"
-        height="100%"
+        height="calc(100vh - 110px)"
         collapsedWidth="70px !important"
         rootStyles={{
           transition: "width 0.3s ease",
@@ -242,8 +242,14 @@ export default function Sidebar17({
           paddingInline: "0px !important",
           background: "transparent !important",
           paddingLeft: "4px !important",
+          [`.${sidebarClasses.container}`]: {
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            overflow: "hidden",
+          },
         }}
-        className={`${props.className}  flex-shrink-0 min-w-[90px] flex flex-col justify-center items-left gap-[30px] top-0 border-blue_gray-50 border-r border-solid bg-transparent !sticky overflow-auto hover:!w-[140px]`}
+        className={`${props.className}  flex-shrink-0 min-w-[90px] max-h-[calc(100vh-110px)] flex flex-col justify-start items-left gap-[12px] top-0 border-blue_gray-50 border-r border-solid bg-transparent !sticky overflow-hidden hover:!w-[140px]`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
@@ -257,111 +263,107 @@ export default function Sidebar17({
         >
           Sections
         </Heading>
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="sections">
-            {(provided) => (
-              <Menu
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                style={{
-                  background: "transparent",
-                }}
-                menuItemStyles={{
-                  button: {
-                    padding: "11px",
-                    borderRadius: "8px",
-                    [`&:hover`]: { backgroundColor: "#eff8ff !important" },
-                  },
-                }}
-                rootStyles={{ ["&>ul"]: { gap: "8px" } }}
-                className="flex flex-col w-full !bg-transparent"
-              >
-                {allItems.map((item, idx) => (
-                  <Draggable
-                    key={item.key}
-                    draggableId={item.key}
-                    index={idx}
-                    isDragDisabled={[
-                      "flexaligntop",
-                      "flexalign",
-                      "search",
-                    ].includes(item.key)}
-                  >
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        style={{
-                          ...provided.draggableProps.style,
-                          opacity: 1,
-                          ...(snapshot.isDragging
-                            ? {
-                              padding: "8px",
-                              background: "#ffffff",
-                              borderRadius: "8px",
-                              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.15)",
-                              zIndex: 9999,
-                              height: "auto !important",
-                              width: "auto !important",
-                              minWidth: "40px",
-                              minHeight: "40px",
-                              overflow: "visible",
-                            }
-                            : {}),
-                        }}
-                        className={snapshot.isDragging ? "dragging" : ""}
-                      >
-                        <MenuItem
-                          className={`${item.key === activeKey ? "active" : ""
-                            } relative`}
-                          onClick={() => {
-                            if (props.onClickAdd)
-                              props.onClickAdd(item.key, idx);
-                            //setLastScrollToSection(""); and delay 2ms before calling handleSectionClick
-                            // setLastScrollToSection(null);
-                            // setTimeout(() => {
-                            //   handleSectionClick(item.key);
-                            // }, 2);
-                            handleSectionClick(item.key);
+        <div className="sidebar-scroll flex-1 min-h-0 overflow-y-auto pr-1">
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="sections">
+              {(provided) => (
+                <Menu
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  style={{
+                    background: "transparent",
+                  }}
+                  menuItemStyles={{
+                    button: {
+                      padding: "11px",
+                      borderRadius: "8px",
+                      [`&:hover`]: { backgroundColor: "#eff8ff !important" },
+                    },
+                  }}
+                  rootStyles={{ ["&>ul"]: { gap: "8px" } }}
+                  className="flex flex-col w-full !bg-transparent"
+                >
+                  {allItems.map((item, idx) => (
+                    <Draggable
+                      key={item.key}
+                      draggableId={item.key}
+                      index={idx}
+                      isDragDisabled={[
+                        "flexaligntop",
+                        "flexalign",
+                        "search",
+                      ].includes(item.key)}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          style={{
+                            ...provided.draggableProps.style,
+                            opacity: 1,
+                            ...(snapshot.isDragging
+                              ? {
+                                padding: "8px",
+                                background: "#ffffff",
+                                borderRadius: "8px",
+                                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.15)",
+                                zIndex: 9999,
+                                height: "auto !important",
+                                width: "auto !important",
+                                minWidth: "40px",
+                                minHeight: "40px",
+                                overflow: "visible",
+                              }
+                              : {}),
                           }}
+                          className={snapshot.isDragging ? "dragging" : ""}
                         >
-                          <div className="flex flex-shrink-0 gap-2 items-center"
+                          <MenuItem
+                            className={`${item.key === activeKey ? "active" : ""
+                              } relative`}
                             onClick={() => {
-                              setLastScrollToSection(null);
+                              if (props.onClickAdd)
+                                props.onClickAdd(item.key, idx);
+                              handleSectionClick(item.key);
                             }}
                           >
-                            <Tooltip
-                              title={getSectionDisplayName(item.key)}
-                              placement="bottom"
-                              mouseEnterDelay={0.5}
-                              mouseLeaveDelay={0.1}
-                              className="flex-shrink-0"
+                            <div className="flex flex-shrink-0 gap-2 items-center"
+                              onClick={() => {
+                                setLastScrollToSection(null);
+                              }}
                             >
-                              <div
-                                className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
-                                style={
-                                  item.key === activeKey
-                                    ? {
-                                      background: brandColor,
-                                      opacity: 0.6,
-                                    }
-                                    : {}
-                                }
+                              <Tooltip
+                                title={getSectionDisplayName(item.key)}
+                                placement="bottom"
+                                mouseEnterDelay={0.5}
+                                mouseLeaveDelay={0.1}
+                                className="flex-shrink-0"
                               >
-                                <Img
-                                  src={getMenuItemIcon(item.key)}
-                                  alt={item.key}
-                                  className="h-[16px] w-[16px] transition-all"
+                                <div
+                                  className="p-2 rounded-full transition-all focus:ring-2 focus:ring-blue-500"
                                   style={
                                     item.key === activeKey
                                       ? {
-                                        filter: "brightness(0) invert(1)",
+                                        background: brandColor,
+                                        opacity: 0.6,
                                       }
                                       : {}
                                   }
-                                />
-                              </div>
-                            </Tooltip>
+                                >
+                                  <Img
+                                    src={getMenuItemIcon(item.key)}
+                                    alt={item.key}
+                                    className="h-[16px] w-[16px] transition-all"
+                                    style={
+                                      item.key === activeKey
+                                        ? {
+                                          filter: "brightness(0) invert(1)",
+                                        }
+                                        : {}
+                                    }
+                                  />
+                                </div>
+                              </Tooltip>
 
                             {/* Always render the drag handle div, but control visibility with CSS */}
                             {!["flexaligntop", "flexalign", "search"].includes(
@@ -414,16 +416,17 @@ export default function Sidebar17({
                                 </div>
                               )}
                           </div>
-                        </MenuItem>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </Menu>
-            )}
-          </Droppable>
-        </DragDropContext>
+                          </MenuItem>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </Menu>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </div>
       </Sidebar>
 
       {/* Custom Delete Confirmation Modal */}
@@ -437,6 +440,24 @@ export default function Sidebar17({
       <style jsx>{`
         .dragging {
           cursor: grabbing !important;
+        }
+
+        .sidebar-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+          background: rgba(100, 116, 139, 0.45);
+          border-radius: 999px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(100, 116, 139, 0.65);
         }
 
         /* Fix for @hello-pangea/dnd clipping issues */

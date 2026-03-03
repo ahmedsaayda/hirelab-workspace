@@ -88,6 +88,10 @@ export const IFrame = ({
         iframeBody.style.overflowX = 'hidden';
         iframeBody.style.minHeight = '100%';
         iframeBody.style.height = 'auto';
+        // In editor preview, the landing page navbar is fixed-position.
+        // Add real padding so the hero isn't hidden under it.
+        iframeBody.style.paddingTop = 'var(--navbar-height, 128px)';
+        iframeBody.style.boxSizing = 'border-box';
       }
       const handleLinkClick = (e) => {
         const target = e.target;

@@ -69,6 +69,17 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
 
   // Check for debug parameter in URL
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
+  const [isBrandDevToolOpen, setIsBrandDevToolOpen] = useState(true);
+
+  const updateBrandingColor = useCallback((colorKey, value) => {
+    setLandingPageData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        [colorKey]: value,
+      };
+    });
+  }, []);
 
   useEffect(() => {
     // Check for debug parameter in URL (?debug=hirelab2024 or ?hldbg=true)
@@ -347,12 +358,9 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     };
   }, [lpId, recordActivity]);
 
-  // Add navbar height adjustment - skip for Template 2 which has header in hero
-  const isTemplate2 = landingPageData?.templateId === "2";
-  
   useEffect(() => {
-    // Template 2 has header built into hero, so no navbar padding needed
-    const navbarHeight = isTemplate2 ? 0 : 128;
+    // Fixed navbar (all single-job templates)
+    const navbarHeight = 128;
     document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`);
     document.documentElement.style.setProperty('scroll-padding-top', `${navbarHeight}px`);
 
@@ -372,7 +380,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
     return () => {
       document.head.removeChild(style);
     };
-  }, [isTemplate2]);
+  }, []);
 
   const fetchData = useCallback(() => {
     if (lpId && !defaultLandingPageData && !landingPageData) {
@@ -485,6 +493,7 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
   // Check both campaignType AND linkedCampaigns for backwards compatibility with published versions
   const isMultiJobCampaign = landingPageData?.campaignType === "multi" ||
     (Array.isArray(landingPageData?.linkedCampaigns) && landingPageData.linkedCampaigns.length > 0);
+  const isBrandDevToolEnabled = process.env.NODE_ENV === "development";
 
   if (isMultiJobCampaign) {
     return (
@@ -663,6 +672,81 @@ export default function LandingpagePage({ paramsId, overrideParamId = null, full
                 )}
               </div>
             </>
+          )}
+        </div>
+      )}
+
+      {isBrandDevToolEnabled && (
+        <div className="fixed bottom-4 left-4 z-[10000] w-[300px] rounded-lg border border-gray-700 bg-black/85 text-white shadow-2xl">
+          <button
+            type="button"
+            onClick={() => setIsBrandDevToolOpen((prev) => !prev)}
+            className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-semibold"
+          >
+            <span>Branding Dev Tool</span>
+            <span>{isBrandDevToolOpen ? "−" : "+"}</span>
+          </button>
+
+          {isBrandDevToolOpen && (
+            <div className="space-y-3 border-t border-gray-700 px-3 py-3 text-xs">
+              <div className="text-gray-300">
+                Real-time color overrides for the current landing page data.
+              </div>
+
+              <label className="block space-y-1">
+                <span className="text-gray-200">Primary</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={landingPageData?.primaryColor || "#0068D6"}
+                    onChange={(e) => updateBrandingColor("primaryColor", e.target.value)}
+                    className="h-8 w-10 cursor-pointer rounded border border-gray-600 bg-transparent p-0"
+                  />
+                  <input
+                    type="text"
+                    value={landingPageData?.primaryColor || "#0068D6"}
+                    onChange={(e) => updateBrandingColor("primaryColor", e.target.value)}
+                    className="h-8 w-full rounded border border-gray-600 bg-gray-900 px-2 text-white"
+                  />
+                </div>
+              </label>
+
+              <label className="block space-y-1">
+                <span className="text-gray-200">Secondary</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={landingPageData?.secondaryColor || "#f5590c"}
+                    onChange={(e) => updateBrandingColor("secondaryColor", e.target.value)}
+                    className="h-8 w-10 cursor-pointer rounded border border-gray-600 bg-transparent p-0"
+                  />
+                  <input
+                    type="text"
+                    value={landingPageData?.secondaryColor || "#f5590c"}
+                    onChange={(e) => updateBrandingColor("secondaryColor", e.target.value)}
+                    className="h-8 w-full rounded border border-gray-600 bg-gray-900 px-2 text-white"
+                  />
+                </div>
+              </label>
+
+              <label className="block space-y-1">
+                <span className="text-gray-200">Tertiary</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={landingPageData?.tertiaryColor || "#3396FF"}
+                    onChange={(e) => updateBrandingColor("tertiaryColor", e.target.value)}
+                    className="h-8 w-10 cursor-pointer rounded border border-gray-600 bg-transparent p-0"
+                  />
+                  <input
+                    type="text"
+                    value={landingPageData?.tertiaryColor || "#3396FF"}
+                    onChange={(e) => updateBrandingColor("tertiaryColor", e.target.value)}
+                    className="h-8 w-full rounded border border-gray-600 bg-gray-900 px-2 text-white"
+                  />
+                </div>
+              </label>
+            </div>
           )}
         </div>
       )}

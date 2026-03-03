@@ -20,19 +20,110 @@ import { FiBriefcase } from "react-icons/fi";
 import { getFonts } from "./getFonts.js";
 import { calculateTextColor } from "./utils.js";
 import cn from "classnames";
-import { getTranslation, getTimeUnitTranslation, getSalaryTimeTranslation } from "../../utils/translations";
+import {
+  getTranslation,
+  getTimeUnitTranslation,
+  getSalaryTimeTranslation,
+} from "../../utils/translations";
 import Image from "next/image.js";
 // hirelab-frontend\src\pages\Landingpage\HeroSection.js
 // hirelab-frontend\src\utils\destructureTheme.js
 
 // Helper function to get image transform styles (zoom, mirror)
 const getImageTransform = (adjustments) => {
-  if (!adjustments) return 'none';
+  if (!adjustments) return "none";
   const zoom = adjustments.zoom || 100;
   const mirrorX = adjustments.mirrorX || false;
   const mirrorY = adjustments.mirrorY || false;
-  if (zoom === 100 && !mirrorX && !mirrorY) return 'none';
-  return `scale(${zoom / 100})${mirrorX ? ' scaleX(-1)' : ''}${mirrorY ? ' scaleY(-1)' : ''}`;
+  if (zoom === 100 && !mirrorX && !mirrorY) return "none";
+  return `scale(${zoom / 100})${mirrorX ? " scaleX(-1)" : ""}${
+    mirrorY ? " scaleY(-1)" : ""
+  }`;
+};
+
+const hexToRgb = (hexColor) => {
+  if (typeof hexColor !== "string") return null;
+  const normalized = hexColor.trim().replace("#", "");
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return null;
+  return {
+    r: parseInt(normalized.slice(0, 2), 16),
+    g: parseInt(normalized.slice(2, 4), 16),
+    b: parseInt(normalized.slice(4, 6), 16),
+  };
+};
+
+const hexToRgba = (hexColor, alpha = 1) => {
+  const rgb = hexToRgb(hexColor);
+  if (!rgb) return `rgba(245, 194, 169, ${alpha})`;
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+};
+
+const getRelativeLuminance = (hexColor) => {
+  const rgb = hexToRgb(hexColor);
+  if (!rgb) return null;
+  const mapChannel = (channel) => {
+    const normalized = channel / 255;
+    return normalized <= 0.03928
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  };
+  const r = mapChannel(rgb.r);
+  const g = mapChannel(rgb.g);
+  const b = mapChannel(rgb.b);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+const getContrastRatio = (a, b) => {
+  const luminanceA = getRelativeLuminance(a);
+  const luminanceB = getRelativeLuminance(b);
+  if (luminanceA === null || luminanceB === null) return 0;
+  const lighter = Math.max(luminanceA, luminanceB);
+  const darker = Math.min(luminanceA, luminanceB);
+  return (lighter + 0.05) / (darker + 0.05);
+};
+
+const pickReadableBrandShade = (
+  backgroundColor,
+  getBrandShade,
+  preferredShade = 500,
+  minContrast = 2.4
+) => {
+  if (typeof getBrandShade !== "function") return "#f5590c";
+
+  // Keep accent visually in-brand: avoid extremes that look near-black/near-white.
+  const shadeCandidates = [500, 400, 600, 300];
+  const shadeData = shadeCandidates
+    .map((shade) => {
+      const color = getBrandShade(shade);
+      return {
+        shade,
+        color,
+        contrast: getContrastRatio(backgroundColor, color),
+      };
+    })
+    .filter(
+      (entry) => typeof entry.color === "string" && entry.color.length > 0
+    );
+
+  if (shadeData.length === 0) {
+    return getBrandShade(preferredShade) || "#f5590c";
+  }
+
+  // Prefer shades closest to the configured brand shade, if readable.
+  const readableClosest = shadeData
+    .filter((entry) => entry.contrast >= minContrast)
+    .sort(
+      (a, b) =>
+        Math.abs(a.shade - preferredShade) - Math.abs(b.shade - preferredShade)
+    )[0];
+
+  if (readableClosest) return readableClosest.color;
+
+  // If none reach threshold, still keep brand family and use the best-contrast shade.
+  const bestContrast = [...shadeData].sort(
+    (a, b) => b.contrast - a.contrast
+  )[0];
+  return bestContrast.color;
 };
 
 //
@@ -182,7 +273,7 @@ const useResponsiveFontSize = (
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !text || typeof window === "undefined") return;
-    
+
     const adjustFontSize = () => {
       // Cross-browser window width detection
       const screenWidth =
@@ -196,13 +287,13 @@ const useResponsiveFontSize = (
       const previewDevice = window.__previewDevice;
       const isMobile = previewDevice === "mobile" || screenWidth < 768;
       const textLength = text.length;
-      
+
       // Check if text is a single word (no spaces)
-      const isSingleWord = !text.trim().includes(' ');
-      
+      const isSingleWord = !text.trim().includes(" ");
+
       // Much more aggressive sizing - start way smaller
       let currentSize;
-      
+
       if (isMobile) {
         // Mobile: very conservative starting sizes
         if (textLength <= 15) {
@@ -232,7 +323,7 @@ const useResponsiveFontSize = (
           currentSize = 30;
         }
       }
-      
+
       // Ensure no single word ever breaks: measure the longest word
       // and shrink the font until that word fits within the container.
       {
@@ -247,16 +338,17 @@ const useResponsiveFontSize = (
             .sort((a, b) => b.length - a.length)[0] || text;
 
         // Create temporary element to measure word width
-        const tempElement = document.createElement('span');
-        tempElement.style.position = 'absolute';
-        tempElement.style.visibility = 'hidden';
-        tempElement.style.whiteSpace = 'nowrap';
-        tempElement.style.fontFamily = container.style.fontFamily || 'inherit';
+        const tempElement = document.createElement("span");
+        tempElement.style.position = "absolute";
+        tempElement.style.visibility = "hidden";
+        tempElement.style.whiteSpace = "nowrap";
+        tempElement.style.fontFamily = container.style.fontFamily || "inherit";
         tempElement.textContent = longestWord;
         document.body.appendChild(tempElement);
 
         // Decrease font size until the longest word fits in one line
-        while (testSize > 12) { // Minimum font size
+        while (testSize > 12) {
+          // Minimum font size
           tempElement.style.fontSize = `${testSize}px`;
           const wordWidth = tempElement.offsetWidth;
           if (wordWidth <= containerWidth) break;
@@ -266,38 +358,38 @@ const useResponsiveFontSize = (
         document.body.removeChild(tempElement);
         currentSize = testSize;
       }
-      
+
       // Apply the size directly - no complex calculations with cross-browser support
       container.style.fontSize = `${currentSize}px`;
-      container.style.lineHeight = '1.1';
-      
+      container.style.lineHeight = "1.1";
+
       // Different word breaking behavior for single words vs multiple words
       if (isSingleWord) {
         // For single words: prevent breaking at all costs
-        container.style.wordBreak = 'keep-all';
-        container.style.overflowWrap = 'normal';
-        container.style.wordWrap = 'normal';
-        container.style.whiteSpace = 'nowrap';
+        container.style.wordBreak = "keep-all";
+        container.style.overflowWrap = "normal";
+        container.style.wordWrap = "normal";
+        container.style.whiteSpace = "nowrap";
       } else {
         // For multiple words: wrap only at whitespace, never inside a word
-        container.style.wordBreak = 'keep-all';
-        container.style.overflowWrap = 'normal';
-        container.style.wordWrap = 'normal'; // IE fallback
-        container.style.whiteSpace = 'normal';
+        container.style.wordBreak = "keep-all";
+        container.style.overflowWrap = "normal";
+        container.style.wordWrap = "normal"; // IE fallback
+        container.style.whiteSpace = "normal";
       }
-      
+
       // Cross-browser hyphenation control
-      container.style.hyphens = 'none';
-      container.style.webkitHyphens = 'none';
-      container.style.msHyphens = 'none';
-      container.style.mozHyphens = 'none';
-      
+      container.style.hyphens = "none";
+      container.style.webkitHyphens = "none";
+      container.style.msHyphens = "none";
+      container.style.mozHyphens = "none";
+
       setFontSize(currentSize);
     };
 
     // Immediate execution
     adjustFontSize();
-    
+
     // Cross-browser resize handler with debouncing
     let resizeTimeout;
     const handleResize = () => {
@@ -309,7 +401,7 @@ const useResponsiveFontSize = (
         adjustFontSize();
       }, 100);
     };
-    
+
     // Cross-browser event listener setup
     if (window.addEventListener) {
       window.addEventListener("resize", handleResize, false);
@@ -319,12 +411,12 @@ const useResponsiveFontSize = (
       // IE8 and older
       window.attachEvent("onresize", handleResize);
     }
-    
+
     return () => {
       if (resizeTimeout) {
         clearTimeout(resizeTimeout);
       }
-      
+
       // Cross-browser event listener cleanup
       if (window.removeEventListener) {
         window.removeEventListener("resize", handleResize, false);
@@ -475,8 +567,10 @@ const Template1 = ({ landingPageData, fetchData }) => {
     80
   );
 
-
-  const textColor = calculateTextColor(getColor("primary", 500), landingPageData?.yiqThreshold);
+  const textColor = calculateTextColor(
+    getColor("primary", 500),
+    landingPageData?.yiqThreshold
+  );
 
   const getBackgroundColor = (primaryColor) => {
     const brightness = getColorBrightness(primaryColor);
@@ -487,7 +581,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
 
   const getColorBrightness = (color) => {
     const rgb = color.match(/^#(\w{6})$/)?.[1];
-    if(!rgb) return 0;
+    if (!rgb) return 0;
     const r = parseInt(rgb.slice(0, 2), 16);
     const g = parseInt(rgb.slice(2, 4), 16);
     const b = parseInt(rgb.slice(4, 6), 16);
@@ -505,7 +599,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
     const primaryColor500 = landingPageData?.primaryColor || "#2e9eac";
     const tertiaryColor300 = landingPageData?.tertiaryColor || "#44b566";
     const tertiaryColor50 = `${tertiaryColor300}20`; // Add light transparency
-    
+
     return {
       gridColor: `${tertiaryColor300}80`, // Semi-transparent tertiary color
       gridLineColor: tertiaryColor50,
@@ -513,26 +607,27 @@ const Template1 = ({ landingPageData, fetchData }) => {
       gridSize: 40,
       maxWidth: 1000,
       // Use a stable key based on the actual color values to prevent unnecessary re-renders
-      key: `hero-${primaryColor500}-${tertiaryColor300}`
+      key: `hero-${primaryColor500}-${tertiaryColor300}`,
     };
   }, [landingPageData?.primaryColor, landingPageData?.tertiaryColor]);
 
   // Create a memoized GridPattern component to prevent re-renders
-  const MemoizedGridPattern = useMemo(() => (
-    <GridPattern
-      key={gridPatternProps.key}
-      gridColor={gridPatternProps.gridColor}
-      gridLineColor={gridPatternProps.gridLineColor}
-      backgroundColor={gridPatternProps.backgroundColor}
-      gridSize={gridPatternProps.gridSize}
-      maxWidth={gridPatternProps.maxWidth}
-    />
-  ), [gridPatternProps]);
+  const MemoizedGridPattern = useMemo(
+    () => (
+      <GridPattern
+        key={gridPatternProps.key}
+        gridColor={gridPatternProps.gridColor}
+        gridLineColor={gridPatternProps.gridLineColor}
+        backgroundColor={gridPatternProps.backgroundColor}
+        gridSize={gridPatternProps.gridSize}
+        maxWidth={gridPatternProps.maxWidth}
+      />
+    ),
+    [gridPatternProps]
+  );
 
   return (
-    <div 
-    className="bg-white px-4 w-full min-h-[380px] lg:min-h-[600px] "
-    >
+    <div className="bg-white px-4 w-full min-h-[380px] lg:min-h-[600px] ">
       <div
         ref={refs.sectionRef}
         className="relative mx-auto w-full rounded-lg hero-section"
@@ -557,7 +652,9 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 }}
                 className="mb-4 text-xs md:text-sm"
               >
-               👋 {" "}{" "}{landingPageData?.weAreHiring || getTranslation(landingPageData?.lang, 'weAreHiring')}
+                👋{" "}
+                {landingPageData?.weAreHiring ||
+                  getTranslation(landingPageData?.lang, "weAreHiring")}
               </span>
 
               <h2
@@ -597,21 +694,23 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 <p
                   style={{
                     fontFamily: subheaderFont?.family,
-                    color: textColor
+                    color: textColor,
                   }}
                   className="text-sm leading-relaxed md:text-base text-white/80"
                   dangerouslySetInnerHTML={{
-                    __html: (landingPageData?.heroDescription ||
-                      "")?.replace?.(/\n/g, "<br>")
+                    __html: (landingPageData?.heroDescription || "")?.replace?.(
+                      /\n/g,
+                      "<br>"
+                    ),
                   }}
-                >
-                </p>
+                ></p>
               </div>
             </div>
             {/* Job Title and Job Description */}
             {/* Mobile Badges - Visible only on small screens */}
             <div className="flex flex-wrap gap-2 justify-center mb-6 lg:hidden">
-              {(landingPageData?.salaryAvailable === false || landingPageData?.salaryMin) && (
+              {(landingPageData?.salaryAvailable === false ||
+                landingPageData?.salaryMin) && (
                 <div
                   className="flex gap-2 items-center p-2 rounded-xl border shadow-lg border-white/10 lg:min-h-[75px]"
                   style={{
@@ -622,7 +721,10 @@ const Template1 = ({ landingPageData, fetchData }) => {
                 >
                   <div
                     className="p-1.5 rounded-lg"
-                    style={{ backgroundColor: getColor("secondary", 500), color: textColor }}
+                    style={{
+                      backgroundColor: getColor("secondary", 500),
+                      color: textColor,
+                    }}
                   >
                     <svg
                       width="18"
@@ -648,12 +750,18 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         className="text-xs font-light"
                         style={{ color: textColor }}
                       >
-                        {landingPageData?.salaryText || getTranslation(landingPageData?.lang, 'competitiveSalary') || 'Competitive Salary'}
+                        {landingPageData?.salaryText ||
+                          getTranslation(
+                            landingPageData?.lang,
+                            "competitiveSalary"
+                          ) ||
+                          "Competitive Salary"}
                       </p>
                     ) : (
-                      <p className="text-xs font-light"
+                      <p
+                        className="text-xs font-light"
                         style={{
-                          color: textColor
+                          color: textColor,
                         }}
                       >
                         {landingPageData?.salaryMin &&
@@ -668,7 +776,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           intToHumanReadablePrice(landingPageData?.salaryMax)}
                         {landingPageData?.salaryCurrency &&
                           ` ${landingPageData?.salaryCurrency}`}
-                        /{getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime || "Month")?.toLowerCase?.()}
+                        /
+                        {getSalaryTimeTranslation(
+                          landingPageData?.lang,
+                          landingPageData?.salaryTime || "Month"
+                        )?.toLowerCase?.()}
                       </p>
                     )}
                   </div>
@@ -681,12 +793,15 @@ const Template1 = ({ landingPageData, fetchData }) => {
                   background:
                     "linear-gradient(270deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 100%)",
                   "backdrop-filter": "blur(34px)",
-                  color: textColor
+                  color: textColor,
                 }}
               >
                 <div
                   className="p-1.5 rounded-lg"
-                  style={{ backgroundColor: getColor("secondary", 500) , color: textColor}}
+                  style={{
+                    backgroundColor: getColor("secondary", 500),
+                    color: textColor,
+                  }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -707,7 +822,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                   ref={refs.hoursRangeRef}
                   className="text-xs font-medium text-white md:text-sm"
                   style={{
-                    color: textColor
+                    color: textColor,
                   }}
                 >
                   {landingPageData?.hoursRange ? (
@@ -718,10 +833,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       >
                         {landingPageData?.hoursMin || "7"}
                       </span>
-                      <span style={{ color: textColor }} >
-                         -
-                      </span>
-                        
+                      <span style={{ color: textColor }}>-</span>
+
                       <span
                         ref={refs.hoursMaxRef}
                         onClick={() => handleItemClick("hoursMax")}
@@ -734,25 +847,31 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       ref={refs.hoursMinRef}
                       onClick={() => handleItemClick("hoursMin")}
                       style={{
-                        color: textColor
+                        color: textColor,
                       }}
                     >
                       {landingPageData?.hoursMin || "7"}
                     </span>
                   )}
                   <span
-                  style={{
-                    color:textColor
-                  }}
-                  > {getTranslation(landingPageData?.lang, 'hour')} / </span>
+                    style={{
+                      color: textColor,
+                    }}
+                  >
+                    {" "}
+                    {getTranslation(landingPageData?.lang, "hour")} /{" "}
+                  </span>
                   <span
                     ref={refs.hoursUnitRef}
                     onClick={() => handleItemClick("hoursUnit")}
                     style={{
-                      color: textColor
+                      color: textColor,
                     }}
                   >
-                    {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit || "Week")}
+                    {getTimeUnitTranslation(
+                      landingPageData?.lang,
+                      landingPageData?.hoursUnit || "Week"
+                    )}
                   </span>
                 </span>
               </div>
@@ -770,7 +889,10 @@ const Template1 = ({ landingPageData, fetchData }) => {
               >
                 <div
                   className="p-1.5 rounded-lg"
-                  style={{ backgroundColor: getColor("secondary", 500) , color: textColor}}
+                  style={{
+                    backgroundColor: getColor("secondary", 500),
+                    color: textColor,
+                  }}
                 >
                   <svg
                     width="18"
@@ -801,10 +923,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     handleItemClick("location");
                   }}
                 >
-                  <span className="text-xs font-medium md:text-sm"
-                  style={{
-                    color: textColor,
-                  }}
+                  <span
+                    className="text-xs font-medium md:text-sm"
+                    style={{
+                      color: textColor,
+                    }}
                   >
                     {selectedLocation}
                   </span>
@@ -821,7 +944,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         className={`transition-transform ${
-                          showLocationDropdown ? "rotate-180" : ""}`}
+                          showLocationDropdown ? "rotate-180" : ""
+                        }`}
                       >
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
@@ -844,12 +968,14 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           getColor("primary", 500),
                           landingPageData?.yiqThreshold
                         ),
-                        scrollbarWidth: "none", /* Firefox */
-                        msOverflowStyle: "none", /* Internet Explorer 10+ */
+                        scrollbarWidth: "none" /* Firefox */,
+                        msOverflowStyle: "none" /* Internet Explorer 10+ */,
                       }}
                     >
                       <div className="flex justify-between items-center px-4 py-2 border-b border-white/10">
-                        <span className="text-xs font-medium">{getTranslation(landingPageData?.lang, 'locations')}</span>
+                        <span className="text-xs font-medium">
+                          {getTranslation(landingPageData?.lang, "locations")}
+                        </span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -888,42 +1014,42 @@ const Template1 = ({ landingPageData, fetchData }) => {
             <div className=" mt-10 -mb-[10px] xl:mb-[-8px] max-w-[1300px] mx-auto ">
               {/* Image Container */}
               <div className="relative mx-auto max-w-3xl shadow-xl">
-               <div className="relative">
-                {isVideoUrl(landingPageData?.heroImage) ? (
-                  <video
-                    src={landingPageData?.heroImage}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="object-cover aspect-[200/140] w-full lg:w-[50vw] xl:w-[75vw] xl:mb-0 max-h-[450px] smx:max-h-[300px] rounded-t-[64px] max-w-[684px] mx-auto"
-                    style={{
-                      border: "10px solid transparent",
-                      background: `linear-gradient(90deg, ${getColor(
-                        "primary",
-                        800
-                      )}, ${getColor("primary", 950)}) border-box`,
-                      objectFit:
-                        landingPageData?.imageAdjustment?.heroImage
-                          ?.objectFit || "cover",
-                    }}
-                  />
-                ) : (
-                  <Image
-                    src={
-                      landingPageData?.heroImage ||
-                      "/dhwise-images/placeholder.png"
-                    }
-                    alt="Project Manager candidate"
-                    className="object-cover  aspect-[200/140] w-full lg:w-[50vw] xl:w-[75vw] xl:mb-0 max-h-[450px] smx:max-h-[300px] rounded-t-[64px] max-w-[684px] mx-auto"
-                    style={{
-                      border: "10px solid transparent" /*2*/,
+                <div className="relative">
+                  {isVideoUrl(landingPageData?.heroImage) ? (
+                    <video
+                      src={landingPageData?.heroImage}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="object-cover aspect-[200/140] w-full lg:w-[50vw] xl:w-[75vw] xl:mb-0 max-h-[450px] smx:max-h-[300px] rounded-t-[64px] max-w-[684px] mx-auto"
+                      style={{
+                        border: "10px solid transparent",
+                        background: `linear-gradient(90deg, ${getColor(
+                          "primary",
+                          800
+                        )}, ${getColor("primary", 950)}) border-box`,
+                        objectFit:
+                          landingPageData?.imageAdjustment?.heroImage
+                            ?.objectFit || "cover",
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      src={
+                        landingPageData?.heroImage ||
+                        "/dhwise-images/placeholder.png"
+                      }
+                      alt="Project Manager candidate"
+                      className="object-cover  aspect-[200/140] w-full lg:w-[50vw] xl:w-[75vw] xl:mb-0 max-h-[450px] smx:max-h-[300px] rounded-t-[64px] max-w-[684px] mx-auto"
+                      style={{
+                        border: "10px solid transparent" /*2*/,
 
-                      background: `linear-gradient(90deg, ${getColor(
-                        "primary",
-                        800
-                      )}, ${getColor("primary", 950)}) border-box` /*3*/,
-                      mask: `
+                        background: `linear-gradient(90deg, ${getColor(
+                          "primary",
+                          800
+                        )}, ${getColor("primary", 950)}) border-box` /*3*/,
+                        mask: `
                           "linear-gradient(#000 0 0) padding-box", 
                           "linear-gradient(#000 0 0)",
                         "mask-composite": "exclude",`,
@@ -934,24 +1060,28 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         objectFit:
                           landingPageData?.imageAdjustment?.heroImage
                             ?.objectFit || "cover",
-                        transform: getImageTransform(landingPageData?.imageAdjustment?.heroImage),
-                        transition: "object-position 0.3s ease-in-out, transform 0.3s ease-in-out",
-                    }}    
-                    width={500}
-                    height={500}
-                    sizes="(max-width: 768px) 100vw, 33vw"	
-                    loading="eager"
-                    fetchPriority="high"
-                  />
-                )}
+                        transform: getImageTransform(
+                          landingPageData?.imageAdjustment?.heroImage
+                        ),
+                        transition:
+                          "object-position 0.3s ease-in-out, transform 0.3s ease-in-out",
+                      }}
+                      width={500}
+                      height={500}
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      loading="eager"
+                      fetchPriority="high"
+                    />
+                  )}
                 </div>
 
                 {/* Info Badges - Only visible on medium screens and up */}
 
                 <div className="hidden absolute -left-[5%] lg:-left-[12%] xl:-left-[32%] top-0 w-1 h-full  lg:block ">
                   {/* Salary */}
-                  <div className=" absolute -left-0 top-[15%]"
-                  style={{transform: "translateX(-50px)"}}
+                  <div
+                    className=" absolute -left-0 top-[15%]"
+                    style={{ transform: "translateX(-50px)" }}
                   >
                     <div
                       className="flex gap-3 items-center p-3 rounded-xl border shadow-lg border-white/10 lg:min-h-[75px] relative z-[500]"
@@ -989,7 +1119,12 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           onClick={() => handleItemClick("salaryText")}
                           style={{ color: textColor }}
                         >
-                          {landingPageData?.salaryText || getTranslation(landingPageData?.lang, 'competitiveSalary') || 'Competitive Salary'}
+                          {landingPageData?.salaryText ||
+                            getTranslation(
+                              landingPageData?.lang,
+                              "competitiveSalary"
+                            ) ||
+                            "Competitive Salary"}
                         </span>
                       ) : (
                         <span
@@ -997,7 +1132,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           className="font-medium whitespace-nowrap"
                           onClick={() => handleItemClick("salaryMin")}
                           style={{
-                            color:textColor
+                            color: textColor,
                           }}
                         >
                           {landingPageData?.salaryRange ? (
@@ -1023,10 +1158,13 @@ const Template1 = ({ landingPageData, fetchData }) => {
                             ref={refs.salaryTimeRef}
                             onClick={() => handleItemClick("salaryTime")}
                             style={{
-                              color:textColor
+                              color: textColor,
                             }}
                           >
-                            {getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime || "Month")?.toLowerCase?.()}
+                            {getSalaryTimeTranslation(
+                              landingPageData?.lang,
+                              landingPageData?.salaryTime || "Month"
+                            )?.toLowerCase?.()}
                           </span>
                         </span>
                       )}
@@ -1068,7 +1206,6 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     </svg>
                   </div>
                 </div>
-             
 
                 <div className="hidden absolute top-0 xl:left-[20%] h-full w-[50%] translate-x-[100%]   lg:block ">
                   {/* Location */}
@@ -1114,10 +1251,11 @@ const Template1 = ({ landingPageData, fetchData }) => {
                           handleItemClick("location");
                         }}
                       >
-                        <span className="font-medium"
-                        style={{
-                          color:textColor
-                        }}
+                        <span
+                          className="font-medium"
+                          style={{
+                            color: textColor,
+                          }}
                         >
                           {selectedLocation}
                         </span>
@@ -1134,7 +1272,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               className={`transition-transform ${
-                                showLocationDropdown ? "rotate-180" : ""}`}
+                                showLocationDropdown ? "rotate-180" : ""
+                              }`}
                             >
                               <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
@@ -1157,18 +1296,22 @@ const Template1 = ({ landingPageData, fetchData }) => {
                                 getColor("primary", 500),
                                 landingPageData?.yiqThreshold
                               ),
-                              scrollbarWidth: "none", /* Firefox */
-                              msOverflowStyle: "none", /* Internet Explorer 10+ */
+                              scrollbarWidth: "none" /* Firefox */,
+                              msOverflowStyle:
+                                "none" /* Internet Explorer 10+ */,
                             }}
                           >
                             <div className="flex justify-between items-center px-4 py-2 border-b border-white/10">
-                              <span className="text-xs font-medium"
-                              style={{
-                                color:textColor
-                              }}
-                              
+                              <span
+                                className="text-xs font-medium"
+                                style={{
+                                  color: textColor,
+                                }}
                               >
-                                {getTranslation(landingPageData?.lang, 'locations')}
+                                {getTranslation(
+                                  landingPageData?.lang,
+                                  "locations"
+                                )}
                               </span>
                               <button
                                 onClick={(e) => {
@@ -1210,7 +1353,6 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                       className="absolute right-[90%] -bottom-[50%]"
-                      
                     >
                       <circle cx="12" cy="31" r="6" fill="white" />
                       <circle
@@ -1252,7 +1394,10 @@ const Template1 = ({ landingPageData, fetchData }) => {
                     >
                       <div
                         className="p-2 rounded-lg"
-                        style={{ backgroundColor: getColor("secondary", 500) ,color:textColor}} 
+                        style={{
+                          backgroundColor: getColor("secondary", 500),
+                          color: textColor,
+                        }}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -1281,19 +1426,19 @@ const Template1 = ({ landingPageData, fetchData }) => {
                                 handleItemClick("hoursMin");
                               }}
                               style={{
-                                color:textColor
+                                color: textColor,
                               }}
                             >
                               {landingPageData?.hoursMin || "7"}
                             </span>
-                            <span style={{ color:textColor }}>-</span>
+                            <span style={{ color: textColor }}>-</span>
                             <span
                               ref={refs.hoursMaxRef}
                               onClick={() => {
                                 handleItemClick("hoursMax");
                               }}
                               style={{
-                                color:textColor
+                                color: textColor,
                               }}
                             >
                               {landingPageData?.hoursMax || "10"}
@@ -1306,7 +1451,7 @@ const Template1 = ({ landingPageData, fetchData }) => {
                               handleItemClick("hoursMin");
                             }}
                             style={{
-                              color:textColor
+                              color: textColor,
                             }}
                           >
                             {landingPageData?.hoursMin || "7"}
@@ -1314,19 +1459,28 @@ const Template1 = ({ landingPageData, fetchData }) => {
                         )}
                         <span
                           style={{
-                            color:textColor
+                            color: textColor,
                           }}
-                        > {getTranslation(landingPageData?.lang, 'hours')} / </span>
+                        >
+                          {" "}
+                          {getTranslation(
+                            landingPageData?.lang,
+                            "hours"
+                          )} /{" "}
+                        </span>
                         <span
                           ref={refs.hoursUnitRef}
                           onClick={() => {
                             handleItemClick("hoursUnit");
                           }}
                           style={{
-                            color:textColor
+                            color: textColor,
                           }}
                         >
-                          {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit || "Week")}
+                          {getTimeUnitTranslation(
+                            landingPageData?.lang,
+                            landingPageData?.hoursUnit || "Week"
+                          )}
                         </span>
                       </span>
                     </div>
@@ -1337,9 +1491,8 @@ const Template1 = ({ landingPageData, fetchData }) => {
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                       className="absolute right-[100%] -bottom-[20%]"
-
                     >
-                      <circle cx="12" cy="12" r="6" fill="white" /> 
+                      <circle cx="12" cy="12" r="6" fill="white" />
                       <circle
                         cx="12"
                         cy="12"
@@ -1573,7 +1726,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
                     color: variantPl1,
                   }}
                 >
-                 <Share2 size={20} color="#5207CD" />
+                  <Share2 size={20} color="#5207CD" />
                 </Button>
               </div>
               <div ref={refs.cta2TitleRef} className="w-full">
@@ -1600,9 +1753,7 @@ const Template3 = ({ landingPageData, fetchData }) => {
 };
 
 const Template2 = ({ landingPageData, fetchData }) => {
-  const menuItemsArray = landingPageData?.menuItems?.map((item) => item.key) || [];
   const { handleItemClick } = useFocusContext();
-  const router = useRouter();
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(() => {
     if (Array.isArray(landingPageData?.location)) {
@@ -1612,12 +1763,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
     }
     return landingPageData?.location;
   });
-  const [currentHash, setCurrentHash] = useState(
-    typeof window !== 'undefined' ? window.location.hash.slice(1) || "job-specifications" : "job-specifications"
-  );
-
   const refs = useHeroHover();
-  const navRef = useRef(null);
   const titleContainerRef = useRef(null);
 
   // Update selectedLocation when landingPageData.location changes
@@ -1638,18 +1784,6 @@ const Template2 = ({ landingPageData, fetchData }) => {
       setSelectedLocation("");
     }
   }, [landingPageData?.location]);
-
-  // Listen for hash changes
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1);
-      setCurrentHash(hash || "job-specifications");
-    };
-    handleHashChange();
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
 
   const location = Array.isArray(landingPageData?.location)
     ? landingPageData?.location.join(", ")
@@ -1685,77 +1819,134 @@ const Template2 = ({ landingPageData, fetchData }) => {
   );
 
   // Split title to highlight second word
-  const titleWords = (landingPageData?.vacancyTitle || "Project Manager").split(" ");
+  const titleWords = (landingPageData?.vacancyTitle || "Project Manager").split(
+    " "
+  );
   const firstWord = titleWords[0] || "";
   const restWords = titleWords.slice(1).join(" ") || "";
-
-  const handleNavigate = (id) => {
-    if (typeof window !== 'undefined') {
-      window.location.href = `#${id}`;
-      const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  };
+  const normalizedYiqThreshold = Number.isFinite(
+    Number(landingPageData?.yiqThreshold)
+  )
+    ? Number(landingPageData?.yiqThreshold)
+    : 180;
+  const heroBackgroundReference = getColor("primary", 300);
+  const heroTextColor = calculateTextColor(
+    heroBackgroundReference,
+    normalizedYiqThreshold
+  );
+  const heroMutedTextColor =
+    heroTextColor === "#FFFFFF" ? "rgba(255,255,255,0.86)" : "#464646";
+  const heroAccentColor = pickReadableBrandShade(
+    heroBackgroundReference,
+    (shade) => getColor("secondary", shade),
+    500,
+    3
+  );
+  const secondaryHighlightBase = getColor("secondary", 200);
+  const secondaryHighlightGradient = `linear-gradient(90deg, ${hexToRgba(
+    secondaryHighlightBase,
+    0.68
+  )} 0%, ${hexToRgba(secondaryHighlightBase, 0)} 100%)`;
 
   return (
-    <div className="bg-white w-full">
+    <div
+      className="w-full pb-16 lg:pb-20"
+      style={{ boxShadow: "none", background: "white" }}
+    >
       <div
         ref={refs.sectionRef}
-        className="relative mx-auto w-full hero-section overflow-hidden"
+        className="relative mx-auto w-full hero-section overflow-visible"
         style={{
           fontFamily: bodyFont?.family || "Inter, sans-serif",
+          boxShadow: "none",
         }}
       >
         {/* Main container with gradient background */}
         <div
-          className="relative rounded-[24px] lg:rounded-[32px] overflow-hidden mx-4 lg:mx-0"
+          className="relative z-10 rounded-[24px] lg:rounded-[32px] overflow-hidden mx-0 min-h-[620px] lg:min-h-[792px]"
           style={{
-            background: `linear-gradient(to bottom, ${getColor("primary", 100)}, ${getColor("primary", 50)})`,
+            // Figma: darker at top, lighter at bottom
+            background: `linear-gradient(180deg, ${getColor(
+              "primary",
+              300
+            )} 0%, ${getColor("primary", 50)} 100%)`,
+            boxShadow: "none",
+            border: "none",
           }}
         >
-          {/* Decorative ellipses */}
+          {/* Large hollow ring - top-left (Ellipse 3: x:227, y:-597, size:1036) */}
           <div
-            className="absolute w-[106px] h-[106px] rounded-full opacity-30"
+            className="absolute hidden lg:block rounded-full"
             style={{
-              left: "40%",
-              top: "140px",
-              background: `radial-gradient(circle, ${getColor("primary", 200)} 0%, transparent 70%)`,
+              left: "-18rem",
+              top: "-24rem",
+              width: "39.6rem",
+              height: "39.6rem",
+              borderRadius: "19.8rem",
+              border: "36px solid #FFF",
+              opacity: 0.22,
             }}
           />
+          {/* Mobile top-left hollow ring */}
           <div
-            className="absolute w-[60px] h-[60px] rounded-full opacity-40"
+            className="absolute lg:hidden rounded-full"
             style={{
-              left: "15%",
-              top: "75%",
-              background: `radial-gradient(circle, ${getColor("primary", 300)} 0%, transparent 70%)`,
+              left: "-9.5rem",
+              top: "-9rem",
+              width: "20rem",
+              height: "20rem",
+              borderRadius: "10rem",
+              border: "24px solid rgba(255,255,255,0.26)",
             }}
           />
+          {/* Large hollow ring - bottom-center (Ellipse 4: x:804, y:574, size:456) */}
           <div
-            className="absolute w-[271px] h-[271px] rounded-full opacity-20 hidden lg:block"
+            className="absolute hidden lg:block rounded-full"
             style={{
-              right: "-50px",
-              bottom: "50px",
-              background: `radial-gradient(circle, ${getColor("primary", 200)} 0%, transparent 70%)`,
+              // Image panel starts at ~52% of hero width on desktop.
+              // Shifted left so only ~25% of the ring overlaps the image.
+              left: "calc(49% - 3.6px)",
+              bottom: "-22rem",
+              width: "clamp(26rem, 34vw, 35.3rem)",
+              height: "clamp(26rem, 34vw, 35.3rem)",
+              borderRadius: "9999px",
+              border: "36px solid #FFF",
+              opacity: 0.3,
+              transform: "translateX(-50%)",
+              zIndex: 6,
             }}
           />
-          {/* Large decorative ellipse top-left */}
+          {/* Medium solid circle - center-top (Ellipse 5: x:550, y:177, size:106) */}
           <div
-            className="absolute w-[500px] h-[500px] rounded-full opacity-10 hidden lg:block"
+            className="absolute hidden lg:block rounded-full"
             style={{
-              left: "-200px",
-              top: "-300px",
-              border: `2px solid ${getColor("primary", 300)}`,
+              left: "550px",
+              top: "177px",
+              width: "106px",
+              height: "106px",
+              backgroundColor: "rgba(255, 255, 255, 0.22)",
             }}
           />
-          {/* Decorative ellipse bottom-center */}
+          {/* Small solid circle - left-bottom (Ellipse 6: x:208, y:587, size:60) */}
           <div
-            className="absolute w-[456px] h-[456px] rounded-full opacity-10 hidden lg:block"
+            className="absolute hidden lg:block rounded-full"
             style={{
-              left: "25%",
-              bottom: "-200px",
-              border: `2px solid ${getColor("primary", 300)}`,
+              left: "208px",
+              bottom: "145px",
+              width: "60px",
+              height: "60px",
+              backgroundColor: "rgba(255, 255, 255, 0.35)",
+            }}
+          />
+          {/* Large solid circle - bottom-right (Ellipse 7: x:1218, y:596, size:271) */}
+          <div
+            className="absolute hidden lg:block rounded-full"
+            style={{
+              right: "-100px",
+              bottom: "-75px",
+              width: "271px",
+              height: "271px",
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
             }}
           />
 
@@ -1767,7 +1958,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
               marginRight: "24px",
               width: "calc(48% - 24px)",
               height: "calc(100% - 48px)",
-              boxShadow: "0px 56px 72px 16px rgba(0,0,0,0.25), 0px 0px 72px 16px rgba(0,0,0,0.15)",
+              boxShadow: "none",
             }}
           >
             {isVideoUrl(landingPageData?.heroImage) ? (
@@ -1779,81 +1970,55 @@ const Template2 = ({ landingPageData, fetchData }) => {
                 playsInline
                 className="object-cover w-full h-full"
                 style={{
-                  objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
+                  objectFit:
+                    landingPageData?.imageAdjustment?.heroImage?.objectFit ||
+                    "cover",
                 }}
               />
             ) : (
               <Image
-                src={landingPageData?.heroImage || "/dhwise-images/placeholder.png"}
+                src={
+                  landingPageData?.heroImage || "/dhwise-images/placeholder.png"
+                }
                 alt="Hero"
                 className="object-cover w-full h-full"
                 style={{
-                  objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
+                  objectPosition: landingPageData?.imageAdjustment?.heroImage
+                    ?.objectPosition
                     ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
                     : "50% 50%",
-                  objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
-                  transform: getImageTransform(landingPageData?.imageAdjustment?.heroImage),
-              }}
-              width={672}
-              height={744}
-              sizes="(max-width: 1024px) 100vw, 48vw"
-              loading="eager"
-              fetchPriority="high"
-            />
+                  objectFit:
+                    landingPageData?.imageAdjustment?.heroImage?.objectFit ||
+                    "cover",
+                  transform: getImageTransform(
+                    landingPageData?.imageAdjustment?.heroImage
+                  ),
+                }}
+                width={672}
+                height={744}
+                sizes="(max-width: 1024px) 100vw, 48vw"
+                loading="eager"
+                fetchPriority="high"
+              />
             )}
           </div>
 
           {/* Content Container */}
-          <div className="relative z-10 px-4 lg:px-12 pt-10 pb-8">
-            {/* Top Navigation Bar */}
-            <div className="flex justify-between items-center mb-8 lg:mb-20">
-              {/* Logo */}
-              <div className="h-4 lg:h-8">
-                {landingPageData?.companyLogo ? (
-                  <img
-                    src={landingPageData.companyLogo}
-                    alt="Company Logo"
-                    className="h-full w-auto object-contain"
-                  />
-                ) : (
-                  <svg width="103" height="24" viewBox="0 0 103 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0 0.5H4.5V10.5H13.5V0.5H18V23.5H13.5V14.5H4.5V23.5H0V0.5Z" fill={getColor("primary", 700)}/>
-                    <path d="M21 0.5H25.5V23.5H21V0.5Z" fill={getColor("primary", 700)}/>
-                    <path d="M28.5 0.5H37.5C42 0.5 45 3.5 45 8C45 12.5 42 14.5 38.5 14.5L45.5 23.5H40L33.5 14.5H33V23.5H28.5V0.5ZM33 11H36.5C38.5 11 40.5 10 40.5 8C40.5 6 38.5 4.5 36.5 4.5H33V11Z" fill={getColor("primary", 700)}/>
-                    <path d="M47.5 0.5H63V4.5H52V10H61V14H52V19.5H63V23.5H47.5V0.5Z" fill={getColor("primary", 700)}/>
-                    <path d="M65.5 0.5H70V19.5H79V23.5H65.5V0.5Z" fill={getColor("primary", 700)}/>
-                    <path d="M84 0.5H89L97.5 23.5H92.5L91 19H82L80.5 23.5H75.5L84 0.5ZM86.5 6L83.5 15H89.5L86.5 6Z" fill={getColor("primary", 700)}/>
-                    <path d="M97 0.5H103.5C108 0.5 111 3.5 111 8C111 10.5 109.5 13 107.5 14L112 23.5H107L103 14.5H101.5V23.5H97V0.5ZM101.5 11H103C105 11 106.5 10 106.5 8C106.5 6 105 4.5 103 4.5H101.5V11Z" fill={getColor("secondary", 500)}/>
-                  </svg>
-                )}
-              </div>
-
-              {/* CTA Buttons - Top Right */}
-              <div className="flex gap-1.5 lg:gap-3 items-center">
-                <button
-                  ref={refs.cta1TitleRef}
-                  onClick={() => handleItemClick("cta1Title")}
-                  className="flex items-center justify-center gap-2 px-5 lg:px-7 py-2.5 lg:py-3 h-9 lg:h-auto rounded-full bg-white font-semibold text-sm lg:text-base transition-all hover:shadow-md"
-                  style={{
-                    color: getColor("secondary", 500),
-                    fontFamily: bodyFont?.family,
-                  }}
-                >
-                  {landingPageData?.cta1Title || "Share"}
-                </button>
-                <button
-                  ref={refs.cta2TitleRef}
-                  onClick={() => handleItemClick("cta2Title")}
-                  className="flex items-center justify-center gap-2 px-5 lg:px-7 py-2.5 lg:py-3 h-9 lg:h-auto rounded-full font-semibold text-sm lg:text-base text-white transition-all hover:shadow-md"
-                  style={{
-                    backgroundColor: getColor("secondary", 500),
-                    fontFamily: bodyFont?.family,
-                  }}
-                >
-                  {landingPageData?.cta2Title || getTranslation(landingPageData?.lang, 'applyNow')}
-                </button>
-              </div>
-            </div>
+          <div className="relative z-10 px-4 lg:px-12 pt-14 lg:pt-[238px] pb-10 lg:pb-14">
+            {/* We are hiring */}
+            <span
+              ref={refs.weAreHiringRef}
+              onClick={() => handleItemClick("weAreHiring")}
+              className="inline-flex items-center gap-2 mb-3 lg:mb-4 text-xs lg:text-sm"
+              style={{
+                color: heroMutedTextColor,
+                fontFamily: bodyFont?.family || "Inter, sans-serif",
+              }}
+            >
+              <span aria-hidden>👋</span>
+              {landingPageData?.weAreHiring ||
+                getTranslation(landingPageData?.lang, "weAreHiring")}
+            </span>
 
             {/* Title Section */}
             <div className="max-w-[327px] lg:max-w-[600px] mb-6 lg:mb-8">
@@ -1869,20 +2034,20 @@ const Template2 = ({ landingPageData, fetchData }) => {
                   style={{
                     fontFamily: titleFont?.family || "Inter, sans-serif",
                     fontSize: `clamp(36px, 8vw, ${titleFontSize}px)`,
-                    lineHeight: "48px",
-                    letterSpacing: "-0.02em",
+                    lineHeight: "clamp(42px, 7.2vw, 80px)",
+                    letterSpacing: "clamp(-1.4px, -0.22vw, -4px)",
                   }}
                 >
-                  <span style={{ color: "#292929" }}>{firstWord} </span>
+                  <span style={{ color: heroTextColor }}>{firstWord} </span>
                   <span className="relative">
                     {/* Highlight background behind text */}
                     <span
-                      className="absolute left-0 bottom-0 h-[24px] w-full rounded-lg -z-10"
+                      className="absolute left-0 top-[67%] h-[33%] w-full rounded-md -z-10 pointer-events-none"
                       style={{
-                        background: `linear-gradient(to right, ${getColor("secondary", 200)}, transparent)`,
+                        background: secondaryHighlightGradient,
                       }}
                     />
-                    <span style={{ color: getColor("secondary", 500) }}>{restWords}</span>
+                    <span style={{ color: heroAccentColor }}>{restWords}</span>
                   </span>
                 </h1>
               </div>
@@ -1892,24 +2057,26 @@ const Template2 = ({ landingPageData, fetchData }) => {
             <div
               ref={refs.heroDescriptionRef}
               onClick={() => handleItemClick("heroDescription")}
-              className="max-w-[327px] lg:max-w-[459px] mb-9 lg:mb-12"
+              className="max-w-[327px] lg:max-w-[459px] mb-9 lg:mb-[52px]"
             >
               <p
                 className="text-base leading-6"
                 style={{
-                  color: "#464646",
+                  color: heroMutedTextColor,
                   fontFamily: subheaderFont?.family || "Inter, sans-serif",
                 }}
                 dangerouslySetInnerHTML={{
-                  __html: (landingPageData?.heroDescription ||
-                    "Provide a compelling description of the job and the company. This will be displayed in the hero section of the landing page.")?.replace?.(/\n/g, "<br>")
+                  __html: (
+                    landingPageData?.heroDescription ||
+                    "Provide a compelling description of the job and the company. This will be displayed in the hero section of the landing page."
+                  )?.replace?.(/\n/g, "<br>"),
                 }}
               />
             </div>
 
             {/* Info Badges */}
             <div
-              className="grid grid-cols-2 lg:flex lg:flex-wrap gap-6 lg:gap-8 items-start lg:items-center pt-8 lg:pt-9 mb-8 lg:mb-16 w-full lg:max-w-[551px]"
+              className="grid grid-cols-2 lg:flex lg:flex-nowrap gap-6 lg:gap-8 items-start lg:items-center pt-8 lg:pt-9 mb-8 lg:mb-0 w-full lg:max-w-[551px]"
               style={{
                 borderTop: `1.5px solid ${getColor("primary", 300)}`,
               }}
@@ -1919,17 +2086,29 @@ const Template2 = ({ landingPageData, fetchData }) => {
                 <div
                   className="flex items-center justify-center w-9 h-9 lg:w-11 lg:h-11 rounded-[13px] lg:rounded-2xl bg-white"
                   style={{
-                    boxShadow: "0px 9.818px 29.455px 0px rgba(164, 196, 230, 0.5)",
+                    boxShadow:
+                      "0px 9.818px 29.455px 0px rgba(164, 196, 230, 0.5)",
                   }}
                 >
-                  <svg className="w-5 h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill={getColor("secondary", 500)}/>
+                  <svg
+                    className="w-5 h-5 lg:w-6 lg:h-6"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z"
+                      fill={getColor("secondary", 500)}
+                    />
                   </svg>
                 </div>
                 <div
                   ref={refs.locationRef}
                   onClick={() => {
-                    if (Array.isArray(landingPageData?.location) && landingPageData?.location.length > 1) {
+                    if (
+                      Array.isArray(landingPageData?.location) &&
+                      landingPageData?.location.length > 1
+                    ) {
                       setShowLocationDropdown(!showLocationDropdown);
                     }
                     handleItemClick("location");
@@ -1938,133 +2117,181 @@ const Template2 = ({ landingPageData, fetchData }) => {
                 >
                   <span
                     className="text-xs font-normal leading-5"
-                    style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                    style={{
+                      color: heroTextColor,
+                      fontFamily: bodyFont?.family,
+                    }}
                   >
-                    {getTranslation(landingPageData?.lang, 'location')?.toUpperCase()}
+                    {getTranslation(
+                      landingPageData?.lang,
+                      "location"
+                    )?.toUpperCase()}
                   </span>
                   <div className="flex items-center gap-1">
                     <span
                       className="text-sm lg:text-base font-semibold leading-5 lg:leading-6"
-                      style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                      style={{
+                        color: heroTextColor,
+                        fontFamily: bodyFont?.family,
+                      }}
                     >
                       {selectedLocation}
                     </span>
-                    {Array.isArray(landingPageData?.location) && landingPageData?.location.length > 1 && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className={`transition-transform ${showLocationDropdown ? "rotate-180" : ""}`}
-                      >
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    )}
+                    {Array.isArray(landingPageData?.location) &&
+                      landingPageData?.location.length > 1 && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={`transition-transform ${
+                            showLocationDropdown ? "rotate-180" : ""
+                          }`}
+                        >
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      )}
                   </div>
                   {/* Location Dropdown */}
-                  {showLocationDropdown && Array.isArray(landingPageData?.location) && (
-                    <div
-                      className="absolute left-0 top-full z-[2000] mt-2 min-w-[200px] bg-white rounded-lg shadow-lg overflow-hidden"
-                      style={{ maxHeight: "220px", overflowY: "auto" }}
-                    >
-                      <div className="flex justify-between items-center px-4 py-2 border-b border-gray-100">
-                        <span className="text-xs font-medium text-gray-600">
-                          {getTranslation(landingPageData?.lang, 'locations')}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowLocationDropdown(false);
-                          }}
-                          className="p-1 rounded-full transition-colors hover:bg-gray-100"
-                        >
-                          <X size={16} className="text-gray-500" />
-                        </button>
-                      </div>
-                      {landingPageData?.location
-                        .filter((loc) => loc !== selectedLocation)
-                        .map((loc, index) => (
-                          <div
-                            key={index}
-                            className="px-4 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50"
-                            onClick={() => {
-                              setSelectedLocation(loc);
+                  {showLocationDropdown &&
+                    Array.isArray(landingPageData?.location) && (
+                      <div
+                        className="absolute left-0 top-full z-[2000] mt-2 min-w-[200px] bg-white rounded-lg shadow-lg overflow-hidden"
+                        style={{ maxHeight: "220px", overflowY: "auto" }}
+                      >
+                        <div className="flex justify-between items-center px-4 py-2 border-b border-gray-100">
+                          <span className="text-xs font-medium text-gray-600">
+                            {getTranslation(landingPageData?.lang, "locations")}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setShowLocationDropdown(false);
                             }}
-                            style={{ color: "#292929" }}
+                            className="p-1 rounded-full transition-colors hover:bg-gray-100"
                           >
-                            {loc}
-                          </div>
-                        ))}
-                    </div>
-                  )}
+                            <X size={16} className="text-gray-500" />
+                          </button>
+                        </div>
+                        {landingPageData?.location
+                          .filter((loc) => loc !== selectedLocation)
+                          .map((loc, index) => (
+                            <div
+                              key={index}
+                              className="px-4 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50"
+                              onClick={() => {
+                                setSelectedLocation(loc);
+                                setShowLocationDropdown(false);
+                              }}
+                              style={{ color: "#292929" }}
+                            >
+                              {loc}
+                            </div>
+                          ))}
+                      </div>
+                    )}
                 </div>
               </div>
 
               {/* Salary Badge */}
-              {(landingPageData?.salaryAvailable === false || landingPageData?.salaryMin) && (
+              {(landingPageData?.salaryAvailable === false ||
+                landingPageData?.salaryMin) && (
                 <div className="flex gap-2.5 items-center">
                   <div
                     className="flex items-center justify-center w-9 h-9 lg:w-11 lg:h-11 rounded-[13px] lg:rounded-2xl bg-white"
                     style={{
-                      boxShadow: "0px 9.818px 29.455px 0px rgba(164, 196, 230, 0.5)",
+                      boxShadow:
+                        "0px 9.818px 29.455px 0px rgba(164, 196, 230, 0.5)",
                     }}
                   >
-                    <svg className="w-5 h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M11.8 10.9C9.53 10.31 8.8 9.7 8.8 8.75C8.8 7.66 9.81 6.9 11.5 6.9C13.28 6.9 13.94 7.75 14 9H16.21C16.14 7.28 15.09 5.7 13 5.19V3H10V5.16C8.06 5.58 6.5 6.84 6.5 8.77C6.5 11.08 8.41 12.23 11.2 12.9C13.7 13.5 14.2 14.38 14.2 15.31C14.2 16 13.71 17.1 11.5 17.1C9.44 17.1 8.63 16.18 8.52 15H6.32C6.44 17.19 8.08 18.42 10 18.83V21H13V18.85C14.95 18.48 16.5 17.35 16.5 15.3C16.5 12.46 14.07 11.49 11.8 10.9Z" fill={getColor("secondary", 500)}/>
+                    <svg
+                      className="w-5 h-5 lg:w-6 lg:h-6"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M11.8 10.9C9.53 10.31 8.8 9.7 8.8 8.75C8.8 7.66 9.81 6.9 11.5 6.9C13.28 6.9 13.94 7.75 14 9H16.21C16.14 7.28 15.09 5.7 13 5.19V3H10V5.16C8.06 5.58 6.5 6.84 6.5 8.77C6.5 11.08 8.41 12.23 11.2 12.9C13.7 13.5 14.2 14.38 14.2 15.31C14.2 16 13.71 17.1 11.5 17.1C9.44 17.1 8.63 16.18 8.52 15H6.32C6.44 17.19 8.08 18.42 10 18.83V21H13V18.85C14.95 18.48 16.5 17.35 16.5 15.3C16.5 12.46 14.07 11.49 11.8 10.9Z"
+                        fill={getColor("secondary", 500)}
+                      />
                     </svg>
                   </div>
                   <div className="flex flex-col gap-2.5">
                     <span
                       className="text-xs font-normal leading-5"
-                      style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                      style={{
+                        color: heroTextColor,
+                        fontFamily: bodyFont?.family,
+                      }}
                     >
-                      {getTranslation(landingPageData?.lang, 'salary')?.toUpperCase()}
+                      {getTranslation(
+                        landingPageData?.lang,
+                        "salary"
+                      )?.toUpperCase()}
                     </span>
                     {landingPageData?.salaryAvailable === false ? (
                       <span
                         ref={refs.salaryTextRef}
                         onClick={() => handleItemClick("salaryText")}
                         className="text-sm lg:text-base font-semibold leading-5 lg:leading-6"
-                        style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                        style={{
+                          color: heroTextColor,
+                          fontFamily: bodyFont?.family,
+                        }}
                       >
-                        {landingPageData?.salaryText || getTranslation(landingPageData?.lang, 'competitiveSalary')}
+                        {landingPageData?.salaryText ||
+                          getTranslation(
+                            landingPageData?.lang,
+                            "competitiveSalary"
+                          )}
                       </span>
                     ) : (
                       <span
                         ref={refs.salaryRangeRef}
                         onClick={() => handleItemClick("salaryMin")}
                         className="text-sm lg:text-base font-semibold leading-5 lg:leading-6"
-                        style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                        style={{
+                          color: heroTextColor,
+                          fontFamily: bodyFont?.family,
+                        }}
                       >
                         {landingPageData?.salaryCurrency || "$"}
                         {landingPageData?.salaryRange ? (
                           <>
                             <span ref={refs.salaryMinRef}>
-                              {intToHumanReadablePrice(landingPageData?.salaryMin)}
+                              {intToHumanReadablePrice(
+                                landingPageData?.salaryMin
+                              )}
                             </span>
                             {landingPageData?.salaryMax && (
                               <>
                                 -
                                 <span ref={refs.salaryMaxRef}>
-                                  {intToHumanReadablePrice(landingPageData?.salaryMax)}
+                                  {intToHumanReadablePrice(
+                                    landingPageData?.salaryMax
+                                  )}
                                 </span>
                               </>
                             )}
                           </>
                         ) : (
                           <span ref={refs.salaryMinRef}>
-                            {intToHumanReadablePrice(landingPageData?.salaryMin)}
+                            {intToHumanReadablePrice(
+                              landingPageData?.salaryMin
+                            )}
                           </span>
                         )}
                         /
                         <span ref={refs.salaryTimeRef}>
-                          {getSalaryTimeTranslation(landingPageData?.lang, landingPageData?.salaryTime || "Month")?.toLowerCase?.()}
+                          {getSalaryTimeTranslation(
+                            landingPageData?.lang,
+                            landingPageData?.salaryTime || "Month"
+                          )?.toLowerCase?.()}
                         </span>
                       </span>
                     )}
@@ -2077,43 +2304,76 @@ const Template2 = ({ landingPageData, fetchData }) => {
                 <div
                   className="flex items-center justify-center w-9 h-9 lg:w-11 lg:h-11 rounded-[13px] lg:rounded-2xl bg-white"
                   style={{
-                    boxShadow: "0px 9.818px 29.455px 0px rgba(164, 196, 230, 0.5)",
+                    boxShadow:
+                      "0px 9.818px 29.455px 0px rgba(164, 196, 230, 0.5)",
                   }}
                 >
-                  <svg className="w-5 h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12.5 7H11V13L16.2 16.2L17 14.9L12.5 12.2V7Z" fill={getColor("secondary", 500)}/>
+                  <svg
+                    className="w-5 h-5 lg:w-6 lg:h-6"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12.5 7H11V13L16.2 16.2L17 14.9L12.5 12.2V7Z"
+                      fill={getColor("secondary", 500)}
+                    />
                   </svg>
                 </div>
                 <div className="flex flex-col gap-2.5">
                   <span
                     className="text-xs font-normal leading-5"
-                    style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                    style={{
+                      color: heroTextColor,
+                      fontFamily: bodyFont?.family,
+                    }}
                   >
-                    {getTranslation(landingPageData?.lang, 'workingHours')?.toUpperCase()}
+                    {getTranslation(
+                      landingPageData?.lang,
+                      "workingHours"
+                    )?.toUpperCase()}
                   </span>
                   <span
                     ref={refs.hoursRangeRef}
                     className="text-sm lg:text-base font-semibold leading-5 lg:leading-6"
-                    style={{ color: "#292929", fontFamily: bodyFont?.family }}
+                    style={{
+                      color: heroTextColor,
+                      fontFamily: bodyFont?.family,
+                    }}
                   >
                     {landingPageData?.hoursRange ? (
                       <>
-                        <span ref={refs.hoursMinRef} onClick={() => handleItemClick("hoursMin")}>
+                        <span
+                          ref={refs.hoursMinRef}
+                          onClick={() => handleItemClick("hoursMin")}
+                        >
                           {landingPageData?.hoursMin || "7"}
                         </span>
                         -
-                        <span ref={refs.hoursMaxRef} onClick={() => handleItemClick("hoursMax")}>
+                        <span
+                          ref={refs.hoursMaxRef}
+                          onClick={() => handleItemClick("hoursMax")}
+                        >
                           {landingPageData?.hoursMax || "10"}
                         </span>
                       </>
                     ) : (
-                      <span ref={refs.hoursMinRef} onClick={() => handleItemClick("hoursMin")}>
+                      <span
+                        ref={refs.hoursMinRef}
+                        onClick={() => handleItemClick("hoursMin")}
+                      >
                         {landingPageData?.hoursMin || "7"}
                       </span>
                     )}{" "}
-                    {getTranslation(landingPageData?.lang, 'hours')}/
-                    <span ref={refs.hoursUnitRef} onClick={() => handleItemClick("hoursUnit")}>
-                      {getTimeUnitTranslation(landingPageData?.lang, landingPageData?.hoursUnit || "Week")?.toLowerCase?.()}
+                    {getTranslation(landingPageData?.lang, "hours")}/
+                    <span
+                      ref={refs.hoursUnitRef}
+                      onClick={() => handleItemClick("hoursUnit")}
+                    >
+                      {getTimeUnitTranslation(
+                        landingPageData?.lang,
+                        landingPageData?.hoursUnit || "Week"
+                      )?.toLowerCase?.()}
                     </span>
                   </span>
                 </div>
@@ -2123,107 +2383,96 @@ const Template2 = ({ landingPageData, fetchData }) => {
             {/* Mobile Hero Image - After info badges */}
             <div
               ref={refs.heroImageRef}
-              className="block lg:hidden mb-8 rounded-[24px] overflow-hidden"
+              className="relative block lg:hidden mb-8 overflow-visible"
               style={{
-                boxShadow: "0px 56px 72px 16px rgba(0,0,0,0.4), 0px 0px 72px 16px rgba(0,0,0,0.15)",
+                boxShadow: "none",
               }}
             >
-              {isVideoUrl(landingPageData?.heroImage) ? (
-                <video
-                  src={landingPageData?.heroImage}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="object-cover w-full"
-                  style={{
-                    height: "362px",
-                    objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
-                  }}
-                />
-              ) : (
-                <Image
-                  src={landingPageData?.heroImage || "/dhwise-images/placeholder.png"}
-                  alt="Hero"
-                  className="object-cover w-full"
-                  style={{
-                    height: "362px",
-                    objectPosition: landingPageData?.imageAdjustment?.heroImage?.objectPosition
-                      ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
-                      : "50% 50%",
-                    objectFit: landingPageData?.imageAdjustment?.heroImage?.objectFit || "cover",
-                    transform: getImageTransform(landingPageData?.imageAdjustment?.heroImage),
-                  }}
-                  width={327}
-                  height={362}
-                  sizes="100vw"
-                  loading="eager"
-                  fetchPriority="high"
-                />
-              )}
-            </div>
-
-            {/* Bottom Navigation Menu */}
-            <div
-              ref={navRef}
-              className="flex items-center gap-6 py-4 px-6 rounded-full overflow-x-auto scrollbar-hide"
-              style={{
-                backgroundColor: getColor("primary", 200),
-                width: "fit-content",
-                maxWidth: "100%",
-                margin: "0 auto",
-              }}
-            >
-              {(() => {
-                // Calculate readable text color based on nav background
-                const navBgColor = getColor("primary", 200);
-                const navTextColor = calculateTextColor(navBgColor, landingPageData?.yiqThreshold);
-                const isLightBg = navTextColor === "#000000" || navTextColor === "black";
-                
-                return landingPageData?.menuItems
-                  ?.filter((tab) => !!tab?.active && !!tab?.visible && !!tab?.id)
-                  ?.sort((a, b) => (a.sort || 0) - (b.sort || 0))
-                  ?.map((tab, index) => (
-                    <button
-                      key={index}
-                      data-tab-id={tab.id}
-                      onClick={() => handleNavigate(tab.id || tab.key)}
-                      className="text-sm lg:text-base whitespace-nowrap transition-all flex-shrink-0"
-                      style={{
-                        color: currentHash === (tab.id || tab.key)
-                          ? (isLightBg ? getColor("primary", 900) : "#ffffff")
-                          : (isLightBg ? getColor("primary", 700) : "rgba(255,255,255,0.7)"),
-                        fontWeight: currentHash === (tab.id || tab.key) ? "600" : "400",
-                        fontFamily: bodyFont?.family,
-                      }}
-                    >
-                      {tab.label}
-                    </button>
-                  ));
-              })()}
+              {/* Mobile circle overlapping image top-right */}
+              <div
+                className="absolute rounded-full pointer-events-none z-10"
+                style={{
+                  right: "-64px",
+                  top: "-156px",
+                  width: "184px",
+                  height: "184px",
+                  borderRadius: "9999px",
+                  border: "24px solid rgba(255,255,255,0.3)",
+                }}
+              />
+              <div className="rounded-[24px] overflow-hidden">
+                {isVideoUrl(landingPageData?.heroImage) ? (
+                  <video
+                    src={landingPageData?.heroImage}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="object-cover w-full"
+                    style={{
+                      height: "362px",
+                      objectFit:
+                        landingPageData?.imageAdjustment?.heroImage?.objectFit ||
+                        "cover",
+                    }}
+                  />
+                ) : (
+                  <Image
+                    src={
+                      landingPageData?.heroImage ||
+                      "/dhwise-images/placeholder.png"
+                    }
+                    alt="Hero"
+                    className="object-cover w-full"
+                    style={{
+                      height: "362px",
+                      objectPosition: landingPageData?.imageAdjustment?.heroImage
+                        ?.objectPosition
+                        ? `${landingPageData.imageAdjustment.heroImage.objectPosition.x}% ${landingPageData.imageAdjustment.heroImage.objectPosition.y}%`
+                        : "50% 50%",
+                      objectFit:
+                        landingPageData?.imageAdjustment?.heroImage?.objectFit ||
+                        "cover",
+                      transform: getImageTransform(
+                        landingPageData?.imageAdjustment?.heroImage
+                      ),
+                    }}
+                    width={327}
+                    height={362}
+                    sizes="100vw"
+                    loading="eager"
+                    fetchPriority="high"
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Stacked background layers for depth effect */}
+        {/* Stacked shadow boxes BELOW the hero - 98% and 95% width, height unchanged */}
         <div
-          className="absolute left-1/2 -translate-x-1/2 rounded-[32px] opacity-40 -z-10"
-          style={{
-            backgroundColor: getColor("primary", 100),
-            width: "96%",
-            height: "173px",
-            bottom: "-24px",
-          }}
-        />
-        <div
-          className="absolute left-1/2 -translate-x-1/2 rounded-[32px] opacity-20 -z-20"
-          style={{
-            backgroundColor: getColor("primary", 100),
-            width: "92%",
-            height: "173px",
-            bottom: "-48px",
-          }}
-        />
+          className="relative -mt-6 z-0 flex flex-col items-center pointer-events-none w-full"
+          style={{ boxShadow: "none" }}
+        >
+          <div
+            className="rounded-[24px] lg:rounded-[32px]"
+            style={{
+              backgroundColor: getColor("primary", 100),
+              width: "98%",
+              height: "48px",
+              opacity: 0.5,
+            }}
+          />
+          <div
+            className="rounded-[24px] lg:rounded-[32px] -mt-6"
+            style={{
+              backgroundColor: getColor("primary", 50),
+              width: "95%",
+              height: "48px",
+              opacity: 0.35,
+            }}
+          />
+        </div>
       </div>
     </div>
   );
@@ -2249,8 +2498,6 @@ export function GridPattern({
   style = {},
 }) {
   const canvasRef = useRef(null);
-  
-
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -2281,17 +2528,17 @@ export function GridPattern({
       // Calculate the left offset to center the pattern
       const leftOffset = Math.floor((width - patternWidth) / 2);
 
-        // RESPONSIVE ADJUSTMENT: Dynamic grid size calculation
-      const minGridSize = 20;  // Minimum size for mobile
+      // RESPONSIVE ADJUSTMENT: Dynamic grid size calculation
+      const minGridSize = 20; // Minimum size for mobile
       const responsiveGridSize = Math.max(
-        minGridSize, 
+        minGridSize,
         Math.min(gridSize, patternWidth / 15) // Adjust divisor for density
       );
 
       // Calculate grid dimensions
       const cols = Math.ceil(patternWidth / responsiveGridSize);
       const actualPatternWidth = cols * responsiveGridSize;
-      
+
       // FIX: Recalculate leftOffset based on actual grid width
       const centeredLeftOffset = (width - actualPatternWidth) / 2;
       const rightEdge = centeredLeftOffset + actualPatternWidth;
@@ -2327,10 +2574,7 @@ export function GridPattern({
           );
 
           // Normalize distance (0 to 1)
-          const normalizedDistance = Math.min(
-            1,
-            distance / maxDistance
-          );
+          const normalizedDistance = Math.min(1, distance / maxDistance);
 
           // Circular fade - stronger at center, fades toward edges
           const fadeFactor = Math.max(0, 1 - normalizedDistance * 1.5);
@@ -2358,7 +2602,11 @@ export function GridPattern({
           const xPos = centeredLeftOffset + x * responsiveGridSize;
 
           // Skip if outside the pattern width
-          if (xPos < centeredLeftOffset || xPos > rightEdge - responsiveGridSize) continue;
+          if (
+            xPos < centeredLeftOffset ||
+            xPos > rightEdge - responsiveGridSize
+          )
+            continue;
 
           // Calculate distance from center point
           const distance = Math.sqrt(
@@ -2367,10 +2615,7 @@ export function GridPattern({
           );
 
           // Normalize distance (0 to 1)
-          const normalizedDistance = Math.min(
-            1,
-            distance / maxDistance
-          );
+          const normalizedDistance = Math.min(1, distance / maxDistance);
 
           // Circular fade - stronger at center, fades toward edges
           const fadeFactor = Math.max(0, 1 - normalizedDistance * 1.5);
@@ -2428,18 +2673,17 @@ export function GridPattern({
       ];
 
       // RESPONSIVE SCALING: Adjust square positions
-      const baseCols = 20;  // Original reference columns
-      const baseRows = 14;  // Original reference rows
+      const baseCols = 20; // Original reference columns
+      const baseRows = 14; // Original reference rows
       const colScale = cols / baseCols;
       const rowScale = rows / baseRows;
 
-
       // Draw the squares at the specified positions
-       squarePositions.forEach(([gridX, gridY]) => {
+      squarePositions.forEach(([gridX, gridY]) => {
         const x = Math.floor(gridX * colScale);
         const y = Math.floor(gridY * rowScale);
-        const distX = Math.abs(x - cols/2) / (cols/2);
-        const distY = Math.abs(y - rows/2) / (rows/2);
+        const distX = Math.abs(x - cols / 2) / (cols / 2);
+        const distY = Math.abs(y - rows / 2) / (rows / 2);
         const dist = Math.sqrt(distX * distX + distY * distY);
         const opacity = 0.35 * Math.max(0, 1 - dist * 0.7);
 

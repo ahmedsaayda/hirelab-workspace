@@ -358,7 +358,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
             style={{
               width: "44px",
               height: "44px",
-              border: "1px solid #fbb693",
+              border: `1px solid ${getColor("secondary", 300)}`,
               backdropFilter: "blur(4px)",
               backgroundColor: "transparent",
             }}
@@ -375,7 +375,7 @@ const Template2 = ({ landingPageData, fetchData }) => {
             style={{
               width: "44px",
               height: "44px",
-              border: "1px solid #fbb693",
+              border: `1px solid ${getColor("secondary", 300)}`,
               backdropFilter: "blur(4px)",
               backgroundColor: "transparent",
             }}
