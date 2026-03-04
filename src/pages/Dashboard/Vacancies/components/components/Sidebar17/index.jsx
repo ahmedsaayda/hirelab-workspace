@@ -1,5 +1,5 @@
 import { Button, Popconfirm, Space, Tooltip, Modal } from "antd";
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   FaArrowAltCircleDown,
@@ -7,8 +7,8 @@ import {
   FaGripVertical,
 } from "react-icons/fa";
 import { IoTrashOutline } from "react-icons/io5";
-import { Trash2 } from "lucide-react";
-import { Menu, MenuItem, Sidebar, sidebarClasses } from "react-pro-sidebar";
+import { Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Menu, MenuItem } from "react-pro-sidebar";
 import { brandColor, currencies } from "../../../../../../data/constants";
 import { Heading, Img, Text } from "..";
 import { useHover } from "../../../../../../contexts/HoverContext";
@@ -139,6 +139,53 @@ export default function Sidebar17({
   const [isHovered, setIsHovered] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [sectionToDelete, setSectionToDelete] = useState(null);
+  const scrollRef = useRef(null);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  const updateScrollArrows = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const up = el.scrollTop > 0;
+    const down = el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+    setCanScrollUp(up);
+    setCanScrollDown(down);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateScrollArrows();
+    const ro = new ResizeObserver(updateScrollArrows);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [updateScrollArrows, items.length]);
+
+  const handleScroll = useCallback(() => {
+    updateScrollArrows();
+  }, [updateScrollArrows]);
+
+  const scrollBy = useCallback((delta) => {
+    const el = scrollRef.current;
+    if (el) {
+      el.scrollBy({ top: delta, behavior: "smooth" });
+      setTimeout(updateScrollArrows, 150);
+    }
+  }, [updateScrollArrows]);
+
+  const handleWheel = useCallback((e) => {
+    const el = scrollRef.current;
+    if (!el || el.scrollHeight <= el.clientHeight) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    const canScrollUp = scrollTop > 0;
+    const canScrollDown = scrollTop + clientHeight < scrollHeight;
+    const scrollingDown = e.deltaY > 0;
+    const scrollingUp = e.deltaY < 0;
+    if ((scrollingDown && canScrollDown) || (scrollingUp && canScrollUp)) {
+      e.preventDefault();
+      el.scrollTop += e.deltaY;
+    }
+  }, []);
 
   const onDragEnd = (result) => {
     if (!result.destination) return;
@@ -231,45 +278,46 @@ export default function Sidebar17({
 
   return (
     <>
-      <Sidebar
+      <div
         {...props}
-        width="90px !important"
-        height="calc(100vh - 110px)"
-        collapsedWidth="70px !important"
-        rootStyles={{
-          transition: "width 0.3s ease",
-          paddingBlock: "4px !important",
-          paddingInline: "0px !important",
-          background: "transparent !important",
-          paddingLeft: "4px !important",
-          [`.${sidebarClasses.container}`]: {
-            display: "flex",
-            flexDirection: "column",
-            height: "100%",
-            overflow: "hidden",
-          },
+        className={`${props.className ?? ""} flex-shrink-0 min-w-[90px] w-[90px] flex flex-col gap-3 top-0 border-blue_gray-50 border-r border-solid bg-transparent sticky overflow-hidden transition-[width] duration-300 ${isHovered ? "!w-[140px]" : ""}`}
+        style={{
+          height: "calc(100vh - 110px)",
+          maxHeight: "calc(100vh - 110px)",
+          padding: "4px 0 4px 4px",
+          background: "transparent",
         }}
-        className={`${props.className}  flex-shrink-0 min-w-[90px] max-h-[calc(100vh-110px)] flex flex-col justify-start items-left gap-[12px] top-0 border-blue_gray-50 border-r border-solid bg-transparent !sticky overflow-hidden hover:!w-[140px]`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        style={{
-          background: "transparent !important",
-        }}
       >
         <Heading
           size="2xl"
           as="h5"
-          className="!text-[#000000]_01 text-left pl-2"
+          className="!text-[#000000]_01 text-left pl-2 flex-shrink-0"
         >
           Sections
         </Heading>
-        <div className="sidebar-scroll flex-1 min-h-0 overflow-y-auto pr-1">
+        <div className="flex-1 min-h-0 relative flex flex-col">
           <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="sections">
               {(provided) => (
-                <Menu
+                <div
                   {...provided.droppableProps}
-                  ref={provided.innerRef}
+                  ref={(el) => {
+                    scrollRef.current = el;
+                    if (provided.innerRef) {
+                      if (typeof provided.innerRef === "function") {
+                        provided.innerRef(el);
+                      } else {
+                        provided.innerRef.current = el;
+                      }
+                    }
+                  }}
+                  className="sidebar-scroll pr-1 flex flex-col gap-2 w-full flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+                  onScroll={handleScroll}
+                  onWheel={handleWheel}
+                >
+                <Menu
                   style={{
                     background: "transparent",
                   }}
@@ -281,7 +329,7 @@ export default function Sidebar17({
                     },
                   }}
                   rootStyles={{ ["&>ul"]: { gap: "8px" } }}
-                  className="flex flex-col w-full !bg-transparent"
+                  className="flex flex-col w-full !bg-transparent !flex-none"
                 >
                   {allItems.map((item, idx) => (
                     <Draggable
@@ -423,11 +471,33 @@ export default function Sidebar17({
                   ))}
                   {provided.placeholder}
                 </Menu>
+                </div>
               )}
             </Droppable>
           </DragDropContext>
+          {/* Scroll arrows - only visible when scrollable */}
+          {canScrollUp && (
+            <button
+              type="button"
+              onClick={() => scrollBy(-120)}
+              className="sidebar-scroll-arrow sidebar-scroll-arrow-up"
+              aria-label="Scroll up"
+            >
+              <ChevronUp size={14} strokeWidth={2.5} />
+            </button>
+          )}
+          {canScrollDown && (
+            <button
+              type="button"
+              onClick={() => scrollBy(120)}
+              className="sidebar-scroll-arrow sidebar-scroll-arrow-down"
+              aria-label="Scroll down"
+            >
+              <ChevronDown size={14} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
-      </Sidebar>
+      </div>
 
       {/* Custom Delete Confirmation Modal */}
       <DeleteConfirmModal
@@ -443,21 +513,43 @@ export default function Sidebar17({
         }
 
         .sidebar-scroll {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+          flex: 1 1 0;
+          min-height: 0;
+          overflow-y: auto;
+          overflow-x: hidden;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
         .sidebar-scroll::-webkit-scrollbar {
-          width: 4px;
+          display: none;
         }
-        .sidebar-scroll::-webkit-scrollbar-track {
-          background: transparent;
+        .sidebar-scroll-arrow {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border: none;
+          border-radius: 50%;
+          background: rgba(241, 245, 249, 0.9);
+          color: rgba(100, 116, 139, 0.7);
+          cursor: pointer;
+          z-index: 5;
+          transition: background 0.15s, color 0.15s;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
         }
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-          background: rgba(100, 116, 139, 0.45);
-          border-radius: 999px;
+        .sidebar-scroll-arrow:hover {
+          background: rgba(226, 232, 240, 0.95);
+          color: rgba(71, 85, 105, 0.9);
         }
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-          background: rgba(100, 116, 139, 0.65);
+        .sidebar-scroll-arrow-up {
+          top: 4px;
+        }
+        .sidebar-scroll-arrow-down {
+          bottom: 4px;
         }
 
         /* Fix for @hello-pangea/dnd clipping issues */

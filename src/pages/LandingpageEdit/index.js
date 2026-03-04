@@ -2508,7 +2508,7 @@ export default function LandingpageEdit({ paramsId }) {
 
   return (
     <div
-      className="flex overflow-hidden flex-col lg:h-screen"
+      className="flex overflow-hidden flex-col lg:h-screen min-h-0"
       style={{ scrollbarWidth: "none" }}
     >
       <Header
@@ -2531,9 +2531,8 @@ export default function LandingpageEdit({ paramsId }) {
       />
       <div className="flex flex-grow overflow-hidden justify-center rounded-[12px] border border-solid border-blue_gray-50_01 bg-white-A700 mdx:flex-col mdx:p-5 p-3 pl-0">
         <div
-          className={` py-4 flex flex-shrink-0  lg:min-w-[590px] flex-grow ${fullscreen ? "w-0 overflow-hidden" : "w-full lg:w-[35%]"
-            } transition-all duration-300 justify-center  `}
-          style={{ scrollbarWidth: "none", }}
+          className={`py-4 flex flex-shrink-0 min-h-0 lg:min-w-[590px] flex-grow overflow-hidden ${fullscreen ? "w-0 overflow-hidden" : "w-full lg:w-[35%]"
+            } transition-all duration-300 justify-center`}
         >
           <Sidebar17
             handleUp={handleUp}
