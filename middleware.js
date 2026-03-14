@@ -132,7 +132,7 @@ async function fetchUserData(accessToken) {
       throw new Error('Backend URL not configured');
     }
 
-    const response = await fetch(`${backendUrl}/auth/me`, {
+    const response = await fetch(`${backendUrl}/api/auth/me`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
