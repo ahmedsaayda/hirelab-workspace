@@ -123,7 +123,7 @@ async function fetchUserData(accessToken) {
 
   try {
     const backendUrl = process.env.NODE_ENV !== "production"
-      ? "https://hirelab-api.onrender.com/"
+      ? "https://hirelab-backend-workspace.onrender.com/"
       : process.env.NEXT_PUBLIC_BACKEND_URL;
 
     // Ensure backend URL is configured in production
