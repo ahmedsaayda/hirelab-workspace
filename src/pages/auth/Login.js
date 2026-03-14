@@ -161,7 +161,7 @@ const LoginInner = () => {
           Welcome!
         </h2>
         <p className="mt-3 text-[#667085] dark:text-gray-300 text-base font-normal">
-          Sign in to your account. Don't have an account?{" "}
+          Sign in to your account. 55Don't have an account?{" "}
           <Link
             href={`/auth/register${router.query.returnUrl ? `?returnUrl=${router.query.returnUrl}` : ''}`}
             className="font-medium text-blue-600 hover:underline"
