@@ -149,7 +149,7 @@ export async function getServerSideProps(context) {
   try {
     // Determine backend URL for server-side requests
     const backendUrl = process.env.NODE_ENV !== "production"
-      ? "http://localhost:5155/api"
+      ? "https://hirelab-api.onrender.com/"
       : process.env.NEXT_PUBLIC_BACKEND_URL;
 
     // Fetch page data from backend

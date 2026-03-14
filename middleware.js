@@ -123,7 +123,7 @@ async function fetchUserData(accessToken) {
 
   try {
     const backendUrl = process.env.NODE_ENV !== "production"
-      ? "http://localhost:5155/api"
+      ? "https://hirelab-api.onrender.com/"
       : process.env.NEXT_PUBLIC_BACKEND_URL;
 
     // Ensure backend URL is configured in production
@@ -199,7 +199,7 @@ export async function middleware(request) {
       const cached = prettyUrlCache.get(host);
       if (cached && now - cached.ts < CACHE_DURATION) return cached;
       try {
-        const backendUrl = process.env.NODE_ENV !== 'production' ? 'http://localhost:5155/api' : process.env.NEXT_PUBLIC_BACKEND_URL;
+        const backendUrl = process.env.NODE_ENV !== 'production' ? 'https://hirelab-api.onrender.com/' : process.env.NEXT_PUBLIC_BACKEND_URL;
         if (!backendUrl) return null;
         // 1) Resolve user/workspace by hostname
         const r1 = await fetch(`${backendUrl}/domains/by-hostname?hostname=${encodeURIComponent(host)}`, { method: 'GET' });

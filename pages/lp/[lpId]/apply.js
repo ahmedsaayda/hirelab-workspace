@@ -2126,7 +2126,7 @@ export async function getServerSideProps(context) {
 
   try {
     const backendUrl = process.env.NODE_ENV !== "production"
-      ? "http://localhost:5155/api"
+      ? "https://hirelab-api.onrender.com/"
       : process.env.NEXT_PUBLIC_BACKEND_URL;
 
     const response = await axios.get(`${backendUrl}/public/getLP?id=${lpId}`, {

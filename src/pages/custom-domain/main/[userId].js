@@ -20,7 +20,7 @@ export default function CustomDomainMain() {
       // Always resolve by hostname to determine scope (workspace vs main)
       if (typeof window !== 'undefined') {
         try {
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5155/api';
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://hirelab-api.onrender.com/';
           const currentHostname = window.location.hostname.replace('www.', ''); // no port
           const params = new URLSearchParams(window.location.search);
           const queryOverride = params.get('cdh');
